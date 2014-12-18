@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.client;
 
+import java.net.URL;
 import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.client.ClientResponse;
@@ -50,6 +51,10 @@ public class BrooklynApi {
 
     public BrooklynApi(String endpoint) {
         target = endpoint;
+    }
+
+    public BrooklynApi(URL endpoint) {
+        this(endpoint.toString());
     }
 
     public ActivityApi getActivityApi() {
