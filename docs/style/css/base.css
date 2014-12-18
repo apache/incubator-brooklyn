@@ -1,0 +1,54 @@
+
+/* WEBSITE MENUS
+   ----------------------------------------------------------------------- */
+
+/* top menu bar */
+.navbar-brand {
+    margin-top: -4px;
+    margin-left: -30px !important;
+}
+
+/* pop-up menu */
+ul.nav li.dropdown:hover > ul.dropdown-menu {
+    display: block;
+}
+
+
+/* FOOTER
+   ----------------------------------------------------------------------- */
+
+/* sticky footer */
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 1200px) {
+    .slightlyNarrowContainer {
+        width: 970px;
+    }
+}
+
+#footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    /* Set the fixed height of the footer here */
+    padding-top: 1em;
+    padding-bottom: 1em;
+    background-color: #f5f5f5;
+    text-align: center;
+}
+
+
+/* LANDING PAGE
+   ----------------------------------------------------------------------- */
+
+#apachebrooklynbanner {
+    background-image: url("../img/apache-brooklyn-logo-817px-wide.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 817px;
+    height: 99px;
+    margin-bottom: 50px;
+}

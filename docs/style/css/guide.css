@@ -135,7 +135,9 @@ div.warning{
 #footer p#linklove a {color: #b6b6b6; text-decoration: none;}
 #footer p#linklove a:hover {text-decoration: underline;}
 
-/* CODE */
+
+/* CODE RENDERING
+   ----------------------------------------------------------------------- */
 pre {
     font-family: Consolas, Lucida Console, Monaco, monospace;
     background-color:#e8eded;
