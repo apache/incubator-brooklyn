@@ -20,13 +20,11 @@ layout: base
 ---
 
 <head>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <title>{{ page.title }}</title>
 
-  <link rel="stylesheet" href="{{ site.path.style }}/css/website.css" type="text/css" media="screen" />
+  {% include base-head.html %}
+
   <link rel="stylesheet" href="{{ site.path.style }}/css/guide.css" type="text/css" media="screen" />
   <link rel="stylesheet" href="{{ site.path.style }}/css/guide-toc.css" type="text/css" media="screen" />
-  <link rel="stylesheet" href="{{ site.path.style }}/css/code.css" type="text/css" media="screen" />
 
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
   
@@ -46,6 +44,7 @@ layout: base
     background-image: url("{{ site.path.style }}/img/clipboard-green-normal.png");
     background-size: 18px 21px;
     width: 18px; height: 21px;
+    overflow: auto;
 }
 .clipboard_button:hover, .clipboard_button.zeroclipboard-is-hover { background-image: url("{{ site.path.style }}/img/clipboard-green-hover.png"); }
 .clipboard_button:active, .clipboard_button.zeroclipboard-is-active { background-image: url("{{ site.path.style }}/img/clipboard-green-click.png"); }'

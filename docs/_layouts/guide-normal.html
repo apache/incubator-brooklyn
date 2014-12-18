@@ -19,10 +19,13 @@
 layout: guide-base
 ---
 
+{% include topmenu.html %}
+
 <div id="container">
 
     <div id="header">
-    
+
+<!--    
         <div id="identity">
             <a href="{{ site.path.website }}/">Brooklyn</a>
         </div>
@@ -34,13 +37,14 @@ layout: guide-base
             <li><a href="https://twitter.com/#!/search?q=brooklyncentral">Twitter</a></li>
             <li><a href="{{site.path.guide}}/meta/contact.html">Contact</a></li>
         </ul>
+-->
 
         <div id="menubar">  
 
 {% include topbar.html %}                    
 
             <form method="get" id="simple_google" class="searchform" action="http://www.google.com/search" method="get">
-                <input type="text" class="searchinput" name="brooklyn-search" placeholder="Search: type &amp; hit enter" />
+                <input type="text" class="searchinput" name="brooklyn-search" placeholder=" Search: type &amp; hit enter" />
                 <input type="hidden" name="q" value="" />
             </form>
             
@@ -69,13 +73,7 @@ layout: guide-base
       </div>
 
     </div><!--contentcontainer-->
-        
-    <div id="footer">
-        <p id="copyright">
-            <b>brooklyn is distributed under the Apache License v2.0.</b><br/>
-            brooklyn is a registered trademark of Cloudsoft Corporation.<br/>
-            &copy; 2013 Cloudsoft Corporation.
-        </p>
-    </div><!--footer -->
 
 </div><!--container-->
+
+{% include footer.html %}
