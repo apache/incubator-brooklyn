@@ -244,7 +244,11 @@ public class LocalLocationManager implements LocationManagerInternal {
                 it.setManagementContext(managementContext);
                 if (!mode.isReadOnly()) {
                     it.onManagementStarted();
-                    if (!mode.wasReadOnly()) {
+                    if (!mode.wasReadOnly() && !mode.isRebinding()) {
+                        // Never record event on rebind; this isn't the location (e.g. the VM) being "created"
+                        // so don't tell listeners that.
+                        // TODO The location-event history should be persisted; currently it is lost on
+                        // rebind, unless there is a listener that is persisting the state externally itself.
                         recordLocationEvent(it, Lifecycle.CREATED);
                     }
                 }

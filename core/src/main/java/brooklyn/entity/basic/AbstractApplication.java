@@ -239,7 +239,9 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     @Override
     public void onManagementStopped() {
         super.onManagementStopped();
-        recordApplicationEvent(Lifecycle.DESTROYED);
+        if (getManagementContext().isRunning()) {
+            recordApplicationEvent(Lifecycle.DESTROYED);
+        }
     }
     
     private void recordApplicationEvent(Lifecycle state) {
