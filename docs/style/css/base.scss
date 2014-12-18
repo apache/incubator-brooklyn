@@ -1,21 +1,27 @@
+---
+---
+
+{% include base-scss.scss %}
 
 /* BASIC STYLES
    ----------------------------------------------------------------------- */
-body {margin: 0px; padding: 10px 0px 20px 0px; font-family: arial, helvetica, sans-serif; background-color: #ffffff; color: #393939; }
+body {
+    margin: 0px; 
+    padding: 10px 0px 20px 0px; 
+    font-family: helvetica neue, helvetica, arial, sans-serif; 
+    background-color: #ffffff; 
+    color: $text_color; 
+}
 h1, h2, h3, h4, h5, h6 {}
 input, select, textarea {}
 p, li, label, td, th,input, select, textarea {}
-h1 {margin: 0 0 20px 0; padding: 0; font-size: 32px; font-weight: normal; color: #4d9d3a; border-bottom: 1px solid #e9e9e9;}
-h2 {margin: 1.25em 0 20px 0; font-size: 20px; font-weight: normal; color: #4f8243}
-h3 {margin: 1.1em 0 20px 0; font-size: 17px; font-weight: bold; color: #111111;}
-h4 {margin: 1.1em 0 20px 0; font-size: 15px; font-weight: bold;}
-textarea {width: 500px; padding: 2px 5px;}
 p, input, label, li {}
 p { margin: 0.75em 0; line-height: 1.4em;}
 form {padding: 0; margin: 0;}
 img {border: 0;}
-a {color: #4f9d3c;}
-a:hover {text-decoration: none;}
+
+a {color: $a_color;}
+a:hover {text-decoration: none; color: $a_hover_color;}
 
 
 /* WEBSITE MENUS
@@ -26,6 +32,37 @@ a:hover {text-decoration: none;}
     margin-top: -4px;
     margin-left: -30px !important;
 }
+
+@mixin icon($name) {
+  .icon-#{$name} {
+    width: 32px;
+    height: 32px;
+    background: url('{{ site.path.style }}/img/'+$name+'-256-black.png');
+    background-size: 32px 32px;
+  }
+  .icon-#{$name}:hover {
+    background: url('{{ site.path.style }}/img/'+$name+'-256-green.png');
+    background-size: 32px 32px;
+  }
+}
+
+.navbar {
+    @include icon('github');
+    @include icon('twitter');
+    @include icon('irc');
+}
+
+#navbar-icons-extra {
+    float: right;
+    margin-right: -114px;
+    padding-top: 10px;
+    a {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+    }
+}
+.navbar-icon-shift { margin-right: -2px; }
 
 /* pop-up menu */
 ul.nav li.dropdown:hover > ul.dropdown-menu {
@@ -62,45 +99,43 @@ html {
 
 /* CODE RENDERING
    ----------------------------------------------------------------------- */
-pre {
-    font-family: Consolas, Lucida Console, Monaco, monospace;
-    background-color:#e8eded;
-    padding: 0.4em 0.8em;
+@mixin nowrap() {
     white-space: pre;
     word-wrap: normal;
     overflow-y: scroll;
+}
+
+pre {
+    font-family: Consolas, Lucida Console, Monaco, monospace;
+    @include nowrap();
+    background-color:$code_bg_color;
+    padding: 0.4em 0.8em;
     overflow-x: scroll;
     /* override border and line-height on 'pre' from bootstrap */
     border: none;
     border-radius: 2px;
     line-height: 1;
+    code {
+        /* override settings on 'pre code' from bootstrap */
+        font-size: 85%; 
+        line-height: 1;
+        @include nowrap();
+        /** and no padding since pre already has some */ 
+        padding: 0px; 
+    }
 }
 code {
     font-family: Consolas, Lucida Console, Monaco, monospace;
     font-size: 85%;
     /* override color and bg-color on 'code' from bootstrap, and a touch more padding on top since font-size is smaller */
     color: black;
-    background-color:#e8eded;
+    background-color:$code_bg_color;
     padding: 4px 4px 2px 4px;
     border-radius: 3px;
 }
-pre code {
-    /* override settings on 'pre code' from bootstrap */
-    font-size: 85%; 
-    line-height: 1;
-    white-space: pre;
-    word-wrap: normal;
-    overflow-x: scroll;
-    /** and no padding since pre already has some */ 
-    padding: 0px; 
-}
-.highlight { background-color:#e8eded; } /* clipboard icon should have the same background color as the code */
+.highlight { background-color:$code_bg_color; } /* clipboard icon should have the same background color as the code */
 
-.nowrap {
-  white-space: pre;
-  word-wrap: normal;
-  overflow-x: scroll;
-}
+.nowrap { @include nowrap(); }
 
 /* LANDING PAGE
    ----------------------------------------------------------------------- */

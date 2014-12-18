@@ -35,7 +35,12 @@ under the License.
     $(window).load(function () { 
         $('body').css('padding-top', parseInt($('#header').css("height"))+10);        
         $('body').css('padding-bottom', parseInt($('#footer').css("height"))+10);
-    });</script>
+    });
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+</script>
+
 </body>
 
 </html>
