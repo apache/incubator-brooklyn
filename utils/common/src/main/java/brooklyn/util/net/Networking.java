@@ -78,12 +78,19 @@ public class Networking {
         if (port < MIN_PORT_NUMBER || port > MAX_PORT_NUMBER) {
             throw new IllegalArgumentException("Invalid start port: " + port);
         }
+
+        // For some operations it's not valid to pass ANY_NIC (0.0.0.0).
+        // We substitute for the loopback address in those cases.
+        InetAddress localAddressNotAny = (localAddress==null || ANY_NIC.equals(localAddress))
+                ? LOOPBACK
+                : ANY_NIC;
+
         Stopwatch watch = Stopwatch.createStarted();
         try {
             try {
                 Socket s = new Socket();
                 s.setSoTimeout(250);
-                s.connect(new InetSocketAddress(localAddress, port), 250);
+                s.connect(new InetSocketAddress(localAddressNotAny, port), 250);
                 try {
                     s.close();
                 } catch (Exception e) {}
@@ -123,7 +130,8 @@ public class Networking {
             
             
             if (localAddress==null || ANY_NIC.equals(localAddress)) {
-                // sometimes 0.0.0.0 can be bound to even if 127.0.0.1 has the port as in use; check 127.0.0.1 if 0.0.0.0 was requested
+                // sometimes 0.0.0.0 can be bound to even if 127.0.0.1 has the port as in use;
+                // check all interfaces if 0.0.0.0 was requested
                 Enumeration<NetworkInterface> nis = null;
                 try {
                     nis = NetworkInterface.getNetworkInterfaces();
