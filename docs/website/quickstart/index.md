@@ -27,9 +27,10 @@ starting.
 
 Please check the following items:
 
-- If you are using Mac OSX, open System Preferences, go to the Sharing item, and enable 'Remote Login'
-- You have a files named `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub`
-- `~/.ssh/id_rsa` is NOT readable by any other user
+- If you are using Mac OSX, open System Preferences, go to the Sharing item, and enable 'Remote Login'.
+- You have two files named `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub`.
+  - If these files do not exist, they can be created with `ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa`.
+- `~/.ssh/id_rsa` is NOT readable by any other user.
   - You can verify this with `ls -l ~/.ssh/id_rsa` - the line should start with `-rw-------` or `-r--------`. If it
     does not, execute `chmod 0600 ~/.ssh/id_rsa`.
 - The file `~/.ssh/authorized_keys` exists and contains a copy of your public key from `~/.ssh/id_rsa.pub`.
