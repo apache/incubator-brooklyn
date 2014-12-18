@@ -584,6 +584,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
             @Override
             public Session create() throws Exception {
                 checkConnected();
+                sshClientConnection.ssh.getConnection().setMaxPacketSize(256 * 1024);
                 session = sshClientConnection.ssh.startSession();
                 if (allocatePTY) {
                     session.allocatePTY(TERM, 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
