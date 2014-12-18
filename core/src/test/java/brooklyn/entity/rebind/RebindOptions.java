@@ -27,15 +27,15 @@ import brooklyn.management.ManagementContext;
  * See {@link RebindTestFixture#rebind(RebindOptions)} and {@link RebindTestUtils#rebind(RebindOptions}}.
  */
 public class RebindOptions {
-    boolean checkSerializable;
-    boolean terminateOrigManagementContext;
-    RebindExceptionHandler exceptionHandler;
-    ManagementContext origManagementContext;
-    ManagementContext newManagementContext;
-    File mementoDir;
-    File mementoDirBackup;
-    ClassLoader classLoader;
-    PersistenceObjectStore objectStore;
+    public boolean checkSerializable;
+    public boolean terminateOrigManagementContext;
+    public RebindExceptionHandler exceptionHandler;
+    public ManagementContext origManagementContext;
+    public ManagementContext newManagementContext;
+    public File mementoDir;
+    public File mementoDirBackup;
+    public ClassLoader classLoader;
+    public PersistenceObjectStore objectStore;
     
     public static RebindOptions create() {
         return new RebindOptions();
