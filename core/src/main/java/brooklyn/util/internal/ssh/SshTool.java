@@ -18,8 +18,7 @@
  */
 package brooklyn.util.internal.ssh;
 
-import static brooklyn.entity.basic.ConfigKeys.newConfigKey;
-import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
+import static brooklyn.entity.basic.ConfigKeys.*;
 
 import java.io.File;
 import java.io.InputStream;
@@ -61,6 +60,7 @@ public interface SshTool extends ShellTool {
     public static final ConfigKey<String> PROP_PRIVATE_KEY_PASSPHRASE = newStringConfigKey("privateKeyPassphrase", "the passphrase for the ssh private key", null);
     public static final ConfigKey<Boolean> PROP_STRICT_HOST_KEY_CHECKING = newConfigKey("strictHostKeyChecking", "whether to check the remote host's identification; defaults to false", false);
     public static final ConfigKey<Boolean> PROP_ALLOCATE_PTY = newConfigKey("allocatePTY", "whether to allocate PTY (vt100); if true then stderr is sent to stdout, but sometimes required for sudo'ing due to requiretty", false);
+    public static final ConfigKey<Integer> PROP_MAX_PACKET_SIZE = newIntegerConfigKey("maxPacketSize", "maximum buffer size for output; default 256KiB", 256 * 1024);
 
     public static final ConfigKey<Long> PROP_CONNECT_TIMEOUT = newConfigKey("connectTimeout", "Timeout in millis when establishing an SSH connection; if 0 then uses default (usually 30s)", 0L);
     public static final ConfigKey<Long> PROP_SESSION_TIMEOUT = newConfigKey("sessionTimeout", "Timeout in millis for an ssh session; if 0 then uses default", 0L);
