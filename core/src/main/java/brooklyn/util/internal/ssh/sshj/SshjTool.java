@@ -96,6 +96,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
 
     protected final int sshTries;
     protected final long sshTriesTimeout;
+    protected int maxPacketSize;
     protected final BackoffLimitedRetryHandler backoffLimitedRetryHandler;
 
     /** Terminal type name for {@code allocatePTY} option. */
@@ -131,6 +132,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         protected int sshTries = 4;  //allow 4 tries by default, much safer
         protected long sshTriesTimeout = 2*60*1000;  //allow 2 minutes by default (so if too slow trying sshTries times, abort anyway)
         protected long sshRetryDelay = 50L;
+        protected int maxPacketSize;
         
         @Override
         public B from(Map<String,?> props) {
@@ -140,6 +142,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
             sshRetryDelay = getOptionalVal(props, PROP_SSH_RETRY_DELAY);
             connectTimeout = getOptionalVal(props, PROP_CONNECT_TIMEOUT);
             sessionTimeout = getOptionalVal(props, PROP_SESSION_TIMEOUT);
+            maxPacketSize = getOptionalVal(props, PROP_MAX_PACKET_SIZE);
             return self();
         }
         public B connectTimeout(int val) {
@@ -156,6 +159,9 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
         public B sshRetryDelay(long val) {
             this.sshRetryDelay = val; return self();
+        }
+        public B maxPacketSize(Integer val) {
+            this.maxPacketSize = val; return self();
         }
         @Override
         @SuppressWarnings("unchecked")
@@ -174,6 +180,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         sshTries = builder.sshTries;
         sshTriesTimeout = builder.sshTriesTimeout;
         backoffLimitedRetryHandler = new BackoffLimitedRetryHandler(sshTries, builder.sshRetryDelay);
+        maxPacketSize = builder.maxPacketSize;
 
         sshClientConnection = SshjClientConnection.builder()
                 .hostAndPort(HostAndPort.fromParts(host, port))
@@ -584,6 +591,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
             @Override
             public Session create() throws Exception {
                 checkConnected();
+                sshClientConnection.ssh.getConnection().setMaxPacketSize(maxPacketSize);
                 session = sshClientConnection.ssh.startSession();
                 if (allocatePTY) {
                     session.allocatePTY(TERM, 80, 24, 0, 0, Collections.<PTYMode, Integer> emptyMap());
