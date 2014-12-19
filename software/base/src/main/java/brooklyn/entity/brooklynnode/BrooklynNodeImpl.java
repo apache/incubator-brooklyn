@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -33,8 +34,8 @@ import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
@@ -121,7 +122,9 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void preStopConfirmCustom() {
         super.preStopConfirmCustom();
-        if (Boolean.TRUE.equals(getAttribute(BrooklynNode.WEB_CONSOLE_ACCESSIBLE))) {
+        ConfigBag stopParameters = BrooklynTaskTags.getCurrentEffectorParameters();
+        if (Boolean.TRUE.equals(getAttribute(BrooklynNode.WEB_CONSOLE_ACCESSIBLE)) &&
+                stopParameters != null && !stopParameters.containsKey(ShutdownEffector.STOP_APPS_FIRST)) {
             Preconditions.checkState(getChildren().isEmpty(), "Can't stop instance with running applications.");
         }
     }
@@ -133,19 +136,63 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         // Shutdown only if accessible: any of stop_* could have already been called.
         // Don't check serviceUp=true because stop() will already have set serviceUp=false && expectedState=stopping
         if (Boolean.TRUE.equals(getAttribute(BrooklynNode.WEB_CONSOLE_ACCESSIBLE))) {
-            DynamicTasks.queue(Effectors.invocation(this, SHUTDOWN, MutableMap.of(ShutdownEffector.REQUEST_TIMEOUT, Duration.ONE_MINUTE)));
+            queueShutdownTask();
+            queueWaitExitTask();
         } else {
             log.info("Skipping children.isEmpty check and shutdown call, because web-console not up for {}", this);
         }
     }
     
+    private void queueWaitExitTask() {
+        //give time to the process to die gracefully after closing the shutdown call
+        DynamicTasks.queue(Tasks.builder().name("wait for graceful stop").body(new Runnable() {
+            @Override
+            public void run() {
+                DynamicTasks.markInessential();
+                boolean cleanExit = Repeater.create()
+                    .until(new Callable<Boolean>() {
+                        @Override
+                        public Boolean call() throws Exception {
+                            return !getDriver().isRunning();
+                        }
+                    })
+                    .backoffTo(Duration.ONE_SECOND)
+                    .limitTimeTo(Duration.ONE_MINUTE)
+                    .run();
+                if (!cleanExit) {
+                    log.warn("Tenant " + this + " didn't stop cleanly after shutdown. Timeout waiting for process exit.");
+                }
+            }
+        }).build());
+    }
+
     @Override
     protected void postStop() {
         super.postStop();
-        //Don't unmanage in entity's task context as it will self-cancel the task.
-        //The external thread doesn't guarantee that the unmanage will be called *after* the stop effector completes.
-        //How to delay and make sure that we don't cancel the (almost-complete) stop effector?
-        new UnmanageThread().start();
+        ConfigBag stopParameters = BrooklynTaskTags.getCurrentEffectorParameters();
+        //unmanage only if stopping the machine
+        if (stopParameters == null || stopParameters.get(StopSoftwareParameters.STOP_MACHINE)) {
+            //Don't unmanage in entity's task context as it will self-cancel the task.
+            //The external thread doesn't guarantee that the unmanage will be called *after* the stop effector completes.
+            //How to delay and make sure that we don't cancel the (almost-complete) stop effector?
+            new UnmanageThread().start();
+        }
+    }
+
+    private void queueShutdownTask() {
+        ConfigBag stopParameters = BrooklynTaskTags.getCurrentEffectorParameters();
+        ConfigBag shutdownParameters;
+        if (stopParameters != null) {
+            shutdownParameters = ConfigBag.newInstanceCopying(stopParameters);
+        } else {
+            shutdownParameters = ConfigBag.newInstance();
+        }
+        shutdownParameters.putIfAbsent(ShutdownEffector.REQUEST_TIMEOUT, Duration.ONE_MINUTE);
+        shutdownParameters.putIfAbsent(ShutdownEffector.FORCE_SHUTDOWN_ON_ERROR, Boolean.TRUE);
+        TaskAdaptable<Void> shutdownTask = Effectors.invocation(this, SHUTDOWN, shutdownParameters);
+        //Mark inessential so that even if it fails the process stop task will run afterwards to clean up.
+        TaskTags.markInessential(shutdownTask);
+        DynamicTasks.queue(shutdownTask);
     }
 
     public static class DeployBlueprintEffectorBody extends EffectorBody<String> implements DeployBlueprintEffector {
@@ -238,15 +285,9 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 }
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                ServiceStateLogic.setExpectedState(entity(), Lifecycle.ON_FIRE);
-                if (initialState!=Lifecycle.RUNNING) {
-                    // ignore failure in this task if the node is not currently running
-                    Tasks.markInessential();
-                }
                 throw new PropagatedRuntimeException("Error shutting down remote node "+entity()+" (in state "+initialState+"): "+Exceptions.collapseText(e), e);
             }
             ServiceNotUpLogic.updateNotUpIndicator(entity(), SHUTDOWN.getName(), "Shutdown of remote node has completed successfuly");
-            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
             return null;
         }
 
@@ -266,20 +307,12 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         @Override
         public Void call(ConfigBag parameters) {
             Duration timeout = parameters.get(TIMEOUT);
-            MutableMap<?, ?> params = MutableMap.of(
-                    ShutdownEffector.STOP_APPS_FIRST, Boolean.FALSE,
-                    ShutdownEffector.SHUTDOWN_TIMEOUT, timeout,
-                    ShutdownEffector.REQUEST_TIMEOUT, timeout);
-            Entity entity = entity();
-            TaskAdaptable<Void> shutdownTask = Effectors.invocation(entity, SHUTDOWN, params);
-            if (!entity.getAttribute(SERVICE_UP)) {
-                TaskTags.markInessential(shutdownTask);
-            }
-            DynamicTasks.queue(shutdownTask).asTask().getUnchecked();
-            waitForShutdown(entity, Duration.ONE_MINUTE);
-            
-            DynamicTasks.queue(Effectors.invocation(entity(), STOP, ConfigBag.EMPTY)).asTask().getUnchecked();
-            Entities.destroy(entity);
+
+            ConfigBag stopParameters = ConfigBag.newInstanceCopying(parameters);
+            stopParameters.put(ShutdownEffector.STOP_APPS_FIRST, Boolean.FALSE);
+            stopParameters.putIfAbsent(ShutdownEffector.SHUTDOWN_TIMEOUT, timeout);
+            stopParameters.putIfAbsent(ShutdownEffector.REQUEST_TIMEOUT, timeout);
+            DynamicTasks.queue(Effectors.invocation(entity(), STOP, stopParameters)).asTask().getUnchecked();
             return null;
         }
     }
@@ -290,30 +323,14 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         @Override
         public Void call(ConfigBag parameters) {
             Duration timeout = parameters.get(TIMEOUT);
-            MutableMap<?, ?> params = MutableMap.of(
-                    ShutdownEffector.STOP_APPS_FIRST, Boolean.TRUE,
-                    ShutdownEffector.SHUTDOWN_TIMEOUT, timeout,
-                    ShutdownEffector.REQUEST_TIMEOUT, timeout);
-            Entity entity = entity();
-            TaskAdaptable<Void> shutdownTask = Effectors.invocation(entity, SHUTDOWN, params);
-            if (!entity.getAttribute(SERVICE_UP)) {
-                TaskTags.markInessential(shutdownTask);
-            }
-            DynamicTasks.queue(shutdownTask).asTask().getUnchecked();
-            waitForShutdown(entity, Duration.ONE_MINUTE);
-            
-            DynamicTasks.queue(Effectors.invocation(entity(), STOP, ConfigBag.EMPTY)).asTask().getUnchecked();
-            Entities.destroy(entity);
+
+            ConfigBag stopParameters = ConfigBag.newInstanceCopying(parameters);
+            stopParameters.put(ShutdownEffector.STOP_APPS_FIRST, Boolean.TRUE);
+            stopParameters.putIfAbsent(ShutdownEffector.SHUTDOWN_TIMEOUT, timeout);
+            stopParameters.putIfAbsent(ShutdownEffector.REQUEST_TIMEOUT, timeout);
+            DynamicTasks.queue(Effectors.invocation(entity(), STOP, stopParameters)).asTask().getUnchecked();
             return null;
         }
-    }
-
-    protected static void waitForShutdown(Entity entity, Duration timeout) {
-        Repeater.create()
-            .until(entity, EntityPredicates.attributeEqualTo(BrooklynNode.WEB_CONSOLE_ACCESSIBLE, false))
-            .backoffTo(Duration.FIVE_SECONDS)
-            .limitTimeTo(timeout)
-            .runRequiringTrue();
     }
 
     public List<String> getClasspath() {
