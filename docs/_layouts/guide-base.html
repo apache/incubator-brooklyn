@@ -29,7 +29,6 @@ layout: base
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
   
 	<!-- Sidebar/ToC Scripts and CSS -->
-	<script src="{{ site.path.style }}/deps/jquery.js"></script>
 	<script src="{{ site.path.style }}/deps/jquery-ui/jquery-ui-1.8.18.custom.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="{{ site.path.style }}/deps/jquery-ui/jquery-ui-1.8.18.custom.css" />
 	
@@ -77,8 +76,8 @@ $(document).ready(function() {
 
     <script type="text/javascript">
         // initialise menu delay
-        jQuery(function(){
-            jQuery('ul#mainmenu').superfish({ 
+        $(document).ready(function() {
+              $('ul#mainmenu').superfish({ 
                 autoArrows:  false,  // disable generation of arrow mark-up 
                 dropShadows: false,  // disable drop shadows 
                 disableHI:   true,   // set to true to disable hoverIntent detection 
