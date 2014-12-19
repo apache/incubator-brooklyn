@@ -43,8 +43,7 @@ public class PostgreSqlRebindIntegrationTest extends RebindTestFixtureWithApp {
 
     @Test(groups = {"Integration"})
     public void testRebind() throws Exception {
-        origApp.createAndManageChild(EntitySpec.create(PostgreSqlNode.class)
-                .configure("mongodbConfTemplateUrl", "classpath:///test-mongodb.conf"));
+        origApp.createAndManageChild(EntitySpec.create(PostgreSqlNode.class));
         origApp.start(ImmutableList.of(loc));
 
         // rebind
