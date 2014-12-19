@@ -15,7 +15,7 @@
 { "title": "Service State",
   "file":  "{{ site.path.guide }}/use/guide/defining-applications/service-state.html" },
 { "title": "Maven Archetype",
-  "file":  "{{ site.path.guide }}/use/guide/defining-applications/archetype.html" }
+  "file":  "{{ site.path.guide }}/use/guide/defining-applications/archetype.html" },
 { "title": "Catalog Maintenance",
   "file":  "{{ site.path.guide }}/use/guide/defining-applications/catalog-maintenance.html" }
 ]
