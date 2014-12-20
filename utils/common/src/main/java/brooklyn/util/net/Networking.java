@@ -83,7 +83,7 @@ public class Networking {
         // We substitute for the loopback address in those cases.
         InetAddress localAddressNotAny = (localAddress==null || ANY_NIC.equals(localAddress))
                 ? LOOPBACK
-                : ANY_NIC;
+                : localAddress;
 
         Stopwatch watch = Stopwatch.createStarted();
         try {
