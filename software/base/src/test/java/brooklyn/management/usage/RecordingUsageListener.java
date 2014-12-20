@@ -35,8 +35,8 @@ public class RecordingUsageListener implements UsageListener {
     
     @Override
     public void onApplicationEvent(String applicationId, String applicationName, String entityType, 
-            Map<String, String> metadata, ApplicationEvent event) {
-        events.add(MutableList.of("application", applicationId, applicationName, entityType, metadata, event));
+            String catalogItemId, Map<String, String> metadata, ApplicationEvent event) {
+        events.add(MutableList.of("application", applicationId, applicationName, entityType, catalogItemId, metadata, event));
     }
 
     @Override
