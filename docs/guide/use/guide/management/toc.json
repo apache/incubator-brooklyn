@@ -15,4 +15,6 @@
 { "title": "Key APIs",
   "file":  "{{ site.path.guide }}/use/guide/management/index.html#key-apis" }, 
 { "title": "Sensors and Effectors",
-  "file":  "{{ site.path.guide }}/use/guide/management/index.html#sensors-and-effectors" }]
+  "file":  "{{ site.path.guide }}/use/guide/management/index.html#sensors-and-effectors" },
+{ "title": "Entitlements",
+  "file":  "{{ site.path.guide }}/use/guide/management/entitlements.html" }]
