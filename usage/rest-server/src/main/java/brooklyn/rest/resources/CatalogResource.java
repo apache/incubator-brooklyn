@@ -42,6 +42,8 @@ import brooklyn.catalog.internal.CatalogItemComparator;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.rest.api.CatalogApi;
@@ -89,6 +91,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @SuppressWarnings("unchecked")
     @Override
     public Response create(String yaml) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.ADD_CATALOG_ITEM, yaml)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to add catalog item",
+                Entitlements.getEntitlementContext().user());
+        }
+        
         CatalogItem<?,?> item;
         try {
             item = brooklyn().getCatalog().addItem(yaml);
@@ -122,6 +129,12 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     public Response resetXml(String xml) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, null) ||
+            !Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.ADD_CATALOG_ITEM, null)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
+                Entitlements.getEntitlementContext().user());
+        }
+
         ((BasicBrooklynCatalog)mgmt().getCatalog()).reset(CatalogDto.newDtoFromXmlContents(xml, "REST reset"));
         return Response.ok().build();
     }
@@ -129,6 +142,10 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Override
     @Deprecated
     public void deleteEntity(String entityId) throws Exception {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(entityId, "delete"))) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
+                Entitlements.getEntitlementContext().user());
+        }
         try {
             CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), entityId);
             if (item==null)
@@ -141,11 +158,15 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     public void deleteEntity(String entityId, String version) throws Exception {
-      try {
-          brooklyn().getCatalog().deleteCatalogItem(entityId, version);
-      } catch (NoSuchElementException e) {
-          throw WebResourceUtils.notFound("Entity with id '%s:%s' not found", entityId, version);
-      }
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(entityId+(Strings.isBlank(version) ? "" : ":"+version), "delete"))) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
+                Entitlements.getEntitlementContext().user());
+        }
+        try {
+            brooklyn().getCatalog().deleteCatalogItem(entityId, version);
+        } catch (NoSuchElementException e) {
+            throw WebResourceUtils.notFound("Entity with id '%s:%s' not found", entityId, version);
+        }
     }
 
     @Override
@@ -162,6 +183,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Override
     @Deprecated
     public CatalogEntitySummary getEntity(String entityId) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, entityId)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
+                Entitlements.getEntitlementContext().user());
+        }
+
         CatalogItem<? extends Entity,EntitySpec<?>> result =
                 CatalogUtils.getCatalogItemOptionalVersion(mgmt(), Entity.class, entityId);
 
@@ -174,6 +200,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     
     @Override
     public CatalogEntitySummary getEntity(String entityId, String version) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, entityId+(Strings.isBlank(version)?"":":"+version))) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
+                Entitlements.getEntitlementContext().user());
+        }
+
         //TODO These casts are not pretty, we could just provide separate get methods for the different types?
         //Or we could provide asEntity/asPolicy cast methods on the CataloItem doing a safety check internally
         @SuppressWarnings("unchecked")
@@ -206,6 +237,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Override
     @Deprecated
     public CatalogItemSummary getPolicy(String policyId) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, policyId)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
+                Entitlements.getEntitlementContext().user());
+        }
+
         CatalogItem<? extends Policy, PolicySpec<?>> result =
             CatalogUtils.getCatalogItemOptionalVersion(mgmt(), Policy.class, policyId);
 
@@ -218,6 +254,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     public CatalogItemSummary getPolicy(String policyId, String version) throws Exception {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, policyId+(Strings.isBlank(version)?"":":"+version))) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
+                Entitlements.getEntitlementContext().user());
+        }
+
         @SuppressWarnings("unchecked")
         CatalogItem<? extends Policy, PolicySpec<?>> result =
                 (CatalogItem<? extends Policy, PolicySpec<?>>)brooklyn().getCatalog().getCatalogItem(policyId, version);
@@ -237,6 +278,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
             filters.add(CatalogPredicates.xml(StringPredicates.containsRegex(regex)));
         if (Strings.isNonEmpty(fragment))
             filters.add(CatalogPredicates.xml(StringPredicates.containsLiteralIgnoreCase(fragment)));
+        
+        filters.add(CatalogPredicates.entitledToSee(mgmt()));
 
         ImmutableList<CatalogItem<Object, Object>> sortedItems =
                 FluentIterable.from(brooklyn().getCatalog().getCatalogItems())
@@ -248,12 +291,22 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @Override
     @Deprecated
     public Response getIcon(String itemId) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, itemId)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
+                Entitlements.getEntitlementContext().user());
+        }
+
         CatalogItem<?,?> result = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), itemId);
         return getCatalogItemIcon(result);
     }
 
     @Override
     public Response getIcon(String itemId, String version) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, itemId+(Strings.isBlank(version)?"":":"+version))) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
+                Entitlements.getEntitlementContext().user());
+        }
+        
         CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(itemId, version);
         return getCatalogItemIcon(result);
     }

@@ -114,7 +114,9 @@ public abstract class EntitlementManagerAdapter implements EntitlementManager {
     }
 
     protected abstract boolean isEntitledToSeeCatalogItem(EntitlementContext context, String catalogItemId);
+    /** passes item to be added, either yaml, or possibly null if any addition allowed (eg when resetting) */
     protected abstract boolean isEntitledToAddCatalogItem(EntitlementContext context, Object catalogItemBeingAdded);
+    /** passes item being modified, as ID and description of modification, both possibly null if any modification is allowed (eg when resetting) */
     protected abstract boolean isEntitledToModifyCatalogItem(EntitlementContext context, String catalogItemId, Object catalogItemModification);
     protected abstract boolean isEntitledToSeeSensor(EntitlementContext context, Entity entity, String sensorName);
     protected abstract boolean isEntitledToSeeEntity(EntitlementContext context, Entity entity);

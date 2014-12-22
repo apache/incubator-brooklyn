@@ -24,6 +24,8 @@ import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 
@@ -101,4 +103,15 @@ public class CatalogPredicates {
             }
         };
     }
+
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> entitledToSee(final ManagementContext mgmt) {
+        return new Predicate<CatalogItem<T,SpecT>>() {
+            @Override
+            public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+                return (item != null) && 
+                    Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, item.getCatalogItemId());
+            }
+        };
+    }
+    
 }
