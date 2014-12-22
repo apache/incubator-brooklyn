@@ -76,6 +76,16 @@ public abstract class YamlLauncherAbstract {
     public Application launchAppYaml(String url) {
         try {
             Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(url));
+            Application app = launchAppYaml(input);
+            log.info("Application started from YAML file "+url+": "+app);
+            return app;
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    public Application launchAppYaml(Reader input) {
+        try {
             AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
 
             Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
@@ -88,7 +98,7 @@ public abstract class YamlLauncherAbstract {
             log.info("Waiting on "+tasks.size()+" task(s)");
             for (Task<?> t: tasks) t.blockUntilEnded();
 
-            log.info("Application started from YAML file "+url+": "+app);
+            log.info("Application started from YAML: "+app);
             Entities.dumpInfo(app);
             return (Application)app;
         } catch (Exception e) {

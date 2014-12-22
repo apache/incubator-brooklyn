@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.database.mysql;
+package brooklyn.entity.nosql.mongodb;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +30,13 @@ import brooklyn.entity.proxying.EntitySpec;
  * Tests restart of the software *process* (as opposed to the VM).
  */
 @Test(groups="Integration")
-public class MySqlRestartIntegrationTest extends AbstractSoftwareProcessRestartIntegrationTest {
+public class MongoDBRestartIntegrationTest extends AbstractSoftwareProcessRestartIntegrationTest {
     
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(MySqlRestartIntegrationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoDBRestartIntegrationTest.class);
 
     @Override
     protected EntitySpec<? extends SoftwareProcess> newEntitySpec() {
-        return EntitySpec.create(MySqlNode.class);
+        return EntitySpec.create(MongoDBServer.class);
     }
 }
