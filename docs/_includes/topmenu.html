@@ -1,0 +1,55 @@
+<nav class="navbar navbar-default navbar-fixed-top" id="header" role="navigation">
+    <div class="container">
+
+            <div id="navbar-icons-extra">
+              <a href="https://github.com/apache/incubator-brooklyn" class="navbar-icon navbar-icon-shift icon-github"
+                data-toggle="tooltip" data-placement="bottom" title="GitHub: apache/incubator-brooklyn" data-delay="400"/>
+              <a href="https://twitter.com/#!/search?q=brooklyncentral" class="navbar-icon navbar-icon-shift icon-twitter"
+                data-toggle="tooltip" data-placement="bottom" title="Twitter: @brooklyncentral" data-delay="400"/>
+              <a href="http://webchat.freenode.net/?channels=brooklyncentral" class="navbar-icon icon-irc"
+                data-toggle="tooltip" data-placement="bottom" title="IRC: freenode #brooklyncentral" data-delay="400"/>
+              <!-- extra a element seems needed else landing page first menu item copies an icon above (!?) -->
+              <a style="width: 0px; height: 0px;"></a>
+            </div>
+            
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                {% if page.navgroup != 'home' %}<a class="navbar-brand" href="{{site.path.website}}/"><img src="{{site.path.style}}/img/apache-brooklyn-logo-244px-wide.png" alt="brooklyn"></a>{% endif %}
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    {% for navgroup in site.data.navgroups %}
+                    {% if navgroup.page.menu2 %}
+                    <li class="dropdown{% if page.navgroup == navgroup.id %} active{% endif %}">
+                        <a href="{{navgroup.page.url}}">{{navgroup.title}}</a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a href="{{navgroup.page.url}}">{{navgroup.title_in_menu}}</a>
+                            </li>
+                            <li class="divider"></li>
+                            {% for child in navgroup.page.menu2 %}
+                            <li>
+                                <a href="{{child.reference.url}}">{{child.reference.title}}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li><!-- {{ navgroup.id }} -->
+                    {% else %}
+                    <li class="{% if page.navgroup == navgroup.id %}active{% endif %}"><a href="{{navgroup.page.url}}">{{navgroup.title}}</a></li><!-- {{ navgroup.id }} -->
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </div><!-- /.navbar-collapse -->
+            
+        </div><!-- /.container-fluid -->
+    </div>
+</nav>

@@ -30,14 +30,18 @@ First time user? The [getting started]({{ site.path.guide }}/use/guide/quickstar
 	<td><small><a href='{{ this_alljar_url_jar }}.asc'>PGP</a>, <a href='{{ this_alljar_url_jar }}.sha1'>SHA1</a></small></td>
   </tr>
   <tr>
-    <td style='text-align:left'>Other Variants</td>
-    <td style='text-align:left'><a href='{{ this_anything_url_search }}' title='Other Variants'><i>listing</i></a></td>
-    <td> - </td>
+    <td style='text-align:left'>Apache Repo</td>
+    <td style='text-align:left'>
+      <a href='{{ this_anything_url_search }}' title='Search'><i>GUI</i></a>
+      —
+      <a href='{{ this_dist_url_list }}' title='List'><i>dir</i></a>
+    </td>
+    <td> — </td>
   </tr>
   <tr>
-	<td style='text-align:left'>Release notes</td>
+	<td style='text-align:left'>Release Notes</td>
 	<td style='text-align:left'><a href='{{ site.path.guide }}/start/release-notes.html'>{{ site.brooklyn-version }}</a></td>
-	<td> - </td>
+	<td> — </td>
   </tr>
 </table>
 
@@ -99,7 +103,11 @@ A good example to start with is the [Elastic Web Cluster]({{site.path.guide}}/us
 
 If you use Maven, you can add Brooklyn with the following in your pom:
 
+<!-- the comment is included due to a jekyll/highlight bug which
+     removes indentation on the first line in a highlight block;
+     we want the actual XML indented so you can cut and paste into a pom.xml sensibly -->  
 {% highlight xml %}
+<!-- include all Brooklyn items in our project -->
     <dependencies>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
@@ -118,18 +126,18 @@ If you wish to use the Apache snapshot repo and/or Cloudsoft repositories,
 you can add some of the following sections:
 
 {% highlight xml %}
+<!-- include repos for snapshot items and other dependencies -->
     <repositories>
-        <repository>
-            <id>cloudsoft-cloudfront-releases-repo</id>
-            <url>http://developers.cloudsoftcorp.com/maven/releases/</url>
-        </repository>
-        <!-- optional for snapshot versions -->
         <repository>
             <id>apache-nexus-snapshots</id>
             <name>Apache Nexus Snapshots</name>
             <url>https://repository.apache.org/content/repositories/snapshots</url>
             <releases> <enabled>false</enabled> </releases>
             <snapshots> <enabled>true</enabled> </snapshots>
+        </repository>
+        <repository>
+            <id>cloudsoft-cloudfront-releases-repo</id>
+            <url>http://developers.cloudsoftcorp.com/maven/releases/</url>
         </repository>
         <repository>
             <id>cloudsoft-cloudfront-snapshots-repo</id>

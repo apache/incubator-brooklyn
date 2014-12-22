@@ -13,7 +13,7 @@ navgroups:
 - { id: download, page: download.md, title: download }
 - { id: getstarted, page: quickstart/index.md, title: get started, title_in_menu: Get Started }
 - { id: documentation, page: documentation.md, title: documentation, title_in_menu: All Documentation }
-- { id: website/community, page: community/index.md, title: community, title_in_menu: Community Home }
+- { id: community, page: community/index.md, title: community, title_in_menu: Community Home }
 ---
 
 <div class="jumbotron">

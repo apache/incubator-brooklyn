@@ -14,21 +14,23 @@
 {% capture apache_snapshots_repo_groupid_url %}{{ this_repo_base_url }}/content/repositories/snapshots/{{ brooklyn_group_id_path }}{% endcapture %}
 {% capture apache_releases_repo_groupid_url %}{{ this_repo_base_url }}/content/repositories/releases/{{ brooklyn_group_id_path }}{% endcapture %}
 
+{% capture this_repo_base_url_content %}{{ apache_snapshots_repo_groupid_url }}{% endcapture %}
+{% capture this_dist_url_list %}{{ this_repo_base_url_content }}/brooklyn-dist/{{ site.brooklyn-version }}/{% endcapture %}
+{% capture this_alljar_url_list %}{{ this_repo_base_url_content }}/brooklyn-all/{{ site.brooklyn-version }}/{% endcapture %}
+
 {% if SNAPSHOT %}
-  {% capture this_repo_base_url_content %}{{ apache_snapshots_repo_groupid_url }}{% endcapture %}
   {% capture this_dist_url_zip %}{{ this_repo_base_url_artifact }}?r=snapshots&g={{ brooklyn_group_id }}&a=brooklyn-dist&v={{ site.brooklyn-version }}&e=zip&c=dist{% endcapture %}
   {% capture this_dist_url_tgz %}{{ this_repo_base_url_artifact }}?r=snapshots&g={{ brooklyn_group_id }}&a=brooklyn-dist&v={{ site.brooklyn-version }}&e=tgz&c=dist{% endcapture %}
   {% capture this_alljar_url_jar %}{{ this_repo_base_url_artifact }}?r=snapshots&g={{ brooklyn_group_id }}&a=brooklyn-all&v={{ site.brooklyn-version }}&e=jar&c=with-dependencies{% endcapture %}
 {% else %}<!--- RELEASE -->
-  {% capture this_repo_base_url_content %}{{ apache_releases_repo_groupid_url }}{% endcapture %}
-  {% capture this_dist_url_zip %}{{ this_repo_base_url_content }}/brooklyn-dist/{{ site.brooklyn-version }}/brooklyn-dist-{{ site.brooklyn-version }}-dist.zip{% endcapture %}
-  {% capture this_dist_url_tgz %}{{ this_repo_base_url_content }}/brooklyn-dist/{{ site.brooklyn-version }}/brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz{% endcapture %}
-  {% capture this_alljar_url_jar %}{{ this_repo_base_url_content }}/brooklyn-all/{{ site.brooklyn-version }}/brooklyn-all-{{ site.brooklyn-version }}-with-dependencies.jar{% endcapture %}
+  {% capture this_dist_url_zip %}{{ this_dist_url_list }}/brooklyn-dist-{{ site.brooklyn-version }}-dist.zip{% endcapture %}
+  {% capture this_dist_url_tgz %}{{ this_dist_url_list }}/brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz{% endcapture %}
+  {% capture this_alljar_url_jar %}{{ this_alljar_url_list }}/brooklyn-all-{{ site.brooklyn-version }}-with-dependencies.jar{% endcapture %}
 {% endif %}
 
 {% capture this_anything_url_search %}{{ this_repo_base_url_search }};gav~{{ brooklyn_group_id }}~~{{ site.brooklyn-version }}~~{% endcapture %}
 {% capture this_dist_url_search %}{{ this_repo_base_url_search }};gav~{{ brooklyn_group_id }}~brooklyn-dist~{{ site.brooklyn-version }}~~{% endcapture %}
-{% capture this_dist_url_search %}{{ this_repo_base_url_search }};gav~{{ brooklyn_group_id }}~brooklyn-all~{{ site.brooklyn-version }}~~{% endcapture %}
+{% capture this_alljar_url_search %}{{ this_repo_base_url_search }};gav~{{ brooklyn_group_id }}~brooklyn-all~{{ site.brooklyn-version }}~~{% endcapture %}
 
 <!-- OLD things -->
 
