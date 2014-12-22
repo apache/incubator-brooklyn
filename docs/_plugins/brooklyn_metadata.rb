@@ -15,6 +15,7 @@ module BrooklynMetadata
       is_snapshot = BrooklynMetadata::BROOKLYN_VERSION.end_with?('-SNAPSHOT')
       
       if is_snapshot
+        git_branch = 'master' unless site.data['git_branch']
         url_set = {
             "search" => {
                 "all" => "https://oss.sonatype.org/index.html#nexus-search;gav~io.brooklyn~~#{ BrooklynMetadata::BROOKLYN_VERSION }~~",
@@ -31,7 +32,9 @@ module BrooklynMetadata
                 "jar" => "https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=io.brooklyn&v=#{ BrooklynMetadata::BROOKLYN_VERSION }}&a=brooklyn-all&c=with-dependencies&e=jar"
             }
         }
+        
       else
+        git_branch = BrooklynMetadata::BROOKLYN_VERSION unless site.data['git_branch']
         url_set = {
             "search" => {
                 "all" => "http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22io.brooklyn%22%20AND%20v%3A%22#{ BrooklynMetadata::BROOKLYN_VERSION }%22",
@@ -50,11 +53,17 @@ module BrooklynMetadata
         }
       end
       
+      url_set["git"] = "https://github.com/apache/incubator-brooklyn/tree/#{ git_branch }"
+      
       site.data['brooklyn'] = {
           "version" => BrooklynMetadata::BROOKLYN_VERSION,
           "is_snapshot" => is_snapshot,
           "url" => url_set
       }
+      
+      # TODO check that "#{ brooklyn['url']['git'] }/core/src/main/java/brooklyn/BrooklynVersion.java"
+      # exists AND contains "versionFromStatic = \"#{ brooklyn['version'] }\""
+  
     end
   end
 end
