@@ -60,6 +60,7 @@ import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.rest.api.ApplicationApi;
@@ -281,7 +282,8 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
             CreationResult<? extends Application, Void> result = EntityManagementUtils.createStarting(mgmt(), at);
             
             Application app = result.get();
-            if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, Startable.START.getName()))) {
+            if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, 
+                StringAndArgument.of(Startable.START.getName(), null)))) {
                 throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
                     Entitlements.getEntitlementContext().user(), at.getType());
             }
@@ -358,7 +360,8 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     @Override
     public Response delete(String application) {
         Application app = brooklyn().getApplication(application);
-        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, Entitlements.LifecycleEffectors.DELETE))) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, 
+            StringAndArgument.of(Entitlements.LifecycleEffectors.DELETE, null)))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to delete application %s",
                 Entitlements.getEntitlementContext().user(), app);
         }

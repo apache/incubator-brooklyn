@@ -25,6 +25,7 @@ import com.google.common.annotations.Beta;
 
 import brooklyn.entity.Entity;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 
 /**
  * provides an easy entry point to supplying entitlements, by providing the dispatch and defining the additional methods
@@ -56,7 +57,7 @@ public abstract class EntitlementManagerAdapter implements EntitlementManager {
             return isEntitledToSeeSensor( context, (EntityAndItem<String>)entitlementClassArgument );
             
         case ENTITLEMENT_INVOKE_EFFECTOR:
-            return isEntitledToInvokeEffector( context, (EntityAndItem<String>)entitlementClassArgument );
+            return isEntitledToInvokeEffector( context, (EntityAndItem<StringAndArgument>)entitlementClassArgument );
             
         case ENTITLEMENT_DEPLOY_APPLICATION:
             return isEntitledToDeploy( context, entitlementClassArgument );
@@ -72,7 +73,7 @@ public abstract class EntitlementManagerAdapter implements EntitlementManager {
 
     protected abstract boolean isEntitledToSeeSensor(EntitlementContext context, EntityAndItem<String> sensorInfo);
     protected abstract boolean isEntitledToSeeEntity(EntitlementContext context, Entity entity);
-    protected abstract boolean isEntitledToInvokeEffector(EntitlementContext context, EntityAndItem<String> effectorInfo);
+    protected abstract boolean isEntitledToInvokeEffector(EntitlementContext context, EntityAndItem<StringAndArgument> effectorInfo);
     protected abstract boolean isEntitledToDeploy(EntitlementContext context, Object app);
     protected abstract boolean isEntitledToSeeAllServerInfo(EntitlementContext context);
     protected abstract boolean isEntitledToRoot(EntitlementContext context);

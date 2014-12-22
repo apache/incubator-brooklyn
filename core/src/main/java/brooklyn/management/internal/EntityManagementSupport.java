@@ -41,6 +41,7 @@ import brooklyn.management.SubscriptionContext;
 import brooklyn.management.entitlement.EntitlementManager;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -456,8 +457,8 @@ public class EntityManagementSupport {
             getManagementContext().getRebindManager().getChangeListener().onChanged(entity);
         }
         @Override
-        public void onEffectorStarting(Effector<?> effector) {
-            Entitlements.checkEntitled(getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(entity, effector.getName()));
+        public void onEffectorStarting(Effector<?> effector, Object parameters) {
+            Entitlements.checkEntitled(getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(entity, StringAndArgument.of(effector.getName(), parameters)));
         }
         @Override
         public void onEffectorCompleted(Effector<?> effector) {

@@ -54,7 +54,8 @@ public class Entitlements {
     
     public static EntitlementClass<Entity> SEE_ENTITY = new BasicEntitlementClassDefinition<Entity>("entity.see", Entity.class);
     public static EntitlementClass<EntityAndItem<String>> SEE_SENSOR = new BasicEntitlementClassDefinition<EntityAndItem<String>>("sensor.see", EntityAndItem. typeToken(String.class));
-    public static EntitlementClass<EntityAndItem<String>> INVOKE_EFFECTOR = new BasicEntitlementClassDefinition<EntityAndItem<String>>("effector.invoke", EntityAndItem.typeToken(String.class));
+    // string is effector name; argument may be a map or a list, depending how the args were supplied
+    public static EntitlementClass<EntityAndItem<StringAndArgument>> INVOKE_EFFECTOR = new BasicEntitlementClassDefinition<EntityAndItem<StringAndArgument>>("effector.invoke", EntityAndItem.typeToken(StringAndArgument.class));
     public static EntitlementClass<Entity> MODIFY_ENTITY = new BasicEntitlementClassDefinition<Entity>("entity.modify", Entity.class);
     
     /** the permission to deploy an application, where parameter is some representation of the app to be deployed (spec instance or yaml plan) */
@@ -100,26 +101,31 @@ public class Entitlements {
         }
     }
     
-    public static class EntityAndItem<T> {
-        final Entity entity;
-        final T item;
+    protected static class Pair<T1,T2> {
+        protected final T1 p1;
+        protected final T2 p2;
+        protected Pair(T1 p1, T2 p2) { this.p1 = p1; this.p2 = p2; }
+    }
+    public static class EntityAndItem<T> extends Pair<Entity,T> {
         public static <TT> TypeToken<EntityAndItem<TT>> typeToken(Class<TT> type) {
             return new TypeToken<Entitlements.EntityAndItem<TT>>() {
                 private static final long serialVersionUID = -738154831809025407L;
             };
         }
-        public EntityAndItem(Entity entity, T item) {
-            this.entity = entity;
-            this.item = item;
-        }
-        public Entity getEntity() {
-            return entity;
-        }
-        public T getItem() {
-            return item;
-        }
+        public EntityAndItem(Entity entity, T item) { super (entity, item); }
+        public Entity getEntity() { return p1; }
+        public T getItem() { return p2; }
         public static <T> EntityAndItem<T> of(Entity entity, T item) {
             return new EntityAndItem<T>(entity, item);
+        }
+    }
+    
+    public static class StringAndArgument extends Pair<String,Object> {
+        public StringAndArgument(String string, Object argument) { super(string, argument); }
+        public String getString() { return p1; }
+        public Object getArgument() { return p2; }
+        public static StringAndArgument of(String string, Object argument) {
+            return new StringAndArgument(string, argument);
         }
     }
 

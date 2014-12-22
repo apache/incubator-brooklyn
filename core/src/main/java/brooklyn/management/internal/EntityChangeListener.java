@@ -42,7 +42,7 @@ public interface EntityChangeListener {
         @Override public void onEnricherRemoved(Enricher enricher) {}
         @Override public void onFeedAdded(Feed feed) {}
         @Override public void onFeedRemoved(Feed feed) {}
-        @Override public void onEffectorStarting(Effector<?> effector) {}
+        @Override public void onEffectorStarting(Effector<?> effector, Object parameters) {}
         @Override public void onEffectorCompleted(Effector<?> effector) {}
     };
     
@@ -72,7 +72,7 @@ public interface EntityChangeListener {
 
     void onFeedRemoved(Feed feed);
 
-    void onEffectorStarting(Effector<?> effector);
+    void onEffectorStarting(Effector<?> effector, Object parameters);
     
     void onEffectorCompleted(Effector<?> effector);
 }

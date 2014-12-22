@@ -245,7 +245,7 @@ public class EffectorUtils {
             }
             ManagementContextInternal mgmtContext = (ManagementContextInternal) ((EntityInternal) entity).getManagementContext();
 
-            mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
+            mgmtSupport.getEntityChangeListener().onEffectorStarting(eff, args);
             try {
                 return mgmtContext.invokeEffectorMethodSync(entity, eff, args);
             } finally {
@@ -276,7 +276,7 @@ public class EffectorUtils {
 
         // FIXME seems brittle to have the listeners in the Utils method; better to move into the context.invokeEff
         // (or whatever the last mile before invoking the effector is - though currently there is not such a canonical place!)
-        mgmtSupport.getEntityChangeListener().onEffectorStarting(eff);
+        mgmtSupport.getEntityChangeListener().onEffectorStarting(eff, parameters);
         try {
             return mgmtContext.invokeEffector(entity, eff, parameters);
         } finally {
