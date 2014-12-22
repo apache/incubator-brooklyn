@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.Beta;
 
 import brooklyn.entity.Entity;
+import brooklyn.management.entitlement.Entitlements.EntitlementClassesHandler;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 
@@ -40,7 +41,65 @@ public abstract class EntitlementManagerAdapter implements EntitlementManager {
 
     private static final Logger log = LoggerFactory.getLogger(EntitlementManagerAdapter.class);
     
-    @SuppressWarnings("unchecked")
+    protected class Handler implements EntitlementClassesHandler<Boolean> {
+        final EntitlementContext context;
+        protected Handler(EntitlementContext context) {
+            this.context = context;
+        }
+        
+        @Override
+        public Boolean handleSeeCatalogItem(String catalogItemId) {
+            return isEntitledToSeeCatalogItem(context, catalogItemId);
+        }
+        @Override
+        public Boolean handleAddCatalogItem(Object catalogItemBeingAdded) {
+            return isEntitledToAddCatalogItem(context, catalogItemBeingAdded);
+        }
+        @Override
+        public Boolean handleModifyCatalogItem(StringAndArgument catalogItemIdAndModification) {
+            return isEntitledToModifyCatalogItem(context, catalogItemIdAndModification==null ? null : catalogItemIdAndModification.getString(),
+                catalogItemIdAndModification==null ? null : catalogItemIdAndModification.getArgument());
+        }
+        
+        @Override
+        public Boolean handleSeeEntity(Entity entity) {
+            return isEntitledToSeeEntity(context, entity);
+        }
+        @Override
+        public Boolean handleSeeSensor(EntityAndItem<String> sensorInfo) {
+            return isEntitledToSeeSensor(context, sensorInfo.getEntity(), sensorInfo.getItem());
+        }
+        @Override
+        public Boolean handleInvokeEffector(EntityAndItem<StringAndArgument> effectorInfo) {
+            StringAndArgument item = effectorInfo.getItem();
+            return isEntitledToInvokeEffector(context, effectorInfo.getEntity(), item==null ? null : item.getString(), item==null ? null : item.getArgument());
+        }
+        @Override
+        public Boolean handleModifyEntity(Entity entity) {
+            return isEntitledToModifyEntity(context, entity);
+        }
+
+        @Override
+        public Boolean handleDeployApplication(Object app) {
+            return isEntitledToDeployApplication(context, app);
+        }
+
+        @Override
+        public Boolean handleSeeAllServerInfo() {
+            return isEntitledToSeeAllServerInfo(context);
+        }
+
+        @Override
+        public Boolean handleSeeServerStatus() {
+            return isEntitledToSeeServerStatus(context);
+        }
+
+        @Override
+        public Boolean handleRoot() {
+            return isEntitledToRoot(context);
+        }
+    }
+    
     @Override
     public <T> boolean isEntitled(EntitlementContext context, EntitlementClass<T> entitlementClass, T entitlementClassArgument) {
         if (log.isTraceEnabled()) {
@@ -49,33 +108,22 @@ public abstract class EntitlementManagerAdapter implements EntitlementManager {
         
         if (isEntitledToRoot( context )) return true;
         
-        switch (Entitlements.EntitlementClassesEnum.of(entitlementClass)) {
-        case ENTITLEMENT_SEE_ENTITY:
-            return isEntitledToSeeEntity( context, (Entity)entitlementClassArgument );
-            
-        case ENTITLEMENT_SEE_SENSOR:
-            return isEntitledToSeeSensor( context, (EntityAndItem<String>)entitlementClassArgument );
-            
-        case ENTITLEMENT_INVOKE_EFFECTOR:
-            return isEntitledToInvokeEffector( context, (EntityAndItem<StringAndArgument>)entitlementClassArgument );
-            
-        case ENTITLEMENT_DEPLOY_APPLICATION:
-            return isEntitledToDeploy( context, entitlementClassArgument );
-
-        case ENTITLEMENT_SEE_ALL_SERVER_INFO:
-            return isEntitledToSeeAllServerInfo( context );
-
-        default:
-            log.warn("Unsupported permission type: "+entitlementClass+" / "+entitlementClassArgument);
-            return false;
-        }
+        Handler handler = new Handler(context);
+        return Entitlements.EntitlementClassesEnum.of(entitlementClass).handle(
+            handler, entitlementClassArgument);
     }
 
-    protected abstract boolean isEntitledToSeeSensor(EntitlementContext context, EntityAndItem<String> sensorInfo);
+    protected abstract boolean isEntitledToSeeCatalogItem(EntitlementContext context, String catalogItemId);
+    protected abstract boolean isEntitledToAddCatalogItem(EntitlementContext context, Object catalogItemBeingAdded);
+    protected abstract boolean isEntitledToModifyCatalogItem(EntitlementContext context, String catalogItemId, Object catalogItemModification);
+    protected abstract boolean isEntitledToSeeSensor(EntitlementContext context, Entity entity, String sensorName);
     protected abstract boolean isEntitledToSeeEntity(EntitlementContext context, Entity entity);
-    protected abstract boolean isEntitledToInvokeEffector(EntitlementContext context, EntityAndItem<StringAndArgument> effectorInfo);
-    protected abstract boolean isEntitledToDeploy(EntitlementContext context, Object app);
+    /** arguments might be null, a map, or a list, depending how/where invoked */
+    protected abstract boolean isEntitledToInvokeEffector(EntitlementContext context, Entity entity, String effectorName, Object arguments);
+    protected abstract boolean isEntitledToModifyEntity(EntitlementContext context, Entity entity);
+    protected abstract boolean isEntitledToDeployApplication(EntitlementContext context, Object app);
     protected abstract boolean isEntitledToSeeAllServerInfo(EntitlementContext context);
+    protected abstract boolean isEntitledToSeeServerStatus(EntitlementContext context);
     protected abstract boolean isEntitledToRoot(EntitlementContext context);
     
 }
