@@ -99,13 +99,12 @@ public class ApplicationUsageTrackingTest {
                 String appName = (String) events.get(0).get(2);
                 String entityType = (String) events.get(0).get(3);
                 String catalogItemId = (String) events.get(0).get(4);
-                System.out.println(catalogItemId);
                 Map<?,?> metadata = (Map<?, ?>) events.get(0).get(5);
                 ApplicationEvent appEvent = (ApplicationEvent) events.get(0).get(6);
                 
                 assertEquals(appId, app.getId(), "events="+events);
                 assertNotNull(appName, "events="+events);
-                assertEquals(app.getCatalogItemId(), "testCatalogItem");
+                assertEquals(catalogItemId, app.getCatalogItemId(), "events="+events);
                 assertNotNull(entityType, "events="+events);
                 assertNotNull(metadata, "events="+events);
                 assertEquals(appEvent.getState(), Lifecycle.STARTING, "events="+events);
