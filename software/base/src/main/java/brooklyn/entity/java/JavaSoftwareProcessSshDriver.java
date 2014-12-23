@@ -42,10 +42,12 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.task.system.ProcessTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
@@ -339,8 +341,9 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         getLocation().acquireMutex("installing", "installing Java at " + getLocation());
         try {
             log.debug("Installing Java {} at {}@{}", new Object[]{version, getEntity(), getLocation()});
-            ProcessTaskWrapper<Integer> installCommand = Entities.submit(getEntity(),
-                    SshTasks.newSshExecTaskFactory(getLocation(), command));
+            ProcessTaskFactory<Integer> taskFactory = SshTasks.newSshExecTaskFactory(getLocation(), command)
+                    .configure(ShellTool.PROP_EXEC_ASYNC, true);
+            ProcessTaskWrapper<Integer> installCommand = Entities.submit(getEntity(), taskFactory);
             int result = installCommand.get();
             if (result != 0) {
                 log.warn("Installation of Java {} failed at {}@{}: {}",

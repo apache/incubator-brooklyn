@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.util.internal.ssh.ShellTool;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;
@@ -84,6 +85,14 @@ public class BrooklynFeatureEnablement {
      */
     public static final String FEATURE_INFER_CATALOG_ITEM_ON_REBIND = "brooklyn.backwardCompatibility.feature.inferCatalogItemOnRebind";
     
+    /**
+     * When executing over ssh, whether to support the "async exec" approach, or only the classic approach.
+     * 
+     * If this feature is disabled, then even if the {@link ShellTool#PROP_EXEC_ASYNC} is configured it
+     * will still use the classic ssh approach.
+     */
+    public static final String FEATURE_SSH_ASYNC_EXEC = "brooklyn.experimental.feature.ssh.asyncExec";
+
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
     private static final Object MUTEX = new Object();
@@ -102,6 +111,7 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, false);
         setDefault(FEATURE_RENAME_THREADS, false);
         setDefault(FEATURE_INFER_CATALOG_ITEM_ON_REBIND, true);
+        setDefault(FEATURE_SSH_ASYNC_EXEC, false);
     }
     
     static {
