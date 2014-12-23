@@ -5,11 +5,11 @@ children:
 - { path: download/verify.md }
 ---
 
-## Get the Brooklyn Source Code
+## Latest Brooklyn Source Code Release
 
-[Download Apache Brooklyn 0.7.0-M2-incubating from our mirror sites](https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/0.7.0-M2-incubating/apache-brooklyn-0.7.0-M2-incubating.tar.gz)
+[Download Apache Brooklyn {{ site.data.brooklyn.version }} from our mirror sites](https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/{{ site.data.brooklyn.version }}/apache-brooklyn-{{ site.data.brooklyn.version }}.tar.gz)
 
-You can also verify that you build has not been tampered with by [verifying the hashes and signatures](download/verify.md).
+You can also verify that you build has not been tampered with by [verifying the hashes and signatures](download/verify.html).
 
 
 ## Build the Binary Package
@@ -18,13 +18,13 @@ We do not yet have an official binary package for Apache Brooklyn. We plan to ad
 it is relatively easy to create the binary package from source code, if you have a working JDK of at least version 6,
 and Maven 3.
 
-Unpack `apache-brooklyn-0.7.0-M2-incubating.tar.gz` and then execute this command in the `apache-brooklyn-0.7.0-M2-incubating` folder:
+Unpack `apache-brooklyn-{{ site.data.brooklyn.version }}.tar.gz` and then execute this command in the `apache-brooklyn-{{ site.data.brooklyn.version }}` folder:
 
 {% highlight bash %}
 mvn clean install -DskipTests
 {% endhighlight %}
 
-You can then find the binary distribution in the folder `usage/dist/target/brooklyn-dist`, or archived as `usage/dist/target/brooklyn-0.7.0-M2-incubator-dist.tar.gz`.
+You can then find the binary distribution in the folder `usage/dist/target/brooklyn-dist`, or archived as `usage/dist/target/brooklyn-{{ site.data.brooklyn.version }}-dist.tar.gz`.
 
 
 ## Get Started!

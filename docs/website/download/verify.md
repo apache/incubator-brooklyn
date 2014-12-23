@@ -33,14 +33,14 @@ You can verify the SHA1 or SHA256 hashes easily by placing the files in the same
 then running `shasum`, which is included in most UNIX-like systems:
 
 {% highlight bash %}
-shasum -c apache-brooklyn-0.7.0-M2-incubating.tar.gz.sha1
-shasum -c apache-brooklyn-0.7.0-M2-incubating.tar.gz.sha256
+shasum -c apache-brooklyn-{{ site.data.brooklyn.version }}.tar.gz.sha1
+shasum -c apache-brooklyn-{{ site.data.brooklyn.version }}.tar.gz.sha256
 {% endhighlight %}
 
 You can verify the MD5 hashes by running a command like this, and comparing the output to the contents of the `.md5` file:
 
 {% highlight bash %}
-md5 apache-brooklyn-0.7.0-M2-incubating.tar.gz
+md5 apache-brooklyn-{{ site.data.brooklyn.version }}.tar.gz
 {% endhighlight %}
 
 
