@@ -4,12 +4,9 @@ title: Versions
 toc: /guide/toc.json
 ---
 
-**TODO: page needs overhaul with separate new main site**
-
-
 <!--- display which version we are using, based on where it is written -->
 
-### Brooklyn v{{ site.brooklyn-version }}
+### Brooklyn v{{ site.brooklyn-stable-version }}
 
 
 {% if site.server %} 

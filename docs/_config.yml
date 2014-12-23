@@ -39,6 +39,8 @@ dependency_urls:
 # These files should not be included in the final build (in addition to _* contents)
 exclude: ['/Gemfile*','/README.md']
 
+brooklyn-stable-version: 0.7.0-M2
+
 brooklyn-version: 0.7.0-SNAPSHOT # BROOKLYN_VERSION
 brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)
 
