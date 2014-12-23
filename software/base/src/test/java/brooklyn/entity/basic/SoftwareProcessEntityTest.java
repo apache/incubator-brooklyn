@@ -350,6 +350,11 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         public MyServiceImpl(Entity parent) { super(parent); }
 
         @Override
+        protected void initEnrichers() {
+            // Don't add enrichers messing with the SERVICE_UP state - we are setting it manually
+        }
+
+        @Override
         public Class<?> getDriverInterface() { return SimulatedDriver.class; }
     }
 
