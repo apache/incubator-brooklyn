@@ -297,7 +297,6 @@ public abstract class ShellAbstractTool implements ShellTool {
          * will continue to be written 
          * note that some modes require \$RESULT passed in order to access a variable, whereas most just need $ */
         protected List<String> buildRunScriptCommand() {
-            // TODO 
             String touchCmd = String.format("touch %s %s %s %s", stdoutPath, stderrPath, exitStatusPath, pidPath);
             String cmd = String.format("( %s > %s 2> %s < /dev/null ; echo $? > %s ) & disown", scriptPath, stdoutPath, stderrPath, exitStatusPath);
             MutableList.Builder<String> cmds = MutableList.<String>builder()

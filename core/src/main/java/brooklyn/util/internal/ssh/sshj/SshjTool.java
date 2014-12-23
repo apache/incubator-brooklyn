@@ -319,6 +319,9 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         if (Boolean.TRUE.equals(execAsync) && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_SSH_ASYNC_EXEC)) {
             return execScriptAsyncAndPoll(props, commands, env);
         } else {
+            if (Boolean.TRUE.equals(execAsync)) {
+                if (LOG.isDebugEnabled()) LOG.debug("Ignoring ssh exec-async configuration, because feature is disabled");
+            }
             return new ToolAbstractExecScript(props) {
                 public int run() {
                     String scriptContents = toScript(props, commands, env);
@@ -397,15 +400,18 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 stderrCount += (countingErr == null) ? 0 : countingErr.getCount();
                 
                 if (longPollResult == 0) {
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll succeeded (exit status 0) on "+SshjTool.this.toString()+" (for "+getSummary()+")");
                     return longPollResult; // success
                     
                 } else if (longPollResult == -1) {
                     // probably a connection failure; try again
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll received exit status -1; will retry on "+SshjTool.this.toString()+" (for "+getSummary()+")");
                     return null;
                     
                 } else {
                     // want to double-check whether this is the exit-code from the async process, or
                     // some unexpected failure in our long-poll command.
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll received exit status "+longPollResult+"; retrieving actual status on "+SshjTool.this.toString()+" (for "+getSummary()+")");
                     Integer result = retrieveStatusCommand();
                     if (result != null) {
                         return result;
@@ -434,14 +440,17 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                     String statusOutStr = new String(statusOut.toByteArray()).trim();
                     if (Strings.isEmpty(statusOutStr)) {
                         // suggests not yet completed; will retry with long-poll
+                        if (LOG.isDebugEnabled()) LOG.debug("Long-poll retrieved status directly; command successful but no result available on "+SshjTool.this.toString()+" (for "+getSummary()+")");
                         return null;
                     } else {
+                        if (LOG.isDebugEnabled()) LOG.debug("Long-poll retrieved status directly; returning '"+statusOutStr+"' on "+SshjTool.this.toString()+" (for "+getSummary()+")");
                         int result = Integer.parseInt(statusOutStr);
                         return result;
                     }
 
                 } else if (statusResult == -1) {
                     // probably a connection failure; try again with long-poll
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll retrieving status directly received exit status -1; will retry on "+SshjTool.this.toString()+" (for "+getSummary()+")");
                     return null;
                     
                 } else {
@@ -454,6 +463,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                         err.write(statusErr.toByteArray());
                     }
                     
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll retrieving status failed; returning "+statusResult+" on "+SshjTool.this.toString()+" (for "+getSummary()+")");
                     return statusResult;
                 }
             }
