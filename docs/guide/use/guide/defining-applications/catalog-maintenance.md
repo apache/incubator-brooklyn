@@ -16,14 +16,14 @@ All YAML blueprints added to the catalog must also contain a `brooklyn.catalog` 
 
 For a blueprint to be accessible via the 'Create Application' dialog, it must be an Application 
 (i.e. the entity at the root of the blueprint must implement `brooklyn.entity.Application`).
+If just deploying via the REST API, then this is not necessary.
 
 <!--
 TODO: Add section that explains how to add plain entities to the catalog and use them either from the App Wizard,
 (and entity UI) or embed the catalog id + version in another YAML
 -->
 
-Let's take the following YAML as a starting point. We will convert it for adding to the catalog, 
-such that it will usable through the 'Create Application' dialog.
+Let's take the following YAML as a starting point.
 
 {% highlight yaml %}
 location: localhost
@@ -35,26 +35,19 @@ services:
     datastore.creation.script.url: classpath://visitors-creation-script.sql
 {% endhighlight %}
 
-The first thing we need to do is add a root element that extends `brooklyn.entity.Application`. As we don't require any
-custom application-specific logic, we can use the `brooklyn.entity.basic.BasicApplication` class. We can then add our
-MySqlNode as a child of the BasicApplication. When deploying a YAML blueprint via the YAML page of the 'Add Application'
-dialog, Brooklyn will do this automatically, however, in order to add our blueprint to the catalog, we will need to this
-manually as follows:
+We will convert it for adding to the catalog, such that it will usable through the 
+'Create Application' dialog.
 
-{% highlight yaml %}
-location: localhost
+The steps are therefore:
 
-name: MySQL Database
-services:
-- type: brooklyn.entity.basic.BasicApplication
-  brooklyn.children:
-  - type: brooklyn.entity.database.mysql.MySqlNode
-    brooklyn.config:
-      datastore.creation.script.url: classpath://visitors-creation-script.sql
-{% endhighlight %}
-
-The next step is to remove the location (as the user will select the location in the GUI), and add a brooklyn.catalog
-section to tell Brooklyn how the blueprint should be displayed in the 'Add Application' dialog:
+* Add a brooklyn.catalog section to give metadata about the version etc. This is also used 
+  when displaying the blueprint in the 'Add Application' dialog.
+* Remove the explicit location (as the user will typically select the location in the GUI).
+* Add a root element that extends `brooklyn.entity.Application`. As we don't require any
+  custom application-specific logic, we can use the `brooklyn.entity.basic.BasicApplication` 
+  class. We can then add our MySqlNode as a child of the BasicApplication. 
+  (When deploying via YAML at the REST API, this is not necessary as Brooklyn will do this 
+  automatically).
 
 {% highlight yaml %}
 brooklyn.catalog:
@@ -73,10 +66,12 @@ services:
 {% endhighlight %}
 
 <!--
-TODO: Add section to explain that the brooklyn.catalog section can contain a libraries array, each item pointing to 
+TODO: Add documentation to explain that the brooklyn.catalog section can contain a libraries array, each item pointing to 
 an OSGi bundle where the code for the blueprint is hosted. Every type from the blueprint will be searched for in the 
-libraries first and then on the standard Brooklyn classpath.
+libraries first and then on the standard Brooklyn classpath.*
 -->
+
+To explain the `brooklyn.catalog` section:
 
 - The `id: MySQL` section specifies a unique ID used by Brooklyn to identify the catalog item. This ID is also passed to 
 `UsageManager.UsageListener.onApplicationEvent` for metering purposes.
@@ -92,7 +87,7 @@ To add the blueprint to the catalog, post the YAML file to Brooklyn's REST API b
 follows (substituting your own usename:password, URL and file path):
 
 {% highlight bash %}
-curl -u admin:password http://127.0.0.1:8081/v1/catalog --data-binary @/Users/martin/Desktop/ms.yaml
+curl -u admin:password http://127.0.0.1:8081/v1/catalog --data-binary @/path/to/mysql-catalog.yaml
 {% endhighlight %}
 
 This will add the blueprint to the catalog as shown here:
@@ -111,5 +106,10 @@ curl -u admin:password -X DELETE http://127.0.0.1:8081/v1/catalog/entities/MySQL
 rebinding the catalog item is used to reconstruct the entity.
 
 <!--
-TODO: Add section policies to the catalog, and explaining how to add items to the UI using the plus icon on the catalog tab
+TODO: Add documentation about adding policies to the catalog, and explaining how to add items to 
+the UI using the plus icon on the catalog tab*
+
+TODO: describe entity addition (this just covers app addition)
+
+TODO: describe how to use the web-console GUI
 -->
