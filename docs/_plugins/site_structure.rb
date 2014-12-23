@@ -5,10 +5,12 @@ module SiteStructure
   BROOKLYN_WEBSITE_ROOT = "/website/index.md" unless defined? BROOKLYN_WEBSITE_ROOT
   
   class Generator < Jekyll::Generator
+
     def find_page_with_path_absolute_or_relative_to(site, path, referrent, structure_processed_pages)
       uncleaned_path = path
       
       # Pathname API ignores first arg below if second is absolute
+#      puts "converting #{path} wrt #{referrent ? referrent.path : ""}"
       file = Pathname.new(File.dirname(referrent ? referrent.path : "")) + path
       file = file.cleanpath
       # is there a better way to trim a leading / ?
@@ -52,67 +54,56 @@ module SiteStructure
     end
 
     def generate(site)
-      structure_processed_pages = []
-      root_page = find_page_with_path_absolute_or_relative_to(site, SiteStructure::BROOKLYN_WEBSITE_ROOT, nil, structure_processed_pages)
-      navgroups = root_page.data['navgroups']
-      navgroups.each do |ng|
-        ng['page'] = find_page_with_path_absolute_or_relative_to(site, ng['page'], root_page, structure_processed_pages)
-        if not ng['title_in_menu']
-          ng['title_in_menu'] = ng['title'].capitalize
-        end
-      end
-      site.data['navgroups'] = navgroups
-      site.data['structure'] = gen_structure(site, SiteStructure::BROOKLYN_WEBSITE_ROOT, nil, navgroups, structure_processed_pages)
+      site.data.merge!( gen_structure(site, { 'path' => SiteStructure::BROOKLYN_WEBSITE_ROOT }, nil, [], [], []).data )
+#      puts "ROOT MENU is #{site.data['menu']}"
+#      puts "C1 sub-menu is #{site.data['menu'][0].data['menu'}"
+#but note after processing 'data' on pages is promoted, so you access it like:
+#      puts "C1 sub-menu will be #{site.data['menu'][0]['menu'}"
     end
 
+    # processes liquid tags, e.g. in a link or path object
     def render_liquid(site, page, content)
+      return content unless page
       info = { :filters => [Jekyll::Filters], :registers => { :site => site, :page => page } }
       page.render_liquid(content, site.site_payload, info)
     end
         
-    def gen_structure(site, pagename, parent, navgroups, structure_processed_pages)
-      page = find_page_with_path_absolute_or_relative_to(site, pagename, parent, structure_processed_pages)
-      
-      # My navgroup is (first rule matches):
-      # 1. what I have explicitly declared
-      # 2. if I find my path referred to in the global navgroup list
-      # 3. my parent's navgroup
-      unless page.data['navgroup']
-        match = navgroups.detect { |ng| ng['page'] == page }
-        if match
-          page.data['navgroup'] = match['id']
-        elsif parent
-          page.data['navgroup'] = parent.data['navgroup']
-        end
-      end
-            
-      # Figure out second level menu
-      # If there's no parent => I'm at the top level, so no action
-      # If there's a parent, but parent has no parent => I'm at second level, so set second-level menu
-      # Otherwise, use the parent's second level menu
-      if parent && !parent.data['parent']
-        page.data['menu2parent'] = page
-        page.data['menu2'] = page.data['children']
-      elsif parent && parent.data['parent']
-        page.data['menu2parent'] = parent.data['menu2parent']
-        page.data['menu2'] = parent.data['menu2']
+    def gen_structure(site, item, parent, breadcrumb_pages, breadcrumb_paths, structure_processed_pages)
+#      puts "gen_structure #{item}"
+      breadcrumb_pages = breadcrumb_pages.dup
+      breadcrumb_paths = breadcrumb_paths.dup
+      if (item['path'])      
+        page = find_page_with_path_absolute_or_relative_to(site, render_liquid(site, parent, item['path']), parent, structure_processed_pages)
+        data = page.data
+        data['path'] = page.path
+        breadcrumb_pages << page
+        breadcrumb_paths << page.path
+      elsif (item['link'])
+        data = { 'link' => render_liquid(site, parent, item['link']) }
+        page = { 'data' => data }
+        breadcrumb_pages << data
+        breadcrumb_paths << item['link']
+      else
+        raise "Link to #{item} in #{parent ? parent.path : nil} must have link or path"
       end
       
-      page.data['parent'] = parent
-      if page.data['children']
-        page.data['children'].each do |c|
-          if c['path']
-            # links to another Jekyll site-structured page
-            c['reference'] = gen_structure(site, render_liquid(site, page, c['path']), page, navgroups, structure_processed_pages)
-          elsif c['link']
-            # links to a non-site-structured page, on this site or elsewhere
-            # allow title and link to use vars and tags (liquid processing)
-            c['reference'] = { 'url' => render_liquid(site, page, c['link']), 'title' => render_liquid(site, page, c['title']) }
-          end
+      data['breadcrumb_pages'] = breadcrumb_pages
+      data['breadcrumb_paths'] = breadcrumb_paths
+      data['menu_parent'] = parent
+      
+      data['title_in_menu'] = item['title_in_menu'] || item['title'] || data['title_in_menu'] || data['title']
+#      puts "built #{data}, now looking at children"
+      
+      if (data['children'])
+        data['menu'] = []
+        data['children'].each do |child|
+          data['menu'] << gen_structure(site, child, page, breadcrumb_pages, breadcrumb_paths, structure_processed_pages)
         end
       end
       
       page
     end
+    
   end
+
 end

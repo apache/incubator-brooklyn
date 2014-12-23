@@ -1,19 +1,13 @@
 ---
 layout: website-landing
 title: Home
-navgroup: home
+landing: true
 children:
 - { path: learnmore/index.md }
 - { path: download.md }
-- { path: quickstart/index.md }
+- { path: quickstart/index.md, title: Get Started }
 - { path: documentation.md }
 - { path: community/index.md }
-navgroups:
-- { id: learnmore, page: learnmore/index.md, title: learn more, title_in_menu: Learn More }
-- { id: download, page: download.md, title: download }
-- { id: getstarted, page: quickstart/index.md, title: get started, title_in_menu: Get Started }
-- { id: documentation, page: documentation.md, title: documentation, title_in_menu: All Documentation }
-- { id: community, page: community/index.md, title: community, title_in_menu: Community Home }
 ---
 
 <div class="jumbotron">
