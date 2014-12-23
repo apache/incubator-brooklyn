@@ -48,7 +48,7 @@ Before installing Apache Brooklyn, you will need to configure the host as follow
 
 ## <a id="download"></a>Download Brooklyn
 
-Download the [Brooklyn distribution]({{ site.data.brooklyn.url.dist.tgz }}) and expand it to your home directory ( `~/` ), or in a location of your choice. Other [download options]({{site.path.website}}/download.html) are available.
+Download Brooklyn and obtain a binary build as described on [the download page]({{site.path.website}}/download.html).
 
 {% if brooklyn_version contains 'SNAPSHOT' %}
 Expand the `tar.gz` archive (note: as this is a -SNAPSHOT version, your filename will be slightly different):
@@ -62,7 +62,7 @@ $ tar -zxf brooklyn-dist-{{ site.data.brooklyn.version }}-timestamp-dist.tar.gz
 {% endhighlight %}
 {% else %}
 {% highlight bash %}
-$ tar -zxf brooklyn-dist-{{ site.data.brooklyn.version }}-dist.tar.gz
+$ tar -zxf brooklyn-{{ site.data.brooklyn.version }}-dist.tar.gz
 {% endhighlight %}
 {% endif %}
 
