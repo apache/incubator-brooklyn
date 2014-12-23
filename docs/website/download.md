@@ -1,70 +1,40 @@
 ---
 layout: website-normal
 title: Download
+children:
+- { path: download/verify.md }
 ---
 
-## Download Brooklyn Binary Distributions
+## Latest Brooklyn Source Code Release
 
-**New to Brooklyn**? Download the *Milestone* release below then take a look
-at the [Get Started](quickstart/) page.
+[Download Apache Brooklyn {{ site.data.brooklyn.version }} from our mirror sites](https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/{{ site.data.brooklyn.version }}/apache-brooklyn-{{ site.data.brooklyn.version }}.tar.gz)
 
-<div class="row">
-<div class="col-md-6" markdown="1">
-
-### Milestone
-
-#### 0.7.0-M1
-*Recommended*. A good compromise between stability and features which has undergone live testing.
-
-Download [.tar.gz](http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/0.7.0-M1/brooklyn-dist-0.7.0-M1-dist.tar.gz)
-&bull; [.zip](http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/0.7.0-M1/brooklyn-dist-0.7.0-M1-dist.zip)
-
-Please note that this release was made prior to entering the Apache Incubator, and therefore it is not endorsed by Apache.
-
-</div>
-<div class="col-md-6" markdown="1">
-
-### Stable
-
-#### 0.6.0
-Well-tested releases, but missing the latest features.
-
-Download [.tar.gz](http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/0.6.0/brooklyn-dist-0.6.0-dist.tar.gz)
-&bull; [.zip](http://search.maven.org/remotecontent?filepath=io/brooklyn/brooklyn-dist/0.6.0/brooklyn-dist-0.6.0-dist.zip)
-
-Please note that this release was made prior to entering the Apache Incubator, and therefore it is not endorsed by Apache.
-
-</div>
-</div>
+You can also verify that you build has not been tampered with by [verifying the hashes and signatures](download/verify.html).
 
 
-## Download Brooklyn source code
+## Build the Binary Package
 
-<div class="row">
-<div class="col-md-6" markdown="1">
+We do not yet have an official binary package for Apache Brooklyn. We plan to address this in our next release. However,
+it is relatively easy to create the binary package from source code, if you have a working JDK of at least version 6,
+and Maven 3.
 
-### Milestone
+Unpack `apache-brooklyn-{{ site.data.brooklyn.version }}.tar.gz` and then execute this command in the `apache-brooklyn-{{ site.data.brooklyn.version }}` folder:
 
-#### 0.7.0-M1
-*Recommended*. A good compromise between stability and features which has undergone live testing.
+{% highlight bash %}
+mvn clean install -DskipTests
+{% endhighlight %}
 
-Download [.tar.gz](https://github.com/apache/incubator-brooklyn/archive/0.7.0-M1.tar.gz)
-&bull; [.zip](https://github.com/apache/incubator-brooklyn/archive/0.7.0-M1.zip)
+You can then find the binary distribution in the folder `usage/dist/target/brooklyn-dist`, or archived as `usage/dist/target/brooklyn-{{ site.data.brooklyn.version }}-dist.tar.gz`.
 
-Please note that this release was made prior to entering the Apache Incubator, and therefore it is not endorsed by Apache.
 
-</div>
-<div class="col-md-6" markdown="1">
+## Get Started!
 
-### Stable
+Take a look at the [Get Started](quickstart/) page!
 
-#### 0.6.0
-Well-tested releases, but missing the latest features.
 
-Download [.tar.gz](https://github.com/apache/incubator-brooklyn/archive/v0.6.0.tar.gz)
-&bull; [.zip](https://github.com/apache/incubator-brooklyn/archive/v0.6.0.zip)
+## Previous Versions
 
-Please note that this release was made prior to entering the Apache Incubator, and therefore it is not endorsed by Apache.
-
-</div>
-</div>
+Versions of Brooklyn prior to 0.7.0-M2 were all made prior to joining the Apache Incubator, therefore **they are not
+endorsed by Apache** and are not hosted by Apache or their mirrors. You can obtain the source code by [inspecting the
+branches of the pre-Apache GitHub repository](https://github.com/brooklyncentral/brooklyn/branches/stale) and binary
+releases by [querying Maven Central for io.brooklyn:brooklyn.dist](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22io.brooklyn%22%20AND%20a%3A%22brooklyn-dist%22).
