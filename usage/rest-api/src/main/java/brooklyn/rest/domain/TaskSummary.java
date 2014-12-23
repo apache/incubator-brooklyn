@@ -166,15 +166,29 @@ public class TaskSummary implements HasId {
   public Object getResult() {
     return result;
   }
-  
+
+  /** @deprecated since 0.7.0 use {@link #isError} instead. */
+  @Deprecated
+  @JsonIgnore
   public boolean getIsError() {
     return isError;
   }
-  
+
+  /** @deprecated since 0.7.0 use {@link #isCancelled} instead. */
+  @Deprecated
+  @JsonIgnore
   public boolean getIsCancelled() {
     return isCancelled;
   }
-  
+
+  public boolean isError() {
+    return isError;
+  }
+
+  public boolean isCancelled() {
+    return isCancelled;
+  }
+
   public List<LinkWithMetadata> getChildren() {
       return children;
   }
