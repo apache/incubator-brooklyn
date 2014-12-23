@@ -1,8 +1,15 @@
 ---
-layout: guide-normal
-title: Overview
-toc: /guide/toc.json
-categories: [start]
+title: User Guide
+layout: website-normal
+children:
+- { path: start/index.md }
+- { path: yaml/index.md }
+- { path: java/index.md }
 ---
 
-{% readj start/index.include.md %}
+This is the user guide.
+
+TODO - wip
+
+END
+
