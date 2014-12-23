@@ -221,6 +221,11 @@ Then check in the changes (probably picking a better message than shown here):
 
 The changes should become live within a few minutes.
 
+SVN commits can be **slow**, particularly if you've regenerated javadoc.
+(The date is included in all javadoc files so the commands above will cause *all* javadoc to be updated.)
+Use `_build/build.sh guide-version --install --skip-javadoc` to update master while re-using the previously installed javadoc.
+That command will fail if javadoc has not been generated for that version.
+
 
 More Notes on the Code
 ----------------------
