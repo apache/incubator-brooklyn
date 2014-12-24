@@ -2,7 +2,7 @@
 layout: website-normal
 title: Download
 children:
-- { path: download/verify.md }
+- { path: verify.md }
 ---
 
 ## Latest Brooklyn Source Code Release

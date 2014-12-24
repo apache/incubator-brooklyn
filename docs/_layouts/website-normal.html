@@ -41,7 +41,7 @@ layout: website-base
     {% if page.menu_parent.landing %} {% comment %} case 2 {% endcomment %}
               {% for item in page.breadcrumb_pages offset:1 %}
                   <h4 class="{% if forloop.index0 > 0 %} with_preceding{% endif %}{% if forloop.rindex0 > 0 %} with_following{% endif %}">
-                    <a href="{{item.url}}" class="list-group-item{% if item.path == page.path %} active{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
+                    <a href="{{item.url}}" class="list-group-item{% if item.path == page.menu_path %} active{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
                       {{ item.title_in_menu }}</a></h4>
               {% endfor %}
               {% for item in page.menu %}
@@ -51,11 +51,11 @@ layout: website-base
     {% else %} {% comment %} case 3a {% endcomment %}
               {% for item in page.menu_parent.breadcrumb_pages offset:1 %}
                   <h4 class="{% if forloop.index0 > 0 %} with_preceding{% endif %}{% if forloop.rindex0 > 0 %} with_following{% endif %}">
-                    <a href="{{item.url}}" class="list-group-item{% if item.path == page.path %} active{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
+                    <a href="{{item.url}}" class="list-group-item{% if item.path == page.menu_path %} active{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
                       {{ item.title_in_menu }}</a></h4>
               {% endfor %}
               {% for item in page.menu_parent.menu %}
-                {% if (page.breadcrumb_paths contains item.path) and page.menu %}
+                {% if (page.breadcrumb_paths contains item.menu_path) and page.menu %}
                   {% comment %} case 3b {% endcomment %}
                   <a href="{{item.url}}" class="list-group-item active with-sub-item">{{ item.title_in_menu }}</a>
                   <div class="sub-item">
@@ -66,7 +66,7 @@ layout: website-base
                   </div>
                 {% else %}
                   {% comment %} case 3a side menu item {% endcomment %}
-                  <a href="{{item.url}}" class="list-group-item{% if page.breadcrumb_paths contains item.path %} active{% endif %}">{{ item.title_in_menu }}</a>
+                  <a href="{{item.url}}" class="list-group-item{% if page.breadcrumb_paths contains item.menu_path %} active{% endif %}">{{ item.title_in_menu }}</a>
                 {% endif %}
               {% endfor %}
         

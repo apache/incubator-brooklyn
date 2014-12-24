@@ -3,11 +3,11 @@ layout: website-landing
 title: Home
 landing: true
 children:
-- { path: learnmore/index.md }
-- { path: download.md }
-- { path: quickstart/index.md, title: Get Started }
-- { path: documentation.md }
-- { path: community/index.md }
+- learnmore/
+- { path: download/, menu: null }
+- { path: quickstart/, title: Get Started }
+- documentation/
+- community/
 ---
 
 <div class="jumbotron">

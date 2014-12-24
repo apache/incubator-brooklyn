@@ -2,10 +2,14 @@
 layout: website-normal
 title: Documentation
 children:
-- { path: ../guide/index.md, title_in_menu: User Guide }
-- { path: glossary.md }
-- { path: documentation/install-on-server.md }
+- { path: /guide/start/index.md, title_in_menu: Get Started }
+- { path: /guide/yaml/index.md, title_in_menu: YAML Blueprints }
+- { path: /guide/java/index.md, title_in_menu: Java Blueprints }
+- { path: /guide/ops/index.md }
+- { path: other-docs.md, title_in_menu: Other Resources }
 ---
+
+TODO kill me
 
 ## Official User Manual
 
