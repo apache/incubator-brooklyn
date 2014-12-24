@@ -798,14 +798,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public String toString() {
-        return "SshMachineLocation["+getDisplayName()+":"+address+"@"+getId()+"]";
+        return "SshMachineLocation["+getDisplayName()+":"+address+":"+getPort()+"@"+getId()+"]";
     }
 
     @Override
     public String toVerboseString() {
         return Objects.toStringHelper(this).omitNullValues()
                 .add("id", getId()).add("name", getDisplayName())
-                .add("user", getUser()).add("address", getAddress()).add("port", getConfig(SSH_PORT))
+                .add("user", getUser()).add("address", getAddress()).add("port", getPort())
                 .add("parentLocation", getParent())
                 .toString();
     }

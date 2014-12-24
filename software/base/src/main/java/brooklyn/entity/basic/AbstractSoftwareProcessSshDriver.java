@@ -159,6 +159,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public String getInstallDir() {
         if (installDir != null) return installDir;
 
+        String existingVal = getEntity().getAttribute(SoftwareProcess.INSTALL_DIR);
+        if (Strings.isNonBlank(existingVal)) { // e.g. on rebind
+            installDir = existingVal;
+            return installDir;
+        }
+
         synchronized (installDirSetupMutex) {
             // previously we looked at sensor value, but we shouldn't as it might have been converted from the config key value
             // *before* we computed the install label, or that label may have changed since previous install; now force a recompute
@@ -245,6 +251,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     public String getExpandedInstallDir() {
         if (expandedInstallDir != null) return expandedInstallDir;
         
+        String existingVal = getEntity().getAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR);
+        if (Strings.isNonBlank(existingVal)) { // e.g. on rebind
+            expandedInstallDir = existingVal;
+            return expandedInstallDir;
+        }
+
         String untidiedVal = ConfigToAttributes.apply(getEntity(), SoftwareProcess.EXPANDED_INSTALL_DIR);
         if (Strings.isNonBlank(untidiedVal)) {
             setExpandedInstallDir(Os.tidyPath(untidiedVal));
