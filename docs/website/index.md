@@ -6,7 +6,17 @@ children:
 - learnmore/
 - { path: download/, menu: null }
 - { path: quickstart/, title: Get Started }
-- documentation/
+- path: documentation/
+  menu:
+  - { path: /guide/index.md, title_in_menu: "User Guide {{ site.brooklyn-stable-version }}", 
+      menu_customization: { dropdown_section_header: true } }
+  - { path: /guide/yaml/index.md, title_in_menu: YAML Blueprints }
+  - { path: /guide/java/index.md, title_in_menu: Java Blueprints }
+  - { path: /guide/ops/index.md, title_in_menu: Operations }
+  - { path: documentation/todo.md, title_in_menu: Developer Guide, 
+      menu_customization: { dropdown_new_section: true } }
+  - { path: documentation/todo.md, title_in_menu: FAQ }
+  - { path: documentation/other-docs.md, title_in_menu: Other Resources }
 - community/
 ---
 

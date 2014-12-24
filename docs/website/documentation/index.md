@@ -2,11 +2,10 @@
 layout: website-normal
 title: Documentation
 children:
-- { path: /guide/index.md, title_in_menu: "User Guide {{ site.brooklyn-stable-version }}", menu_customization: { dropdown_section_header: true } }
-- { path: /guide/yaml/index.md, title_in_menu: Brooklyn YAML }
-- { path: /guide/java/index.md, title_in_menu: Java Blueprints }
-- { path: /guide/ops/index.md }
-- { path: other-docs.md, title_in_menu: Other Resources, menu_customization: { dropdown_new_section: true } }
+- { path: /guide/index.md, title_in_menu: "User Guide {{ site.brooklyn-stable-version }}" }
+- { path: todo.md, title_in_menu: Developer Guide }
+- { path: todo.md, title_in_menu: FAQ }
+- { path: other-docs.md, title_in_menu: Other Resources }
 ---
 
 TODO kill me

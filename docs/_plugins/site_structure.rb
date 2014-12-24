@@ -43,7 +43,8 @@
 module SiteStructure
 
   DEBUG = false
-  
+
+  require 'yaml'  
 #  require 'pp'
 
   class Generator < Jekyll::Generator
@@ -218,6 +219,9 @@ module SiteStructure
               # process custom menu override
               sub['menu'] = child['menu']
               if (sub['menu'] != nil)
+                if sub['menu'].is_a? String
+                  sub['menu'] = YAML.load(render_liquid(site, page, sub['menu'])) if sub['menu'].is_a? String
+                end
                 sub['menu'] = sub['menu'].collect { |mi| 
                   gen_structure(site, mi, page, breadcrumb_pages, breadcrumb_paths, structure_processed_pages)
                 }
