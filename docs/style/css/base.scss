@@ -71,6 +71,16 @@ a[id]:empty, a[name]:empty {
 }
 .navbar-icon-shift { margin-right: -2px; }
 
+.navbar div.dropdown_section_header hr {
+  margin: 4px 12px;
+  border-color: #ddd;
+}
+
+.navbar div.dropdown_new_section hr {
+  margin: 6px 0px;
+  border-color: #ddd;
+}
+
 /* pop-up top-menu */
 ul.nav li.dropdown:hover > ul.dropdown-menu {
     display: block;

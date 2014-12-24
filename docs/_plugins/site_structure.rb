@@ -15,6 +15,7 @@
 # * `breadcrumbs_pages` - page items for ancestor items (and self)
 # * `breadcrumbs_paths` - paths of breadcrumb pages (useful for `if .. contains` jekyll tests)
 # * `menu_parent` - the parent menu which contains this page
+# * `menu_customization` - a hash of customization set in front matter or in children (can be any data you like)
 # * (in addition the entry may *be* the actual page object when the item is a page whose menu is not overridden)
 #
 # To build, set `children` as a list of either strings (the relative or absolute path to the child .md file),
@@ -33,6 +34,8 @@
 # The menu is automatically generated for all files referenced from the root menu.
 # You can also set `breadcrumbs` as a list of paths in a page to force breadcrumbs, and
 # `menu_proxy_for` to have `menu_path` set differently to the usual `path` (to fake breadcrumbs).
+# 
+# The hash `menu_customization` allows you to pass arbitrary data around, e.g. for use in styling.
 # 
 # Additionally URL rewriting is done if a path map is set in _config.yaml,
 # with `path: { xxx: /new_xxx }` causing `/xxx/foo.html` to be rewritten as `/new_xxx/foo.html`.
@@ -110,9 +113,9 @@ module SiteStructure
         Generator.gen_structure(site, { 'path' => p.path }, nil, [], [], structure_processed_pages) if p.path.end_with? ".md"
       }
       site.data['structure_processed_pages'] = structure_processed_pages
-#      puts "ROOT MENU is #{site.data['menu']}"
-#      puts "PAGE menu is #{structure_processed_pages['/website/index.md'].data['menu'}"
-#but in the context hash map 'data' on pages is promoted, so you access it like {{ page.menu }}
+#      puts "ROOT menu is #{site.data['menu']}"
+#      puts "PAGE menu is #{structure_processed_pages['website/documentation/index.md'].data['menu']}"
+# (but note, in the context hash map 'data' on pages is promoted, so you access it like {{ page.menu }})
     end
 
     # processes liquid tags, e.g. in a link or path object
@@ -121,7 +124,7 @@ module SiteStructure
       info = { :filters => [Jekyll::Filters], :registers => { :site => site, :page => page } }
       page.render_liquid(content, site.site_payload, info)
     end
-        
+    
     def self.gen_structure(site, item, parent, breadcrumb_pages_in, breadcrumb_paths_in, structure_processed_pages)
 #      puts "gen_structure #{item}"
       breadcrumb_pages = breadcrumb_pages_in.dup
@@ -163,11 +166,13 @@ module SiteStructure
         raise "Link to #{item} in #{parent ? parent.path : nil} must have link or path"
       end
 
+      data['menu_customization'] = {}.merge(data['menu_customization'] || {}).merge(item['menu_customization'] || {})
+      
       data['breadcrumb_pages'] ||= breadcrumb_pages
       data['breadcrumb_paths'] ||= breadcrumb_paths
       data['menu_parent'] ||= parent
       
-      data['title_in_menu'] = item['title_in_menu'] || item['title'] || data['title_in_menu'] || data['title']
+      data['title_in_menu'] = render_liquid(site, parent, item['title_in_menu'] || item['title'] || data['title_in_menu'] || data['title'])
 #      puts "built #{data}, now looking at children"
 
       # if already processed then return now that we have set custom item overrides (don't recurse through children)
@@ -179,7 +184,7 @@ module SiteStructure
         menu_proxy_for = gen_structure(site, { 'path' => data['menu_proxy_for'], 'no_copy' => "because breadcrumbs won't be right" }, page, [], [], structure_processed_pages)
         raise "missing menu_proxy_for #{data['menu_proxy_for']} in #{page.path}" unless menu_proxy_for
         data['menu_path'] = menu_proxy_for['path']
-        data.merge!(menu_proxy_for.select {|key, value| ['menu', 'breadcrumb_paths', 'breadcrumb_pages', 'menu_parent'].include?(key) })
+        data.merge!(menu_proxy_for.select {|key, value| ['menu', 'title_in_menu', 'breadcrumb_paths', 'breadcrumb_pages', 'menu_parent', 'menu_customization'].include?(key) })
       end
       
       if data['breadcrumbs']

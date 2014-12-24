@@ -35,7 +35,11 @@ layout: website-base
   Case 3a) Otherwise if we're contained in a menu, show that menu.
   Case 3b) And if we have a menu, show our menu nested.
   
+  Note the breadcrumbs are offset:1. This is because usually breadcrumbs include the root;
+  but also if we're overriding breadcrumbs it gives us a way to set a topmenu item (making it breadcrumb[0])
+  while customizing the side menu (make self breadcrumb[1]).
 {% endcomment %}
+
 {% unless page.landing %}
   {% if page.menu_parent %}
     {% if page.menu_parent.landing %} {% comment %} case 2 {% endcomment %}

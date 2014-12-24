@@ -38,7 +38,13 @@
                             <li class="divider"></li>
                             {% for item2 in item.menu %}
                               <li>
+                                {% if item2.menu_customization.dropdown_new_section %}
+                                  <div class="dropdown_new_section"><hr></div>
+                                {% endif %}
                                 <a href="{{item2.url}}">{{item2.title_in_menu}}</a>
+                                {% if item2.menu_customization.dropdown_section_header %}
+                                  <div class="dropdown_section_header"><hr></div>
+                                {% endif %}
                               </li>
                             {% endfor %}
                         </ul>
