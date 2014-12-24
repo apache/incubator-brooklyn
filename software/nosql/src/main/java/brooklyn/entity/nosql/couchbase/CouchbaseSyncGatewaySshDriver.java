@@ -92,10 +92,10 @@ public class CouchbaseSyncGatewaySshDriver extends AbstractSoftwareProcessSshDri
 
                 @Override
                 public boolean apply(@Nullable Entity entity) {
-                    if (entity instanceof CouchbaseNode && Boolean.TRUE.equals(entity.getAttribute(CouchbaseNode.IS_IN_CLUSTER))) {
-                        return true;
-                    }
-                    return false;
+                    // Must either be recognised by a cluster as added, or be the primary node in a cluster of ONE.
+                    return entity instanceof CouchbaseNode
+                      && (Boolean.TRUE.equals(entity.getAttribute(entity.IS_IN_CLUSTER))
+                      || Boolean.TRUE.equals(entity.getAttribute(entity.IS_PRIMARY_NODE)));
                 }
             });
             if (cbClusterNode.isPresent()) {
@@ -172,5 +172,4 @@ public class CouchbaseSyncGatewaySshDriver extends AbstractSoftwareProcessSshDri
             return arch + fileExtension;
         }
     }
-
 }
