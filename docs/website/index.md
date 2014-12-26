@@ -63,7 +63,7 @@ View and modify using the *web console* or automate using the *REST API*
 
 <div style="text-align: center" markdown="1">
 
-<a class="btn btn-primary btn-lg" role="button" href="learnmore.html">learn more</a>
+<a class="btn btn-primary btn-lg" role="button" href="learnmore/">learn more</a>
 <a class="btn btn-primary btn-lg" role="button" href="quickstart/">get started</a>
 
 </div>
