@@ -23,6 +23,13 @@ img {border: 0;}
 a {color: $a_color;}
 a:hover {text-decoration: none; color: $a_hover_color;}
 
+/* Offset link anchors so they are not hidden by the header */
+a[id]:empty, a[name]:empty {
+    padding-top: 60px;
+    margin-top: -60px;
+    display: block;
+}
+
 
 /* WEBSITE MENUS
    ----------------------------------------------------------------------- */
