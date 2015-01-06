@@ -60,6 +60,7 @@ import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import brooklyn.rest.filter.HaMasterCheckFilter;
 import brooklyn.rest.filter.LoggingFilter;
+import brooklyn.rest.filter.NoCacheFilter;
 import brooklyn.rest.filter.RequestTaggingFilter;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.BrooklynNetworkUtils;
@@ -80,6 +81,7 @@ import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
 import com.sun.jersey.api.core.DefaultResourceConfig;
@@ -308,9 +310,9 @@ public class BrooklynWebServer {
         for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
 
-        // Accept gzipped requests and responses
+        // Accept gzipped requests and responses, disable caching for dynamic content
         config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS, GZIPContentEncodingFilter.class.getName());
-        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, GZIPContentEncodingFilter.class.getName());
+        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, ImmutableList.of(GZIPContentEncodingFilter.class, NoCacheFilter.class));
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
