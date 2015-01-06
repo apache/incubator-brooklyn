@@ -254,7 +254,12 @@ define([
             if (!this.name) {
                 throw new Error("Catalog collection must know its name");
             }
+            //this.model is a constructor so it shouldn't be _.bind'ed to this
+            //It actually works when a browser provided .bind is used, but the
+            //fallback implementation doesn't support it.
+            var model = this.model;
             _.bindAll(this);
+            this.model = model;
         },
         url: function() {
             return "/v1/catalog/" + this.name;
@@ -384,7 +389,7 @@ define([
                 return items[0];
             }
 
-            var catalogTree = orderedIds.map(function(symbolicName) {
+            var catalogTree = _.map(orderedIds, function(symbolicName) {
                 var group = groups[symbolicName];
                 var root = getLatestStableVersion(group);
                 var children = _.reject(group, function(model) {return root.id == model.id;});

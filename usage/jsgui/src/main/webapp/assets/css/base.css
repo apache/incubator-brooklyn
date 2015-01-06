@@ -196,7 +196,7 @@ li.text-filter input {
     width: 10em;
     margin-top: 3px;
     /* taken from datatables_filter input */    
-    background-image: url("../img/magnifying-glass-right.png");
+    background-image: url("../img/magnifying-glass-right-icon.png");
     background-size:12px 12px;
     background-repeat: no-repeat;
     background-position: 8px 5px;
@@ -360,6 +360,7 @@ input[type="color"]:focus,.uneditable-input:focus {
     padding: 10px 0px 0px 74px !important;
     width: 298px !important;
     height: 201px !important;
+    margin-right: 0;
 }
 
 .addApplication:hover {
@@ -904,7 +905,7 @@ padding: 2px 5px;
 margin: 0;
 }
 .dataTables_filter input {
-    background-image: url("../img/magnifying-glass-right.png");
+    background-image: url("../img/magnifying-glass-right-icon.png");
     /* url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJ5JREFUeNpi+P//PwMQMANxERCfAeI/UBrEZwbJQ9WAFR0A4u1AbAnEbFB6O1ScGaawGoi3wHQiYyBYDZKHKbwHxLo4FOqC5GEKf4Ksw6EQ5IyfIDYTkPEUiNUZsAOQ+F9GRkYJEKcFiDficSOIcRjE4QTiY0C8DuRbqAJLKP8/FP9kQArHUiA+jySJjA8w4LAS5KZd0MAHhaccQIABALsMiBZy4YLtAAAAAElFTkSuQmCC); */
     background-size:12px 12px;
     background-repeat: no-repeat;
