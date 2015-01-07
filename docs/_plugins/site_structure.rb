@@ -33,7 +33,8 @@
 #
 # The menu is automatically generated for all files referenced from the root menu.
 # You can also set `breadcrumbs` as a list of paths in a page to force breadcrumbs, and
-# `menu_proxy_for` to have `menu_path` set differently to the usual `path` (to fake breadcrumbs).
+# `menu_proxy_for` to have `menu_path` set differently to the usual `path` (to fake breadcrumbs)
+# or `menu_parent` to a path to the menu which should be the parent of the current node.
 # 
 # The hash `menu_customization` allows you to pass arbitrary data around, e.g. for use in styling.
 # 
@@ -49,6 +50,8 @@ module SiteStructure
 
   class Generator < Jekyll::Generator
 
+    @@verbose = false;
+    
     def self.find_page_with_path_absolute_or_relative_to(site, path, referrent, structure_processed_pages)
       uncleaned_path = path
       
@@ -104,14 +107,15 @@ module SiteStructure
     end
 
     def generate(site)
-      
       structure_processed_pages = {}
       # process root page
       root_menu_page = site.config['root_menu_page']
+      puts "site_structure processing root menu page #{root_menu_page}" if @@verbose
       site.data.merge!( Generator.gen_structure(site, { 'path' => root_menu_page }, nil, [], [], structure_processed_pages).data ) if root_menu_page
       # process all pages
+      puts "site_structure now processing all pages" if @@verbose
       site.pages.each { |p| 
-        Generator.gen_structure(site, { 'path' => p.path }, nil, [], [], structure_processed_pages) if p.path.end_with? ".md"
+        Generator.gen_structure(site, { 'path' => p.path }, nil, [], [], structure_processed_pages) if (p.path.end_with? ".md") && (!p['menu_processed'])
       }
       site.data['structure_processed_pages'] = structure_processed_pages
 #      puts "ROOT menu is #{site.data['menu']}"
@@ -127,7 +131,7 @@ module SiteStructure
     end
     
     def self.gen_structure(site, item, parent, breadcrumb_pages_in, breadcrumb_paths_in, structure_processed_pages)
-#      puts "gen_structure #{item}"
+      puts "gen_structure #{item} from #{parent ? parent.path : 'root'} (#{breadcrumb_paths_in})" if @@verbose
       breadcrumb_pages = breadcrumb_pages_in.dup
       breadcrumb_paths = breadcrumb_paths_in.dup
       if (item.is_a? String)
@@ -135,17 +139,21 @@ module SiteStructure
       end
       if (item['path'])      
         page = find_page_with_path_absolute_or_relative_to(site, render_liquid(site, parent, item['path']), parent, structure_processed_pages)
-        # if find_page doesn't raise, we are in debug, silently ignore
+        # if nil and find_page doesn't raise, we are in debug mode, silently ignore
         return nil unless page
         # build up the menu info
-        if (item.length==1)
+        if (item.length==1 && !page['menu_processed'])
+          puts "setting up #{item} from #{page.path} as original" if @@verbose
           data = page.data
           result = page
         else
-          # if other fields set on 'item' then we are overriding, so we have to take a duplicate
-          unless page['menu']
+          puts "setting up #{item} from #{page.path} as copy" if @@verbose
+          # if other fields are set on 'item' then we are overriding, so we have to take a duplicate
+          unless page['menu_processed']
             # force processing if not yet processed, breadcrumbs etc set from that page
+            puts "making copy of #{page.path}" if @@verbose
             page = gen_structure(site, "/"+page.path, parent, breadcrumb_pages_in, breadcrumb_paths_in, structure_processed_pages)
+            puts "copy is #{page.path}" if @@verbose
           end
           data = page.data.dup
           data['data'] = data
@@ -153,10 +161,12 @@ module SiteStructure
         end 
         data['path'] = page.path
         data['url'] = page.url
+        puts "data is #{data}" if @@verbose
         data['page'] = page
         breadcrumb_pages << page
         breadcrumb_paths << page.path
       elsif (item['link'])
+        puts "setting up #{item} as link" if @@verbose
         link = render_liquid(site, parent, item['link'])
         data = { 'link' => link, 'url' => link }
         breadcrumb_pages << data
@@ -190,20 +200,23 @@ module SiteStructure
       
       if data['breadcrumbs']
         # if custom breadcrumbs set on page, use them instead
-        data['breadcrumb_pages'] = data['breadcrumbs'].collect { |path|
+        breadcrumb_pages = data['breadcrumb_pages'] = data['breadcrumbs'].collect { |path|
           result = find_page_with_path_absolute_or_relative_to(site, render_liquid(site, parent, path), page, structure_processed_pages)
           raise "missing breadcrumb #{path} in #{page.path}" unless result
           result
         }
-        data['breadcrumb_paths'] = data['breadcrumb_pages'].collect { |p| p.path }
+        breadcrumb_paths = data['breadcrumb_paths'] = data['breadcrumb_pages'].collect { |p| p.path }
       end
 
       if data['menu_parent'] 
         if data['menu_parent'].is_a? String
           # if custom menu_parent was set as a string then load it
-          result = find_page_with_path_absolute_or_relative_to(site, render_liquid(site, parent, data['menu_parent']), page, structure_processed_pages)        
-          raise "missing parent #{data['menu_parent']} in #{page['path']}" unless result
-          data['menu_parent'] = result
+          parent_result = find_page_with_path_absolute_or_relative_to(site, render_liquid(site, parent, data['menu_parent']), page, structure_processed_pages)        
+          raise "missing parent #{data['menu_parent']} in #{page['path']}" unless parent_result
+          data['menu_parent'] = parent_result
+          if !data['breadcrumbs']
+            # TODO should we inherit actual menu parent breadcrumbs if not set on page?
+          end
         end
       else
         # set menu_parent from breadcrumbs if not set (e.g. we are loading an isolated page)
@@ -212,6 +225,7 @@ module SiteStructure
 
       if (data['children'])
         data['menu'] = []
+        puts "children of #{data['path']} - #{data['children']}" if @@verbose
         data['children'].each do |child|
           sub = gen_structure(site, child, page, breadcrumb_pages, breadcrumb_paths, structure_processed_pages)
           if sub
@@ -229,10 +243,16 @@ module SiteStructure
               end
             end
             data['menu'] << sub
+            puts "sub is #{sub['url']}" if @@verbose
+          else
+            raise "could not find #{child} in #{page.path}"
           end
         end
+        puts "end children of #{data['path']}" if @@verbose
       end
       
+      data['menu_processed']=true
+      puts "done #{item}" if @@verbose
       result
     end
   end
