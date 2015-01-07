@@ -8,14 +8,15 @@ children:
 - { path: quickstart/, title: Get Started }
 - path: documentation/
   menu:
-  - { path: /guide/index.md, title_in_menu: "User Guide {{ site.brooklyn-stable-version }}", 
+  - { path: /guide/index.md, title_in_menu: "User Guide", 
       menu_customization: { dropdown_section_header: true } }
   - { path: /guide/yaml/index.md, title_in_menu: YAML Blueprints }
   - { path: /guide/java/index.md, title_in_menu: Java Blueprints }
-  - { path: /guide/ops/index.md, title_in_menu: Operations }
-  - { path: documentation/todo.md, title_in_menu: Developer Guide, 
+  - { path: /guide/ops/index.md, title_in_menu: Operations,
+      menu_customization: { dropdown_section_header: true } }
+  - { path: /guide/dev/index.md, title_in_menu: Developer Guide }
+  - { path: documentation/faq.md, title_in_menu: FAQ,
       menu_customization: { dropdown_new_section: true } }
-  - { path: documentation/todo.md, title_in_menu: FAQ }
   - { path: documentation/other-docs.md, title_in_menu: Other Resources }
 - community/
 ---

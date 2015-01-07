@@ -1,4 +1,5 @@
 ---
+# BROOKLYN_VERSION_BELOW
 title: User Guide
 layout: website-normal
 breadcrumbs:
@@ -9,6 +10,7 @@ children:
 - { path: /guide/yaml/index.md }
 - { path: /guide/java/index.md }
 - { path: /guide/ops/index.md }
+- { path: /guide/misc/index.md }
 ---
 
 This is the user guide.

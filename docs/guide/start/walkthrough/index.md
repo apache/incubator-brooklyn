@@ -1,7 +1,6 @@
 ---
 layout: guide-normal
 title: Walkthrough
-toc: /guide/toc.json
 ---
 {% include fields.md %}
 

@@ -18,6 +18,8 @@
 
 # layout for most website pages, inheriting base for the menu bar, and providing a main column of content and a menu column
 # (not used for the landing page, and not used for the guide)
+#
+# menu_customizations can be used, including force_inactive to prevent highlighting
 layout: website-base
 ---
 <div class="container">
@@ -55,7 +57,7 @@ layout: website-base
     {% else %} {% comment %} case 3a {% endcomment %}
               {% for item in page.menu_parent.breadcrumb_pages offset:1 %}
                   <h4 class="{% if forloop.index0 > 0 %} with_preceding{% endif %}{% if forloop.rindex0 > 0 %} with_following{% endif %}">
-                    <a href="{{item.url}}" class="list-group-item{% if item.path == page.menu_path %} active{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
+                    <a href="{{item.url}}" class="list-group-item{% if item.path == page.menu_path %}{% unless item.menu_customization.force_inactive %} active{% endunless %}{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
                       {{ item.title_in_menu }}</a></h4>
               {% endfor %}
               {% for item in page.menu_parent.menu %}
@@ -70,7 +72,7 @@ layout: website-base
                   </div>
                 {% else %}
                   {% comment %} case 3a side menu item {% endcomment %}
-                  <a href="{{item.url}}" class="list-group-item{% if page.breadcrumb_paths contains item.menu_path %} active{% endif %}">{{ item.title_in_menu }}</a>
+                  <a href="{{item.url}}" class="list-group-item{% if page.breadcrumb_paths contains item.menu_path %}{% unless item.menu_customization.force_inactive %} active{% endunless %}{% endif %}">{{ item.title_in_menu }}</a>
                 {% endif %}
               {% endfor %}
         

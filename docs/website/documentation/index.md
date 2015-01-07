@@ -2,10 +2,10 @@
 layout: website-normal
 title: Documentation
 children:
-- { path: /guide/index.md, title_in_menu: "User Guide {{ site.brooklyn-stable-version }}" }
-- { path: todo.md, title_in_menu: Developer Guide }
-- { path: todo.md, title_in_menu: FAQ }
-- { path: other-docs.md, title_in_menu: Other Resources }
+- /guide/
+- /guide/dev/
+- faq.md
+- other-docs.md
 ---
 
 TODO kill me

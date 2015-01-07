@@ -1,8 +1,10 @@
 ---
 layout: guide-normal
-title: Overview
-toc: /guide/toc.json
-categories: [start]
+title: Getting Started
+children:
+- quickstart/
+- walkthrough/
 ---
 
-{% readj index.include.md %}
+TODO
+
