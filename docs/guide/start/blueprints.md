@@ -1,8 +1,8 @@
 ---
-title: Getting Started
-layout: website-normal
-children:
-- { path: policies-and-catalogs.md }
+title: Getting Started - Blueprints
+title_in_menu: Blueprints
+layout: guide-normal
+menu_parent: index.md
 ---
 
 {% include fields.md %}
@@ -213,6 +213,7 @@ To stop an application, select the application in the tree view (the top/root en
 
 So far we have touched on Brooklyn's ability to *deploy* an application blueprint to a cloud provider, but this a very small part of Brooklyn's capabilities!
 
-Brooklyn's real power is in using Policies to automatically *manage* applications. There is also the (very useful) ability to store a catalog of application blueprints, ready to go.
+Brooklyn's real power is in using Policies to automatically *manage* applications. 
+There is also the (very useful) ability to store a catalog of application blueprints, ready to go.
 
-[Getting Started - Policies and Catalogs](policies-and-catalogs.html)
+[Getting Started - Catalog](catalog.html)

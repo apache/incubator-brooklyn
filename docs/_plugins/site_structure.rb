@@ -195,7 +195,8 @@ module SiteStructure
         menu_proxy_for = gen_structure(site, { 'path' => data['menu_proxy_for'], 'no_copy' => "because breadcrumbs won't be right" }, page, [], [], structure_processed_pages)
         raise "missing menu_proxy_for #{data['menu_proxy_for']} in #{page.path}" unless menu_proxy_for
         data['menu_path'] = menu_proxy_for['path']
-        data.merge!(menu_proxy_for.select {|key, value| ['menu', 'title_in_menu', 'breadcrumb_paths', 'breadcrumb_pages', 'menu_parent', 'menu_customization'].include?(key) })
+        data.merge!(menu_proxy_for.select {|key, value| ['breadcrumb_paths', 'breadcrumb_pages'].include?(key) })
+        data.merge!(menu_proxy_for.select {|key, value| ['menu', 'breadcrumb_pages', 'menu_parent', 'menu_customization'].include?(key) })
       end
       
       if data['breadcrumbs']

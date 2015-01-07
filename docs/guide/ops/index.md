@@ -2,7 +2,8 @@
 title: Operations
 layout: website-normal
 children:
-- locations/
+- locations/index.md
+- locations/configuring.md
 - persistence/
 - webconsole/
 ---

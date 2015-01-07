@@ -1,9 +1,11 @@
 ---
 layout: guide-normal
 title: Getting Started
+menu_parent: ../index.md
 children:
-- quickstart/
-- walkthrough/
+- blueprints.md
+- catalog.md
+- policies.md
 ---
 
 TODO

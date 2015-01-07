@@ -5,7 +5,7 @@ landing: true
 children:
 - learnmore/
 - { path: download/, menu: null }
-- { path: quickstart/, title: Get Started }
+- { path: /guide/start/blueprints.md, title: Get Started }
 - path: documentation/
   menu:
   - { path: /guide/index.md, title_in_menu: "User Guide", 

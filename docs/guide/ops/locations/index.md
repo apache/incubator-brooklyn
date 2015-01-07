@@ -1,5 +1,5 @@
 ---
-title: Locations
+title: Locations Intro
 layout: guide-normal
 ---
 

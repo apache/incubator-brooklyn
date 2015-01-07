@@ -8,6 +8,10 @@ breadcrumbs:
 children:
 - env/
 - code/
+- code/tests.md
+- tips/
+- tips/logging.md
+- tips/debugging-remote-brooklyn.md
 ---
 
 The Developer Guide contains information on working with the Brooklyn codebase.

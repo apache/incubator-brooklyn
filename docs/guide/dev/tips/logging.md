@@ -1,7 +1,6 @@
 ---
-layout: guide-normal
 title: Logging
-toc: /guide/toc.json
+layout: website-normal
 ---
 
 ## Logging: A Quick Overview

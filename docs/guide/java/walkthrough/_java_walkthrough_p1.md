@@ -1,7 +1,3 @@
----
-layout: guide-normal
-title: Walkthrough
----
 {% include fields.md %}
 
 ## Intro
