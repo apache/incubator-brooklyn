@@ -5,5 +5,5 @@ source 'https://rubygems.org'
 
 gem 'jekyll'
 gem 'therubyracer'
-gem 'link-checker'
+gem 'html-proofer'
 gem 'json'
