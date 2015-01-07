@@ -30,29 +30,25 @@
 
     $.support.transition = (function () {
 
-      var transitionEnd = (function () {
+        // copied from bootstrap 2.1.1 - adds support for IE10+
+        function transitionEnd() {
+            var el = document.createElement('bootstrap')
 
-        var el = document.createElement('bootstrap')
-          , transEndEventNames = {
-               'WebkitTransition' : 'webkitTransitionEnd'
-            ,  'MozTransition'    : 'transitionend'
-            ,  'OTransition'      : 'oTransitionEnd'
-            ,  'msTransition'     : 'MSTransitionEnd'
-            ,  'transition'       : 'transitionend'
+            var transEndEventNames = {
+              WebkitTransition : 'webkitTransitionEnd',
+              MozTransition    : 'transitionend',
+              OTransition      : 'oTransitionEnd otransitionend',
+              transition       : 'transitionend'
             }
-          , name
 
-        for (name in transEndEventNames){
-          if (el.style[name] !== undefined) {
-            return transEndEventNames[name]
+            for (var name in transEndEventNames) {
+              if (el.style[name] !== undefined) {
+                return { end: transEndEventNames[name] }
+              }
+            }
+
+            return false // explicit for ie8 (  ._.)
           }
-        }
-
-      }())
-
-      return transitionEnd && {
-        end: transitionEnd
-      }
 
     })()
 

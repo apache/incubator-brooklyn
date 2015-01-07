@@ -19,9 +19,6 @@
 package brooklyn.rest;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import brooklyn.rest.filter.LoggingFilter;
-import brooklyn.rest.filter.RequestTaggingFilter;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
@@ -51,9 +48,12 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.filter.HaMasterCheckFilter;
+import brooklyn.rest.filter.LoggingFilter;
+import brooklyn.rest.filter.NoCacheFilter;
+import brooklyn.rest.filter.RequestTaggingFilter;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.security.provider.SecurityProvider;
-import brooklyn.rest.filter.HaMasterCheckFilter;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
@@ -326,6 +326,9 @@ public class BrooklynRestApiLauncher {
         // load all our REST API modules, JSON, and Swagger
         for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
+
+        // disable caching for dynamic content
+        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, NoCacheFilter.class.getName());
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
