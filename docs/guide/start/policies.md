@@ -25,7 +25,6 @@ Sitting idle, this cluster will only contain one server, but you can use a tool 
 
 As load is added, Brooklyn requests a new cloud machine, creates a new app server, and adds it to the cluster. As load is removed, servers are removed from the cluster, and the infrastructure is handed back to the cloud.
 
-
 ### Next
 
 This guide has given a quick overview to writing blueprints for applications, deploying applications, and
