@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [ ! -x make-javadoc.sh ]; then
   echo This command must be run from the _build directory, not its parent.
