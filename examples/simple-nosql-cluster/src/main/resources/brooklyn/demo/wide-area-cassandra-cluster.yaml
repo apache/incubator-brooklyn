@@ -1,0 +1,41 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# A YAML version of the WideAreaCassandraCluster application
+#
+name: Wide Area Cassandra cluster
+locations:
+- aws-ec2:us-east-1
+- rackspace-cloudservers-uk
+
+services:
+- type: brooklyn.entity.nosql.cassandra.CassandraFabric
+  name: Brooklyn
+  brooklyn.config:
+    initialSize: 2
+    snitchName: brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch
+    customSnitchJarUrl: classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar
+    memberSpec:
+      $brooklyn:entitySpec:
+        type: brooklyn.entity.nosql.cassandra.CassandraNode
+        brookyn.policies:
+        - type: brooklyn.policy.ha.ServiceRestarter
+        brooklyn.enrichers:
+        - type: brooklyn.policy.ha.ServiceFailureDetector
+    brooklyn.policies:
+    - type: brooklyn.policy.ha.ServiceReplacer
