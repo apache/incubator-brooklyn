@@ -1,5 +1,8 @@
 {% include fields.md %}
 
+{% comment %} explicit rewrite_paths call needed since this is an included file {% endcomment %}
+{% rewrite_paths %}
+
 ## Intro
 
 Brooklyn makes it easy to describe the structure and management of sophisticated distributed applications, 
@@ -100,7 +103,7 @@ everything supported by [jclouds](http://jclouds.org), from OpenStack to Google 
 
 Your console will inform you that it has started a Brooklyn console at [http://localhost:8081](http://localhost:8081)
 
-[![Web Console](wt-starting-700.png "Web Console")](wt-starting.png) 
+[![Web Console]({{ page.url_basedir }}wt-starting-700.png "Web Console")](wt-starting.png) 
 
 The management console provides a view on to the entities that launched,
 including the hierarchy (appservers grouped into a cluster) and their locations. 
@@ -109,7 +112,7 @@ Brooklyn collects information from these entities ("sensors"),
 aggregates these for clusters and other groups (using "enrichers"),
 and exposes operations ("effectors") that can be performed on entities.
 
-[![Web Console Details](wt-tree-jboss-sensors-700.png "Web Console Details")](wt-tree-jboss-sensors.png) 
+[![Web Console Details]({{ page.url_basedir }}wt-tree-jboss-sensors-700.png "Web Console Details")](wt-tree-jboss-sensors.png) 
 
 
 ## Topology, Dependencies, and Management Policies
@@ -155,7 +158,7 @@ public class ClusterWebServerDatabaseSample extends AbstractApplication {
 
 We now see our app at the Nginx URL:
 
-[![Our Web App](wt-deployed-application-700.png "Screenshot of our Web App")](wt-deployed-application.png) 
+[![Our Web App]({{ page.url_basedir }}wt-deployed-application-700.png "Screenshot of our Web App")](wt-deployed-application.png) 
 
 Finally, we'll bring in some active management: we're going to monitor requests per second,
 and scale out if this exceeds 100 up to a maximum of 5 servers.

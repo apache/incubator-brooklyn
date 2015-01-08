@@ -1,5 +1,4 @@
 ---
-# BROOKLYN_VERSION_BELOW
 title: User Guide
 layout: website-normal
 breadcrumbs:
@@ -13,10 +12,8 @@ children:
 - { path: /guide/misc/index.md }
 ---
 
-This is the user guide.
+This is the Brooklyn User Guide for v{{ site.brooklyn-version }}:
 
-TODO - wip
+{% include list-children.html %}
 
-add dev
-
-END
+If you are working with the Brooklyn codebase itself, also see the [Developer Guide](dev/) for this version.

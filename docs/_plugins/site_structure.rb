@@ -20,7 +20,9 @@
 #
 # To build, set `children` as a list of either strings (the relative or absolute path to the child .md file),
 # or as maps with a `path` or `link` (absolute URL) key, a `title` (optional for `path`, to override the title from the file),
-# and (for `path` only) an optional `menu` block (to override the menu inherited from the `children` records in file).
+# and (for `path` only) an optional `menu` block (to override the menu inherited from the `children` records in file),
+# `menu_customization` to set arbitrary data available (e.g. for templates to use when styling),
+# `href_path` to specify that an actual click should send to a different page than was used to produce the menu.
 #
 # For instance:
 #
@@ -28,12 +30,12 @@
 #- child.md
 #- { path: child.md }  # identical to above
 #- { path: child.md, title: "Child with New Name" }  # overriding name
-#- { path: child.md, menu: [ { path: subchild.md, title: "Sub-Child with New Name" } ] }  # custom sub-menu with custom title
+#- { path: child.md, menu: [ { path: subchild.md, title: "Sub-Child with New Name" } ], href_path: subchild.md }  # custom sub-menu with custom title, and click on main sends to submenu 
 #- { path: child.md, menu: null }  # suppress sub-menu (note `null` not `nil` because this is yaml)
 #
 # The menu is automatically generated for all files referenced from the root menu.
 # You can also set `breadcrumbs` as a list of paths in a page to force breadcrumbs, and
-# `menu_proxy_for` to have `menu_path` set differently to the usual `path` (to fake breadcrumbs)
+# `menu_proxy_for` to have `menu_path` set differently to the usual `path` (highlight another page in a menu via breadcrumbs)
 # or `menu_parent` to a path to the menu which should be the parent of the current node.
 # 
 # The hash `menu_customization` allows you to pass arbitrary data around, e.g. for use in styling.
@@ -48,6 +50,47 @@ module SiteStructure
   require 'yaml'  
 #  require 'pp'
 
+  class RewritePaths < Liquid::Tag
+    def initialize(tag_name, text, tokens)
+      super
+      @text = text
+    end
+    def render(context)
+      page = context['page']
+      site = context['site']
+      RewritePaths.rewrite_paths(site, page)
+    end
+    
+    def self.rewrite_paths(site, page)
+      path = page['path']
+      page_hash = (page.is_a? Hash) ? page : page.data
+      # set url_basedir and apply path mapping
+      page_hash['url_basedir'] = File.dirname(path)+"/"
+      page_hash['url_basedir'].prepend("/") unless page_hash['url_basedir'].start_with? "/"
+      
+      config_hash = (site.is_a? Hash) ? site : site.config
+      
+      if ((config_hash['path']) && (config_hash['path'].is_a? Hash))
+        config_hash['path'].each {|key, value| 
+          if (path.start_with?(key))
+            if ((!page.is_a? Hash) && page.url)
+              page.url.slice!("/"+key)
+              page.url.prepend(value)
+            end
+            
+            page_hash['url_basedir'].slice!("/"+key)
+            page_hash['url_basedir'].prepend(value)
+          end
+        }
+      end
+      
+      nil
+    end
+  end
+  
+  Liquid::Template.register_tag('rewrite_paths', SiteStructure::RewritePaths)
+
+  
   class Generator < Jekyll::Generator
 
     @@verbose = false;
@@ -89,16 +132,6 @@ module SiteStructure
           return nil
         end
       end
-
-      # now apply standard clean-up
-      if ((site.config['path']) && (site.config['path'].is_a? Hash))
-        site.config['path'].each {|key, value| 
-          if (page.url.start_with?("/"+key))
-            page.url.slice!("/"+key)
-            page.url.prepend(value)
-          end
-        }
-      end 
       
       # and put in cache
       structure_processed_pages[path] = page
@@ -107,6 +140,8 @@ module SiteStructure
     end
 
     def generate(site)
+      # rewrite paths
+      site.pages.each { |p| RewritePaths.rewrite_paths(site, p) }
       structure_processed_pages = {}
       # process root page
       root_menu_page = site.config['root_menu_page']
@@ -160,7 +195,12 @@ module SiteStructure
           result = data
         end 
         data['path'] = page.path
-        data['url'] = page.url
+        if item['href_path']
+          href_page = find_page_with_path_absolute_or_relative_to(site, render_liquid(site, page, item['href_path']), parent, structure_processed_pages)
+        else
+          href_page = page
+        end
+        data['url'] = href_page.url
         puts "data is #{data}" if @@verbose
         data['page'] = page
         breadcrumb_pages << page
@@ -195,8 +235,8 @@ module SiteStructure
         menu_proxy_for = gen_structure(site, { 'path' => data['menu_proxy_for'], 'no_copy' => "because breadcrumbs won't be right" }, page, [], [], structure_processed_pages)
         raise "missing menu_proxy_for #{data['menu_proxy_for']} in #{page.path}" unless menu_proxy_for
         data['menu_path'] = menu_proxy_for['path']
-        data.merge!(menu_proxy_for.select {|key, value| ['breadcrumb_paths', 'breadcrumb_pages'].include?(key) })
-        data.merge!(menu_proxy_for.select {|key, value| ['menu', 'breadcrumb_pages', 'menu_parent', 'menu_customization'].include?(key) })
+        # copy other data across
+        data.merge!(menu_proxy_for.select {|key, value| ['breadcrumb_paths', 'breadcrumb_pages', 'menu', 'title_in_menu', 'menu_parent', 'menu_customization'].include?(key) })
       end
       
       if data['breadcrumbs']

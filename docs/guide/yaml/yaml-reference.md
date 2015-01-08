@@ -1,8 +1,6 @@
 ---
 title: Broooklyn YAML Blueprint Reference
-layout: guide-normal
-toc: ../guide_toc.json
-categories: [use, guide, defining-applications]
+layout: website-normal
 ---
 
 ## Root Elements

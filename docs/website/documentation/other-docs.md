@@ -8,5 +8,4 @@ children:
 - { path: ../meta/sitemap.md }
 ---
 
-TODO
-
+{% include list-children.html %}

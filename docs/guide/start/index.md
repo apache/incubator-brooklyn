@@ -8,5 +8,4 @@ children:
 - policies.md
 ---
 
-TODO
-
+{% include list-children.html %}

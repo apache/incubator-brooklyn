@@ -3,7 +3,7 @@ layout: website-normal
 title: Learn More
 children:
 # - { path: yaml-explained.md }
-- { path: theory.md, title: Theory }
+- { path: theory.md, title_in_menu: Theory }
 ---
 
 <!--
@@ -12,4 +12,5 @@ TODO have a list of resources here?  or start w yaml explained?
 TODO include { path: catalog/index.html }
 -->
 
-* [The Theory of Brooklyn](theory.html)
+{% include list-children.html %}
+

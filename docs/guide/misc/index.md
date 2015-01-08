@@ -11,14 +11,10 @@ children:
 - { path: /website/documentation/, title_in_menu: "All Documentation", menu_customization: { force_inactive: true } }
 ---
 
-TODO: breacrumbs {{ page.breadcrumb_paths }}.
+Further documentation specific to this version of Brooklyn includes:
 
+{% for item in page.menu reversed offset:1 reversed %}
+* [{{ item.title_in_menu }}]({{ item.url }})
+{% endfor %}
 
-Extra docs for this version include:
-
-* download
-* TODO
-
-Other documentation available too TODO.
-
-END
+Also see the [other versions]({{ path.guide }}/meta/versions.html) or [general documentation]({{ path.guide }}/documentation/).

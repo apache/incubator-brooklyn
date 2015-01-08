@@ -13,7 +13,9 @@ children:
 - policy.md
 - policies/
 - service-state.md
-menu_proxy_for: walkthrough/
 ---
 
-{% readj walkthrough/_java_walkthrough_p1.md %}
+Java blueprints are much more powerful than YAML but is also rather more difficult.
+Advanced Java skills are required.
+
+{% include list-children.html %}
