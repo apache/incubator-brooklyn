@@ -304,10 +304,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     private BasicPool<SshTool> buildPool(final Map<String, ?> properties) {
         return BasicPool.<SshTool>builder()
-                .name(getDisplayName()+"@"+address+
+                .name(getDisplayName()+"@"+address+":"+getPort()+
                         (hasConfig(SSH_HOST, true) ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
-                        ":"+
-                        System.identityHashCode(this))
+                        ":hash"+System.identityHashCode(this))
                 .supplier(new Supplier<SshTool>() {
                         @Override public SshTool get() {
                             return connectSsh(properties);
