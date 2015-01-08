@@ -21,6 +21,7 @@ package brooklyn.entity.proxying;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
@@ -50,6 +51,7 @@ import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.javalang.AggregateClassLoader;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -252,6 +254,8 @@ public class InternalEntityFactory extends InternalFactory {
                 ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
             }
 
+            checkAllRequiredConfigIsSet(entity);
+
             Entity parent = spec.getParent();
             if (parent != null) {
                 parent = (parent instanceof AbstractEntity) ? ((AbstractEntity)parent).getProxyIfAvailable() : parent;
@@ -262,6 +266,32 @@ public class InternalEntityFactory extends InternalFactory {
             
         } catch (Exception e) {
             throw Exceptions.propagate(e);
+        }
+    }
+
+    /**
+     * Checks the given entity's interfaces for {@link ConfigKey ConfigKeys} that are marked
+     * non-null and throws an {@link IllegalArgumentException} if any are unset.
+     */
+    protected <T extends Entity> void checkAllRequiredConfigIsSet(T entity) {
+        Set<Class<?>> interfaces = Reflections.getInterfacesIncludingClassAncestors(entity.getClass());
+        for (Class<?> c : interfaces) {
+            for (Field f : c.getFields()) {
+                if (ConfigKey.class.isAssignableFrom(f.getType())) {
+                    f.setAccessible(true);
+                    ConfigKey ck;
+                    try {
+                        ck = ConfigKey.class.cast(f.get(entity));
+                    } catch (IllegalAccessException e) {
+                        log.debug("Couldn't complete non-null check on {} for {}: {}",
+                                new Object[]{entity, f.getType(), e.getMessage()});
+                        continue;
+                    }
+                    if (ck != null && ck.isNonNull() && entity.getConfig(ck) == null) {
+                        throw new IllegalArgumentException(entity + " must have non-null value for " + ck);
+                    }
+                }
+            }
         }
     }
     

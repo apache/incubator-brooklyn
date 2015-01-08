@@ -949,7 +949,9 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @SuppressWarnings("unchecked")
     private <T> T setConfigInternal(ConfigKey<T> key, Object val) {
-        if (!inConstruction && getManagementSupport().isDeployed()) {
+        if (key.isNonNull() && val == null) {
+            throw new IllegalArgumentException("Null value for required key " + key);
+        } else if (!inConstruction && getManagementSupport().isDeployed()) {
             // previously we threw, then warned, but it is still quite common;
             // so long as callers don't expect miracles, it should be fine.
             // i (Alex) think the way to be stricter about this (if that becomes needed) 

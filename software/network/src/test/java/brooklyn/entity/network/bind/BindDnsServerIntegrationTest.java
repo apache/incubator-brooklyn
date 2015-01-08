@@ -19,6 +19,8 @@
 package brooklyn.entity.network.bind;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,7 @@ import brooklyn.entity.rebind.RebindTestFixture;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.exceptions.Exceptions;
 
 public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplication> {
 
@@ -89,6 +92,19 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
         e.setAttribute(PrefixAndIdEnricher.SENSOR, Strings.repeat("a", 171));
         EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.A_RECORDS,
                 ImmutableMap.of(Strings.repeat("a", 63), e.getAttribute(Attributes.ADDRESS)));
+    }
+
+    @Test(groups = "Integration")
+    public void testInitFailsIfHostnameSensorUnset() {
+        try {
+            origApp.createAndManageChild(EntitySpec.create(BindDnsServer.class));
+            fail("Expected exception when BindDnsServer is missing " + BindDnsServer.HOSTNAME_SENSOR);
+        } catch (Exception e) {
+            Throwable t = Exceptions.getFirstInteresting(e);
+            LOG.info("exception", e);
+            assertTrue(t.getMessage().contains(BindDnsServer.HOSTNAME_SENSOR.getName()),
+                    "exception=" + t);
+        }
     }
 
     @Test(groups = "Integration")
@@ -166,3 +182,4 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
     }
 
 }
+

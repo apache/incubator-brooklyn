@@ -20,6 +20,7 @@ package brooklyn.config;
 
 import java.util.Collection;
 
+import com.google.common.annotations.Beta;
 import com.google.common.reflect.TypeToken;
 
 /**
@@ -77,6 +78,12 @@ public interface ConfigKey<T> {
      * @return True if the configuration can be changed at runtime.
      */
     boolean isReconfigurable();
+
+    /**
+     * @return True if the configuration must be non-null.
+     */
+    @Beta
+    boolean isNonNull();
 
     /** Interface for elements which want to be treated as a config key without actually being one
      * (e.g. config attribute sensors).
