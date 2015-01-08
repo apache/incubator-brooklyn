@@ -44,6 +44,7 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.location.Location;
 import brooklyn.management.AccessController;
@@ -171,15 +172,18 @@ public class LocalManagementContext extends AbstractManagementContext {
     
     public LocalManagementContext(Builder builder, Map<String, Object> brooklynAdditionalProperties, DataGridFactory datagridFactory) {
         super(builder.build(), datagridFactory);
+        
+        checkNotNull(configMap, "brooklynProperties");
+        
         // TODO in a persisted world the planeId may be injected
         this.managementPlaneId = Strings.makeRandomId(8);
-        
         this.managementNodeId = Strings.makeRandomId(8);
-        checkNotNull(configMap, "brooklynProperties");
         this.builder = builder;
         this.brooklynAdditionalProperties = brooklynAdditionalProperties;
         if (brooklynAdditionalProperties != null)
             configMap.addFromMap(brooklynAdditionalProperties);
+        
+        BrooklynFeatureEnablement.init(configMap);
         
         this.locationManager = new LocalLocationManager(this);
         this.accessManager = new LocalAccessManager();
@@ -384,6 +388,8 @@ public class LocalManagementContext extends AbstractManagementContext {
         this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
 
         clearLocationRegistry();
+        
+        BrooklynFeatureEnablement.init(configMap);
         
         // Notify listeners that properties have been reloaded
         for (PropertiesReloadListener listener : reloadListeners) {
