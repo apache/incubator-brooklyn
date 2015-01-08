@@ -93,7 +93,7 @@ Contributing using GitHub
 Our GitHub repository is located at
 [https://github.com/apache/incubator-brooklyn](https://github.com/apache/incubator-brooklyn)
 
-Your commit messages must properly describes the changes that have been made and
+Your commit messages must properly describe the changes that have been made and
 their purpose ([here are some
 guidelines](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)).
 If your contributions fix a Jira issue, then ensure that you reference the issue
@@ -130,7 +130,7 @@ set of commits, and having an atomic change per commit is preferred in the end.
 Use your best judgement and work with your reviewer as to when you should revise
 a commit or create a new one.
 
-A pull request is considered ready to be merged once it gets at lease one +1
+A pull request is considered ready to be merged once it gets at least one +1
 from a committer. Once all the changes have been completed and the pull request
 is accepted, you may be asked to rebase it against the latest code. You may also
 wish to squash some commits together and make other history revisions, to leave
