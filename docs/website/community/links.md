@@ -1,7 +1,7 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: Development Bookmarks
-toc: ../toc.json
+menu_proxy_for: how-to-contribute.md
 ---
 
 {% include fields.md %}
