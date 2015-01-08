@@ -11,8 +11,8 @@ children:
 - clusters-and-policies.md
 - custom-entities.md
 - catalog-maintenance.md
-- chef/
 - { path: yaml-reference.md, title: YAML Blueprint Reference }
 ---
+
 
 {% include list-children.html %}
