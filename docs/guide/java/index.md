@@ -1,6 +1,6 @@
 ---
-title: Java
-title_in_menu: Java
+title: Java Blueprints
+title_in_menu: Java Blueprints
 layout: website-normal
 children:
 - walkthrough/

@@ -12,13 +12,6 @@ menu_parent: index.md
 
 Download the template [catalog.xml](catalog.xml) to your `~/.brooklyn/` folder, and relaunch Brooklyn.
 
-{% highlight bash %}
-$ cd ~/.brooklyn
-$ wget {{site.url_root}}{{site.path.guide}}/start/catalog.xml
-
-$ brooklyn launch
-{% endhighlight %}
-
 Now when we open the web console, two applications are displayed from the catalog.
 
 Select the 'Demo Web Cluster with DB' and click 'Next'.

@@ -1,9 +1,15 @@
 ---
-title: YAML
+title: YAML Blueprints
 layout: website-normal
 children:
 - creating-yaml.md
-- deploying-yaml.md
+- setting-locations.md
+- configuring-vms.md
+- clusters.md
+- bigger-blueprint.md
+- multiple-services.md
+- clusters-and-policies.md
+- custom-entities.md
 - catalog-maintenance.md
 - chef/
 - { path: yaml-reference.md, title: YAML Blueprint Reference }
