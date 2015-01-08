@@ -277,8 +277,16 @@ public class Duration implements Comparable<Duration>, Serializable {
         return compareTo(x) > 0;
     }
 
+    public boolean isLongerThan(Stopwatch stopwatch) {
+        return isLongerThan(Duration.millis(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+    }
+
     public boolean isShorterThan(Duration x) {
         return compareTo(x) < 0;
+    }
+
+    public boolean isShorterThan(Stopwatch stopwatch) {
+        return isShorterThan(Duration.millis(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
     }
 
     /** returns the larger of this value or the argument */
@@ -303,5 +311,4 @@ public class Duration implements Comparable<Duration>, Serializable {
     public Duration maximum(Duration alternateMaximumValue) {
         return upperBound(alternateMaximumValue);
     }
-    
 }

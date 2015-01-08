@@ -247,7 +247,7 @@ public abstract class ShellAbstractTool implements ShellTool {
             }
             this.scriptNameWithoutExtension = "brooklyn-"+
                     Time.makeDateStampString()+"-"+Identifiers.makeRandomId(4)+
-                    (summary==null ? "" : "-"+summary);
+                    (Strings.isBlank(summary) ? "" : "-"+summary);
             this.scriptPath = Os.mergePathsUnix(scriptDir, scriptNameWithoutExtension+".sh");
         }
 
@@ -367,14 +367,13 @@ public abstract class ShellAbstractTool implements ShellTool {
          * An offset can be given, to only retrieve data starting at a particular character (indexed from 0).
          */
         protected List<String> buildLongPollCommand(int stdoutPosition, int stderrPosition, Duration timeout) {
-            // Note that `tail -c +1` means start at the *first* character (i.e. start counting from 1, not 0)
-            // TODO Relies on commands terminating when ssh connection dropped (because not run with `nohup`)
-            String catStdoutCmd = "tail -c +"+(stdoutPosition+1)+" -f "+stdoutPath+" &";
-            String catStderrCmd = "tail -c +"+(stderrPosition+1)+" -f "+stderrPath+" 1>&2 &";
             long maxTime = Math.max(1, timeout.toSeconds());
             
+            // Note that `tail -c +1` means start at the *first* character (i.e. start counting from 1, not 0)
             List<String> waitForExitStatusParts = ImmutableList.of(
                     "# Long poll", // comment is to aid testing - see SshjToolAsyncStubIntegrationTest
+                    "tail -c +"+(stdoutPosition+1)+" -f "+stdoutPath+" & export TAIL_STDOUT_PID=$!",
+                    "tail -c +"+(stderrPosition+1)+" -f "+stderrPath+" 1>&2 & export TAIL_STDERR_PID=$!",
                     "EXIT_STATUS_PATH="+exitStatusPath,
                     "PID_PATH="+pidPath,
                     "MAX_TIME="+maxTime,
@@ -390,9 +389,11 @@ public abstract class ShellAbstractTool implements ShellTool {
                     "            sleep 3",
                     "            if test -s $EXIT_STATUS_PATH; then",
                     "                EXIT_STATUS=`cat $EXIT_STATUS_PATH`",
+                    "                kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID}",
                     "                exit $EXIT_STATUS",
                     "            else",
                     "                echo \"No exit status in $EXIT_STATUS_PATH, and pid in $PID_PATH ($PID) not executing\"",
+                    "                kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID}",
                     "                exit 126",
                     "            fi",
                     "        fi",
@@ -401,25 +402,32 @@ public abstract class ShellAbstractTool implements ShellTool {
                     "    sleep 1",
                     "    COUNTER+=1",
                     "done",
+                    "kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID}",
                     "exit 125"+"\n");
             String waitForExitStatus = Joiner.on("\n").join(waitForExitStatusParts);
 
-            MutableList.Builder<String> cmds = MutableList.<String>builder()
-                    .add(runAsRoot ? BashCommands.sudo(catStdoutCmd) : catStdoutCmd)
-                    .add(runAsRoot ? BashCommands.sudo(catStderrCmd) : catStderrCmd)
-                    .add(runAsRoot ? BashCommands.sudo(waitForExitStatus) : waitForExitStatus);
-            return cmds.build();
+            return ImmutableList.of(runAsRoot ? BashCommands.sudo(waitForExitStatus) : waitForExitStatus);
         }
 
         protected List<String> deleteTemporaryFilesCommand() {
+            ImmutableList.Builder<String> cmdParts = ImmutableList.builder();
+            
             if (!Boolean.TRUE.equals(noDeleteAfterExec)) {
                 // use "-f" because some systems have "rm" aliased to "rm -i"
                 // use "< /dev/null" to guarantee doesn't hang
-                return ImmutableList.of(
+                cmdParts.add(
                         "rm -f "+scriptPath+" "+stdoutPath+" "+stderrPath+" "+exitStatusPath+" "+pidPath+" < /dev/null");
-            } else {
-                return ImmutableList.<String>of();
             }
+            
+            // If the buildLongPollCommand didn't complete properly then it might have left tail command running;
+            // ensure they are killed.
+            cmdParts.add(
+                    "ps aux | grep \"tail -c\" | grep \""+stdoutPath+"\" | grep -v grep | awk '{ printf $2 }' | xargs kill",
+                    "ps aux | grep \"tail -c\" | grep \""+stderrPath+"\" | grep -v grep | awk '{ printf $2 }' | xargs kill");
+
+            String cmd = Joiner.on("\n").join(cmdParts.build());
+            
+            return ImmutableList.of(runAsRoot ? BashCommands.sudo(cmd) : cmd);
         }
 
         public abstract int run();
