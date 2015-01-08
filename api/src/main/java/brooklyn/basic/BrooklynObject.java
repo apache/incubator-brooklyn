@@ -22,18 +22,15 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.entity.trait.Configurable;
 import brooklyn.entity.trait.Identifiable;
-import brooklyn.management.Task;
 
-import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 
 /**
  * Super-type of entity, location, policy and enricher.
  */
-public interface BrooklynObject extends Identifiable {
+public interface BrooklynObject extends Identifiable, Configurable {
     
     /**
      * A display name; recommended to be a concise single-line description.
@@ -67,8 +64,6 @@ public interface BrooklynObject extends Identifiable {
     @Deprecated
     TagSupport getTagSupport();
     
-    ConfigurationSupport config();
-    
     public interface TagSupport {
         /**
          * @return An immutable copy of the set of tags on this entity. 
@@ -84,53 +79,5 @@ public interface BrooklynObject extends Identifiable {
         boolean addTags(@Nonnull Iterable<?> tags);
         
         boolean removeTag(@Nonnull Object tag);
-    }
-
-    @Beta
-    public interface ConfigurationSupport {
-
-        /**
-         * Gets the given configuration value for this entity, in the following order of preference:
-         * <ol>
-         *   <li> value (including null) explicitly set on the entity
-         *   <li> value (including null) explicitly set on an ancestor (inherited)
-         *   <li> a default value (including null) on the best equivalent static key of the same name declared on the entity
-         *        (where best equivalence is defined as preferring a config key which extends another, 
-         *        as computed in EntityDynamicType.getConfigKeys)
-         *   <li> a default value (including null) on the key itself
-         *   <li> null
-         * </ol>
-         */
-        <T> T get(ConfigKey<T> key);
-        
-        /**
-         * @see {@link #getConfig(ConfigKey)}
-         */
-        <T> T get(HasConfigKey<T> key);
-
-        /**
-         * Sets the config to the given value.
-         */
-        <T> T set(ConfigKey<T> key, T val);
-        
-        /**
-         * @see {@link #setConfig(HasConfigKey, Object)}
-         */
-        <T> T set(HasConfigKey<T> key, T val);
-        
-        /**
-         * Sets the config to the value returned by the task.
-         * 
-         * Returns immediately without blocking; subsequent calls to {@link #getConfig(ConfigKey)} 
-         * will execute the task, and block until the task completes.
-         * 
-         * @see {@link #setConfig(ConfigKey, Object)}
-         */
-        <T> T set(ConfigKey<T> key, Task<T> val);
-        
-        /**
-         * @see {@link #setConfig(ConfigKey, Task)}
-         */
-        <T> T set(HasConfigKey<T> key, Task<T> val);
     }
 }

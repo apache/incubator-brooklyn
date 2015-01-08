@@ -48,7 +48,7 @@ import com.google.common.base.Function;
  * FIXME Add {@link setAttribute(AttributeSensorAndConfigKey<?,T>)} back in if/when move it back,
  * or if we extract an interface for AttributeSensorAndConfigKey.
  */
-public interface EntityLocal extends Entity, Configurable {
+public interface EntityLocal extends Entity {
     
     // FIXME Rename to something other than EntityLocal.
     // Separate out what is specific to "local jvm", and what is here for an SPI rather than API.

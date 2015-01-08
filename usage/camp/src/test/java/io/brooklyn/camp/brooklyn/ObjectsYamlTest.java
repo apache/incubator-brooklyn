@@ -26,9 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.Lists;
-
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
@@ -36,9 +35,13 @@ import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
+import brooklyn.management.Task;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+
+import com.google.common.collect.Lists;
 
 @Test
 public class ObjectsYamlTest extends AbstractYamlTest {
@@ -81,7 +84,8 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         private Integer number;
         private Object object;
         private Double value;
-
+        BasicConfigurationSupport configSupport = new BasicConfigurationSupport();
+        
         public ConfigurableObject() { }
 
         public String getString() { return string; }
@@ -95,11 +99,52 @@ public class ObjectsYamlTest extends AbstractYamlTest {
 
         @Override
         public <T> T setConfig(ConfigKey<T> key, T value) {
-            log.info("Detected configuration injection for {}: {}", key.getName(), value);
-            configKeys.add(key.getName());
-            if ("config.number".equals(key.getName())) number = TypeCoercions.coerce(value, Integer.class);
-            if ("config.object".equals(key.getName())) object = value;
-            return value;
+            return config().set(key, value);
+        }
+        
+        @Override
+        public ConfigurationSupport config() {
+            return configSupport;
+        }
+        
+        private class BasicConfigurationSupport implements ConfigurationSupport {
+            private final ConfigBag bag = new ConfigBag();
+            
+            @Override
+            public <T> T get(ConfigKey<T> key) {
+                return bag.get(key);
+            }
+
+            @Override
+            public <T> T get(HasConfigKey<T> key) {
+                return get(key.getConfigKey());
+            }
+
+            @Override
+            public <T> T set(ConfigKey<T> key, T val) {
+                log.info("Detected configuration injection for {}: {}", key.getName(), val);
+                configKeys.add(key.getName());
+                if ("config.number".equals(key.getName())) number = TypeCoercions.coerce(val, Integer.class);
+                if ("config.object".equals(key.getName())) object = val;
+                T old = bag.get(key);
+                bag.configure(key, val);
+                return old;
+            }
+
+            @Override
+            public <T> T set(HasConfigKey<T> key, T val) {
+                return set(key.getConfigKey(), val);
+            }
+
+            @Override
+            public <T> T set(ConfigKey<T> key, Task<T> val) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public <T> T set(HasConfigKey<T> key, Task<T> val) {
+                return set(key.getConfigKey(), val);
+            }
         }
     }
 

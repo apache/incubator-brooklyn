@@ -387,4 +387,14 @@ public class PortForwardManagerClient implements PortForwardManager {
     public TagSupport getTagSupport() {
         return getDelegate().getTagSupport();
     }
+
+    @Override
+    public <T> T setConfig(ConfigKey<T> key, T val) {
+        return getDelegate().setConfig(key, val);
+    }
+
+    @Override
+    public ConfigurationSupport config() {
+        return getDelegate().config();
+    }
 }

@@ -20,6 +20,8 @@ package brooklyn.basic;
 
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.config.ConfigMap;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.management.ManagementContext;
@@ -44,10 +46,10 @@ public class BasicConfigurableObject implements Configurable, Identifiable, Mana
     private String id = Identifiers.makeRandomId(8);
 
     private volatile ManagementContext managementContext;
-    private ConfigBag config;
-
+    private BasicConfigurationSupport config;
+    
     public BasicConfigurableObject() {
-        config = ConfigBag.newInstance();
+        config = new BasicConfigurationSupport();
     }
 
     @Override
@@ -65,14 +67,53 @@ public class BasicConfigurableObject implements Configurable, Identifiable, Mana
     }
 
     @Override
+    public ConfigurationSupport config() {
+        return config;
+    }
+
+    @Override
+    @Deprecated
     public <T> T setConfig(ConfigKey<T> key, T value) {
-        T old = config.get(key);
-        config.configure(key, value);
-        return old;
+        return config().set(key, value);
     }
 
     public <T> T getConfig(ConfigKey<T> key) {
-        return config.get(key);
+        return config().get(key);
     }
 
+    private static class BasicConfigurationSupport implements ConfigurationSupport {
+        private final ConfigBag config = ConfigBag.newInstance();
+
+        @Override
+        public <T> T get(ConfigKey<T> key) {
+            return config.get(key);
+        }
+
+        @Override
+        public <T> T get(HasConfigKey<T> key) {
+            return get(key.getConfigKey());
+        }
+
+        @Override
+        public <T> T set(ConfigKey<T> key, T val) {
+            T old = config.get(key);
+            config.configure(key, val);
+            return old;
+        }
+
+        @Override
+        public <T> T set(HasConfigKey<T> key, T val) {
+            return set(key.getConfigKey(), val);
+        }
+
+        @Override
+        public <T> T set(ConfigKey<T> key, Task<T> val) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T> T set(HasConfigKey<T> key, Task<T> val) {
+            return set(key.getConfigKey(), val);
+        }
+    }
 }
