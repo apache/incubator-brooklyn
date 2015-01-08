@@ -122,8 +122,10 @@ module SiteStructure
         # could not load it from pages, look on disk
 
         if file.exist?                 
-          puts "INFO: reading excluded file #{file} for site structure generation" unless SiteStructure::DEBUG
+          puts "INFO: reading excluded file #{file} for site structure generation" if SiteStructure::DEBUG
           page = Jekyll::Page.new(site, site.source, File.dirname(file), File.basename(file))
+          # make sure right url is set
+          RewritePaths.rewrite_paths(site, page)
         end
  
         unless page
