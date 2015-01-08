@@ -241,7 +241,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         ImmutableList<CatalogItem<Object, Object>> sortedItems =
                 FluentIterable.from(brooklyn().getCatalog().getCatalogItems())
                     .filter(Predicates.and(filters))
-                    .toSortedList(CatalogItemComparator.INSTANCE);
+                    .toSortedList(CatalogItemComparator.getInstance());
         return Lists.transform(sortedItems, TO_CATALOG_ITEM_SUMMARY);
     }
 
