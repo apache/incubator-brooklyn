@@ -3,7 +3,6 @@ title: Policies
 layout: guide-normal
 
 ---
-<a name="introduction"></a>
 
 Policies perform the active management enabled by Brooklyn.  
 They can subscribe to entity sensors and be triggered by them or they can run periodically.
@@ -22,7 +21,6 @@ When a policy runs it can:
 
 Entities can have zero or more ``Policy`` instances attached to them.
 
-<a name="writing-policies"></a>
 Writing Policies
 ----------------
 
@@ -69,7 +67,6 @@ For this release, some of the mechanisms for implementing the above practices ar
 - extend ``AbstractPolicy``, or override an existing policy
 
 
-<a name="off-the-shelf-policies"></a>
 Off-the-Shelf Policies
 ----------------------
 
@@ -113,7 +110,6 @@ TODO - describe how they can be customised (briefly mention sensors)
 
 	Aggregates multiple sensor values (usually across a tier, esp. a cluster) and performs a supplied aggregation method to them to return an aggregate figure, e.g. sum, mean, median, etc. 
 
-<a name="implementing-policies"></a>
 Implementing Policies
 ---------------------
 

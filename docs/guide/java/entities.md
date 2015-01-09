@@ -5,14 +5,12 @@ layout: guide-normal
 
 This section details how to create new custom application components or groups as brooklyn entities.
 
-<a name="entity-lifestyle"></a>
 The Entity Lifecycle
 --------------------
 
 - Importance of serialization, ref to How mananagement works
 - Parents and Membership (groups)
 
-<a name="implementation-classes"></a>
 What to Extend -- Implementation Classes
 ----------------------------------------
 
@@ -37,7 +35,6 @@ often delegating either to a driver (for software processes) or children entitie
 See ``JBoss7Server`` and ``MySqlNode`` for exemplars.
 
 
-<a name="configuration"></a>
 Configuration
 -------------
 <!---
@@ -56,7 +53,7 @@ TODO: why to use config?
   
   This is particularly useful on a contended machine (localhost!). Like ordinary configuration, the config is done by the user, and the actual port used is reported back as a sensor on the entity.
  
-<a name="implementing-sensors"></a>
+ 
 Implementing Sensors
 --------------------
 
@@ -97,7 +94,6 @@ Note the first line (``super.connectSensors()``); as one descends into specific 
 
 For some sensors, and often at compound entities, the values are obtained by monitoring values of other sensors on the same (in the case of a rolling average) or different (in the case of the average of children nodes) entities. This is achieved by policies, described below.
 
-<a name="implementing-effectors"></a>
 Implementing Effectors
 ----------------------
 
@@ -124,7 +120,6 @@ Routines which are convenient for specific drivers can then be inherited in the 
 TODO more drivers such as jmx, etc are planned
 -->
 
-<a name="testing"></a>
 Testing
 -------
 
