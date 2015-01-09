@@ -2,7 +2,7 @@
 title: Runtime Management
 layout: guide-normal
 ---
-<a name="introduction"></a>
+
 brooklyn uses many of the ideas from autonomic computing to implement management of entities in a structured and reusable fashion (including provisioning, 
 healing, and optimising).
 
@@ -21,7 +21,6 @@ This chapter describes these high-level runtime concepts, then proceeds to prese
 detailed information on the underlying implementation of management within brooklyn.
 
 
-<a name="startup-config"></a>
 Startup Configuration
 ---------------------
 
@@ -47,7 +46,6 @@ is supported and recommended.
 
 
 
-<a name="cli"></a>
 Command Line Interface
 ----------------------
 
@@ -100,7 +98,6 @@ You can add things to the brooklyn classpath in a number of ways:
 * Use the ``BROOKLYN_CLASSPATH`` environment variable. If set, this is prepended to the brooklyn classpath.
 
 
-<a name="console"></a>
 Management Web Console
 ----------------------
 
@@ -230,7 +227,6 @@ brooklyn.webconsole.security.keystore.certificate.alias=brooklyn
 
 In order to access the Brooklyn console, you will also need to enable security, and setup a user as described above
 
-<a name="observation-other"></a>
 Other Ways to Observe Activity
 ------------------------------
 
@@ -287,7 +283,6 @@ TODO
 -->
 
 
-<a name="key-apis"></a>
 Key APIs
 --------
 <!---
@@ -302,7 +297,7 @@ TODO - brief overview of key APIs
 <!---
 TODO - describe how to simply configure logging slf4j
 -->
-<a name="sensors-and-effectors"></a>
+
 Sensors and Effectors
 ---------------------
 

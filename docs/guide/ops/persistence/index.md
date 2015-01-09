@@ -3,14 +3,12 @@ title: Persistence
 layout: guide-normal
 ---
 
-<a name="introduction"></a>
 Brooklyn can be configured to persist its state so that the Brooklyn server can be restarted, 
 or so that a high availability standby server can take over.
 
 Brooklyn can persist its state to one of two places: the file system, or to an Object Store
 of your choice.
 
-<a name="command-line-options"></a>
 Command Line Options
 --------------------
 
@@ -39,7 +37,6 @@ the following config keys:
 * `brooklyn.persistence.location.spec`
 
 
-<a name="file-based-persistence"></a>
 File-based Persistence
 ----------------------
 
@@ -65,7 +62,6 @@ entity's: id; display name; type; config; attributes; tags; relationships to loc
 entities, group membership, policies and enrichers; and dynamically added effectors and sensors.
 
 
-<a name="object-store-persistence"></a>
 Object Store Persistence
 ------------------------
 
@@ -96,7 +92,6 @@ brooklyn launch --persist auto --persistenceDir myContainerName --persistenceLoc
 {% endhighlight %}
 
 
-<a name="rebind"></a>
 Rebind
 ------
 
@@ -109,7 +104,6 @@ HTTP or JMX). This new state will be reported in the web-console and can also tr
 any registered policies.
 
 
-<a name="copy-state"></a>
 Copying Persistence State
 -------------------------
 
@@ -128,19 +122,16 @@ The `copy-state` CLI command takes the following arguments:
   The local transformations file to be applied to the copy of the data before uploading it.
 
 
-<a name="handling-rebind-failures"></a>
 Handling Rebind Failures
 ------------------------
 If rebind were to fail for any reason, details of the underlying failures will be reported 
 in the brooklyn.debug.log. There are several approaches to resolving problems.
 
-<a name="rebind-failures-determine-underlying-cause"></a>
 ### Determine Underlying Cause
 
 The problems reported in brooklyn.debug.log will indicate where the problem lies - which 
 entities, locations or policies, and in what way it failed.
 
-<a name="rebind-failures-ignore-errors"></a>
 ### Ignore Errors
 
 The `~/.brooklyn/brooklyn.properties` has several configuration options:
@@ -174,7 +165,6 @@ The meaning of the configuration options is:
 * `rebind.failureMode.rebind`: any errors on rebind not covered by the more specific error cases described above.
 
 
-<a name="rebind-failures-seek-help"></a>
 ### Seek Help
 
 Help can be found at `dev@brooklyn.incubator.apache.org`, where folk will be able to investigate 
@@ -184,7 +174,6 @@ By sharing the persisted state (with credentials removed), Brooklyn developers w
 reproduce and debug the problem.
 
 
-<a name="rebind-failures-determine-fix-up-the-state"></a>
 ### Fix-up the State
 
 The state of each entity, location, policy and enricher is persisted in XML. 
@@ -206,7 +195,6 @@ instance. After fixing the entities, locations and/or policies, the Brooklyn ins
 new persisted state can be copied and used to fix the production instance.
 
 
-<a name="high-availability"></a>
 High Availability
 -----------------
 
@@ -252,7 +240,6 @@ For example, the following cURL command could be used to change the state of a `
     curl -v -X POST -d mode=HOT_STANDBY -H "Brooklyn-Allow-Non-Master-Access: true" http://localhost:8082/v1/server/ha/state
 
 
-<a name="writing-persistable-code"></a>
 Writing Persistable Code
 ------------------------
 The most common problem on rebind is that custom entity code has not been written in a way
