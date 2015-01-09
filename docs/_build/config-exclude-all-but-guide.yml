@@ -1,1 +1,1 @@
-exclude: ['/Gemfile*','/README.md','/index.md','/website']
+exclude: ['/Gemfile*','/README.md','/index.md','/website/']
