@@ -10,8 +10,8 @@ children:
 - clusters-and-policies.md
 - custom-entities.md
 - catalog-maintenance.md
-- { path: yaml-reference.md, title: YAML Blueprint Reference }
 - chef/
+- { path: yaml-reference.md, title: YAML Blueprint Reference }
 ---
 
 
