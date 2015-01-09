@@ -1,7 +1,6 @@
 ---
 layout: website-normal
 title: The Theory behind Brooklyn
-navgroup: learnmore
 ---
 
 <div class="jumobotron" markdown="1">

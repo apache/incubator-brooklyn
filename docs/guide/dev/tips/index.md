@@ -1,7 +1,6 @@
 ---
 layout: guide-normal
 title: Miscellaneous Tips and Tricks
-toc: /guide/toc.json
 ---
 
 ## General Good Ways of Working

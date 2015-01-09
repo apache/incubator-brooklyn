@@ -1,19 +1,24 @@
 ---
 layout: website-landing
 title: Home
-navgroup: home
+landing: true
 children:
-- { path: learnmore/index.md }
-- { path: download.md }
-- { path: quickstart/index.md }
-- { path: documentation.md }
-- { path: community/index.md }
-navgroups:
-- { id: learnmore, page: learnmore/index.md, title: learn more, title_in_menu: Learn More }
-- { id: download, page: download.md, title: download }
-- { id: getstarted, page: quickstart/index.md, title: get started, title_in_menu: Get Started }
-- { id: documentation, page: documentation.md, title: documentation, title_in_menu: All Documentation }
-- { id: community, page: community/index.md, title: community, title_in_menu: Community Home }
+- learnmore/
+- { path: download/, menu: null }
+- { path: /guide/start/running.md, title: Get Started }
+- path: documentation/
+  menu:
+  - { path: /guide/index.md, title_in_menu: "User Guide", 
+      menu_customization: { dropdown_section_header: true } }
+  - { path: /guide/yaml/index.md, title_in_menu: YAML Blueprints, href_path: /guide/yaml/creating-yaml.md }
+  - { path: /guide/java/index.md, title_in_menu: Java Blueprints }
+  - { path: /guide/ops/index.md, title_in_menu: Operations,
+      menu_customization: { dropdown_section_header: true } }
+  - { path: /guide/dev/index.md, title_in_menu: Developer Guide }
+  - { path: documentation/faq.md, title_in_menu: FAQ,
+      menu_customization: { dropdown_new_section: true } }
+  - { path: documentation/other-docs.md, title_in_menu: Other Resources }
+- community/
 ---
 
 <div class="jumbotron">
