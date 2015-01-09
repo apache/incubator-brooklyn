@@ -40,7 +40,7 @@ itself to the server, passing on its configuration.
 This diagram summarises the interaction between Brooklyn, the new node, and the various Chef tools. Note that there
 is no interaction between the AMP Server and the Chef Server.
 
-[![Chef Flow Diagram](chef-call-flow.png "Chef Flow Diagram" )](Chef.png)
+[![Chef Flow Diagram](chef-call-flow.png "Chef Flow Diagram" )](chef-call-flow.png)
 
 ### How Brooklyn interacts with Chef
 

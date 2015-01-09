@@ -5,8 +5,6 @@ title: Release Notes
 
 ## Version {{ site.brooklyn-version }}
 
-TODO: breacrumbs {{ page.breadcrumb_paths }}.
-
 {% if SNAPSHOT %}
 **You are viewing a SNAPSHOT release (master branch), so this list is incomplete.**
 {% endif %}
@@ -37,7 +35,7 @@ For more information, please visit [brooklyn.io](http://brooklyn.io).
 
 * Networking
 
-* Docker support:  see [clocker.io](clocker.io)
+* Docker support:  see [clocker.io](http://clocker.io)
 
 
 ### Backwards Compatibility

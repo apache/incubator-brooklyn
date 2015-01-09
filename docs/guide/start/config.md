@@ -44,7 +44,7 @@ Some sample settings for this are:
     brooklyn.location.named.softlayer-dal05 = jclouds:softlayer:dal05
     brooklyn.location.named.softlayer-dal05.displayName = Softlayer Dallas
 
-If you want to test Brooklyn on localhost, follow [these instructions]({{site.path.guide}}/use/guide/locations/) 
+If you want to test Brooklyn on localhost, follow [these instructions]({{site.path.guide}}/ops/locations/) 
 to ensure that your Brooklyn can access your machine.
 
 Once updated, restart Brooklyn (or reload the properties within the web GUI).

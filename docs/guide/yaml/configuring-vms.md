@@ -18,7 +18,7 @@ ignored if deploying to `localhost` or `byon` fixed-IP machines.*
 
 This will create a VM with the specified parameters in your choice of cloud.
 In the GUI (and in the REST API), the entity is called "VM",
-and the hostname and IP address(es) are reported as [sensors]({{ site.path.guide }}/use/guide/defining-applications/basic-concepts.html).
+and the hostname and IP address(es) are reported as [sensors]({{ site.path.guide }}/concepts/entities.html).
 There are many more `provisioning.properties` supported here,
 including:
 

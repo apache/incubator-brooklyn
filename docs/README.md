@@ -160,9 +160,14 @@ useful for testing.
 Supported options beyond that include `--serve`, to start a web browser serving the content of `_site/`,
 and `--skip-javadoc`, to speed up the build significantly by skipping javadoc generation.
 A handy command for testing the live files, analogous to `jekyll serve` 
-but with the correct file structure, is:
+but with the correct file structure, and then checking links, is:
 
     _build/build.sh test-both --skip-javadoc --serve
+
+And to run link-checks quickly (without validating external links), use:
+
+    htmlproof --href_ignore "https?://127.*" --alt_ignore ".*" --disable_external _site
+
 
 
 Preparing for a Release
