@@ -4,9 +4,7 @@ title_in_menu: Java Blueprints
 layout: website-normal
 children:
 - walkthrough/
-- basic-concepts.md
 - common-usage.md
-- advanced-concepts.md
 - archetype.md
 - entity.md
 - entities/
