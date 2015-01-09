@@ -148,4 +148,9 @@ public interface BindDnsServer extends SoftwareProcess {
     @Effector(description="Gets the IP to hostname mappings stored in this DNS server's conf file")
     public Map<String, String> getReverseMappings();
 
+    /**
+     * @return the predicate used to filter entities for the Bind server to manage.
+     */
+    Predicate<? super Entity> getEntityFilter();
+
 }

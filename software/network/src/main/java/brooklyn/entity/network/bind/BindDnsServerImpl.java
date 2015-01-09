@@ -73,6 +73,7 @@ import brooklyn.util.text.Strings;
 public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerImpl.class);
+    private final Object serialMutex = new Object();
 
     // As per RFC 952 and RFC 1123.
     private static final CharMatcher DOMAIN_NAME_FIRST_CHAR_MATCHER = CharMatcher.inRange('a', 'z')
@@ -110,7 +111,9 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         setAttribute(CNAME_RECORDS, ImmutableMultimap.<String, String>of());
         setAttribute(PTR_RECORDS, ImmutableMap.<String, String>of());
         setAttribute(ADDRESS_MAPPINGS, ImmutableMultimap.<String, String>of());
-        setAttribute(SERIAL, System.currentTimeMillis());
+        synchronized (serialMutex) {
+            setAttribute(SERIAL, System.currentTimeMillis());
+        }
     }
 
     @Override
@@ -275,12 +278,13 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
                 String.format("rm -f %s", temp)));
     }
 
-    // Mostly used in templates
 
-    protected Predicate<? super Entity> getEntityFilter() {
+    @Override
+    public Predicate<? super Entity> getEntityFilter() {
         return getConfig(ENTITY_FILTER);
     }
 
+    // Mostly used in templates
     public String getManagementCidr() {
         return getConfig(MANAGEMENT_CIDR);
     }
@@ -297,9 +301,11 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
      * @return A serial number guaranteed to be valid for use in a modified domain.zone or reverse.zone file.
      */
     public long getSerial() {
-        long next = getAttribute(SERIAL) + 1;
-        setAttribute(SERIAL, next);
-        return next;
+        synchronized (serialMutex) {
+            long next = getAttribute(SERIAL) + 1;
+            setAttribute(SERIAL, next);
+            return next;
+        }
     }
 
     public Cidr getReverseLookupNetwork() {

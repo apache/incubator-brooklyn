@@ -44,6 +44,7 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerSshDriver.class);
     private volatile BindOsSupport osSupport;
+    private final Object osSupportMutex = new Object();
 
     public BindDnsServerSshDriver(BindDnsServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -168,7 +169,7 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
     public BindOsSupport getOsSupport() {
         BindOsSupport result = osSupport;
         if (result == null) {
-            synchronized(this) {
+            synchronized (osSupportMutex) {
                 result = osSupport;
                 if (result == null) {
                     boolean yumExists = newScript("testing for yum")
