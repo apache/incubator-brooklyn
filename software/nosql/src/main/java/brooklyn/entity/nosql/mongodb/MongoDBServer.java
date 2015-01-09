@@ -36,7 +36,12 @@ import brooklyn.util.flags.SetFromFlag;
     iconUrl="classpath:///mongodb-logo.png")
 @ImplementedBy(MongoDBServerImpl.class)
 public interface MongoDBServer extends AbstractMongoDBServer {
-    
+
+    @SetFromFlag("mongodbConfTemplateUrl")
+    ConfigKey<String> MONGODB_CONF_TEMPLATE_URL = ConfigKeys.newConfigKeyWithDefault(
+            AbstractMongoDBServer.MONGODB_CONF_TEMPLATE_URL,
+            "classpath://brooklyn/entity/nosql/mongodb/default-mongod.conf");
+
     // See http://docs.mongodb.org/ecosystem/tools/http-interfaces/#http-console
     // This is *always* 1000 more than port. We disable if it is not available.
     PortAttributeSensorAndConfigKey HTTP_PORT =

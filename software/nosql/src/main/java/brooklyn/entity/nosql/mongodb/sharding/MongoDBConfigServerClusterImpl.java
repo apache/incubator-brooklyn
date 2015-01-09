@@ -24,10 +24,12 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
+import brooklyn.location.access.BrooklynAccessUtils;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.net.HostAndPort;
 
 public class MongoDBConfigServerClusterImpl extends DynamicClusterImpl implements MongoDBConfigServerCluster {
     
@@ -46,7 +48,7 @@ public class MongoDBConfigServerClusterImpl extends DynamicClusterImpl implement
         Iterable<String> memberHostNamesAndPorts = Iterables.transform(getMembers(), new Function<Entity, String>() {
             @Override
             public String apply(Entity entity) {
-                return entity.getAttribute(MongoDBConfigServer.HOSTNAME) + ":" + entity.getAttribute(MongoDBConfigServer.PORT);
+                return entity.getAttribute(MongoDBConfigServer.SUBNET_HOSTNAME) + ":" + entity.getAttribute(MongoDBConfigServer.PORT);
             }
         });
         setAttribute(MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES, ImmutableList.copyOf(memberHostNamesAndPorts));

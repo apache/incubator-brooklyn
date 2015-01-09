@@ -42,12 +42,18 @@ public interface CoLocatedMongoDBRouter extends SameServerEntity {
     @SetFromFlag("shardedDeployment")
     ConfigKey<MongoDBShardedDeployment> SHARDED_DEPLOYMENT = ConfigKeys.newConfigKey(MongoDBShardedDeployment.class, 
             "mongodb.colocatedrouter.shardeddeployment", "Sharded deployment to which the router should report");
-    
+
+    /** Deprecated since 0.7.0 use {@link #PROPAGATING_SENSORS} instead. */
+    @Deprecated
     @SuppressWarnings("serial")
     @SetFromFlag("propogatingSensors")
     ConfigKey<List<Map<String, ?>>> PROPOGATING_SENSORS = ConfigKeys.newConfigKey(new TypeToken<List<Map<String, ?>>>(){}, 
             "mongodb.colocatedrouter.propogating.sensors", "List of sensors to be propogated from child members");
-    
-    public static AttributeSensor<MongoDBRouter> ROUTER = Sensors.newSensor(MongoDBRouter.class, "mongodb.colocatedrouter.router",
-            "Router");
+
+    @SetFromFlag("propagatingSensors")
+    ConfigKey<List<Map<String, ?>>> PROPAGATING_SENSORS = ConfigKeys.newConfigKey(new TypeToken<List<Map<String, ?>>>(){},
+            "mongodb.colocatedrouter.propagating.sensors", "List of sensors to be propogated from child members");
+
+    public static AttributeSensor<MongoDBRouter> ROUTER = Sensors.newSensor(MongoDBRouter.class,
+            "mongodb.colocatedrouter.router", "Router");
 }
