@@ -19,8 +19,6 @@ fi
 rm -rf target/$JAVADOC_TARGET1_SUBPATH/
 
 export DATESTAMP=`date "+%Y-%m-%d"`
-# BROOKLYN_VERSION_BELOW
-export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.7.0-SNAPSHOT-with-dependencies.jar
 echo "building javadoc at $DATESTAMP from:
 $SOURCE_PATHS"
 
@@ -28,7 +26,7 @@ javadoc -sourcepath $SOURCE_PATHS \
   -public \
   -d target/$JAVADOC_TARGET1_SUBPATH/ \
   -subpackages "org.apache.brooklyn:io.brooklyn:brooklyn" \
-  -classpath "$BROOKLYN_JAVADOC_CLASSPATH" \
+  -classpath ../../usage/all/target/brooklyn-all-0.7.0-SNAPSHOT-with-dependencies.jar \
   -doctitle "Apache Brooklyn" \
   -windowtitle "Apache Brooklyn" \
   -header "Apache Brooklyn" \
