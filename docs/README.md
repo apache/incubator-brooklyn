@@ -160,6 +160,22 @@ but with the correct file structure, is:
     _build/build.sh test-both --skip-javadoc --serve
 
 
+Preparing for a Release
+-----------------------
+
+When doing a release and changing versions:
+
+* Before branching:
+  * Change the `brooklyn-stable-version` variable in `_config.yml`
+  * Update `website/meta/versions.md` with a bit of info on this release
+*  In the branch, with `change-version.sh` run (e.g. from `N.SNAPSHOT` to `N`)
+  * Ensure the `guide/start/release-notes.md` file is current
+  * Build and publish `website-root`, `guide-latest`, and `guide-version`
+* In master, with `change-version.sh` run (e.g. to `N+1-SNAPSHOT`)
+  * Clear old stuff in the `guide/start/release-notes.md` file
+  * Optionally build and public `guide-version`
+ 
+
 Publishing the Website and Guide
 --------------------------------
 
@@ -266,5 +282,4 @@ Archived versions are kept under `/v/` in the website.  New versions should be a
 the appropriate directory (`guide-version` above will do this).  These versions take their
 own copy of the `style` files so that changes there will not affect future versions.
 
-A list of available versions also needs to be updated.  This is referenced from the `website`.
-<!-- TODO: where -->
+A list of available versions is in `website/meta/versions.md`.

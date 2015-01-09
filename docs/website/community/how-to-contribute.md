@@ -1,7 +1,6 @@
 ---
 layout: website-normal
 title: How to Contribute
-navgroup: community
 ---
 
 Welcome and thank you for your interest in contributing to Apache Brooklyn! This guide will take you through the
@@ -83,3 +82,9 @@ Our canonical repository is located at `https://git-wip-us.apache.org/repos/asf/
 
 When producing patches, please use `git format-patch` or a similar mechanism - this will ensure that you are properly
 attributed as the author of the patch when a committer merges it.
+
+
+Handy Places
+------------
+
+Development bookmarks are available [here](links.html).

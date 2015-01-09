@@ -1,7 +1,6 @@
 ---
-layout: guide-normal
 title: Logging
-toc: /guide/toc.json
+layout: website-normal
 ---
 
 ## Logging: A Quick Overview
@@ -66,6 +65,10 @@ For example:
   configuration file, except it should be wrapped in ``<included>`` XML tags rather
   than ``<configuration>`` XML tags (because it is included from the ``logback.xml``
   which comes with ``brooklyn-logback-xml``.)
+* To redirect all jclouds logging to a separate file include ``brooklyn/logback-logger-debug-jclouds.xml``.
+  This redirects all logging from ``org.jclouds`` and ``jclouds`` to one of two files: anything
+  logged from Brooklyn's persistence thread will end up in a `persistence.log`, everything else
+  will end up in ``jclouds.log``.
 
 You should **not** supply your own ``logback.xml`` if you are using ``brooklyn-logback-xml``.
 If you do, logback will detect multiple files with that name and will scream at you.

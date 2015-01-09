@@ -60,9 +60,9 @@ module JekyllRead
     def render(context)
       filename = @text.strip
       filename = context[filename] || filename
-
       # Pathname API ignores first arg below if second is absolute
-      file = Pathname.new(File.dirname(context['page']['path'])) + filename
+      page = context['page'] || context.registers[:page]
+      file = Pathname.new(File.dirname(page['path'])) + filename
       file = file.cleanpath
       # is there a better way to trim a leading / ?
       file = file.relative_path_from(Pathname.new("/")) unless file.relative?

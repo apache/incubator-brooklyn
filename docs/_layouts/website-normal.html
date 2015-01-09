@@ -18,6 +18,8 @@
 
 # layout for most website pages, inheriting base for the menu bar, and providing a main column of content and a menu column
 # (not used for the landing page, and not used for the guide)
+#
+# menu_customizations can be used, including force_inactive to prevent highlighting
 layout: website-base
 ---
 <div class="container">
@@ -27,14 +29,60 @@ layout: website-base
             {{ content }}
         </div>
         <div class="col-md-3">
-            {% if page.menu2 %}
-            <div class="list-group">
-                <h4><a href="{{page.menu2parent.url}}" class="list-group-item{% if page.menu2parent.path == page.path %} active{% endif %}">{{ page.menu2parent.title }}</a></h4>
-                {% for child in page.menu2 %}
-                <a href="{{child.reference.url}}" class="list-group-item{% if child.reference.path == page.path %} active{% endif %}">{{ child.reference.title }}</a>
-                {% endfor %}
+            <div class="list-group side-menu">
+{% comment %}
+
+  Case 1) If we're the landing page show nothing.
+  Case 2) If we're contained in the top (landing page) menu, show our menu if we have one.
+  Case 3a) Otherwise if we're contained in a menu, show that menu.
+  Case 3b) And if we have a menu, show our menu nested.
+  
+  Note the breadcrumbs are offset:1. This is because usually breadcrumbs include the root;
+  but also if we're overriding breadcrumbs it gives us a way to set a topmenu item (making it breadcrumb[0])
+  while customizing the side menu (make self breadcrumb[1]).
+{% endcomment %}
+
+{% unless page.landing %}
+  {% if page.menu_parent %}
+    {% if page.menu_parent.landing %} {% comment %} case 2 {% endcomment %}
+              {% for item in page.breadcrumb_pages offset:1 %}
+                  <h4 class="{% if forloop.index0 > 0 %} with_preceding{% endif %}{% if forloop.rindex0 > 0 %} with_following{% endif %}">
+                    <a href="{{item.url}}" class="list-group-item{% if item.path == page.menu_path %} active{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
+                      {{ item.title_in_menu }}</a></h4>
+              {% endfor %}
+              {% for item in page.menu %}
+                <a href="{{item.url}}" class="list-group-item{% if page.breadcrumbs contains item %} active{% endif %}">{{ item.title_in_menu }}</a>
+              {% endfor %}
+    
+    {% else %} {% comment %} case 3a {% endcomment %}
+              {% for item in page.menu_parent.breadcrumb_pages offset:1 %}
+                  <h4 class="{% if forloop.index0 > 0 %} with_preceding{% endif %}{% if forloop.rindex0 > 0 %} with_following{% endif %}">
+                    <a href="{{item.url}}" class="list-group-item{% if item.path == page.menu_path %}{% unless item.menu_customization.force_inactive %} active{% endunless %}{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
+                      {{ item.title_in_menu }}</a></h4>
+              {% endfor %}
+              {% for item in page.menu_parent.menu %}
+                {% if (page.breadcrumb_paths contains item.menu_path) and page.menu %}
+                  {% comment %} case 3b {% endcomment %}
+                  <a href="{{item.url}}" class="list-group-item active with-sub-item">{{ item.title_in_menu }}</a>
+                  <div class="sub-item">
+                   {% for item2 in page.menu %}
+                    <a href="{{item2.url}}" class="list-group-item sub-item">
+                      {{ item2.title_in_menu }}</a>
+                   {% endfor %}
+                  </div>
+                {% else %}
+                  {% comment %} case 3a side menu item {% endcomment %}
+                  <a href="{{item.url}}" class="list-group-item{% if page.breadcrumb_paths contains item.menu_path %}{% unless item.menu_customization.force_inactive %} active{% endunless %}{% endif %}">{{ item.title_in_menu }}</a>
+                {% endif %}
+              {% endfor %}
+        
+    {% endif %}    
+  {% elsif page.menu %}
+    <!-- no pages have a menu without being in the top menu, won't come here -->
+  {% endif %}
+{% endunless %}
+        
             </div>
-            {% endif %}
         </div>
     </div>
 </div>

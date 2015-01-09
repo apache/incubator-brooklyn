@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+JAVADOC_TARGET1_SUBPATH=javadoc
+JAVADOC_TARGET2_SUBPATH=misc/javadoc
 
 if [ ! -x make-javadoc.sh ]; then
   echo This command must be run from the _build directory, not its parent.
@@ -13,17 +16,19 @@ else
   export SOURCE_PATHS=$BROOKLYN_JAVADOC_SOURCE_PATHS
 fi
 
-rm -rf target/apidocs/
+rm -rf target/$JAVADOC_TARGET1_SUBPATH/
 
 export DATESTAMP=`date "+%Y-%m-%d"`
+# BROOKLYN_VERSION_BELOW
+export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.7.0-SNAPSHOT-with-dependencies.jar
 echo "building javadoc at $DATESTAMP from:
 $SOURCE_PATHS"
 
 javadoc -sourcepath $SOURCE_PATHS \
   -public \
-  -d target/apidocs/ \
+  -d target/$JAVADOC_TARGET1_SUBPATH/ \
   -subpackages "org.apache.brooklyn:io.brooklyn:brooklyn" \
-  -classpath ../../usage/all/target/brooklyn-all-0.7.0-SNAPSHOT-with-dependencies.jar \
+  -classpath "$BROOKLYN_JAVADOC_CLASSPATH" \
   -doctitle "Apache Brooklyn" \
   -windowtitle "Apache Brooklyn" \
   -header "Apache Brooklyn" \
@@ -33,12 +38,12 @@ javadoc -sourcepath $SOURCE_PATHS \
 if ((${PIPESTATUS[0]})) ; then echo ; echo ; echo "ERROR: javadoc process exited non-zero" ; exit 1 ; fi
 echo ; echo
 
-if [ ! -f target/apidocs/brooklyn/entity/Entity.html ]; then echo "ERROR: missing expected content. Are the paths right?" ; exit 1 ; fi
+if [ ! -f target/$JAVADOC_TARGET1_SUBPATH/brooklyn/entity/Entity.html ]; then echo "ERROR: missing expected content. Are the paths right?" ; exit 1 ; fi
 
 if [ ! -z "`grep warnings target/javadoc.log`" ] ; then echo "WARNINGs occurred during javadoc build. See target/javadoc.log for more information." ; fi
 
-if [ -d ../_site/guide/use/api/ ] ; then
+if [ -d ../_site/guide/$$JAVADOC_TARGET2_SUBPATH/ ] ; then
   echo "API directory detected in test structure _site, copying docs there so they can be served with serve-site.sh"
-  cp -r target/apidocs/* ../_site/guide/use/api/
+  cp -r target/$JAVADOC_TARGET1_SUBPATH/* ../_site/guide/$JAVADOC_TARGET2_SUBPATH/
 fi
 
