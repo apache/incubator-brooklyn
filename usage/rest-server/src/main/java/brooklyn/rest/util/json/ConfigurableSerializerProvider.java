@@ -91,5 +91,4 @@ final class ConfigurableSerializerProvider extends StdSerializerProvider {
             unknownTypeSerializer.serialize(value, jgen, this);
         }
     }
-
 }

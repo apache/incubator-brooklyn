@@ -36,33 +36,32 @@ import com.google.common.collect.Lists;
 
 public class ActivityResource extends AbstractBrooklynRestResource implements ActivityApi {
 
-  @Override
-  public TaskSummary get(String taskId) {
-      Task<?> t = mgmt().getExecutionManager().getTask(taskId);
-      if (t==null)
-          throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
-      return TaskTransformer.FROM_TASK.apply(t);
-  }
+    @Override
+    public TaskSummary get(String taskId) {
+        Task<?> t = mgmt().getExecutionManager().getTask(taskId);
+        if (t == null)
+            throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
+        return TaskTransformer.FROM_TASK.apply(t);
+    }
 
-  @Override
-  public List<TaskSummary> children(String taskId) {
-      Task<?> t = mgmt().getExecutionManager().getTask(taskId);
-      if (t==null)
-          throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
-      if (!(t instanceof HasTaskChildren))
-          return Collections.emptyList();
-      return new LinkedList<TaskSummary>(Collections2.transform(Lists.newArrayList(((HasTaskChildren)t).getChildren()), 
-              TaskTransformer.FROM_TASK));
-  }
+    @Override
+    public List<TaskSummary> children(String taskId) {
+        Task<?> t = mgmt().getExecutionManager().getTask(taskId);
+        if (t == null)
+            throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
+        if (!(t instanceof HasTaskChildren))
+            return Collections.emptyList();
+        return new LinkedList<TaskSummary>(Collections2.transform(Lists.newArrayList(((HasTaskChildren) t).getChildren()),
+                TaskTransformer.FROM_TASK));
+    }
 
-  public String stream(String taskId, String streamId) {
-      Task<?> t = mgmt().getExecutionManager().getTask(taskId);
-      if (t==null)
-          throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
-      WrappedStream stream = BrooklynTaskTags.stream(t, streamId);
-      if (stream==null)
-          throw WebResourceUtils.notFound("Cannot find stream '%s' in task '%s'", streamId, taskId);
-      return stream.streamContents.get();
-  }
-  
+    public String stream(String taskId, String streamId) {
+        Task<?> t = mgmt().getExecutionManager().getTask(taskId);
+        if (t == null)
+            throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
+        WrappedStream stream = BrooklynTaskTags.stream(t, streamId);
+        if (stream == null)
+            throw WebResourceUtils.notFound("Cannot find stream '%s' in task '%s'", streamId, taskId);
+        return stream.streamContents.get();
+    }
 }

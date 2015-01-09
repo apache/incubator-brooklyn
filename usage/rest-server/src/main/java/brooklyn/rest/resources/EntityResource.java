@@ -75,57 +75,57 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
     @Context
     private UriInfo uriInfo;
     
-  @Override
-  public List<EntitySummary> list(final String application) {
-      return FluentIterable
-              .from(brooklyn().getApplication(application).getChildren())
-              .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
-              .transform(EntityTransformer.FROM_ENTITY)
-              .toList();
-  }
+    @Override
+    public List<EntitySummary> list(final String application) {
+        return FluentIterable
+                .from(brooklyn().getApplication(application).getChildren())
+                .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
+                .transform(EntityTransformer.FROM_ENTITY)
+                .toList();
+    }
 
-  @Override
-  public EntitySummary get(String application, String entityName) {
-      Entity entity = brooklyn().getEntity(application, entityName);
-      if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
-          return EntityTransformer.entitySummary(entity);
-      }
-      throw WebResourceUtils.unauthorized("User '%s' is not authorized to get entity '%s'",
-              Entitlements.getEntitlementContext().user(), entity);
-  }
+    @Override
+    public EntitySummary get(String application, String entityName) {
+        Entity entity = brooklyn().getEntity(application, entityName);
+        if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
+            return EntityTransformer.entitySummary(entity);
+        }
+        throw WebResourceUtils.unauthorized("User '%s' is not authorized to get entity '%s'",
+                Entitlements.getEntitlementContext().user(), entity);
+    }
 
-  @Override
-  public List<EntitySummary> getChildren(final String application, final String entity) {
-      return FluentIterable
-              .from(brooklyn().getEntity(application, entity).getChildren())
-              .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
-              .transform(EntityTransformer.FROM_ENTITY)
-              .toList();
-  }
-  
-  @Override
-  public List<EntitySummary> getChildrenOld(String application, String entity) {
+    @Override
+    public List<EntitySummary> getChildren(final String application, final String entity) {
+        return FluentIterable
+                .from(brooklyn().getEntity(application, entity).getChildren())
+                .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
+                .transform(EntityTransformer.FROM_ENTITY)
+                .toList();
+    }
+
+    @Override
+    public List<EntitySummary> getChildrenOld(String application, String entity) {
         log.warn("Using deprecated call to /entities when /children should be used");
         return getChildren(application, entity);
-  }
-  
+    }
+
     @Override
     public Response addChildren(String applicationToken, String entityToken, Boolean start, String timeoutS, String yaml) {
         final EntityLocal parent = brooklyn().getEntity(applicationToken, entityToken);
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, parent)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
-                Entitlements.getEntitlementContext().user(), entityToken);
+                    Entitlements.getEntitlementContext().user(), entityToken);
         }
         CreationResult<List<Entity>, List<String>> added = EntityManagementUtils.addChildren(parent, yaml, start)
-            .blockUntilComplete(timeoutS==null ? Duration.millis(20) : Duration.of(timeoutS));
+                .blockUntilComplete(timeoutS==null ? Duration.millis(20) : Duration.of(timeoutS));
         ResponseBuilder response;
         
         if (added.get().size()==1) {
             Entity child = Iterables.getOnlyElement(added.get());
             URI ref = uriInfo.getBaseUriBuilder()
-                .path(EntityApi.class)
-                .path(EntityApi.class, "get")
-                .build(child.getApplicationId(), child.getId());
+                    .path(EntityApi.class)
+                    .path(EntityApi.class, "get")
+                    .build(child.getApplicationId(), child.getId());
             response = created(ref);
         } else {
             response = Response.status(Status.CREATED);
@@ -133,48 +133,48 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
         return response.entity(TaskTransformer.taskSummary(added.task())).build();
     }
 
-  @Override
-  public List<TaskSummary> listTasks(String applicationId, String entityId) {
-      Entity entity = brooklyn().getEntity(applicationId, entityId);
-      Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(mgmt().getExecutionManager(), entity);
-      return new LinkedList<TaskSummary>(Collections2.transform(tasks, TaskTransformer.FROM_TASK));
-  }
+    @Override
+    public List<TaskSummary> listTasks(String applicationId, String entityId) {
+        Entity entity = brooklyn().getEntity(applicationId, entityId);
+        Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(mgmt().getExecutionManager(), entity);
+        return new LinkedList<TaskSummary>(Collections2.transform(tasks, TaskTransformer.FROM_TASK));
+    }
 
-  @Override
-  public TaskSummary getTask(final String application, final String entityToken, String taskId) {
-      // TODO deprecate in favour of ActivityApi.get ?
-      Task<?> t = mgmt().getExecutionManager().getTask(taskId);
-      if (t==null)
-          throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
-      return TaskTransformer.FROM_TASK.apply(t);
-  }
+    @Override
+    public TaskSummary getTask(final String application, final String entityToken, String taskId) {
+        // TODO deprecate in favour of ActivityApi.get ?
+        Task<?> t = mgmt().getExecutionManager().getTask(taskId);
+        if (t == null)
+            throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
+        return TaskTransformer.FROM_TASK.apply(t);
+    }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public List<Object> listTags(String applicationId, String entityId) {
-      Entity entity = brooklyn().getEntity(applicationId, entityId);
-      return (List<Object>) getValueForDisplay(MutableList.copyOf(entity.tags().getTags()), true, true);
-  }
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<Object> listTags(String applicationId, String entityId) {
+        Entity entity = brooklyn().getEntity(applicationId, entityId);
+        return (List<Object>) getValueForDisplay(MutableList.copyOf(entity.tags().getTags()), true, true);
+    }
 
-  @Override
-  public Response getIcon(String applicationId, String entityId) {
-      EntityLocal entity = brooklyn().getEntity(applicationId, entityId);
-      String url = entity.getIconUrl();
-      if (url==null)
-          return Response.status(Status.NO_CONTENT).build();
-      
-      if (brooklyn().isUrlServerSideAndSafe(url)) {
-          // classpath URL's we will serve IF they end with a recognised image format;
-          // paths (ie non-protocol) and 
-          // NB, for security, file URL's are NOT served
-          MediaType mime = WebResourceUtils.getImageMediaTypeFromExtension(Files.getFileExtension(url));
-          Object content = ResourceUtils.create(brooklyn().getCatalog().getRootClassLoader()).getResourceFromUrl(url);
-          return Response.ok(content, mime).build();
-      }
-      
-      // for anything else we do a redirect (e.g. http / https; perhaps ftp)
-      return Response.temporaryRedirect(URI.create(url)).build();
-  }
+    @Override
+    public Response getIcon(String applicationId, String entityId) {
+        EntityLocal entity = brooklyn().getEntity(applicationId, entityId);
+        String url = entity.getIconUrl();
+        if (url == null)
+            return Response.status(Status.NO_CONTENT).build();
+
+        if (brooklyn().isUrlServerSideAndSafe(url)) {
+            // classpath URL's we will serve IF they end with a recognised image format;
+            // paths (ie non-protocol) and
+            // NB, for security, file URL's are NOT served
+            MediaType mime = WebResourceUtils.getImageMediaTypeFromExtension(Files.getFileExtension(url));
+            Object content = ResourceUtils.create(brooklyn().getCatalog().getRootClassLoader()).getResourceFromUrl(url);
+            return Response.ok(content, mime).build();
+        }
+
+        // for anything else we do a redirect (e.g. http / https; perhaps ftp)
+        return Response.temporaryRedirect(URI.create(url)).build();
+    }
 
     @Override
     public Response rename(String application, String entity, String newName) {
@@ -191,33 +191,33 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
         return status(ACCEPTED).entity(summary).build();
     }
 
-  @Override
-  public List<EntitySummary> getDescendants(String application, String entity, String typeRegex) {
-      return EntityTransformer.entitySummaries(brooklyn().descendantsOfType(application, entity, typeRegex));
-  }
+    @Override
+    public List<EntitySummary> getDescendants(String application, String entity, String typeRegex) {
+        return EntityTransformer.entitySummaries(brooklyn().descendantsOfType(application, entity, typeRegex));
+    }
 
-  @Override
-  public Map<String, Object> getDescendantsSensor(String application, String entity, String sensor, String typeRegex) {
-      Iterable<Entity> descs = brooklyn().descendantsOfType(application, entity, typeRegex);
-      return ApplicationResource.getSensorMap(sensor, descs);
-  }
+    @Override
+    public Map<String, Object> getDescendantsSensor(String application, String entity, String sensor, String typeRegex) {
+        Iterable<Entity> descs = brooklyn().descendantsOfType(application, entity, typeRegex);
+        return ApplicationResource.getSensorMap(sensor, descs);
+    }
 
-  @Override
-  public List<LocationSummary> getLocations(String application, String entity) {
-      List<LocationSummary> result = Lists.newArrayList();
-      EntityLocal e = brooklyn().getEntity(application, entity);
-      for (Location l: e.getLocations()) {
-          result.add(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.NONE));
-      }
-      return result;
-  }
+    @Override
+    public List<LocationSummary> getLocations(String application, String entity) {
+        List<LocationSummary> result = Lists.newArrayList();
+        EntityLocal e = brooklyn().getEntity(application, entity);
+        for (Location l : e.getLocations()) {
+            result.add(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.NONE));
+        }
+        return result;
+    }
 
-  @Override
-  public String getSpec(String applicationToken,  String entityToken) {
-      EntityLocal entity = brooklyn().getEntity(applicationToken, entityToken);
-      NamedStringTag spec = BrooklynTags.findFirst(BrooklynTags.YAML_SPEC_KIND, entity.tags().getTags());
-      if (spec==null) return null;
-      return (String) getValueForDisplay(spec.getContents(), true, true);
-  }
-  
+    @Override
+    public String getSpec(String applicationToken, String entityToken) {
+        EntityLocal entity = brooklyn().getEntity(applicationToken, entityToken);
+        NamedStringTag spec = BrooklynTags.findFirst(BrooklynTags.YAML_SPEC_KIND, entity.tags().getTags());
+        if (spec == null)
+            return null;
+        return (String) getValueForDisplay(spec.getContents(), true, true);
+    }
 }

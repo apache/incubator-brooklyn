@@ -74,12 +74,11 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
         return result;
     }
 
+    // TODO would like to make 'config' arg optional but jersey complains if we do
     @SuppressWarnings("unchecked")
     @Override
     public PolicySummary addPolicy( String application,String entityToken, String policyTypeName,
-            // TODO would like to make this optional but jersey complains if we do
-            Map<String, String> config
-    ) {
+            Map<String, String> config) {
         EntityLocal entity = brooklyn().getEntity(application, entityToken);
         Class<? extends Policy> policyType;
         try {

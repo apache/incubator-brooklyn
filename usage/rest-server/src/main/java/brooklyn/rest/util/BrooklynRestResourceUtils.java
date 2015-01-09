@@ -554,5 +554,4 @@ public class BrooklynRestResourceUtils {
     public void reloadBrooklynProperties() {
         mgmt.reloadBrooklynProperties();
     }
-
 }

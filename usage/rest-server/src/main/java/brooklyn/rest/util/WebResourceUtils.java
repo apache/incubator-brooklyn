@@ -139,5 +139,4 @@ public class WebResourceUtils {
             return Urls.encode(versionedId);
         }
     }
-
 }

@@ -78,5 +78,4 @@ public class FormMapProvider implements MessageBodyReader<Map<String, Object>> {
         }
         return map;
     }
-
 }

@@ -59,5 +59,4 @@ public class MultimapSerializer extends SerializerBase<Multimap<?, ?>> {
             provider.defaultSerializeValue(Lists.newArrayList(entry.getValue()), jgen);
         }
     }
-
 }
