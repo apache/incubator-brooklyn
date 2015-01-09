@@ -24,15 +24,15 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 public class ScriptExecutionSummary {
 
-    @JsonSerialize(include=Inclusion.NON_NULL)
+    @JsonSerialize(include = Inclusion.NON_NULL)
     private final Object result;
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
+    @JsonSerialize(include = Inclusion.NON_EMPTY)
     private final String problem;
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
+    @JsonSerialize(include = Inclusion.NON_EMPTY)
     private final String stdout;
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
+    @JsonSerialize(include = Inclusion.NON_EMPTY)
     private final String stderr;
-    
+
     public ScriptExecutionSummary(
             @JsonProperty("result") Object result, 
             @JsonProperty("problem") String problem, 
@@ -56,9 +56,8 @@ public class ScriptExecutionSummary {
     public String getStderr() {
         return stderr;
     }
-    
+
     public String getStdout() {
         return stdout;
     }
-    
 }

@@ -46,113 +46,105 @@ import com.wordnik.swagger.core.ApiParam;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface SensorApi {
 
-  @GET
-  @ApiOperation(value = "Fetch the sensor list for a specific application entity",
-      responseClass = "brooklyn.rest.domain.SensorSummary",
-      multiValueResponse = true)
-  @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Could not find application or entity")
-  })
-  public List<SensorSummary> list(
-      @ApiParam(value = "Application ID or name", required = true)
-      @PathParam("application") final String application,
-      @ApiParam(value = "Entity ID or name", required = true)
-      @PathParam("entity") final String entityToken
-  ) ;
+    @GET
+    @ApiOperation(value = "Fetch the sensor list for a specific application entity",
+            responseClass = "brooklyn.rest.domain.SensorSummary",
+            multiValueResponse = true)
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Could not find application or entity")
+    })
+    public List<SensorSummary> list(
+            @ApiParam(value = "Application ID or name", required = true)
+            @PathParam("application") final String application,
+            @ApiParam(value = "Entity ID or name", required = true)
+            @PathParam("entity") final String entityToken);
 
-  @GET
-  @Path("/current-state")
-  @ApiOperation(value = "Fetch sensor values in batch", notes="Returns a map of sensor name to value")
-  public Map<String, Object> batchSensorRead(
-          @ApiParam(value = "Application ID or name", required = true)
-          @PathParam("application") final String application,
-          @ApiParam(value = "Entity ID or name", required = true)
-          @PathParam("entity") final String entityToken,
-          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
-          @QueryParam("raw") @DefaultValue("false") final Boolean raw
-      ) ;
+    @GET
+    @Path("/current-state")
+    @ApiOperation(value = "Fetch sensor values in batch", notes="Returns a map of sensor name to value")
+    public Map<String, Object> batchSensorRead(
+            @ApiParam(value = "Application ID or name", required = true)
+            @PathParam("application") final String application,
+            @ApiParam(value = "Entity ID or name", required = true)
+            @PathParam("entity") final String entityToken,
+            @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+            @QueryParam("raw") @DefaultValue("false") final Boolean raw);
 
-  @GET
-  @Path("/{sensor}")
-  @ApiOperation(value = "Fetch sensor value (json)", responseClass = "Object")
-  @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
-  })
-  public Object get(
-          @ApiParam(value = "Application ID or name", required = true)
-          @PathParam("application") final String application,
-          @ApiParam(value = "Entity ID or name", required = true)
-          @PathParam("entity") final String entityToken,
-          @ApiParam(value = "Sensor name", required = true)
-          @PathParam("sensor") String sensorName,
-          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
-          @QueryParam("raw") @DefaultValue("false") final Boolean raw
-  ) ;
+    @GET
+    @Path("/{sensor}")
+    @ApiOperation(value = "Fetch sensor value (json)", responseClass = "Object")
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+    })
+    public Object get(
+            @ApiParam(value = "Application ID or name", required = true)
+            @PathParam("application") final String application,
+            @ApiParam(value = "Entity ID or name", required = true)
+            @PathParam("entity") final String entityToken,
+            @ApiParam(value = "Sensor name", required = true)
+            @PathParam("sensor") String sensorName,
+            @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+            @QueryParam("raw") @DefaultValue("false") final Boolean raw);
 
-  // this method is used if user has requested plain (ie not converting to json)
-  @GET
-  @Path("/{sensor}")
-  @ApiOperation(value = "Fetch sensor value (text/plain)", responseClass = "String")
-  @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
-  })
-  @Produces(MediaType.TEXT_PLAIN)
-  public String getPlain(
-          @ApiParam(value = "Application ID or name", required = true)
-          @PathParam("application") final String application,
-          @ApiParam(value = "Entity ID or name", required = true)
-          @PathParam("entity") final String entityToken,
-          @ApiParam(value = "Sensor name", required = true)
-          @PathParam("sensor") String sensorName,
-          @ApiParam(value = "Return raw sensor data instead of display values", required = false)
-          @QueryParam("raw") @DefaultValue("false") final Boolean raw
-  ) ;
+    // this method is used if user has requested plain (ie not converting to json)
+    @GET
+    @Path("/{sensor}")
+    @ApiOperation(value = "Fetch sensor value (text/plain)", responseClass = "String")
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+    })
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getPlain(
+            @ApiParam(value = "Application ID or name", required = true)
+            @PathParam("application") final String application,
+            @ApiParam(value = "Entity ID or name", required = true)
+            @PathParam("entity") final String entityToken,
+            @ApiParam(value = "Sensor name", required = true)
+            @PathParam("sensor") String sensorName,
+            @ApiParam(value = "Return raw sensor data instead of display values", required = false)
+            @QueryParam("raw") @DefaultValue("false") final Boolean raw);
 
-  @POST
-  @ApiOperation(value = "Manually set multiple sensor values")
-  @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Could not find application or entity")
-  })
-  @SuppressWarnings("rawtypes")
-  public void setFromMap(
-      @ApiParam(value = "Application ID or name", required = true)
-      @PathParam("application") final String application,
-      @ApiParam(value = "Entity ID or name", required = true)
-      @PathParam("entity") final String entityToken,
-      @ApiParam(value = "Map of sensor names to values", required = true)
-      Map newValues
-  ) ;
+    @POST
+    @ApiOperation(value = "Manually set multiple sensor values")
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Could not find application or entity")
+    })
+    @SuppressWarnings("rawtypes")
+    public void setFromMap(
+            @ApiParam(value = "Application ID or name", required = true)
+            @PathParam("application") final String application,
+            @ApiParam(value = "Entity ID or name", required = true)
+            @PathParam("entity") final String entityToken,
+            @ApiParam(value = "Map of sensor names to values", required = true)
+            Map newValues);
 
-  @POST
-  @Path("/{sensor}")
-  @ApiOperation(value = "Manually set a sensor value")
-  @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
-  })
-  public void set(
-          @ApiParam(value = "Application ID or name", required = true)
-          @PathParam("application") final String application,
-          @ApiParam(value = "Entity ID or name", required = true)
-          @PathParam("entity") final String entityToken,
-          @ApiParam(value = "Sensor name", required = true)
-          @PathParam("sensor") String sensorName,
-          @ApiParam(value = "Value to set")
-          Object newValue
-  ) ;
+    @POST
+    @Path("/{sensor}")
+    @ApiOperation(value = "Manually set a sensor value")
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+    })
+    public void set(
+            @ApiParam(value = "Application ID or name", required = true)
+            @PathParam("application") final String application,
+            @ApiParam(value = "Entity ID or name", required = true)
+            @PathParam("entity") final String entityToken,
+            @ApiParam(value = "Sensor name", required = true)
+            @PathParam("sensor") String sensorName,
+            @ApiParam(value = "Value to set")
+            Object newValue);
 
-  @DELETE
-  @Path("/{sensor}")
-  @ApiOperation(value = "Manually clear a sensor value")
-  @ApiErrors(value = {
-      @ApiError(code = 404, reason = "Could not find application, entity or sensor")
-  })
-  public void delete(
-          @ApiParam(value = "Application ID or name", required = true)
-          @PathParam("application") final String application,
-          @ApiParam(value = "Entity ID or name", required = true)
-          @PathParam("entity") final String entityToken,
-          @ApiParam(value = "Sensor name", required = true)
-          @PathParam("sensor") String sensorName
-  ) ;
-
+    @DELETE
+    @Path("/{sensor}")
+    @ApiOperation(value = "Manually clear a sensor value")
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+    })
+    public void delete(
+            @ApiParam(value = "Application ID or name", required = true)
+            @PathParam("application") final String application,
+            @ApiParam(value = "Entity ID or name", required = true)
+            @PathParam("entity") final String entityToken,
+            @ApiParam(value = "Sensor name", required = true)
+            @PathParam("sensor") String sensorName);
 }

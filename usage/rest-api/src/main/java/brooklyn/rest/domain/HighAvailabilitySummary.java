@@ -40,102 +40,100 @@ public class HighAvailabilitySummary {
                 @JsonProperty("nodeUri") URI nodeUri,
                 @JsonProperty("status") String status,
                 @JsonProperty("localTimestamp") Long localTimestamp,
-                @JsonProperty("remoteTimestamp") Long remoteTimestamp
-            ) {
-              this.nodeId = nodeId;
-              this.nodeUri = nodeUri;
-              this.status = status;
-              this.localTimestamp = localTimestamp;
-              this.remoteTimestamp = remoteTimestamp;
-            }
+                @JsonProperty("remoteTimestamp") Long remoteTimestamp) {
+            this.nodeId = nodeId;
+            this.nodeUri = nodeUri;
+            this.status = status;
+            this.localTimestamp = localTimestamp;
+            this.remoteTimestamp = remoteTimestamp;
+        }
 
-            public String getNodeId() {
-              return nodeId;
-            }
+        public String getNodeId() {
+            return nodeId;
+        }
 
-            public URI getNodeUri() {
-              return nodeUri;
-            }
+        public URI getNodeUri() {
+            return nodeUri;
+        }
 
-            public String getStatus() {
-              return status;
-            }
-            
-            public Long getLocalTimestamp() {
-                return localTimestamp;
-            }
-            
-            public Long getRemoteTimestamp() {
-                return remoteTimestamp;
-            }
-            
-            @Override
-            public boolean equals(Object o) {
-              return (o instanceof HaNodeSummary) && Objects.equal(nodeId, ((HaNodeSummary)o).getNodeId());
-            }
+        public String getStatus() {
+            return status;
+        }
 
-            @Override
-            public int hashCode() {
-              return Objects.hashCode(nodeId);
-            }
+        public Long getLocalTimestamp() {
+            return localTimestamp;
+        }
 
-            @Override
-            public String toString() {
-              return "HighAvailabilitySummary{" +
-                  "nodeId='" + nodeId + '\'' +
-                  ", status='" + status + '\'' +
-                  '}';
-            }
+        public Long getRemoteTimestamp() {
+            return remoteTimestamp;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return (o instanceof HaNodeSummary) && Objects.equal(nodeId, ((HaNodeSummary) o).getNodeId());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(nodeId);
+        }
+
+        @Override
+        public String toString() {
+            return "HighAvailabilitySummary{"
+                    + "nodeId='" + nodeId + '\''
+                    + ", status='" + status + '\''
+                    + '}';
+        }
     }
-    
+
     private final String ownId;
     private final String masterId;
     private final Map<String, HaNodeSummary> nodes;
     private final Map<String, URI> links;
 
     public HighAvailabilitySummary(
-        @JsonProperty("ownId") String ownId,
-        @JsonProperty("masterId") String masterId,
-        @JsonProperty("nodes") Map<String, HaNodeSummary> nodes,
-        @JsonProperty("links") Map<String, URI> links
-    ) {
-      this.ownId = ownId;
-      this.masterId = masterId;
-      this.nodes = (nodes == null) ? ImmutableMap.<String, HaNodeSummary>of() : nodes;
-      this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
+            @JsonProperty("ownId") String ownId,
+            @JsonProperty("masterId") String masterId,
+            @JsonProperty("nodes") Map<String, HaNodeSummary> nodes,
+            @JsonProperty("links") Map<String, URI> links) {
+        this.ownId = ownId;
+        this.masterId = masterId;
+        this.nodes = (nodes == null) ? ImmutableMap.<String, HaNodeSummary>of() : nodes;
+        this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
     }
 
     public String getOwnId() {
-      return ownId;
+        return ownId;
     }
 
     public String getMasterId() {
-      return masterId;
+        return masterId;
     }
-    
+
     public Map<String, HaNodeSummary> getNodes() {
-      return nodes;
+        return nodes;
     }
-    
+
     public Map<String, URI> getLinks() {
-      return links;
+        return links;
     }
 
     @Override
     public boolean equals(Object o) {
-      return (o instanceof HighAvailabilitySummary) && ownId.equals(((HighAvailabilitySummary)o).getOwnId());
+        return (o instanceof HighAvailabilitySummary) && ownId.equals(((HighAvailabilitySummary) o).getOwnId());
     }
 
     @Override
     public int hashCode() {
-      return ownId != null ? ownId.hashCode() : 0;
+        return ownId != null ? ownId.hashCode() : 0;
     }
 
     @Override
     public String toString() {
-      return "HighAvailabilitySummary{" +
-          "ownId='" + ownId + '\'' +
-          ", links=" + links +
-          '}';
+        return "HighAvailabilitySummary{"
+                + "ownId='" + ownId + '\''
+                + ", links=" + links
+                + '}';
     }
 }
