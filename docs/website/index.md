@@ -11,7 +11,7 @@ children:
   - { path: /guide/index.md, title_in_menu: "User Guide", 
       menu_customization: { dropdown_section_header: true } }
   - { path: /guide/yaml/index.md, title_in_menu: YAML Blueprints, href_path: /guide/yaml/creating-yaml.md }
-  - { path: /guide/java/index.md, title_in_menu: Java Blueprints, href_path: /guide/java/walkthrough/ }
+  - { path: /guide/java/index.md, title_in_menu: Java Blueprints }
   - { path: /guide/ops/index.md, title_in_menu: Operations,
       menu_customization: { dropdown_section_header: true } }
   - { path: /guide/dev/index.md, title_in_menu: Developer Guide }
