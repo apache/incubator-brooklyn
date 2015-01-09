@@ -26,7 +26,7 @@ import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.api.client.util.Preconditions;
+import com.google.common.base.Preconditions;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;

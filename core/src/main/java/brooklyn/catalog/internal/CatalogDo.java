@@ -37,7 +37,7 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
-import com.google.api.client.util.Objects;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 public class CatalogDo {
