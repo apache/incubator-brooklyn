@@ -20,7 +20,7 @@ rm -rf target/$JAVADOC_TARGET1_SUBPATH/
 
 export DATESTAMP=`date "+%Y-%m-%d"`
 # BROOKLYN_VERSION_BELOW
-export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.7.0-SNAPSHOT-with-dependencies.jar
+export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.7.0-M2-incubating-with-dependencies.jar
 echo "building javadoc at $DATESTAMP from:
 $SOURCE_PATHS"
 
