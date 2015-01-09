@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
-import java.lang.Long;
 import java.util.Collection;
 import java.util.Map;
 
@@ -56,6 +55,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.event.Sensor;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.policy.PolicySpec;
@@ -73,6 +73,7 @@ import brooklyn.util.text.Strings;
 public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerImpl.class);
+    private final Object serialMutex = new Object();
 
     // As per RFC 952 and RFC 1123.
     private static final CharMatcher DOMAIN_NAME_FIRST_CHAR_MATCHER = CharMatcher.inRange('a', 'z')
@@ -99,51 +100,20 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         super();
     }
 
-    public String getManagementCidr() {
-        return getConfig(MANAGEMENT_CIDR);
-    }
-
-    public Integer getDnsPort() {
-        return getAttribute(DNS_PORT);
-    }
-
-    public String getDomainName() {
-        return getConfig(DOMAIN_NAME);
-    }
-
-    /**
-     * @return A serial number guaranteed to be valid for use in a modified domain.zone or reverse.zone file.
-     */
-    public long getSerial() {
-        long next = getAttribute(SERIAL) + 1;
-        setAttribute(SERIAL, next);
-        return next;
-    }
-
-    public Cidr getReverseLookupNetwork() {
-        return getAttribute(REVERSE_LOOKUP_CIDR);
-    }
-
-    public String getReverseLookupDomain() {
-        return getAttribute(REVERSE_LOOKUP_DOMAIN);
-    }
-
-    public DynamicGroup getEntities() {
-        return getAttribute(ENTITIES);
-    }
-
     @Override
     public void init() {
         super.init();
-        checkNotNull(getConfig(HOSTNAME_SENSOR), "{} requires value for {}", getClass().getName(), HOSTNAME_SENSOR);
+        checkNotNull(getConfig(HOSTNAME_SENSOR), "%s requires value for %s", getClass().getName(), HOSTNAME_SENSOR);
         DynamicGroup entities = addChild(EntitySpec.create(DynamicGroup.class)
-                .configure("entityFilter", getConfig(ENTITY_FILTER)));
+                .configure(DynamicGroup.ENTITY_FILTER, getEntityFilter()));
         setAttribute(ENTITIES, entities);
         setAttribute(A_RECORDS, ImmutableMap.<String, String>of());
         setAttribute(CNAME_RECORDS, ImmutableMultimap.<String, String>of());
         setAttribute(PTR_RECORDS, ImmutableMap.<String, String>of());
         setAttribute(ADDRESS_MAPPINGS, ImmutableMultimap.<String, String>of());
-        setAttribute(SERIAL, System.currentTimeMillis());
+        synchronized (serialMutex) {
+            setAttribute(SERIAL, System.currentTimeMillis());
+        }
     }
 
     @Override
@@ -193,8 +163,8 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
         addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Address tracker")
-                .configure("sensorsToTrack", ImmutableSet.of(getConfig(HOSTNAME_SENSOR)))
-                .configure("group", getEntities()));
+                .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(getConfig(HOSTNAME_SENSOR)))
+                .configure(AbstractMembershipTrackingPolicy.GROUP, getEntities()));
     }
 
     @Override
@@ -246,10 +216,11 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
             LOG.debug("{} updating with entities: {}", this, Iterables.toString(availableEntities));
             ImmutableListMultimap<String, Entity> hostnameToEntity = Multimaps.index(availableEntities,
                     new HostnameTransformer());
+
             Map<String, String> octetToName = Maps.newHashMap();
             BiMap<String, String> ipToARecord = HashBiMap.create();
-            Multimap<String, String> aRecordToCnames = MultimapBuilder.hashKeys().arrayListValues().build();
-            Multimap<String, String> ipToAllNames = MultimapBuilder.hashKeys().arrayListValues().build();
+            Multimap<String, String> aRecordToCnames = MultimapBuilder.hashKeys().hashSetValues().build();
+            Multimap<String, String> ipToAllNames = MultimapBuilder.hashKeys().hashSetValues().build();
 
             for (Map.Entry<String, Entity> e : hostnameToEntity.entries()) {
                 String domainName = e.getKey();
@@ -257,7 +228,10 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
                 if (!location.isPresent()) {
                     LOG.debug("Member {} of {} does not have an SSH location so will not be configured", e.getValue(), this);
                     continue;
+                } else if (ipToARecord.inverse().containsKey(domainName)) {
+                    continue;
                 }
+
                 String address = location.get().getAddress().getHostAddress();
                 ipToAllNames.put(address, domainName);
                 if (!ipToARecord.containsKey(address)) {
@@ -302,6 +276,48 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         machine.execScript("updating file", ImmutableList.of(
                 BashCommands.sudo(String.format("tee -a %s < %s", destination, temp)),
                 String.format("rm -f %s", temp)));
+    }
+
+
+    @Override
+    public Predicate<? super Entity> getEntityFilter() {
+        return getConfig(ENTITY_FILTER);
+    }
+
+    // Mostly used in templates
+    public String getManagementCidr() {
+        return getConfig(MANAGEMENT_CIDR);
+    }
+
+    public Integer getDnsPort() {
+        return getAttribute(DNS_PORT);
+    }
+
+    public String getDomainName() {
+        return getConfig(DOMAIN_NAME);
+    }
+
+    /**
+     * @return A serial number guaranteed to be valid for use in a modified domain.zone or reverse.zone file.
+     */
+    public long getSerial() {
+        synchronized (serialMutex) {
+            long next = getAttribute(SERIAL) + 1;
+            setAttribute(SERIAL, next);
+            return next;
+        }
+    }
+
+    public Cidr getReverseLookupNetwork() {
+        return getAttribute(REVERSE_LOOKUP_CIDR);
+    }
+
+    public String getReverseLookupDomain() {
+        return getAttribute(REVERSE_LOOKUP_DOMAIN);
+    }
+
+    public DynamicGroup getEntities() {
+        return getAttribute(ENTITIES);
     }
 
     public Map<String, String> getAddressRecords() {

@@ -47,6 +47,7 @@ import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/catalog")
 @Apidoc("Catalog")
+@Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public interface CatalogApi {
 
@@ -58,7 +59,8 @@ public interface CatalogApi {
         @ApiParam(name = "yaml", value = "multipart/form-data file input field")
         @FormDataParam("yaml") InputStream uploadedInputStream,
         @FormDataParam("yaml") FormDataContentDisposition fileDetail);
-    
+
+    @Consumes
     @POST
     @ApiOperation(value = "Add a catalog item (e.g. new entity or policy type) by uploading YAML descriptor", responseClass = "String")
     public Response create(
