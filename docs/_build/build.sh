@@ -32,6 +32,7 @@ function help() {
   echo "* --quick-javadoc : to do a quick javadoc build (for testing)"
   echo "* --serve : serve files from _site after building (for testing)"
   echo "* --install : install files from _site to the appropriate place in "'$'"BROOKLYN_SITE_DIR (or ../../incubator-brooklyn-site-public)"
+  echo "* --skip-test : skip the HTML Proof run on _site"
   echo ""
 }
 
@@ -133,12 +134,27 @@ function parse_arguments() {
       INSTALL_AFTERWARDS=true
       shift
       ;;
+    "--skip-test")
+      SKIP_TEST=true
+      shift
+      ;;
     *)
       echo "ERROR: invalid argument '"$1"'"
       exit 1
       ;;
     esac
   done
+}
+
+# Runs htmlproof against _site
+function test_site() {
+  if [ "$SKIP_TEST" == "true" ]; then
+    return
+  fi
+  echo "Running htmlproof on _site"
+  mkdir -p target
+  LOG="target/htmlproof.log"
+  htmlproof _site 2>&1 | tee $LOG
 }
 
 function make_jekyll() {
@@ -230,6 +246,8 @@ parse_arguments $@
 make_jekyll || { echo ERROR: failed jekyll docs build in `pwd` ; exit 1 ; }
 
 make_javadoc || { echo ERROR: failed javadoc build ; exit 1 ; }
+
+test_site
 
 # TODO build catalog
 
