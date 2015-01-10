@@ -59,10 +59,53 @@ a[id]:empty, a[name]:empty {
     @include icon('irc');
 }
 
-#navbar-icons-extra {
-    float: right;
-    margin-right: -114px;
+/* special container with sidebar where if sidebar is squeezed
+   (under "responsiveness") the text keeps at least its "auto" size,
+   squashing the main container instead */
+.container-and-sidebars {
+  width: 100%;
+  display: flex;
+}
+.container-between-sidebars {
+  flex: 10 1 100%;
+  display: inline-block;
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+.container-sidebar {
+  flex: 0 0 auto;
+}
+.container-sidebar-right { 
+  @extend .container-sidebar; 
+  text-align: left;
+  padding-right: 10px;
+} 
+.container-sidebar-left {
+  @extend .container-sidebar;
+  text-align: right;
+  padding-left: 10px;
+}
+
+@media (min-width: 768px) {
+  .container-sidebar { min-width: calc((100% - 750px)/2); }
+}
+@media (min-width: 992px) {
+  .container-sidebar { min-width: calc((100% - 970px)/2); }
+}
+@media (min-width: 1200px) {
+  .container-sidebar { min-width: calc((100% - 1170px)/2); }
+}
+
+
+.navbar-feather {
+  padding-top: 12px; 
+  margin-right: -6px;
+}
+.navbar-sidebar-right-icons {
     padding-top: 10px;
+    margin-left: -6px;
+    white-space: nowrap;
     a {
       display: inline-block;
       width: 32px;
@@ -224,4 +267,17 @@ code {
     width: 817px;
     height: 99px;
     margin-bottom: 50px;
+}
+
+@mixin flip() {
+  transform: scaleX(-1);
+  filter: FlipH;
+  -webkit-transform: scaleX(-1);
+  -moz-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  -ms-filter: "FlipH";
+}
+
+.flip {
+  @include flip;
 }
