@@ -5,7 +5,7 @@ toc: ../guide_toc.json
 categories: [use, guide, catalog-maintenance]
 ---
 
-In addition to deploying [YAML blueprints](creating-yaml.md) directly through the web console, it is possible
+In addition to deploying [YAML blueprints](creating-yaml.html) directly through the web console, it is possible
 to add YAML blueprints to the catalog via Brooklyn's REST API.
 
 The catalog is a collection of versioned blueprints, which can be deployed directly or referenced 

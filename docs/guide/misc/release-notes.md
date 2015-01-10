@@ -37,7 +37,7 @@ For more information, please visit [brooklyn.io](http://brooklyn.io).
 
 * Networking
 
-* Docker support:  see [clocker.io](clocker.io)
+* Docker support:  see [clocker.io](http://clocker.io)
 
 
 ### Backwards Compatibility

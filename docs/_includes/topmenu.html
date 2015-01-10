@@ -1,18 +1,12 @@
 <nav class="navbar navbar-default navbar-fixed-top" id="header" role="navigation">
-    <div class="container">
+    <div class="container-and-sidebars">
 
-            <div id="navbar-icons-extra">
-              <a href="https://github.com/apache/incubator-brooklyn" class="navbar-icon navbar-icon-shift icon-github"
-                data-toggle="tooltip" data-placement="bottom" title="GitHub: apache/incubator-brooklyn" data-delay="400"/>
-              <a href="https://twitter.com/#!/search?q=brooklyncentral" class="navbar-icon navbar-icon-shift icon-twitter"
-                data-toggle="tooltip" data-placement="bottom" title="Twitter: @brooklyncentral" data-delay="400"/>
-              <a href="http://webchat.freenode.net/?channels=brooklyncentral" class="navbar-icon icon-irc"
-                data-toggle="tooltip" data-placement="bottom" title="IRC: freenode #brooklyncentral" data-delay="400"/>
-              <!-- extra a element seems needed else landing page first menu item copies an icon above (!?) -->
-              <a style="width: 0px; height: 0px;"></a>
-            </div>
-            
-        <div class="container-fluid">
+        <div class="container-sidebar-left">
+          <img src="{{ site.path.style }}/img/feather.png" alt="[feather]" width="80" class="flip navbar-feather">
+        </div>
+
+        <div class="container container-between-sidebars top-menu">
+          <div class="container-fluid">
             <!-- Brand and toggle get grouped for better mobile display -->
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -57,7 +51,21 @@
                   {% endfor %}
                 </ul>
             </div><!-- /.navbar-collapse -->
-            
-        </div><!-- /.container-fluid -->
-    </div>
+          </div><!-- /.container-fluid -->
+        </div><!-- /.container -->
+        
+        <div class="container-sidebar-right">
+          <div class="navbar-sidebar-right-icons">
+            <a href="https://github.com/apache/incubator-brooklyn" class="navbar-icon navbar-icon-shift icon-github"
+              data-toggle="tooltip" data-placement="bottom" title="GitHub: apache/incubator-brooklyn" data-delay="400"/>
+            <a href="https://twitter.com/#!/search?q=brooklyncentral" class="navbar-icon navbar-icon-shift icon-twitter"
+              data-toggle="tooltip" data-placement="bottom" title="Twitter: @brooklyncentral" data-delay="400"/>
+            <a href="http://webchat.freenode.net/?channels=brooklyncentral" class="navbar-icon icon-irc"
+              data-toggle="tooltip" data-placement="bottom" title="IRC: freenode #brooklyncentral" data-delay="400"/>
+            <!-- extra a element seems needed as landing page seems to copy the last element here (!?) -->
+            <a href="." style="width: 0px; height: 0px;"></a>
+         </div>
+      </div>
+      
+  </div>
 </nav>

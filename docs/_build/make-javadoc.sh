@@ -16,11 +16,20 @@ else
   export SOURCE_PATHS=$BROOKLYN_JAVADOC_SOURCE_PATHS
 fi
 
+mkdir -p target
 rm -rf target/$JAVADOC_TARGET1_SUBPATH/
 
 export DATESTAMP=`date "+%Y-%m-%d"`
+
 # BROOKLYN_VERSION_BELOW
-export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.7.0-M2-incubating-with-dependencies.jar
+export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.7.0-SNAPSHOT-with-dependencies.jar
+
+if [ \! -f ${BROOKLYN_JAVADOC_CLASSPATH} ]; then
+  echo "Expected to find ${BROOKLYN_JAVADOC_CLASSPATH}"
+  echo "Please run a full Maven build in the project root"
+  exit 1
+fi
+
 echo "building javadoc at $DATESTAMP from:
 $SOURCE_PATHS"
 
@@ -28,12 +37,12 @@ javadoc -sourcepath $SOURCE_PATHS \
   -public \
   -d target/$JAVADOC_TARGET1_SUBPATH/ \
   -subpackages "org.apache.brooklyn:io.brooklyn:brooklyn" \
-  -classpath "$BROOKLYN_JAVADOC_CLASSPATH" \
+  -classpath "${BROOKLYN_JAVADOC_CLASSPATH}" \
   -doctitle "Apache Brooklyn" \
   -windowtitle "Apache Brooklyn" \
   -header "Apache Brooklyn" \
   -footer '<b>Apache Brooklyn - Multi-Cloud Application Management</b> <br/> <a href="http://brooklyn.io/" target="_top">brooklyn.io</a>. Apache License. &copy; '$DATESTAMP'.' \
- | tee target/javadoc.log
+2>&1 1>/dev/null | tee target/javadoc.log
 
 if ((${PIPESTATUS[0]})) ; then echo ; echo ; echo "ERROR: javadoc process exited non-zero" ; exit 1 ; fi
 echo ; echo

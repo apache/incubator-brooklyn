@@ -9,7 +9,7 @@ children:
 
 [Download Apache Brooklyn {{ site.data.brooklyn.version }} from our mirror sites](https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/{{ site.data.brooklyn.version }}/apache-brooklyn-{{ site.data.brooklyn.version }}.tar.gz)
 
-You can also verify that you build has not been tampered with by [verifying the hashes and signatures](download/verify.html).
+You can also verify that you build has not been tampered with by [verifying the hashes and signatures](verify.html).
 
 
 ## Build the Binary Package
@@ -29,7 +29,7 @@ You can then find the binary distribution in the folder `usage/dist/target/brook
 
 ## Get Started!
 
-Take a look at the [Get Started](quickstart/) page!
+Take a look at the [Get Started]({{ site.path.guide }}/start/running.html) page!
 
 
 ## Previous Versions

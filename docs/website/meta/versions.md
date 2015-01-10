@@ -7,9 +7,9 @@ title: Versions
 
 The current stable version of Brooklyn is {{ site.brooklyn-stable-version }}:
 
-* [Download]({{ site.path.website }}/download.md)
+* [Download]({{ site.path.website }}/download/)
 * [User Guide]({{ site.path.guide }}/)
-* [Release Notes]({{ site.path.guide }}/start/release-notes.md)
+* [Release Notes]({{ site.path.guide }}/misc/release-notes.html)
 
 This documentation was generated {{ site.time | date_to_string }}.
 
@@ -20,7 +20,7 @@ Apache versions:
 
 * **[0.7.0-SNAPSHOT](/v/0.7.0-SNAPSHOT/)**: bleeding-edge (not voted on or endorsed by Apache!)
 
-* **[0.7.0-M2-incubating](/v/0.7.0-M2-incubating/)**: YAML, persistence, Chef, Windows, Docker. The first Apache release! (Dec 2014)
+* **[0.7.0-M2](/v/0.7.0-M2/)**: YAML, persistence, Chef, Windows, Docker. The first Apache release! (Dec 2014)
 
 
 The versions below were made prior to joining the Apache Incubator, 

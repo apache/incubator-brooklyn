@@ -37,8 +37,8 @@ YAML supports this, and sometimes that makes more readable plans.
 (Although in this case a simple `location: localhost` is equivalent and even more succinct, but this is a tutorial.)
 
 For more information see the Locations section of the [YAML reference](yaml-reference.html) 
-and in the [User's Guide]({{ site.path.guide }}/use/guide/locations/).
-Another good reference is the [template brooklyn.properties](/use/guide/quickstart/brooklyn.properties),
+and in the [Operations]({{ site.path.guide }}/ops/locations) section of the User Guide.
+Another good reference is the [template brooklyn.properties]({{ brooklyn_properties_url_path }}),
 which if you install in `~/.brooklyn/brooklyn.properties` and edit with your credentials,  
 allows you to refer to clouds simply as `location: jclouds:aws-ec2:eu-west-1` or
 set up "named locations" you can use as `location: named:my_cloudstack`.

@@ -68,7 +68,7 @@ brooklyn.location.named.AWS\ Virginia\ Large\ Centos.minRam=4096
 
 This will  appear as 'AWS Virginia Large Centos' in the web console, but will need to be escaped on the command line as:  `AWS\ Virginia\ Large\ Centos`.
 
-See the Getting Started [template brooklyn.properties](../quickstart/brooklyn.properties) for more examples of using cloud endpoints.
+See the Getting Started [template brooklyn.properties](../start/brooklyn.properties) for more examples of using cloud endpoints.
 
 
 ## Fixed Infrastructure

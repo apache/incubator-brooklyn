@@ -21,7 +21,7 @@ function help() {
   echo "* website-root  : to build the website only, in the root"
   echo "* guide-latest  : to build the guide only, in /v/latest/"
   # BROOKLYN_VERSION_BELOW
-  echo "* guide-version : to build the guide only, in the versioned namespace /v/0.7.0-M2-incubating/"
+  echo "* guide-version : to build the guide only, in the versioned namespace /v/0.7.0-SNAPSHOT/"
   echo "* test-guide-root : to build the guide only, in the root (for testing)"
   echo "* test-both : to build the website to root and guide to /v/latest/ (for testing)"
   echo "* test-both-sub : to build the website to /sub/ and guide to /sub/v/latest/ (for testing)"
@@ -32,6 +32,7 @@ function help() {
   echo "* --quick-javadoc : to do a quick javadoc build (for testing)"
   echo "* --serve : serve files from _site after building (for testing)"
   echo "* --install : install files from _site to the appropriate place in "'$'"BROOKLYN_SITE_DIR (or ../../incubator-brooklyn-site-public)"
+  echo "* --skip-test : skip the HTML Proof run on _site"
   echo ""
 }
 
@@ -65,7 +66,7 @@ function parse_mode() {
     # Mac bash defaults to v3 not v4, so can't use assoc arrays :(
     DIRS_TO_MOVE[0]=guide
     # BROOKLYN_VERSION_BELOW
-    DIRS_TO_MOVE_TARGET[0]=v/0.7.0-M2-incubating
+    DIRS_TO_MOVE_TARGET[0]=v/0.7.0-SNAPSHOT
     DIRS_TO_MOVE[1]=style
     DIRS_TO_MOVE_TARGET[1]=${DIRS_TO_MOVE_TARGET[0]}/style
     INSTALL_RSYNC_OPTIONS=""
@@ -133,12 +134,27 @@ function parse_arguments() {
       INSTALL_AFTERWARDS=true
       shift
       ;;
+    "--skip-test")
+      SKIP_TEST=true
+      shift
+      ;;
     *)
       echo "ERROR: invalid argument '"$1"'"
       exit 1
       ;;
     esac
   done
+}
+
+# Runs htmlproof against _site
+function test_site() {
+  if [ "$SKIP_TEST" == "true" ]; then
+    return
+  fi
+  echo "Running htmlproof on _site"
+  mkdir -p target
+  LOG="target/htmlproof.log"
+  htmlproof _site --href_ignore "https?://127.*" --alt_ignore ".*" 2>&1 | tee $LOG
 }
 
 function make_jekyll() {
@@ -230,6 +246,8 @@ parse_arguments $@
 make_jekyll || { echo ERROR: failed jekyll docs build in `pwd` ; exit 1 ; }
 
 make_javadoc || { echo ERROR: failed javadoc build ; exit 1 ; }
+
+test_site
 
 # TODO build catalog
 
