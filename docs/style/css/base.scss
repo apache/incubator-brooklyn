@@ -8,7 +8,9 @@
 body {
     margin: 0px; 
     padding: 10px 0px 20px 0px; 
-    font-family: helvetica neue, helvetica, arial, sans-serif; 
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 300;
+    font-size: 17px; 
     background-color: #ffffff; 
     color: $text_color; 
 }
@@ -28,6 +30,9 @@ a[id]:empty, a[name]:empty {
     padding-top: 60px;
     margin-top: -60px;
     display: block;
+}
+.dropdown-menu > li > a {
+  font-weight: 300;
 }
 
 
@@ -125,12 +130,30 @@ a[id]:empty, a[name]:empty {
 }
 
 /* pop-up top-menu */
-ul.nav li.dropdown:hover > ul.dropdown-menu {
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  background-color: #f5f5f5;
+  color: $brooklyn_green;
+}
+.top-menu {
+  font-size: 14px;
+  font-weight: 400;
+  .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
+    background-color: #f5f5f5;
+    background-image: none;
+    color: $brooklyn_green;
+  }
+  ul.nav li.dropdown:hover > ul.dropdown-menu {
     display: block;
+  }
 }
 
 /* side menu */
 .side-menu {
+  font-size: 14px;
+  font-weight: 400;
   h4.with_following {
     margin-bottom: 0;
   }
@@ -231,6 +254,7 @@ pre {
     background-color:$code_bg_color;
     padding: 0.4em 0.8em;
     overflow-x: scroll;
+    font-size: 85%;
     /* override border and line-height on 'pre' from bootstrap */
     border: none;
     border-radius: 2px;
