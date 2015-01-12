@@ -1,5 +1,5 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: Prepopulating a Local Artifact Repository
 toc: /guide/toc.json
 ---

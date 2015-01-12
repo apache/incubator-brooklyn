@@ -1,5 +1,5 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: IDE Setup
 toc: /guide/toc.json
 ---

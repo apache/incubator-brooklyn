@@ -1,6 +1,6 @@
 ---
 title: Policies
-layout: guide-normal
+layout: website-normal
 
 ---
 

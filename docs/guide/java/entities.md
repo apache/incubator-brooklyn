@@ -1,6 +1,6 @@
 ---
 title: Custom Entity Development
-layout: guide-normal
+layout: website-normal
 ---
 
 This section details how to create new custom application components or groups as brooklyn entities.

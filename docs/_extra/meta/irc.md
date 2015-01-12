@@ -1,5 +1,5 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: IRC
 toc: /guide/toc.json
 ---

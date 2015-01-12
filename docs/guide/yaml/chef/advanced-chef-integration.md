@@ -1,7 +1,7 @@
 ---
 title: Advanced Chef Integration
 title_in_menu: Advanced Chef Integration
-layout: guide-normal
+layout: website-normal
 ---
 
 ### Adding Sensors and Effectors

@@ -1,7 +1,7 @@
 ---
 title: Configuring Brooklyn
 title_in_menu: Configuring Brooklyn
-layout: guide-normal
+layout: website-normal
 menu_parent: index.md
 ---
 

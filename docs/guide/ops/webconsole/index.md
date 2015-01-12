@@ -1,6 +1,6 @@
 ---
 title: Runtime Management
-layout: guide-normal
+layout: website-normal
 ---
 
 brooklyn uses many of the ideas from autonomic computing to implement management of entities in a structured and reusable fashion (including provisioning, 

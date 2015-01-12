@@ -1,6 +1,6 @@
 ---
 title: Persistence
-layout: guide-normal
+layout: website-normal
 ---
 
 Brooklyn can be configured to persist its state so that the Brooklyn server can be restarted, 

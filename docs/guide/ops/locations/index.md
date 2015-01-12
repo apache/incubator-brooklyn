@@ -1,6 +1,6 @@
 ---
 title: Locations Intro
-layout: guide-normal
+layout: website-normal
 ---
 
 Locations are the environments to which Brooklyn deploys applications.

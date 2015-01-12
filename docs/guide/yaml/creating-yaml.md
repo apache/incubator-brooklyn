@@ -1,6 +1,6 @@
 ---
 title: The Basic Structure
-layout: guide-normal
+layout: website-normal
 toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---
@@ -52,17 +52,24 @@ TODO building up children entities
 
 ### More Information
 
+Topics to explore next on the topic of YAML blueprints are:
+
+{% include list-children.html %}
+
 Plenty of examples of blueprints exist in the Brooklyn codebase,
-so a good starting point is to [`git clone`]({{ site.path.guide }}/dev/code/index.html) it
+so another starting point is to [`git clone`]({{ site.path.guide }}/dev/code/index.html) it
 and search for `*.yaml` files therein.
 
 Brooklyn lived as a Java framework for many years before we felt confident
 to make a declarative front-end, so you can do pretty much anything you want to
-by dropping to the JVM. For more information on this:
+by dropping to the JVM. For more information on Java:
+
 * start with a [Maven archetype]({{site.path.guide}}/java/archetype.html)
 * see all [Brooklyn Java guide]({{site.path.guide}}/java/) topics
 * look at test cases in the [codebase](https://github.com/apache/incubator-brooklyn)
-<!-- TODO
+
+<!-- 
+TODO
 * review some [examples]({{site.path.guide}}/use/examples/index.html)
 -->
 

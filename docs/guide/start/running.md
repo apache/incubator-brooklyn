@@ -1,7 +1,7 @@
 ---
 title: Running Brooklyn
 title_in_menu: Running Brooklyn
-layout: guide-normal
+layout: website-normal
 menu_parent: index.md
 ---
 
