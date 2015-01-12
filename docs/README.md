@@ -50,9 +50,14 @@ return to the `_build` directory and re-run the above command.
 
 On some platforms there may be some fiddling required before `jekyll` runs without errors,
 but the ecosystem is fairly mature and most problems can be resolved with a bit of googling.
-For instance on Ubuntu, there may be additional dependencies required:
+Some issues we've encountered are:
 
-    sudo apt-get install libxslt-dev libxml2-dev
+ * on Mac, install xcode and its command-line tools
+ * if ruby gets confused about versions,
+   [clean out your gems](http://judykat.com/ken-judy/force-bundler-rebuild-ruby-rails-gemset/)
+ * if `libxml2` fails, set `bundle config build.nokogiri --use-system-libraries` before the install
+   (more details [here](http://www.nokogiri.org/tutorials/installing_nokogiri.html))
+ * on Ubuntu, `sudo apt-get install libxslt-dev libxml2-dev`
 
 
 Seeing the Website and Docs
@@ -155,9 +160,14 @@ useful for testing.
 Supported options beyond that include `--serve`, to start a web browser serving the content of `_site/`,
 and `--skip-javadoc`, to speed up the build significantly by skipping javadoc generation.
 A handy command for testing the live files, analogous to `jekyll serve` 
-but with the correct file structure, is:
+but with the correct file structure, and then checking links, is:
 
     _build/build.sh test-both --skip-javadoc --serve
+
+And to run link-checks quickly (without validating external links), use:
+
+    htmlproof --href_ignore "https?://127.*" --alt_ignore ".*" --disable_external _site
+
 
 
 Preparing for a Release

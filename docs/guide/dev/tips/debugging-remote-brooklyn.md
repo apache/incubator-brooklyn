@@ -4,7 +4,7 @@ title: Brooklyn Remote Debugging
 toc: /guide/toc.json
 ---
 
-Usually during development, you will be running Brooklyn from your IDE (see [IDE Setup](ide.html)), in which case
+Usually during development, you will be running Brooklyn from your IDE (see [IDE Setup](../env/ide/)), in which case
 debugging is as simple as setting a breakpoint. There may however be times when you need to debug an existing remote
 Brooklyn instance (often referred to as Resident Brooklyn, or rBrooklyn) on another machine, usually in the cloud.
 
@@ -108,7 +108,7 @@ Setting up your IDE will differ depending upon which IDE you are using. Instruct
 IntelliJ, and have been tested with Eclipse Luna and IntelliJ Ultimate 14.
 
 ### Eclipse Setup
-To debug using Eclipse, first open the Brooklyn project in Eclipse (see [IDE Setup](ide.html)).
+To debug using Eclipse, first open the Brooklyn project in Eclipse (see [IDE Setup](../env/ide/)).
 
 Now create a debug configuration by clicking `Run` | `Debug Configurations...`. You will then be presented with the 
 Debug Configuration dialog.
@@ -119,7 +119,7 @@ Connection Type should be set to 'Standard (Socket Attach)'. The Host should be 
 and the Port should be set to 8888. Click 'Debug' to start debugging.
 
 ### IntelliJ Setup
-To debug using IntelliJ, first open the Brooklyn project in IntelliJ (see [IDE Setup](ide.html)).
+To debug using IntelliJ, first open the Brooklyn project in IntelliJ (see [IDE Setup](../env/ide/)).
 
 Now create a debug configuration by clicking `Run` | `Edit Configurations`. You will then be presented with the
 Run/Debug Configurations dialog.

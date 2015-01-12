@@ -211,6 +211,7 @@ module SiteStructure
         puts "setting up #{item} as link" if @@verbose
         link = render_liquid(site, parent, item['link'])
         data = { 'link' => link, 'url' => link }
+        data['title'] = item['title'] if item['title']
         breadcrumb_pages << data
         breadcrumb_paths << data['link']
         data['data'] = data
@@ -226,6 +227,7 @@ module SiteStructure
       data['menu_parent'] ||= parent
       
       data['title_in_menu'] = render_liquid(site, parent, item['title_in_menu'] || item['title'] || data['title_in_menu'] || data['title'])
+      data['title'] ||= data['title_in_menu']
 #      puts "built #{data}, now looking at children"
 
       # if already processed then return now that we have set custom item overrides (don't recurse through children)

@@ -154,7 +154,7 @@ function test_site() {
   echo "Running htmlproof on _site"
   mkdir -p target
   LOG="target/htmlproof.log"
-  htmlproof _site 2>&1 | tee $LOG
+  htmlproof _site --href_ignore "https?://127.*" --alt_ignore ".*" 2>&1 | tee $LOG
 }
 
 function make_jekyll() {

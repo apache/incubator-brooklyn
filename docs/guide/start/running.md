@@ -11,7 +11,7 @@ This tutorial assumes that you are using Linux or Mac OSX.
 
 ## Install Brooklyn
 
-Download Brooklyn and obtain a binary build as described on [the download page]({{site.path.website}}/download.html).
+Download Brooklyn and obtain a binary build as described on [the download page]({{site.path.website}}/download/).
 
 {% if brooklyn_version contains 'SNAPSHOT' %}
 Expand the `tar.gz` archive (note: as this is a -SNAPSHOT version, your filename will be slightly different):
@@ -68,7 +68,7 @@ then answer 'yes', and then repeat the command run again.
 If the response is `hello world`, with no other output or prompts, then your SSH setup is good and Brooklyn should be
 able to use it without a problem.
 
-If these steps are not working, [these instructions]({{ site.path.guide }}/use/guide/locations/) may be
+If these steps are not working, [these instructions]({{ site.path.guide }}/ops/locations/) may be
 useful.
 
 

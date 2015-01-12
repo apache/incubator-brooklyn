@@ -28,4 +28,4 @@ From the links above you can also access the Developer Guide for the relevant ve
 
 ## Other Docs
 
-Many other mini-docs are available [here](other-docs.md).
+Many other mini-docs are available [here](other-docs.html).
