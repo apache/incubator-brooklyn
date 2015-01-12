@@ -93,11 +93,11 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
             }
             if (lo.isPresent()) {
                 Location l = lo.get();
-                Optional<Boolean> locationRunning = Optional.fromNullable(l.getConfig(BrooklynConfigKeys.ENTITY_RUNNING));
-                Optional<Boolean> entityRunning = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_RUNNING));
-                Optional<Boolean> locationInstalled = Optional.fromNullable(l.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION));
-                Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION));
-                Optional<Boolean> entityStarted = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_STARTED));
+                Optional<Boolean> locationRunning = Optional.fromNullable(l.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING));
+                Optional<Boolean> entityRunning = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING));
+                Optional<Boolean> locationInstalled = Optional.fromNullable(l.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+                Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+                Optional<Boolean> entityStarted = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START));
                 boolean skipCheck = locationRunning.or(entityRunning).or(locationInstalled).or(entityInstalled).or(entityStarted).or(false);
                 if (l instanceof PortSupplier) {
                     int p = ((PortSupplier) l).obtainPort(value);

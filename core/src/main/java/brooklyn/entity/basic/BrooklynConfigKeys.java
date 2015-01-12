@@ -68,7 +68,7 @@ public class BrooklynConfigKeys {
      *
      * @see #ENTITY_RUNNING
      */
-    public static final ConfigKey<Boolean> ENTITY_STARTED = newBooleanConfigKey("entity.started", "Skip the startup process entirely, for running services");
+    public static final ConfigKey<Boolean> SKIP_ENTITY_START = newBooleanConfigKey("entity.started", "Skip the startup process entirely, for running services");
 
     /**
      * Set this configuration value to true to skip the entity startup process as with {@link #ENTITY_STARTED} if the process or
@@ -79,14 +79,14 @@ public class BrooklynConfigKeys {
      *
      * @see #ENTITY_STARTED
      */
-    public static final ConfigKey<Boolean> ENTITY_RUNNING = newBooleanConfigKey("entity.running", "Skip the startup process entirely, if service already running");
+    public static final ConfigKey<Boolean> SKIP_ENTITY_START_IF_RUNNING = newBooleanConfigKey("entity.running", "Skip the startup process entirely, if service already running");
 
     /**
      * Set this configuration value to true if the entity installation, customization and launch process is to be skipped entirely.
      * <p>
      * This will skip the installation phase of the lifecycle, and move directl;y to customization and launching of the entity.
      */
-    public static final ConfigKey<Boolean> SKIP_INSTALLATION = newBooleanConfigKey("install.skip", "Skip the driver install commands entirely, for pre-installed software");
+    public static final ConfigKey<Boolean> SKIP_ENTITY_INSTALLATION = newBooleanConfigKey("install.skip", "Skip the driver install commands entirely, for pre-installed software");
 
     // The implementation in AbstractSoftwareSshDriver runs this command as an SSH command 
     public static final ConfigKey<String> PRE_INSTALL_COMMAND = ConfigKeys.newStringConfigKey("pre.install.command",

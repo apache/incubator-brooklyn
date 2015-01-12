@@ -78,8 +78,8 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      * The {@link BrooklynConfigKeys#ENTITY_RUNNING} key can be set on the location
      * or the entity to skip the startup process if the entity is already running,
      * according to the {@link #isRunning()} method. To force the startup to be
-     * skipped, {@link BrooklynConfigKeys#ENTITY_STARTED} can be set on the entity.
-     * The {@link BrooklynConfigKeys#SKIP_INSTALLATION} key can also be used to
+     * skipped, {@link BrooklynConfigKeys#SKIP_ENTITY_START} can be set on the entity.
+     * The {@link BrooklynConfigKeys#SKIP_ENTITY_INSTALLATION} key can also be used to
      * skip the {@link #setup()}, {@link #copyInstallResources()} and
      * {@link #install()} methods if set on the entity or location. 
      *
@@ -88,9 +88,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     @Override
     public void start() {
         boolean skipStart = false;
-        Optional<Boolean> locationRunning = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.ENTITY_RUNNING));
-        Optional<Boolean> entityRunning = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_RUNNING));
-        Optional<Boolean> entityStarted = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.ENTITY_STARTED));
+        Optional<Boolean> locationRunning = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING));
+        Optional<Boolean> entityRunning = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING));
+        Optional<Boolean> entityStarted = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START));
         if (locationRunning.or(entityRunning).or(false)) {
             skipStart = isRunning();
         } else {
@@ -107,8 +107,8 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 }});
             };
 
-            Optional<Boolean> locationInstalled = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_INSTALLATION));
-            Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_INSTALLATION));
+            Optional<Boolean> locationInstalled = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+            Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
             boolean skipInstall = locationInstalled.or(entityInstalled).or(false);
             if (!skipInstall) {
                 DynamicTasks.queue("setup", new Runnable() { public void run() {
