@@ -109,6 +109,7 @@ public class CumulusRDFApplication extends AbstractApplication {
     private Entity cassandra;
     private TomcatServer webapp;
     private HostAndPort endpoint;
+    private final Object endpointMutex = new Object();
 
     /**
      * Create the application entities:
@@ -160,9 +161,11 @@ public class CumulusRDFApplication extends AbstractApplication {
             public Void call(ConfigBag parameters) {
                 // Process the YAML template given in the application config
                 String url = Entities.getRequiredUrlConfig(CumulusRDFApplication.this, CUMULUS_RDF_CONFIG_URL);
-                Map<String, Object> config = MutableMap.<String, Object>of("cassandraHostname", endpoint.getHostText(), "cassandraThriftPort", endpoint.getPort());
+                Map<String, Object> config;
+                synchronized (endpointMutex) {
+                    config = MutableMap.<String, Object>of("cassandraHostname", endpoint.getHostText(), "cassandraThriftPort", endpoint.getPort());
+                }
                 String contents = TemplateProcessor.processTemplateContents(ResourceUtils.create(CumulusRDFApplication.this).getResourceAsString(url), config);
-
                 // Copy the file contents to the remote machine
                 return DynamicTasks.queue(SshEffectorTasks.put("/tmp/cumulus.yaml").contents(contents)).get();
             }
@@ -173,7 +176,7 @@ public class CumulusRDFApplication extends AbstractApplication {
             @Override
             public void onEvent(SensorEvent<String> event) {
                 if (Strings.isNonBlank(event.getValue())) {
-                    synchronized (endpoint) {
+                    synchronized (endpointMutex) {
                         String hostname = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraDatacenter.HOSTNAME)).getUnchecked();
                         Integer thriftPort = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraDatacenter.THRIFT_PORT)).getUnchecked();
                         HostAndPort current = HostAndPort.fromParts(hostname, thriftPort);

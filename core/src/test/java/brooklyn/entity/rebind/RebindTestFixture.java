@@ -53,7 +53,7 @@ import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 
-import com.google.api.client.util.Sets;
+import com.google.common.collect.Sets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 
