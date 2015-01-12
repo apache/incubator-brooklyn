@@ -25,18 +25,16 @@ under the License.
 
 
 <script language="JavaScript" type="application/javascript">
-    $(window).resize(function () { 
+    fix_padding_function = function () { 
         $('body').css('padding-top', parseInt($('#header').css("height"))+10);
         $('body').css('padding-bottom', parseInt($('#footer').css("height"))+10);
-    });
+    };
+    $(window).resize(fix_padding_function);
+    $(window).load(fix_padding_function);
     
-    $(window).load(function () { 
-        $('body').css('padding-top', parseInt($('#header').css("height"))+10);        
-        $('body').css('padding-bottom', parseInt($('#footer').css("height"))+10);
-    });
     $(function () {
         $('[data-toggle="tooltip"]').tooltip()
-    })
+    });
 </script>
 
 </body>

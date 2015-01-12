@@ -211,6 +211,29 @@ a[id]:empty, a[name]:empty {
     padding-top: 8px; 
     padding-bottom: 8px; 
   }
+  a.sub-item.list-group-item.active {
+//    background-image: -webkit-linear-gradient(top, #5cb85c 0%, #48a648 100%);
+//    background-image: linear-gradient(to bottom, #5cb85c 0%, #48a648 100%);
+
+//    background-image: -webkit-linear-gradient(top, #ff0000 0%, #0000ff 100%);
+//    background-image: linear-gradient(to bottom, #6ca06c 0%, #589058 100%);
+
+    background-color: #f5f5f5;
+    // the below is needed to achieve the above, since bg-image is already set
+    background-image: -webkit-linear-gradient(top, #f5f5f5 0%, #f5f5f5 100%);
+    background-image: linear-gradient(to bottom, #f5f5f5 0%, #f5f5f5 100%);
+    
+    border-color: #ddd;
+    color: $text_color;
+    text-shadow: none;
+    // not sure why the bottom border is visible at all, and stays on hover, but vanishes on 'active';
+    // but this sorts it out (taking 1 away from padding)
+    margin-bottom: 0;
+    padding-bottom: 7px;
+  }
+  a.sub-item.list-group-item.active:hover {
+    color: $a_hover_color;
+  }
 }
 
 

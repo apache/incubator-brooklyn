@@ -24,13 +24,13 @@ layout: website-base
 ---
 <div class="container" id="main_container">
     <div class="row">
-        <div class="col-md-9">
+        <div class="col-md-9" id="content_container">
             <h1>{{ page.title }}</h1>
             {{ content }}
         </div>
 
         <div class="col-md-3">
-<script>
+<script language="JavaScript" type="application/javascript">
 {% comment %} 
 the menu is css position:fixed so won't scroll; 
 but also it will not obey its parents width.
@@ -90,10 +90,11 @@ $(window).resize(sidemenu_y_nonfloater);
                   {% comment %} case 3b {% endcomment %}
                   <a href="{{item.url}}" class="list-group-item active with-sub-item">{{ item.title_in_menu }}</a>
                   <div class="sub-item">
-                   {% for item2 in page.menu %}
-                    <a href="{{item2.url}}" class="list-group-item sub-item">
-                      {{ item2.title_in_menu }}</a>
-                   {% endfor %}
+                    {% for item2 in page.menu %}
+                      {% capture item_section_classes %}{% if item2.section %} section{% endif %}{% endcapture %}
+                      <a href="{{item2.url}}" class="list-group-item sub-item {{ item_section_classes }}" {% if item2.section %}section-target="#{{ item2.section }}"{% endif %}>
+                        {{ item2.title_in_menu }}</a>
+                    {% endfor %}
                   </div>
                 {% else %}
                   {% comment %} case 3a side menu item {% endcomment %}
@@ -112,5 +113,84 @@ $(window).resize(sidemenu_y_nonfloater);
         </div>
     </div>
 </div>
+
+<script language="JavaScript" type="application/javascript">
+// Cache selectors
+var sideMenu = $("#side-menu"),
+    sideItems = sideMenu.find("a"),
+    // Anchors corresponding to menu items
+    scrollItems = sideItems.map(function(){
+      var item = $(this).attr("section-target");
+      if (item && item.length) { return item; }
+    });
+
+var highlight_section_last_top = -1;
+
+var highlight_section = function(data) {
+   // Get container scroll position
+   var highlight_section_new_top = $(this).scrollTop();
+   if (highlight_section_new_top == highlight_section_last_top) return;
+   var highlight_section_new_bottom = highlight_section_new_top + $(window).height();
+   var scroll_advancing = (highlight_section_new_top > highlight_section_last_top);
+
+   // if initial, look if there was a link supplied
+
+   // if scrolling advance, pick up a section when title is fully visible
+   
+   // if scrolling back, pick up a section as soon as the title is visible,
+   // of if the next title is below the halfway point
+   
+   // when scrolling up
+   // Get id of all scroll items above the current position
+   var last_item = null, active_item = $("#side-menu a.section#active");
+   var cur = scrollItems.map(function(itemI){
+     item = $(scrollItems[itemI]);
+     if (item && item.length) {
+       if (scroll_advancing) {
+         // if scrolling advance, pick up a section when title starts before 1/3 height 
+         if (item.offset().top < highlight_section_new_top + $(window).height()/3)
+           return item;
+           
+         // or if containing div is finished (usu the whole main content)
+         div_containing_item = item.closest("div");
+         if (div_containing_item.offset().top + div_containing_item.height() < highlight_section_new_bottom + 15)
+           return item;
+         // or when next title is visible
+         if (last_item && item.offset().top < highlight_section_new_bottom + 15)
+           return last_item;
+       } else {
+         // if scrolling back, pick up a section as soon as the title is visible,
+         if (item.offset().top < highlight_section_new_top)
+           return item;
+         // or if title is before the 2/3 point
+         // (not sure about this, probably want also to have 
+         // "AND the id.top is <= current_active_it.top" so we don't jump FORWARD a section
+         // when scrolling BACK, with lots of tiny sections) 
+         if ((item.offset().top < highlight_section_new_top + 2*$(window).height()/3)
+             && (!active_item || !active_item.offset() || active_item.offset().top >= item.offset().top))
+           return item;
+         
+       }
+       last_item = item;
+     }
+   });
+   // Get the id of the current element
+   cur = cur[cur.length-1];
+   var id = cur && cur.length ? cur[0].id : "";
+   // Set/remove active class
+   new_active = $("#side-menu a.section").filter("[section-target='#"+id+"']");
+   if (new_active.hasClass("active")) {
+     // nothing needed
+   } else {
+     $("#side-menu a.section").removeClass("active");
+     $("#side-menu a.section").filter("[section-target='#"+id+"']").addClass("active");
+   }
+   
+   highlight_section_last_top = highlight_section_new_top;
+};
+
+$(window).scroll(highlight_section);
+$(highlight_section);
+</script>
 
 {% include footer.html %}

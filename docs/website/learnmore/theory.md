@@ -1,6 +1,11 @@
 ---
 layout: website-normal
 title: The Theory behind Brooklyn
+children:
+- { section: why_brooklyn, title: "Why Brooklyn?" }
+- { section: blueprints, title: Blueprints }
+- { section: benefits, title: Benefits }
+- { section: standards, title: Standards }
 ---
 
 <div class="jumobotron" markdown="1">
@@ -10,7 +15,7 @@ through autonomic blueprints.
 
 </div>
 
-## Why Brooklyn?
+## <a id="why_brooklyn"></a> Why Brooklyn?
 
 Building and deploying applications in the cloud computing era has changed many
 things. Provision a bare server just-in-time, and use automated tools to install
@@ -61,7 +66,7 @@ tools to collect key health/performance metrics; responding to situations
 such as a failing node; and adding or removing capacity to match demand.
 
 
-## Blueprints
+## <a id="blueprints"></a> Blueprints
 
 A Brooklyn blueprint defines an application, using a declarative YAML syntax
 supporting JVM plugins. A basic blueprint might comprise a single process,
@@ -117,7 +122,7 @@ managing complex software to be codified as part of the software development
 process.
 
 
-### Agile and flexible
+### <a id="benefits"></a> Agile and flexible
 
 Brooklyn is a product built from the ground up for application agility. This
 includes portability across non-cloud, cloud, and PaaS targets; devops-style
@@ -164,7 +169,7 @@ Salt apply promise theory to files and processes on machines; Brooklyn can
 leverage all of these tools, complementing it with an application-oriented
 model.
 
-### Standards compliant
+### <a id="standards"></a> Standards compliant
 
 Finally we note some emerging standards in this area. OASIS CAMP (Cloud
 Application Management for Platforms) and TOSCA (Topology and Orchestration
