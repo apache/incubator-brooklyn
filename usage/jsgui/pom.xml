@@ -147,6 +147,23 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>assemble-jsgui</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/assembly.xml</descriptor>
+                    </descriptors>
+                </configuration>
+            </plugin>
             <!--
                  run js tests with: $ mvn clean process-resources jasmine:test
                  run tests in the browser with: $ mvn jasmine:bdd
