@@ -22,14 +22,39 @@
 # menu_customizations can be used, including force_inactive to prevent highlighting
 layout: website-base
 ---
-<div class="container">
+<div class="container" id="main_container">
     <div class="row">
         <div class="col-md-9">
             <h1>{{ page.title }}</h1>
             {{ content }}
         </div>
+
         <div class="col-md-3">
-            <div class="list-group side-menu">
+<script>
+{% comment %} 
+the menu is css position:fixed so won't scroll; 
+but also it will not obey its parents width.
+set the width on load and on resize.
+{% endcomment %} 
+sidemenu_x_sizer=function(){ $('#side-menu').width($('#side-menu').parent().find('#width_reference').outerWidth()); };
+$(sidemenu_x_sizer);
+$(window).resize(sidemenu_x_sizer);
+
+{% comment %} 
+also ensure the y-height of the screen is big enough, else revert to non-floating menu
+{% endcomment %} 
+sidemenu_y_nonfloater=function(){
+  if ($('#side-menu').outerHeight(true) + $('#header').outerHeight(true) + $('#footer').outerHeight(true) > window.innerHeight) {
+    $('#side-menu').css('position', 'inherit');
+  } else {
+    // restore if screen has grown
+    $('#side-menu').css('position', 'fixed');
+  }
+};
+$(sidemenu_y_nonfloater);
+$(window).resize(sidemenu_y_nonfloater);
+</script>
+            <div class="list-group side-menu" id="side-menu">
 {% comment %}
 
   Case 1) If we're the landing page show nothing.
@@ -83,6 +108,7 @@ layout: website-base
 {% endunless %}
         
             </div>
+            <div id="width_reference"></div>
         </div>
     </div>
 </div>
