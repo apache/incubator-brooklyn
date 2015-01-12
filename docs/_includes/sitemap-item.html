@@ -1,0 +1,34 @@
+{% pop site_items item %}
+{% set_hash_entry item path item_path %}
+ {% set_hash_entry item url item_url %}
+
+{% unless item_path %}
+ {% unless item_url %}
+  {% puts error, null item_url %}
+  {% putp item %}
+  {% putv item_url %}
+  {% fail item missing path and url (jekyll block evaluation order can cause this) %}
+ {% endunless %}
+{% endunless %}
+
+<a id="{{ item_path }}"></a>
+<li>
+ {% if visited contains item_path %}
+  {{ item['title'] }} (<a href="#{{ item_path }}">repeat</a>)
+ {% elsif item['external'] %}
+  {{ item['title'] }} (<a href="{{ item['url'] }}">external</a>)
+ {% else %}
+  <a href="{{ item['url'] }}">{{ item['title'] }}</a>
+  {% if item['menu'] %}
+   {% push visited item_path %}
+   <ul>
+    {% push site_items item %}
+    {% for item in site_items[-1]['menu'] %}
+     {% push site_items item %}
+     {% include sitemap-item.html %}
+    {% endfor %}
+    {% pop site_items item %}
+   </ul>
+  {% endif %}
+ {% endif %}
+</li>

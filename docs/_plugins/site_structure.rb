@@ -236,7 +236,7 @@ module SiteStructure
       elsif (item['link'])
         puts "setting up #{item} as link" if @@verbose
         link = render_liquid(site, parent, item['link'])
-        data = { 'link' => link, 'url' => link }
+        data = { 'link' => link, 'url' => link, 'external' => true }
         data['title'] = item['title'] if item['title']
         breadcrumb_pages << data
         breadcrumb_paths << data['link']
