@@ -37,7 +37,8 @@
                     {% for item2 in page.menu %}
                       {% capture item_section_classes %}{% if item2.section %} section{% endif %}{% endcapture %}
                       <a href="{{item2.url}}" class="list-group-item sub-item {{ item_section_classes }}" {% if item2.section %}section-target="#{{ item2.section }}"{% endif %}>
-                        {{ item2.title_in_menu }}</a>
+                        {{ item2.title_in_menu }}
+                        {% if item2.external %}&nbsp;<span class="octicon octicon-link-external"></span>{% endif %}</a>
                     {% endfor %}
                   </div>
                 {% else %}
