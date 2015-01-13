@@ -1,7 +1,7 @@
 ---
 layout: website-normal
 title: Development Bookmarks
-menu_proxy_for: how-to-contribute.md
+menu_proxy_for: index.md
 ---
 
 {% include fields.md %}
