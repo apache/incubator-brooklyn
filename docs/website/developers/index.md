@@ -31,9 +31,8 @@ Firstly, please see our [community resources](../community/index.html), in parti
 - [IRC channel](../community/irc.html)
 - [JIRA for bug tracking](https://issues.apache.org/jira/browse/BROOKLYN)
 
+Next, you may want to read the [Developer Guide]({{ site.path.guide }}/dev/).
+
 If you have changes or additions to the Brooklyn source code, we would love to
 see them! Please read our guide on [how to contribute](how-to-contribute.html).
 
-If you have used the *brooklyncentral* repository prior to Brooklyn's move to
-Apache, you can read the guide on
-[how to migrate your brooklyncentral fork to Apache](migrate-to-apache.html).
