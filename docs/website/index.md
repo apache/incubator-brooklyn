@@ -19,6 +19,7 @@ children:
       menu_customization: { dropdown_new_section: true } }
   - { path: documentation/other-docs.md, title_in_menu: Other Resources }
 - community/
+- developers/
 ---
 
 <div class="jumbotron">
