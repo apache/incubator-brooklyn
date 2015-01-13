@@ -66,11 +66,14 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("launchLatch")
     ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
 
-    @SetFromFlag("entityStarted")
-    ConfigKey<Boolean> ENTITY_STARTED = BrooklynConfigKeys.ENTITY_STARTED;
+    @SetFromFlag("skipStart")
+    ConfigKey<Boolean> ENTITY_STARTED = BrooklynConfigKeys.SKIP_ENTITY_START;
+
+    @SetFromFlag("skipStartIfRunning")
+    ConfigKey<Boolean> SKIP_ENTITY_START_IF_RUNNING = BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING;
 
     @SetFromFlag("skipInstall")
-    ConfigKey<Boolean> SKIP_INSTALLATION = BrooklynConfigKeys.SKIP_INSTALLATION;
+    ConfigKey<Boolean> SKIP_INSTALLATION = BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION;
 
     @SetFromFlag("preInstallCommand")
     ConfigKey<String> PRE_INSTALL_COMMAND = BrooklynConfigKeys.PRE_INSTALL_COMMAND;
