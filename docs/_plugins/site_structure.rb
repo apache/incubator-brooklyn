@@ -43,8 +43,8 @@
 #  # child, but with custom sub-menu and custom title in there 
 #- { path: child.md, menu: null }  # suppress sub-menu (note `null` not `nil` because this is yaml)
 #  # child again, but suppressing sub-menu (note `null` not `nil` because this is yaml)
-#- { section: foo }
-#- { section: bar }
+#- { section: Foo }
+#- { section: Bar }
 #  # various sections in *this* doc (to make highlighting work for sections requires
 #  # extra JS responding to scrolls; otherwise the parent page remains highlighted)
 #
@@ -225,10 +225,14 @@ module SiteStructure
         
       elsif (item['section'])
         puts "setting up #{item} as section" if @@verbose
-        link = (parent ? parent.url : "") + "#"+item['section']
-        data = { 'link' => link, 'url' => link, 'section' => item['section'] }
+        section = item['section']
+        section_cleaned = section.gsub(%r{[^A-Za-z0-9]+}, "-").downcase;
+        section_cleaned.slice!(1) if section_cleaned.start_with?("-")
+        section_cleaned.chomp!("-") # 0..-1) if section_cleaned.end_with?("-")
+        link = (parent ? parent.url : "") + '#' + section_cleaned
+        data = { 'link' => link, 'url' => link, 'section' => section_cleaned, 'section_title' => section }
         data['title'] = item['title'] if item['title']
-        data['title'] = item['section'] unless data['title']
+        data['title'] = section unless data['title']
         # nothing for breadcrumbs
         data['data'] = data
         result = data

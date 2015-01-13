@@ -78,7 +78,6 @@ also ensure the screen is big enough, else revert to non-floating menu:
 check y-height, and check widths (in case it was moved to after the other column)
 {% endcomment %} 
 sidemenu_y_nonfloater=function(){
-  console.log( $('#side-menu') );
   if ($('#side-menu').outerHeight(true) + $('#header').outerHeight(true) + $('#footer').outerHeight(true) > window.innerHeight ||
       $('#side-menu').width() >= $('#content_container').width()/2) {
     $('#side-menu').css('position', 'inherit');
@@ -103,6 +102,7 @@ var sideMenu = $("#side-menu"),
     });
 
 var highlight_section_last_top = -1;
+var highlight_section_completed = false;
 
 var highlight_section = function(data) {
    // Get container scroll position
@@ -112,10 +112,15 @@ var highlight_section = function(data) {
    var scroll_advancing = (highlight_section_new_top > highlight_section_last_top);
 
    var last_item = null, active_item = $("#side-menu a.section#active");
+   
    var displayable_items = scrollItems.map(function(itemI){
      item = $(scrollItems[itemI]);
      if (item && item.length) {
-       if (scroll_advancing) {
+       if (highlight_section_last_top == -1 || !highlight_section_completed) {
+         // just opening page - take item at top of page
+         if (item.offset().top < highlight_section_new_top + 15)
+           return item;         
+       } else if (scroll_advancing) {
          // if scrolling advance, pick up a section when title starts before 1/3 height 
          if (item.offset().top < highlight_section_new_top + $(window).height()/3)
            return item;
@@ -139,6 +144,9 @@ var highlight_section = function(data) {
              && (!active_item || !active_item.offset() || active_item.offset().top >= item.offset().top))
            return item;
          
+       }
+       if (!highlight_section_completed && document.readyState === "complete") {
+         highlight_section_completed = true;
        }
        last_item = item;
      }

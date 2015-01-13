@@ -2,17 +2,32 @@
 layout: website-normal
 title: How to Contribute
 children:
-- { section: CLA }
-- { section: Jira }
-- { section: GitHub }
+- { section: Contributor License Agreement, title: CLA }
+- { section: Create an Issue in Jira, title: Jira }
+- { section: Contributing using GitHub, title: GitHub }
 - { section: Reviews }
+- { section: Handy Places }
 ---
 
 Welcome and thank you for your interest in contributing to Apache Brooklyn! This guide will take you through the
 process of making contributions to the Apache Brooklyn code base.
 
+<div class="panel panel-info">
+<div class="panel-heading" markdown="1">
+#### TL;DR
+</div>
+<div class="panel-body" markdown="1">
 
-## <a id="CLA"></a> Contributor License Agreement
+ 1. Pull request to [GitHub](http://github.com/apache/incubator-brooklyn).
+ 1. Sign the [Apache CLA](https://www.apache.org/licenses/#clas) if it's non-trivial.
+ 1. For bigger changes, open a [Jira](https://issues.apache.org/jira/browse/BROOKLYN)
+    and/or [email the list](../community/mailing-lists.html).
+
+You can do the above steps in reverse order, too.
+</div>
+</div>
+
+## Contributor License Agreement
 
 Apache Brooklyn is licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0). All
 contributions will be under this license, so please read and understand this license before contributing.
@@ -27,17 +42,20 @@ CLA with the Foundation.
 ### Join the Community
 
 If it's your first contribution or it's a particularly big or complex contribution, things typically go much more
-smoothly when they start off with a conversation. Visit our [Community](index.html) page to see how you can contact
-us via IRC or email.
+smoothly when they start off with a conversation. 
+Significant changes are normally discussed on the mailing list in any case,
+sometimes with a [feature proposal](https://drive.google.com/drive/#folders/0B3XurVLRa7pIUHNFV3NuVVRkRlE/0B3XurVLRa7pIblN4NGRNN2dYUGM/0B3XurVLRa7pIMlZQSUxrdTh4Wmc) document.
 
-### <a id="Jira"></a> Create an Issue in Jira
+Visit our [Community](index.html) page to see how to contact Brooklyners via IRC or email.
 
-Your first step is to create or find an issue in [Brooklyn's Jira](https://issues.apache.org/jira/browse/BROOKLYN)
+### Create an Issue in Jira
+
+The first step is usually to create or find an issue in [Brooklyn's Jira](https://issues.apache.org/jira/browse/BROOKLYN)
 for your feature request or fix. For small changes this isn't necessary, but it's good to see if your change fixes an
 existing issue anyway.
 
 
-### <a id="GitHub"> Contributing using GitHub
+### Contributing using GitHub
 
 This is our preferred way for contributing code. Our GitHub repository is located at
 [https://github.com/apache/incubator-brooklyn](https://github.com/apache/incubator-brooklyn)
@@ -59,7 +77,7 @@ as possible, and we will ask you to rebase again if master has moved before acce
 
 Finally, add a comment in the Jira issue with a link to the pull request so we know the code is ready to be reviewed.
 
-### <a id="Reviews"></a> Reviews
+### Reviews
 
 The Apache Brooklyn community will review your pull request before it is merged. This process can take a while, so
 please be patient. If we are slow to respond, please feel free to post a reminder to the PR, Jira issue, IRC channel

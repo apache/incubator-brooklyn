@@ -2,10 +2,10 @@
 layout: website-normal
 title: The Theory behind Brooklyn
 children:
-- { section: why_brooklyn, title: "Why Brooklyn?" }
-- { section: blueprints, title: Blueprints }
-- { section: benefits, title: Benefits }
-- { section: standards, title: Standards }
+- { section: "Why Brooklyn?" }
+- { section: Blueprints }
+- { section: Benefits }
+- { section: Standards }
 ---
 
 <div class="jumobotron" markdown="1">
@@ -15,7 +15,7 @@ through autonomic blueprints.
 
 </div>
 
-## <a id="why_brooklyn"></a> Why Brooklyn?
+## Why Brooklyn?
 
 Building and deploying applications in the cloud computing era has changed many
 things. Provision a bare server just-in-time, and use automated tools to install
@@ -49,7 +49,7 @@ some clustered services requiring an odd number of instances to prevent voting
 deadlocks.
 
 
-## How Brooklyn can help
+## How Brooklyn Can Help
 
 In this context the advantage of Brooklyn becomes apparent: a single tool is
 able to manage provisioning and application deployment, monitor an application's
@@ -66,7 +66,7 @@ tools to collect key health/performance metrics; responding to situations
 such as a failing node; and adding or removing capacity to match demand.
 
 
-## <a id="blueprints"></a> Blueprints
+## Blueprints
 
 A Brooklyn blueprint defines an application, using a declarative YAML syntax
 supporting JVM plugins. A basic blueprint might comprise a single process,
@@ -122,7 +122,9 @@ managing complex software to be codified as part of the software development
 process.
 
 
-### <a id="benefits"></a> Agile and flexible
+<a id="benefits"></a>
+
+### Agile and Flexible
 
 Brooklyn is a product built from the ground up for application agility. This
 includes portability across non-cloud, cloud, and PaaS targets; devops-style
@@ -153,7 +155,7 @@ lessons:
 - Brooklyn's focus on blueprinting and modeling as code and APIs serves these
 principles.
 
-### Autonomic computing
+### Autonomic Computing
 
 Another major influence on the design of Brooklyn are the ideas of autonomic
 computing and promise theory. It is not necessary to have a thorough
@@ -169,7 +171,7 @@ Salt apply promise theory to files and processes on machines; Brooklyn can
 leverage all of these tools, complementing it with an application-oriented
 model.
 
-### <a id="standards"></a> Standards compliant
+### Standards
 
 Finally we note some emerging standards in this area. OASIS CAMP (Cloud
 Application Management for Platforms) and TOSCA (Topology and Orchestration
