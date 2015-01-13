@@ -69,10 +69,13 @@ $(sidemenu_x_sizer);
 $(window).resize(sidemenu_x_sizer);
 
 {% comment %} 
-also ensure the y-height of the screen is big enough, else revert to non-floating menu
+also ensure the screen is big enough, else revert to non-floating menu:
+check y-height, and check widths (in case it was moved to after the other column)
 {% endcomment %} 
 sidemenu_y_nonfloater=function(){
-  if ($('#side-menu').outerHeight(true) + $('#header').outerHeight(true) + $('#footer').outerHeight(true) > window.innerHeight) {
+  console.log( $('#side-menu') );
+  if ($('#side-menu').outerHeight(true) + $('#header').outerHeight(true) + $('#footer').outerHeight(true) > window.innerHeight ||
+      $('#side-menu').width() >= $('#content_container').width()/2) {
     $('#side-menu').css('position', 'inherit');
   } else {
     // restore if screen has grown
@@ -82,8 +85,10 @@ sidemenu_y_nonfloater=function(){
 $(sidemenu_y_nonfloater);
 $(window).resize(sidemenu_y_nonfloater);
 
+{% comment %} 
+auto-advance "sections" in menu on scroll
+{% endcomment %} 
 
-// Cache selectors
 var sideMenu = $("#side-menu"),
     sideItems = sideMenu.find("a"),
     // Anchors corresponding to menu items
@@ -101,17 +106,8 @@ var highlight_section = function(data) {
    var highlight_section_new_bottom = highlight_section_new_top + $(window).height();
    var scroll_advancing = (highlight_section_new_top > highlight_section_last_top);
 
-   // if initial, look if there was a link supplied
-
-   // if scrolling advance, pick up a section when title is fully visible
-   
-   // if scrolling back, pick up a section as soon as the title is visible,
-   // of if the next title is below the halfway point
-   
-   // when scrolling up
-   // Get id of all scroll items above the current position
    var last_item = null, active_item = $("#side-menu a.section#active");
-   var cur = scrollItems.map(function(itemI){
+   var displayable_items = scrollItems.map(function(itemI){
      item = $(scrollItems[itemI]);
      if (item && item.length) {
        if (scroll_advancing) {
@@ -132,7 +128,7 @@ var highlight_section = function(data) {
            return item;
          // or if title is before the 2/3 point
          // (not sure about this, probably want also to have 
-         // "AND the id.top is <= current_active_it.top" so we don't jump FORWARD a section
+         // "AND the id.top is <= displayable_itemsrent_active_it.top" so we don't jump FORWARD a section
          // when scrolling BACK, with lots of tiny sections) 
          if ((item.offset().top < highlight_section_new_top + 2*$(window).height()/3)
              && (!active_item || !active_item.offset() || active_item.offset().top >= item.offset().top))
@@ -142,16 +138,19 @@ var highlight_section = function(data) {
        last_item = item;
      }
    });
-   // Get the id of the current element
-   cur = cur[cur.length-1];
-   var id = cur && cur.length ? cur[0].id : "";
-   // Set/remove active class
-   new_active = $("#side-menu a.section").filter("[section-target='#"+id+"']");
-   if (new_active.hasClass("active")) {
-     // nothing needed
-   } else {
+   if (!displayable_items.length) {
      $("#side-menu a.section").removeClass("active");
-     $("#side-menu a.section").filter("[section-target='#"+id+"']").addClass("active");
+   } else {
+     displayable_items = displayable_items[displayable_items.length-1];
+     var id = displayable_items && displayable_items.length ? displayable_items[0].id : "";
+   // Set/remove active class
+     new_active = $("#side-menu a.section").filter("[section-target='#"+id+"']");
+     if (new_active.hasClass("active")) {
+       // nothing needed
+     } else {
+       $("#side-menu a.section").removeClass("active");
+       $("#side-menu a.section").filter("[section-target='#"+id+"']").addClass("active");
+     }
    }
    
    highlight_section_last_top = highlight_section_new_top;

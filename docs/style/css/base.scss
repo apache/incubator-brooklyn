@@ -7,14 +7,14 @@
    ----------------------------------------------------------------------- */
 body {
     margin: 0px; 
-    padding: 10px 0px 20px 0px; 
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    padding: 60px 0px 20px 0px; 
+    font-family: $fonts;
     font-weight: 300;
     font-size: 17px; 
     background-color: #ffffff; 
     color: $text_color; 
 }
-h1, h2, h3, h4, h5, h6 {}
+h1, h2, h3, h4, h5, h6 { font-family: Avenir, $fonts; }
 input, select, textarea {}
 p, li, label, td, th,input, select, textarea {}
 p, input, label, li {}
@@ -34,7 +34,57 @@ a[id]:empty, a[name]:empty {
 .dropdown-menu > li > a {
   font-weight: 300;
 }
+.btn-default {
+    text-shadow: none;
+    color: #666;
+    font-weight: 300;
+}
 
+/* GENERAL UTILS
+   ----------------------------------------------------------------------- */
+   
+@mixin flip() {
+  transform: scaleX(-1);
+  filter: FlipH;
+  -webkit-transform: scaleX(-1);
+  -moz-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  -ms-filter: "FlipH";
+}
+
+.flip {
+  @include flip;
+}
+
+/* CUSTOM HEADINGS 
+   ----------------------------------------------------------------------- */
+
+#content_container h1 {
+  max-width: 95%;
+  font-variant: normal;
+  margin-top: 48px;
+  padding-bottom: 6px;
+  margin-bottom: 24px;
+  border-bottom: 1px dotted #aaa;
+  font-weight: 300;
+  font-size: 36px;
+  text-transform: uppercase;
+}
+
+/* TOOLTIPS
+   ----------------------------------------------------------------------- */
+   
+.tooltip .tooltip-inner {
+    color: $text_color;
+    background-color: #ccc;
+    font-weight: 500;
+}
+.tooltip.top .tooltip-arrow { 
+    border-top-color: #ccc;
+}
+.tooltip.bottom .tooltip-arrow { 
+    border-bottom-color: #ccc;
+}
 
 /* WEBSITE MENUS
    ----------------------------------------------------------------------- */
@@ -64,32 +114,40 @@ a[id]:empty, a[name]:empty {
     @include icon('irc');
 }
 
+.navbar .tooltip .tooltip-inner {
+    position: relative;
+    right: 40%;
+    // include calc for those browsers which support it
+    right: calc(50% - 25px);
+    max-width: 300px;
+}
+
 /* special container with sidebar where if sidebar is squeezed
    (under "responsiveness") the text keeps at least its "auto" size,
    squashing the main container instead */
 .container-and-sidebars {
-  width: 100%;
-  display: flex;
+    width: 100%;
+    display: flex;
 }
 .container-between-sidebars {
-  flex: 10 1 100%;
-  display: inline-block;
-  width: auto;
-  margin-left: auto;
-  margin-right: auto;
+    flex: 10 1 100%;
+    display: inline-block;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
 }
 .container-sidebar {
-  flex: 0 0 auto;
+    flex: 0 0 auto;
 }
 .container-sidebar-right { 
-  @extend .container-sidebar; 
-  text-align: left;
-  padding-right: 10px;
+    @extend .container-sidebar; 
+    text-align: left;
+    padding-right: 10px;
 } 
 .container-sidebar-left {
-  @extend .container-sidebar;
-  text-align: right;
-  padding-left: 10px;
+    @extend .container-sidebar;
+    text-align: right;
+    padding-left: 10px;
 }
 
 @media (min-width: 768px) {
@@ -152,6 +210,7 @@ a[id]:empty, a[name]:empty {
 
 /* side menu */
 .side-menu {
+  font-family: Avenir, $fonts;
   font-size: 14px;
   font-weight: 400;
   position: fixed;
@@ -171,7 +230,7 @@ a[id]:empty, a[name]:empty {
     border-top-left-radius: 0;
     border-top: 0;
   }
-  a, a.breadcrumb.breadcrumb0 { padding-left: 15px; }
+  a, a.breadcrumb.breadcrumb0 { padding-left: 15px; padding-top: 8px; padding-bottom: 6px; }
   a.breadcrumb.breadcrumb1 { padding-left: 30px; }
   a.breadcrumb.breadcrumb2 { padding-left: 45px; }
   a.breadcrumb.breadcrumb3 { padding-left: 60px; }
@@ -252,15 +311,25 @@ html {
     }
 }
 
-#footer {
+div#footer {
     position: absolute;
     bottom: 0;
     width: 100%;
-    /* Set the fixed height of the footer here */
     padding-top: 1em;
     padding-bottom: 1em;
     background-color: #f5f5f5;
     text-align: center;
+    font-size: 80%;
+}
+.octicon-footer {
+    color: #777;
+    font-size: 130%;
+    position: relative;
+    top: 2px;
+    padding-left: 6px;
+}
+a:hover .octicon-footer {
+    color: $brooklyn_green;
 }
 
 
@@ -308,6 +377,10 @@ code {
 /* LANDING PAGE
    ----------------------------------------------------------------------- */
 
+.jumbotron {
+    margin-top: 18px;
+}
+
 #apachebrooklynbanner {
     background-image: url("../img/apache-brooklyn-logo-817px-wide.png");
     background-repeat: no-repeat;
@@ -317,15 +390,23 @@ code {
     margin-bottom: 50px;
 }
 
-@mixin flip() {
-  transform: scaleX(-1);
-  filter: FlipH;
-  -webkit-transform: scaleX(-1);
-  -moz-transform: scaleX(-1);
-  -o-transform: scaleX(-1);
-  -ms-filter: "FlipH";
+div.feather.landing {
+    overflow: visible;
+    max-height: 10px;
+    img {
+        width: 200px;
+        margin-left: 40px;
+        margin-top: 0px;
+    }
 }
 
-.flip {
-  @include flip;
+
+/* MAIN CONTAINER
+   ----------------------------------------------------------------------- */
+
+#content_container {
+  padding-bottom: 48px;
+  img {
+    max-width: 100%;
+  }
 }
