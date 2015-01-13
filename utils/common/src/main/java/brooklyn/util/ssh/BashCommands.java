@@ -505,7 +505,7 @@ public class BashCommands {
         
         List<String> commands = new ArrayList<String>();
         for (String url : urls) {
-            String command = "curl -f -L -k ";
+            String command = "curl -f -L -k --retry 10 --keepalive-time 30 --speed-time 30 ";
             if (user!=null && password!=null) {
                command = command + format("-u %s:%s ", user, password);
             }
