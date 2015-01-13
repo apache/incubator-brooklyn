@@ -34,10 +34,12 @@ a[id]:empty, a[name]:empty {
 .dropdown-menu > li > a {
   font-weight: 300;
 }
-.btn-default {
+.btn-default, .btn-primary, .btn-success, .btn-info, .btn-warning, .btn-danger {
     text-shadow: none;
-    color: #666;
     font-weight: 300;
+}
+.btn-default {
+    color: #666;
 }
 
 /* GENERAL UTILS

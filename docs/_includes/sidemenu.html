@@ -19,20 +19,24 @@
                     <a href="{{item.url}}" class="list-group-item{% if item.path == page.menu_path %} active{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
                       {{ item.title_in_menu }}</a></h4>
               {% endfor %}
+              
               {% for item in page.menu %}
-                <a href="{{item.url}}" class="list-group-item{% if page.breadcrumbs contains item %} active{% endif %}">{{ item.title_in_menu }}</a>
+                <a href="{{item.url}}" class="list-group-item{% if page.breadcrumbs contains item %} active{% endif %}">{{ item.title_in_menu }}
+                  {% if item.external %}&nbsp;<span class="octicon octicon-link-external"></span>{% endif %}</a>
               {% endfor %}
     
     {% else %} {% comment %} case 3a {% endcomment %}
               {% for item in page.menu_parent.breadcrumb_pages offset:1 %}
                   <h4 class="{% if forloop.index0 > 0 %} with_preceding{% endif %}{% if forloop.rindex0 > 0 %} with_following{% endif %}">
                     <a href="{{item.url}}" class="list-group-item{% if item.path == page.menu_path %}{% unless item.menu_customization.force_inactive %} active{% endunless %}{% endif %} breadcrumb breadcrumb{{ forloop.index0 }}">
-                      {{ item.title_in_menu }}</a></h4>
+                      {{ item.title_in_menu }}
+                      {% if item.external %}&nbsp;<span class="octicon octicon-link-external"></span>{% endif %}</a></h4>
               {% endfor %}
               {% for item in page.menu_parent.menu %}
                 {% if (page.breadcrumb_paths contains item.menu_path) and page.menu %}
                   {% comment %} case 3b {% endcomment %}
-                  <a href="{{item.url}}" class="list-group-item active with-sub-item">{{ item.title_in_menu }}</a>
+                  <a href="{{item.url}}" class="list-group-item active with-sub-item">{{ item.title_in_menu }}
+                    {% if item.external %}&nbsp;<span class="octicon octicon-link-external"></span>{% endif %}</a>
                   <div class="sub-item">
                     {% for item2 in page.menu %}
                       {% capture item_section_classes %}{% if item2.section %} section{% endif %}{% endcapture %}

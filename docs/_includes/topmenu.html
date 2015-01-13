@@ -37,7 +37,8 @@
                                 {% if item2.menu_customization.dropdown_new_section %}
                                   <div class="dropdown_new_section"><hr></div>
                                 {% endif %}
-                                <a href="{{item2.url}}">{{item2.title_in_menu}}</a>
+                                <a href="{{item2.url}}">{{item2.title_in_menu}}
+                                  {% if item2.external %}&nbsp;<span class="octicon octicon-link-external"></span>{% endif %}</a>
                                 {% if item2.menu_customization.dropdown_section_header %}
                                   <div class="dropdown_section_header"><hr></div>
                                 {% endif %}
