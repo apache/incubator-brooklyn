@@ -1,6 +1,6 @@
 ---
 layout: website-normal
-title: Mailing lists
+title: Mailing Lists
 ---
 
 Our main discussion list is our *dev* list - here you can ask questions and get

@@ -47,7 +47,8 @@
                   </div>
                 {% else %}
                   {% comment %} case 3a side menu item {% endcomment %}
-                  <a href="{{item.url}}" class="list-group-item{% if page.breadcrumb_paths contains item.menu_path %}{% unless item.menu_customization.force_inactive %} active{% endunless %}{% endif %}">{{ item.title_in_menu }}</a>
+                  <a href="{{item.url}}" class="list-group-item{% if page.breadcrumb_paths contains item.menu_path %}{% unless item.menu_customization.force_inactive %} active{% endunless %}{% endif %}">{{ item.title_in_menu }}
+                    {% if item.external %}&nbsp;<span class="octicon octicon-link-external"></span>{% endif %}</a>
                 {% endif %}
               {% endfor %}
         

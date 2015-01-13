@@ -3,9 +3,10 @@ layout: website-normal
 title: Developers
 children:
 - how-to-contribute.md
-- migrate-to-apache.md
-- { link: 'https://issues.apache.org/jira/browse/BROOKLYN', title: 'Bug tracker (JIRA)' }
+- /guide/dev/
 - committers/
+- { link: 'http://github.com/apache/incubator-brooklyn', title: 'GitHub' }
+- { link: 'https://issues.apache.org/jira/browse/BROOKLYN', title: 'Bug Tracker (JIRA)' }
 ---
 
 Hello developers! These pages are aimed at people who want to get involved with reading, changing, testing and otherwise

@@ -3,6 +3,10 @@ layout: website-normal
 title: How to Migrate
 ---
 
+*This is old. Everyone has probably already migrated.
+But just in case you need it, this page is being left a bit longer
+(just taken out of the menus).*
+
 Prior to our adoption by the Apache Incubator, Brooklyn was developed in a
 GitHub repository at `https://github.com/brooklyncentral/brooklyn`. If you
 already have a fork of this repository, follow this guide to smoothly shift

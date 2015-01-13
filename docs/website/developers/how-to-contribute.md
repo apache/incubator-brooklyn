@@ -1,14 +1,18 @@
 ---
 layout: website-normal
 title: How to Contribute
+children:
+- { section: CLA }
+- { section: Jira }
+- { section: GitHub }
+- { section: Reviews }
 ---
 
 Welcome and thank you for your interest in contributing to Apache Brooklyn! This guide will take you through the
 process of making contributions to the Apache Brooklyn code base.
 
 
-Contributor license agreement
------------------------------
+## <a id="CLA"></a> Contributor License Agreement
 
 Apache Brooklyn is licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0). All
 contributions will be under this license, so please read and understand this license before contributing.
@@ -18,23 +22,22 @@ Software Foundation. Please read the [guide to CLAs](https://www.apache.org/lice
 CLA with the Foundation.
 
 
-Before you start
-----------------
+## Before You Start
 
-### Join the community
+### Join the Community
 
 If it's your first contribution or it's a particularly big or complex contribution, things typically go much more
 smoothly when they start off with a conversation. Visit our [Community](index.html) page to see how you can contact
 us via IRC or email.
 
-### Create an issue in Jira
+### <a id="Jira"></a> Create an Issue in Jira
 
 Your first step is to create or find an issue in [Brooklyn's Jira](https://issues.apache.org/jira/browse/BROOKLYN)
 for your feature request or fix. For small changes this isn't necessary, but it's good to see if your change fixes an
 existing issue anyway.
 
 
-### Contributing using GitHub
+### <a id="GitHub"> Contributing using GitHub
 
 This is our preferred way for contributing code. Our GitHub repository is located at
 [https://github.com/apache/incubator-brooklyn](https://github.com/apache/incubator-brooklyn)
@@ -56,11 +59,11 @@ as possible, and we will ask you to rebase again if master has moved before acce
 
 Finally, add a comment in the Jira issue with a link to the pull request so we know the code is ready to be reviewed.
 
-### Reviews
+### <a id="Reviews"></a> Reviews
 
 The Apache Brooklyn community will review your pull request before it is merged. This process can take a while, so
 please be patient. If we are slow to respond, please feel free to post a reminder to the PR, Jira issue, IRC channel
-or mailing list - see the [Community](index.html) page to see how to contact us.
+or mailing list - see the [Community](../community/) page to see how to contact us.
 
 During the review process you may be asked to make some changes to your submission. While working through feedback,
 it can be beneficial to create new commits so the incremental change is obvious.  This can also lead to a complex set
@@ -84,7 +87,6 @@ When producing patches, please use `git format-patch` or a similar mechanism - t
 attributed as the author of the patch when a committer merges it.
 
 
-Handy Places
-------------
+## Handy Places
 
 Development bookmarks are available [here](links.html).
