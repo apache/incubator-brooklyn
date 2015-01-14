@@ -25,18 +25,43 @@ under the License.
 
 
 <script language="JavaScript" type="application/javascript">
-    $(window).resize(function () { 
+    fix_padding_function = function () { 
         $('body').css('padding-top', parseInt($('#header').css("height"))+10);
         $('body').css('padding-bottom', parseInt($('#footer').css("height"))+10);
+    };
+    $(window).resize(fix_padding_function);
+    $(window).load(fix_padding_function);
+    
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip({ delay: { show: 600, hide: 100 }})
     });
     
-    $(window).load(function () { 
-        $('body').css('padding-top', parseInt($('#header').css("height"))+10);        
-        $('body').css('padding-bottom', parseInt($('#footer').css("height"))+10);
-    });
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-    })
+/* generate anchors for headers, a la github and http://blog.parkermoore.de/2014/08/01/header-anchor-links-in-vanilla-javascript-for-github-pages-and-jekyll/ */
+var anchorForId = function (id, text) {
+  var anchor = document.createElement("a");
+  anchor.className = "header-link";
+  anchor.href      = "#" + id;
+  anchor.innerHTML = "<i class=\"fa fa-link\"></i>";
+  return anchor;
+};
+
+var linkifyAnchors = function (level, containingElement) {
+  var headers = contentBlock.find("h" + level);
+  for (var h = 0; h < headers.length; h++) {
+    var header = headers[h];
+    if (typeof header.id !== "undefined" && header.id !== "") {
+      header.appendChild(anchorForId(header.id, $(header).text()));
+    }
+  }
+};
+
+$(function () {
+    contentBlock = $("#content_container");
+    if (!contentBlock) return;
+    for (var level = 1; level <= 6; level++) {
+      linkifyAnchors(level, contentBlock);
+    }
+});
 </script>
 
 </body>

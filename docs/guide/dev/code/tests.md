@@ -1,5 +1,5 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: Tests
 toc: /guide/toc.json
 ---

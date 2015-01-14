@@ -1,5 +1,5 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: Global Web Fabric
 toc: /guide/toc.json
 ---

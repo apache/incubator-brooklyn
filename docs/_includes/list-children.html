@@ -2,6 +2,8 @@
 TODO style this much better
 {% endcomment %}
 
+<div class="list-children"><ul>
 {% for item in page.menu %}
-* [{{ item.title }}]({{ item.url }})
+<li> <a href="{{ item.url }}">{{ item.title }}</a> </li>
 {% endfor %}
+</ul></div>

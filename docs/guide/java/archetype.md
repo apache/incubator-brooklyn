@@ -1,6 +1,6 @@
 ---
 title: Creating from a Maven Archetype
-layout: guide-normal
+layout: website-normal
 toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---

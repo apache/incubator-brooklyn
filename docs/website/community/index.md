@@ -4,7 +4,7 @@ title: Community
 children:
 - mailing-lists.md
 - irc.md
-- { link: 'https://issues.apache.org/jira/browse/BROOKLYN', title: 'Bug tracker (JIRA)' }
+- { link: 'https://issues.apache.org/jira/browse/BROOKLYN', title: 'Bug Tracker (JIRA)' }
 - { path: how-to-contribute-docs.md }
 ---
 

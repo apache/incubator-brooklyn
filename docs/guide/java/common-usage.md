@@ -1,6 +1,6 @@
 ---
 title: Common Classes and Entities
-layout: guide-normal
+layout: website-normal
 ---
 
 ### Entity Class Hierarchy

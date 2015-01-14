@@ -8,6 +8,7 @@ breadcrumbs:
 children:
 - env/
 - code/
+- { link: "http://github.com/apache/incubating-brooklyn", title: "GitHub" }
 - code/tests.md
 - tips/
 - tips/logging.md

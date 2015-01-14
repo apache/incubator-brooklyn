@@ -1,6 +1,6 @@
 ---
 title: Configuring Locations
-layout: guide-normal
+layout: website-normal
 ---
 
 <a id="locations"></a>

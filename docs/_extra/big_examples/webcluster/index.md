@@ -1,5 +1,5 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: Elastic Web Cluster
 toc: /guide/toc.json
 ---

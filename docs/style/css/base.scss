@@ -7,14 +7,14 @@
    ----------------------------------------------------------------------- */
 body {
     margin: 0px; 
-    padding: 10px 0px 20px 0px; 
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    padding: 60px 0px 20px 0px; 
+    font-family: $fonts;
     font-weight: 300;
     font-size: 17px; 
     background-color: #ffffff; 
     color: $text_color; 
 }
-h1, h2, h3, h4, h5, h6 {}
+h1, h2, h3, h4, h5, h6 { font-family: Avenir, $fonts; }
 input, select, textarea {}
 p, li, label, td, th,input, select, textarea {}
 p, input, label, li {}
@@ -34,7 +34,130 @@ a[id]:empty, a[name]:empty {
 .dropdown-menu > li > a {
   font-weight: 300;
 }
+.btn-default, .btn-primary, .btn-success, .btn-info, .btn-warning, .btn-danger {
+    text-shadow: none;
+    font-weight: 300;
+}
+.btn-default {
+    color: #666;
+}
+.panel-heading {
+  h4 {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+  }
+}
+.panel-body {
+    margin: 0px;
+    font-size: 95%;
+    color: #606060;
+    padding: 15px;
+    background-color: #fafafa;
+    border-radius: 5px;
+    p:first-child {
+      margin-top: 0px;
+    }
+    p:last-child {
+      margin-bottom: 0px;
+    }
+    > ul, > ol {
+      margin-left: -1em;
+    }
+}
+/* GENERAL UTILS
+   ----------------------------------------------------------------------- */
+   
+@mixin flip() {
+  transform: scaleX(-1);
+  filter: FlipH;
+  -webkit-transform: scaleX(-1);
+  -moz-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  -ms-filter: "FlipH";
+}
 
+.flip {
+  @include flip;
+}
+
+/* CUSTOM HEADINGS 
+   ----------------------------------------------------------------------- */
+
+/* this causes jumps to anchors to show the anchor below the navbar */
+#content_container { h1, h2, h3, h4, h5, h6 {
+    margin-top: -64px;
+    padding-top: 64px;
+}}
+
+#content_container h1 {
+  max-width: 95%;
+  font-variant: normal;
+  margin-top: -16px;
+  padding-bottom: 6px;
+  margin-bottom: 24px;
+  border-bottom: 1px dotted #aaa;
+  font-weight: 300;
+  font-size: 36px;
+  text-transform: uppercase;
+}
+
+/* headings get a tooltip showing the permalink URL, a la github jekyll */
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('{{ site.path.style }}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.eot');
+  src: url('{{ site.path.style }}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.eot?#iefix&v=4.2.0') format('embedded-opentype'), url('{{ site.path.style }}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.woff?v=4.2.0') format('woff'), url('{{ site.path.style }}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.ttf?v=4.2.0') format('truetype'), url('{{ site.path.style }}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.svg?v=4.2.0#fontawesomeregular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+.fa {
+  display: inline-block;
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.fa-link:before {
+  content: "\f0c1";
+}
+/*
+ * This code is courtesy Ben Balter, modified by Parker Moore for jekyllrb.com
+ * http://ben.balter.com/2014/03/13/pages-anchor-links/
+ */
+.header-link {
+  position: relative;
+  left: 0.5em;
+  opacity: 0;
+  font-size: 0.8em;
+
+  -webkit-transition: opacity 0.2s ease-in-out 0.1s;
+  -moz-transition: opacity 0.2s ease-in-out 0.1s;
+  -ms-transition: opacity 0.2s ease-in-out 0.1s;
+}
+h2:hover .header-link,
+h3:hover .header-link,
+h4:hover .header-link,
+h5:hover .header-link,
+h6:hover .header-link {
+  opacity: 1;
+}
+a.header-literal-anchor { display: inline !important; }
+
+/* TOOLTIPS
+   ----------------------------------------------------------------------- */
+   
+.tooltip .tooltip-inner {
+    color: $text_color;
+    background-color: #ccc;
+    font-weight: 500;
+}
+.tooltip.top .tooltip-arrow { 
+    border-top-color: #ccc;
+}
+.tooltip.bottom .tooltip-arrow { 
+    border-bottom-color: #ccc;
+}
 
 /* WEBSITE MENUS
    ----------------------------------------------------------------------- */
@@ -64,32 +187,40 @@ a[id]:empty, a[name]:empty {
     @include icon('irc');
 }
 
+.navbar .tooltip .tooltip-inner {
+    position: relative;
+    right: 40%;
+    // include calc for those browsers which support it
+    right: calc(50% - 25px);
+    max-width: 300px;
+}
+
 /* special container with sidebar where if sidebar is squeezed
    (under "responsiveness") the text keeps at least its "auto" size,
    squashing the main container instead */
 .container-and-sidebars {
-  width: 100%;
-  display: flex;
+    width: 100%;
+    display: flex;
 }
 .container-between-sidebars {
-  flex: 10 1 100%;
-  display: inline-block;
-  width: auto;
-  margin-left: auto;
-  margin-right: auto;
+    flex: 10 1 100%;
+    display: inline-block;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
 }
 .container-sidebar {
-  flex: 0 0 auto;
+    flex: 0 0 auto;
 }
 .container-sidebar-right { 
-  @extend .container-sidebar; 
-  text-align: left;
-  padding-right: 10px;
+    @extend .container-sidebar; 
+    text-align: left;
+    padding-right: 10px;
 } 
 .container-sidebar-left {
-  @extend .container-sidebar;
-  text-align: right;
-  padding-left: 10px;
+    @extend .container-sidebar;
+    text-align: right;
+    padding-left: 10px;
 }
 
 @media (min-width: 768px) {
@@ -152,8 +283,10 @@ a[id]:empty, a[name]:empty {
 
 /* side menu */
 .side-menu {
+  font-family: Avenir, $fonts;
   font-size: 14px;
   font-weight: 400;
+  position: fixed;
   h4.with_following {
     margin-bottom: 0;
   }
@@ -170,7 +303,7 @@ a[id]:empty, a[name]:empty {
     border-top-left-radius: 0;
     border-top: 0;
   }
-  a, a.breadcrumb.breadcrumb0 { padding-left: 15px; }
+  a, a.breadcrumb.breadcrumb0 { padding-left: 15px; padding-top: 8px; padding-bottom: 6px; }
   a.breadcrumb.breadcrumb1 { padding-left: 30px; }
   a.breadcrumb.breadcrumb2 { padding-left: 45px; }
   a.breadcrumb.breadcrumb3 { padding-left: 60px; }
@@ -210,6 +343,29 @@ a[id]:empty, a[name]:empty {
     padding-top: 8px; 
     padding-bottom: 8px; 
   }
+  a.sub-item.list-group-item.active {
+//    background-image: -webkit-linear-gradient(top, #5cb85c 0%, #48a648 100%);
+//    background-image: linear-gradient(to bottom, #5cb85c 0%, #48a648 100%);
+
+//    background-image: -webkit-linear-gradient(top, #ff0000 0%, #0000ff 100%);
+//    background-image: linear-gradient(to bottom, #6ca06c 0%, #589058 100%);
+
+    background-color: #f5f5f5;
+    // the below is needed to achieve the above, since bg-image is already set
+    background-image: -webkit-linear-gradient(top, #f5f5f5 0%, #f5f5f5 100%);
+    background-image: linear-gradient(to bottom, #f5f5f5 0%, #f5f5f5 100%);
+    
+    border-color: #ddd;
+    color: $text_color;
+    text-shadow: none;
+    // not sure why the bottom border is visible at all, and stays on hover, but vanishes on 'active';
+    // but this sorts it out (taking 1 away from padding)
+    margin-bottom: 0;
+    padding-bottom: 7px;
+  }
+  a.sub-item.list-group-item.active:hover {
+    color: $a_hover_color;
+  }
 }
 
 
@@ -228,15 +384,25 @@ html {
     }
 }
 
-#footer {
+div#footer {
     position: absolute;
     bottom: 0;
     width: 100%;
-    /* Set the fixed height of the footer here */
     padding-top: 1em;
     padding-bottom: 1em;
     background-color: #f5f5f5;
     text-align: center;
+    font-size: 80%;
+}
+.octicon-footer {
+    color: #777;
+    font-size: 130%;
+    position: relative;
+    top: 2px;
+    padding-left: 6px;
+}
+a:hover .octicon-footer {
+    color: $brooklyn_green;
 }
 
 
@@ -248,32 +414,33 @@ html {
     overflow-y: scroll;
 }
 
-pre {
+@mixin code() {
     font-family: Consolas, Lucida Console, Monaco, monospace;
     @include nowrap();
-    background-color:$code_bg_color;
+    font-size: 85%;
+    /* override color and bg-color on 'code' from bootstrap, and a touch more padding on top since font-size is smaller */
+    color: $text_color;
+    background-color: $code_bg_color;
+}
+
+pre {
+    @include code();
     padding: 0.4em 0.8em;
     overflow-x: scroll;
-    font-size: 85%;
     /* override border and line-height on 'pre' from bootstrap */
     border: none;
     border-radius: 2px;
     line-height: 1;
     code {
         /* override settings on 'pre code' from bootstrap */
-        font-size: 85%; 
+        @include code();
         line-height: 1;
-        @include nowrap();
         /** and no padding since pre already has some */ 
         padding: 0px; 
     }
 }
 code {
-    font-family: Consolas, Lucida Console, Monaco, monospace;
-    font-size: 85%;
-    /* override color and bg-color on 'code' from bootstrap, and a touch more padding on top since font-size is smaller */
-    color: black;
-    background-color:$code_bg_color;
+    @include code();
     padding: 4px 4px 2px 4px;
     border-radius: 3px;
 }
@@ -284,6 +451,10 @@ code {
 /* LANDING PAGE
    ----------------------------------------------------------------------- */
 
+.jumbotron {
+    margin-top: 18px;
+}
+
 #apachebrooklynbanner {
     background-image: url("../img/apache-brooklyn-logo-817px-wide.png");
     background-repeat: no-repeat;
@@ -293,15 +464,23 @@ code {
     margin-bottom: 50px;
 }
 
-@mixin flip() {
-  transform: scaleX(-1);
-  filter: FlipH;
-  -webkit-transform: scaleX(-1);
-  -moz-transform: scaleX(-1);
-  -o-transform: scaleX(-1);
-  -ms-filter: "FlipH";
+div.feather.landing {
+    overflow: visible;
+    max-height: 10px;
+    img {
+        width: 200px;
+        margin-left: 40px;
+        margin-top: 0px;
+    }
 }
 
-.flip {
-  @include flip;
+
+/* MAIN CONTAINER
+   ----------------------------------------------------------------------- */
+
+#content_container {
+  padding-bottom: 48px;
+  img {
+    max-width: 100%;
+  }
 }

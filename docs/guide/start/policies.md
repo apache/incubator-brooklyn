@@ -1,7 +1,7 @@
 ---
 title: Getting Started - Policies
 title_in_menu: Policies
-layout: guide-normal
+layout: website-normal
 ---
 
 ### Exploring and Testing Policies

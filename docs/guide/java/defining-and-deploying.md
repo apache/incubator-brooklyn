@@ -1,6 +1,6 @@
 ---
 title: Defining and Deploying
-layout: guide-normal
+layout: website-normal
 ---
 
 ## Intro

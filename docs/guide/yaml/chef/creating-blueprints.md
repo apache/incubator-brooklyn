@@ -1,7 +1,7 @@
 ---
 title: Creating Blueprints from Chef
 title_in_menu: Creating Blueprints from Chef
-layout: guide-normal
+layout: website-normal
 ---
 
 In a nutshell, a new Chef-based entity can be defined as a service by specifying

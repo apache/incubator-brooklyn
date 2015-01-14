@@ -1,6 +1,6 @@
 ---
 layout: website-normal
-title: Merging contributed code
+title: Merging Contributed Code
 ---
 
 The Apache Brooklyn Git repositories are hosted in the ASF infrastructure and mirrored to Github. This is the current
