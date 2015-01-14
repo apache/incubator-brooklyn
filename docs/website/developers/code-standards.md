@@ -1,7 +1,6 @@
 ---
 layout: website-normal
 title: Code Standards
-toc: /guide/toc.json
 ---
 
 Without being too restrictive about how you have to code as part of Brooklyn,
