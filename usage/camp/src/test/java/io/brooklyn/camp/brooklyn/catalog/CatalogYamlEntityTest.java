@@ -299,37 +299,27 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String firstItemId = "my.catalog.app.id.register_bundle";
-        String secondItemId = "my.catalog.app.id.reference_bundle";
         String nonExistentId = "non_existent_id";
         String nonExistentVersion = "9.9.9";
-        addCatalogItem(
-            "brooklyn.catalog:",
-            "  id: " + firstItemId,
-            "  version: " + TEST_VERSION,
-            "  libraries:",
-            "  - name: " + nonExistentId,
-            "    version: " + nonExistentVersion,
-            "    url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
-            "",
-            "services:",
-            "- type: " + SIMPLE_ENTITY_TYPE);
-        deleteCatalogEntity(firstItemId);
-
         try {
             addCatalogItem(
                 "brooklyn.catalog:",
-                "  id: " + secondItemId,
+                "  id: " + firstItemId,
                 "  version: " + TEST_VERSION,
                 "  libraries:",
                 "  - name: " + nonExistentId,
                 "    version: " + nonExistentVersion,
+                "    url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
                 "",
                 "services:",
                 "- type: " + SIMPLE_ENTITY_TYPE);
             fail();
         } catch (IllegalStateException e) {
-            assertEquals(e.getMessage(), "Bundle CatalogBundleDto{symbolicName=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} " +
-                    "not previously registered, but URL is empty.");
+            assertEquals(e.getMessage(), "Bundle from " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + " already " +
+                    "installed as " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_NAME + ":" +
+                    OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_VERSION + " but user explicitly requested " +
+                    "CatalogBundleDto{symbolicName=" + nonExistentId + ", version=" + nonExistentVersion + ", url=" +
+                    OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + "}");
         }
     }
     
