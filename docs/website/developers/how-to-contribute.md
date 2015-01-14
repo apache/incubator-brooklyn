@@ -18,12 +18,11 @@ process of making contributions to the Apache Brooklyn code base.
 </div>
 <div class="panel-body" markdown="1">
 
- 1. Pull request to [GitHub](http://github.com/apache/incubator-brooklyn).
- 1. Sign the [Apache CLA](https://www.apache.org/licenses/#clas) if it's non-trivial.
- 1. For bigger changes, open a [Jira](https://issues.apache.org/jira/browse/BROOKLYN)
-    and/or [email the list](../community/mailing-lists.html).
+* Pull request to [GitHub](http://github.com/apache/incubator-brooklyn).
+* Sign the [Apache CLA](https://www.apache.org/licenses/#clas) if it's non-trivial.
+* For bigger changes, open a [Jira](https://issues.apache.org/jira/browse/BROOKLYN)
+   and/or [email the list](../community/mailing-lists.html).
 
-You can do the above steps in reverse order, too.
 </div>
 </div>
 

@@ -41,7 +41,29 @@ a[id]:empty, a[name]:empty {
 .btn-default {
     color: #666;
 }
-
+.panel-heading {
+  h4 {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+  }
+}
+.panel-body {
+    margin: 0px;
+    font-size: 95%;
+    color: #606060;
+    padding: 15px;
+    background-color: #fafafa;
+    border-radius: 5px;
+    p:first-child {
+      margin-top: 0px;
+    }
+    p:last-child {
+      margin-bottom: 0px;
+    }
+    > ul, > ol {
+      margin-left: -1em;
+    }
+}
 /* GENERAL UTILS
    ----------------------------------------------------------------------- */
    
@@ -392,32 +414,33 @@ a:hover .octicon-footer {
     overflow-y: scroll;
 }
 
-pre {
+@mixin code() {
     font-family: Consolas, Lucida Console, Monaco, monospace;
     @include nowrap();
-    background-color:$code_bg_color;
+    font-size: 85%;
+    /* override color and bg-color on 'code' from bootstrap, and a touch more padding on top since font-size is smaller */
+    color: $text_color;
+    background-color: $code_bg_color;
+}
+
+pre {
+    @include code();
     padding: 0.4em 0.8em;
     overflow-x: scroll;
-    font-size: 85%;
     /* override border and line-height on 'pre' from bootstrap */
     border: none;
     border-radius: 2px;
     line-height: 1;
     code {
         /* override settings on 'pre code' from bootstrap */
-        font-size: 85%; 
+        @include code();
         line-height: 1;
-        @include nowrap();
         /** and no padding since pre already has some */ 
         padding: 0px; 
     }
 }
 code {
-    font-family: Consolas, Lucida Console, Monaco, monospace;
-    font-size: 85%;
-    /* override color and bg-color on 'code' from bootstrap, and a touch more padding on top since font-size is smaller */
-    color: black;
-    background-color:$code_bg_color;
+    @include code();
     padding: 4px 4px 2px 4px;
     border-radius: 3px;
 }

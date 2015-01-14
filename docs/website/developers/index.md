@@ -9,18 +9,21 @@ children:
 - { link: 'https://issues.apache.org/jira/browse/BROOKLYN', title: 'Bug Tracker (JIRA)' }
 ---
 
-Hello developers! These pages are aimed at people who want to get involved with reading, changing, testing and otherwise
-working with the "bleeding edge" of code produced by our project.
+Hello developers!
+These pages are aimed at people who want to get involved with reading, changing, testing and otherwise
+working with the bleeding edge Brooklyn code.
 
 <div class="panel panel-danger">
 <div class="panel-heading" markdown="1">
-#### Danger!
+#### Caution
 </div>
 <div class="panel-body" markdown="1">
-These pages contain information about accessing the "bleeding edge" code, and artifacts produced from it. Such code and
-artifacts have not been formally released, and therefore The Apache Software Foundation has not performed any validation
-or due diligence. They may contain bugs which cause data loss and other serious consequences. Proceed only if you
-understand the potential consequences of using unreleased, untested code.
+As these pages contain information about accessing the bleeding edge code and artifacts produced from it,
+you should be aware that the code and binaries you will encounter may be unstable.
+The Apache Software Foundation has not performed the level of validation and due diligence done 
+on formally released artifacts. 
+Proceed only if you understand the potential consequences of using unreleased code
+and are comfortable doing so.
 </div>
 </div>
 
