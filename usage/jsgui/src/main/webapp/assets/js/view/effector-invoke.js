@@ -87,7 +87,7 @@ define([
                         initialValue : chosenLocation,
                         rowId : 0
                     }))
-                    var $selectLocations = container.find('#select-location')
+                    var $selectLocations = container.find('.select-location')
                         .append(this.locationOptionTemplate({
                                 id: "",
                                 name: "None"
