@@ -11,7 +11,7 @@ body {
     font-family: $fonts;
     font-weight: 300;
     font-size: 17px; 
-    background-color: #ffffff; 
+    background-color: white; 
     color: $text_color; 
 }
 h1, h2, h3, h4, h5, h6 { font-family: Avenir, $fonts; }
@@ -39,7 +39,7 @@ a[id]:empty, a[name]:empty {
     font-weight: 300;
 }
 .btn-default {
-    color: #666;
+    color: $gray_66;
 }
 .panel-heading {
   h4 {
@@ -50,9 +50,9 @@ a[id]:empty, a[name]:empty {
 .panel-body {
     margin: 0px;
     font-size: 95%;
-    color: #606060;
+    color: $gray_66;
     padding: 15px;
-    background-color: #fafafa;
+    background-color: $white_fa;
     border-radius: 5px;
     p:first-child {
       margin-top: 0px;
@@ -95,13 +95,14 @@ a[id]:empty, a[name]:empty {
   margin-top: -16px;
   padding-bottom: 6px;
   margin-bottom: 24px;
-  border-bottom: 1px dotted #aaa;
+  border-bottom: 1px dotted $gray_aa;
   font-weight: 300;
   font-size: 36px;
   text-transform: uppercase;
 }
 
 /* headings get a tooltip showing the permalink URL, a la github jekyll */
+/* install subset of font-awesome */
 @font-face {
   font-family: 'FontAwesome';
   src: url('{{ site.path.style }}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.eot');
@@ -120,6 +121,9 @@ a[id]:empty, a[name]:empty {
 }
 .fa-link:before {
   content: "\f0c1";
+}
+.fa-play-circle-o:before {
+  content: "\f01d";
 }
 /*
  * This code is courtesy Ben Balter, modified by Parker Moore for jekyllrb.com
@@ -149,14 +153,14 @@ a.header-literal-anchor { display: inline !important; }
    
 .tooltip .tooltip-inner {
     color: $text_color;
-    background-color: #ccc;
+    background-color: $white_dd;
     font-weight: 500;
 }
 .tooltip.top .tooltip-arrow { 
-    border-top-color: #ccc;
+    border-top-color: $white_dd;
 }
 .tooltip.bottom .tooltip-arrow { 
-    border-bottom-color: #ccc;
+    border-bottom-color: $white_dd;
 }
 
 /* WEBSITE MENUS
@@ -252,12 +256,12 @@ a.header-literal-anchor { display: inline !important; }
 
 .navbar div.dropdown_section_header hr {
   margin: 4px 12px;
-  border-color: #ddd;
+  border-color: $white_dd;
 }
 
 .navbar div.dropdown_new_section hr {
   margin: 6px 0px;
-  border-color: #ddd;
+  border-color: $white_dd;
 }
 
 /* pop-up top-menu */
@@ -265,14 +269,14 @@ a.header-literal-anchor { display: inline !important; }
 .navbar-default .navbar-nav > li > a:focus,
 .navbar-default .navbar-nav > .active > a:hover,
 .navbar-default .navbar-nav > .active > a:focus {
-  background-color: #f5f5f5;
+  background-color: $white_f5;
   color: $brooklyn_green;
 }
 .top-menu {
   font-size: 14px;
   font-weight: 400;
   .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
-    background-color: #f5f5f5;
+    background-color: $white_f5;
     background-image: none;
     color: $brooklyn_green;
   }
@@ -311,20 +315,11 @@ a.header-literal-anchor { display: inline !important; }
   a.breadcrumb { padding-left: 70px; }
   
   div.sub-item {
-    background-color: #48a648;
-    border-left: 1px solid #428bca;
-    /*
-    border-bottom: 1px solid #428bca;
-    border-top: 1px solid #428bca;
-    border-right: 1px solid #428bca;
-    */
-    /*
-    padding-bottom: 6px;
-    padding-right: 6px;
-    */
+    background-color: $bootstrap_theme_green_gradient_lower;
+    border-left: 1px solid $bootstrap_blue_border;
   } 
   div.sub-item:last-child {
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid $white_dd;
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
   }
@@ -332,7 +327,7 @@ a.header-literal-anchor { display: inline !important; }
     border-bottom-right-radius: 4px !important;
   }
   a.with-sub-item {
-    /* border-bottom: 1px solid #ddd; */
+    /* border-bottom: 1px solid $white_dd; */
     border-bottom: 0;
   }
   a.sub-item { 
@@ -344,18 +339,12 @@ a.header-literal-anchor { display: inline !important; }
     padding-bottom: 8px; 
   }
   a.sub-item.list-group-item.active {
-//    background-image: -webkit-linear-gradient(top, #5cb85c 0%, #48a648 100%);
-//    background-image: linear-gradient(to bottom, #5cb85c 0%, #48a648 100%);
-
-//    background-image: -webkit-linear-gradient(top, #ff0000 0%, #0000ff 100%);
-//    background-image: linear-gradient(to bottom, #6ca06c 0%, #589058 100%);
-
-    background-color: #f5f5f5;
+    background-color: $white_f5;
     // the below is needed to achieve the above, since bg-image is already set
-    background-image: -webkit-linear-gradient(top, #f5f5f5 0%, #f5f5f5 100%);
-    background-image: linear-gradient(to bottom, #f5f5f5 0%, #f5f5f5 100%);
+    background-image: -webkit-linear-gradient(top, $white_f5 0%, $white_f5 100%);
+    background-image: linear-gradient(to bottom, $white_f5 0%, $white_f5 100%);
     
-    border-color: #ddd;
+    border-color: $white_dd;
     color: $text_color;
     text-shadow: none;
     // not sure why the bottom border is visible at all, and stays on hover, but vanishes on 'active';
@@ -390,12 +379,12 @@ div#footer {
     width: 100%;
     padding-top: 1em;
     padding-bottom: 1em;
-    background-color: #f5f5f5;
+    background-color: $white_f5;
     text-align: center;
     font-size: 80%;
 }
 .octicon-footer {
-    color: #777;
+    color: $footer_icon_gray;
     font-size: 130%;
     position: relative;
     top: 2px;
@@ -417,23 +406,28 @@ a:hover .octicon-footer {
 @mixin code() {
     font-family: Consolas, Lucida Console, Monaco, monospace;
     @include nowrap();
-    font-size: 85%;
+    font-size: 14px;
     /* override color and bg-color on 'code' from bootstrap, and a touch more padding on top since font-size is smaller */
     color: $text_color;
     background-color: $code_bg_color;
 }
 
-pre {
+@mixin pre() {
     @include code();
     padding: 0.4em 0.8em;
     overflow-x: scroll;
     /* override border and line-height on 'pre' from bootstrap */
     border: none;
     border-radius: 2px;
-    line-height: 1;
+    line-height: 1.4;
+    font-size: 13px;
+}
+
+pre {
+    @include pre();
     code {
         /* override settings on 'pre code' from bootstrap */
-        @include code();
+        @include pre();
         line-height: 1;
         /** and no padding since pre already has some */ 
         padding: 0px; 
@@ -482,5 +476,178 @@ div.feather.landing {
   padding-bottom: 48px;
   img {
     max-width: 100%;
+  }
+}
+
+/* YAML EXPLAINED
+   ----------------------------------------------------------------------- */
+
+$explained_code_bg_color: $gray_66;
+$explained_code_fg_color: $white_dd;
+$explained_code_highlight_bg_color: $vibrant_bg_green; 
+$explained_code_highlight_fg_color: $white_fa;
+$explained_text_highlight_fg_color: $text_color;
+$explained_text_highlight_bg_color: $white_fa;
+
+$code_width: 57%;
+$annotation_width: 41%;
+
+div.annotated_blueprint {
+  margin-top: 60px;
+  div.code_scroller {
+    background-color: $code_bg_color;
+    border: 0.4em solid $explained_code_bg_color;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 3px;
+    width: $code_width;
+    margin-right: 0px;
+    margin-left: auto;
+    background-color: $explained_code_bg_color;
+    color: $explained_code_fg_color;
+    overflow-x: scroll;
+    div { 
+      overflow-x: visible !important; 
+      overflow-y: visible !important; 
+    }  
+    div.code_viewer {
+      width: auto;
+      height: 100%;
+      div.block {
+        display: flex;
+        align-items: center;
+        z-index: -10;
+      }
+      div.block > div:last-child {
+          @include pre();
+          border: 0;
+          border-radius: 0;
+          padding: 0px 0.6em;
+          background-color: $explained_code_bg_color;
+          color: $explained_code_fg_color;
+          min-width: 100%;
+          margin-top: 3px;
+          margin-bottom: 3px;
+      }
+      div.block > div.annotations_wrapper1 {
+        font-family: $fonts;
+        div.annotations_wrapper2 {
+          // seems we have to use abs positioning because other techniques
+          // (translation, negative margins, etc) don't show up outside the scroll-x
+          position: absolute;
+          transform: translateX(-100%) translateY(-50%);
+          width: $annotation_width;
+          
+          display: flex;
+          align-items: center;
+          div.annotations {
+            // positioning and sizing
+            height: auto;
+            width: 100%;
+            padding: 8px 8px;
+            color: $explained_text_highlight_fg_color;
+
+            div.short {
+              font-size: 125%;
+              text-align: right;
+            }
+            div.long {
+              display: none;
+              
+              font-size: 85%;
+              p { margin: 8px 0 8px 0; }
+              p:first-child { margin-top: 0; }
+              p:last-child { margin-bottom: 0; }
+            }
+          }
+          div.connector {
+            height: 7px;
+            width: 24px;
+          }
+        }
+      }
+      div.block:hover > div:last-child {
+          background-color: $explained_code_highlight_bg_color;
+          color: $explained_code_highlight_fg_color;
+          // TODO the bg color doesn't apply to regions which are only visible after a scroll-right :(
+          // to fix this i think we can us JS to set width of div.block to the width of this, the code last-child
+      }
+      div.block:hover {
+        z-index: 30 !important;
+        div.annotations_wrapper1 {
+          z-index: 30 !important;
+        }
+        div.annotations {
+          background-color: $explained_text_highlight_bg_color;
+          border: 4px solid $explained_code_highlight_bg_color;
+          border-radius: 8px;
+          text-align: center; 
+          div.short {
+            font-size: 100% !important;
+            text-align: center !important;
+            color: $text_color;
+            margin-bottom: 8px;
+            font-weight: bold; 
+            z-index: 10;
+          }
+          div.long { display: inherit !important; }
+        }
+        div.connector {
+          background-color: $explained_code_highlight_bg_color;
+        }
+      }
+      // highlighting of key code segments
+      div.block > div:last-child .ann_highlight { 
+        font-weight: bold; 
+        color: #e8f0e0; 
+      }
+      div.block:hover > div:last-child .ann_highlight { 
+        color: #f8fff8; 
+      }
+    }
+  }
+  div.code_viewer:hover {
+    div.annotations div.short {
+      color: $gray_aa;
+    }
+  }
+  
+  // have an initial notice
+  div.code_scroller {
+    div.initial_notice {
+      height: 0;
+      width: 0;
+      overflow-x: visible;
+      overflow-y: visible;
+    }
+    div.initial_notice > div {
+      z-index: 10;
+      background-color: transparentize($gray_aa, 0.1);
+      position: relative;
+      width: 0;
+      height: 0;
+      display: flex;
+      align-items: top;
+    }
+    div.initial_notice > div > div {
+      padding-top: 24px;
+      font-size: 125%;
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
+      .ann_light {
+        padding-top: 12px;
+        font-weight: 300;
+      }
+      .ann_play {
+        display: block;
+        padding-top: 24px;
+        padding-bottom: 24px;
+        font-size: 600%;
+      }
+    }
+  }
+  div.code_scroller:hover div.initial_notice {
+    display: none;
   }
 }

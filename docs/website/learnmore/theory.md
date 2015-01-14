@@ -173,10 +173,12 @@ model.
 
 ### Standards
 
-Finally we note some emerging standards in this area. OASIS CAMP (Cloud
-Application Management for Platforms) and TOSCA (Topology and Orchestration
-Specification for Cloud Applications) both define YAML application models
-similar to Brooklyn's. CAMP focuses on the REST API for interacting with such a
+Finally we note some emerging standards in this area. OASIS CAMP 
+(<a href="https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=camp#technical">Cloud Application Management for Platforms</a>) 
+and TOSCA 
+(<a href="https://www.oasis-open.org/committees/tosca/">Topology and Orchestration Specification for Cloud Applications</a>) 
+both define YAML application models similar to Brooklyn's. 
+CAMP focuses on the REST API for interacting with such a
 management layer, and TOSCA focuses on declarative support for more
 sophisticated orchestration. Currently Brooklyn uses a YAML which complies with
 CAMP's syntax and exposes many of the CAMP REST API endpoints. We would like to
