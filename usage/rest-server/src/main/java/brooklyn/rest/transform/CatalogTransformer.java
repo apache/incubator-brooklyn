@@ -100,5 +100,4 @@ public class CatalogTransformer {
             return "/v1/catalog/icon/"+item.getSymbolicName() + "/" + item.getVersion();
         return iconUrl;
     }
-
 }

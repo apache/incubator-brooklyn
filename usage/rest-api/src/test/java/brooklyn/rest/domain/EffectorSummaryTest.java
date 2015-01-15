@@ -33,23 +33,21 @@ import com.google.common.collect.ImmutableSet;
 
 public class EffectorSummaryTest {
 
-  final EffectorSummary effectorSummary = new EffectorSummary(
-      "stop",
-      "void",
-      ImmutableSet.<EffectorSummary.ParameterSummary<?>>of(),
-      "Effector description",
-      ImmutableMap.of(
-          "self", URI.create("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
-      )
-  );
+    final EffectorSummary effectorSummary = new EffectorSummary(
+            "stop",
+            "void",
+            ImmutableSet.<EffectorSummary.ParameterSummary<?>>of(),
+            "Effector description",
+            ImmutableMap.of(
+                    "self", URI.create("/v1/applications/redis-app/entities/redis-ent/effectors/stop")));
 
-  @Test
-  public void testSerializeToJSON() throws IOException {
-    assertEquals(asJson(effectorSummary), jsonFixture("fixtures/effector-summary.json"));
-  }
+    @Test
+    public void testSerializeToJSON() throws IOException {
+        assertEquals(asJson(effectorSummary), jsonFixture("fixtures/effector-summary.json"));
+    }
 
-  @Test
-  public void testDeserializeFromJSON() throws IOException {
-    assertEquals(fromJson(jsonFixture("fixtures/effector-summary.json"), EffectorSummary.class), effectorSummary);
-  }
+    @Test
+    public void testDeserializeFromJSON() throws IOException {
+        assertEquals(fromJson(jsonFixture("fixtures/effector-summary.json"), EffectorSummary.class), effectorSummary);
+    }
 }

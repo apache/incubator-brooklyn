@@ -32,25 +32,22 @@ import com.google.common.collect.ImmutableSet;
 
 public class ApplicationSpecTest {
 
-  final EntitySpec entitySpec = new EntitySpec("Vanilla Java App", "brooklyn.entity.java.VanillaJavaApp",
-      ImmutableMap.<String, String>of(
-          "initialSize", "1",
-          "creationScriptUrl", "http://my.brooklyn.io/storage/foo.sql"
-      ));
+    final EntitySpec entitySpec = new EntitySpec("Vanilla Java App", "brooklyn.entity.java.VanillaJavaApp",
+            ImmutableMap.<String, String>of(
+                    "initialSize", "1",
+                    "creationScriptUrl", "http://my.brooklyn.io/storage/foo.sql"));
 
-  final ApplicationSpec applicationSpec = ApplicationSpec.builder().name("myapp").
-          entities(ImmutableSet.of(entitySpec)).locations(ImmutableSet.of("/v1/locations/1")).
-          build();
+    final ApplicationSpec applicationSpec = ApplicationSpec.builder().name("myapp")
+            .entities(ImmutableSet.of(entitySpec)).locations(ImmutableSet.of("/v1/locations/1"))
+            .build();
 
-  @Test
-  public void testSerializeToJSON() throws IOException {
-    assertEquals(asJson(applicationSpec), jsonFixture("fixtures/application-spec.json"));
-  }
+    @Test
+    public void testSerializeToJSON() throws IOException {
+        assertEquals(asJson(applicationSpec), jsonFixture("fixtures/application-spec.json"));
+    }
 
-  @Test
-  public void testDeserializeFromJSON() throws IOException {
-    assertEquals(fromJson(jsonFixture("fixtures/application-spec.json"),
-        ApplicationSpec.class), applicationSpec);
-  }
-
+    @Test
+    public void testDeserializeFromJSON() throws IOException {
+        assertEquals(fromJson(jsonFixture("fixtures/application-spec.json"), ApplicationSpec.class), applicationSpec);
+    }
 }

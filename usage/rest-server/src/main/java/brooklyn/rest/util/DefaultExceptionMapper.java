@@ -99,5 +99,4 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
             rb.message("Internal error. Contact server administrator to consult logs for more details.");
         return rb.build().asResponse(Status.INTERNAL_SERVER_ERROR, MediaType.APPLICATION_JSON_TYPE);
     }
-
 }

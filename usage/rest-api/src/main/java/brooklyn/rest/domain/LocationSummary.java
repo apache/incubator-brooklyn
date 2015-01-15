@@ -34,62 +34,61 @@ import com.google.common.collect.ImmutableMap;
 
 public class LocationSummary extends LocationSpec implements HasName, HasId {
 
-  private final String id;
-  
-  /** only intended for instantiated Locations, not definitions */ 
-  @JsonSerialize(include=Inclusion.NON_NULL)
-  private final String type;
-  private final Map<String, URI> links;
+    private final String id;
 
-  public LocationSummary(
-      @JsonProperty("id") String id,
-      @JsonProperty("name") String name,
-      @JsonProperty("spec") String spec,
-      @JsonProperty("type") String type,
-      @JsonProperty("config") @Nullable Map<String, ?> config,
-      @JsonProperty("links") Map<String, URI> links
-  ) {
-    super(name, spec, config);
-    this.id = checkNotNull(id);
-    this.type = type;
-    this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
-  }
+    /** only intended for instantiated Locations, not definitions */
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    private final String type;
+    private final Map<String, URI> links;
 
-  @Override
-  public String getId() {
-    return id;
-  }
+    public LocationSummary(
+            @JsonProperty("id") String id,
+            @JsonProperty("name") String name,
+            @JsonProperty("spec") String spec,
+            @JsonProperty("type") String type,
+            @JsonProperty("config") @Nullable Map<String, ?> config,
+            @JsonProperty("links") Map<String, URI> links) {
+        super(name, spec, config);
+        this.id = checkNotNull(id);
+        this.type = type;
+        this.links = (links == null) ? ImmutableMap.<String, URI> of() : ImmutableMap.copyOf(links);
+    }
 
-  public String getType() {
-    return type;
-  }
-  
-  public Map<String, URI> getLinks() {
-    return links;
-  }
+    @Override
+    public String getId() {
+        return id;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    if (!super.equals(o)) return false;
-    LocationSummary that = (LocationSummary) o;
-    return Objects.equal(id, that.id);
-  }
+    public String getType() {
+        return type;
+    }
 
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(id, links);
-  }
+    public Map<String, URI> getLinks() {
+        return links;
+    }
 
-  @Override
-  public String toString() {
-    return "LocationSummary{" +
-        "id='" + getId() + '\'' +
-        "name='" + getName() + '\'' +
-        "spec='" + getSpec() + '\'' +
-        "type='" + getType() + '\'' +
-        ", config=" + getConfig() +
-        ", links=" + links +
-        '}';
+    @Override
+    public boolean equals(Object o) {
+        if (!super.equals(o)) return false;
+        LocationSummary that = (LocationSummary) o;
+        return Objects.equal(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id, links);
+    }
+
+    @Override
+    public String toString() {
+        return "LocationSummary{"
+                + "id='" + getId() + '\''
+                + "name='" + getName() + '\''
+                + "spec='" + getSpec() + '\''
+                + "type='" + getType() + '\''
+                + ", config=" + getConfig()
+                + ", links=" + links
+                + '}';
   }
 
 }

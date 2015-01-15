@@ -169,5 +169,4 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
     public void injectManagementContext(ManagementContext mgmt) {
         this.mgmt = mgmt;
     }
-
 }

@@ -31,21 +31,20 @@ import com.sun.jersey.api.client.ClientResponse;
 
 public class VersionResourceTest extends BrooklynRestResourceTest {
 
-  @Test
-  public void testGetVersion() {
-    ClientResponse response = client().resource("/v1/version")
-        .get(ClientResponse.class);
+    @Test
+    public void testGetVersion() {
+        ClientResponse response = client().resource("/v1/version")
+                .get(ClientResponse.class);
 
-    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-    String version = response.getEntity(String.class);
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        String version = response.getEntity(String.class);
 
-    assertTrue(version.matches("^\\d+\\.\\d+\\.\\d+.*"));
-  }
+        assertTrue(version.matches("^\\d+\\.\\d+\\.\\d+.*"));
+    }
 
-  @SuppressWarnings("deprecation")
-  @Override
-  protected void addBrooklynResources() {
-      addResource(new VersionResource());
-  }
-  
+    @SuppressWarnings("deprecation")
+    @Override
+    protected void addBrooklynResources() {
+        addResource(new VersionResource());
+    }
 }

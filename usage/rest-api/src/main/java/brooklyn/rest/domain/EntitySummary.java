@@ -29,67 +29,66 @@ import java.util.Map;
 
 public class EntitySummary implements HasId, HasName {
 
-  private final String id;
-  private final String name;
-  private final String type;
-  @JsonSerialize(include=Inclusion.NON_NULL)
-  private final String catalogItemId;
-  private final Map<String, URI> links;
+    private final String id;
+    private final String name;
+    private final String type;
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    private final String catalogItemId;
+    private final Map<String, URI> links;
 
-  public EntitySummary(
-      @JsonProperty("id") String id,
-      @JsonProperty("name") String name,
-      @JsonProperty("type") String type,
-      @JsonProperty("catalogItemId") String catalogItemId,
-      @JsonProperty("links") Map<String, URI> links
-  ) {
-    this.type = type;
-    this.id = id;
-    this.name = name;
-    this.catalogItemId = catalogItemId;
-    this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
-  }
+    public EntitySummary(
+            @JsonProperty("id") String id,
+            @JsonProperty("name") String name,
+            @JsonProperty("type") String type,
+            @JsonProperty("catalogItemId") String catalogItemId,
+            @JsonProperty("links") Map<String, URI> links) {
+        this.type = type;
+        this.id = id;
+        this.name = name;
+        this.catalogItemId = catalogItemId;
+        this.links = (links == null) ? ImmutableMap.<String, URI> of() : ImmutableMap.copyOf(links);
+    }
 
-  public String getType() {
-    return type;
-  }
+    public String getType() {
+        return type;
+    }
 
-  @Override
-  public String getId() {
-    return id;
-  }
-  
-  @Override
-  public String getName() {
-    return name;
-  }
-  
-  public String getCatalogItemId() {
-    return catalogItemId;
-}
-  
-  public Map<String, URI> getLinks() {
-    return links;
-  }
+    @Override
+    public String getId() {
+        return id;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    return (o instanceof EntitySummary) && id.equals(((EntitySummary)o).getId());
-  }
+    @Override
+    public String getName() {
+        return name;
+    }
 
-  @Override
-  public int hashCode() {
-    return id != null ? id.hashCode() : 0;
-  }
+    public String getCatalogItemId() {
+        return catalogItemId;
+    }
 
-  @Override
-  public String toString() {
-    return "EntitySummary{" +
-        "id='" + id + '\'' +
-        ", name=" + name +
-        ", type=" + type +
-        ", catalogItemId=" + catalogItemId +
-        ", links=" + links +
-        '}';
+    public Map<String, URI> getLinks() {
+        return links;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof EntitySummary) && id.equals(((EntitySummary) o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "EntitySummary{"
+                + "id='" + id + '\''
+                + ", name=" + name
+                + ", type=" + type
+                + ", catalogItemId=" + catalogItemId
+                + ", links=" + links
+                + '}';
   }
 }

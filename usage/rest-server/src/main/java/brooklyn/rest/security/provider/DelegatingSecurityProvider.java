@@ -145,5 +145,4 @@ public class DelegatingSecurityProvider implements SecurityProvider {
     private String getModificationCountKey() {
         return getClass().getName() + ".ModCount";
     }
-
 }

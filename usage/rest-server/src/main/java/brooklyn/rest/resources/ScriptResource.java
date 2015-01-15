@@ -92,8 +92,7 @@ public class ScriptResource extends AbstractBrooklynRestResource implements Scri
         // call toString on the result, in case it is not serializable
         return new ScriptExecutionSummary(
                 value!=null ? value.toString() : null, 
-                        problem!=null ? problem.toString() : null,
-                                stdout.toString(), stderr.toString());
+                problem!=null ? problem.toString() : null,
+                stdout.toString(), stderr.toString());
     }
-
 }

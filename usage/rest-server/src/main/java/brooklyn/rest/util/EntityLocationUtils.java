@@ -82,5 +82,4 @@ public class EntityLocationUtils {
     protected boolean isLocatedLocation(Location l) {
         return l.getConfig(LocationConfigKeys.LATITUDE)!=null && l.getConfig(LocationConfigKeys.LONGITUDE)!=null;
     }
-
 }

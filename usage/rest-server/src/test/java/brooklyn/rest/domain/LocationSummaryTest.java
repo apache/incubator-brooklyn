@@ -34,22 +34,21 @@ import brooklyn.rest.transform.LocationTransformer;
 
 public class LocationSummaryTest {
 
-  final LocationSummary summary = LocationTransformer.newInstance("123", LocationSpec.localhost());
+    final LocationSummary summary = LocationTransformer.newInstance("123", LocationSpec.localhost());
 
-  @Test
-  public void testSerializeToJSON() throws IOException {
-    assertEquals(asJson(summary), jsonFixture("fixtures/location-summary.json"));
-  }
+    @Test
+    public void testSerializeToJSON() throws IOException {
+        assertEquals(asJson(summary), jsonFixture("fixtures/location-summary.json"));
+    }
 
-  @Test
-  public void testDeserializeFromJSON() throws IOException {
-    assertEquals(fromJson(jsonFixture("fixtures/location-summary.json"), LocationSummary.class), summary);
-  }
-  
-  @Test
-  public void testDeserializeListFromJSON() throws IOException {
-    assertEquals(fromJson(jsonFixture("fixtures/location-list.json"), new TypeReference<List<LocationSummary>>() {}), 
-            Collections.singletonList(summary));
-  }
+    @Test
+    public void testDeserializeFromJSON() throws IOException {
+        assertEquals(fromJson(jsonFixture("fixtures/location-summary.json"), LocationSummary.class), summary);
+    }
 
+    @Test
+    public void testDeserializeListFromJSON() throws IOException {
+        assertEquals(fromJson(jsonFixture("fixtures/location-list.json"), new TypeReference<List<LocationSummary>>() {}), 
+                Collections.singletonList(summary));
+    }
 }

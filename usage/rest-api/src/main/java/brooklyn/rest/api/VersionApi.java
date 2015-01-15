@@ -36,7 +36,7 @@ import javax.ws.rs.core.MediaType;
 public interface VersionApi {
 
   @GET
-  @ApiOperation(value = "Return version identifier information for this Brooklyn instance; deprecated, use /server/version", responseClass = "String", multiValueResponse = false)
-  public String getVersion() ;
-
+  @ApiOperation(value = "Return version identifier information for this Brooklyn instance; deprecated, use /server/version", 
+          responseClass = "String", multiValueResponse = false)
+  public String getVersion();
 }

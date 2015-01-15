@@ -152,5 +152,4 @@ public class EntityTransformer {
         Double priority = catalogConfig==null ? null : catalogConfig.priority();
         return entityConfigSummary(config, label, priority, null);
     }
-
 }

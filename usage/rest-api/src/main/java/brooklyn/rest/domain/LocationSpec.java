@@ -34,61 +34,60 @@ import com.google.common.collect.ImmutableMap;
 /** @deprecated since 0.7.0 location spec objects will not be used from the client, instead pass yaml location spec strings */
 public class LocationSpec implements HasName, HasConfig {
 
-  @JsonSerialize(include=Inclusion.NON_NULL)
-  private final String name;
-  @JsonSerialize(include=Inclusion.NON_NULL)
-  private final String spec;
-  
-  @JsonSerialize(include=Inclusion.NON_EMPTY)
-  private final Map<String, ?> config;
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    private final String name;
+    @JsonSerialize(include = Inclusion.NON_NULL)
+    private final String spec;
 
-  public static LocationSpec localhost() {
-    return new LocationSpec("localhost", "localhost", null);
-  }
+    @JsonSerialize(include = Inclusion.NON_EMPTY)
+    private final Map<String, ?> config;
 
-  public LocationSpec(
-      @JsonProperty("name") String name,
-      @JsonProperty("spec") String spec,
-      @JsonProperty("config") @Nullable Map<String, ?> config
-  ) {
-    this.name = name;
-    this.spec = spec;
-    this.config = (config == null) ? Collections.<String, String>emptyMap() : ImmutableMap.copyOf(config);
-  }
+    public static LocationSpec localhost() {
+        return new LocationSpec("localhost", "localhost", null);
+    }
 
-  @Override
-  public String getName() {
-    return name;
-}
-  
-  public String getSpec() {
-    return spec;
-  }
+    public LocationSpec(
+            @JsonProperty("name") String name,
+            @JsonProperty("spec") String spec,
+            @JsonProperty("config") @Nullable Map<String, ?> config) {
+        this.name = name;
+        this.spec = spec;
+        this.config = (config == null) ? Collections.<String, String> emptyMap() : ImmutableMap.copyOf(config);
+    }
 
-  public Map<String, ?> getConfig() {
-    return config;
-  }
+    @Override
+    public String getName() {
+        return name;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    public String getSpec() {
+        return spec;
+    }
 
-    LocationSpec that = (LocationSpec) o;
-    return Objects.equal(name, that.name) && Objects.equal(spec, that.spec) && Objects.equal(config, that.config);
-  }
+    public Map<String, ?> getConfig() {
+        return config;
+    }
 
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(spec, name, config);
-  }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-  @Override
-  public String toString() {
-    return "LocationSpec{" +
-        "name='" + name + '\'' +
-        "spec='" + spec + '\'' +
-        ", config=" + config +
-        '}';
-  }
+        LocationSpec that = (LocationSpec) o;
+        return Objects.equal(name, that.name) && Objects.equal(spec, that.spec) && Objects.equal(config, that.config);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(spec, name, config);
+    }
+
+    @Override
+    public String toString() {
+        return "LocationSpec{"
+                + "name='" + name + '\''
+                + "spec='" + spec + '\''
+                + ", config=" + config
+                + '}';
+    }
 }

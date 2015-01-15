@@ -50,19 +50,19 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
 
     private static final Logger LOG = LoggerFactory.getLogger(EntityConfigResource.class);
 
-  @Override
-  public List<EntityConfigSummary> list(final String application, final String entityToken) {
-    final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+    @Override
+    public List<EntityConfigSummary> list(final String application, final String entityToken) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
 
-    return Lists.newArrayList(transform(
-        entity.getEntityType().getConfigKeys(),
-        new Function<ConfigKey<?>, EntityConfigSummary>() {
-          @Override
-          public EntityConfigSummary apply(ConfigKey<?> config) {
-            return EntityTransformer.entityConfigSummary(entity, config);
-          }
-        }));
-  }
+        return Lists.newArrayList(transform(
+                entity.getEntityType().getConfigKeys(),
+                new Function<ConfigKey<?>, EntityConfigSummary>() {
+                    @Override
+                    public EntityConfigSummary apply(ConfigKey<?> config) {
+                        return EntityTransformer.entityConfigSummary(entity, config);
+                    }
+                }));
+    }
 
     // TODO support parameters  ?show=value,summary&name=xxx &format={string,json,xml}
     // (and in sensors class)
@@ -82,15 +82,15 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
         return result;
     }
 
-  @Override
-  public Object get(String application, String entityToken, String configKeyName, Boolean raw) {
-      return get(true, application, entityToken, configKeyName, raw);
-  }
-  
-  @Override
-  public String getPlain(String application, String entityToken, String configKeyName, Boolean raw) {
-      return Strings.toString(get(false, application, entityToken, configKeyName, raw));
-  }
+    @Override
+    public Object get(String application, String entityToken, String configKeyName, Boolean raw) {
+        return get(true, application, entityToken, configKeyName, raw);
+    }
+
+    @Override
+    public String getPlain(String application, String entityToken, String configKeyName, Boolean raw) {
+        return Strings.toString(get(false, application, entityToken, configKeyName, raw));
+    }
 
     public Object get(boolean preferJson, String application, String entityToken, String configKeyName, Boolean raw) {
         EntityLocal entity = brooklyn().getEntity(application, entityToken);
@@ -102,54 +102,54 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
         return getValueForDisplay(value, preferJson, true);
     }
 
-  private ConfigKey<?> findConfig(EntityLocal entity, String configKeyName) {
-      ConfigKey<?> ck = entity.getEntityType().getConfigKey(configKeyName);
-      if (ck==null) ck = new BasicConfigKey<Object>(Object.class, configKeyName);
-      return ck;
-  }
+    private ConfigKey<?> findConfig(EntityLocal entity, String configKeyName) {
+        ConfigKey<?> ck = entity.getEntityType().getConfigKey(configKeyName);
+        if (ck == null)
+            ck = new BasicConfigKey<Object>(Object.class, configKeyName);
+        return ck;
+    }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  @Override
-  public void setFromMap(String application, String entityToken, Boolean recurse, Map newValues) {
-      final EntityLocal entity = brooklyn().getEntity(application, entityToken);
-      if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
-          throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
-              Entitlements.getEntitlementContext().user(), entity);
-      }
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void setFromMap(String application, String entityToken, Boolean recurse, Map newValues) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+                    Entitlements.getEntitlementContext().user(), entity);
+        }
 
-      if (LOG.isDebugEnabled())
-          LOG.debug("REST user "+Entitlements.getEntitlementContext()+" setting configs "+newValues);
-      for (Object entry: newValues.entrySet()) {
-          String configName = Strings.toString(((Map.Entry)entry).getKey());
-          Object newValue = ((Map.Entry)entry).getValue();
-          
-          ConfigKey ck = findConfig(entity, configName);
-          ((EntityInternal) entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
-          if (Boolean.TRUE.equals(recurse)) {
-              for (Entity e2: Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
-                  ((EntityInternal) e2).setConfig(ck, newValue);
-              }
-          }
-      }
-  }
-  
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  @Override
-  public void set(String application, String entityToken, String configName, Boolean recurse, Object newValue) {
-      final EntityLocal entity = brooklyn().getEntity(application, entityToken);
-      if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
-          throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
-              Entitlements.getEntitlementContext().user(), entity);
-      }
+        if (LOG.isDebugEnabled())
+            LOG.debug("REST user " + Entitlements.getEntitlementContext() + " setting configs " + newValues);
+        for (Object entry : newValues.entrySet()) {
+            String configName = Strings.toString(((Map.Entry) entry).getKey());
+            Object newValue = ((Map.Entry) entry).getValue();
 
-      ConfigKey ck = findConfig(entity, configName);
-      LOG.debug("REST setting config "+configName+" on "+entity+" to "+newValue);
-      ((EntityInternal) entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
-      if (Boolean.TRUE.equals(recurse)) {
-          for (Entity e2: Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
-              ((EntityInternal) e2).setConfig(ck, newValue);
-          }
-      }
-  }
+            ConfigKey ck = findConfig(entity, configName);
+            ((EntityInternal) entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
+            if (Boolean.TRUE.equals(recurse)) {
+                for (Entity e2 : Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
+                    ((EntityInternal) e2).setConfig(ck, newValue);
+                }
+            }
+        }
+    }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void set(String application, String entityToken, String configName, Boolean recurse, Object newValue) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+                    Entitlements.getEntitlementContext().user(), entity);
+        }
+
+        ConfigKey ck = findConfig(entity, configName);
+        LOG.debug("REST setting config " + configName + " on " + entity + " to " + newValue);
+        ((EntityInternal) entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
+        if (Boolean.TRUE.equals(recurse)) {
+            for (Entity e2 : Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
+                ((EntityInternal) e2).setConfig(ck, newValue);
+            }
+        }
+    }
 }
