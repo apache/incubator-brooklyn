@@ -557,31 +557,33 @@ define([
         },
         renderAddedLocations:function () {
             // renders the locations added to the model
-            var rowTemplate = this.locationRowTemplate,
-                optionTemplate = this.locationOptionTemplate,
-                container = this.$("#selector-container");
-            container.empty();
+            var that = this;
+            var container = this.$("#selector-container")
+            container.empty()
             for (var li = 0; li < this.model.spec.get("locations").length; li++) {
                 var chosenLocation = this.model.spec.get("locations")[li];
-                container.append(rowTemplate({
-                    initialValue: chosenLocation,
-                    rowId: li
-                }));
+                container.append(that.locationRowTemplate({
+                        initialValue: chosenLocation,
+                        rowId: li
+                    }))
             }
-            var $locationOptions = container.find('.select-location');
-            var templated = this.locations.map(function(aLocation) {
-                return optionTemplate({
-                    id: aLocation.id || "",
-                    name: aLocation.getPrettyName()
-                });
-            });
-            // insert "none" location
-            templated.push(optionTemplate({ id: "", name: '&lt;none&gt;' }));
-            $locationOptions.append(templated.join(""));
+            var $locationOptions = container.find('.select-location')
+            this.locations.each(function(aLocation) {
+                    if (!aLocation.id) {
+                        log("missing id for location:");
+                        log(aLocation);
+                    } else {
+                        var $option = that.locationOptionTemplate({
+                            id:aLocation.id,
+                            name:aLocation.getPrettyName()
+                        })
+                        $locationOptions.append($option)
+                    }
+                })
             $locationOptions.each(function(i) {
-                var option = $($locationOptions[i]);
-                option.val(option.parent().attr('initialValue'));
-            });
+                var w = $($locationOptions[i]);
+                w.val( w.parent().attr('initialValue') );
+            })
         },
         render:function () {
             this.delegateEvents()
@@ -669,7 +671,7 @@ define([
             var loc_id = $(event.currentTarget).val();
             var loc = this.locations.find(function (candidate) {
                 return candidate.get("id")==loc_id;
-            });
+            })
             if (!loc) {
                 log("invalid location "+loc_id);
                 this.showFailure("Invalid location "+loc_id);
