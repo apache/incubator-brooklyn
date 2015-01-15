@@ -66,13 +66,25 @@ a[id]:empty, a[name]:empty {
 }
 /* GENERAL UTILS
    ----------------------------------------------------------------------- */
+
+@mixin flex() {
+  display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+  display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+  display: -ms-flexbox;      /* TWEENER - IE 10 */
+  display: -webkit-flex;     /* NEW - Chrome */
+  display: flex;             /* NEW, Spec - Opera 12.1, Firefox 20+ */
+}
+
+@mixin transform($tfn) {
+  -webkit-transform: #{$tfn};
+  -moz-transform: #{$tfn};
+  -o-transform: #{$tfn};
+  transform: #{$tfn};
+}
    
 @mixin flip() {
-  transform: scaleX(-1);
   filter: FlipH;
-  -webkit-transform: scaleX(-1);
-  -moz-transform: scaleX(-1);
-  -o-transform: scaleX(-1);
+  @include transform('scaleX(-1)');
   -ms-filter: "FlipH";
 }
 
@@ -206,9 +218,13 @@ a.header-literal-anchor { display: inline !important; }
    squashing the main container instead */
 .container-and-sidebars {
     width: 100%;
-    display: flex;
+    @include flex();
 }
 .container-between-sidebars {
+    -webkit-box-flex: 1 100%;
+    -webkit-flex: 1 100%;
+    -webkit-flex-flex: 1 100%;
+    flex: 1 100%;
     flex: 10 1 100%;
     display: inline-block;
     width: auto;
@@ -216,6 +232,10 @@ a.header-literal-anchor { display: inline !important; }
     margin-right: auto;
 }
 .container-sidebar {
+    -webkit-box-flex: 0 auto;
+    -webkit-flex: 0 auto;
+    -webkit-flex-flex: 0 auto;
+    flex: 0 auto;
     flex: 0 0 auto;
 }
 .container-sidebar-right { 
@@ -456,8 +476,8 @@ code {
 }
 .clipboard_button {
   font-size: 18px;
-  transform: translateY(-2px);
   color: $vibrant_fg_green;
+  @include transform('translateY(-2px)');
 }
 .clipboard_button:hover, .clipboard_button.zeroclipboard-is-hover {
   color: $a_hover_color;
@@ -487,7 +507,7 @@ code {
   display: inline-block;
   @include nowrap();
   padding: 3px 7px;
-  transform: translateX(-50%);
+  @include transform('translateX(-50%)');
 }
 
 
@@ -495,8 +515,8 @@ code {
    ----------------------------------------------------------------------- */
 
 div.search_right {
-  float: right; 
-  transform: translateY(-12px);
+  float: right;
+  @include transform('translateY(-12px)');
   padding-right: 5%; 
   padding-bottom: 18px;
   font-size: 75%;
@@ -628,7 +648,8 @@ div.annotated_blueprint {
       width: auto;
       height: 100%;
       div.block {
-        display: flex;
+        @include flex();
+        -webkit-align-items: center;
         align-items: center;
         z-index: -10;
       }
@@ -649,10 +670,11 @@ div.annotated_blueprint {
           // seems we have to use abs positioning because other techniques
           // (translation, negative margins, etc) don't show up outside the scroll-x
           position: absolute;
-          transform: translateX(-100%) translateY(-50%);
+          @include transform('translateX(-100%) translateY(-50%)');
           width: $annotation_width;
           
-          display: flex;
+          @include flex();
+          -webkit-align-items: center;
           align-items: center;
           div.annotations {
             // positioning and sizing
@@ -740,7 +762,8 @@ div.annotated_blueprint {
       position: relative;
       width: 0;
       height: 0;
-      display: flex;
+      @include flex();
+      -webkit-align-items: top;
       align-items: top;
     }
     div.initial_notice > div > div {
