@@ -33,7 +33,8 @@
                       {% if item.external %}&nbsp;<span class="octicon octicon-link-external"></span>{% endif %}</a></h4>
               {% endfor %}
               {% for item in page.menu_parent.menu %}
-                {% if (page.breadcrumb_paths contains item.menu_path) and page.menu %}
+                {% if page.breadcrumb_paths contains item.menu_path %}{% assign in_menu = true %}{% else %}{% assign in_menu = false %}{% endif %} 
+                {% if in_menu and page.menu %}
                   {% comment %} case 3b {% endcomment %}
                   <a href="{{item.url}}" class="list-group-item active with-sub-item">{{ item.title_in_menu }}
                     {% if item.external %}&nbsp;<span class="octicon octicon-link-external"></span>{% endif %}</a>
