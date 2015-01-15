@@ -5,7 +5,8 @@ children:
 - locations/index.md
 - locations/configuring.md
 - persistence/
-- webconsole/
+- launching/
+- runtime-management/
 ---
 
 {% include list-children.html %}
