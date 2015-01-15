@@ -169,8 +169,8 @@ public class SshjClientConnection implements SshAction<SSHClient> {
             } catch (IOException e) {
                 if (LOG.isDebugEnabled()) LOG.debug("<< exception disconnecting from {}: {}", e, e.getMessage());
             }
-            ssh = null;
         }
+        ssh = null;
     }
 
     @Override

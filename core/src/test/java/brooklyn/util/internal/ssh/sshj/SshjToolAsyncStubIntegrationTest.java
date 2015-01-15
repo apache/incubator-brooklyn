@@ -29,7 +29,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.internal.ssh.SshAbstractTool.SshAction;
 import brooklyn.util.internal.ssh.sshj.SshjTool.ShellAction;
 import brooklyn.util.time.Duration;
 
@@ -58,15 +60,17 @@ public class SshjToolAsyncStubIntegrationTest {
     private SshjTool tool;
     private List<InjectedResult> sequence;
     int counter = 0;
+    private boolean origFeatureEnablement;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        origFeatureEnablement = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_SSH_ASYNC_EXEC);
         sequence = Lists.newArrayList();
         counter = 0;
         
         tool = new SshjTool(ImmutableMap.<String,Object>of("host", "localhost")) {
             @SuppressWarnings("unchecked")
-            protected <T, C extends SshAction<T>> T acquire(C action) {
+            protected <T, C extends SshAction<T>> T acquire(C action, int sshTries, Duration sshTriesTimeout) {
                 if (action instanceof SshjTool.ShellAction) {
                     SshjTool.ShellAction shellAction = (SshjTool.ShellAction) action;
                     InjectedResult injectedResult = sequence.get(counter);
@@ -74,14 +78,18 @@ public class SshjToolAsyncStubIntegrationTest {
                     counter++;
                     return (T) injectedResult.result.apply(shellAction);
                 }
-                return super.acquire(action);
+                return super.acquire(action, sshTries, sshTriesTimeout);
             }
         };
     }
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (tool != null) tool.disconnect();
+        try {
+            if (tool != null) tool.disconnect();
+        } finally {
+            BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_SSH_ASYNC_EXEC, origFeatureEnablement);
+        }
     }
     
     private Predicate<SshjTool.ShellAction> containsCmd(final String cmd) {

@@ -117,8 +117,8 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
                 Map<String, PortMapping> mappingsCopy;
                 Map<String,String> publicIpIdToHostnameCopy;
                 synchronized (mutex) {
-                    mappingsCopy = ImmutableMap.copyOf(mappings);
-                    publicIpIdToHostnameCopy = ImmutableMap.copyOf(publicIpIdToHostname);
+                    mappingsCopy = MutableMap.copyOf(mappings);
+                    publicIpIdToHostnameCopy = MutableMap.copyOf(publicIpIdToHostname);
                 }
                 return getMementoWithProperties(MutableMap.<String,Object>of(
                         "mappings", mappingsCopy, 
