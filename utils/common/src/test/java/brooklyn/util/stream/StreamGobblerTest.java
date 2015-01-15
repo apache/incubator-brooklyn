@@ -30,8 +30,10 @@ import java.io.PipedOutputStream;
 import org.testng.annotations.Test;
 
 import brooklyn.test.Asserts;
+import brooklyn.util.os.Os;
 
 public class StreamGobblerTest {
+    private String NL = Os.LINE_SEPARATOR;
 
     @Test
     public void testGobbleStream() throws Exception {
@@ -43,7 +45,7 @@ public class StreamGobblerTest {
         try {
             gobbler.join(10*1000);
             assertFalse(gobbler.isAlive());
-            assertEquals(new String(out.toByteArray()), "abc\n");
+            assertEquals(new String(out.toByteArray()), "abc" + NL);
         } finally {
             gobbler.close();
             gobbler.interrupt();
@@ -59,20 +61,20 @@ public class StreamGobblerTest {
         gobbler.start();
         try {
             pipedOutputStream.write("line1\n".getBytes());
-            assertEqualsEventually(out, "line1\n");
+            assertEqualsEventually(out, "line1" + NL);
 
             pipedOutputStream.write("line2\n".getBytes());
-            assertEqualsEventually(out, "line1\nline2\n");
+            assertEqualsEventually(out, "line1" + NL + "line2" + NL);
 
             pipedOutputStream.write("line".getBytes());
             pipedOutputStream.write("3\n".getBytes());
-            assertEqualsEventually(out, "line1\nline2\nline3\n");
+            assertEqualsEventually(out, "line1" + NL + "line2" + NL + "line3" + NL);
 
             pipedOutputStream.close();
             
             gobbler.join(10*1000);
             assertFalse(gobbler.isAlive());
-            assertEquals(new String(out.toByteArray()), "line1\nline2\nline3\n");
+            assertEquals(new String(out.toByteArray()), "line1" + NL + "line2" + NL + "line3" + NL);
         } finally {
             gobbler.close();
             gobbler.interrupt();
