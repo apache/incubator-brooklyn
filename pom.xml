@@ -1727,6 +1727,10 @@
                                                     <fileset erroronmissingdir="false" dir="src/main/java" />
                                                     <fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
                                                 </cobertura-report>
+                                                <cobertura-report format="html" destdir="target/site/cobertura" datafile="target/cobertura/cobertura.ser">
+                                                    <fileset erroronmissingdir="false" dir="src/main/java" />
+                                                    <fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
+                                                </cobertura-report>
                                             </then>
                                         </if>
                                     </target>
