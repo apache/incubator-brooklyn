@@ -32,6 +32,9 @@ These can be specified as a shell environment variable or as a Java system prope
 although in those contexts the conventional format ``BROOKLYN_JCLOUDS_AWS_EC2_IDENTITY`` 
 is supported and recommended.
 
+The recommended approach is to use the properties file, with permissions 600 
+(i.e. readable and writable only by the file's owner).
+
 
 Command Line Interface
 ----------------------
@@ -85,3 +88,56 @@ You can add things to the brooklyn classpath in a number of ways:
 * Use the ``BROOKLYN_CLASSPATH`` environment variable. If set, this is prepended to the brooklyn classpath.
 
 
+### Cloud Explorer
+
+The `brooklyn` command line tool includes support for querying (and managing) cloud
+compute resources and blob-store resources. 
+
+For example, `brooklyn cloud-compute list-instances --location aws-ec2:eu-west-1`
+will use the AWS credentials from brooklyn.properties, and will list the VM instances
+running in the given EC2 region.
+
+Use `brooklyn help` and `brooklyn help cloud-compute` to find out more information.
+
+This functionality is not intended as a generic cloud management CLI, but instead 
+solves specific brooklyn use-cases. The main use-case is discovering the valid 
+configuration options on a given cloud, such as for `imageId` and `hardwareId`.
+
+
+#### Cloud Compute
+
+The command `brooklyn cloud-compute` has the following options:
+
+* `list-images`: lists VM images within the given cloud, which can be chosen when
+  provisioning new VMs.
+  This is useful for finding the possible values for the `imageId` configuration.
+
+* `get-image <imageId1> <imageId2> ...`: retrieves metadata about the specific images.
+
+* `list-hardware-profiles`: lists the ids and the details of the hardware profiles
+  available when provisioning. 
+  This is useful for finding the possible values for the `hardwareId` configuration.
+
+* `default-template`: retrieves metadata about the image and hardware profile that will
+  be used by Brooklyn for that location, if no additional configuration options
+  are supplied.
+
+* `list-instances`: lists the VM instances within the given cloud.
+
+* `terminate-instances <instanceId1> <instanceId2> ...`: Terminates the instances with
+  the given ids.
+
+
+#### Blob Store
+
+The command `brooklyn cloud-blobstore` is used to access a given object store, such as S3
+or Swift. It has the following options:
+
+* `list-containers`: lists the containers (i.e. buckets in S3 terminology) within the 
+  given object store.
+
+* `list-container <containerName>`: lists all the blobs (i.e. objects) contained within 
+  the given container.
+
+* `blob --container <containerName> --blob <blobName>`: retrieves the given blob
+  (i.e. object), including metadata and its contents.
