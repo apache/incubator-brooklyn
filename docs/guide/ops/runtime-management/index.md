@@ -167,13 +167,14 @@ More information can be found in the javadoc for ``ManagementContext``.
 
 ### Management REST API
 
-Brooklyn does not yet expose a REST API. This was to allow the APi to be designed to align with emerging standards.
+Brooklyn's REST API supports a wide range of queries and operations. All information
+and operations shown in the web-console is performed via the REST API.
 
-Selected management operations are possible remotely using links exposed by the GUI (after authenticating with the GUI).
+The REST API can be explored through the Brooklyn web-console, via the menu Script -> REST API.
 
 ### Logging
 
-Brooklyn uses the SLF4J logging facade,  which allows use of many popular frameworks including java.util.logging, log4j, and logback.
+Brooklyn uses the SLF4J logging facade, which allows use of many popular frameworks including logback, java.util.logging and log4j.
 
 The convention for log levels is as follows:
 * ERROR and above:  exceptional situations which indicate that something has unexpectedly failed or
