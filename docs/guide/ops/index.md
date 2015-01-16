@@ -6,6 +6,7 @@ children:
 - locations/configuring.md
 - persistence/
 - launching/
+- catalog/
 - runtime-management/
 ---
 
