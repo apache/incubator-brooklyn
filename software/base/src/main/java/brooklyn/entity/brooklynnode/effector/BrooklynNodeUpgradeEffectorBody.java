@@ -30,6 +30,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityTasks;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
 import brooklyn.entity.brooklynnode.BrooklynCluster;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNodeDriver;
@@ -132,9 +133,11 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
 
         // 3 stop new version
         // 4 stop old version
+        ConfigBag stopParameters = ConfigBag.newInstance();
+        stopParameters.put(StopSoftwareParameters.STOP_MACHINE, Boolean.FALSE);
         DynamicTasks.queue(Tasks.builder().name("shutdown original and transient nodes")
-            .add(Effectors.invocation(dryRunChild, BrooklynNode.SHUTDOWN, ConfigBag.EMPTY))
-            .add(Effectors.invocation(entity(), BrooklynNode.SHUTDOWN, ConfigBag.EMPTY))
+            .add(Effectors.invocation(dryRunChild, BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, stopParameters))
+            .add(Effectors.invocation(entity(), BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, stopParameters))
             .build());
 
         // 5 move old files, and move new files
