@@ -1,28 +1,32 @@
 ---
 title: Catalog
 layout: website-normal
+children:
+- { section: Catalog Items }
+- { section: Adding to the Catalog, title: Adding and Deleting } 
+- { section: Versioning } 
+- { section: special-reqs, title: Wizard } 
 ---
 
-Brooklyn has a 'catalog', which is a collection of versioned blueprints. 
+Brooklyn provides a **catalog**, which is a persisted collection of versioned blueprints. 
 These can be deployed directly or referenced by other blueprints. 
 Blueprints in the catalog can be deployed via the Brooklyn REST API, or from 
-the web-console's 'Catalog' section of the 'Create Application' dialog box.
+the web-console's "Catalog" tab of the "Create Application" wizard dialog box.
 
 
 <!--
 TODO: Clean up confusion in terminology between Catalog item and Blueprint (and Java blueprint?)?
 -->
 
-### Catalog items
+### Catalog Items
 
-An item to be added to the catalog is defined in YAML. This looks like any other 
-YAML blueprint, but also has a `brooklyn.catalog` section giving appropriate metadata.
-
-An example is shown below.
+An item to be added to the catalog is defined in YAML. This follows the syntax of a 
+YAML blueprint with an addition `brooklyn.catalog` section giving 
+the metadata needed to register the blueprint in the catalog:
 
 {% highlight yaml %}
 brooklyn.catalog:
-  id: org.example.MySQL
+  id: my-MySQL
   version: 1.0
   iconUrl: classpath://mysql.png
   description: MySql is an open source relational database management system (RDBMS)
@@ -34,55 +38,60 @@ services:
 - type: brooklyn.entity.database.mysql.MySqlNode
 {% endhighlight %}
 
-To explain the `brooklyn.catalog` section:
+To explain the `brooklyn.catalog` fields:
 
-- The `id: MySQL` section specifies a unique ID used by Brooklyn to identify the catalog item. 
+- The `id: MySQL` line specifies a unique ID used by Brooklyn to identify the catalog item. 
   Other blueprints can reference the catalog item using this id.
-- The `version: 1.0` section provides a unique version for the *blueprint*. NOTE: This is *not* the version of the software
-being installed (in this case MySQL).
-- The `iconUrl: classpath://...` is an optional, but recommended, section that allows you to provide the URL of a graphic to be 
-displayed in the 'Add Application' dialog alongside the blueprint name. If using a URL of the form `classpath://...`, then
-the image should be on Brooklyn's classpath (e.g. in the `conf` folder of the Brooklyn distro).
-- The `description: ...` section allows you to give a free-format description of the blueprint, which is displayed in the 
-'Add Application' dialog.
+- The `version: 1.0` line provides a unique version for the *blueprint*. 
+  Note that this is typically *not* the version of the software being installed (in this case MySQL).
+- The `iconUrl: classpath://...` is an optional line where an icon can be specified 
+  for use with the item (in the "Add Application" dialog and elsewhere).
+  Note that `classpath` URLs *cannot* refer to items in the OSGi bundle 
+  (to prevent requiring all OSGi bundles to be loaded at launch);
+  use the server supplying the OSGi bundles or the `conf` folder of the Brooklyn distro instead.
+- The `description: ...` line, also optional, allows supplying a free-format description of the blueprint.
+
 
 The `libraries` section references OSGi bundles required for the blueprint. It can be omitted if everything
-required by the blueprint is already on the Brooklyn classpath. The URLs should be to stable OSGi bundles -
-if the bundle at this URL changes then this could impact applications if the Brooklyn server is restarted
-or fails over to a standby node.
+required by the blueprint is already on the Brooklyn classpath.
+These URL's should be to stable OSGi bundles;
+if the contents at any of these URLs changes, the behaviour of the blueprint may change 
+whenever a bundle is reloaded in a Brooklyn server,
+and if entities have been deployed against that version, their behavior may change in subtle or potentially incompatible ways.
+To avoid this situation, it is highly recommended to use OSGi version stamps as part of the URL.
 
-
-To reference a catalog item in another blueprint, simply use its id and optionally its version number.
+To reference a catalog item in another blueprint, simply reference its ID and optionally its version number.
 For example: 
 
 {% highlight yaml %}
 services:
-- type: org.example.MySQL:1.0
+- type: my-MySQL:1.0
 {% endhighlight %}
 
 
 ### Adding to the Catalog
 
-To add a catalog item to the catalog, post the YAML file to Brooklyn's REST API by using the `curl` command as
-follows (substituting your own usename:password, URL and file path):
+To add a catalog item to the catalog, `POST` the YAML file to `/v1/catalog` endpoint in
+Brooklyn's REST API.
+To do this using `curl`:
 
 {% highlight bash %}
-curl -u admin:password http://127.0.0.1:8081/v1/catalog --data-binary @/path/to/mysql-catalog.yaml
+curl http://127.0.0.1:8081/v1/catalog --data-binary @/path/to/mysql-catalog.yaml
 {% endhighlight %}
 
 
 
 ### Deleting from the Catalog
 
-You can delete a versioned item from the catalog using the REST API. For example, to delete
-the item with id `org.example.MySQL` and version `1.0`:
+You can delete a versioned item from the catalog using the same endpoint at the REST API. 
+For example, to delete the item with id `my-MySQL` and version `1.0` with `curl`:
 
 {% highlight bash %}
-curl -u admin:password -X DELETE http://127.0.0.1:8081/v1/catalog/entities/MySQL/1.0
+curl -X DELETE http://127.0.0.1:8081/v1/catalog/entities/MySQL/1.0
 {% endhighlight %}
 
-**Note** Catalog items should not be deleted if there are running apps which were created using the same item. During
-rebinding the catalog item is used to reconstruct the entity.
+**Note:** Catalog items should not be deleted if there are running apps which were created using the same item. 
+During rebinding the catalog item is used to reconstruct the entity.
 
 
 ### Versioning
@@ -90,19 +99,21 @@ rebinding the catalog item is used to reconstruct the entity.
 Version numbers follow the OSGi convention. This can have a major, minor, micro and qualifier part.
 For example, `1.0`. `1.0.1` or `1.0.1-20150101`.
 
-If you attempt to deploy the same version of a catalog item a second time, you will receive an 
-error stating `Updating existing catalog entries is forbidden`.
-To update the blueprint, you will need to change the version number in your yaml file and then
-POST the new YAML file.
+The combination of `id:version` strings must be unique across the catalog.
+It is an error to deploy the same version of an existing item:
+to update a blueprint, it is recommended to increase its version number;
+alternatively in some cases it is permitted to delete an `id:version` instance
+and then re-deploy.
+If no version is specified, re-deploying will automatically
+increment an internal version number for the catalog item.
 
-An exception to this rule is when no version is specified. Re-deploying will automatically
-increment an internal version number for that catalog item.
-
-When referencing a blueprint, if a version number is not specified then the latest version will
-be used when the application is deployed.
+When referencing a blueprint, if a version number is not specified 
+the latest non-snapshot version will be loaded when an entity is instantiated.
 
 
-### Special requirements for 'Create Application' dialog
+<a id="special-reqs"/>
+
+### Special Requirements for the "Create Application" Wizard Dialog
 
 For a blueprint in the catalog to be accessible via the 'Create Application' dialog, it must be an Application 
 (i.e. the entity at the root of the blueprint must implement `brooklyn.entity.Application`).
@@ -115,7 +126,7 @@ the `MySqlNode` is added as a child of the `BasicApplication`.
 
 {% highlight yaml %}
 brooklyn.catalog:
-  id: org.example.MySQL
+  id: my-MySQL
   version: 1.0
   iconUrl: classpath://mysql.png
   description: MySql is an open source relational database management system (RDBMS)
@@ -127,7 +138,7 @@ services:
   - type: brooklyn.entity.database.mysql.MySqlNode
 {% endhighlight %}
 
-When added to the catalog via the HTTP POST command, the blueprint will appear in the 'Create Application' dialog
+When added to the catalog via the HTTP `POST` command, the blueprint will appear in the 'Create Application' dialog
 as shown here:
 
 [![MySQL in Brooklyn Catalog](mysql-in-catalog-w700.png "MySQL in Brooklyn Catalog")](mysql-in-catalog.png) 
