@@ -41,6 +41,9 @@ code {
     padding: 4px 4px 2px 4px;
     border-radius: 3px;
 }
+a code {
+  color: inherit;
+}
 
 .nowrap { @include nowrap(); }
 

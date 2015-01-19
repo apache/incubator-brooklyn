@@ -2,8 +2,7 @@
 title: Operations
 layout: website-normal
 children:
-- locations/index.md
-- locations/configuring.md
+- locations/
 - persistence/
 - launching/
 - catalog/

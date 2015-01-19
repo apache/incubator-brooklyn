@@ -1,17 +1,18 @@
 # Inserts several useful fields that can be referenced using {{ name }} syntax
 #
-# TODO: remove, no need for a plugin i think, this is already set in fields.md
-# (although doing it in ruby might be better!)
+# TODO: move things from fields.md to here
 #
-# site.data.brooklyn.version: brooklyn version, such as 0.7.0-M1
-# site.data.brooklyn.is_snapshot: true if this is a snapshot version, otherwise false
+# site.brooklyn.version: brooklyn version, such as 0.7.0-M1 (taken from brooklyn-version in _config.yml)
+# site.brooklyn.is_snapshot: true if this is a snapshot version, otherwise false
 #
 module BrooklynMetadata
 
-  BROOKLYN_VERSION = "0.7.0-M2-incubating" unless defined? BROOKLYN_VERSION
+  BROOKLYN_VERSION = "0.7.0-SNAPSHOT" unless defined? BROOKLYN_VERSION
 
   class Generator < Jekyll::Generator
     def generate(site)
+      raise "Brooklyn version mismatch" if BrooklynMetadata::BROOKLYN_VERSION != site.config['brooklyn-version']
+
       is_snapshot = BrooklynMetadata::BROOKLYN_VERSION.end_with?('-SNAPSHOT')
       
       if is_snapshot
@@ -55,14 +56,11 @@ module BrooklynMetadata
       
       url_set["git"] = "https://github.com/apache/incubator-brooklyn/tree/#{ git_branch }"
       
-      site.data['brooklyn'] = {
+      site.config['brooklyn'] = {
           "version" => BrooklynMetadata::BROOKLYN_VERSION,
           "is_snapshot" => is_snapshot,
           "url" => url_set
       }
-      
-      # TODO check that "#{ brooklyn['url']['git'] }/core/src/main/java/brooklyn/BrooklynVersion.java"
-      # exists AND contains "versionFromStatic = \"#{ brooklyn['version'] }\""
   
     end
   end

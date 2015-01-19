@@ -1,6 +1,13 @@
 ---
 title: Persistence
 layout: website-normal
+children:
+- { section: Command Line Options }
+- { section: File-based Persistence }
+- { section: Object Store Persistence }
+- { section: Rebinding to State }
+- { section: High Availability }
+- { section: Writing Persistable Code }
 ---
 
 Brooklyn can be configured to persist its state so that the Brooklyn server can be restarted, 
@@ -92,8 +99,8 @@ brooklyn launch --persist auto --persistenceDir myContainerName --persistenceLoc
 {% endhighlight %}
 
 
-Rebind
-------
+Rebinding to State
+------------------
 
 When Brooklyn starts up pointing at existing state, it will recreate the entities, locations 
 and policies based on that persisted state.
@@ -104,8 +111,7 @@ HTTP or JMX). This new state will be reported in the web-console and can also tr
 any registered policies.
 
 
-Copying Persistence State
--------------------------
+## CLI Commands for Copying State
 
 Brooklyn includes a command to copy persistence state easily between two locations.
 The `copy-state` CLI command takes the following arguments:
@@ -122,10 +128,11 @@ The `copy-state` CLI command takes the following arguments:
   The local transformations file to be applied to the copy of the data before uploading it.
 
 
-Handling Rebind Failures
-------------------------
-If rebind were to fail for any reason, details of the underlying failures will be reported 
-in the brooklyn.debug.log. There are several approaches to resolving problems.
+## Handling Rebind Failures
+
+If rebind fails fail for any reason, details of the underlying failures will be reported 
+in the `brooklyn.debug.log`. There are several approaches to resolving problems.
+
 
 ### Determine Underlying Cause
 
