@@ -5,6 +5,8 @@ layout: website-normal
 menu_parent: index.md
 ---
 
+{% include fields.md %}
+
 Brooklyn reads startup configuration from a file `~/.brooklyn/brooklyn.properties`, by default.
 You can create this from a template [brooklyn.properties]({{brooklyn_properties_url_path}}) file which you edit.
 

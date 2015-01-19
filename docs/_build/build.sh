@@ -43,6 +43,7 @@ function parse_mode() {
     exit 0 ;;
   website-root)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-guide.yml,_build/config-website-root.yml
+    STYLE_SUBDIR=style
     DIRS_TO_MOVE[0]=website
     DIRS_TO_MOVE_TARGET[0]=""
     SKIP_JAVADOC=true
@@ -55,7 +56,8 @@ function parse_mode() {
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=style
-    DIRS_TO_MOVE_TARGET[1]=v/latest/style
+    STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/style
+    DIRS_TO_MOVE_TARGET[1]=$STYLE_SUBDIR
     INSTALL_RSYNC_OPTIONS=""
     INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
@@ -68,7 +70,8 @@ function parse_mode() {
     # BROOKLYN_VERSION_BELOW
     DIRS_TO_MOVE_TARGET[0]=v/0.7.0-SNAPSHOT
     DIRS_TO_MOVE[1]=style
-    DIRS_TO_MOVE_TARGET[1]=${DIRS_TO_MOVE_TARGET[0]}/style
+    STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/style
+    DIRS_TO_MOVE_TARGET[1]=$STYLE_SUBDIR
     INSTALL_RSYNC_OPTIONS=""
     INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
@@ -78,6 +81,7 @@ function parse_mode() {
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-root.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=""
+    STYLE_SUBDIR=style
     JAVADOC_TARGET=$JAVADOC_SUBPATH/
     SUMMARY="user guide files in the root"
     ;;
@@ -87,6 +91,7 @@ function parse_mode() {
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=website
     DIRS_TO_MOVE_TARGET[1]=""
+    STYLE_SUBDIR=style
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="all files, website in root and guide in /${DIRS_TO_MOVE_TARGET[0]}"
     ;;
@@ -97,12 +102,14 @@ function parse_mode() {
     DIRS_TO_MOVE[1]=website
     DIRS_TO_MOVE_TARGET[1]=brooklyn
     DIRS_TO_MOVE[2]=style
-    DIRS_TO_MOVE_TARGET[2]=brooklyn/style
+    STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[1]}/style
+    DIRS_TO_MOVE_TARGET[2]=$STYLE_SUBDIR
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="all files in /brooklyn"
     ;;
   original)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml
+    STYLE_SUBDIR=style
     SUMMARY="all files in their original place"
     ;;
   "")
@@ -192,6 +199,8 @@ function make_javadoc() {
       return 1
     fi
     mv _build/target/$JAVADOC_BUILD_TARGET_SUBPATH/* _site/$JAVADOC_TARGET
+    cat _site/${STYLE_SUBDIR}/css/javadoc.css >> _site/$JAVADOC_TARGET/stylesheet.css || return 1
+    cp _site/${STYLE_SUBDIR}/img/feather.png _site/$JAVADOC_TARGET/ || return 1
   fi
 }
 

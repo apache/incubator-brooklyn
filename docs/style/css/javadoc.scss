@@ -1,0 +1,119 @@
+---
+---
+
+{% include base-scss.scss %}
+
+@import 'util';
+@import 'basic';
+@import 'tooltips';
+@import 'code_blocks';
+
+body {
+  padding: 0;
+  font-size: 100%;
+}
+
+.title { color: $blackish; }
+
+a, a:link, a:visited { color: $a_color; }
+a:hover, a:link:hover, a:visited:hover { color: $a_hover_color; }
+
+.indexContainer, td {
+  a, a:link, a:visited { color: darken($a_color, 20%); }
+}
+
+
+.topNav, .bottomNav, .bar {
+  background-image: -webkit-linear-gradient(top, darken($bootstrap_theme_green_gradient_upper, 10%) 0%, darken($bootstrap_theme_green_gradient_lower, 10%) 100%);
+  background-image: linear-gradient(to bottom, darken($bootstrap_theme_green_gradient_upper, 10%) 0%, darken($bootstrap_theme_green_gradient_lower, 10%) 100%);
+  a:hover, a:link:hover, a:visited:hover { color: lighten($a_hover_color, 10%); }
+}
+
+.topNav {
+  height: inherit;
+  padding-bottom: 6px;
+}
+.topNav .aboutLanguage .brooklyn-header {
+  font-family: $header_fonts;
+  font-weight: bold;
+  font-size: 140%;
+  img { margin-top: 8px; }
+}
+.bar .brooklyn-header .img {
+  display: none;
+}
+.brooklyn-header .img {
+  background-image: url('feather.png');
+  background-size: contain;
+  width: 50px; 
+  height: 15px;
+  margin-left: 8px;
+  margin-top: 8px;
+  display: inline-block;
+} 
+
+.bottomNav .aboutLanguage {
+  margin-top: 0;
+}
+
+.subNav div {
+  padding: 0;
+}
+
+// sub-nav items seem to need extra indent
+ul.subNavList li:first-child {
+  padding-left: 6px;
+}
+ul.subNavList li {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+// there is so much code we don't want special treatment for it
+code {
+  font-size: 100%;
+  background-color: inherit;
+  padding: 0;
+  word-wrap: normal;
+  whitespace: inherit;
+}
+
+// tabs
+.overviewSummary caption span, .packageSummary caption span, .contentContainer ul.blockList li.blockList caption span, .summary caption span, .classUseContainer caption span, .constantValuesContainer caption span {
+  padding-top: 5px;
+  padding-bottom: 3px;
+}
+.overviewSummary .tabEnd, .packageSummary .tabEnd, .contentContainer ul.blockList li.blockList .tabEnd, .summary .tabEnd, .classUseContainer .tabEnd, .constantValuesContainer .tabEnd {
+  width: 0;
+}
+
+// package
+.subTitle {
+  margin-bottom: -6px;
+  font-family: $header_fonts;
+  font-weight: normal;
+  font-style: italic;
+  font-size: 125%;
+}
+.subTitle .block {
+  margin-top: 6px;
+  margin-bottom: 24px;
+  font-style: normal;
+  
+  p {
+    font-family: $fonts; 
+    font-style: normal;
+    font-weight: 300;
+    font-size: 90%;
+  }
+}
+.footer .subTitle .block {
+  margin-top: 18px;
+  font-weight: bold;
+  p {
+    font-weight: 300;
+  }
+}
+.header .subTitle .block {
+  font-weight: 300;
+}

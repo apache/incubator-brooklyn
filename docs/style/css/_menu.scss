@@ -1,0 +1,201 @@
+/* WEBSITE MENUS
+   ----------------------------------------------------------------------- */
+
+/* top menu bar */
+.navbar-brand {
+    margin-top: -4px;
+    margin-left: -30px !important;
+}
+
+@mixin icon($name) {
+  .icon-#{$name} {
+    width: 32px;
+    height: 32px;
+    background: url('#{$style_dir}/img/'+$name+'-256-black.png');
+    background-size: 32px 32px;
+  }
+  .icon-#{$name}:hover {
+    background: url('#{$style_dir}/img/'+$name+'-256-green.png');
+    background-size: 32px 32px;
+  }
+}
+
+.navbar {
+    @include icon('github');
+    @include icon('twitter');
+    @include icon('irc');
+}
+
+.navbar .tooltip .tooltip-inner {
+    position: relative;
+    right: 40%;
+    // include calc for those browsers which support it
+    right: calc(50% - 25px);
+    max-width: 300px;
+}
+
+/* special container with sidebar where if sidebar is squeezed
+   (under "responsiveness") the text keeps at least its "auto" size,
+   squashing the main container instead */
+.container-and-sidebars {
+    width: 100%;
+    @include flex();
+}
+.container-between-sidebars {
+    -webkit-box-flex: 1 100%;
+    -webkit-flex: 1 100%;
+    -webkit-flex-flex: 1 100%;
+    flex: 1 100%;
+    flex: 10 1 100%;
+    display: inline-block;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+.container-sidebar {
+    -webkit-box-flex: 0 auto;
+    -webkit-flex: 0 auto;
+    -webkit-flex-flex: 0 auto;
+    flex: 0 auto;
+    flex: 0 0 auto;
+}
+.container-sidebar-right { 
+    @extend .container-sidebar; 
+    text-align: left;
+    padding-right: 10px;
+} 
+.container-sidebar-left {
+    @extend .container-sidebar;
+    text-align: right;
+    padding-left: 10px;
+}
+
+@media (min-width: 768px) {
+  .container-sidebar { min-width: calc((100% - 750px)/2); }
+}
+@media (min-width: 992px) {
+  .container-sidebar { min-width: calc((100% - 970px)/2); }
+}
+@media (min-width: 1200px) {
+  .container-sidebar { min-width: calc((100% - 1170px)/2); }
+}
+
+
+.navbar-feather {
+  padding-top: 12px; 
+  margin-right: -6px;
+}
+.navbar-sidebar-right-icons {
+    padding-top: 10px;
+    margin-left: -6px;
+    white-space: nowrap;
+    a {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+    }
+}
+.navbar-icon-shift { margin-right: -2px; }
+
+.navbar div.dropdown_section_header hr {
+  margin: 4px 12px;
+  border-color: $white_dd;
+}
+
+.navbar div.dropdown_new_section hr {
+  margin: 6px 0px;
+  border-color: $white_dd;
+}
+
+/* pop-up top-menu */
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  background-color: $white_f5;
+  color: $brooklyn_green;
+}
+.top-menu {
+  font-size: 14px;
+  font-weight: 400;
+  .dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
+    background-color: $white_f5;
+    background-image: none;
+    color: $brooklyn_green;
+  }
+  ul.nav li.dropdown:hover > ul.dropdown-menu {
+    display: block;
+  }
+}
+
+/* side menu */
+.side-menu {
+  font-family: Avenir, $fonts;
+  font-size: 14px;
+  font-weight: 400;
+  position: fixed;
+  h4.with_following {
+    margin-bottom: 0;
+  }
+  h4.with_preceding {
+    margin-top: 0;
+  }
+  h4.with_following a {
+    border-bottom-right-radius: 0 !important ;
+    border-bottom-left-radius: 0 !important ;
+    border-bottom: 0;
+  }
+  h4.with_preceding a {
+    border-top-right-radius: 0;
+    border-top-left-radius: 0;
+    border-top: 0;
+  }
+  a, a.breadcrumb.breadcrumb0 { padding-left: 15px; padding-top: 8px; padding-bottom: 6px; }
+  a.breadcrumb.breadcrumb1 { padding-left: 30px; }
+  a.breadcrumb.breadcrumb2 { padding-left: 45px; }
+  a.breadcrumb.breadcrumb3 { padding-left: 60px; }
+  /* further crumbs all get the same */
+  a.breadcrumb { padding-left: 70px; }
+  
+  div.sub-item {
+    background-color: $bootstrap_theme_green_gradient_lower;
+    border-left: 1px solid $bootstrap_blue_border;
+  } 
+  div.sub-item:last-child {
+    border-bottom: 1px solid $white_dd;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+  div.sub-item:last-child a.sub-item:last-child {
+    border-bottom-right-radius: 4px !important;
+  }
+  a.with-sub-item {
+    /* border-bottom: 1px solid $white_dd; */
+    border-bottom: 0;
+  }
+  a.sub-item { 
+    border-radius: 0 !important;
+    border-bottom: 0;
+    margin-left: 12px;
+    padding-left: 10px; 
+    padding-top: 8px; 
+    padding-bottom: 8px; 
+  }
+  a.sub-item.list-group-item.active {
+    background-color: $white_f5;
+    // the below is needed to achieve the above, since bg-image is already set
+    background-image: -webkit-linear-gradient(top, $white_f5 0%, $white_f5 100%);
+    background-image: linear-gradient(to bottom, $white_f5 0%, $white_f5 100%);
+    
+    border-color: $white_dd;
+    color: $text_color;
+    text-shadow: none;
+    // not sure why the bottom border is visible at all, and stays on hover, but vanishes on 'active';
+    // but this sorts it out (taking 1 away from padding)
+    margin-bottom: 0;
+    padding-bottom: 7px;
+  }
+  a.sub-item.list-group-item.active:hover {
+    color: $a_hover_color;
+  }
+}
