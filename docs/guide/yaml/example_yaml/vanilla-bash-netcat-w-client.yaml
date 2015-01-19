@@ -14,13 +14,13 @@ services:
 
   # a failure detector and a service restarter work together
   brooklyn.enrichers:
-  - enricherType: brooklyn.policy.ha.ServiceFailureDetector
+  - type: brooklyn.policy.ha.ServiceFailureDetector
     brooklyn.config:
       # wait 15s after service fails before propagating failure
       serviceFailedStabilizationDelay: 15s
 
   brooklyn.policies:
-  - policyType: brooklyn.policy.ha.ServiceRestarter
+  - type: brooklyn.policy.ha.ServiceRestarter
     brooklyn.config:
       # repeated failures in a time window can cause the restarter to abort,
       # propagating the failure; a time window of 0 will mean it always restarts!
@@ -45,7 +45,9 @@ services:
   
   # set the hostname of the netcat instance as an env var for the scripts 
   env:
-    TARGET_HOSTNAME: $brooklyn:component("netcat-server").attributeWhenReady("host.name")
+    TARGET_HOSTNAME: 
+      $brooklyn:component("netcat-server").
+        attributeWhenReady("host.name")
     
   # start/check/stop are no-op
   launch.command: ""

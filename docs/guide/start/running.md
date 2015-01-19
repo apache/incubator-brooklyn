@@ -94,10 +94,10 @@ $ brooklyn launch
 
 Brooklyn will output the address of the management interface:
 
-
-`INFO  Starting brooklyn web-console on loopback interface because no security config is set`
-
-`INFO  Started Brooklyn console at http://127.0.0.1:8081/, running classpath://brooklyn.war and []`
+<pre>
+INFO  Starting brooklyn web-console on loopback interface because no security config is set
+INFO  Started Brooklyn console at http://127.0.0.1:8081/, running classpath://brooklyn.war and []
+</pre>
 
 ### Next
 
