@@ -91,7 +91,7 @@ the devops process. In some ways, Brooklyn is to run-time what Maven is to
 build-time.
 
 
-### Blueprints turn into deployments
+### Blueprints Turn into Deployments
 
 Brooklyn knows about Chef, Salt, and similar tools, and APT and Yum and
 plain old shell scripts, for deploying application components. Blueprints

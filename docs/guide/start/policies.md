@@ -25,12 +25,27 @@ Sitting idle, this cluster will only contain one server, but you can use a tool 
 
 As load is added, Brooklyn requests a new cloud machine, creates a new app server, and adds it to the cluster. As load is removed, servers are removed from the cluster, and the infrastructure is handed back to the cloud.
 
+
+### Under the Covers
+
+The `AutoScalerPolicy` here is configured to respond to the sensor
+reporting requests per second per node, invoking the default `resize` effector.
+By clicking on the policy, you can configure it to respond to a much lower threshhold
+or set long stabilization delays (the period before it scales out or back).
+
+An even simpler test is to manually suspend the policy, by clicking "Suspend" in the policies list.
+You can then switch to the "Effectors" tab and manually trigger a `resize`.
+On resize, new nodes are created and configured, 
+and in this case a policy on the nginx node reconfigures nginx whenever the set of active
+targets changes.
+
+
 ### Next
 
 This guide has given a quick overview to writing blueprints for applications, deploying applications, and
 managing them. Next, learn more about any of:
 
-* [Writing blueprints with YAML](../yaml/) 
-* [Writing blueprints with Java](../java/) 
+* [Writing Blueprints with YAML](../yaml/) 
+* [Writing Blueprints with Java](../java/) 
 * [Operating Brooklyn](../ops/) 
 
