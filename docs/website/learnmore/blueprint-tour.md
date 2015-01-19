@@ -4,12 +4,11 @@ title: A Quick Tour of a Brooklyn Blueprint
 title_in_menu: Blueprint Tour
 ---
 
-
 <div class="jumobotron annotated_blueprint" markdown="1">
   <div class="code_scroller">
     <div class="initial_notice"><div><div>
       Hover over an element to learn more
-      <div class="ann_light">This message will self-destruct in <span id="countdown">3s</span></div>
+      <div class="ann_light">This message will go away in <span id="countdown">3s</span></div>
       <div class="ann_play fa fa-play-circle-o"></div>
     </div></div></div>
     <div class="code_viewer">

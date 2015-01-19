@@ -66,6 +66,7 @@ div.annotated_blueprint {
             height: auto;
             width: 100%;
             padding: 8px 8px;
+            padding-bottom: 11px;
             color: $explained_text_highlight_fg_color;
 
             div.short {
@@ -83,7 +84,7 @@ div.annotated_blueprint {
           }
           div.connector {
             height: 7px;
-            width: 24px;
+            width: 48px;
           }
         }
       }
@@ -103,18 +104,23 @@ div.annotated_blueprint {
           border: 4px solid $explained_code_highlight_bg_color;
           border-radius: 8px;
           text-align: center; 
+          box-shadow: 2px 10px 20px $gray_aa;
           div.short {
             font-size: 100% !important;
             text-align: center !important;
             color: $text_color;
             margin-bottom: 8px;
-            font-weight: bold; 
+            font-weight: normal; 
             z-index: 10;
           }
           div.long { display: inherit !important; }
         }
         div.connector {
-          background-color: $explained_code_highlight_bg_color;
+          border-style: solid;
+          width: 16px !important;
+          border-width: 5px 0px 5px 6px;
+          border-style: solid;
+          border-color: transparent transparent transparent $explained_code_highlight_bg_color;
         }
       }
       // highlighting of key code segments
