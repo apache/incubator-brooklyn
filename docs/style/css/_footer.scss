@@ -1,0 +1,36 @@
+/* FOOTER
+   ----------------------------------------------------------------------- */
+
+/* sticky footer */
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 1200px) {
+    .slightlyNarrowContainer {
+        width: 970px;
+    }
+}
+
+div#footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    background-color: $white_f5;
+    text-align: center;
+    font-size: 80%;
+}
+.octicon-footer {
+    color: $footer_icon_gray;
+    font-size: 130%;
+    position: relative;
+    top: 2px;
+    padding-left: 6px;
+}
+a:hover .octicon-footer {
+    color: $brooklyn_green;
+}
+

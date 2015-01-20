@@ -17,4 +17,4 @@ Further documentation specific to this version of Brooklyn includes:
 * [{{ item.title_in_menu }}]({{ item.url }})
 {% endfor %}
 
-Also see the [other versions]({{ path.guide }}/meta/versions.html) or [general documentation]({{ path.guide }}/documentation/).
+Also see the [other versions]({{ site.path.website }}/meta/versions.html) or [general documentation]({{ site.path.website }}/documentation/).

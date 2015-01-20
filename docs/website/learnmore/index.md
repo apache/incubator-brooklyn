@@ -3,6 +3,7 @@ layout: website-normal
 title: Learn More
 children:
 - blueprint-tour.md
+- features/
 - { path: theory.md, title_in_menu: Theory }
 - { path: catalog/, title_in_menu: Browse Catalog }
 ---

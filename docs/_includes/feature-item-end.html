@@ -1,0 +1,14 @@
+
+{% if include.img %}
+{% comment %}
+  does not work to do: { % include feature-image.html src='{{ include.img }}' % }
+  so we repeat that snippet :(
+{% endcomment %}
+
+<div class="feature-image">
+  <img src="{{ include.img }}"/>
+</div>
+
+{% endif %}
+
+</div></div>

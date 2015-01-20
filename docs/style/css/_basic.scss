@@ -1,0 +1,62 @@
+/* BASIC STYLES
+   ----------------------------------------------------------------------- */
+body {
+    margin: 0px; 
+    padding: 60px 0px 20px 0px; 
+    font-family: $fonts;
+    font-weight: 300;
+    font-size: 17px; 
+    background-color: white; 
+    color: $text_color; 
+}
+h1, h2, h3, h4, h5, h6 { font-family: $header_fonts; }
+input, select, textarea {}
+p, li, label, td, th,input, select, textarea {}
+p, input, label, li {}
+p { margin: 0.75em 0; line-height: 1.4em;}
+form {padding: 0; margin: 0;}
+img {border: 0;}
+
+a {color: $a_color;}
+a:hover {text-decoration: none; color: $a_hover_color;}
+
+.dropdown-menu > li > a {
+  font-weight: 300;
+}
+.btn-default, .btn-primary, .btn-success, .btn-info, .btn-warning, .btn-danger {
+    text-shadow: none;
+    font-weight: 300;
+}
+.btn-default {
+    color: $gray_66;
+}
+.panel-heading {
+  h4 {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    padding-top: 8px;
+    margin-top: 0px;
+  }
+}
+.panel-body {
+    margin: 0px;
+    font-size: 95%;
+    color: $gray_66;
+    padding: 15px;
+    background-color: $white_fa;
+    border-radius: 5px;
+    p:first-child {
+      margin-top: 0px;
+    }
+    p:last-child {
+      margin-bottom: 0px;
+    }
+    > ul, > ol {
+      margin-left: -1em;
+    }
+}
+.table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td {
+    // extend bootstrap with a bottom border on table items; 
+    // these get collapsed so not sure why bootstrap does weirdness where there's no bottom border
+    border-bottom: 1px solid $white_dd;
+}

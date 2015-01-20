@@ -1,6 +1,6 @@
 {% pop site_items item %}
 {% set_hash_entry item path item_path %}
- {% set_hash_entry item url item_url %}
+{% set_hash_entry item url item_url %}
 
 {% unless item_path %}
  {% unless item_url %}
@@ -11,7 +11,7 @@
  {% endunless %}
 {% endunless %}
 
-<a id="{{ item_path }}"></a>
+<a id="{{ item_path }}" name="{{ item_path }}" href="javascript:void(0);"></a>
 <li>
  {% if visited contains item_path %}
   {{ item['title'] }} &nbsp; <a href="#{{ item_path }}"><span class="octicon octicon-link-external flip"></span></a>

@@ -1,8 +1,6 @@
 ---
 title: Execution
 layout: website-normal
-toc: ../guide_toc.json
-categories: [use, guide, defining-applications]
 ---
 
 All processing, whether an effector invocation or a policy cycle, are tracked as ***tasks***. This allows several important capabilities:
@@ -31,6 +29,6 @@ For example, a ``TomcatServer`` may implement start and other effectors using a 
 Particularly for sensors, some technologies are used so frequently that they are
 packaged as ***feeds*** which can discover their configuration (including from drivers). These include JMX and HTTP (see ``JmxFeed`` and ``HttpFeed``).
 
-Brooklyn comes with entity implementations for a growing number of commonly used systems, including various web application servers, databases and NoSQL data stores, and messaging systems. See: [Extras]({{site.path.guide}}/use/guide/extras/index.html).
+Brooklyn comes with entity implementations for a growing number of commonly used systems, including various web application servers, databases and NoSQL data stores, and messaging systems.
 
 

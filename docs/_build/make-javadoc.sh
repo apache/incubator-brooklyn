@@ -19,7 +19,9 @@ fi
 mkdir -p target
 rm -rf target/$JAVADOC_TARGET1_SUBPATH/
 
+export YEARSTAMP=`date "+%Y"`
 export DATESTAMP=`date "+%Y-%m-%d"`
+export SHA1STAMP=`git rev-parse HEAD`
 
 # BROOKLYN_VERSION_BELOW
 export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.7.0-SNAPSHOT-with-dependencies.jar
@@ -40,8 +42,10 @@ javadoc -sourcepath $SOURCE_PATHS \
   -classpath "${BROOKLYN_JAVADOC_CLASSPATH}" \
   -doctitle "Apache Brooklyn" \
   -windowtitle "Apache Brooklyn" \
-  -header "Apache Brooklyn" \
-  -footer '<b>Apache Brooklyn - Multi-Cloud Application Management</b> <br/> <a href="http://brooklyn.io/" target="_top">brooklyn.io</a>. Apache License. &copy; '$DATESTAMP'.' \
+  -notimestamp \
+  -overview javadoc-overview.html \
+  -header '<a href="/" class="brooklyn-header">Apache Brooklyn <div class="img"></div></a>' \
+  -footer '<b>Apache Brooklyn - Multi-Cloud Application Management</b> <br/> <a href="http://brooklyn.io/" target="_top">brooklyn.io</a>. Apache License. &copy; '$YEARSTAMP'.' \
 2>&1 1>/dev/null | tee target/javadoc.log
 
 if ((${PIPESTATUS[0]})) ; then echo ; echo ; echo "ERROR: javadoc process exited non-zero" ; exit 1 ; fi
@@ -51,7 +55,11 @@ if [ ! -f target/$JAVADOC_TARGET1_SUBPATH/brooklyn/entity/Entity.html ]; then ec
 
 if [ ! -z "`grep warnings target/javadoc.log`" ] ; then echo "WARNINGs occurred during javadoc build. See target/javadoc.log for more information." ; fi
 
-if [ -d ../_site/guide/$$JAVADOC_TARGET2_SUBPATH/ ] ; then
+sed -i.bak s/'${DATESTAMP}'/"${DATESTAMP}"/ target/$JAVADOC_TARGET1_SUBPATH/overview-summary.html
+sed -i.bak s/'${SHA1STAMP}'/"${SHA1STAMP}"/ target/$JAVADOC_TARGET1_SUBPATH/overview-summary.html
+rm target/$JAVADOC_TARGET1_SUBPATH/*.bak
+
+if [ -d ../_site/guide/$JAVADOC_TARGET2_SUBPATH/ ] ; then
   echo "API directory detected in test structure _site, copying docs there so they can be served with serve-site.sh"
   cp -r target/$JAVADOC_TARGET1_SUBPATH/* ../_site/guide/$JAVADOC_TARGET2_SUBPATH/
 fi

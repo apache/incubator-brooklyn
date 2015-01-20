@@ -1,9 +1,43 @@
 ---
 title: Multiple Services and Dependency Injection
 layout: website-normal
-toc: ../guide_toc.json
-categories: [use, guide, defining-applications]
 ---
+
+We've seen the configuration of machines and how to build up clusters.
+Now let's return to our app-server example and explore how more interesting
+services can be configured, composed, and combined.
+
+
+### Service Configuration
+
+We'll begin by using more key-value pairs to configure the JBoss server to run a real app:
+
+{% highlight yaml %}
+{% readj example_yaml/appserver-configured.yaml %}
+{% endhighlight %}
+
+(As before, you'll need to add the `location` info; `localhost` will work for these and subsequent examples.)
+
+When this is deployed, you can see management information in the Brooklyn Web Console,
+including a link to the deployed application (downloaded to the target machine from the `hello-world` URL),
+running on port 8080.
+
+**Tip**:  If port 8080 might be in use, you can specify `8080+` to take the first available port >= 8080;
+the actual port will be reported as a sensor by Brooklyn.
+
+It's also worth indicating an alternate, more formal syntax.
+Not all configuration on entities is supported at the top level of the service specification
+(only those which are defined as "flags" in the underlying blueprint,
+e.g. the `@SetFromFlag("war")` in the `WebAppServiceConstants` parent of `JBoss7Server`).
+All configuration has a formal qualified name, and this can be supplied even where flags or config keys are not
+explicitly defined, by placing it into a `brooklyn.config` section:
+
+{% highlight yaml %}
+{% readj example_yaml/appserver-configured-in-config.yaml %}
+{% endhighlight %}
+
+
+### Multiple Services
 
 If you explored the `hello-world-sql` application we just deployed, 
 you'll have noticed it tries to access a database.
@@ -43,7 +77,6 @@ there is no blocking; but if the JBoss entity completes its installation and
 downloading the WAR, it will wait for the database before it launches.
 At that point the URL is injected, first passing it through `formatString`
 to include the credentials for the database (which are defined in the database creation script).
-
 
 
 ### An Aside: Substitutability

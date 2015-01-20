@@ -2,12 +2,12 @@
 title: Operations
 layout: website-normal
 children:
-- locations/index.md
-- locations/configuring.md
+- cli.md
+- brooklyn_properties.md
+- locations/
 - persistence/
-- launching/
 - catalog/
-- runtime-management/
+- logging.md
 ---
 
 {% include list-children.html %}

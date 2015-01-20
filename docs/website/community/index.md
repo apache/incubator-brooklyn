@@ -60,7 +60,7 @@ Find us on `#brooklyncentral` on Freenode, or click below for more information.
 
 <div class="panel panel-default">
   <div class="panel-heading" markdown="1">
-#### [Developer community](../developers/index.md)
+#### [Developer community](../developers/)
   </div>
   <div class="panel-body" markdown="1">
 Want to contribute code to our project? Head over to our developer's section. Warning, bleeding edge code ahead!

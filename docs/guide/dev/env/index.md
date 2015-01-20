@@ -10,4 +10,4 @@ children:
 - ide/
 ---
 
-TODO
+{% include list-children.html %}

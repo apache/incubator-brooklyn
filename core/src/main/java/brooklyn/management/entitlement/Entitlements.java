@@ -292,6 +292,7 @@ public class Entitlements {
     public static EntitlementManager newManager(ManagementContext mgmt, BrooklynProperties brooklynProperties) {
         EntitlementManager result = newGlobalManager(mgmt, brooklynProperties);
         // TODO read per user settings from brooklyn.properties, if set there ?
+        // update brooklyn_properties.md when done
         return result;
     }
     private static EntitlementManager newGlobalManager(ManagementContext mgmt, BrooklynProperties brooklynProperties) {

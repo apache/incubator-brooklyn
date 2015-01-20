@@ -25,7 +25,7 @@ Here's a very simple YAML blueprint plan, to explain the structure:
 * The `name` is just for the benefit of us humans.
 
 * The `location` specifies where this should be deployed.
-  If you've [set up passwordless localhost SSH access](setting-locations.html#localhost) 
+  If you've [set up passwordless localhost SSH access](../ops/locations/#localhost) 
   you can use `localhost` as above, but if not, just wait ten seconds for the next example.
   
 * The `services` block takes a list of the typed services we want to deploy.

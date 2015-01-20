@@ -4,12 +4,11 @@ title: A Quick Tour of a Brooklyn Blueprint
 title_in_menu: Blueprint Tour
 ---
 
-
 <div class="jumobotron annotated_blueprint" markdown="1">
   <div class="code_scroller">
     <div class="initial_notice"><div><div>
       Hover over an element to learn more
-      <div class="ann_light">This message will self-destruct in <span id="countdown">3s</span></div>
+      <div class="ann_light">This message will go away in <span id="countdown">3s</span></div>
       <div class="ann_play fa fa-play-circle-o"></div>
     </div></div></div>
     <div class="code_viewer">
@@ -24,7 +23,7 @@ title_in_menu: Blueprint Tour
             optionally adding a version and other metadata.
             The format is YAML -- a human-friendly extension to JSON --
             following the  
-            <a href="{{ site.path.guide }}/learnmore/theory.html">CAMP</a> standard.
+            <a href="{{ site.path.website }}/learnmore/theory.html#standards">CAMP</a> standard.
           </p><p>
             Treat it like source code: use comments, version control it, test it with CI.
         </p></div>
