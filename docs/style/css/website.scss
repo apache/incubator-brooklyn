@@ -3,7 +3,7 @@
 
 {% include base-scss.scss %}
 
-$style_dir: {{ site.path.style }};
+$style_dir: "{{ site.path.style }}";
 
 @import 'util';
 @import 'basic';
