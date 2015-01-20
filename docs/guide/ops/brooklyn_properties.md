@@ -10,6 +10,8 @@ children:
 - { section: HTTPS Configuration }
 ---
 
+{% include fields.md %}
+
 The file `~/.brooklyn/brooklyn.properties` is read when Brooklyn starts
 to load server configuration values.
 A different properties file can be specified either additionally or instead

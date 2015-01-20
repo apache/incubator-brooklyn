@@ -4,7 +4,7 @@ title: Downloads
 ---
 {% include fields.md %}
 
-First time user? The [getting started]({{ site.path.guide }}/use/guide/quickstart/index.html) guide will walk you through downloading Brooklyn, setup of your `brooklyn.properties` and `catalog.xml` files, and then trying the [examples](#examples). 
+First time user? The [getting started]({{ site.path.guide }}/start/) guide will walk you through downloading Brooklyn and running an example. 
 
 ## Download Version {{ site.brooklyn-version }}
 
@@ -12,7 +12,7 @@ First time user? The [getting started]({{ site.path.guide }}/use/guide/quickstar
   <tr>
 	<th style='text-align:left'>Download</th>
 	<th style='text-align:left'>File/Format</th>
-	<th>checksums <small><a href="/meta/verify.html" title='Instructions on verifying the integrity of your downloads.'>(?)</a></small></th>
+	<th>checksums <small><a href="{{ site.path.website }}/download/verify.html" title='Instructions on verifying the integrity of your downloads.'>(?)</a></small></th>
   </tr>
   <tr>
 	<td style='text-align:left;vertical-align:top' rowspan='2'>Distro</td>
@@ -84,9 +84,10 @@ and [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-all/) for snapshot versio
 
 ## Release Notes
 
-Release notes can be found [here]({{ site.path.guide }}/start/release-notes.html).
+Release notes can be found [here]({{ site.path.guide }}/misc/release-notes.html).
 
-
+{% comment %}
+TODO
 <a name="examples"></a>
 
 ## Examples
@@ -95,6 +96,7 @@ Examples can be found in the main Brooklyn codebase, in the `/examples` director
 
 A good example to start with is the [Elastic Web Cluster]({{site.path.guide}}/use/examples/webcluster.html).
 
+{% endcomment %}
 
 <a name="maven"></a>
 

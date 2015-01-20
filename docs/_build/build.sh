@@ -32,7 +32,8 @@ function help() {
   echo "* --quick-javadoc : to do a quick javadoc build (for testing)"
   echo "* --serve : serve files from _site after building (for testing)"
   echo "* --install : install files from _site to the appropriate place in "'$'"BROOKLYN_SITE_DIR (or ../../incubator-brooklyn-site-public)"
-  echo "* --skip-test : skip the HTML Proof run on _site"
+  echo "* --skip-htmlproof : skip the HTML Proof run on _site"
+  echo "* --quick-htmlproof : do a fast HTML Proof run on _site (not checking external links)"
   echo ""
 }
 
@@ -141,8 +142,12 @@ function parse_arguments() {
       INSTALL_AFTERWARDS=true
       shift
       ;;
-    "--skip-test")
+    "--skip-htmlproof")
       SKIP_TEST=true
+      shift
+      ;;
+    "--quick-htmlproof")
+      QUICK_TEST=true
       shift
       ;;
     *)
@@ -160,16 +165,12 @@ function test_site() {
   fi
   echo "Running htmlproof on _site"
   mkdir -p target
-  LOG="target/htmlproof.log"
-  # TODO for now exclude all javadoc; in time it would be nice to police that also
-  # (but not sure this is properly working yet)
-  htmlproof _site \
-    --href_ignore "https?://127.*" \
-    --href_ignore "https?://github.com/apache/incubator-brooklyn/edit/.*" \
-    --href_ignore "/" \
-    --alt_ignore ".*" \
-    --file_ignore ".*/javadoc/.*" \
-    2>&1 | tee $LOG
+  LOG="_build/target/htmlproof.log"
+  HTMLPROOF_OPTS=""
+  if [ "$QUICK_TEST" == "true" ]; then
+    HTMLPROOF_OPTS="$HTMLPROOF_OPTS --disable_external"
+  fi
+  _build/htmlproof-brooklyn.sh $HTMLPROOF_OPTS 2>&1 | tee $LOG
 }
 
 function make_jekyll() {

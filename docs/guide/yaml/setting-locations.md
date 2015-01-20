@@ -5,6 +5,8 @@ toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---
 
+{% include fields.md %}
+
 Brooklyn supports a very wide range of target locations -- localhost is mainly a convenience for testing.
 With deep integration to [Apache jclouds](http://jclouds.org), most well-known clouds and cloud platforms are supported.
 The following example is for Amazon EC2:
