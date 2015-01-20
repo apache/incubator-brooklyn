@@ -44,6 +44,9 @@ exclude: ['/Gemfile*','/README.md']
 sass:
     sass_dir: style/css
 
+# used for the "verify" page
+brooklyn-stable-versions: [ 0.7.0-M2-incubating ]
+
 brooklyn-stable-version: 0.7.0-M2-incubating
 
 brooklyn-version: 0.7.0-SNAPSHOT # BROOKLYN_VERSION

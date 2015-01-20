@@ -55,3 +55,8 @@ a:hover {text-decoration: none; color: $a_hover_color;}
       margin-left: -1em;
     }
 }
+.table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td {
+    // extend bootstrap with a bottom border on table items; 
+    // these get collapsed so not sure why bootstrap does weirdness where there's no bottom border
+    border-bottom: 1px solid $white_dd;
+}

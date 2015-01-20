@@ -4,11 +4,15 @@ title: Downloads
 ---
 {% include fields.md %}
 
-First time user? The [getting started]({{ site.path.guide }}/start/) guide will walk you through downloading Brooklyn and running an example. 
+**Brooklyn in Apache has not yet made an official clean binary release. 
+The downloads on this page have not been voted on and should be used at your own risk.
+Additionally some links on this page may not work until those builds have been officially released.
+For more information, see the [main download page]({{ site.path.website }}/download/).**
+
 
 ## Download Version {{ site.brooklyn-version }}
 
-<table>
+<table class="table">
   <tr>
 	<th style='text-align:left'>Download</th>
 	<th style='text-align:left'>File/Format</th>

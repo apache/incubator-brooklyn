@@ -21,15 +21,15 @@ Expand the `tar.gz` archive:
 
 {% if brooklyn_version contains 'SNAPSHOT' %}
 {% highlight bash %}
-$ tar -zxf brooklyn-dist-{{ site.data.brooklyn.version }}-timestamp-dist.tar.gz
+$ tar -zxf brooklyn-dist-{{ site.brooklyn-version }}-timestamp-dist.tar.gz
 {% endhighlight %}
 {% else %}
 {% highlight bash %}
-$ tar -zxf brooklyn-{{ site.data.brooklyn.version }}-dist.tar.gz
+$ tar -zxf brooklyn-{{ site.brooklyn-version }}-dist.tar.gz
 {% endhighlight %}
 {% endif %}
 
-This will create a `brooklyn-{{ site.data.brooklyn.version }}` folder.
+This will create a `brooklyn-{{ site.brooklyn-version }}` folder.
 
 **Note**: You'll need a Java JRE or SDK installed (version 6 or later), as Brooklyn is Java under the covers.
 

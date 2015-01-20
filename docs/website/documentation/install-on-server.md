@@ -61,20 +61,20 @@ Expand the `tar.gz` archive:
 
 {% if brooklyn_version contains 'SNAPSHOT' %}
 {% highlight bash %}
-$ tar -zxf brooklyn-dist-{{ site.data.brooklyn.version }}-timestamp-dist.tar.gz
+$ tar -zxf brooklyn-dist-{{ site.brooklyn-stable-version }}-timestamp-dist.tar.gz
 {% endhighlight %}
 {% else %}
 {% highlight bash %}
-$ tar -zxf brooklyn-{{ site.data.brooklyn.version }}-dist.tar.gz
+$ tar -zxf brooklyn-{{ site.brooklyn-stable-version }}-dist.tar.gz
 {% endhighlight %}
 {% endif %}
 
-This will create a `brooklyn-{{ site.data.brooklyn.version }}` folder.
+This will create a `brooklyn-{{ site.brooklyn-stable-version }}` folder.
 
 Let's setup some paths for easy commands.
 
 {% highlight bash %}
-$ cd brooklyn-{{ site.data.brooklyn.version }}
+$ cd brooklyn-{{ site.brooklyn-stable-version }}
 $ BROOKLYN_DIR="$(pwd)"
 $ export PATH=$PATH:$BROOKLYN_DIR/bin/
 {% endhighlight %}
