@@ -18,6 +18,8 @@
  */
 package brooklyn.management.entitlement;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -283,26 +285,28 @@ public class Entitlements {
     
     // ----------------- initialization ----------------
 
-    public static ConfigKey<String> GLOBAL_ENTITLEMENT_MANAGER = ConfigKeys.newStringConfigKey("brooklyn.entitlements.global", 
+    public final static String ENTITLEMENTS_CONFIG_PREFIX = "brooklyn.entitlements";
+    
+    public static ConfigKey<String> GLOBAL_ENTITLEMENT_MANAGER = ConfigKeys.newStringConfigKey(ENTITLEMENTS_CONFIG_PREFIX+".global", 
         "Class for entitlements in effect globally; "
         + "short names 'minimal', 'readonly', or 'root' are permitted here, with the default 'root' giving full access to all declared users; "
         + "or supply the name of an "+EntitlementManager.class+" class to instantiate, taking a 1-arg BrooklynProperties constructor or a 0-arg constructor",
         "root");
     
     public static EntitlementManager newManager(ManagementContext mgmt, BrooklynProperties brooklynProperties) {
-        EntitlementManager result = newGlobalManager(mgmt, brooklynProperties);
-        // TODO read per user settings from brooklyn.properties, if set there ?
-        // update brooklyn_properties.md when done
-        return result;
+        return newGlobalManager(mgmt, brooklynProperties);
     }
     private static EntitlementManager newGlobalManager(ManagementContext mgmt, BrooklynProperties brooklynProperties) {
-        String type = brooklynProperties.getConfig(GLOBAL_ENTITLEMENT_MANAGER);
-        if ("root".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(root());
-        if ("readonly".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(readOnly());
-        if ("minimal".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(minimal());
+        return load(mgmt, brooklynProperties, brooklynProperties.getConfig(GLOBAL_ENTITLEMENT_MANAGER));
+    }
+    
+    public static EntitlementManager load(@Nullable ManagementContext mgmt, BrooklynProperties brooklynProperties, String type) {
+        if ("root".equalsIgnoreCase(type)) return root();
+        if ("readonly".equalsIgnoreCase(type) || "read_only".equalsIgnoreCase(type)) return readOnly();
+        if ("minimal".equalsIgnoreCase(type)) return minimal();
         if (Strings.isNonBlank(type)) {
             try {
-                ClassLoader cl = ((ManagementContextInternal)mgmt).getBaseClassLoader();
+                ClassLoader cl = mgmt==null ? null : ((ManagementContextInternal)mgmt).getBaseClassLoader();
                 if (cl==null) cl = Entitlements.class.getClassLoader();
                 Class<?> clazz = cl.loadClass(type);
                 Optional<?> result = Reflections.invokeConstructorWithArgs(clazz, brooklynProperties);

@@ -12,6 +12,7 @@ children:
 - policy.md
 - policies.md
 - service-state.md
+- entitlements.md
 ---
 
 Java blueprints are much more powerful than YAML but is also rather more difficult.

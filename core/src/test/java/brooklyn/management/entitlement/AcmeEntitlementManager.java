@@ -18,13 +18,29 @@
  */
 package brooklyn.management.entitlement;
 
-class AcmeEntitlementManager extends PerUserEntitlementManagerWithDefault {
+class AcmeEntitlementManager extends PerUserEntitlementManager {
 
     public AcmeEntitlementManager() {
+        // default mode (if no user specified) is root
         super(Entitlements.root());
-        super.addUser("hacker", Entitlements.minimal());
-        super.addUser("bob", Entitlements.readOnly());
-        super.addUser("alice", Entitlements.root());
+        
+        super.addUser("admin", Entitlements.root());
+        
+        super.addUser("support", Entitlements.readOnly());
+        
+        // metrics can log in but can't really do much else
+        super.addUser("metrics", Entitlements.minimal());
+        
+        // 'navigator' defines a user with a custom entitlement manager allowing 
+        // access to see entities (in the tree) but not to do anything 
+        // or even see any sensor information on those entities
+        super.addUser("navigator", new EntitlementManager() {
+            @Override
+            public <T> boolean isEntitled(EntitlementContext context, EntitlementClass<T> entitlementClass, T entitlementClassArgument) {
+                if (Entitlements.SEE_ENTITY.equals(entitlementClass)) return true;
+                return false;
+            }
+        });
     }
 
 }

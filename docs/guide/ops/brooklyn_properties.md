@@ -113,10 +113,10 @@ Other security providers available include:
 
 ## Entitlements
 
-In addition to login access, fine-grained permissions including 
-seeing entities, creating applications, seeing sensors, and invoking effectors
+In addition to login access, fine-grained permissions -- including 
+seeing entities, creating applications, seeing sensors, and invoking effectors --
 can be defined on a per-user *and* per-target (e.g. which entity/effector) basis
-using an **Entitlement Manager**.
+using a plug-in **Entitlement Manager**.
 
 This can be set globally with the property:
 
@@ -131,20 +131,34 @@ and understands:
 * `readonly`:  read-only access to almost all information
 * `minimal`:  access only to server stats, for use by monitoring systems
 
-{% comment %}
-TODO in Entitlements
-
 These keywords are also understood at the `global` level, so to grant full access to `admin`
-but read-only access to any other authenticated users, you can write:
+but limited access to other authenticated users and `readonly, 
+you can write:
 
 {% highlight properties %}
 brooklyn.entitlements.global=readonly
-brooklyn.entitlements.user.admin=root
+brooklyn.entitlements.perUser.admin=root
+brooklyn.entitlements.perUser.support=readonly
+brooklyn.entitlements.perUser.metrics=minimal
 {% endhighlight %}
 
-{% endcomment %}
+Under the covers this invokes the `PerUserEntitlementManager`, 
+with a `default` set (and if not specified `default` defaults to `minimal`); 
+so the above can equivalently be written:
 
-For more information, see {% include java_link.html class_name="EntitlementManager" package_path="brooklyn/management/entitlement" project_subpath="api" %}.
+{% highlight properties %}
+brooklyn.entitlements.global=brooklyn.management.entitlement.PerUserEntitlementManager
+brooklyn.entitlements.perUser.default=readonly
+brooklyn.entitlements.perUser.admin=root
+brooklyn.entitlements.perUser.support=readonly
+brooklyn.entitlements.perUser.metrics=minimal
+{% endhighlight %}
+
+For more information, see 
+[Java: Entitlements]({{ site.path.guide }}/java/entitlements.html).
+or
+{% include java_link.html class_name="EntitlementManager" package_path="brooklyn/management/entitlement" project_subpath="api" %}.
+
 
 
 ## HTTPS Configuration
