@@ -9,7 +9,6 @@ children:
 - multiple-services.md
 - clusters-and-policies.md
 - custom-entities.md
-- catalog-maintenance.md
 - chef/
 - { path: yaml-reference.md, title: YAML Blueprint Reference }
 ---

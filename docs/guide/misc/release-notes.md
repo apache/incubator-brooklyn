@@ -1,11 +1,9 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: Release Notes
 ---
 
 ## Version {{ site.brooklyn-version }}
-
-TODO: breacrumbs {{ page.breadcrumb_paths }}.
 
 {% if SNAPSHOT %}
 **You are viewing a SNAPSHOT release (master branch), so this list is incomplete.**

@@ -1,6 +1,6 @@
 ---
 title: Configuration, Sensors and Effectors
-layout: guide-normal
+layout: website-normal
 toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---

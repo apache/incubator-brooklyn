@@ -1,7 +1,7 @@
 ---
 title: Writing Chef for Blueprints
 title_in_menu: Writing Chef for Blueprints
-layout: guide-normal
+layout: website-normal
 ---
 
 ## Making it Simpler

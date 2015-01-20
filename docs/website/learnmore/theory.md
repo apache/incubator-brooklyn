@@ -1,6 +1,11 @@
 ---
 layout: website-normal
 title: The Theory behind Brooklyn
+children:
+- { section: "Why Brooklyn?" }
+- { section: Blueprints }
+- { section: Benefits }
+- { section: Standards }
 ---
 
 <div class="jumobotron" markdown="1">
@@ -44,7 +49,7 @@ some clustered services requiring an odd number of instances to prevent voting
 deadlocks.
 
 
-## How Brooklyn can help
+## How Brooklyn Can Help
 
 In this context the advantage of Brooklyn becomes apparent: a single tool is
 able to manage provisioning and application deployment, monitor an application's
@@ -86,7 +91,7 @@ the devops process. In some ways, Brooklyn is to run-time what Maven is to
 build-time.
 
 
-### Blueprints turn into deployments
+### Blueprints Turn into Deployments
 
 Brooklyn knows about Chef, Salt, and similar tools, and APT and Yum and
 plain old shell scripts, for deploying application components. Blueprints
@@ -117,7 +122,8 @@ managing complex software to be codified as part of the software development
 process.
 
 
-### Agile and flexible
+
+### <a id="benefits"></a> Agile and Flexible
 
 Brooklyn is a product built from the ground up for application agility. This
 includes portability across non-cloud, cloud, and PaaS targets; devops-style
@@ -148,7 +154,7 @@ lessons:
 - Brooklyn's focus on blueprinting and modeling as code and APIs serves these
 principles.
 
-### Autonomic computing
+### Autonomic Computing
 
 Another major influence on the design of Brooklyn are the ideas of autonomic
 computing and promise theory. It is not necessary to have a thorough
@@ -164,12 +170,14 @@ Salt apply promise theory to files and processes on machines; Brooklyn can
 leverage all of these tools, complementing it with an application-oriented
 model.
 
-### Standards compliant
+### Standards
 
-Finally we note some emerging standards in this area. OASIS CAMP (Cloud
-Application Management for Platforms) and TOSCA (Topology and Orchestration
-Specification for Cloud Applications) both define YAML application models
-similar to Brooklyn's. CAMP focuses on the REST API for interacting with such a
+Finally we note some emerging standards in this area. OASIS CAMP 
+(<a href="https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=camp#technical">Cloud Application Management for Platforms</a>) 
+and TOSCA 
+(<a href="https://www.oasis-open.org/committees/tosca/">Topology and Orchestration Specification for Cloud Applications</a>) 
+both define YAML application models similar to Brooklyn's. 
+CAMP focuses on the REST API for interacting with such a
 management layer, and TOSCA focuses on declarative support for more
 sophisticated orchestration. Currently Brooklyn uses a YAML which complies with
 CAMP's syntax and exposes many of the CAMP REST API endpoints. We would like to

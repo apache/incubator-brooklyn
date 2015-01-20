@@ -1,8 +1,0 @@
-[
-{ "title": "Versions",
-  "file":  "{{ site.path.guide }}/meta/versions.html" },
-{ "title": "Verify",
-  "file":  "{{ site.path.guide }}/meta/verify.html" },
-{ "title": "Contact",
-  "file":  "{{ site.path.guide }}/meta/contact.html" }
-]

@@ -1,5 +1,5 @@
 ---
-title: Increase entropy
+title: Increase Entropy
 layout: website-normal
 ---
 If you are installing AMP on a virtual machine, you may find it useful to increase the Linux kernel entropy to speed up the ssh connections to the managed entities. You can install and configure `rng-tools` or just use /dev/urandom`.

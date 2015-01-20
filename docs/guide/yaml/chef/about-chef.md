@@ -1,7 +1,7 @@
 ---
 title: About Chef
 title_in_menu: About Chef
-layout: guide-normal
+layout: website-normal
 ---
 
 ## What you need to know about Chef

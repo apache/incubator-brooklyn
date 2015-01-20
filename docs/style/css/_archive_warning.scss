@@ -1,0 +1,31 @@
+/* ARCHIVE PAGE WARNING
+   ----------------------------------------------------------------------- */
+
+#page_notes {
+    display: none;
+    background-color: #4D9D3A;
+    border: 3px solid orange;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+    padding: 0.3em;
+    padding-left: 0.75em;
+    margin-top: 24px;
+    margin-bottom: -24px;
+
+ div.warning {
+    background-color: #F8CB9C;
+    border: 1px solid #FFAB7C;
+    padding-left: 0.75em;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+ }
+ .warning_banner_image img {
+    width: 64px; padding-top: 8px; padding-right: 12px;
+    float: left;
+ }
+ p { line-height: 100%; color: white; }
+ p.warning_banner_buttons {padding-right: 24px; } 
+ p.warning_banner_buttons a, #page_notes p.warning_banner_buttons a:visited { 
+    color: orange; font-weight: bold; padding-right: 1em; text-decoration: none; }
+ p.warning_banner_buttons a:hover { color: #FFC31E; font-weight: bold; }
+}

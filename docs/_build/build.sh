@@ -32,7 +32,8 @@ function help() {
   echo "* --quick-javadoc : to do a quick javadoc build (for testing)"
   echo "* --serve : serve files from _site after building (for testing)"
   echo "* --install : install files from _site to the appropriate place in "'$'"BROOKLYN_SITE_DIR (or ../../incubator-brooklyn-site-public)"
-  echo "* --skip-test : skip the HTML Proof run on _site"
+  echo "* --skip-htmlproof : skip the HTML Proof run on _site"
+  echo "* --quick-htmlproof : do a fast HTML Proof run on _site (not checking external links)"
   echo ""
 }
 
@@ -43,6 +44,7 @@ function parse_mode() {
     exit 0 ;;
   website-root)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-guide.yml,_build/config-website-root.yml
+    STYLE_SUBDIR=style
     DIRS_TO_MOVE[0]=website
     DIRS_TO_MOVE_TARGET[0]=""
     SKIP_JAVADOC=true
@@ -55,7 +57,8 @@ function parse_mode() {
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=style
-    DIRS_TO_MOVE_TARGET[1]=v/latest/style
+    STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/style
+    DIRS_TO_MOVE_TARGET[1]=$STYLE_SUBDIR
     INSTALL_RSYNC_OPTIONS=""
     INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
@@ -68,7 +71,8 @@ function parse_mode() {
     # BROOKLYN_VERSION_BELOW
     DIRS_TO_MOVE_TARGET[0]=v/0.7.0-M2-incubating
     DIRS_TO_MOVE[1]=style
-    DIRS_TO_MOVE_TARGET[1]=${DIRS_TO_MOVE_TARGET[0]}/style
+    STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/style
+    DIRS_TO_MOVE_TARGET[1]=$STYLE_SUBDIR
     INSTALL_RSYNC_OPTIONS=""
     INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
@@ -78,6 +82,7 @@ function parse_mode() {
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-root.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=""
+    STYLE_SUBDIR=style
     JAVADOC_TARGET=$JAVADOC_SUBPATH/
     SUMMARY="user guide files in the root"
     ;;
@@ -87,6 +92,7 @@ function parse_mode() {
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=website
     DIRS_TO_MOVE_TARGET[1]=""
+    STYLE_SUBDIR=style
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="all files, website in root and guide in /${DIRS_TO_MOVE_TARGET[0]}"
     ;;
@@ -97,12 +103,14 @@ function parse_mode() {
     DIRS_TO_MOVE[1]=website
     DIRS_TO_MOVE_TARGET[1]=brooklyn
     DIRS_TO_MOVE[2]=style
-    DIRS_TO_MOVE_TARGET[2]=brooklyn/style
+    STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[1]}/style
+    DIRS_TO_MOVE_TARGET[2]=$STYLE_SUBDIR
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="all files in /brooklyn"
     ;;
   original)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml
+    STYLE_SUBDIR=style
     SUMMARY="all files in their original place"
     ;;
   "")
@@ -134,8 +142,12 @@ function parse_arguments() {
       INSTALL_AFTERWARDS=true
       shift
       ;;
-    "--skip-test")
+    "--skip-htmlproof")
       SKIP_TEST=true
+      shift
+      ;;
+    "--quick-htmlproof")
+      QUICK_TEST=true
       shift
       ;;
     *)
@@ -153,8 +165,12 @@ function test_site() {
   fi
   echo "Running htmlproof on _site"
   mkdir -p target
-  LOG="target/htmlproof.log"
-  htmlproof _site --href_ignore "https?://127.*" --alt_ignore ".*" 2>&1 | tee $LOG
+  LOG="_build/target/htmlproof.log"
+  HTMLPROOF_OPTS=""
+  if [ "$QUICK_TEST" == "true" ]; then
+    HTMLPROOF_OPTS="$HTMLPROOF_OPTS --disable_external"
+  fi
+  _build/htmlproof-brooklyn.sh $HTMLPROOF_OPTS 2>&1 | tee $LOG
 }
 
 function make_jekyll() {
@@ -192,6 +208,8 @@ function make_javadoc() {
       return 1
     fi
     mv _build/target/$JAVADOC_BUILD_TARGET_SUBPATH/* _site/$JAVADOC_TARGET
+    cat _site/${STYLE_SUBDIR}/css/javadoc.css >> _site/$JAVADOC_TARGET/stylesheet.css || return 1
+    cp _site/${STYLE_SUBDIR}/img/feather.png _site/$JAVADOC_TARGET/ || return 1
   fi
 }
 

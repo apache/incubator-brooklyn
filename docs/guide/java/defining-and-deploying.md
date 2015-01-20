@@ -1,6 +1,6 @@
 ---
 title: Defining and Deploying
-layout: guide-normal
+layout: website-normal
 ---
 
 ## Intro
@@ -33,8 +33,8 @@ provides a template to follow.
 
 ## Deploying the Application
 
-If you have not already done so, follow the section in the 
-[Getting Started Guide]({{site.path.guide}}/use/guide/quickstart/index.html) to create a `brooklyn.properties` 
+If you have not already done so, follow the instructions 
+[here]({{site.path.guide}}/ops/locations/) to create a `brooklyn.properties` 
 file containing credentials for your preferred cloud provider. 
 
 To launch this application, build the project and run the `start.sh` script in the resulting assembly:
@@ -69,17 +69,19 @@ and exposes operations ("effectors") that can be performed on entities.
 ## What Next?
  
 In addition to the sample project created by the archetype, with its README and
-`assembly` build, you can find additional code related to this example included with Brooklyn as the ``simple-web-cluster`` example,
+`assembly` build, you can find additional code related to this example included with Brooklyn as the ``simple-web-cluster`` example.
+{% comment %}
 described [in detail here]({{site.path.guide}}/use/examples/webcluster).
+{% endcomment %}
 
 For your applications, you might want to mix in other data stores, messaging systems, or on-line services including PaaS.
 Brooklyn supports some of these out-of-the-box, including a wide-range of tools which it can use Whirr to provision, such as Hadoop.
 But if you have something you don't see, 
-[let us know]({{site.path.guide}}/meta/contact.html) -- 
+[let us know]({{site.path.website}}/community/) -- 
 we want to work with you to 
-[write a new entity]({{site.path.guide}}/dev/code/entity.html) or
-[policy]({{site.path.guide}}/dev/code/policy.html) 
-and [contribute it]({{site.path.guide}}/dev/how-to-contrib.html).
+[write a new entity]({{site.path.guide}}/java/entity.html) or
+[policy]({{site.path.guide}}/java/policy.html) 
+and [contribute it]({{site.path.website}}/developers/how-to-contribute.html).
 
 
 <!--

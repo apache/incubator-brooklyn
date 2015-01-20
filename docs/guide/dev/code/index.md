@@ -25,11 +25,14 @@ cd usage/dist/target/brooklyn-dist/
 bin/brooklyn launch
 {% endhighlight %}
 
+{% comment %}
+TODO examples
 Plenty of examples are in the **examples** sub-dir,
 described [here]({{site.path.guide}}/use/examples).
+{% endcomment %}
 
 Information on using Brooklyn -- configuring locations (in `brooklyn.properties`) 
-and adding new projects to a catalog -- can be found in the [User's Guide]({{site.path.guide}}/use/guide/quickstart/index.html).
+and adding new projects to a catalog -- can be found in the [User's Guide]({{site.path.guide}}).
 This document is intended to help people become familiar with the codebase.
 
 ## Project Structure
@@ -74,8 +77,8 @@ Brooklyn is split into the following projects and sub-projects:
     * **scripts**: various scripts useful for building, updating, etc. (see comments in the scripts)
     * **qa**: longevity and stress tests
     * **test-support**: provides Brooklyn-specific support for tests, used by nearly all projects in scope ``test``
-* **``docs``**: the markdown source code for this documentation, as described [here]({{site.path.guide}}/dev/tips/update-docs.html)
-* **``examples``**: some canonical examples, as listed [here]({{site.path.guide}}/use/examples)
+* **``docs``**: the markdown source code for this documentation
+* **``examples``**: some canonical examples
 * **``sandbox``**: various projects, entities, and policies which the Brooklyn Project is incubating
 
  

@@ -1,10 +1,9 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: Getting Started
 menu_parent: ../index.md
 children:
 - running.md
-- config.md
 - blueprints.md
 - managing.md
 - policies.md

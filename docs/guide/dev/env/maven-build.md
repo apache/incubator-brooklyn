@@ -1,5 +1,5 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: Maven Build
 toc: /guide/toc.json
 ---
@@ -24,12 +24,12 @@ Key things to note if you're new to Maven:
 * Add ``-DskipTests`` to skip tests. 
 
 * Run ``-PIntegration`` to run integration tests, or ``-PLive`` to run live tests
-  ([tests described here](tests.html))
+  ([tests described here](../code/tests.html))
 
 * Nearly all the gory details are in the root ``pom.xml``, which is referenced by child project poms.
 
 * You can also open and use the code in your favourite IDE,
-  although you may hit a few **[snags](ide.html)**
+  although you may hit a few **[snags](ide/)**
   (that link has some tips for resolving them too)
 
 
@@ -71,10 +71,6 @@ If there is a good reason that a file, pattern, or directory should be permanent
   and then want to re-run the examples you can do:
   
   ``examples/simple-web-cluster% mvnf ../../{software/webapp,usage/all}`` 
-
-* The **developers catalog** ([developers-catalog.xml](developers-catalog.xml)) uses artifacts from your local `~/.m2/repository/...` (after building from source). This avoids unnecessary web requests to Maven Central or Sonatype, and will allow you to work off-line.
-  
-  ``wget {{site.url_root}}{{site.path.guide}}/dev/build/developers-catalog.xml > ~/.brooklyn/catalog.xml`` 
 
 ## Appendix: Sample Output
 

@@ -8,11 +8,15 @@ breadcrumbs:
 children:
 - env/
 - code/
+- { link: "http://github.com/apache/incubator-brooklyn", title: "GitHub" }
 - code/tests.md
 - tips/
 - tips/logging.md
 - tips/debugging-remote-brooklyn.md
 ---
+
+{% comment %}
+TODO
 
 The Developer Guide contains information on working with the Brooklyn codebase.
 
@@ -28,3 +32,6 @@ And for the Brooklyn codebase itself, see:
 * Areas of Special Hairiness
 
 (All links are TODO.)
+{% endcomment %}
+
+{% include list-children.html %}

@@ -1,5 +1,5 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: Writing an Entity
 ---
 

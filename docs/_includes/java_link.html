@@ -1,0 +1,18 @@
+{% comment %}
+
+includes a code-formatted class name with link to its javadoc and optionally its source code
+
+usage:  
+
+{ % include java_link.html class_name="JcloudsLocationConfig" package_path="brooklyn/location/jclouds" project_subpath="location/jclouds" % }
+
+
+{% endcomment %}{% if include.project_subpath %}<code>{{ include.class_name }}</code>
+  (<a href="{{ site.path.guide }}/misc/javadoc/{{ include.package_path }}/{{ include.class_name }}.html">javadoc</a>, 
+   <a href="{{ site.brooklyn.url.git }}/{{ include.project_subpath }}/src/main/java/{{ include.package_path }}/{{ include.class_name }}.java">src</a>){% comment %}
+{% endcomment %}{% else %}<a href="{{ site.path.guide }}/misc/javadoc/{{ include.package_path }}/{{ include.class_name }}.html">
+<code>{{ include.class_name }}</code></a>
+{% endif %}{% comment %}
+
+must NOT have a newline at the end here, as the include is often done inline
+{% endcomment %}

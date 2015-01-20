@@ -1,5 +1,5 @@
 ---
-layout: guide-normal
+layout: website-normal
 title: IDE Setup
 toc: /guide/toc.json
 ---
@@ -75,9 +75,8 @@ find . \( -path "*/src/main" -or -path "*/src/test" \) -exec echo {} \; -exec mk
   but for others (older ones) you may need to handcraft these 
   (either right-click the project in the Package Explorer and choose Configure,
   or edit the ``.project`` manually adding it to the project properties).
-  The tips [for jclouds maven-eclipse](http://www.jclouds.org/documentation/devguides/using-eclipse) might be helpful. 
 
-If the pain starts to be too much, come find us on IRC #brooklyncentral or [elsewhere]({{site.path.guide}}/meta/contact.html) and we can hopefully share our pearls.
+If the pain starts to be too much, come find us on IRC #brooklyncentral or [elsewhere]({{site.path.website}}/community/) and we can hopefully share our pearls.
 (And if you have a tip we haven't mentioned please let us know that too!)
 
 

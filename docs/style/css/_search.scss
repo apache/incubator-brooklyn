@@ -1,0 +1,29 @@
+/* SEARCH
+   ----------------------------------------------------------------------- */
+
+div.search_right {
+  float: right;
+  @include transform('translateY(-12px)');
+  padding-right: 5%; 
+  padding-bottom: 18px;
+  font-size: 75%;
+  .searchform {
+    width: 240px; 
+    margin: 0; 
+    padding: 5px 5px 0 0; 
+    overflow: hidden; 
+    text-align: right;
+  }
+  .searchinput {
+    width: 227px; 
+    background: #ffffff; 
+    border: 1px solid #b1b7c2; 
+    -moz-border-radius: 2px; 
+    border-radius: 2px; 
+    color: #c8ccd5; 
+    padding: 3px;
+  }
+  .searchinput:focus {
+    color: $blackish;
+  }
+}

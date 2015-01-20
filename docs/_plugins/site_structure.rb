@@ -19,19 +19,34 @@
 # * (in addition the entry may *be* the actual page object when the item is a page whose menu is not overridden)
 #
 # To build, set `children` as a list of either strings (the relative or absolute path to the child .md file),
-# or as maps with a `path` or `link` (absolute URL) key, a `title` (optional for `path`, to override the title from the file),
-# and (for `path` only) an optional `menu` block (to override the menu inherited from the `children` records in file),
-# `menu_customization` to set arbitrary data available (e.g. for templates to use when styling),
-# `href_path` to specify that an actual click should send to a different page than was used to produce the menu.
+# or as maps indicating the target, one of:
+# * `path` to a markdownfile
+# * `link` as an URL 
+# * `section` anchored in this file (annotated with `<a name="#section"></a>`)
+# And optionally:
+# * a `title` (required for `link`), to override the title from the file
+# * an optional `menu` block  (for `path` only) to override the menu inherited from the `children` record noted at `path`
+# * `menu_customization` to set arbitrary data available (e.g. for templates to use when styling)
+# * `href_path` (for `path` only) to specify that a click should send to a different page than the path used to produce the menu
 #
 # For instance:
 #
 #children:
 #- child.md
-#- { path: child.md }  # identical to above
-#- { path: child.md, title: "Child with New Name" }  # overriding name
-#- { path: child.md, menu: [ { path: subchild.md, title: "Sub-Child with New Name" } ], href_path: subchild.md }  # custom sub-menu with custom title, and click on main sends to submenu 
+#- { path: child.md }  
+#  # identical to above
+#- { path: subchild.md, title: "Sub Child" }   
+#  # different child, with custom title
+#- { path: subchild.md, href_path: subchild_alt.md }  
+#  # takes title and menu from subchild page, but links to subchild_alt
+#- { path: child.md, menu: [ { path: subchild.md, title: "Sub-Child with New Name" } ] } 
+#  # child, but with custom sub-menu and custom title in there 
 #- { path: child.md, menu: null }  # suppress sub-menu (note `null` not `nil` because this is yaml)
+#  # child again, but suppressing sub-menu (note `null` not `nil` because this is yaml)
+#- { section: Foo }
+#- { section: Bar }
+#  # various sections in *this* doc (to make highlighting work for sections requires
+#  # extra JS responding to scrolls; otherwise the parent page remains highlighted)
 #
 # The menu is automatically generated for all files referenced from the root menu.
 # You can also set `breadcrumbs` as a list of paths in a page to force breadcrumbs, and
@@ -207,17 +222,32 @@ module SiteStructure
         data['page'] = page
         breadcrumb_pages << page
         breadcrumb_paths << page.path
+        
+      elsif (item['section'])
+        puts "setting up #{item} as section" if @@verbose
+        section = item['section']
+        section_cleaned = section.gsub(%r{[^A-Za-z0-9]+}, "-").downcase;
+        section_cleaned.slice!(1) if section_cleaned.start_with?("-")
+        section_cleaned.chomp!("-") # 0..-1) if section_cleaned.end_with?("-")
+        link = (parent ? parent.url : "") + '#' + section_cleaned
+        data = { 'link' => link, 'url' => link, 'section' => section_cleaned, 'section_title' => section }
+        data['title'] = item['title'] if item['title']
+        data['title'] = section unless data['title']
+        # nothing for breadcrumbs
+        data['data'] = data
+        result = data
+        
       elsif (item['link'])
         puts "setting up #{item} as link" if @@verbose
         link = render_liquid(site, parent, item['link'])
-        data = { 'link' => link, 'url' => link }
+        data = { 'link' => link, 'url' => link, 'external' => true }
         data['title'] = item['title'] if item['title']
         breadcrumb_pages << data
         breadcrumb_paths << data['link']
         data['data'] = data
         result = data
       else
-        raise "Link to #{item} in #{parent ? parent.path : nil} must have link or path"
+        raise "Link to #{item} in #{parent ? parent.path : nil} must have path or section or link"
       end
 
       data['menu_customization'] = {}.merge(data['menu_customization'] || {}).merge(item['menu_customization'] || {})

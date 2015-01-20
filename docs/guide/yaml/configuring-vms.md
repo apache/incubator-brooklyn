@@ -1,6 +1,6 @@
 ---
 title: Configuring VMs
-layout: guide-normal
+layout: website-normal
 toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---
@@ -28,4 +28,4 @@ including:
 * `machineCreateAttempts` (for dodgy clouds, and they nearly all fail occasionally!) 
 * and things like `imageId` and `userMetadata` and disk and networking options (e.g. `autoAssignFloatingIp` for private clouds)
 
-For more information, see the javadoc on `JcloudsLocationConfig`.
+For more information, see [Operations: Locations](../ops/locations/).

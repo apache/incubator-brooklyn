@@ -41,6 +41,12 @@ root_menu_page: /website/index.md
 # These files should not be included in the final build (in addition to _* contents)
 exclude: ['/Gemfile*','/README.md']
 
+sass:
+    sass_dir: style/css
+
+# used for the "verify" page
+brooklyn-stable-versions: [ 0.7.0-M2-incubating ]
+
 brooklyn-stable-version: 0.7.0-M2-incubating
 
 brooklyn-version: 0.7.0-M2-incubating # BROOKLYN_VERSION

@@ -1,9 +1,11 @@
 ---
 title: Setting Locations
-layout: guide-normal
+layout: website-normal
 toc: ../guide_toc.json
 categories: [use, guide, defining-applications]
 ---
+
+{% include fields.md %}
 
 Brooklyn supports a very wide range of target locations -- localhost is mainly a convenience for testing.
 With deep integration to [Apache jclouds](http://jclouds.org), most well-known clouds and cloud platforms are supported.
@@ -32,13 +34,12 @@ depending on the blueprint):
 {% readj example_yaml/simple-appserver-with-location-byon.yaml %}
 {% endhighlight %}
 
-You'll also note in this example that we've used JSON-style notation in the second `location` block.
+Note in this example that we've used JSON-style notation in the second `location` block.
 YAML supports this, and sometimes that makes more readable plans.
-(Although in this case a simple `location: localhost` is equivalent and even more succinct, but this is a tutorial.)
+(Although in this case a simple `location: localhost` is equivalent and even more succinct, 
+but this is a tutorial.)
 
-For more information see the Locations section of the [YAML reference](yaml-reference.html) 
-and in the [Operations]({{ site.path.guide }}/ops/locations) section of the User Guide.
-Another good reference is the [template brooklyn.properties]({{ brooklyn_properties_url_path }}),
-which if you install in `~/.brooklyn/brooklyn.properties` and edit with your credentials,  
-allows you to refer to clouds simply as `location: jclouds:aws-ec2:eu-west-1` or
-set up "named locations" you can use as `location: named:my_cloudstack`.
+For more information see the [Operations: Locations]({{ site.path.guide }}/ops/locations) section of the User Guide.
+This includes support for defining locations externally in a [brooklyn.properties]({{ brooklyn_properties_url_path }}) file,
+after which you can deploy to clouds or bring-your-own-nodes
+simply as `location: jclouds:aws-ec2:eu-west-1` or `location: named:my_cloudstack`.
