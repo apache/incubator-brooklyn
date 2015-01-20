@@ -218,6 +218,11 @@ using the instructions in `build.sh` as a guide.)
 A typical update consists of the following commands (or a subset),
 copied to `${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}`:
 
+    # ensure svn repo is up-to-date (very painful otherwise)
+    cd ${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}
+    svn up
+    cd -
+
     # main website, relative to / 
     _build/build.sh website-root --install
     

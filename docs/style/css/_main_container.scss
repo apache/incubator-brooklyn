@@ -10,22 +10,28 @@
 /* HEADER LINKS 
    ----------------------------------------------------------------------- */
 
-/* this causes jumps to anchors to show the anchor below the navbar */
-#content_container { h1, h2, h3, h4, h5, h6 {
-    margin-top: -64px;
-    padding-top: 64px;
-}}
-
 #content_container h1 {
   max-width: 95%;
   font-variant: normal;
   margin-top: -16px;
   padding-bottom: 6px;
+  margin-top: 64px;
   margin-bottom: 24px;
   border-bottom: 1px dotted $gray_aa;
   font-weight: 300;
   font-size: 36px;
   text-transform: uppercase;
+}
+h4, h5, h6 {
+  margin-top: 20px;
+  margin-bottom: 8px;
+}
+h5 {
+  font-size: 18px;
+  font-weight: 300;
+}
+h6 {
+  font-size: 16px;
 }
 
 /* headings get a tooltip showing the permalink URL, a la github jekyll */

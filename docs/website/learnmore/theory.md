@@ -122,9 +122,8 @@ managing complex software to be codified as part of the software development
 process.
 
 
-<a id="benefits"></a>
 
-### Agile and Flexible
+### <a id="benefits"></a> Agile and Flexible
 
 Brooklyn is a product built from the ground up for application agility. This
 includes portability across non-cloud, cloud, and PaaS targets; devops-style

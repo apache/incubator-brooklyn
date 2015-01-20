@@ -31,7 +31,7 @@ and are comfortable doing so.
 
 Firstly, please see our [community resources](../community/index.html), in particular:
 
-- [Mailing lists](../community/mailist-lists.html)
+- [Mailing lists](../community/mailing-lists.html)
 - [IRC channel](../community/irc.html)
 - [JIRA for bug tracking](https://issues.apache.org/jira/browse/BROOKLYN)
 

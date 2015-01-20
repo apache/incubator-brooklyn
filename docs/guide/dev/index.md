@@ -15,6 +15,9 @@ children:
 - tips/debugging-remote-brooklyn.md
 ---
 
+{% comment %}
+TODO
+
 The Developer Guide contains information on working with the Brooklyn codebase.
 
 Of particular note to people getting started, there is:
@@ -29,3 +32,6 @@ And for the Brooklyn codebase itself, see:
 * Areas of Special Hairiness
 
 (All links are TODO.)
+{% endcomment %}
+
+{% include list-children.html %}

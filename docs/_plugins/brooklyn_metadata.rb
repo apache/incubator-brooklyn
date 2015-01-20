@@ -61,6 +61,9 @@ module BrooklynMetadata
           "is_snapshot" => is_snapshot,
           "url" => url_set
       }
+      # config is preferred of data, because you can write just {{ site.brooklyn.xxx }},
+      # but some places reference site.data.brooklyn
+      site.data['brooklyn'] = site.config['brooklyn']
   
     end
   end

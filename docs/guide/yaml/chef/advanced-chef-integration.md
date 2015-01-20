@@ -30,7 +30,7 @@ indicated earlier.  If you'd like to work with us to implement these, please let
 
 A general schema for the supported YAML is below: 
 
-```
+{% highlight yaml %}
 - type: chef:cookbook_name
   cookbook_urls:
     cookbook_name: url://for/cookbook.tgz
@@ -39,7 +39,7 @@ A general schema for the supported YAML is below:
   launch_attributes: # map of arguments to set in the chef node
   service_name: cookbook_service
   pid_file: /var/run/cookbook.pid
-```
+{% endhighlight %}
 
 If you are interested in exploring the Java code for creating blueprints,
 start with the `TypedToyMySqlEntiyChef` class, which essentially does what this tutorial has shown;

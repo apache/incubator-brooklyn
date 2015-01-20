@@ -40,18 +40,43 @@ and that your key is authorized for ssh access:
 $ cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 {% endhighlight %}
 
-You should be able to run `ssh localhost` without any password required.
+Now verify that your setup by running the command: `ssh localhost echo hello world`
 
-**Got a passphrase?** Set `brooklyn.location.localhost.privateKeyPassphrase`
-as described [here](index.html#os-setup)
+If your setup is correct, you should see `hello world` printed back at you.
 
-**MacOS user?** In addition to the above, enable "Remote Login" in "System Preferences > Sharing".
+On the first connection, you may see a message similar to this:
+
+<pre>
+The authenticity of host 'localhost (::1)' can't be established.
+RSA key fingerprint is 7b:e3:8e:c6:5b:2a:05:a1:7c:8a:cf:d1:6a:83:c2:ad.
+Are you sure you want to continue connecting (yes/no)?
+</pre>
+
+Simply answer 'yes' and then repeat the command again.
+
+If this isn't the case, see below. 
+
+
 
 
 ### Potential Problems
 
-* `~/.ssh/` or files in that directory too open: they should be visible only to the user (apart from public keys),
-  both on the source machine and the target machine
+* **MacOS user?** In addition to the above, enable "Remote Login" in "System Preferences > Sharing".
+
+* **Got a passphrase?** Set `brooklyn.location.localhost.privateKeyPassphrase`
+  as described [here](index.html#os-setup).
+  If you're not sure, or you don't know what a passphrase is, you can test this by executing `ssh-keygen -y`.
+  If it does *not* ask for a passphrase, then your key has no passphrase.
+  If your key does have a passphrase, you can remove it by running `ssh-keygen -p`.
+
+* Check that you have an `~/.ssh/id_rsa` file (or `id_dsa`) and a corresponding public key with a `.pub` extension;
+  if not, create one as described above
+  
+* `~/.ssh/` or files in that directory may have permissions they shouldn't: 
+  they should be visible only to the user (apart from public keys),
+  both on the source machine and the target machine.
+  You can verify this with `ls -l ~/.ssh/`:  lines should start with `-rw-------` or `-r--------` (or `-rwx------` for directories). 
+  If it does not, execute `chmod go-rwx ~/.ssh ~/.ssh/*`.
  
 * Sometimes machines are configured with different sets of support SSL/TLS versions and ciphers;
   if command-line `ssh` and `scp` work, but Brooklyn/java does not, check the versions enabled in Java and on both servers.

@@ -60,7 +60,7 @@ brooklyn.location.jclouds.aws-ec2.credential=s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1
 
 And in this case you can reference the location in YAML with `location: jclouds:aws-ec2`.
 
-The Getting Started [template brooklyn.properties](../start/brooklyn.properties) contains more examples 
+The Getting Started [template brooklyn.properties]({{ site.path.guide }}/start/brooklyn.properties) contains more examples 
 of configuring cloud endpoints, including information on credential types used in different clouds.
 
 
@@ -264,5 +264,5 @@ brooklyn.location.named.On-Prem\ Iron\ Example.privateKeyPassphrase=s3cr3tpassph
 
 ### Other Location Topics
 
-* [More Locations](more-locations.md)
-* [SSH Keys](ssh-keys.md)
+* [More Locations](more-locations.html)
+* [SSH Keys](ssh-keys.html)

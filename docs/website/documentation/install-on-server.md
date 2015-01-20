@@ -16,7 +16,9 @@ There is a simple bash script available to help with the installation process.
 #### Script prerequisites
 The script assumes that the server is a recent *RHEL/CentOS 6.x Linux* or *Ubuntu 12.04* installation, but other Linux variants have been tested successfully.
 
-The script will install Java 7 and other required packages if they are not present. You must have root access over [passwordless SSH]({{ site.path.website }}/documentation/passwordless-ssh.html) to install brooklyn, but the service runs as an ordinary user once installed. 
+The script will install Java 7 and other required packages if they are not present. 
+You must have root access over [passwordless SSH]({{ site.path.guide }}/ops/locations/ssh-keys.html) 
+to install brooklyn, but the service runs as an ordinary user once installed. 
 
 To manage the brooklyn service you must also be able to connect to port 8081 remotely.
 
@@ -37,18 +39,19 @@ $ ./brooklyn-install.sh -s -r <your-server-ip>
 
 ### <a id="prerequisites"></a>Set up the prerequisites
 
-Before installing Apache Brooklyn, you will need to configure the host as follows. 
+Before installing Apache Brooklyn, it is recommented to configure the host as follows. 
 
 * install Java JRE or SDK (version 6 or later)
-* install [SSH key]({{ site.path.website }}/documentation//ssh-key.html), if not available.
-* enable [passwordless ssh login]({{ site.path.website }}/documentation/passwordless-ssh.html).
+* install an [SSH key]({{ site.path.guide }}/ops/locations/ssh-keys.html), if not available
+* enable [passwordless ssh login]({{ site.path.guide }}/ops/locations/ssh-keys.html)
 * create a `~/.brooklyn` directory on the host with `$ mkdir ~/.brooklyn`
-* Check your iptables service, and if enabled, make sure that it accepts all incoming connections to 8443+ ports.
-* [optional] Increase [linux kernel entropy]({{ site.path.website }}/documentation//increase-entropy.html) for faster ssh connections.
+* check your `iptables` or other firewall service, making sure that incoming connections on port 8443 is not blocked
+* check that the [linux kernel entropy](increase-entropy.html) is sufficient
+
 
 ## <a id="download"></a>Download Brooklyn
 
-Download Brooklyn and obtain a binary build as described on [the download page]({{site.path.website}}/download.html).
+Download Brooklyn and obtain a binary build as described on [the download page]({{site.path.website}}/download/).
 
 {% if brooklyn_version contains 'SNAPSHOT' %}
 Expand the `tar.gz` archive (note: as this is a -SNAPSHOT version, your filename will be slightly different):

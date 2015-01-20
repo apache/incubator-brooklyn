@@ -120,8 +120,12 @@ var highlight_section = function() {
      if (item && item.length) {
        if (highlight_section_last_top == -1 || !highlight_section_completed) {
          // just opening page - take item matching hash, or otherwise the first item visible
-         if (item.selector === window.location.hash || (item.offset().top > highlight_section_new_top - 15 && !found_top)) {
+         if (item.selector === window.location.hash || (item.offset().top > highlight_section_new_top - 20 && !found_top)) {
            found_top = true;
+           if (item.selector === window.location.hash && item.offset().top < highlight_section_new_top + 60) {
+             // because of our top header, we need to scroll 64px down from any link
+             $('html, body').animate({scrollTop: item.offset().top - 64}, 0);
+           }
            return item;
          }
        } else if (scroll_advancing) {

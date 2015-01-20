@@ -161,7 +161,15 @@ function test_site() {
   echo "Running htmlproof on _site"
   mkdir -p target
   LOG="target/htmlproof.log"
-  htmlproof _site --href_ignore "https?://127.*" --alt_ignore ".*" 2>&1 | tee $LOG
+  # TODO for now exclude all javadoc; in time it would be nice to police that also
+  # (but not sure this is properly working yet)
+  htmlproof _site \
+    --href_ignore "https?://127.*" \
+    --href_ignore "https?://github.com/apache/incubator-brooklyn/edit/.*" \
+    --href_ignore "/" \
+    --alt_ignore ".*" \
+    --file_ignore ".*/javadoc/.*" \
+    2>&1 | tee $LOG
 }
 
 function make_jekyll() {

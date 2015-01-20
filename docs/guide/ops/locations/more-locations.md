@@ -50,6 +50,6 @@ and then to `acct2`.
 
 ### The Server Pool
 
-The {% include java_link.html package_path="brooklyn/entity/pool" project_subpath="software/base" %}
+The {% include java_link.html class_name="ServerPool" package_path="brooklyn/entity/pool" project_subpath="software/base" %}
 entity type allows defining an entity which becomes available as a location.
 

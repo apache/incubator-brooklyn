@@ -23,7 +23,7 @@ title_in_menu: Blueprint Tour
             optionally adding a version and other metadata.
             The format is YAML -- a human-friendly extension to JSON --
             following the  
-            <a href="{{ site.path.guide }}/learnmore/theory.html">CAMP</a> standard.
+            <a href="{{ site.path.website }}/learnmore/theory.html#standards">CAMP</a> standard.
           </p><p>
             Treat it like source code: use comments, version control it, test it with CI.
         </p></div>
