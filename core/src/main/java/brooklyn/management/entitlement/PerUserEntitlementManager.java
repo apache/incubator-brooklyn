@@ -78,7 +78,7 @@ public class PerUserEntitlementManager implements EntitlementManager {
     }
 
     public void addUser(String user, EntitlementManager managerForThisUser) {
-        perUserManagers.put(user, managerForThisUser);
+        perUserManagers.put(Preconditions.checkNotNull(user, "user"), Preconditions.checkNotNull(managerForThisUser, "managerForThisUser"));
     }
 
     @Override

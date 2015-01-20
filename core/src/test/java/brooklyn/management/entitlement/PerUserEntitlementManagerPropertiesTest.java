@@ -38,8 +38,8 @@ public class PerUserEntitlementManagerPropertiesTest extends AcmeEntitlementMana
     }
     
     @Test
-    public void testAnonUserHasMinimalPermissions() {
-        checkUserHasMinimalPermissions("anon");
+    public void testOtherAuthorizedUserHasMinimalPermissions() {
+        checkUserHasMinimalPermissions("other");
     }
 
     @Test

@@ -32,8 +32,8 @@ public class AcmeEntitlementManagerTest extends AcmeEntitlementManagerTestFixtur
     }
 
     @Test
-    public void testAnonUserHasAllPermissions() {
-        checkUserHasAllPermissions("anon");
+    public void testOtherAuthorizedUserHasAllPermissions() {
+        checkUserHasAllPermissions("other");
     }
 
     @Test
