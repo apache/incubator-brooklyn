@@ -24,7 +24,7 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.management.ManagementContext;
 
 /**
- * See {@link RebindTestFixture#rebind(RebindOptions)} and {@link RebindTestUtils#rebind(RebindOptions}}.
+ * See {@link RebindTestFixture#rebind(RebindOptions)} and {@link RebindTestUtils#rebind(RebindOptions)}.
  */
 public class RebindOptions {
     public boolean checkSerializable;

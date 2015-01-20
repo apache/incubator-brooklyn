@@ -24,9 +24,12 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.entity.software.MachineLifecycleEffectorTasks;
+import brooklyn.entity.software.MachineLifecycleEffectorTasksTest;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
@@ -37,15 +40,18 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+
 import org.jclouds.util.Throwables2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,14 +80,19 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
     private FixedListMachineProvisioningLocation<SshMachineLocation> loc;
     
     @BeforeMethod(alwaysRun=true)
-    @SuppressWarnings("unchecked")
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class));
+        loc = getLocation();
+    }
+
+    @SuppressWarnings("unchecked")
+    private FixedListMachineProvisioningLocation<SshMachineLocation> getLocation() {
+        FixedListMachineProvisioningLocation<SshMachineLocation> loc = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class));
         machine = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", "localhost"));
         loc.addMachine(machine);
+        return loc;
     }
 
     @Test
@@ -256,9 +267,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         d.events.clear();
 
         TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.STOP,
-                ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE, false
-
-                )));
+                ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE, false)));
         t1.asTask().get(10, TimeUnit.SECONDS);
 
         assertEquals(d.events, ImmutableList.of("stop"));
@@ -266,6 +275,68 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         assertFalse(loc.getAvailable().contains(machine));
     }
     
+    @Test(groups = "Integration")
+    public void testBasicSoftwareProcessStopAllModes() throws Exception {
+        for (boolean isEntityStopped : new boolean[] {true, false}) {
+            for (StopMode stopProcessMode : StopMode.values()) {
+                for (StopMode stopMachineMode : StopMode.values()) {
+                    try {
+                        testBasicSoftwareProcessStopModes(stopProcessMode, stopMachineMode, isEntityStopped);
+                    } catch (Exception e) {
+                        String msg = "stopProcessMode: " + stopProcessMode + ", stopMachineMode: " + stopMachineMode + ", isEntityStopped: " + isEntityStopped;
+                        throw new PropagatedRuntimeException(msg, e);
+                    }
+                }
+            }
+        }
+    }
+    
+    @Test
+    public void testBasicSoftwareProcessStopSomeModes() throws Exception {
+        for (boolean isEntityStopped : new boolean[] {true, false}) {
+            StopMode stopProcessMode = StopMode.IF_NOT_STOPPED;
+            StopMode stopMachineMode = StopMode.IF_NOT_STOPPED;
+            try {
+                testBasicSoftwareProcessStopModes(stopProcessMode, stopMachineMode, isEntityStopped);
+            } catch (Exception e) {
+                String msg = "stopProcessMode: " + stopProcessMode + ", stopMachineMode: " + stopMachineMode + ", isEntityStopped: " + isEntityStopped;
+                throw new PropagatedRuntimeException(msg, e);
+            }
+        }
+    }
+    
+    private void testBasicSoftwareProcessStopModes(StopMode stopProcessMode, StopMode stopMachineMode, boolean isEntityStopped) throws Exception {
+        FixedListMachineProvisioningLocation<SshMachineLocation> l = getLocation();
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
+        entity.start(ImmutableList.of(l));
+        SimulatedDriver d = (SimulatedDriver) entity.getDriver();
+        Location machine = Iterables.getOnlyElement(entity.getLocations());
+        d.events.clear();
+
+        if (isEntityStopped) {
+            ((EntityInternal)entity).setAttribute(ServiceStateLogic.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
+        }
+
+        TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.STOP,
+                ConfigBag.newInstance()
+                    .configure(StopSoftwareParameters.STOP_PROCESS_MODE, stopProcessMode)
+                    .configure(StopSoftwareParameters.STOP_MACHINE_MODE, stopMachineMode)));
+        t1.asTask().get(10, TimeUnit.SECONDS);
+
+        if (MachineLifecycleEffectorTasksTest.canStop(stopProcessMode, isEntityStopped)) {
+            assertEquals(d.events, ImmutableList.of("stop"));
+        } else {
+            assertTrue(d.events.isEmpty());
+        }
+        if (MachineLifecycleEffectorTasksTest.canStop(stopMachineMode, isEntityStopped)) {
+            assertTrue(entity.getLocations().isEmpty());
+            assertTrue(l.getAvailable().contains(machine));
+        } else {
+            assertEquals(ImmutableList.copyOf(entity.getLocations()), ImmutableList.of(machine));
+            assertFalse(l.getAvailable().contains(machine));
+        }
+    }
+
     @Test
     public void testShutdownIsIdempotent() throws Exception {
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
@@ -348,6 +419,11 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
     public static class MyServiceImpl extends SoftwareProcessImpl implements MyService {
         public MyServiceImpl() {}
         public MyServiceImpl(Entity parent) { super(parent); }
+
+        @Override
+        protected void initEnrichers() {
+            // Don't add enrichers messing with the SERVICE_UP state - we are setting it manually
+        }
 
         @Override
         public Class<?> getDriverInterface() { return SimulatedDriver.class; }

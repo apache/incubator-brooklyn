@@ -45,7 +45,7 @@ public interface RiakNode extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
-            "2.0.1");
+            "2.0.2");
 
     // vm.args and app.config are used for pre-version 2.0.0. Later versions use the (simplified) riak.conf
     // see https://github.com/joedevivo/ricon/blob/master/cuttlefish.md
@@ -69,17 +69,20 @@ public interface RiakNode extends SoftwareProcess {
     @SetFromFlag("downloadUrlRhelCentos")
     AttributeSensorAndConfigKey DOWNLOAD_URL_RHEL_CENTOS = new TemplatedStringAttributeSensorAndConfigKey("download.url.rhelcentos",
             "URL pattern for downloading the linux RPM installer (will substitute things like ${version} automatically)",
-            "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/rhel/${entity.osMajorVersion}/riak-${entity.fullVersion}-1.el6.x86_64.rpm");
+            "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/rhel/" +
+                    "${entity.osMajorVersion}/riak-${entity.fullVersion}-1.el${entity.osMajorVersion}.x86_64.rpm");
 
     @SetFromFlag("downloadUrlUbuntu")
     AttributeSensorAndConfigKey DOWNLOAD_URL_UBUNTU = new TemplatedStringAttributeSensorAndConfigKey("download.url.ubuntu",
             "URL pattern for downloading the linux Ubuntu installer (will substitute things like ${version} automatically)",
-            "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/ubuntu/$OS_RELEASE/riak_${entity.fullVersion}-1_amd64.deb");
+            "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/ubuntu/" +
+                    "$OS_RELEASE/riak_${entity.fullVersion}-1_amd64.deb");
 
     @SetFromFlag("downloadUrlDebian")
     AttributeSensorAndConfigKey DOWNLOAD_URL_DEBIAN = new TemplatedStringAttributeSensorAndConfigKey("download.url.debian",
             "URL pattern for downloading the linux Debian installer (will substitute things like ${version} automatically)",
-            "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/debian/$OS_RELEASE/riak_${entity.fullVersion}-1_amd64.deb");
+            "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/debian/" +
+                    "$OS_RELEASE/riak_${entity.fullVersion}-1_amd64.deb");
 
     @SetFromFlag("downloadUrlMac")
     AttributeSensorAndConfigKey DOWNLOAD_URL_MAC = new TemplatedStringAttributeSensorAndConfigKey("download.url.mac",

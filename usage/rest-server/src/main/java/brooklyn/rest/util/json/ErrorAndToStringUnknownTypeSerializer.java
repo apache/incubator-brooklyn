@@ -122,5 +122,4 @@ public class ErrorAndToStringUnknownTypeSerializer extends UnknownSerializer {
             return false;
         }
     }
-    
 }

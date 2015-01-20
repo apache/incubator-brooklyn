@@ -23,8 +23,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.util.internal.ssh.ShellTool;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;
@@ -42,27 +44,29 @@ public class BrooklynFeatureEnablement {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynFeatureEnablement.class);
 
-    public static final String FEATURE_POLICY_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.policyPersistence";
+    public static final String FEATURE_PROPERTY_PREFIX = "brooklyn.experimental.feature";
     
-    public static final String FEATURE_ENRICHER_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.enricherPersistence";
+    public static final String FEATURE_POLICY_PERSISTENCE_PROPERTY = FEATURE_PROPERTY_PREFIX+".policyPersistence";
+    
+    public static final String FEATURE_ENRICHER_PERSISTENCE_PROPERTY = FEATURE_PROPERTY_PREFIX+".enricherPersistence";
 
-    public static final String FEATURE_FEED_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.feedPersistence";
+    public static final String FEATURE_FEED_PERSISTENCE_PROPERTY = FEATURE_PROPERTY_PREFIX+".feedPersistence";
     
     /** whether feeds are automatically registered when set on entities, so that they are persisted */
-    public static final String FEATURE_FEED_REGISTRATION_PROPERTY = "brooklyn.experimental.feature.feedRegistration";
+    public static final String FEATURE_FEED_REGISTRATION_PROPERTY = FEATURE_PROPERTY_PREFIX+".feedRegistration";
 
-    public static final String FEATURE_CATALOG_PERSISTENCE_PROPERTY = "brooklyn.experimental.feature.catalogPersistence";
+    public static final String FEATURE_CATALOG_PERSISTENCE_PROPERTY = FEATURE_PROPERTY_PREFIX+".catalogPersistence";
     
     /** whether the default standby mode is {@link HighAvailabilityMode#HOT_STANDBY} or falling back to the traditional
      * {@link HighAvailabilityMode#STANDBY} */
-    public static final String FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY = "brooklyn.experimental.feature.defaultStandbyIsHot";
+    public static final String FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY = FEATURE_PROPERTY_PREFIX+".defaultStandbyIsHot";
     
     /** whether to attempt to use {@link BrooklynStorage} (datagrid) as a backing store for data;
      * note this is <b>not</b> compatible with {@link #FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY} 
      * which uses a blob/file store and a larger-granularity rebind process than was intended with the datagrid */
     /* not sure if we still even need this? now the rebind/read-only feature reloads on demand from the persistence store;
      * the data-grid backing  */
-    public static final String FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE = "brooklyn.experimental.feature.useBrooklynLiveObjectsDatagridStorage";
+    public static final String FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE = FEATURE_PROPERTY_PREFIX+".useBrooklynLiveObjectsDatagridStorage";
 
     /**
      * Renaming threads can really helps with debugging etc; however it's a massive performance hit (2x)
@@ -84,6 +88,14 @@ public class BrooklynFeatureEnablement {
      */
     public static final String FEATURE_INFER_CATALOG_ITEM_ON_REBIND = "brooklyn.backwardCompatibility.feature.inferCatalogItemOnRebind";
     
+    /**
+     * When executing over ssh, whether to support the "async exec" approach, or only the classic approach.
+     * 
+     * If this feature is disabled, then even if the {@link ShellTool#PROP_EXEC_ASYNC} is configured it
+     * will still use the classic ssh approach.
+     */
+    public static final String FEATURE_SSH_ASYNC_EXEC = FEATURE_PROPERTY_PREFIX+".ssh.asyncExec";
+
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
     private static final Object MUTEX = new Object();
@@ -102,10 +114,39 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, false);
         setDefault(FEATURE_RENAME_THREADS, false);
         setDefault(FEATURE_INFER_CATALOG_ITEM_ON_REBIND, true);
+        setDefault(FEATURE_SSH_ASYNC_EXEC, false);
     }
     
     static {
         setDefaults();
+    }
+    
+    /**
+     * Initialises the feature-enablement from brooklyn properties. For each
+     * property, prefer a system-property if present; otherwise use the value 
+     * from brooklyn properties.
+     */
+    public static void init(BrooklynProperties props) {
+        boolean changed = false;
+        for (Map.Entry<String, Object> entry : props.asMapWithStringKeys().entrySet()) {
+            String property = entry.getKey();
+            if (property.startsWith(FEATURE_PROPERTY_PREFIX)) {
+                if (!FEATURE_ENABLEMENTS.containsKey(property)) {
+                    Object rawVal = System.getProperty(property);
+                    if (rawVal == null) {
+                        rawVal = entry.getValue();
+                    }
+                    boolean val = Boolean.parseBoolean(""+rawVal);
+                    FEATURE_ENABLEMENTS.put(property, val);
+                    
+                    changed = true;
+                    LOG.debug("Init feature enablement of "+property+" set to "+val);
+                }
+            }
+        }
+        if (!changed) {
+            LOG.debug("Init feature enablement did nothing, as no settings in brooklyn properties");
+        }
     }
     
     public static boolean isEnabled(String property) {

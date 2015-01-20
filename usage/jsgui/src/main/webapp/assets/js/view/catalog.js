@@ -185,7 +185,6 @@ define([
                     .done(function (data, status, xhr) {
                         // Can extract location of new item with:
                         //model.url = Brooklyn.util.pathOf(xhr.getResponseHeader("Location"));
-                        submitButton.button("reset");
                         self.close();  // one of the calls below should draw a different view
                         parent.loadAccordionItem("entities", data.id);
                         parent.loadAccordionItem("applications", data.id);
@@ -231,15 +230,18 @@ define([
                 if (!configKeys.displayName) {
                     configKeys.displayName = location.get("name");
                 }
+                var submitButton = this.$(".catalog-submit-button");
+                // "loading" is an indicator to Bootstrap, not a string to display
+                submitButton.button("loading");
                 location.set("config", configKeys);
                 location.save()
                     .done(function (newModel) {
                         newModel = new Location.Model(newModel);
-                        submitButton.button("reset");
                         self.close();  // the call below should draw a different view
                         parent.loadAccordionItem("locations", newModel.id);
                     })
                     .fail(function (response) {
+                        submitButton.button("reset");
                         body.showError(Brooklyn.util.extractError(response));
                     });
             }
@@ -254,7 +256,12 @@ define([
             if (!this.name) {
                 throw new Error("Catalog collection must know its name");
             }
+            //this.model is a constructor so it shouldn't be _.bind'ed to this
+            //It actually works when a browser provided .bind is used, but the
+            //fallback implementation doesn't support it.
+            var model = this.model;
             _.bindAll(this);
+            this.model = model;
         },
         url: function() {
             return "/v1/catalog/" + this.name;
@@ -384,7 +391,7 @@ define([
                 return items[0];
             }
 
-            var catalogTree = orderedIds.map(function(symbolicName) {
+            var catalogTree = _.map(orderedIds, function(symbolicName) {
                 var group = groups[symbolicName];
                 var root = getLatestStableVersion(group);
                 var children = _.reject(group, function(model) {return root.id == model.id;});

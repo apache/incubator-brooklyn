@@ -18,7 +18,7 @@ can be done in `~/.brooklyn/brooklyn.properties`.
 
 A recommended starting point is the file at:
 
-    http://brooklyncentral.github.io/use/guide/quickstart/brooklyn.properties
+    https://brooklyn.incubator.apache.org/v/latest/use/guide/quickstart/brooklyn.properties
 
 As a quick-start, you can specify:
 
@@ -34,7 +34,7 @@ Many other clouds are supported also, as well as pre-existing machines
 ("bring your own nodes"), custom endpoints for private clouds, and specifying 
 custom keys and passphrases. For more information see:
 
-    http://brooklyncentral.github.io/use/guide/defining-applications/common-usage#locations
+    https://brooklyn.incubator.apache.org/v/latest/use/guide/defining-applications/common-usage#locations
 
 
 ### Run
@@ -48,7 +48,7 @@ Usage:
 The optional port argument specifies the port where the Brooklyn console 
 will be running, such as localhost:8081. (The console is only bound to 
 localhost, unless you set up users and security, as described at
-http://brooklyncentral.github.io/use/guide/management/ .)
+https://brooklyn.incubator.apache.org/v/latest/use/guide/management/ .)
 
 In the console, you can access the catalog and deploy applications to
 configured locations.

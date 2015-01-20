@@ -79,6 +79,8 @@ public interface BrooklynCatalog {
     /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
     @Deprecated
     <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass);
+    /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
+    CatalogItem<?,?> getCatalogItemForType(String typeName);
 
     /**
      * Adds an item (represented in yaml) to the catalog.

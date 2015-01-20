@@ -61,18 +61,18 @@ public interface ServerApi {
     @ApiOperation(value = "Terminate this Brooklyn server instance")
     @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
     public void shutdown(
-        @ApiParam(name = "stopAppsFirst", value = "Whether to stop running applications before shutting down")
-        @FormParam("stopAppsFirst") @DefaultValue("false") boolean stopAppsFirst,
-        @ApiParam(name = "forceShutdownOnError", value ="Force shutdown if apps fail to stop or timeout")
-        @FormParam("forceShutdownOnError") @DefaultValue("false") boolean forceShutdownOnError,
-        @ApiParam(name = "shutdownTimeout", value = "A maximum delay to wait for apps to gracefully stop before giving up or forcibly exiting, 0 to wait infinitely")
-        @FormParam("shutdownTimeout") @DefaultValue("20s") String shutdownTimeout,
-        @ApiParam(name = "requestTimeout", value = "Maximum time to block the request for the shutdown to finish, 0 to wait infinitely")
-        @FormParam("requestTimeout") @DefaultValue("20s") String requestTimeout,
-        @ApiParam(name = "delayForHttpReturn", value = "The delay before exiting the process, to permit the REST response to be returned")
-        @FormParam("delayForHttpReturn") @DefaultValue("5s") String delayForHttpReturn,
-        @ApiParam(name = "delayMillis", value = "Deprecated, analogous to delayForHttpReturn")
-        @FormParam("delayMillis") Long delayMillis);
+            @ApiParam(name = "stopAppsFirst", value = "Whether to stop running applications before shutting down")
+            @FormParam("stopAppsFirst") @DefaultValue("false") boolean stopAppsFirst,
+            @ApiParam(name = "forceShutdownOnError", value ="Force shutdown if apps fail to stop or timeout")
+            @FormParam("forceShutdownOnError") @DefaultValue("false") boolean forceShutdownOnError,
+            @ApiParam(name = "shutdownTimeout", value = "A maximum delay to wait for apps to gracefully stop before giving up or forcibly exiting, 0 to wait infinitely")
+            @FormParam("shutdownTimeout") @DefaultValue("20s") String shutdownTimeout,
+            @ApiParam(name = "requestTimeout", value = "Maximum time to block the request for the shutdown to finish, 0 to wait infinitely")
+            @FormParam("requestTimeout") @DefaultValue("20s") String requestTimeout,
+            @ApiParam(name = "delayForHttpReturn", value = "The delay before exiting the process, to permit the REST response to be returned")
+            @FormParam("delayForHttpReturn") @DefaultValue("5s") String delayForHttpReturn,
+            @ApiParam(name = "delayMillis", value = "Deprecated, analogous to delayForHttpReturn")
+            @FormParam("delayMillis") Long delayMillis);
 
     @GET
     @Path("/version")
@@ -83,15 +83,15 @@ public interface ServerApi {
     @GET
     @Path("/status")
     @ApiOperation(value = "Returns the status of this Brooklyn instance [DEPRECATED; see ../ha/state]",
-        responseClass = "String",
-        multiValueResponse = false)
+            responseClass = "String",
+            multiValueResponse = false)
     public String getStatus();
 
     @Deprecated /** @deprecated since 0.7.0 use /ha/states */
     @GET
     @Path("/highAvailability")
     @ApiOperation(value = "Returns the status of all Brooklyn instances in the management plane [DEPRECATED; see ../ha/states]",
-        responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
+            responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
     public HighAvailabilitySummary getHighAvailability();
     
     @GET
@@ -114,7 +114,7 @@ public interface ServerApi {
     @GET
     @Path("/ha/states")
     @ApiOperation(value = "Returns the HA states and detail for all nodes in this management plane",
-        responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
+            responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
     public HighAvailabilitySummary getHighAvailabilityPlaneStates();
 
     @GET
@@ -135,7 +135,7 @@ public interface ServerApi {
     @ApiOperation(value = "Retrieves the persistence store data, as an archive")
     public Response exportPersistenceData(
         @ApiParam(name = "origin", value = "Whether to take from LOCAL or REMOTE state; default to AUTO detect, "
-            + "using LOCAL as master and REMOTE for other notes")
+                + "using LOCAL as master and REMOTE for other notes")
         @QueryParam("origin") @DefaultValue("AUTO") String origin);
 
     // TODO would be nice to allow setting, as a means to recover / control more easily than messing with persistent stores
@@ -156,7 +156,8 @@ public interface ServerApi {
 
     @GET
     @Path("/user")
-    @ApiOperation(value = "Return user information for this Brooklyn instance", responseClass = "String", multiValueResponse = false)
+    @ApiOperation(value = "Return user information for this Brooklyn instance", 
+            responseClass = "String", multiValueResponse = false)
     public String getUser(); 
 
 }

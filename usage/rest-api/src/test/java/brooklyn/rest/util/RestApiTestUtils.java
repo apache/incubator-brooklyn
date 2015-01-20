@@ -55,5 +55,4 @@ public class RestApiTestUtils {
             throw Exceptions.propagate(e);
         }
     }
-
 }

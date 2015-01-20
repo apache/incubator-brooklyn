@@ -193,12 +193,16 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     private String getDefaultVersion(String symbolicName) {
         Iterable<CatalogItem<Object, Object>> versions = getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo(symbolicName)));
-        ImmutableSortedSet<CatalogItem<?, ?>> orderedVersions = ImmutableSortedSet.orderedBy(CatalogItemComparator.INSTANCE).addAll(versions).build();
+        Collection<CatalogItem<Object, Object>> orderedVersions = sortVersionsDesc(versions);
         if (!orderedVersions.isEmpty()) {
             return orderedVersions.iterator().next().getVersion();
         } else {
             return null;
         }
+    }
+
+    private <T,SpecT> Collection<CatalogItem<T,SpecT>> sortVersionsDesc(Iterable<CatalogItem<T,SpecT>> versions) {
+        return ImmutableSortedSet.orderedBy(CatalogItemComparator.<T,SpecT>getInstance()).addAll(versions).build();
     }
 
     @Override
@@ -402,21 +406,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
     @Deprecated
     public <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass) {
-        // Automated tests and manual tests suggests that typeName is either symbolic-name or symbolic-name:version so
-        // detect which has been passed in.
-        final Iterable<CatalogItem<Object,Object>> resultL;
-        if (typeName.indexOf(':') == -1) {
-            resultL = getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
-        }
-        else {
-            resultL = getCatalogItems(CatalogPredicates.typeName(typeName));
+        final CatalogItem<?,?> resultI = getCatalogItemForType(typeName);
+
+        if (resultI == null) {
+            throw new NoSuchElementException("Unable to find catalog item for type "+typeName);
         }
 
-        if (Iterables.isEmpty(resultL)) throw new NoSuchElementException("Unable to find catalog item for type "+typeName);
-        CatalogItem<?,?> resultI = resultL.iterator().next();
-        if (log.isDebugEnabled() && Iterables.size(resultL)>1) {
-            log.debug("Found "+Iterables.size(resultL)+" matches in catalog for type "+typeName+"; returning the first, "+resultI);
-        }
         return (Class<? extends T>) loadClass(resultI);
     }
 
@@ -738,4 +733,43 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         reset(dto);
     }
+
+    @Deprecated
+    public CatalogItem<?,?> getCatalogItemForType(String typeName) {
+        final CatalogItem<?,?> resultI;
+        final BrooklynCatalog catalog = mgmt.getCatalog();
+        if (CatalogUtils.looksLikeVersionedId(typeName)) {
+            //All catalog identifiers of the form xxxx:yyyy are composed of symbolicName+version.
+            //No javaType is allowed as part of the identifier.
+            resultI = CatalogUtils.getCatalogItemOptionalVersion(mgmt, typeName);
+        } else {
+            //Usually for catalog items with javaType (that is items from catalog.xml)
+            //the symbolicName and javaType match because symbolicName (was ID)
+            //is not specified explicitly. But could be the case that there is an item
+            //whose symbolicName is explicitly set to be different from the javaType.
+            //Note that in the XML the attribute is called registeredTypeName.
+            Iterable<CatalogItem<Object,Object>> resultL = catalog.getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
+            if (!Iterables.isEmpty(resultL)) {
+                //Push newer versions in front of the list (not that there should
+                //be more than one considering the items are coming from catalog.xml).
+                resultI = sortVersionsDesc(resultL).iterator().next();
+                if (log.isDebugEnabled() && Iterables.size(resultL)>1) {
+                    log.debug("Found "+Iterables.size(resultL)+" matches in catalog for type "+typeName+"; returning the result with preferred version, "+resultI);
+                }
+            } else {
+                //As a last resort try searching for items with the same symbolicName supposedly
+                //different from the javaType.
+                resultI = catalog.getCatalogItem(typeName, BrooklynCatalog.DEFAULT_VERSION);
+                if (resultI != null) {
+                    if (resultI.getJavaType() == null) {
+                        throw new NoSuchElementException("Unable to find catalog item for type "+typeName +
+                                ". There is an existing catalog item with ID " + resultI.getId() +
+                                " but it doesn't define a class type.");
+                    }
+                }
+            }
+        }
+        return resultI;
+    }
+
 }

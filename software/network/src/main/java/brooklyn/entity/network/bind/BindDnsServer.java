@@ -18,32 +18,27 @@
  */
 package brooklyn.entity.network.bind;
 
-import java.lang.Long;
 import java.util.Map;
+
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Multimap;
+import com.google.common.reflect.TypeToken;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Cidr;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.Multimap;
-import com.google.common.reflect.TypeToken;
 
 /**
  * This sets up a BIND DNS server.
@@ -54,7 +49,8 @@ public interface BindDnsServer extends SoftwareProcess {
 
     @SetFromFlag("filter")
     ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = ConfigKeys.newConfigKey(new TypeToken<Predicate<? super Entity>>() {},
-            "bind.entity.filter", "Filter for entities which will use the BIND DNS service for name resolution",
+            "bind.entity.filter", "Filter for entities which will use the BIND DNS service for name resolution." +
+                    "Default is all instances of SoftwareProcess in the application.",
             Predicates.instanceOf(SoftwareProcess.class));
 
     @SetFromFlag("domainName")
@@ -90,6 +86,11 @@ public interface BindDnsServer extends SoftwareProcess {
     ConfigKey<String> NAMED_CONF_TEMPLATE = ConfigKeys.newStringConfigKey(
             "bind.template.named-conf", "The BIND named configuration file (as FreeMarker template)",
             "classpath://brooklyn/entity/network/bind/named.conf");
+
+    @SetFromFlag("updateRootZonesFile")
+    ConfigKey<Boolean> UPDATE_ROOT_ZONES_FILE = ConfigKeys.newBooleanConfigKey(
+            "bind.updateRootZones", "Instructs the entity to fetch the latest root zones file from ftp.rs.internic.net.",
+            Boolean.FALSE);
 
 
     /* Reverse lookup attributes. */
@@ -146,5 +147,10 @@ public interface BindDnsServer extends SoftwareProcess {
     @Deprecated
     @Effector(description="Gets the IP to hostname mappings stored in this DNS server's conf file")
     public Map<String, String> getReverseMappings();
+
+    /**
+     * @return the predicate used to filter entities for the Bind server to manage.
+     */
+    Predicate<? super Entity> getEntityFilter();
 
 }

@@ -18,23 +18,20 @@
 
 # layout for most website pages, inheriting base for the menu bar, and providing a main column of content and a menu column
 # (not used for the landing page, and not used for the guide)
+#
+# menu_customizations can be used, including force_inactive to prevent highlighting
 layout: website-base
 ---
-<div class="container">
+<div class="container" id="main_container">
     <div class="row">
-        <div class="col-md-9">
+        <div class="col-md-9" id="content_container">
+            <div id="page_notes"></div>
             <h1>{{ page.title }}</h1>
             {{ content }}
         </div>
+
         <div class="col-md-3">
-            {% if page.menu2 %}
-            <div class="list-group">
-                <h4><a href="{{page.menu2parent.url}}" class="list-group-item{% if page.menu2parent.path == page.path %} active{% endif %}">{{ page.menu2parent.title }}</a></h4>
-                {% for child in page.menu2 %}
-                <a href="{{child.reference.url}}" class="list-group-item{% if child.reference.path == page.path %} active{% endif %}">{{ child.reference.title }}</a>
-                {% endfor %}
-            </div>
-            {% endif %}
+            {% include sidemenu.html %}
         </div>
     </div>
 </div>

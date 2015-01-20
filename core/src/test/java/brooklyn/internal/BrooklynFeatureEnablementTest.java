@@ -25,6 +25,8 @@ import static org.testng.Assert.assertTrue;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynProperties;
+
 public class BrooklynFeatureEnablementTest {
 
     @BeforeMethod(alwaysRun=true)
@@ -84,6 +86,31 @@ public class BrooklynFeatureEnablementTest {
         try {
             BrooklynFeatureEnablement.setDefault(featureProperty, true);
             assertFalse(BrooklynFeatureEnablement.isEnabled(featureProperty));
+        } finally {
+            System.clearProperty(featureProperty);
+        }
+    }
+    
+    @Test
+    public void testCanSetDefaultWhichIsIgnoredIfBrooklynProps() throws Exception {
+        String featureProperty = "brooklyn.experimental.feature.testCanSetDefaultWhichIsIgnoredIfBrooklynProps";
+        BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
+        props.put(featureProperty, false);
+        BrooklynFeatureEnablement.init(props);
+        BrooklynFeatureEnablement.setDefault(featureProperty, true);
+        assertFalse(BrooklynFeatureEnablement.isEnabled(featureProperty));
+    }
+    
+    @Test
+    public void testPrefersSysPropOverBrooklynProps() throws Exception {
+        String featureProperty = "brooklyn.experimental.feature.testPrefersSysPropOverBrooklynProps";
+        BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
+        props.put(featureProperty, false);
+        System.setProperty(featureProperty, "true");
+        try {
+            BrooklynFeatureEnablement.init(props);
+            BrooklynFeatureEnablement.setDefault(featureProperty, true);
+            assertTrue(BrooklynFeatureEnablement.isEnabled(featureProperty));
         } finally {
             System.clearProperty(featureProperty);
         }

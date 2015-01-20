@@ -36,8 +36,18 @@ dependency_urls:
   bootstrap.js: https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js
   jquery.js: https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
 
+root_menu_page: /website/index.md
+
 # These files should not be included in the final build (in addition to _* contents)
 exclude: ['/Gemfile*','/README.md']
+
+sass:
+    sass_dir: style/css
+
+# used for the "verify" page
+brooklyn-stable-versions: [ 0.7.0-M2-incubating ]
+
+brooklyn-stable-version: 0.7.0-M2-incubating
 
 brooklyn-version: 0.7.0-SNAPSHOT # BROOKLYN_VERSION
 brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)

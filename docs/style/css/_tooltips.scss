@@ -1,0 +1,14 @@
+/* TOOLTIPS
+   ----------------------------------------------------------------------- */
+   
+.tooltip .tooltip-inner {
+    color: $text_color;
+    background-color: $white_dd;
+    font-weight: 500;
+}
+.tooltip.top .tooltip-arrow { 
+    border-top-color: $white_dd;
+}
+.tooltip.bottom .tooltip-arrow { 
+    border-bottom-color: $white_dd;
+}

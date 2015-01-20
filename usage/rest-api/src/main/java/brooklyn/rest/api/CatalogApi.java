@@ -47,6 +47,7 @@ import com.wordnik.swagger.core.ApiParam;
 
 @Path("/v1/catalog")
 @Apidoc("Catalog")
+@Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public interface CatalogApi {
 
@@ -58,13 +59,13 @@ public interface CatalogApi {
         @ApiParam(name = "yaml", value = "multipart/form-data file input field")
         @FormDataParam("yaml") InputStream uploadedInputStream,
         @FormDataParam("yaml") FormDataContentDisposition fileDetail);
-    
+
+    @Consumes
     @POST
     @ApiOperation(value = "Add a catalog item (e.g. new entity or policy type) by uploading YAML descriptor", responseClass = "String")
     public Response create(
             @ApiParam(name = "yaml", value = "YAML descriptor of catalog item", required = true)
-            @Valid String yaml
-    ) ;
+            @Valid String yaml);
 
     @POST
     @Consumes(MediaType.APPLICATION_XML)
@@ -72,8 +73,7 @@ public interface CatalogApi {
     @ApiOperation(value = "Resets the catalog to the given (XML) format")
     public Response resetXml(
             @ApiParam(name = "xml", value = "XML descriptor of the entire catalog to install", required = true)
-            @Valid String xml
-    ) ;
+            @Valid String xml);
 
     /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
     @Deprecated
@@ -85,7 +85,7 @@ public interface CatalogApi {
     })
     public void deleteEntity(
         @ApiParam(name = "entityId", value = "The ID of the entity or template to delete", required = true)
-        @PathParam("entityId") String entityId) throws Exception ;
+        @PathParam("entityId") String entityId) throws Exception;
 
     @DELETE
     @Path("/entities/{entityId}/{version}")
@@ -98,7 +98,7 @@ public interface CatalogApi {
         @PathParam("entityId") String entityId,
 
         @ApiParam(name = "version", value = "The version identifier of the entity or template to delete", required = true)
-        @PathParam("version") String version) throws Exception ;
+        @PathParam("version") String version) throws Exception;
 
     @GET
     @Path("/entities")
@@ -107,8 +107,7 @@ public interface CatalogApi {
         @ApiParam(name = "regex", value = "Regular expression to search for")
         @QueryParam("regex") @DefaultValue("") String regex,
         @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-        @QueryParam("fragment") @DefaultValue("") String fragment
-    ) ;
+        @QueryParam("fragment") @DefaultValue("") String fragment);
 
     @GET
     @Path("/applications")
@@ -117,8 +116,7 @@ public interface CatalogApi {
             @ApiParam(name = "regex", value = "Regular expression to search for")
             @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-            @QueryParam("fragment") @DefaultValue("") String fragment
-    ) ;
+            @QueryParam("fragment") @DefaultValue("") String fragment);
 
     /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
     @Deprecated
@@ -130,7 +128,7 @@ public interface CatalogApi {
     })
     public CatalogEntitySummary getEntity(
         @ApiParam(name = "entityId", value = "The ID of the entity or template to retrieve", required = true)
-        @PathParam("entityId") String entityId) throws Exception ;
+        @PathParam("entityId") String entityId) throws Exception;
 
     @GET
     @Path("/entities/{entityId}/{version}")
@@ -143,7 +141,7 @@ public interface CatalogApi {
         @PathParam("entityId") String entityId,
         
         @ApiParam(name = "version", value = "The version identifier of the entity or template to retrieve", required = true)
-        @PathParam("version") String version) throws Exception ;
+        @PathParam("version") String version) throws Exception;
 
     /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
     @Deprecated
@@ -155,7 +153,7 @@ public interface CatalogApi {
     })
     public CatalogEntitySummary getApplication(
         @ApiParam(name = "applicationId", value = "The ID of the application to retrieve", required = true)
-        @PathParam("applicationId") String entityId) throws Exception ;
+        @PathParam("applicationId") String entityId) throws Exception;
 
     @GET
     @Path("/applications/{applicationId}/{version}")
@@ -168,7 +166,7 @@ public interface CatalogApi {
         @PathParam("applicationId") String entityId,
         
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
-        @PathParam("version") String version) throws Exception ;
+        @PathParam("version") String version) throws Exception;
 
     @GET
     @Path("/policies")
@@ -177,8 +175,7 @@ public interface CatalogApi {
             @ApiParam(name = "regex", value = "Regular expression to search for")
             @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-            @QueryParam("fragment") @DefaultValue("") String fragment
-    ) ;
+            @QueryParam("fragment") @DefaultValue("") String fragment);
     
     /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
     @Deprecated
@@ -190,7 +187,7 @@ public interface CatalogApi {
     })
     public CatalogItemSummary getPolicy(
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
-        @PathParam("policyId") String policyId) throws Exception ;
+        @PathParam("policyId") String policyId) throws Exception;
     
     @GET
     @Path("/policies/{policyId}/{version}")
@@ -202,7 +199,7 @@ public interface CatalogApi {
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
         @PathParam("policyId") String policyId,
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
-        @PathParam("version") String version) throws Exception ;
+        @PathParam("version") String version) throws Exception;
     
     /** @deprecated since 0.7.0 use {@link #getIcon(String, String)} */
     @Deprecated
@@ -215,8 +212,7 @@ public interface CatalogApi {
     @Produces("application/image")
     public Response getIcon(
         @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy)")
-        @PathParam("itemId") @DefaultValue("") String itemId
-    ) ;
+        @PathParam("itemId") @DefaultValue("") String itemId);
 
     @GET
     @Path("/icon/{itemId}/{version}")
@@ -230,8 +226,7 @@ public interface CatalogApi {
         @PathParam("itemId") String itemId,
 
         @ApiParam(name = "version", value = "version identifier of catalog item (application, entity, policy)", required=true)
-        @PathParam("version") String version
-    ) ;
+        @PathParam("version") String version);
 
 }
 

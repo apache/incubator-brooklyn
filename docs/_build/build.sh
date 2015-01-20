@@ -1,7 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # this generates the site in _site
 # override --url /myMountPoint  (as an argument to this script) if you don't like the default set in /_config.yml
+
+export JAVADOC_SUBPATH=misc/javadoc
+export JAVADOC_BUILD_TARGET_SUBPATH=javadoc
 
 if [ ! -x _build/build.sh ] ; then
   echo ERROR: script must be run in root of docs dir
@@ -29,6 +32,8 @@ function help() {
   echo "* --quick-javadoc : to do a quick javadoc build (for testing)"
   echo "* --serve : serve files from _site after building (for testing)"
   echo "* --install : install files from _site to the appropriate place in "'$'"BROOKLYN_SITE_DIR (or ../../incubator-brooklyn-site-public)"
+  echo "* --skip-htmlproof : skip the HTML Proof run on _site"
+  echo "* --quick-htmlproof : do a fast HTML Proof run on _site (not checking external links)"
   echo ""
 }
 
@@ -39,23 +44,27 @@ function parse_mode() {
     exit 0 ;;
   website-root)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-guide.yml,_build/config-website-root.yml
+    STYLE_SUBDIR=style
     DIRS_TO_MOVE[0]=website
     DIRS_TO_MOVE_TARGET[0]=""
     SKIP_JAVADOC=true
     INSTALL_RSYNC_OPTIONS="--exclude v"
     INSTALL_RSYNC_SUBDIR=""
     SUMMARY="website files in the root"
+    HTMLPROOF_OPTS=--ignore-v-refs
     ;;
   guide-latest)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-latest.yml,_build/config-style-latest.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=style
-    DIRS_TO_MOVE_TARGET[1]=v/latest/style
+    STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/style
+    DIRS_TO_MOVE_TARGET[1]=$STYLE_SUBDIR
     INSTALL_RSYNC_OPTIONS=""
     INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
-    JAVADOC_TARGET=_site/${DIRS_TO_MOVE_TARGET[0]}/use/api/
+    JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="user guide files in /${DIRS_TO_MOVE_TARGET[0]}"
+    HTMLPROOF_OPTS=--v-only
     ;;
   guide-version)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-version.yml
@@ -64,17 +73,20 @@ function parse_mode() {
     # BROOKLYN_VERSION_BELOW
     DIRS_TO_MOVE_TARGET[0]=v/0.7.0-SNAPSHOT
     DIRS_TO_MOVE[1]=style
-    DIRS_TO_MOVE_TARGET[1]=${DIRS_TO_MOVE_TARGET[0]}/style
+    STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/style
+    DIRS_TO_MOVE_TARGET[1]=$STYLE_SUBDIR
     INSTALL_RSYNC_OPTIONS=""
     INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
-    JAVADOC_TARGET=_site/${DIRS_TO_MOVE_TARGET[0]}/use/api/
+    JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="user guide files in /${DIRS_TO_MOVE_TARGET[0]}"
+    HTMLPROOF_OPTS=--v-only
     ;;
   test-guide-root)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-root.yml
     DIRS_TO_MOVE[0]=guide
     DIRS_TO_MOVE_TARGET[0]=""
-    JAVADOC_TARGET=_site/use/api/
+    STYLE_SUBDIR=style
+    JAVADOC_TARGET=$JAVADOC_SUBPATH/
     SUMMARY="user guide files in the root"
     ;;
   test-both)
@@ -83,8 +95,10 @@ function parse_mode() {
     DIRS_TO_MOVE_TARGET[0]=v/latest
     DIRS_TO_MOVE[1]=website
     DIRS_TO_MOVE_TARGET[1]=""
-    JAVADOC_TARGET=_site/${DIRS_TO_MOVE_TARGET[0]}/use/api/
+    STYLE_SUBDIR=style
+    JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="all files, website in root and guide in /${DIRS_TO_MOVE_TARGET[0]}"
+    HTMLPROOF_OPTS=--ignore-v-refs
     ;;
   test-both-sub)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-root-index.yml,_build/config-subpath-brooklyn.yml
@@ -93,13 +107,17 @@ function parse_mode() {
     DIRS_TO_MOVE[1]=website
     DIRS_TO_MOVE_TARGET[1]=brooklyn
     DIRS_TO_MOVE[2]=style
-    DIRS_TO_MOVE_TARGET[2]=brooklyn/style
-    JAVADOC_TARGET=_site/${DIRS_TO_MOVE_TARGET[0]}/use/api/
+    STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[1]}/style
+    DIRS_TO_MOVE_TARGET[2]=$STYLE_SUBDIR
+    JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="all files in /brooklyn"
+    HTMLPROOF_OPTS=--ignore-v-refs
     ;;
   original)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml
+    STYLE_SUBDIR=style
     SUMMARY="all files in their original place"
+    HTMLPROOF_OPTS=--ignore-v-refs
     ;;
   "")
     echo "ERROR: mode is required; try 'help'"
@@ -130,12 +148,34 @@ function parse_arguments() {
       INSTALL_AFTERWARDS=true
       shift
       ;;
+    "--skip-htmlproof")
+      SKIP_HTMLPROOF=true
+      shift
+      ;;
+    "--quick-htmlproof")
+      QUICK_HTMLPROOF=true
+      shift
+      ;;
     *)
       echo "ERROR: invalid argument '"$1"'"
       exit 1
       ;;
     esac
   done
+}
+
+# Runs htmlproof against _site
+function test_site() {
+  if [ "$SKIP_HTMLPROOF" == "true" ]; then
+    return
+  fi
+  echo "Running htmlproof on _site"
+  mkdir -p target
+  HTMLPROOF_LOG="_build/target/htmlproof.log"
+  if [ "$QUICK_HTMLPROOF" == "true" ]; then
+    HTMLPROOF_OPTS="$HTMLPROOF_OPTS --disable_external"
+  fi
+  _build/htmlproof-brooklyn.sh $HTMLPROOF_OPTS 2>&1 | tee $HTMLPROOF_LOG
 }
 
 function make_jekyll() {
@@ -160,7 +200,7 @@ function make_javadoc() {
     return
   fi
   pushd _build > /dev/null
-  rm -rf target/apidocs
+  rm -rf target/$JAVADOC_BUILD_TARGET_SUBPATH
   if [ "$QUICK_JAVADOC" == "true" ]; then
     ./quick-make-few-javadoc.sh || { echo ERROR: failed javadoc build ; exit 1 ; }
   else
@@ -168,11 +208,13 @@ function make_javadoc() {
   fi
   popd > /dev/null
   if [ ! -z "$JAVADOC_TARGET" ]; then
-    if [ ! -d "$JAVADOC_TARGET" ]; then
-      echo "ERROR: javadoc target directory $JAVADOC_TARGET gone; is there a jekyll already watching?"
+    if [ ! -d "_site/$JAVADOC_TARGET" ]; then
+      echo "ERROR: javadoc target directory _site/$JAVADOC_TARGET gone; is there a jekyll already watching?"
       return 1
     fi
-    mv _build/target/apidocs/* $JAVADOC_TARGET
+    mv _build/target/$JAVADOC_BUILD_TARGET_SUBPATH/* _site/$JAVADOC_TARGET
+    cat _site/${STYLE_SUBDIR}/css/javadoc.css >> _site/$JAVADOC_TARGET/stylesheet.css || return 1
+    cp _site/${STYLE_SUBDIR}/img/feather.png _site/$JAVADOC_TARGET/ || return 1
   fi
 }
 
@@ -189,12 +231,6 @@ function make_install() {
     return 1
   fi
   if [ ! -z ${QUICK_JAVADOC+SET} ]; then echo "ERROR: --install not permitted when doing quick javadoc" ; return 1 ; fi
-  if [ ! -z ${JAVADOC_TARGET+SET} ]; then
-    if [ ! -z ${SKIP_JAVADOC+SET} ]; then
-      echo "ERROR: --install not permitted when skipping javadoc for this target which wants to install javadoc"
-      return 1
-    fi
-  fi
 
   SITE_DIR=${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}
   ls $SITE_DIR/style/img/apache-brooklyn-logo-244px-wide.png > /dev/null || { echo "ERROR: cannot find incubator-brooklyn-site-public; set BROOKLYN_SITE_DIR" ; return 1 ; }
@@ -202,10 +238,34 @@ function make_install() {
   if [ -z ${INSTALL_RSYNC_SUBDIR+SET} ]; then echo "ERROR: --install not supported for this build" ; return 1 ; fi
   
   RSYNC_COMMAND_BASE="rsync -rvi --delete --exclude .svn"
+  
+  if [ ! -z ${JAVADOC_TARGET+SET} ]; then
+    if [ ! -z ${SKIP_JAVADOC+SET} ]; then
+      echo 'grep "Generated by javadoc" '$SITE_DIR/$INSTALL_RSYNC_SUBDIR/$JAVADOC_SUBPATH/index.html
+      export JAVADOC_LAST_DATE=`grep "Generated by javadoc" $SITE_DIR/$INSTALL_RSYNC_SUBDIR/$JAVADOC_SUBPATH/index.html`
+      if [ -z "$JAVADOC_LAST_DATE" ]; then
+        echo "ERROR: installing with skipped javadoc, but no previous javadoc exists"
+        return 1
+      fi
+      echo "Installing with skipped javadoc, reusing old: $JAVADOC_LAST_DATE"
+      RSYNC_COMMAND_BASE="$RSYNC_COMMAND_BASE --exclude $JAVADOC_SUBPATH"
+    fi
+  fi
+  
   RSYNC_COMMAND="$RSYNC_COMMAND_BASE $INSTALL_RSYNC_OPTIONS ./_site/$INSTALL_RSYNC_SUBDIR $SITE_DIR/$INSTALL_RSYNC_SUBDIR"
   echo INSTALLING to local site svn repo with: $RSYNC_COMMAND
-  $RSYNC_COMMAND || return 1
-  
+  $RSYNC_COMMAND | tee _build/target/rsync.log || return 1
+
+  echo RSYNC changed files:
+  grep -v f\\.\\.T\\.\\.\\.\\.\\.\\.\\. _build/target/rsync.log || echo "(none)"
+  echo
+
+  if [ ! -z "$HTMLPROOF_LOG" ]; then
+    echo HTMLPROOF log:
+    cat $HTMLPROOF_LOG
+    echo
+  fi
+    
   SUMMARY="$SUMMARY, installed to $SITE_DIR"
 }
 
@@ -219,6 +279,8 @@ parse_arguments $@
 make_jekyll || { echo ERROR: failed jekyll docs build in `pwd` ; exit 1 ; }
 
 make_javadoc || { echo ERROR: failed javadoc build ; exit 1 ; }
+
+test_site
 
 # TODO build catalog
 

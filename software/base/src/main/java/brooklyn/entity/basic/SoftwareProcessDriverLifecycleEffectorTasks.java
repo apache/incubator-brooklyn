@@ -162,6 +162,13 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
     }
     
     @Override
+    protected void preStopConfirmCustom() {
+        super.preStopConfirmCustom();
+        
+        entity().preStopConfirmCustom();
+    }
+    
+    @Override
     protected void preStopCustom() {
         super.preStopCustom();
         

@@ -218,19 +218,25 @@ public class BrooklynRestResourceUtils {
 
         // Load the class; first try to use the appropriate catalog item; but then allow anything that is on the classpath
         final Class<? extends Entity> clazz;
+        final String catalogItemId;
         if (Strings.isEmpty(type)) {
             clazz = BasicApplication.class;
+            catalogItemId = null;
         } else {
             Class<? extends Entity> tempclazz;
-            try {
-                tempclazz = getCatalog().loadClassByType(type, Entity.class);
-            } catch (NoSuchElementException e) {
+            BrooklynCatalog catalog = getCatalog();
+            CatalogItem<?, ?> item = catalog.getCatalogItemForType(type);
+            if (item != null) {
+                catalogItemId = item.getId();
+                tempclazz = (Class<? extends Entity>) catalog.loadClass(item);
+            } else {
+                catalogItemId = null;
                 try {
-                    tempclazz = (Class<? extends Entity>) getCatalog().getRootClassLoader().loadClass(type);
+                    tempclazz = (Class<? extends Entity>) catalog.getRootClassLoader().loadClass(type);
                     log.info("Catalog does not contain item for type {}; loaded class directly instead", type);
                 } catch (ClassNotFoundException e2) {
                     log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
-                    throw e;
+                    throw new NoSuchElementException("Unable to find catalog item for type "+type);
                 }
             }
             clazz = tempclazz;
@@ -251,7 +257,7 @@ public class BrooklynRestResourceUtils {
                     instance = appBuilder.manage(mgmt);
 
                 } else if (Application.class.isAssignableFrom(clazz)) {
-                    brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO);
+                    brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO, catalogItemId);
                     configureRenderingMetadata(spec, coreSpec);
                     instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
                     for (EntitySpec entitySpec : entities) {
@@ -266,13 +272,12 @@ public class BrooklynRestResourceUtils {
                     if (entities.size() > 0)
                         log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
 
-                    brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO);
+                    brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO, catalogItemId);
                     configureRenderingMetadata(spec, coreSpec);
 
                     instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
 
-                    final Class<? extends Entity> eclazz = getCatalog().loadClassByType(spec.getType(), Entity.class);
-                    Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(eclazz, name, configO));
+                    Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(clazz, name, configO, catalogItemId));
                     instance.addChild(soleChild);
                     instance.addEnricher(Enrichers.builder()
                             .propagatingAllBut(Attributes.SERVICE_UP, Attributes.SERVICE_NOT_UP_INDICATORS, 
@@ -328,16 +333,21 @@ public class BrooklynRestResourceUtils {
         String name = spec.getName();
         Map<String, String> config = (spec.getConfig() == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(spec.getConfig());
 
+        BrooklynCatalog catalog = getCatalog();
+        CatalogItem<?, ?> item = catalog.getCatalogItemForType(type);
         Class<? extends Entity> tempclazz;
-        try {
-            tempclazz = getCatalog().loadClassByType(type, Entity.class);
-        } catch (NoSuchElementException e) {
+        final String catalogItemId;
+        if (item != null) {
+            tempclazz = (Class<? extends Entity>) catalog.loadClass(item);
+            catalogItemId = item.getId();
+        } else {
+            catalogItemId = null;
             try {
-                tempclazz = (Class<? extends Entity>) getCatalog().getRootClassLoader().loadClass(type);
+                tempclazz = (Class<? extends Entity>) catalog.getRootClassLoader().loadClass(type);
                 log.info("Catalog does not contain item for type {}; loaded class directly instead", type);
             } catch (ClassNotFoundException e2) {
                 log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
-                throw e;
+                throw new NoSuchElementException("Unable to find catalog item for type "+type);
             }
         }
         final Class<? extends Entity> clazz = tempclazz;
@@ -347,6 +357,7 @@ public class BrooklynRestResourceUtils {
         } else {
             result = brooklyn.entity.proxying.EntitySpec.create(Entity.class).impl(clazz).additionalInterfaces(Reflections.getAllInterfaces(clazz));
         }
+        result.catalogItemId(catalogItemId);
         if (!Strings.isEmpty(name)) result.displayName(name);
         result.configure( convertFlagsToKeys(result.getType(), config) );
         configureRenderingMetadata(spec, result);
@@ -375,7 +386,7 @@ public class BrooklynRestResourceUtils {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO) {
+    private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO, String catalogItemId) {
         Map<String, String> config = (configO == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
         brooklyn.entity.proxying.EntitySpec<? extends Entity> result;
@@ -389,6 +400,7 @@ public class BrooklynRestResourceUtils {
             result = brooklyn.entity.proxying.EntitySpec.create(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
         }
         
+        result.catalogItemId(catalogItemId);
         if (!Strings.isEmpty(name)) result.displayName(name);
         result.configure( convertFlagsToKeys(result.getImplementation(), config) );
         return result;
@@ -542,5 +554,4 @@ public class BrooklynRestResourceUtils {
     public void reloadBrooklynProperties() {
         mgmt.reloadBrooklynProperties();
     }
-
 }

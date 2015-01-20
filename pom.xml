@@ -113,7 +113,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Testing -->
-        <cobertura.version>1.9.4.1</cobertura.version>
+        <cobertura.plugin.version>2.5.2</cobertura.plugin.version>
         <surefire.version>2.18</surefire.version>
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
@@ -200,6 +200,7 @@
         <jsr311-api.version>1.1.1</jsr311-api.version>
         <maxmind.version>0.8.1</maxmind.version>
         <jna.version>4.0.0</jna.version>
+        <coverage.target>${working.dir}</coverage.target>
 
         <!-- Release -->
         <!-- no passphrase by default, so we can do automated deploy builds;
@@ -824,9 +825,9 @@
                     <version>1.7</version>
                 </plugin>
                 <plugin>
-                    <groupId>net.sourceforge.cobertura</groupId>
+                    <groupId>org.codehaus.mojo</groupId>
                     <artifactId>cobertura</artifactId>
-                    <version>${cobertura.version}</version>
+                    <version>${cobertura.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>com.google.code.maven-replacer-plugin</groupId>
@@ -1657,9 +1658,9 @@
             <id>Coverage</id>
             <dependencies>
                 <dependency>
-                    <groupId>net.sourceforge.cobertura</groupId>
-                    <artifactId>cobertura</artifactId>
-                    <version>${cobertura.version}</version>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>cobertura-maven-plugin</artifactId>
+                    <version>${cobertura.plugin.version}</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
@@ -1723,7 +1724,11 @@
                                             <then>
                                                 <echo message="GENERATING COBERTURA COVERAGE REPORT" />
                                                 <cobertura-report format="xml" destdir="target/site/cobertura" datafile="target/cobertura/cobertura.ser">
-                                                    <fileset erroronmissingdir="false" dir="src/java" />
+                                                    <fileset erroronmissingdir="false" dir="src/main/java" />
+                                                    <fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
+                                                </cobertura-report>
+                                                <cobertura-report format="html" destdir="target/site/cobertura" datafile="target/cobertura/cobertura.ser">
+                                                    <fileset erroronmissingdir="false" dir="src/main/java" />
                                                     <fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
                                                 </cobertura-report>
                                             </then>
@@ -1760,9 +1765,9 @@
                                 <version>${testng.version}</version>
                             </dependency>
                             <dependency>
-                                <groupId>net.sourceforge.cobertura</groupId>
-                                <artifactId>cobertura</artifactId>
-                                <version>${cobertura.version}</version>
+                                <groupId>org.codehaus.mojo</groupId>
+                                <artifactId>cobertura-maven-plugin</artifactId>
+                                <version>${cobertura.plugin.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>

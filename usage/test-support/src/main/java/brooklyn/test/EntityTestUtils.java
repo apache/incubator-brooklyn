@@ -19,10 +19,12 @@
 package brooklyn.test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -41,6 +43,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class EntityTestUtils {
 
@@ -160,5 +163,18 @@ public class EntityTestUtils {
         assertAttributeEventually(entity, attribute, 
             Predicates.not(Predicates.equalTo(entity.getAttribute(attribute))));
     }
-    
+
+    @Beta
+    public static <T> void assertAttributeNever(final Entity entity, final AttributeSensor<T> attribute, T... disallowed) {
+        final Set<T> reject = Sets.newHashSet(disallowed);
+        Asserts.succeedsContinually(new Runnable() {
+            @Override
+            public void run() {
+                T val = entity.getAttribute(attribute);
+                assertFalse(reject.contains(val),
+                        "Attribute " + attribute + " on " + entity + " has disallowed value " + val);
+            }
+        });
+    }
+
 }

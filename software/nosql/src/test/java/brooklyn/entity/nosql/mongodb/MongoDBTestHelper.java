@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
+import com.google.common.net.HostAndPort;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -34,6 +35,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
+
+import brooklyn.location.access.BrooklynAccessUtils;
 
 public class MongoDBTestHelper {
 
@@ -111,7 +114,8 @@ public class MongoDBTestHelper {
 
     private static MongoClient clientForServer(AbstractMongoDBServer server) {
         try {
-            return new MongoClient(server.getAttribute(MongoDBServer.HOSTNAME), server.getAttribute(MongoDBServer.PORT));
+            HostAndPort hap = BrooklynAccessUtils.getBrooklynAccessibleAddress(server, server.getAttribute(MongoDBServer.PORT));
+            return new MongoClient(hap.getHostText(), hap.getPort());
         } catch (UnknownHostException e) {
             // Fail whatever test called this method.
             throw Throwables.propagate(e);

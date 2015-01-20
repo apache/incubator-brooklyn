@@ -37,6 +37,7 @@ import brooklyn.entity.Entity;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementContext;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.MemoryUsageTracker;
 import brooklyn.util.stream.Streams;
@@ -274,9 +275,11 @@ public class BrooklynTaskTags extends TaskTags {
     public static class EffectorCallTag {
         protected final String entityId;
         protected final String effectorName;
-        protected EffectorCallTag(String entityId, String effectorName) {
+        protected transient ConfigBag parameters;
+        protected EffectorCallTag(String entityId, String effectorName, ConfigBag parameters) {
             this.entityId = checkNotNull(entityId, "entityId");
             this.effectorName = checkNotNull(effectorName, "effectorName");
+            this.parameters = parameters;
         }
         public String toString() {
             return EFFECTOR_TAG+"@"+entityId+":"+effectorName;
@@ -300,10 +303,16 @@ public class BrooklynTaskTags extends TaskTags {
         public String getEffectorName() {
             return effectorName;
         }
+        public ConfigBag getParameters() {
+            return parameters;
+        }
+        public void setParameters(ConfigBag parameters) {
+            this.parameters = parameters;
+        }
     }
     
-    public static EffectorCallTag tagForEffectorCall(Entity entity, String effectorName) {
-        return new EffectorCallTag(entity.getId(), effectorName);
+    public static EffectorCallTag tagForEffectorCall(Entity entity, String effectorName, ConfigBag parameters) {
+        return new EffectorCallTag(entity.getId(), effectorName, parameters);
     }
     
     /**
@@ -341,7 +350,7 @@ public class BrooklynTaskTags extends TaskTags {
     public static EffectorCallTag getEffectorCallTag(Task<?> task, boolean recurse) {
         Task<?> t = task;
         while (t!=null) {
-            for (Object tag: task.getTags()) {
+            for (Object tag: t.getTags()) {
                 if (tag instanceof EffectorCallTag)
                     return (EffectorCallTag)tag;
             }
@@ -357,7 +366,23 @@ public class BrooklynTaskTags extends TaskTags {
         EffectorCallTag result = getEffectorCallTag(task, true);
         return (result == null) ? null : result.getEffectorName();
     }
+
+    public static ConfigBag getEffectorParameters(Task<?> task) {
+        EffectorCallTag result = getEffectorCallTag(task, true);
+        return (result == null) ? null : result.getParameters();
+    }
+
+    public static ConfigBag getCurrentEffectorParameters() {
+        return getEffectorParameters(Tasks.current());
+    }
     
+    public static void setEffectorParameters(Task<?> task, ConfigBag parameters) {
+        EffectorCallTag result = getEffectorCallTag(task, true);
+        if (result == null) {
+            throw new IllegalStateException("No EffectorCallTag found, is the task an effector? Task: " + task);
+        }
+        result.setParameters(parameters);
+    }
     // ---------------- entitlement tags ----------------
     
     public static class EntitlementTag {

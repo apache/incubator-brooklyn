@@ -21,10 +21,12 @@ package io.brooklyn.camp.brooklyn.catalog;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
-
 import brooklyn.test.TestResourceUnavailableException;
+import brooklyn.util.ResourceUtils;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Collection;
 
 import org.testng.Assert;
@@ -297,37 +299,27 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String firstItemId = "my.catalog.app.id.register_bundle";
-        String secondItemId = "my.catalog.app.id.reference_bundle";
         String nonExistentId = "non_existent_id";
         String nonExistentVersion = "9.9.9";
-        addCatalogItem(
-            "brooklyn.catalog:",
-            "  id: " + firstItemId,
-            "  version: " + TEST_VERSION,
-            "  libraries:",
-            "  - name: " + nonExistentId,
-            "    version: " + nonExistentVersion,
-            "    url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
-            "",
-            "services:",
-            "- type: " + SIMPLE_ENTITY_TYPE);
-        deleteCatalogEntity(firstItemId);
-
         try {
             addCatalogItem(
                 "brooklyn.catalog:",
-                "  id: " + secondItemId,
+                "  id: " + firstItemId,
                 "  version: " + TEST_VERSION,
                 "  libraries:",
                 "  - name: " + nonExistentId,
                 "    version: " + nonExistentVersion,
+                "    url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
                 "",
                 "services:",
                 "- type: " + SIMPLE_ENTITY_TYPE);
             fail();
         } catch (IllegalStateException e) {
-            assertEquals(e.getMessage(), "Bundle CatalogBundleDto{symbolicName=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} " +
-                    "not previously registered, but URL is empty.");
+            assertEquals(e.getMessage(), "Bundle from " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + " already " +
+                    "installed as " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_NAME + ":" +
+                    OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_VERSION + " but user explicitly requested " +
+                    "CatalogBundleDto{symbolicName=" + nonExistentId + ", version=" + nonExistentVersion + ", url=" +
+                    OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + "}");
         }
     }
     
@@ -361,6 +353,20 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         CatalogItem<?, ?> item = catalog.getCatalogItem(id, TEST_VERSION);
         Object spec = catalog.createSpec(item);
         Assert.assertNotNull(spec);
+    }
+    
+    @Test
+    public void testLoadResourceFromBundle() throws Exception {
+        String id = "resource.test";
+        addCatalogOSGiEntity(id, SIMPLE_ENTITY_TYPE);
+        String yaml =
+                "services: \n" +
+                "  - serviceType: "+ver(id);
+        Entity app = createAndStartApplication(yaml);
+        Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
+        InputStream icon = new ResourceUtils(simpleEntity).getResourceFromUrl("classpath:/brooklyn/osgi/tests/icon.gif");
+        assertTrue(icon != null);
+        icon.close();
     }
 
     private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {

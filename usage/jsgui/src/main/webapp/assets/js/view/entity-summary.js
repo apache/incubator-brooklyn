@@ -37,6 +37,7 @@ define([
             this.$el.html(this.template({
                 entity:this.model,
                 application:this.options.application,
+                isApp: this.isApp()
             }));
             if (this.model.get('catalogItemId'))
                 this.$("div.catalogItemId").show();
@@ -58,8 +59,13 @@ define([
             // however if we only use external objects we must either subscribe to their errors also
             // or do our own polling against the server, so we know when to disable ourselves
 //            ViewUtils.fetchRepeatedlyWithDelay(this, this.model, { period: 10*1000 })
-            
+
             this.loadSpec();
+        },
+        isApp: function() {
+            var id = this.model.get('id');
+            var selfLink = this.model.get('links').self;
+            return selfLink.indexOf("/applications/" + id) != -1;
         },
         render:function () {
             return this;

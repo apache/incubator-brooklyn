@@ -181,5 +181,4 @@ public class LocationTransformer {
                 .addIfNotNull("spec", specId!=null ? URI.create("/v1/locations/"+specId) : null)
                 .asUnmodifiable() );
     }
-    
 }

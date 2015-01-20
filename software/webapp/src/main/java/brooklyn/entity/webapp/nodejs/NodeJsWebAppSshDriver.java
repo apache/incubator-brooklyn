@@ -152,6 +152,8 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
             appCommandLine = appCommand + " " + appFile;
         }
 
+        // Ensure global NPM modules are on Node's path.
+        commands.add("export NODE_PATH=\"$NODE_PATH:$(npm root -g)\"");
         commands.add(String.format("cd %s", Os.mergePathsUnix(getRunDir(), appName)));
         commands.add("nohup " + appCommandLine + " > console.out 2>&1 &");
 

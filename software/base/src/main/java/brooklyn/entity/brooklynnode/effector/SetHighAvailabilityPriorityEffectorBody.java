@@ -29,7 +29,7 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.http.HttpToolResponse;
 
-import com.google.api.client.util.Preconditions;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public class SetHighAvailabilityPriorityEffectorBody extends EffectorBody<Integer> implements SetHighAvailabilityPriorityEffector {

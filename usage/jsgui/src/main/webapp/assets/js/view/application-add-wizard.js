@@ -39,7 +39,7 @@ define([
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
              DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
-        ) {
+) {
 
     function setVisibility(obj, isVisible) {
         if (isVisible) obj.show();
@@ -61,13 +61,11 @@ define([
                 services.push(entityToCAMP(entities[i]));
             }
         }
-
         return {
             name: spec.name,
             locations: spec.locations,
             services: services
         };
-
     }
 
     function entityToCAMP(entity) {
@@ -77,7 +75,6 @@ define([
             "brooklyn.config": entity.config
         };
     }
-
 
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
@@ -283,8 +280,12 @@ define([
             'click #remove-config':'removeConfigRow',
             'click #add-config':'addConfigRow',
             'click .template-lozenge':'templateClick',
-            'input .text-filter input':'applyFilter',
-            'input #yaml_code':'onYamlCodeChange',
+            'keyup .text-filter input':'applyFilter',
+            'change .text-filter input':'applyFilter',
+            'paste .text-filter input':'applyFilter',
+            'keyup #yaml_code':'onYamlCodeChange',
+            'change #yaml_code':'onYamlCodeChange',
+            'paste #yaml_code':'onYamlCodeChange',
             'shown a[data-toggle="tab"]':'onTabChange'
         },
         template:_.template(CreateHtml),
@@ -329,15 +330,16 @@ define([
             return this
         },
         onTabChange: function(e) {
-            if (e.target.text=="Catalog") {
+            var tabText = $(e.target).text();
+            if (tabText=="Catalog") {
                 $("li.text-filter").show()
             } else {
                 $("li.text-filter").hide()
             }
 
-            if (e.target.text=="YAML") {
+            if (tabText=="YAML") {
                 this.model.mode = "yaml";
-            } else if (e.target.text=="Template") {
+            } else if (tabText=="Template") {
                 this.model.mode = "template";
             } else {
                 this.model.mode = "other";
@@ -528,15 +530,16 @@ define([
 
     ModalWizard.StepDeploy = Backbone.View.extend({
         className:'modal-body',
+
         events:{
             'click #add-selector-container':'addLocation',
             'click #remove-app-location':'removeLocation',
-            'change select':'selection',
-            'change option':'selection',
+            'change .select-location': 'selection',
             'blur #application-name':'updateName',
             'click #remove-config':'removeConfigRow',
             'click #add-config':'addConfigRow'
         },
+
         template:_.template(DeployHtml),
         locationRowTemplate:_.template(DeployLocationRowHtml),
         locationOptionTemplate:_.template(DeployLocationOptionHtml),
@@ -564,7 +567,7 @@ define([
                         rowId: li
                     }))
             }
-            var $locationOptions = container.find('#select-location')
+            var $locationOptions = container.find('.select-location')
             this.locations.each(function(aLocation) {
                     if (!aLocation.id) {
                         log("missing id for location:");

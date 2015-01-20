@@ -98,5 +98,4 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
 
         return false;
     }
-
 }

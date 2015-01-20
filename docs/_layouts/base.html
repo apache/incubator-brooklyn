@@ -24,19 +24,161 @@ under the License.
 {{ content }}
 
 
+<script src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/1.3.1/ZeroClipboard.min.js"></script>
+
 <script language="JavaScript" type="application/javascript">
-    $(window).resize(function () { 
+    fix_padding_function = function () { 
         $('body').css('padding-top', parseInt($('#header').css("height"))+10);
         $('body').css('padding-bottom', parseInt($('#footer').css("height"))+10);
+    };
+    $(window).resize(fix_padding_function);
+    $(window).load(fix_padding_function);
+    
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip({ delay: { show: 600, hide: 100 }})
     });
     
-    $(window).load(function () { 
-        $('body').css('padding-top', parseInt($('#header').css("height"))+10);        
-        $('body').css('padding-bottom', parseInt($('#footer').css("height"))+10);
+/* generate anchors for headers, a la github and http://blog.parkermoore.de/2014/08/01/header-anchor-links-in-vanilla-javascript-for-github-pages-and-jekyll/ */
+var anchorForId = function (id, text) {
+  var anchor = document.createElement("a");
+  anchor.className = "header-link";
+  anchor.href      = "#" + id;
+  anchor.innerHTML = "<i class=\"fa fa-link\"></i>";
+  return anchor;
+};
+
+var linkifyAnchors = function (level, containingElement) {
+  var headers = contentBlock.find("h" + level);
+  for (var h = 0; h < headers.length; h++) {
+    var header = headers[h];
+    if (typeof header.id !== "undefined" && header.id !== "") {
+      header.appendChild(anchorForId(header.id, $(header).text()));
+    }
+  }
+};
+
+$(function () {
+    contentBlock = $("#content_container");
+    if (!contentBlock) return;
+    for (var level = 1; level <= 6; level++) {
+      linkifyAnchors(level, contentBlock);
+    }
+});
+
+<!-- Clipboard support -->
+  ZeroClipboard.config({ moviePath: '//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/1.3.1/ZeroClipboard.swf' });
+
+$(function() {
+  $('div.highlight').prepend(
+  $('<div class="clipboard_container" title="Copy to Clipboard">'+
+    '<div class="fa clipboard_button">'+
+    '<div class="on-active"><div>Copied to Clipboard</div></div>'+
+  '</div></div>'));
+  $('div.clipboard_container').each(function(index) {
+    var clipboard = new ZeroClipboard();
+    clipboard.clip( $(this).find(":first")[0], $(this)[0] );
+    var target = $(this).next();
+    var txt = target.text().trim();
+    if (target.find('code.bash')) {
+      // Strip out bash prompts from the start of each line (i.e. '$' or '%' characters
+      // at the very start, or immediately following any newline). Correctly handles continuation
+      // lines, where a leading '$' or '%' is *not* a prompt character.
+      txt = txt.replace(/(^|[^\\]\n)[$%] /g, "$1");
+    }
+    clipboard.on( 'dataRequested', function (client, args) {
+      client.setText( txt );
     });
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-    })
+  });
+});
+
+<!-- search -->
+    $(function() {
+        $('#simple_google')
+            .submit(function() {
+                $('input[name="q"]').val("site:" + document.location.hostname + " " + $('input[name="brooklyn-search"]').val());
+            return true;
+            });
+        $('input[name="brooklyn-search"]').focus(function() {
+                if ($(this).val() === $(this).attr('placeholder')) {
+                    $(this).val('');
+                }
+            })
+            .blur(function() {
+                if ($(this).val() === '') {
+                    $(this).val($(this).attr('placeholder'));
+                }
+            })
+            .blur();
+    });
+
+
+ <!-- analytics -->
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-30530918-1']);
+    _gaq.push(['_trackPageview']);
+    
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+
+<!-- page warning (for archive pages) -->
+{% comment %}
+TODO insert the warning html at generation-time (jekyll) rather than runtime (JS)
+{% endcomment %}
+{% if page.path contains 'guide/' %} 
+    $(function() {
+        if (document.location.pathname.replace(/^\/([^\/]*).*$/, '$1') === "v"){
+            var thisversion = document.location.pathname.split("/")[2],
+                msg = "";
+            if (thisversion != 'latest' && (!$.cookie('brooklyn_versions') || 
+                    (($.inArray('ALL', $.cookie('brooklyn_versions').split(",")) === -1) &&
+                    ($.inArray(thisversion, $.cookie('brooklyn_versions').split(",")) === -1))) ){
+                msg += "<div class='warning_banner_image'><img src='{{ site.path.style }}/img/warning.png'/></div>";
+                msg += "<p>You are browsing the archive site for version <strong>"+thisversion+"</strong>.</p>";
+                if (thisversion.indexOf("SNAPSHOT") >= 0) {
+                  msg += "<p>Note that SNAPSHOT versions have not been voted on and are not endorsed by the Apache Software Foundation.</p>";
+                  msg += "<p>Do you understand and accept the risks?</p>";
+                } else {
+                  msg += "<p>Is this deliberate?</p>";
+                }
+                msg += "<center><p class='warning_banner_buttons'>";
+                msg += "<a href = 'javascript:void(0);' onclick=\"set_user_version('"+thisversion+"');\">Yes, hide this warning</a>";
+                msg += "<a href = '{{ site.path.guide }}'>No, take me to the latest version guide</a>";
+                msg += "<a href = '{{ site.path.website }}/meta/versions.html'>Show all versions</a>";
+                msg += "</p></center>"
+                            
+                $('#page_notes').html(msg);
+                $('#page_notes').fadeIn('slow');
+            }
+        }
+    });
+{% endif %}
+    function get_user_versions() {
+        return $.cookie("brooklyn_versions") ? $.cookie("brooklyn_versions").split(",") : [];
+    };
+    function set_user_version(version) {
+        var version_cookie = get_user_versions();
+        version_cookie.push(version);
+        $.cookie('brooklyn_versions', version_cookie, { expires: 365, path: '/' });
+        $('#page_notes').fadeOut();
+        event.preventDefault ? event.preventDefault() : event.returnValue = false;
+    };
+    function set_user_versions_all() {
+        var version_cookie = get_user_versions();
+        version_cookie.push("ALL");
+        $.cookie('brooklyn_versions', version_cookie, { expires: 365, path: '/' });
+        $('#page_notes').fadeOut();
+        event.preventDefault ? event.preventDefault() : event.returnValue = false;
+    };
+    function clear_user_versions() {
+        $.removeCookie('brooklyn_versions', { path: '/' });
+        $('#page_notes').fadeIn('slow');
+        event.preventDefault ? event.preventDefault() : event.returnValue = false;
+    };
+
 </script>
 
 </body>

@@ -25,9 +25,8 @@ import brooklyn.rest.api.VersionApi;
 @Deprecated
 public class VersionResource extends AbstractBrooklynRestResource implements VersionApi {
 
-  @Override
-  public String getVersion() {
-    return BrooklynVersion.get();
-  }
-
+    @Override
+    public String getVersion() {
+        return BrooklynVersion.get();
+    }
 }

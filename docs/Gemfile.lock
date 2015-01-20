@@ -1,25 +1,33 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    anemone (0.7.2)
-      nokogiri (>= 1.3.0)
-      robotex (>= 1.0.0)
+    addressable (2.3.6)
     blankslate (2.1.2.4)
     celluloid (0.16.0)
       timers (~> 4.0.0)
-    classifier-reborn (2.0.2)
+    classifier-reborn (2.0.3)
       fast-stemmer (~> 1.0)
     coffee-script (2.3.0)
       coffee-script-source
       execjs
     coffee-script-source (1.8.0)
     colorator (0.1)
-    colorize (0.5.8)
+    colored (1.2)
+    ethon (0.7.2)
+      ffi (>= 1.3.0)
     execjs (2.2.2)
     fast-stemmer (1.0.2)
     ffi (1.9.6)
     hitimes (1.2.2)
-    jekyll (2.5.2)
+    html-proofer (1.6.0)
+      addressable (~> 2.3)
+      colored (~> 1.2)
+      mercenary (~> 0.3.2)
+      nokogiri (~> 1.5)
+      parallel (~> 1.3)
+      typhoeus (~> 0.6.7)
+      yell (~> 2.0)
+    jekyll (2.5.3)
       classifier-reborn (~> 2.0)
       colorator (~> 0.1)
       jekyll-coffeescript (~> 1.0)
@@ -42,24 +50,22 @@ GEM
       sass (~> 3.2)
     jekyll-watch (1.2.0)
       listen (~> 2.7)
-    json (1.8.1)
+    json (1.8.2)
     kramdown (1.5.0)
     libv8 (3.16.14.7)
-    link-checker (0.7.2)
-      anemone (~> 0.7.2)
-      colorize (~> 0.5.8)
-      nokogiri (~> 1.5.5)
-      trollop (~> 2.0)
     liquid (2.6.1)
-    listen (2.8.3)
+    listen (2.8.5)
       celluloid (>= 0.15.2)
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)
     mercenary (0.3.5)
-    nokogiri (1.5.11)
+    mini_portile (0.6.2)
+    nokogiri (1.6.5)
+      mini_portile (~> 0.6.0)
+    parallel (1.3.3)
     parslet (1.5.0)
       blankslate (~> 2.0)
-    posix-spawn (0.3.8)
+    posix-spawn (0.3.9)
     pygments.rb (0.6.0)
       posix-spawn (~> 0.3.6)
       yajl-ruby (~> 1.1.0)
@@ -68,7 +74,6 @@ GEM
       ffi (>= 0.5.0)
     redcarpet (3.2.2)
     ref (1.0.5)
-    robotex (1.0.0)
     safe_yaml (1.0.4)
     sass (3.4.9)
     therubyracer (0.12.1)
@@ -78,14 +83,16 @@ GEM
       hitimes
     toml (0.1.2)
       parslet (~> 1.5.0)
-    trollop (2.0)
+    typhoeus (0.6.9)
+      ethon (>= 0.7.1)
     yajl-ruby (1.1.0)
+    yell (2.0.5)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  html-proofer
   jekyll
   json
-  link-checker
   therubyracer

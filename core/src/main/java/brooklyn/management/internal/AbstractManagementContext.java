@@ -35,8 +35,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.StringConfigMap;
@@ -76,7 +78,7 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
 
-import com.google.api.client.repackaged.com.google.common.base.Objects;
+import com.google.common.base.Objects;
 import com.google.common.base.Function;
 
 public abstract class AbstractManagementContext implements ManagementContextInternal {
@@ -113,14 +115,23 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     }
 
     static {
-        // ensure that if ResourceUtils is given an entity as context,
-        // we use the catalog class loader (e.g. to resolve classpath URLs)
         ResourceUtils.addClassLoaderProvider(new Function<Object, BrooklynClassLoadingContext>() {
             @Override
             public BrooklynClassLoadingContext apply(@Nullable Object input) {
-                // TODO for entities, this should get its originating catalog item's loader
-                if (input instanceof EntityInternal)
-                    return apply(((EntityInternal)input).getManagementSupport());
+                if (input instanceof EntityInternal) {
+                    EntityInternal internal = (EntityInternal)input;
+                    if (internal.getCatalogItemId() != null) {
+                        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(internal.getManagementContext(), internal.getCatalogItemId());
+                        if (item != null) {
+                            return CatalogUtils.newClassLoadingContext(internal.getManagementContext(), item);
+                        } else {
+                            log.error("Can't find catalog item " + internal.getCatalogItemId() +
+                                    " used for instantiating entity " + internal +
+                                    ". Falling back to application classpath.");
+                        }
+                    }
+                    return apply(internal.getManagementSupport());
+                }
                 
                 if (input instanceof EntityManagementSupport)
                     return apply(((EntityManagementSupport)input).getManagementContext());

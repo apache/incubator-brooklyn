@@ -40,10 +40,14 @@ public class UsageStatistic implements HasId {
     private final long duration;
     private final Map<String,String> metadata;
 
-    public UsageStatistic(@JsonProperty("status") Status status, @JsonProperty("id") String id, @JsonProperty("applicationId") String applicationId,
-                     @JsonProperty("start") String start,
-                     @JsonProperty("end") String end,
-                     @JsonProperty("duration") long duration, @JsonProperty("metadata") Map<String, String> metadata) {
+    public UsageStatistic(
+            @JsonProperty("status") Status status, 
+            @JsonProperty("id") String id, 
+            @JsonProperty("applicationId") String applicationId,
+            @JsonProperty("start") String start,
+            @JsonProperty("end") String end,
+            @JsonProperty("duration") long duration, 
+            @JsonProperty("metadata") Map<String, String> metadata) {
         this.status = checkNotNull(status, "status");
         this.id = checkNotNull(id, "id");
         this.applicationId = applicationId;

@@ -1,8 +1,12 @@
 ---
-layout: guide-normal
-title: Overview
-toc: /guide/toc.json
-categories: [start]
+layout: website-normal
+title: Getting Started
+menu_parent: ../index.md
+children:
+- running.md
+- blueprints.md
+- managing.md
+- policies.md
 ---
 
-{% readj index.include.md %}
+{% include list-children.html %}

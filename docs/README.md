@@ -50,9 +50,14 @@ return to the `_build` directory and re-run the above command.
 
 On some platforms there may be some fiddling required before `jekyll` runs without errors,
 but the ecosystem is fairly mature and most problems can be resolved with a bit of googling.
-For instance on Ubuntu, there may be additional dependencies required:
+Some issues we've encountered are:
 
-    sudo apt-get install libxslt-dev libxml2-dev
+ * on Mac, install xcode and its command-line tools
+ * if ruby gets confused about versions,
+   [clean out your gems](http://judykat.com/ken-judy/force-bundler-rebuild-ruby-rails-gemset/)
+ * if `libxml2` fails, set `bundle config build.nokogiri --use-system-libraries` before the install
+   (more details [here](http://www.nokogiri.org/tutorials/installing_nokogiri.html))
+ * on Ubuntu, `sudo apt-get install libxslt-dev libxml2-dev`
 
 
 Seeing the Website and Docs
@@ -155,10 +160,31 @@ useful for testing.
 Supported options beyond that include `--serve`, to start a web browser serving the content of `_site/`,
 and `--skip-javadoc`, to speed up the build significantly by skipping javadoc generation.
 A handy command for testing the live files, analogous to `jekyll serve` 
-but with the correct file structure, is:
+but with the correct file structure, and then checking links, is:
 
     _build/build.sh test-both --skip-javadoc --serve
 
+And to run link-checks quickly (without validating external links), use:
+
+    htmlproof --href_ignore "https?://127.*" --alt_ignore ".*" --disable_external _site
+
+
+
+Preparing for a Release
+-----------------------
+
+When doing a release and changing versions:
+
+* Before branching:
+  * Change the `brooklyn-stable-version` variable in `_config.yml`
+  * Update `website/meta/versions.md` with a bit of info on this release
+*  In the branch, with `change-version.sh` run (e.g. from `N.SNAPSHOT` to `N`)
+  * Ensure the `guide/start/release-notes.md` file is current
+  * Build and publish `website-root`, `guide-latest`, and `guide-version`
+* In master, with `change-version.sh` run (e.g. to `N+1-SNAPSHOT`)
+  * Clear old stuff in the `guide/start/release-notes.md` file
+  * Optionally build and public `guide-version`
+ 
 
 Publishing the Website and Guide
 --------------------------------
@@ -192,6 +218,11 @@ using the instructions in `build.sh` as a guide.)
 A typical update consists of the following commands (or a subset),
 copied to `${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}`:
 
+    # ensure svn repo is up-to-date (very painful otherwise)
+    cd ${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}
+    svn up
+    cd -
+
     # main website, relative to / 
     _build/build.sh website-root --install
     
@@ -221,6 +252,11 @@ Then check in the changes (probably picking a better message than shown here):
 
 The changes should become live within a few minutes.
 
+SVN commits can be **slow**, particularly if you've regenerated javadoc.
+(The date is included in all javadoc files so the commands above will cause *all* javadoc to be updated.)
+Use `_build/build.sh guide-version --install --skip-javadoc` to update master while re-using the previously installed javadoc.
+That command will fail if javadoc has not been generated for that version.
+
 
 More Notes on the Code
 ----------------------
@@ -231,35 +267,16 @@ We use some custom Jekyll plugins, in the `_plugins` dir:
 
 * include markdown files inside other files (see, for example, the `*.include.md` files 
   which contain text which is used in multiple other files)
-* parse JSON which we can loop over in our markdown docs (to do the TOC in the `guide`)
-* generate the site structure (for the `website`)
+* generate the site structure / menu objects
+* parse JSON which we can loop over in our markdown docs (to build up models; previously used
+  for the TOC in the guide, but now replaced with site_structure)
 * trim whitespace of ends of variables
-
-
-# Guide ToC
-
-In the `guide`, JSON table-of-contents files (toc.json) are our lightweight solution to the 
-problem of making the site structure navigable (the menus at left). 
-If you add a page, simply add the file and a title to the `toc.json` in that directory 
-and it will get included in the menu. 
-
-You can also configure a special toc to show on your page, if you wish, by setting the toc variable in the header. 
-Most pages declare the `guide-normal` layout (in `_layouts/`) which builds a menu in the left side-bar 
-(`_includes/sidebar.html`) using the JSON, automatically detecting which page is active.
-
-
-# Website ToC
-
-The `website` follows a different, simpler pattern, using the `site-structure` plugin
-and front-matter in each page.  When adding a page, simply add the relevant front matter
-in the page(s) which refer to them.
 
 
 # Versions
 
 Archived versions are kept under `/v/` in the website.  New versions should be added with
-the appropriate directory (`guide-version` above will do this).  These versions take their
-own copy of the `style` files so that changes there will not affect future versions.
+the appropriate directory (`_build/build.sh guide-version` above will do this).  
+These versions take their own copy of the `style` files so that changes there will not affect future versions.
 
-A list of available versions also needs to be updated.  This is referenced from the `website`.
-<!-- TODO: where -->
+A list of available versions is in `website/meta/versions.md`.

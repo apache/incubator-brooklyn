@@ -65,5 +65,4 @@ public class BrooklynUserWithRandomPasswordSecurityProvider extends AbstractSecu
             return false;
         }
     }
-
 }

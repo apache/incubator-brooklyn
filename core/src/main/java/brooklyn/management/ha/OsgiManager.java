@@ -44,7 +44,6 @@ import brooklyn.util.os.Os;
 import brooklyn.util.os.Os.DeletionResult;
 import brooklyn.util.osgi.Osgis;
 import brooklyn.util.osgi.Osgis.BundleFinder;
-import brooklyn.util.osgi.Osgis.VersionedName;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;
 
@@ -62,10 +61,6 @@ public class OsgiManager {
     protected ManagementContext mgmt;
     protected Framework framework;
     protected File osgiCacheDir;
-
-    // we could manage without this map but it is useful to validate what is a user-supplied url
-    protected Map<String,VersionedName> urlToBundleIdentifier = MutableMap.of();
-
 
     public OsgiManager(ManagementContext mgmt) {
         this.mgmt = mgmt;
@@ -125,8 +120,6 @@ public class OsgiManager {
             Bundle b = Osgis.install(framework, bundle.getUrl());
 
             checkCorrectlyInstalled(bundle, b);
-
-            urlToBundleIdentifier.put(bundle.getUrl(), new VersionedName(b));
         } catch (BundleException e) {
             log.debug("Bundle from "+bundle+" failed to install (rethrowing): "+e);
             throw Throwables.propagate(e);
@@ -136,11 +129,8 @@ public class OsgiManager {
     private void checkCorrectlyInstalled(CatalogBundle bundle, Bundle b) {
         String nv = b.getSymbolicName()+":"+b.getVersion().toString();
 
-        if (bundle.isNamed() &&
-                (!bundle.getSymbolicName().equals(b.getSymbolicName()) ||
-                !bundle.getVersion().equals(b.getVersion().toString()))) {
-            log.warn("Bundle at " + bundle.getUrl() + " installed as " + nv +
-                    " but user explicitly requested " + bundle.getSymbolicName() + ":" + bundle.getVersion());
+        if (!isBundleNameEqualOrAbsent(bundle, b)) {
+            throw new IllegalStateException("Bundle from "+bundle.getUrl()+" already installed as "+nv+" but user explicitly requested "+bundle);
         }
 
         List<Bundle> matches = Osgis.bundleFinder(framework)
@@ -162,24 +152,16 @@ public class OsgiManager {
     private boolean checkBundleInstalledThrowIfInconsistent(CatalogBundle bundle) {
         String bundleUrl = bundle.getUrl();
         if (bundleUrl != null) {
-            VersionedName nv = urlToBundleIdentifier.get(bundleUrl);
-            if (nv!=null) {
-                if (bundle.isNamed() && !nv.equals(bundle.getSymbolicName(), bundle.getVersion())) {
-                    throw new IllegalStateException("Bundle from "+bundleUrl+" already installed as "+nv+" but user explicitly requested "+bundle);
-                }
-                Maybe<Bundle> installedBundle = Osgis.bundleFinder(framework).requiringFromUrl(bundleUrl).find();
-                if (installedBundle.isPresent()) {
-                    if (bundle.isNamed()) {
-                        Bundle b = installedBundle.get();
-                        if (!nv.equals(b.getSymbolicName(), b.getVersion().toString())) {
-                            log.error("Bundle from "+bundleUrl+" already installed as "+nv+" but reports "+b.getSymbolicName()+":"+b.getVersion());
-                        }
-                    }
-                    log.trace("Bundle from "+bundleUrl+" already installed as "+nv+"; not re-registering");
-                    return true;
+            Maybe<Bundle> installedBundle = Osgis.bundleFinder(framework).requiringFromUrl(bundleUrl).find();
+            if (installedBundle.isPresent()) {
+                Bundle b = installedBundle.get();
+                String nv = b.getSymbolicName()+":"+b.getVersion().toString();
+                if (!isBundleNameEqualOrAbsent(bundle, b)) {
+                    throw new IllegalStateException("Bundle from "+bundle.getUrl()+" already installed as "+nv+" but user explicitly requested "+bundle);
                 } else {
-                    log.error("Bundle "+nv+" from "+bundleUrl+" is known in map but not installed; perhaps in the process of installing?");
+                    log.trace("Bundle from "+bundleUrl+" already installed as "+nv+"; not re-registering");
                 }
+                return true;
             }
         } else {
             Maybe<Bundle> installedBundle = Osgis.bundleFinder(framework).symbolicName(bundle.getSymbolicName()).version(bundle.getVersion()).find();
@@ -191,6 +173,12 @@ public class OsgiManager {
             return true;
         }
         return false;
+    }
+
+    public static boolean isBundleNameEqualOrAbsent(CatalogBundle bundle, Bundle b) {
+        return !bundle.isNamed() ||
+                (bundle.getSymbolicName().equals(b.getSymbolicName()) &&
+                bundle.getVersion().equals(b.getVersion().toString()));
     }
 
     public <T> Maybe<Class<T>> tryResolveClass(String type, CatalogBundle... catalogBundles) {

@@ -66,11 +66,14 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("launchLatch")
     ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
 
-    @SetFromFlag("entityStarted")
-    ConfigKey<Boolean> ENTITY_STARTED = BrooklynConfigKeys.ENTITY_STARTED;
+    @SetFromFlag("skipStart")
+    ConfigKey<Boolean> ENTITY_STARTED = BrooklynConfigKeys.SKIP_ENTITY_START;
+
+    @SetFromFlag("skipStartIfRunning")
+    ConfigKey<Boolean> SKIP_ENTITY_START_IF_RUNNING = BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING;
 
     @SetFromFlag("skipInstall")
-    ConfigKey<Boolean> SKIP_INSTALLATION = BrooklynConfigKeys.SKIP_INSTALLATION;
+    ConfigKey<Boolean> SKIP_INSTALLATION = BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION;
 
     @SetFromFlag("preInstallCommand")
     ConfigKey<String> PRE_INSTALL_COMMAND = BrooklynConfigKeys.PRE_INSTALL_COMMAND;
@@ -261,6 +264,20 @@ public interface SoftwareProcess extends Entity, Startable {
         public static final ConfigKey<Boolean> STOP_MACHINE = ConfigKeys.newBooleanConfigKey("stopMachine",
                 "Whether to stop the machine provisioned for this entity:  'true', or 'false' are supported, "
                         + "with the default being 'true'", true);
+
+        //IF_NOT_STOPPED includes STARTING, STOPPING, RUNNING
+        public enum StopMode { ALWAYS, IF_NOT_STOPPED, NEVER };
+
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<StopMode> STOP_PROCESS_MODE = ConfigKeys.newConfigKey(StopMode.class, "stopProcessMode",
+                "When to stop the process with regard to the entity state", StopMode.IF_NOT_STOPPED);
+
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<StopMode> STOP_MACHINE_MODE = ConfigKeys.newConfigKey(StopMode.class, "stopMachineMode",
+                "When to stop the machine with regard to the entity state. " +
+                "ALWAYS will try to stop the machine even if the entity is already stopped, " +
+                "IF_NOT_STOPPED stops the machine only if the entity is not already stopped, " +
+                "NEVER doesn't stop the machine.", StopMode.IF_NOT_STOPPED);
     }
     
     // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks

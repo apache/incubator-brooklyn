@@ -33,6 +33,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.URLParamEncoder;
 
@@ -70,11 +71,15 @@ public class EntityTransformer {
                 .put("activities", URI.create(entityUri + "/activities"))
                 .put("locations", URI.create(entityUri + "/locations"))
                 .put("tags", URI.create(entityUri + "/tags"))
-                .put("catalog", URI.create("/v1/catalog/entities/" + type))
                 .put("expunge", URI.create(entityUri + "/expunge"))
                 .put("rename", URI.create(entityUri + "/name"))
                 .put("spec", URI.create(entityUri + "/spec"))
             ;
+
+        if (entity.getCatalogItemId() != null) {
+            lb.put("catalog", URI.create("/v1/catalog/entities/" + WebResourceUtils.getPathFromVersionedId(entity.getCatalogItemId())));
+        }
+
         if (entity.getIconUrl()!=null)
             lb.put("iconUrl", URI.create(entityUri + "/icon"));
 
@@ -147,5 +152,4 @@ public class EntityTransformer {
         Double priority = catalogConfig==null ? null : catalogConfig.priority();
         return entityConfigSummary(config, label, priority, null);
     }
-
 }

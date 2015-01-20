@@ -35,7 +35,7 @@ import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.Enums;
 
-import com.google.api.client.util.Preconditions;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 

@@ -44,7 +44,7 @@ import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.time.Duration;
 
-import com.google.api.client.util.Preconditions;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 

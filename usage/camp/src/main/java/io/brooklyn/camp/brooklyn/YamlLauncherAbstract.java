@@ -74,9 +74,13 @@ public abstract class YamlLauncherAbstract {
     protected abstract BrooklynCampPlatformLauncherAbstract newPlatformLauncher();
 
     public Application launchAppYaml(String url) {
+        return launchAppYaml(url, true);
+    }
+
+    public Application launchAppYaml(String url, boolean waitForTasksToComplete) {
         try {
             Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(url));
-            Application app = launchAppYaml(input);
+            Application app = launchAppYaml(input, waitForTasksToComplete);
             log.info("Application started from YAML file "+url+": "+app);
             return app;
         } catch (Exception e) {
@@ -85,6 +89,10 @@ public abstract class YamlLauncherAbstract {
     }
 
     public Application launchAppYaml(Reader input) {
+        return launchAppYaml(input, true);
+    }
+
+    public Application launchAppYaml(Reader input, boolean waitForTasksToComplete) {
         try {
             AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
 
@@ -93,10 +101,14 @@ public abstract class YamlLauncherAbstract {
             log.info("Launching "+app);
 
             if (getShutdownAppsOnExit()) BrooklynShutdownHooks.invokeStopOnShutdown(app);
-            
-            Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
-            log.info("Waiting on "+tasks.size()+" task(s)");
-            for (Task<?> t: tasks) t.blockUntilEnded();
+
+            if (waitForTasksToComplete) {
+                Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(brooklynMgmt.getExecutionManager(), app);
+                log.info("Waiting on "+tasks.size()+" task(s)");
+                for (Task<?> t: tasks) {
+                    t.blockUntilEnded();
+                }
+            }
 
             log.info("Application started from YAML: "+app);
             Entities.dumpInfo(app);

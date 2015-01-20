@@ -244,6 +244,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected void postStart() {
     }
     
+    protected void preStopConfirmCustom() {
+    }
+    
     protected void preStop() {
         // note asymmetry that disconnectSensors is done in the entity not the driver
         // whereas on start the *driver* calls connectSensors, before calling postStart,
@@ -568,5 +571,5 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected final void doRestart() {
         doRestart(ConfigBag.EMPTY);
     }
-    
+
 }

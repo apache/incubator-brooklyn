@@ -23,18 +23,18 @@ import org.testng.annotations.Test;
 public class MongoDbBlueprintTest extends AbstractBlueprintTest {
 
     // TODO Some tests are failing! Needs investigated.
-    
+
     @Test(groups={"Integration", "WIP"})
     public void testMongoSharded() throws Exception {
         runTest("mongo-sharded.yaml");
     }
 
-    @Test(groups={"Integration", "WIP"})
+    @Test(groups={"Integration"})
     public void testMongoReplicaSet() throws Exception {
         runTest("mongo-blueprint.yaml");
     }
 
-    @Test(groups={"Integration", "WIP"})
+    @Test(groups={"Integration"})
     public void testMongoClientAndSingleServer() throws Exception {
         runTest("mongo-client-single-server.yaml");
     }
