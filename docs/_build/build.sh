@@ -51,6 +51,7 @@ function parse_mode() {
     INSTALL_RSYNC_OPTIONS="--exclude v"
     INSTALL_RSYNC_SUBDIR=""
     SUMMARY="website files in the root"
+    HTMLPROOF_OPTS=--ignore-v-refs
     ;;
   guide-latest)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-latest.yml,_build/config-style-latest.yml
@@ -63,6 +64,7 @@ function parse_mode() {
     INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="user guide files in /${DIRS_TO_MOVE_TARGET[0]}"
+    HTMLPROOF_OPTS=--v-only
     ;;
   guide-version)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-version.yml
@@ -77,6 +79,7 @@ function parse_mode() {
     INSTALL_RSYNC_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="user guide files in /${DIRS_TO_MOVE_TARGET[0]}"
+    HTMLPROOF_OPTS=--v-only
     ;;
   test-guide-root)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-all-but-guide.yml,_build/config-guide-root.yml
@@ -95,6 +98,7 @@ function parse_mode() {
     STYLE_SUBDIR=style
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="all files, website in root and guide in /${DIRS_TO_MOVE_TARGET[0]}"
+    HTMLPROOF_OPTS=--ignore-v-refs
     ;;
   test-both-sub)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml,_build/config-exclude-root-index.yml,_build/config-subpath-brooklyn.yml
@@ -107,11 +111,13 @@ function parse_mode() {
     DIRS_TO_MOVE_TARGET[2]=$STYLE_SUBDIR
     JAVADOC_TARGET=${DIRS_TO_MOVE_TARGET[0]}/$JAVADOC_SUBPATH/
     SUMMARY="all files in /brooklyn"
+    HTMLPROOF_OPTS=--ignore-v-refs
     ;;
   original)
     JEKYLL_CONFIG=_config.yml,_build/config-production.yml
     STYLE_SUBDIR=style
     SUMMARY="all files in their original place"
+    HTMLPROOF_OPTS=--ignore-v-refs
     ;;
   "")
     echo "ERROR: mode is required; try 'help'"
@@ -143,11 +149,11 @@ function parse_arguments() {
       shift
       ;;
     "--skip-htmlproof")
-      SKIP_TEST=true
+      SKIP_HTMLPROOF=true
       shift
       ;;
     "--quick-htmlproof")
-      QUICK_TEST=true
+      QUICK_HTMLPROOF=true
       shift
       ;;
     *)
@@ -160,17 +166,16 @@ function parse_arguments() {
 
 # Runs htmlproof against _site
 function test_site() {
-  if [ "$SKIP_TEST" == "true" ]; then
+  if [ "$SKIP_HTMLPROOF" == "true" ]; then
     return
   fi
   echo "Running htmlproof on _site"
   mkdir -p target
-  LOG="_build/target/htmlproof.log"
-  HTMLPROOF_OPTS=""
-  if [ "$QUICK_TEST" == "true" ]; then
+  HTMLPROOF_LOG="_build/target/htmlproof.log"
+  if [ "$QUICK_HTMLPROOF" == "true" ]; then
     HTMLPROOF_OPTS="$HTMLPROOF_OPTS --disable_external"
   fi
-  _build/htmlproof-brooklyn.sh $HTMLPROOF_OPTS 2>&1 | tee $LOG
+  _build/htmlproof-brooklyn.sh $HTMLPROOF_OPTS 2>&1 | tee $HTMLPROOF_LOG
 }
 
 function make_jekyll() {
@@ -249,8 +254,18 @@ function make_install() {
   
   RSYNC_COMMAND="$RSYNC_COMMAND_BASE $INSTALL_RSYNC_OPTIONS ./_site/$INSTALL_RSYNC_SUBDIR $SITE_DIR/$INSTALL_RSYNC_SUBDIR"
   echo INSTALLING to local site svn repo with: $RSYNC_COMMAND
-  $RSYNC_COMMAND || return 1
-  
+  $RSYNC_COMMAND | tee _build/target/rsync.log || return 1
+
+  echo RSYNC changed files:
+  grep -v f\\.\\.T\\.\\.\\.\\.\\.\\.\\. _build/target/rsync.log || echo "(none)"
+  echo
+
+  if [ ! -z "$HTMLPROOF_LOG" ]; then
+    echo HTMLPROOF log:
+    cat $HTMLPROOF_LOG
+    echo
+  fi
+    
   SUMMARY="$SUMMARY, installed to $SITE_DIR"
 }
 
