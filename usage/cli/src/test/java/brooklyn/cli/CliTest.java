@@ -78,7 +78,7 @@ import com.google.common.io.Files;
 
 public class CliTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CliTest.class);
 
     // See testInvokeGroovyScript test for usage
     public static final AtomicBoolean GROOVY_INVOKED = new AtomicBoolean(false);
