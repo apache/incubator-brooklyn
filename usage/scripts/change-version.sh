@@ -20,6 +20,7 @@
 
 # changes the version everywhere
 # usage, e.g.:  change-version.sh 0.3.0-SNAPSHOT 0.3.0-RC1
+#          or:  change-version.sh MARKER 0.3.0-SNAPSHOT 0.3.0-RC1
 
 [ -d .git ] || {
   echo "Must run in brooklyn project root directory"
@@ -44,11 +45,14 @@ VERSION_MARKER_NL=${VERSION_MARKER}_BELOW
 CURRENT_VERSION=$1
 NEW_VERSION=$2
 
-# exclude dot files, and exclude log, war, etc. files
-GREP_ARGS='-r -l --exclude-dir=^\. --exclude=\.(log|war|min.js|min.css)$'
+# grep --exclude-dir working only in recent versions, not on all platforms, replace with find
+# skip folders named "ignored" or .xxx (but not the current folder ".")
+# exclude log, war, etc. files
+FILES=`find . -type d \( -name ignored -or -name .?\* \) -prune \
+       -o -type f -not \( -name \*.log -or -name '*.war' -or -name '*.min.js' -or -name '*.min.css' \) -print | \
+       xargs grep -l "${VERSION_MARKER}\|${VERSION_MARKER_NL}"`
 
 # search for files containing version markers
-FILES=`grep $GREP_ARGS "${VERSION_MARKER}\|${VERSION_MARKER_NL}" .`
 sed -i.bak -e "/${VERSION_MARKER}/s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
 sed -i.bak -e "/${VERSION_MARKER_NL}/n;s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
 
