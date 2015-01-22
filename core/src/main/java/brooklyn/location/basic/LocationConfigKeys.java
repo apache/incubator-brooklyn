@@ -53,7 +53,7 @@ public class LocationConfigKeys {
     public static final ConfigKey<String> USER = ConfigKeys.newStringConfigKey("user", 
             "user account for normal access to the remote machine, defaulting to local user", System.getProperty("user.name"));
     
-    public static final ConfigKey<String> PASSWORD = ConfigKeys.newStringConfigKey("password");
+    public static final ConfigKey<String> PASSWORD = ConfigKeys.newStringConfigKey("password", "password to use for ssh; note some images do not allow password-based ssh access");
     public static final ConfigKey<String> PUBLIC_KEY_FILE = ConfigKeys.newStringConfigKey("publicKeyFile", "ssh public key file to use; if blank will infer from privateKeyFile by appending \".pub\"");
     public static final ConfigKey<String> PUBLIC_KEY_DATA = ConfigKeys.newStringConfigKey("publicKeyData", "ssh public key string to use (takes precedence over publicKeyFile)");
     public static final ConfigKey<String> PRIVATE_KEY_FILE = ConfigKeys.newStringConfigKey("privateKeyFile", "a '" + File.pathSeparator + "' separated list of ssh private key files; uses first in list that can be read",

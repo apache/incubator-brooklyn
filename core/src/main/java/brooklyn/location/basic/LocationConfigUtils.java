@@ -20,33 +20,39 @@ package brooklyn.location.basic;
 
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.crypto.AuthorizedKeysParser;
+import brooklyn.util.crypto.SecureKeys;
+import brooklyn.util.crypto.SecureKeys.PassphraseProblem;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 public class LocationConfigUtils {
 
@@ -84,12 +90,37 @@ public class LocationConfigUtils {
         }
 
         /** throws if there are any problems */
-        public OsCredential check() {
-            throwOnErrors(true);
-            infer();
+        public OsCredential checkNotEmpty() {
+            checkNoErrors();
+            
+            if (!hasKey() && !hasPassword()) {
+                if (warningMessages.size()>0)
+                    throw new IllegalStateException("Could not find credentials: "+warningMessages);
+                else 
+                    throw new IllegalStateException("Could not find credentials");
+            }
             return this;
         }
 
+        /** throws if there were errors resolving (e.g. explicit keys, none of which were found/valid, or public key required and not found) 
+         * @return */
+        public OsCredential checkNoErrors() {
+            throwOnErrors(true);
+            dirty();
+            infer();
+            return this;
+        }
+        
+        public OsCredential logAnyWarnings() {
+            if (!warningMessages.isEmpty())
+                log.warn("When reading credentials: "+warningMessages);
+            return this;
+        }
+
+        public Set<String> getWarningMessages() {
+            return warningMessages;
+        }
+        
         /** returns either the key or password or null; if both a key and a password this prefers the key unless otherwise set
          * via {@link #preferPassword()} */
         public synchronized String get() {
@@ -172,16 +203,20 @@ public class LocationConfigUtils {
         
         private synchronized void infer() {
             if (!dirty) return;
+            warningMessages.clear(); 
             
             log.debug("Inferring OS credentials");
             privateKeyData = config.get(LocationConfigKeys.PRIVATE_KEY_DATA);
             password = config.get(LocationConfigKeys.PASSWORD);
             publicKeyData = getKeyDataFromDataKeyOrFileKey(config, LocationConfigKeys.PUBLIC_KEY_DATA, LocationConfigKeys.PUBLIC_KEY_FILE);
 
+            KeyPair privateKey = null;
+            
             if (Strings.isBlank(privateKeyData)) {
                 // look up private key files
                 String privateKeyFiles = null;
-                if (tryDefaultKeys || config.containsKey(LocationConfigKeys.PRIVATE_KEY_FILE)) 
+                boolean privateKeyFilesExplicitlySet = config.containsKey(LocationConfigKeys.PRIVATE_KEY_FILE);
+                if (privateKeyFilesExplicitlySet || (tryDefaultKeys && password==null)) 
                     privateKeyFiles = config.get(LocationConfigKeys.PRIVATE_KEY_FILE);
                 if (Strings.isNonBlank(privateKeyFiles)) {
                     Iterator<String> fi = Arrays.asList(privateKeyFiles.split(File.pathSeparator)).iterator();
@@ -192,60 +227,138 @@ public class LocationConfigUtils {
                                 // real URL's won't actual work, due to use of path separator above 
                                 // not real important, but we get it for free if "files" is a list instead.
                                 // using ResourceUtils is useful for classpath resources
-                                privateKeyData = ResourceUtils.create().getResourceAsString(file);
-                                if (Strings.isNonBlank(publicKeyData)) {
-                                    log.debug("Loaded private key data from "+file+" (public key data from explicit config)");
+                                if (file!=null)
+                                    privateKeyData = ResourceUtils.create().getResourceAsString(file);
+                                // else use data already set
+                                
+                                privateKey = getValidatedPrivateKey(file);
+                                
+                                if (privateKeyData==null) {
+                                    // was cleared due to validation error
+                                } else if (Strings.isNonBlank(publicKeyData)) {
+                                    log.debug("Loaded private key data from "+file+" (public key data explicitly set)");
+                                    break;
                                 } else {
+                                    String publicKeyFile = (file!=null ? file+".pub" : "(data)");
                                     try {
-                                        file = file+".pub";
-                                        publicKeyData = ResourceUtils.create().getResourceAsString(file);
-                                        log.debug("Loaded private key data from "+Strings.removeFromEnd(file, ".pub")+
-                                            " and public key data from "+file);
+                                        publicKeyData = ResourceUtils.create().getResourceAsString(publicKeyFile);
+                                        
+                                        log.debug("Loaded private key data from "+file+
+                                            " and public key data from "+publicKeyFile);
                                         break;
                                     } catch (Exception e) {
                                         Exceptions.propagateIfFatal(e);
-                                        log.debug("No public key file "+file+" ; " + 
-                                            (!requirePublicKey ? "this is allowed in this case" : !fi.hasNext() ? "no more files to try" : "trying next file"), e);
-                                        if (requirePublicKey) {
-                                            privateKeyData = null;
+                                        log.debug("No public key file "+publicKeyFile+"; will try extracting from private key");
+                                        publicKeyData = AuthorizedKeysParser.encodePublicKey(privateKey.getPublic());
+                                        
+                                        if (publicKeyData==null) {
+                                            if (requirePublicKey) {
+                                                addWarning("Unable to find or extract public key for "+file, "skipping");
+                                            } else {
+                                                log.debug("Loaded private key data from "+file+" (public key data not found but not required)");
+                                                break;
+                                            }
                                         } else {
-                                            // look for a different private key
+                                            log.debug("Loaded private key data from "+file+" (public key data extracted)");
                                             break;
                                         }
+                                        privateKeyData = null;
                                     }
                                 }
-                                
-                                // TODO check passphrase public key, validation, etc
-                                
+
                             } catch (Exception e) {
                                 Exceptions.propagateIfFatal(e);
-                                log.debug("No private key file "+file+" ; " + (!fi.hasNext() ? "no more files to try" : "trying next file"), e);
+                                String message = "Missing/invalid private key file "+file;
+                                if (privateKeyFilesExplicitlySet) addWarning(message, (!fi.hasNext() ? "no more files to try" : "trying next file")+": "+e);
                             }
                         }
                     }
+                    if (privateKeyFilesExplicitlySet && Strings.isBlank(privateKeyData))
+                        error("No valid private keys found", ""+warningMessages);
                 }
+            } else {
+                privateKey = getValidatedPrivateKey("(data)");
             }
             
             if (privateKeyData!=null) {
                 if (requirePublicKey && Strings.isBlank(publicKeyData)) {
-                    String message = "If explicit "+LocationConfigKeys.PRIVATE_KEY_DATA.getName()+" is supplied, then "
-                        + "the corresponding "+LocationConfigKeys.PUBLIC_KEY_DATA.getName()+" must also be supplied.";
-                    if (warnOnErrors) log.warn(message);
-                    if (throwOnErrors) throw new IllegalStateException(message);
+                    if (privateKey!=null) {
+                        publicKeyData = AuthorizedKeysParser.encodePublicKey(privateKey.getPublic());
+                    }
+                    if (Strings.isBlank(publicKeyData)) {
+                        error("If explicit "+LocationConfigKeys.PRIVATE_KEY_DATA.getName()+" is supplied, then "
+                            + "the corresponding "+LocationConfigKeys.PUBLIC_KEY_DATA.getName()+" must also be supplied.", null);
+                    } else {
+                        log.debug("Public key data extracted");
+                    }
+                }
+                if (doKeyValidation && privateKey!=null && privateKey.getPublic()!=null && Strings.isNonBlank(publicKeyData)) {
+                    PublicKey decoded = null;
+                    try {
+                        decoded = AuthorizedKeysParser.decodePublicKey(publicKeyData);
+                    } catch (Exception e) {
+                        Exceptions.propagateIfFatal(e);
+                        addWarning("Invalid public key: "+decoded);
+                    }
+                    if (decoded!=null && !privateKey.getPublic().equals( decoded )) {
+                        error("Public key inferred from does not match public key extracted from private key", null);
+                    }
                 }
             }
 
             log.debug("OS credential inference: "+this);
             dirty = false;
         }
+
+        private KeyPair getValidatedPrivateKey(String label) {
+            KeyPair privateKey = null;
+            String passphrase = config.get(CloudLocationConfig.PRIVATE_KEY_PASSPHRASE);
+            try {
+                privateKey = SecureKeys.readPem(new ByteArrayInputStream(privateKeyData.getBytes()), passphrase);
+                if (passphrase!=null) {
+                    // get the unencrypted key data for our internal use (jclouds requires this)
+                    privateKeyData = SecureKeys.toPem(privateKey);
+                }
+            } catch (PassphraseProblem e) {
+                if (doKeyValidation) {
+                    if (Strings.isBlank(passphrase))
+                        addWarning("Passphrase required for key '"+label+"'");
+                    else
+                        addWarning("Invalid passphrase for key '"+label+"'");
+                    privateKeyData = null;
+                }
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                if (doKeyValidation) {
+                    addWarning("Unable to parse private key from '"+label+"': unknown format");
+                    privateKeyData = null;
+                }
+            }
+            return privateKey;
+        }
         
+        Set<String> warningMessages = MutableSet.of();
+        
+        private void error(String msg, String logExtension) {
+            addWarning(msg);
+            if (warnOnErrors) log.warn(msg+(logExtension==null ? "" : ": "+logExtension));
+            if (throwOnErrors) throw new IllegalStateException(msg+(logExtension==null ? "" : "; "+logExtension));
+        }
+
+        private void addWarning(String msg) {
+            addWarning(msg, null);
+        }
+        private void addWarning(String msg, String debugExtension) {
+            log.debug(msg+(debugExtension==null ? "" : "; "+debugExtension));
+            warningMessages.add(msg);
+        }
+
         @Override
         public String toString() {
-            // TODO print hash of key?
             return getClass().getSimpleName()+"["+
-                (Strings.isNonBlank(publicKeyData) ? "public-key" : "public-key")+","+
+                (Strings.isNonBlank(publicKeyData) ? publicKeyData : "public-key")+";"+
                 (Strings.isNonBlank(privateKeyData) ? "private-key" : "private-key")+","+
-                (password!=null ? "password" : "no-password")+"]";
+                (password!=null ? "password(len="+password.length()+")" : "no-password")+"]";
         }
     }
 
@@ -324,9 +437,12 @@ public class LocationConfigUtils {
             String file = fi.next();
             if (groovyTruth(file)) {
                 try {
-                    File f = new File(file);
-                    return Files.toString(f, Charsets.UTF_8);
-                } catch (IOException e) {
+                    // see comment above
+                    String result = ResourceUtils.create().getResourceAsString(file);
+                    if (result!=null) return result;
+                    log.debug("Invalid file "+file+" ; " + (!fi.hasNext() ? "no more files to try" : "trying next file")+" (null)");
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
                     log.debug("Invalid file "+file+" ; " + (!fi.hasNext() ? "no more files to try" : "trying next file"), e);
                 }
             }

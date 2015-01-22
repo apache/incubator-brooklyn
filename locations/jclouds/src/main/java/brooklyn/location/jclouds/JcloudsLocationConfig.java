@@ -77,7 +77,11 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Whether to skip creation of 'user' when provisioning machines (default false)", false);
     public static final ConfigKey<Boolean> GRANT_USER_SUDO = ConfigKeys.newBooleanConfigKey("grantUserSudo",
             "Whether to grant the created user sudo privileges. Irrelevant if dontCreateUser is true. Default: true.", true);
-
+    public static final ConfigKey<Boolean> DISABLE_ROOT_AND_PASSWORD_SSH = ConfigKeys.newBooleanConfigKey("disableRootAndPasswordSsh",
+        "Whether to disable direct SSH access for root and disable password-based SSH, "
+        + "if creating a user with a key-based login; "
+        + "defaults to true (set false to leave root users alone)", true);
+    
     public static final ConfigKey<LoginCredentials> CUSTOM_CREDENTIALS = new BasicConfigKey<LoginCredentials>(LoginCredentials.class,
             "customCredentials", "Custom jclouds LoginCredentials object to be used to connect to the VM", null);
     
