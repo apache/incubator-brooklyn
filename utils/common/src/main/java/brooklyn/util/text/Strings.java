@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.CharMatcher;
@@ -106,6 +107,12 @@ public class Strings {
      */
     public static boolean isNonBlank(CharSequence s) {
         return !isBlank(s);
+    }
+
+    /** @return a {@link Maybe} object which is absent if the argument {@link #isBlank(CharSequence)} */
+    public static <T extends CharSequence> Maybe<T> maybeNonBlank(T s) {
+        if (isNonBlank(s)) return Maybe.of(s);
+        return Maybe.absent();
     }
 
     /** throws IllegalArgument if string not empty; cf. guava Preconditions.checkXxxx */

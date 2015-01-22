@@ -27,71 +27,69 @@ import brooklyn.util.config.ConfigBag;
 
 public class LocationConfigUtilsTest {
 
-    public static final String SSH_PRIVATE_KEY_FILE = System.getProperty("sshPrivateKey", "~/.ssh/id_rsa");
-    public static final String SSH_PUBLIC_KEY_FILE = System.getProperty("sshPrivateKey", "~/.ssh/id_rsa.pub");
+    // set these system properties differently if needed to fix your tests
+    public static final String SSH_PRIVATE_KEY_FILE_WITH_TILDE = System.getProperty("sshPrivateKey", "~/.ssh/id_rsa");
+    public static final String SSH_PUBLIC_KEY_FILE_WITH_TILDE = System.getProperty("sshPublicKey", "~/.ssh/id_rsa.pub");
+    public static final String SSH_PRIVATE_KEY_FILE = System.getProperty("sshPrivateKeySample", "/brooklyn/location/basic/sample_id_rsa");
+    public static final String SSH_PUBLIC_KEY_FILE = System.getProperty("sshPublicKeySample", "/brooklyn/location/basic/sample_id_rsa.pub");
     
-    @Test(groups="Integration")
     public void testPreferPrivateKeyDataOverFile() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PRIVATE_KEY_DATA, "mydata");
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE);
         
-        String data = LocationConfigUtils.getPrivateKeyData(config);
+        String data = LocationConfigUtils.getOsCredential(config).getPrivateKeyData();
         assertEquals(data, "mydata");
     }
     
-    @Test(groups="Integration")
     public void testPreferPubilcKeyDataOverFile() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PUBLIC_KEY_DATA, "mydata");
         config.put(LocationConfigKeys.PUBLIC_KEY_FILE, SSH_PUBLIC_KEY_FILE);
         
-        String data = LocationConfigUtils.getPublicKeyData(config);
+        String data = LocationConfigUtils.getOsCredential(config).getPublicKeyData();
         assertEquals(data, "mydata");
     }
     
-    @Test(groups="Integration")
-    public void testReadsPrivateKeyFileWithTildaPath() throws Exception {
+    @Test(groups="Integration")  // requires ~/.ssh/id_rsa
+    public void testReadsPrivateKeyFileWithTildePath() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
-        config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE);
+        config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE_WITH_TILDE);
         
-        String data = LocationConfigUtils.getPrivateKeyData(config);
+        String data = LocationConfigUtils.getOsCredential(config).skipPassphraseValidation().get();
         assertTrue(data != null && data.length() > 0);
     }
     
-    @Test(groups="Integration")
     public void testReadsPrivateKeyFileWithMultipleColonSeparatedFilesWithGoodLast() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, "/path/does/not/exist:"+SSH_PRIVATE_KEY_FILE);
         
-        String data = LocationConfigUtils.getPrivateKeyData(config);
+        String data = LocationConfigUtils.getOsCredential(config).get();
         assertTrue(data != null && data.length() > 0);
     }
     
-    @Test(groups="Integration")
     public void testReadsPrivateKeyFileWithMultipleColonSeparatedFilesWithGoodFirst() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE+":/path/does/not/exist");
-        
-        String data = LocationConfigUtils.getPrivateKeyData(config);
+
+        String data = LocationConfigUtils.getOsCredential(config).get();
         assertTrue(data != null && data.length() > 0);
     }
     
-    @Test(groups="Integration")
-    public void testReadsPublicKeyFileWithTildaPath() throws Exception {
+    @Test(groups="Integration")  // requires ~/.ssh/id_rsa
+    public void testReadsPublicKeyFileWithTildePath() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
-        config.put(LocationConfigKeys.PUBLIC_KEY_FILE, SSH_PUBLIC_KEY_FILE);
+        config.put(LocationConfigKeys.PUBLIC_KEY_FILE, SSH_PUBLIC_KEY_FILE_WITH_TILDE);
         
-        String data = LocationConfigUtils.getPublicKeyData(config);
+        String data = LocationConfigUtils.getOsCredential(config).skipPassphraseValidation().getPublicKeyData();
         assertTrue(data != null && data.length() > 0);
     }
     
-    @Test(groups="Integration")
     public void testInfersPublicKeyFileFromPrivateKeyFile() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE);
         
-        String data = LocationConfigUtils.getPublicKeyData(config);
+        String data = LocationConfigUtils.getOsCredential(config).getPublicKeyData();
         assertTrue(data != null && data.length() > 0);
     }
 }

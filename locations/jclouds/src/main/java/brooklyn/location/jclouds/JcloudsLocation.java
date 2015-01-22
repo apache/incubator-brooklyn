@@ -99,6 +99,7 @@ import brooklyn.location.access.PortForwardManager;
 import brooklyn.location.basic.BasicMachineMetadata;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
+import brooklyn.location.basic.LocationConfigUtils.OsCredential;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
@@ -575,14 +576,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             Stopwatch provisioningStopwatch = Stopwatch.createStarted();
             Duration templateTimestamp, provisionTimestamp, usableTimestamp, customizedTimestamp;
 
-            LoginCredentials initialCredentials = null;
+            LoginCredentials userCredentials = null;
             Set<? extends NodeMetadata> nodes;
             Template template;
             try {
                 // Setup the template
                 template = buildTemplate(computeService, setup);
                 if (waitForSshable && !skipJcloudsSshing) {
-                    initialCredentials = initTemplateForCreateUser(template, setup);
+                    userCredentials = initTemplateForCreateUser(template, setup);
                 }
 
                 //FIXME initialCredentials = initUserTemplateOptions(template, setup);
@@ -627,39 +628,39 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (waitForSshable && skipJcloudsSshing) {
                 // once that host:port is definitely reachable, we can create the user
                 waitForReachable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
-                initialCredentials = createUser(computeService, node, sshHostAndPortOverride, setup);
+                userCredentials = createUser(computeService, node, sshHostAndPortOverride, setup);
             }
             
             // Figure out which login-credentials to use
             LoginCredentials customCredentials = setup.get(CUSTOM_CREDENTIALS);
             if (customCredentials != null) {
-                initialCredentials = customCredentials;
+                userCredentials = customCredentials;
                 //set userName and other data, from these credentials
                 Object oldUsername = setup.put(USER, customCredentials.getUser());
                 LOG.debug("node {} username {} / {} (customCredentials)", new Object[] { node, customCredentials.getUser(), oldUsername });
                 if (customCredentials.getOptionalPassword().isPresent()) setup.put(PASSWORD, customCredentials.getOptionalPassword().get());
                 if (customCredentials.getOptionalPrivateKey().isPresent()) setup.put(PRIVATE_KEY_DATA, customCredentials.getOptionalPrivateKey().get());
             }
-            if (initialCredentials == null) {
-                initialCredentials = extractVmCredentials(setup, node);
+            if (userCredentials == null) {
+                userCredentials = extractVmCredentials(setup, node);
             }
-            if (initialCredentials != null) {
-                node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(initialCredentials).build();
+            if (userCredentials != null) {
+                node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(userCredentials).build();
             } else {
                 // only happens if something broke above...
-                initialCredentials = LoginCredentials.fromCredentials(node.getCredentials());
+                userCredentials = LoginCredentials.fromCredentials(node.getCredentials());
             }
             
             // Wait for the VM to be reachable over SSH
             if (waitForSshable) {
-                waitForReachable(computeService, node, sshHostAndPortOverride, initialCredentials, setup);
+                waitForReachable(computeService, node, sshHostAndPortOverride, userCredentials, setup);
             } else {
                 LOG.debug("Skipping ssh check for {} ({}) due to config waitForSshable=false", node, setup.getDescription());
             }
             usableTimestamp = Duration.of(provisioningStopwatch);
             
             // Create a JcloudsSshMachineLocation, and register it
-            sshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, initialCredentials, sshHostAndPortOverride, setup);
+            sshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, userCredentials, sshHostAndPortOverride, setup);
             if (template!=null && sshMachineLocation.getTemplate()==null) {
                 sshMachineLocation.template = template;
             }
@@ -767,8 +768,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.info("Finished VM "+setup.getDescription()+" creation:"
                     + " "+sshMachineLocation.getUser()+"@"+sshMachineLocation.getAddress()+":"+sshMachineLocation.getPort()
                     + (Boolean.TRUE.equals(setup.get(LOG_CREDENTIALS))
-                              ? "password=" + (initialCredentials.getOptionalPassword().isPresent() ? initialCredentials.getOptionalPassword() : "<absent>")
-                                      + " && key=" + (initialCredentials.getOptionalPrivateKey().isPresent() ? initialCredentials.getOptionalPrivateKey() : "<absent>")
+                              ? "password=" + (userCredentials.getOptionalPassword().isPresent() ? userCredentials.getOptionalPassword() : "<absent>")
+                                      + " && key=" + (userCredentials.getOptionalPrivateKey().isPresent() ? userCredentials.getOptionalPrivateKey() : "<absent>")
                               : "")
                     + " ready after "+Duration.of(provisioningStopwatch).toStringRounded()
                     + " ("+template+" template built in "+Duration.of(templateTimestamp).toStringRounded()+";"
@@ -1232,7 +1233,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
         }
 
-        return userCreation.loginCredentials;
+        return userCreation.createdUserCredentials;
     }
     
     /**
@@ -1246,15 +1247,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             options.runScript(new StatementList(userCreation.statements));
         }
 
-        return userCreation.loginCredentials;
+        return userCreation.createdUserCredentials;
     }
     
     protected static class UserCreation {
-        public final LoginCredentials loginCredentials;
+        public final LoginCredentials createdUserCredentials;
         public final List<Statement> statements;
         
         public UserCreation(LoginCredentials creds, List<Statement> statements) {
-            this.loginCredentials = creds;
+            this.createdUserCredentials = creds;
             this.statements = statements;
         }
     }
@@ -1305,23 +1306,21 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      *   
      * @param image  The image being used to create the VM
      * @param config Configuration for creating the VM
-     * @return       The commands required to create the user, along with the expected login credentials.
+     * @return       The commands required to create the user, along with the expected login credentials for that user.
      */
     protected UserCreation createUserStatements(@Nullable Image image, ConfigBag config) {
         //NB: we ignore private key here because, by default we probably should not be installing it remotely;
         //also, it may not be valid for first login (it is created before login e.g. on amazon, so valid there;
         //but not elsewhere, e.g. on rackspace).
         
-        LoginCredentials loginCreds = null;
+        LoginCredentials createdUserCreds = null;
         String user = getUser(config);
         String explicitLoginUser = config.get(LOGIN_USER);
         String loginUser = groovyTruth(explicitLoginUser) ? explicitLoginUser : (image != null && image.getDefaultCredentials() != null) ? image.getDefaultCredentials().identity : null;
         Boolean dontCreateUser = config.get(DONT_CREATE_USER);
         Boolean grantUserSudo = config.get(GRANT_USER_SUDO);
-        String publicKeyData = LocationConfigUtils.getPublicKeyData(config);
-        String privateKeyData = LocationConfigUtils.getPrivateKeyData(config);
-        String explicitPassword = config.get(PASSWORD);
-        String password = groovyTruth(explicitPassword) ? explicitPassword : Identifiers.makeRandomId(12);
+        OsCredential credential = LocationConfigUtils.getOsCredential(config);
+        String newPassword = Strings.isNonBlank(credential.getPassword()) ? credential.getPassword() : Identifiers.makeRandomId(12);
         List<Statement> statements = Lists.newArrayList();
         
         if (groovyTruth(dontCreateUser)) {
@@ -1336,42 +1335,30 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 
             } else {
                 LOG.info("Not creating user {}, and not setting its password or authorizing keys", user);
-                
-                if (privateKeyData != null) {
-                    loginCreds = LoginCredentials.builder().user(user).privateKey(privateKeyData).build();
-                } else if (explicitPassword != null) {
-                    loginCreds = LoginCredentials.builder().user(user).password(password).build();
+
+                if (credential.isUsingPassword()) {
+                    createdUserCreds = LoginCredentials.builder().user(user).password(credential.get()).build();
+                } else if (credential.hasKey()) {
+                    createdUserCreds = LoginCredentials.builder().user(user).privateKey(credential.get()).build();
                 }
             }
             
-        } else if (!groovyTruth(user) || user.equals(loginUser)) {
+        } else if (Strings.isBlank(user) || user.equals(loginUser) || user.equals(ROOT_USERNAME)) {
             // For subsequent ssh'ing, we'll be using the loginUser
-            if (!groovyTruth(user)) {
-                config.put(USER, loginUser);
+            if (Strings.isBlank(user)) {
+                user = loginUser;
+                config.put(USER, user);
             }
 
             // Using the pre-existing loginUser; setup the publicKey/password so can login as expected
-            if (password != null) {
-                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), loginUser, password));
-                loginCreds = LoginCredentials.builder().user(loginUser).password(password).build();
+            if (Strings.isNonBlank(newPassword)) {
+                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), user, newPassword));
+                createdUserCreds = LoginCredentials.builder().user(user).password(newPassword).build();
             }
-            if (publicKeyData!=null) {
-                statements.add(new AuthorizeRSAPublicKeys("~"+loginUser+"/.ssh", ImmutableList.of(publicKeyData)));
-                if (privateKeyData != null) {
-                    loginCreds = LoginCredentials.builder().user(loginUser).privateKey(privateKeyData).build();
-                }
-            }
-            
-        } else if (user.equals(ROOT_USERNAME)) {
-            // Authorizes the public-key and sets password for the root user, so can login as expected
-            if (password != null) {
-                statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), ROOT_USERNAME, password));
-                loginCreds = LoginCredentials.builder().user(user).password(password).build();
-            }
-            if (publicKeyData!=null) {
-                statements.add(new AuthorizeRSAPublicKeys("~"+ROOT_USERNAME+"/.ssh", ImmutableList.of(publicKeyData)));
-                if (privateKeyData != null) {
-                    loginCreds = LoginCredentials.builder().user(user).privateKey(privateKeyData).build();
+            if (Strings.isNonBlank(credential.getPublicKeyData())) {
+                statements.add(new AuthorizeRSAPublicKeys("~"+user+"/.ssh", ImmutableList.of(credential.getPublicKeyData())));
+                if (Strings.isNonBlank(credential.getPrivateKeyData()) && createdUserCreds==null) {
+                    createdUserCreds = LoginCredentials.builder().user(user).privateKey(credential.getPrivateKeyData()).build();
                 }
             }
             
@@ -1380,13 +1367,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // note AdminAccess requires _all_ fields set, due to http://code.google.com/p/jclouds/issues/detail?id=1095
             AdminAccess.Builder adminBuilder = AdminAccess.builder()
                     .adminUsername(user)
-                    .adminPassword(password)
+                    .adminPassword(newPassword)
                     .grantSudoToAdminUser(groovyTruth(grantUserSudo))
                     .resetLoginPassword(true)
-                    .loginPassword(password);
+                    .loginPassword(newPassword);
 
-            if (publicKeyData!=null) {
-                adminBuilder.authorizeAdminPublicKey(true).adminPublicKey(publicKeyData);
+            if (Strings.isNonBlank(credential.getPublicKeyData())) {
+                adminBuilder.authorizeAdminPublicKey(true).adminPublicKey(credential.getPublicKeyData());
             } else {
                 adminBuilder.authorizeAdminPublicKey(false).adminPublicKey("ignored");
             }
@@ -1396,27 +1383,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // then authorizeAdminPublicKey is reset to null!
             adminBuilder.installAdminPrivateKey(false).adminPrivateKey("ignore");
             
-            if (groovyTruth(explicitPassword)) {
-                adminBuilder.lockSsh(false);
-            } else if (publicKeyData != null) {
-                adminBuilder.lockSsh(true);
-            } else {
-                // no keys or passwords supplied; using only defaults!
-                adminBuilder.lockSsh(false);
-            }
-
+            // lock SSH (key only) iff there is a public key and no password supplied
+            boolean useKey = !credential.isUsingPassword() && Strings.isNonBlank(credential.getPublicKeyData()) && Strings.isNonBlank(credential.getPrivateKeyData());
+            adminBuilder.lockSsh(useKey);
             
             statements.add(adminBuilder.build());
             
-            if (groovyTruth(publicKeyData) && groovyTruth(privateKeyData)) {
-                // assume have uploaded corresponding .pub file
-                loginCreds = LoginCredentials.builder().user(user).privateKey(privateKeyData).build();
+            if (useKey) {
+                createdUserCreds = LoginCredentials.builder().user(user).privateKey(credential.getPrivateKeyData()).build();
             } else {
-                loginCreds = LoginCredentials.builder().user(user).password(password).build();
+                createdUserCreds = LoginCredentials.builder().user(user).password(newPassword).build();
             }
         }
         
-        return new UserCreation(loginCreds, statements);
+        return new UserCreation(createdUserCreds, statements);
     }
 
 
@@ -1490,8 +1470,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 throw new IllegalArgumentException("Jclouds node for rebind matching multiple, looking for id="+rawId+" and hostname="+rawHostname+": "+candidateNodes);
 
             NodeMetadata node = Iterables.getOnlyElement(candidateNodes);
-            String pkd = LocationConfigUtils.getPrivateKeyData(setup);
-            if (groovyTruth(pkd)) {
+            String pkd = LocationConfigUtils.getOsCredential(setup).getPrivateKeyData();
+            if (Strings.isNonBlank(pkd)) {
                 LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(new Credentials(user, pkd));
                 //override credentials
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
@@ -1710,33 +1690,33 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      */
     protected LoginCredentials extractVmCredentials(ConfigBag setup, NodeMetadata node) {
         String user = getUser(setup);
-        String localPrivateKeyData = LocationConfigUtils.getPrivateKeyData(setup);
-        String localPassword = setup.get(PASSWORD);
+        OsCredential localCredentials = LocationConfigUtils.getOsCredential(setup);
         LoginCredentials nodeCredentials = LoginCredentials.fromCredentials(node.getCredentials());
 
-        LOG.debug("node {} username {} / {} (jclouds)", new Object[] { node, user, nodeCredentials.getUser() });
+        LOG.debug("Credentials extracted for {}: {}/{} with {}/{}", new Object[] { node, 
+            user, nodeCredentials.getUser(), localCredentials, nodeCredentials });
         
-        if (groovyTruth(nodeCredentials.getUser())) {
-            if (user==null) {
+        if (Strings.isNonBlank(nodeCredentials.getUser())) {
+            if (Strings.isBlank(user)) {
                 setup.put(USER, user = nodeCredentials.getUser());
-            } else if ("root".equals(user) && ROOT_ALIASES.contains(nodeCredentials.getUser())) {
+            } else if (ROOT_USERNAME.equals(user) && ROOT_ALIASES.contains(nodeCredentials.getUser())) {
                 // deprecated, we used to default username to 'root'; now we leave null, then use autodetected credentials if no user specified
-                // 
                 LOG.warn("overriding username 'root' in favour of '"+nodeCredentials.getUser()+"' at {}; this behaviour may be removed in future", node);
                 setup.put(USER, user = nodeCredentials.getUser());
             }
             
-            String pkd = elvis(localPrivateKeyData, nodeCredentials.getPrivateKey());
-            String pwd = elvis(localPassword, nodeCredentials.getPassword());
-            if (user==null || (pkd==null && pwd==null)) {
+            String pkd = Strings.maybeNonBlank(localCredentials.getPrivateKeyData()).or(nodeCredentials.getOptionalPrivateKey().orNull());
+            String pwd = Strings.maybeNonBlank(localCredentials.getPassword()).or(nodeCredentials.getOptionalPassword().orNull());
+            if (Strings.isBlank(user) || (Strings.isBlank(pkd) && pwd==null)) {
                 String missing = (user==null ? "user" : "credential");
                 LOG.warn("Not able to determine "+missing+" for "+this+" at "+node+"; will likely fail subsequently");
                 return null;
             } else {
-                LoginCredentials.Builder resultBuilder = LoginCredentials.builder()
-                        .user(user);
-                if (pkd!=null) resultBuilder.privateKey(pkd);
-                if (pwd!=null && pkd==null) resultBuilder.password(pwd);
+                LoginCredentials.Builder resultBuilder = LoginCredentials.builder().user(user);
+                if (pwd!=null && (Strings.isBlank(pkd) || localCredentials.isUsingPassword())) 
+                    resultBuilder.password(pwd);
+                else // pkd guaranteed non-blank due to above  
+                    resultBuilder.privateKey(pkd);
                 return resultBuilder.build();        
             }
         }
