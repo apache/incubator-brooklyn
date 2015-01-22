@@ -73,6 +73,8 @@ import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.jclouds.googlecomputeengine.compute.options.GoogleComputeEngineTemplateOptions;
 import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
 import org.jclouds.rest.AuthorizationException;
+import org.jclouds.scriptbuilder.ScriptBuilder;
+import org.jclouds.scriptbuilder.domain.LiteralStatement;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.scriptbuilder.domain.Statements;
@@ -1457,6 +1459,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             } else if (passwordToSet!=null) {
                 createdUserCreds = LoginCredentials.builder().user(user).password(passwordToSet).build();
             }
+
+        }
+        
+        String customTemplateOptionsScript = config.get(CUSTOM_TEMPLATE_OPTIONS_SCRIPT_CONTENTS);
+        if (Strings.isNonBlank(customTemplateOptionsScript)) {
+            statements.add(new LiteralStatement(customTemplateOptionsScript));
         }
         
         return new UserCreation(createdUserCreds, statements);

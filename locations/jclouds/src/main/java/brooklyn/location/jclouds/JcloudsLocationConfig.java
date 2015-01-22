@@ -85,6 +85,11 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
         "Whether to disable direct SSH access for root and disable password-based SSH, "
         + "if creating a user with a key-based login; "
         + "defaults to true (set false to leave root users alone)", true);
+    public static final ConfigKey<String> CUSTOM_TEMPLATE_OPTIONS_SCRIPT_CONTENTS = ConfigKeys.newStringConfigKey("customTemplateOptionsScriptContents",
+        "A custom script to pass to jclouds as part of template options, run after AdminAccess, "
+        + "for use primarily where a command which must run as root on first login before switching to the admin user, "
+        + "e.g. to customize sudoers; may start in an odd location (e.g. /tmp/bootstrap); "
+        + "NB: most commands should be run by entities, or if VM-specific but sudo is okay, then via setup.script, not via this");
     
     public static final ConfigKey<LoginCredentials> CUSTOM_CREDENTIALS = new BasicConfigKey<LoginCredentials>(LoginCredentials.class,
             "customCredentials", "Custom jclouds LoginCredentials object to be used to connect to the VM", null);
