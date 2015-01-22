@@ -43,7 +43,7 @@ public class LocationConfigUtilsTest {
         config.put(LocationConfigKeys.PRIVATE_KEY_DATA, "mydata");
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE);
         
-        OsCredential creds = LocationConfigUtils.getOsCredential(config);
+        OsCredential creds = LocationConfigUtils.getOsCredential(config).doKeyValidation(false);
         Assert.assertTrue(creds.hasKey());
         // warnings, as it is malformed
         Assert.assertFalse(creds.getWarningMessages().isEmpty());
@@ -57,7 +57,7 @@ public class LocationConfigUtilsTest {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PRIVATE_KEY_DATA, "mydata");
         
-        OsCredential creds = LocationConfigUtils.getOsCredential(config);
+        OsCredential creds = LocationConfigUtils.getOsCredential(config).doKeyValidation(false);
         Assert.assertTrue(creds.hasKey());
         Assert.assertFalse(creds.getWarningMessages().isEmpty());
         

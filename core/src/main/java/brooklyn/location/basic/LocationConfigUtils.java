@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
@@ -75,7 +76,7 @@ public class LocationConfigUtils {
         private boolean preferPassword = false;
         private boolean tryDefaultKeys = true;
         private boolean requirePublicKey = true;
-        private boolean doKeyValidation = true;
+        private boolean doKeyValidation = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_VALIDATE_LOCATION_SSH_KEYS);
         private boolean warnOnErrors = true;
         private boolean throwOnErrors = false;
         
