@@ -111,7 +111,9 @@ import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
 import brooklyn.location.jclouds.zone.AwsAvailabilityZoneExtension;
 import brooklyn.management.AccessController;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.exceptions.CompoundRuntimeException;
@@ -179,8 +181,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     // In Groovy, that's considered ok but not in Java. 
 
     // TODO test (and fix) ability to set config keys from flags
-
-    // TODO need a way to define imageId (and others?) with a specific location
 
     // TODO we say config is inherited, but it isn't the case for many "deep" / jclouds properties
     // e.g. when we pass getRawLocalConfigBag() in and decorate it with additional flags
@@ -760,6 +760,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     List<String> cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
                     sshMachineLocation.execCommands("Stopping iptables", cmds);
                 }
+                
+                List<String> extraKeyUrlsToAuth = setup.get(EXTRA_PUBLIC_KEYS_TO_AUTH);
+                if (extraKeyUrlsToAuth!=null && !extraKeyUrlsToAuth.isEmpty()) {
+                    List<String> extraKeyDataToAuth = MutableList.of();
+                    for (String keyUrl: extraKeyUrlsToAuth) {
+                        extraKeyDataToAuth.add(ResourceUtils.create().getResourceAsString(keyUrl));
+                    }
+                    sshMachineLocation.execCommands("Authorizing ssh keys", 
+                        MutableList.of(new AuthorizeRSAPublicKeys(extraKeyDataToAuth).render(org.jclouds.scriptbuilder.domain.OsFamily.UNIX)));
+                }
+
             } else {
                 // Otherwise we have deliberately not waited to be ssh'able, so don't try now to 
                 // ssh to exec these commands!
@@ -775,8 +786,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.info("Finished VM "+setup.getDescription()+" creation:"
                     + " "+sshMachineLocation.getUser()+"@"+sshMachineLocation.getAddress()+":"+sshMachineLocation.getPort()
                     + (Boolean.TRUE.equals(setup.get(LOG_CREDENTIALS))
-                              ? "password=" + (userCredentials.getOptionalPassword().isPresent() ? userCredentials.getOptionalPassword() : "<absent>")
-                                      + " && key=" + (userCredentials.getOptionalPrivateKey().isPresent() ? userCredentials.getOptionalPrivateKey() : "<absent>")
+                              ? "password=" + userCredentials.getOptionalPassword().or("<absent>")
+                                      + " && key=" + userCredentials.getOptionalPrivateKey().or("<absent>")
                               : "")
                     + " ready after "+Duration.of(provisioningStopwatch).toStringRounded()
                     + " ("+template+" template built in "+Duration.of(templateTimestamp).toStringRounded()+";"
@@ -1435,8 +1446,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // (we build the creds below)
             adminBuilder.installAdminPrivateKey(false).adminPrivateKey(Identifiers.makeRandomId(12)+"-ignored");
             
-            // lock SSH (key only) iff there is a public key and no password supplied
-            adminBuilder.lockSsh(useKey && !config.get(JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH));
+            // lock SSH means no root login and no passwordless login
+            // if we're using a password or we don't have sudo, then don't do this!
+            adminBuilder.lockSsh(useKey && grantUserSudo && !config.get(JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH));
             
             statements.add(adminBuilder.build());
             
