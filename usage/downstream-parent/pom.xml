@@ -48,6 +48,7 @@
     <!-- versions should match those used by Brooklyn, to avoid conflicts -->
     <jclouds.version>1.8.1</jclouds.version>
     <logback.version>1.0.7</logback.version>
+    <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
     <guava.version>17.0</guava.version>
     <xstream.version>1.4.7</xstream.version>
     <jackson.version>1.9.13</jackson.version>
@@ -55,6 +56,7 @@
     <jersey.version>1.12</jersey.version>
     <httpclient.version>4.2.5</httpclient.version>
     <commons-lang3.version>3.1</commons-lang3.version>
+    <groovy.version>2.3.4</groovy.version>
   </properties>
 
   <dependencyManagement>
@@ -416,7 +418,14 @@
       </build>
     </profile>
 
-    <!-- make release build (e.g. for Sonatype) with -PRelease -->
+    <!--
+      Make release build (e.g. for Sonatype) with -PRelease
+      Note that a sonatype release requires signed artifacts, javadoc and source jars; 
+      this snippet doesn't do everything, as you need to set up a key etc,
+      but it should get you a long way there (and prevent maven faffing).
+      If you don't deploy you can delete or ignore this (it has no effect unless you 
+      enter -PRelease).
+    -->
     <profile>
       <id>Release</id>
       <activation>
