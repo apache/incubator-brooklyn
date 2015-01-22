@@ -135,6 +135,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             MachineDetails.class,
             "machineDetails");
 
+    public static final ConfigKey<Boolean> DETECT_MACHINE_DETAILS = ConfigKeys.newBooleanConfigKey("detectMachineDetails",
+            "Attempt to detect machine details automatically. Works with SSH-accessible Linux instances.", true);
+
     @SetFromFlag
     protected String user;
 
@@ -896,6 +899,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     protected MachineDetails inferMachineDetails() {
+        boolean detectionEnabled = getConfig(DETECT_MACHINE_DETAILS);
+        if (!detectionEnabled)
+            return new BasicMachineDetails(new BasicHardwareDetails(-1, -1), new BasicOsDetails("UNKNOWN", "UNKNOWN", "UNKNOWN"));
+
         Tasks.setBlockingDetails("Waiting for machine details");
         try {
             return BasicMachineDetails.forSshMachineLocation(this);

@@ -1588,7 +1588,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     .configure("node", node)
                     .configureIfNotNull(CLOUD_AVAILABILITY_ZONE_ID, nodeAvailabilityZone)
                     .configureIfNotNull(CLOUD_REGION_ID, nodeRegion)
-                    .configure(CALLER_CONTEXT, setup.get(CALLER_CONTEXT)));
+                    .configure(CALLER_CONTEXT, setup.get(CALLER_CONTEXT))
+                    .configure(SshMachineLocation.DETECT_MACHINE_DETAILS, setup.get(SshMachineLocation.DETECT_MACHINE_DETAILS)));
         } else {
             LOG.warn("Using deprecated JcloudsSshMachineLocation constructor because "+this+" is not managed");
             return new JcloudsSshMachineLocation(MutableMap.builder()
