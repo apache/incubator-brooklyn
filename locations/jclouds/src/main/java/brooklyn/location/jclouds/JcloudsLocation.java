@@ -1430,7 +1430,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             
             if (Strings.isNonBlank(pubKey)) {
                 adminBuilder.authorizeAdminPublicKey(true).adminPublicKey(pubKey);
-                useKey = true;
+                if (privKey!=null) useKey = true;
             } else {
                 adminBuilder.authorizeAdminPublicKey(false).adminPublicKey(Identifiers.makeRandomId(12)+"-ignored");
             }

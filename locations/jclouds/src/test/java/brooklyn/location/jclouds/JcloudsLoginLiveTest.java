@@ -25,10 +25,12 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
@@ -51,6 +53,10 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
 
     // Image: {id=us-east-1/ami-d0f89fb9, providerId=ami-d0f89fb9, name=ubuntu/images/ebs/ubuntu-precise-12.04-amd64-server-20130411.1, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=12.04, description=099720109477/ubuntu/images/ebs/ubuntu-precise-12.04-amd64-server-20130411.1, is64Bit=true}, description=099720109477/ubuntu/images/ebs/ubuntu-precise-12.04-amd64-server-20130411.1, version=20130411.1, status=AVAILABLE[available], loginUser=ubuntu, userMetadata={owner=099720109477, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}}
     public static final String AWS_EC2_UBUNTU_IMAGE_ID = "us-east-1/ami-d0f89fb9";
+    
+    // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
+    // Uses "root" as loginUser
+    public static final String AWS_EC2_UBUNTU_10_IMAGE_ID = "us-east-1/ami-5e008437";
 
     public static final String RACKSPACE_LOCATION_SPEC = "jclouds:" + RACKSPACE_PROVIDER;
     
@@ -188,9 +194,32 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
     }
 
     @Test(groups = {"Live"})
-    protected void testSpecifyingPasswordWhenDefaultSshKeysExistPrefersKeys() throws Exception {
+    protected void testSpecifyingPasswordIgnoresDefaultSshKeys() throws Exception {
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
+        jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
+        
+        machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
+        assertSshable(machine);
+        
+        assertSshable(ImmutableMap.builder()
+                .put("address", machine.getAddress())
+                .put("user", "myname")
+                .put(SshMachineLocation.PASSWORD, "mypassword")
+                .build());
+        
+        assertNotSshable(ImmutableMap.builder()
+            .put("address", machine.getAddress())
+            .put("user", "myname")
+            .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
+            .build());
+    }
+
+    @Test(groups = {"Live"})
+    protected void testSpecifyingPasswordWithPublicKeyAllowsKeyAccess() throws Exception {
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(RACKSPACE_LOCATION_SPEC);
         
         machine = createRackspaceMachine(ImmutableMap.of("imageNameRegex", RACKSPACE_DEBIAN_IMAGE_NAME_REGEX));
@@ -234,16 +263,12 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
 
     @Test(groups = {"Live"})
     protected void testAwsEc2SpecifyingRootUser() throws Exception {
-        // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-        // Uses "root" as loginUser
-        String imageId = "us-east-1/ami-5e008437";
-        
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "root");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
-        machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
+        machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", AWS_EC2_UBUNTU_10_IMAGE_ID));
         assertSshable(machine);
         
         assertSshable(ImmutableMap.builder()
@@ -255,16 +280,12 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
     
     @Test(groups = {"Live"})
     protected void testAwsEc2WhenBlankUserSoUsesRootLoginUser() throws Exception {
-        // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-        // Uses "root" as loginUser
-        String imageId = "us-east-1/ami-5e008437";
-        
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
-        machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
+        machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", AWS_EC2_UBUNTU_10_IMAGE_ID));
         assertSshable(machine);
         
         assertSshable(ImmutableMap.builder()
@@ -278,16 +299,12 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
     // That was very bad for if someone is running brooklyn on a new AWS VM, and just installs brooklyn+runs as the default ec2-user.
     @Test(groups = {"Live"})
     protected void testAwsEc2SpecifyingSpecialUser() throws Exception {
-        // Image: {id=us-east-1/ami-5e008437, providerId=ami-5e008437, name=RightImage_Ubuntu_10.04_x64_v5.8.8.3, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=ubuntu, arch=paravirtual, version=10.04, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_Ubuntu_10.04_x64_v5.8.8.3.manifest.xml, version=5.8.8.3, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-        // Uses "root" as loginUser
-        String imageId = "us-east-1/ami-5e008437";
-        
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "ec2-user");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
-        machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", imageId));
+        machine = createEc2Machine(ImmutableMap.<String,Object>of("imageId", AWS_EC2_UBUNTU_10_IMAGE_ID));
         assertSshable(machine);
         
         assertSshable(ImmutableMap.builder()
@@ -319,12 +336,22 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
     }
     
     protected void assertSshable(Map<?,?> machineConfig) {
-        SshMachineLocation machineUsingPassword = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+        SshMachineLocation machineWithThatConfig = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure(machineConfig));
         try {
-            assertSshable(machineUsingPassword);
+            assertSshable(machineWithThatConfig);
         } finally {
-            Streams.closeQuietly(machineUsingPassword);
+            Streams.closeQuietly(machineWithThatConfig);
+        }
+    }
+    
+    protected void assertNotSshable(Map<?,?> machineConfig) {
+        try {
+            assertSshable(machineConfig);
+            Assert.fail("ssh should not have succeeded "+machineConfig);
+        } catch (Exception e) {
+            // expected
+            LOG.debug("Exception as expected when testing sshable "+machineConfig);
         }
     }
     
