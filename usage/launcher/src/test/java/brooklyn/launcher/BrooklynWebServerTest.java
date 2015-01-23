@@ -93,7 +93,7 @@ public class BrooklynWebServerTest {
     public void verifyHttps() throws Exception {
         Map<String,?> flags = ImmutableMap.<String,Object>builder()
                 .put("httpsEnabled", true)
-                .put("keystorePath", getFile("server.ks"))
+                .put("keystoreUrl", getFile("server.ks"))
                 .put("keystorePassword", "password")
                 .build();
         webServer = new BrooklynWebServer(flags, newManagementContext(brooklynProperties));

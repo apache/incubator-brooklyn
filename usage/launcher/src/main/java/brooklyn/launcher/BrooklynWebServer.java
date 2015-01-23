@@ -159,6 +159,9 @@ public class BrooklynWebServer {
     private String sslCertificate;
 
     @SetFromFlag
+    private String keystoreUrl;
+
+    @SetFromFlag @Deprecated /** @deprecated use keystoreUrl */
     private String keystorePath;
 
     @SetFromFlag
@@ -366,19 +369,28 @@ public class BrooklynWebServer {
 
             SslContextFactory sslContextFactory = new SslContextFactory();
 
-            if (keystorePath==null) keystorePath = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_URL);
+            // allow webconsole keystore & related properties to be set in brooklyn.properties
+            if (Strings.isNonBlank(keystorePath)) {
+                if (keystoreUrl==null) {
+                    log.warn("Deprecated 'keystorePath' used; callers should use 'keystoreUrl'");
+                    keystoreUrl = keystorePath;
+                } else if (!keystoreUrl.equals(keystorePath)) {
+                    log.warn("Deprecated 'keystorePath' supplied with different value than 'keystoreUrl', preferring the latter: "+
+                        keystorePath+" / "+keystoreUrl);
+                }
+            }
+            if (keystoreUrl==null) keystoreUrl = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_URL);
             if (keystorePassword==null) keystorePassword = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_PASSWORD);
             if (keystoreCertAlias==null) keystoreCertAlias = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_CERTIFICATE_ALIAS);
             
-            if (keystorePath!=null) {
-                sslContextFactory.setKeyStorePath(checkFileExists(keystorePath, "keystore"));
+            if (keystoreUrl!=null) {
+                sslContextFactory.setKeyStorePath(ResourceUtils.create(this).checkUrlExists(keystoreUrl, BrooklynWebConfig.KEYSTORE_URL.getName()));
                 if (Strings.isEmpty(keystorePassword))
                     throw new IllegalArgumentException("Keystore password is required and non-empty if keystore is specified.");
                 sslContextFactory.setKeyStorePassword(keystorePassword);
                 if (Strings.isNonEmpty(keystoreCertAlias))
                     sslContextFactory.setCertAlias(keystoreCertAlias);
             } else {
-                // TODO allow webconsole keystore & related properties to be set in brooklyn.properties 
                 log.info("No keystore specified but https enabled; creating a default keystore");
                 
                 if (Strings.isEmpty(keystoreCertAlias))
