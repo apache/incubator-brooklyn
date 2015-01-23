@@ -315,7 +315,7 @@ define([
                 self.$("#appClassTab .application-type-input").typeahead().data('typeahead').source = self.catalogApplicationIds
                 $('#catalog-applications-throbber').hide();
                 $('#catalog-applications-empty').hide();
-                if (self.catalogApplicationItems) {
+                if (self.catalogApplicationItems && self.catalogApplicationItems.length > 0) {
                     self.addTemplateLozenges()
                 } else {
                     $('#catalog-applications-empty').show();
