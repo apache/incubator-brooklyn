@@ -1336,19 +1336,19 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String user = getUser(config);
         String explicitLoginUser = config.get(LOGIN_USER);
         String loginUser = groovyTruth(explicitLoginUser) ? explicitLoginUser : (image != null && image.getDefaultCredentials() != null) ? image.getDefaultCredentials().identity : null;
-        Boolean dontCreateUser = config.get(DONT_CREATE_USER);
-        Boolean grantUserSudo = config.get(GRANT_USER_SUDO);
+        boolean dontCreateUser = config.get(DONT_CREATE_USER);
+        boolean grantUserSudo = config.get(GRANT_USER_SUDO);
         OsCredential credential = LocationConfigUtils.getOsCredential(config);
         credential.checkNoErrors().logAnyWarnings();
         String passwordToSet = Strings.isNonBlank(credential.getPassword()) ? credential.getPassword() : Identifiers.makeRandomId(12);
         List<Statement> statements = Lists.newArrayList();
         
-        if (groovyTruth(dontCreateUser)) {
+        if (dontCreateUser) {
             // dontCreateUser:
             // if caller has not specified a user, we'll just continue to use the loginUser;
             // if caller *has*, we set up our credentials assuming that user and credentials already exist
             
-            if (!groovyTruth(user)) {
+            if (Strings.isBlank(user)) {
                 // createdUserCreds returned from this method will be null; 
                 // we will use the creds returned by jclouds on the node
                 LOG.info("Not setting up any user (subsequently using loginUser {})", user, loginUser);
@@ -1407,20 +1407,18 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // note AdminAccess requires _all_ fields set, due to http://code.google.com/p/jclouds/issues/detail?id=1095
             AdminAccess.Builder adminBuilder = AdminAccess.builder()
                     .adminUsername(user)
-                    .grantSudoToAdminUser(groovyTruth(grantUserSudo));
-                    // login user's password now set to something random
-                    // (could explicitly set with loginPassword)
+                    .grantSudoToAdminUser(grantUserSudo);
             
             Boolean useKey = null;
             if (passwordToSet!=null) {
                 adminBuilder.adminPassword(passwordToSet);
                 useKey = false;
             } else {
-                // will be using a key, but a password should be set
+                // will be using a key, so set the password to something obscure (and forget it)
                 adminBuilder.adminPassword(Identifiers.makeRandomId(12));
             }
             
-            if (config.get(JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH)) {
+            if (grantUserSudo && config.get(JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH)) {
                 // the default - set root password which we forget, because we have sudo acct
                 // (and lock out root and passwords from ssh)
                 adminBuilder.resetLoginPassword(true);
