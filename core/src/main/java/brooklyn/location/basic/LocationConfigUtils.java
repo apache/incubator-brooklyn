@@ -50,6 +50,7 @@ import brooklyn.util.os.Os;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -71,6 +72,7 @@ public class LocationConfigUtils {
     
     /** Convenience class for holding private/public keys and passwords, inferring from config keys.
      * See {@link LocationConfigUtils#getOsCredential(ConfigBag)}. */
+    @Beta // would be nice to replace with a builder pattern 
     public static class OsCredential {
         private final ConfigBag config;
         private boolean preferPassword = false;
@@ -357,8 +359,8 @@ public class LocationConfigUtils {
         @Override
         public String toString() {
             return getClass().getSimpleName()+"["+
-                (Strings.isNonBlank(publicKeyData) ? publicKeyData : "public-key")+";"+
-                (Strings.isNonBlank(privateKeyData) ? "private-key" : "private-key")+","+
+                (Strings.isNonBlank(publicKeyData) ? publicKeyData : "no-public-key")+";"+
+                (Strings.isNonBlank(privateKeyData) ? "private-key-present" : "no-private-key")+","+
                 (password!=null ? "password(len="+password.length()+")" : "no-password")+"]";
         }
     }
