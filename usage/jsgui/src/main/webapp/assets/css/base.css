@@ -130,6 +130,14 @@ div#create-step-template-entries {
     padding-top: 12px;
     padding-bottom: 36px;
 }
+div#catalog-applications-throbber {
+    margin-top: 100px;
+    text-align: center;
+}
+div#catalog-applications-empty {
+    margin-top: 100px;
+    text-align: center;
+}
 /* menu bar */
 .navbar .nav>li {
     display: block;

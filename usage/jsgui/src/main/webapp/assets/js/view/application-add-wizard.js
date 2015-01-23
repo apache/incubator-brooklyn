@@ -286,7 +286,9 @@ define([
             'keyup #yaml_code':'onYamlCodeChange',
             'change #yaml_code':'onYamlCodeChange',
             'paste #yaml_code':'onYamlCodeChange',
-            'shown a[data-toggle="tab"]':'onTabChange'
+            'shown a[data-toggle="tab"]':'onTabChange',
+            'click #templateTab #catalog-add':'switchToCatalogAdd',
+            'click #templateTab #catalog-yaml':'showYamlTab',
         },
         template:_.template(CreateHtml),
         wizard: null,
@@ -311,7 +313,14 @@ define([
                 self.catalogApplicationItems = result
                 self.catalogApplicationIds = _.map(result, function(item) { return item.id })
                 self.$("#appClassTab .application-type-input").typeahead().data('typeahead').source = self.catalogApplicationIds
-                self.addTemplateLozenges()
+                $('#catalog-applications-throbber').hide();
+                $('#catalog-applications-empty').hide();
+                if (self.catalogApplicationItems) {
+                    self.addTemplateLozenges()
+                } else {
+                    $('#catalog-applications-empty').show();
+                    self.showYamlTab();
+                }
             })
         },
         renderConfiguredEntities:function () {
@@ -351,6 +360,15 @@ define([
         onYamlCodeChange: function() {
             if (this.options.wizard)
                 this.options.wizard.updateButtonVisibility();
+        },
+        switchToCatalogAdd: function() {
+            var $modal = $('.add-app #modal-container .modal')
+            $modal.modal('hide');
+            window.location.href="#v1/catalog/new";
+        },
+        showYamlTab: function() {
+            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show')
+            $("#yaml_code").focus();
         },
         applyFilter: function(e) {
             var filter = $(e.currentTarget).val().toLowerCase()
