@@ -19,8 +19,12 @@
 package brooklyn.location.access;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import javax.annotation.Nullable;
+
 import brooklyn.location.Location;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.net.HostAndPort;
 
@@ -48,6 +52,13 @@ public class PortMapping {
         this.publicPort = publicPort;
         this.target = target;
         this.privatePort = privatePort;
+    }
+
+    // In a release after 0.7.0, this will no longer be @Nullable
+    @Beta
+    @Nullable
+    public HostAndPort getPublicEndpoint() {
+        return publicEndpoint;
     }
 
     public int getPublicPort() {

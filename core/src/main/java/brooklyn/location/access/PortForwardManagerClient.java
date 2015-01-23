@@ -134,6 +134,11 @@ public class PortForwardManagerClient implements PortForwardManager {
     }
 
     @Override
+    public boolean forgetPortMappings(String publicIpId) {
+        return getDelegate().forgetPortMappings(publicIpId);
+    }
+
+    @Override
     public String getId() {
         return getDelegate().getId();
     }    
