@@ -428,8 +428,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return getComputeService(MutableMap.of());
     }
     public ComputeService getComputeService(Map<?,?> flags) {
-        return JcloudsUtil.findComputeService((flags==null || flags.isEmpty()) ? getAllConfigBag() :
-            ConfigBag.newInstanceExtending(getAllConfigBag(), flags));
+        ConfigBag conf = (flags==null || flags.isEmpty()) 
+                ? getAllConfigBag()
+                : ConfigBag.newInstanceExtending(getAllConfigBag(), flags);
+        return getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(conf, true);
     }
     
     /** @deprecated since 0.7.0 use {@link #listMachines()} */ @Deprecated
@@ -552,7 +554,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         JcloudsPortForwarderExtension portForwarder = setup.get(PORT_FORWARDER);
         if (usePortForwarding) checkNotNull(portForwarder, "portForwarder, when use-port-forwarding enabled");
 
-        final ComputeService computeService = JcloudsUtil.findComputeService(setup);
+        final ComputeService computeService = getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(setup, true);
         CloudMachineNamer cloudMachineNamer = getCloudMachineNamer(setup);
         String groupId = elvis(setup.get(GROUP_ID), cloudMachineNamer.generateNewGroupId());
         NodeMetadata node = null;
@@ -799,6 +801,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             throw Exceptions.propagate(e);
         }
     }
+
     
     // ------------- constructing the template, etc ------------------------
     
@@ -1128,7 +1131,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // TODO use key
             m1.putStringKey("anyOwner", true);
         }
-        ComputeService computeServiceLessRestrictive = JcloudsUtil.findComputeService(m1);
+        ComputeService computeServiceLessRestrictive = getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(m1, true);
         Set<? extends Image> imgs = computeServiceLessRestrictive.listImages();
         LOG.info(""+imgs.size()+" available images at "+this);
         for (Image img: imgs) {
@@ -1457,7 +1460,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         (rawHostname != null ? rawHostname : "<unspecified>"), 
                         getProvider()});
             
-            ComputeService computeService = JcloudsUtil.findComputeService(setup, true);
+            ComputeService computeService = getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(setup, true);
             
             Set<? extends NodeMetadata> candidateNodes = computeService.listNodesDetailsMatching(new Predicate<ComputeMetadata>() {
                 @Override
@@ -1589,7 +1592,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     .configureIfNotNull(CLOUD_AVAILABILITY_ZONE_ID, nodeAvailabilityZone)
                     .configureIfNotNull(CLOUD_REGION_ID, nodeRegion)
                     .configure(CALLER_CONTEXT, setup.get(CALLER_CONTEXT))
-                    .configure(SshMachineLocation.DETECT_MACHINE_DETAILS, setup.get(SshMachineLocation.DETECT_MACHINE_DETAILS)));
+                    .configure(SshMachineLocation.DETECT_MACHINE_DETAILS, setup.get(SshMachineLocation.DETECT_MACHINE_DETAILS))
+                    .configureIfNotNull(USE_PORT_FORWARDING, setup.get(USE_PORT_FORWARDING))
+                    .configureIfNotNull(PORT_FORWARDER, setup.get(PORT_FORWARDER))
+                    .configureIfNotNull(PORT_FORWARDING_MANAGER, setup.get(PORT_FORWARDING_MANAGER)));
         } else {
             LOG.warn("Using deprecated JcloudsSshMachineLocation constructor because "+this+" is not managed");
             return new JcloudsSshMachineLocation(MutableMap.builder()
@@ -1604,6 +1610,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     .put("callerContext", setup.get(CALLER_CONTEXT))
                     .putIfNotNull(CLOUD_AVAILABILITY_ZONE_ID.getName(), nodeAvailabilityZone)
                     .putIfNotNull(CLOUD_REGION_ID.getName(), nodeRegion)
+                    .put(USE_PORT_FORWARDING, setup.get(USE_PORT_FORWARDING))
+                    .put(PORT_FORWARDER, setup.get(PORT_FORWARDER))
+                    .put(PORT_FORWARDING_MANAGER, setup.get(PORT_FORWARDING_MANAGER))
                     .build(),
                     this,
                     node);
@@ -1647,19 +1656,21 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     @Override
     public void release(SshMachineLocation machine) {
         String instanceId = vmInstanceIds.remove(machine);
-        if (!groovyTruth(instanceId)) {
+        if (instanceId == null) {
+            LOG.info("Attempted release of unknown machine "+machine+" in "+toString());
             throw new IllegalArgumentException("Unknown machine "+machine);
         }
         
         LOG.info("Releasing machine {} in {}, instance id {}", new Object[] {machine, this, instanceId});
         
         removeChild(machine);
+        
         try {
             releaseNode(instanceId);
         } catch (Exception e) {
             LOG.error("Problem releasing machine "+machine+" in "+this+", instance id "+instanceId+
                     "; discarding instance and continuing...", e);
-            Exceptions.propagate(e);
+            throw Exceptions.propagate(e);
         }
     }
 
@@ -1675,7 +1686,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String instanceId = node.getId();
         LOG.info("Releasing node {} in {}, instance id {}", new Object[] {node, this, instanceId});
         
-        ComputeService computeService = null;
         try {
             releaseNode(instanceId);
         } catch (Exception e) {
@@ -1687,7 +1697,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected void releaseNode(String instanceId) {
         ComputeService computeService = null;
         try {
-            computeService = JcloudsUtil.findComputeService(getAllConfigBag());
+            computeService = getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(getAllConfigBag(), true);
             computeService.destroyNode(instanceId);
         } finally {
         /*

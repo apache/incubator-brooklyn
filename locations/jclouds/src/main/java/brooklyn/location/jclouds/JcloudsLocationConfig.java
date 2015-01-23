@@ -230,6 +230,12 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> OS_VERSION_REGEX = ConfigKeys.newStringConfigKey("osVersionRegex", 
         "Regular expression for the OS version to load");
 
+    public static final ConfigKey<ComputeServiceRegistry> COMPUTE_SERVICE_REGISTRY = ConfigKeys.newConfigKey(
+            ComputeServiceRegistry.class,
+            "jclouds.computeServiceRegistry",
+            "Registry/Factory for creating jclouds ComputeService; default is almost always fine, except where tests want to customize behaviour",
+            ComputeServiceRegistryImpl.INSTANCE);
+    
     // TODO
     
 //  "noDefaultSshKeys" - hints that local ssh keys should not be read as defaults
