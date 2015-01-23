@@ -18,6 +18,8 @@
 # under the License.
 #
 
+set -e
+
 # changes the version everywhere
 # usage, e.g.:  change-version.sh 0.3.0-SNAPSHOT 0.3.0-RC1
 #          or:  change-version.sh MARKER 0.3.0-SNAPSHOT 0.3.0-RC1
@@ -45,16 +47,24 @@ VERSION_MARKER_NL=${VERSION_MARKER}_BELOW
 CURRENT_VERSION=$1
 NEW_VERSION=$2
 
-# grep --exclude-dir working only in recent versions, not on all platforms, replace with find
-# skip folders named "ignored" or .xxx (but not the current folder ".")
-# exclude log, war, etc. files
+# grep --exclude-dir working only in recent versions, not on all platforms, replace with find;
+# skip folders named "ignored" or .xxx (but not the current folder ".");
+# exclude log, war, etc. files;
+# use null delimiters so files containing spaces are supported;
+# pass /dev/null as the first file to search in, so the command doesn't fail if find doesn't match any files;
+# add || true for the case where grep doesn't have matches, so the script doesn't halt
+# If there's an error "Argument list too long" add -n20 to xargs arguments and loop over $FILE around sed
 FILES=`find . -type d \( -name ignored -or -name .?\* \) -prune \
-       -o -type f -not \( -name \*.log -or -name '*.war' -or -name '*.min.js' -or -name '*.min.css' \) -print | \
-       xargs grep -l "${VERSION_MARKER}\|${VERSION_MARKER_NL}"`
+       -o -type f -not \( -name \*.log -or -name '*.war' -or -name '*.min.js' -or -name '*.min.css' \) -print0 | \
+       xargs -0 grep -l "${VERSION_MARKER}\|${VERSION_MARKER_NL}" /dev/null || true`
 
-# search for files containing version markers
-sed -i.bak -e "/${VERSION_MARKER}/s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
-sed -i.bak -e "/${VERSION_MARKER_NL}/n;s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
+FILES_COUNT=`echo $FILES | wc | awk '{print $2}'`
 
-echo "Changed ${CURRENT_VERSION} to ${NEW_VERSION} for "`echo $FILES | wc | awk '{print $2}'`" files"
+if [ ${FILES_COUNT} -ne 0 ]; then
+    # search for files containing version markers
+    sed -i.bak -e "/${VERSION_MARKER}/s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
+    sed -i.bak -e "/${VERSION_MARKER_NL}/n;s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
+fi
+
+echo "Changed ${CURRENT_VERSION} to ${NEW_VERSION} for "${FILES_COUNT}" files"
 echo "(Do a \`find . -name \"*.bak\" -delete\`  to delete the backup files.)"
