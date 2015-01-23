@@ -454,7 +454,8 @@ input[type="color"]:focus,.uneditable-input:focus {
 #reload-brooklyn-properties-resource {
 	text-align: right;
 }
-#reload-brooklyn-properties-indicator {
+
+#clear-ha-node-records-resource {
     text-align: right;
 }
 

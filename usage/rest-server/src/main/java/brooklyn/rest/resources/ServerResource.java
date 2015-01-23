@@ -287,6 +287,12 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     }
 
     @Override
+    public Response clearHighAvailabilityPlaneStates() {
+        mgmt().getHighAvailabilityManager().publishClearNonMaster();
+        return Response.ok().build();
+    }
+
+    @Override
     public String getUser() {
         EntitlementContext entitlementContext = Entitlements.getEntitlementContext();
         if (entitlementContext!=null && entitlementContext.user()!=null){

@@ -17,10 +17,10 @@
  * under the License.
 */
 define([
-    "jquery", "underscore", "backbone", "moment",
+    "jquery", "underscore", "backbone", "moment", "view/viewutils",
     "model/ha",
     "text!tpl/home/ha-summary.html"
-], function ($, _, Backbone, moment, ha, HASummaryHtml) {
+], function ($, _, Backbone, moment, ViewUtils, ha, HASummaryHtml) {
 
     var template = _.template(HASummaryHtml);
     var nodeRowTemplate = _.template(
@@ -43,6 +43,9 @@ define([
         beforeClose: function() {
             clearInterval(this.updateTimestampCallback);
             this.stopListening();
+        },
+        updateNow: function() {
+            ha.fetch();
         },
         render: function() {
             this.$el.html(template());

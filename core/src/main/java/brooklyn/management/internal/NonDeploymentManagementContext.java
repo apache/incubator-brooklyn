@@ -599,5 +599,9 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         public Map<String, Object> getMetrics() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
+        @Override
+        public void publishClearNonMaster() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
     }
 }

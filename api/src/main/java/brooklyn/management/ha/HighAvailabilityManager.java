@@ -97,7 +97,12 @@ public interface HighAvailabilityManager {
     void setPriority(long priority);
     
     long getPriority();
-    
+
+    /** deletes non-master node records; active nodes (including this) will republish, 
+     * so this provides a simple way to clean out the cache of dead brooklyn nodes */
+    @Beta
+    void publishClearNonMaster();
+
     /**
      * Returns a snapshot of the management-plane's current / most-recently-known status,
      * as last read from {@link #loadManagementPlaneSyncRecord(boolean)}, or null if none read.
