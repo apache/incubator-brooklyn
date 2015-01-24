@@ -159,7 +159,7 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
         }).build());
         
         DynamicTasks.waitForLast();
-        entity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, null);
+        entity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, (String)null);
         entity().getConfigMap().addToLocalBag(parameters.getAllConfig());
         ((BrooklynNodeDriver)((DriverDependentEntity<?>)entity()).getDriver()).clearInstallDir();
 

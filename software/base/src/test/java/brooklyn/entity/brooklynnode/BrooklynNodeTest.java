@@ -74,7 +74,7 @@ public class BrooklynNodeTest {
         // TODO Using BrooklynNodeImpl directly, because want to instantiate a BroolynNodeSshDriver.
         //      Really want to make that easier to test, without going through "wrong" code path for creating entity.
         BrooklynNodeImpl entity = new BrooklynNodeImpl();
-        entity.configure(BrooklynNode.SUGGESTED_VERSION, version);
+        entity.setConfig(BrooklynNode.SUGGESTED_VERSION, version);
         entity.setParent(app);
         Entities.manage(entity);
         ConfigToAttributes.apply(entity);
