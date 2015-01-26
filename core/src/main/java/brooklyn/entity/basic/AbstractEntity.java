@@ -59,6 +59,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.internal.BrooklynFeatureEnablement;
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.Reference;
 import brooklyn.internal.storage.impl.BasicReference;
@@ -143,7 +144,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
     
-    static { BrooklynLanguageExtensions.init(); }
+    static { BrooklynInitialization.initAll(); }
     
     public static final BasicNotificationSensor<Location> LOCATION_ADDED = new BasicNotificationSensor<Location>(
             Location.class, "entity.location.added", "Location dynamically added to entity");

@@ -47,9 +47,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
-import brooklyn.entity.basic.EntityFactory;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;
@@ -473,11 +473,14 @@ public class TypeCoercions {
         return null;
     }
 
-    public synchronized static <A,B> void registerAdapter(Class<A> sourceType, Class<B> targetType, Function<? super A,B> fn) {
-        registry.put(targetType, sourceType, fn);
+    /** Registers an adapter for use with type coercion. Returns any old adapter. */
+    public synchronized static <A,B> Function registerAdapter(Class<A> sourceType, Class<B> targetType, Function<? super A,B> fn) {
+        return registry.put(targetType, sourceType, fn);
     }
 
-    static {
+    static { BrooklynInitialization.initTypeCoercionStandardAdapters(); }
+    
+    public static void initStandardAdapters() {
         registerAdapter(CharSequence.class, String.class, new Function<CharSequence,String>() {
             @Override
             public String apply(CharSequence input) {
@@ -551,18 +554,20 @@ public class TypeCoercions {
                 return new ClosureEntityFactory(input);
             }
         });
-        registerAdapter(EntityFactory.class, ConfigurableEntityFactory.class, new Function<EntityFactory,ConfigurableEntityFactory>() {
+        @SuppressWarnings({"unused", "deprecation"})
+        Function<?,?> ignoredVarHereToAllowSuppressDeprecationWarning1 = registerAdapter(brooklyn.entity.basic.EntityFactory.class, ConfigurableEntityFactory.class, new Function<brooklyn.entity.basic.EntityFactory,ConfigurableEntityFactory>() {
             @SuppressWarnings("unchecked")
             @Override
-            public ConfigurableEntityFactory apply(EntityFactory input) {
+            public ConfigurableEntityFactory apply(brooklyn.entity.basic.EntityFactory input) {
                 if (input instanceof ConfigurableEntityFactory) return (ConfigurableEntityFactory)input;
                 return new ConfigurableEntityFactoryFromEntityFactory(input);
             }
         });
-        registerAdapter(Closure.class, EntityFactory.class, new Function<Closure,EntityFactory>() {
+        @SuppressWarnings({"unused", "deprecation"})
+        Function<?,?> ignoredVarHereToAllowSuppressDeprecationWarning2 = registerAdapter(Closure.class, brooklyn.entity.basic.EntityFactory.class, new Function<Closure,brooklyn.entity.basic.EntityFactory>() {
             @SuppressWarnings("unchecked")
             @Override
-            public EntityFactory apply(Closure input) {
+            public brooklyn.entity.basic.EntityFactory apply(Closure input) {
                 return new ClosureEntityFactory(input);
             }
         });

@@ -42,6 +42,7 @@ import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
 
@@ -55,7 +56,11 @@ public class SecureKeys extends SecureKeysWithoutBouncyCastle {
 
     private static final Logger log = LoggerFactory.getLogger(SecureKeys.class);
     
-    static { Security.addProvider(new BouncyCastleProvider()); }
+    static { BrooklynInitialization.initSecureKeysBouncyCastleProvider(); }
+    
+    public static void initBouncyCastleProvider() {
+        Security.addProvider(new BouncyCastleProvider());
+    }
     
     public static class PassphraseProblem extends IllegalStateException {
         private static final long serialVersionUID = -3382824813899223447L;

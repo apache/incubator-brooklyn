@@ -22,7 +22,6 @@ import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
@@ -32,8 +31,8 @@ import javax.security.auth.x500.X500Principal;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.X509Extension;
 import org.bouncycastle.jce.X509Principal;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.util.exceptions.Exceptions;
 
 /** A fluent API which simplifies generating certificates (signed keys) */
@@ -42,7 +41,7 @@ import brooklyn.util.exceptions.Exceptions;
  * drags in an add'l dependency (bcmail) and is harder to use. */
 public class FluentKeySigner {
 
-    static { Security.addProvider(new BouncyCastleProvider()); }
+    static { BrooklynInitialization.initSecureKeysBouncyCastleProvider(); }
 
     protected X500Principal issuerPrincipal;
     protected KeyPair issuerKey;
