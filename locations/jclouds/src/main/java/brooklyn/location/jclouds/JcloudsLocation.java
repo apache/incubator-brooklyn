@@ -763,7 +763,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     sshMachineLocation.execCommands("Stopping iptables", cmds);
                 }
                 
-                List<String> extraKeyUrlsToAuth = setup.get(EXTRA_PUBLIC_KEYS_TO_AUTH);
+                List<String> extraKeyUrlsToAuth = setup.get(EXTRA_PUBLIC_KEY_URLS_TO_AUTH);
                 if (extraKeyUrlsToAuth!=null && !extraKeyUrlsToAuth.isEmpty()) {
                     List<String> extraKeyDataToAuth = MutableList.of();
                     for (String keyUrl: extraKeyUrlsToAuth) {
@@ -1389,6 +1389,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             String privKey = credential.getPrivateKeyData();
             
             if (credential.isEmpty()) {
+                /*
+                 * TODO have an explicit `create_new_key_per_machine` config key.
+                 * error if privateKeyData is set in this case.
+                 * publicKeyData automatically added to EXTRA_SSH_KEY_URLS_TO_AUTH.
+                 * 
+                 * if this config key is not set, use a key `brooklyn_id_rsa` and `.pub` in `MGMT_BASE_DIR`,
+                 * with permission 0600, creating it if necessary, and logging the fact that this was created.
+                 */
                 if (!loggedSshKeysHint && !config.containsKey(PRIVATE_KEY_FILE)) {
                     loggedSshKeysHint = true;
                     LOG.info("Default SSH keys not found or not usable; will create new keys for each machine. "

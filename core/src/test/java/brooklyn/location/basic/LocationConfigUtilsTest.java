@@ -90,7 +90,7 @@ public class LocationConfigUtilsTest {
         assertTrue(data != null && data.length() > 0);
     }
     
-    @Test(groups="Integration")  // requires ~/.ssh/passphrase-id_rsa
+    @Test(groups="Integration")
     public void testReadsPrivateKeyFileWithPassphrase() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE_WITH_PASSPHRASE);

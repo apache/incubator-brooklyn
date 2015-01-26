@@ -18,18 +18,22 @@
  */
 package brooklyn.internal;
 
-import com.google.common.annotations.Beta;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.net.Networking;
 
+import com.google.common.annotations.Beta;
+
 /** Various static initialization tasks are routed through this class,
  * to give us better traceability of their invocation. */ 
 @Beta
 public class BrooklynInitialization {
 
+    private static AtomicBoolean done = new AtomicBoolean(false);
+    
     public static void initTypeCoercionStandardAdapters() {
         TypeCoercions.initStandardAdapters();
     }
@@ -57,12 +61,21 @@ public class BrooklynInitialization {
      * 
      */
     
-    public static void initAll() {
+    public synchronized static void initAll() {
+        if (done.get()) return;
         initTypeCoercionStandardAdapters();
         initSecureKeysBouncyCastleProvider();
         initNetworking();
         initPortRanges();
         initLegacyLanguageExtensions();
+        done.set(true);
+    }
+
+    @SuppressWarnings("deprecation")
+    public synchronized static void reinitAll() {
+        done.set(false);
+        brooklyn.util.BrooklynLanguageExtensions.reinit();
+        initAll();
     }
 
 }

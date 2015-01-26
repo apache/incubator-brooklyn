@@ -74,8 +74,8 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> EXTRA_PUBLIC_KEY_DATA_TO_AUTH = ConfigKeys.newStringConfigKey("extraSshPublicKeyData",
         "Additional public key data to add to authorized_keys", null);
     @SuppressWarnings("serial")
-    public static final ConfigKey<List<String>> EXTRA_PUBLIC_KEYS_TO_AUTH = ConfigKeys.newConfigKey(new TypeToken<List<String>>() {}, 
-        "extraSshPublicKeys", "Additional public keys (files or URLs) to add to authorized_keys", null);
+    public static final ConfigKey<List<String>> EXTRA_PUBLIC_KEY_URLS_TO_AUTH = ConfigKeys.newConfigKey(new TypeToken<List<String>>() {}, 
+        "extraSshPublicKeyUrls", "Additional public keys (files or URLs, in SSH2/RFC4716/id_rsa.pub format) to add to authorized_keys", null);
     
     public static final ConfigKey<Boolean> DONT_CREATE_USER = ConfigKeys.newBooleanConfigKey("dontCreateUser", 
             "Whether to skip creation of 'user' when provisioning machines (default false)", false);

@@ -54,15 +54,15 @@ public class AuthorizedKeysParser {
 
             String type = readType(stream);
             if (type.equals("ssh-rsa")) {
-                BigInteger e = readBigInt(stream);
-                BigInteger m = readBigInt(stream);
+                BigInteger e = readBigInt(stream, 1);
+                BigInteger m = readBigInt(stream, 1);
                 RSAPublicKeySpec spec = new RSAPublicKeySpec(m, e);
                 return KeyFactory.getInstance("RSA").generatePublic(spec);
             } else if (type.equals("ssh-dss")) {
-                BigInteger p = readBigInt(stream);
-                BigInteger q = readBigInt(stream);
-                BigInteger g = readBigInt(stream);
-                BigInteger y = readBigInt(stream);
+                BigInteger p = readBigInt(stream, 1);
+                BigInteger q = readBigInt(stream, 1);
+                BigInteger g = readBigInt(stream, 1);
+                BigInteger y = readBigInt(stream, 1);
                 DSAPublicKeySpec spec = new DSAPublicKeySpec(y, p, q, g);
                 return KeyFactory.getInstance("DSA").generatePublic(spec);
             } else {
@@ -80,8 +80,10 @@ public class AuthorizedKeysParser {
             | ((stream.read() & 0xFF) << 8) | (stream.read() & 0xFF);
     }
     
-    private static byte[] readBytesWithLength(InputStream stream) throws IOException {
+    private static byte[] readBytesWithLength(InputStream stream, int minLen) throws IOException {
         int len = readInt(stream);
+        if (len<minLen || len>100000)
+            throw new IllegalStateException("Invalid stream header: length "+len);
         byte[] result = new byte[len];
         stream.read(result);
         return result;
@@ -96,8 +98,8 @@ public class AuthorizedKeysParser {
         stream.write(buf);
     }
     
-    private static String readType(InputStream stream) throws IOException { return new String(readBytesWithLength(stream)); }
-    private static BigInteger readBigInt(InputStream stream) throws IOException { return new BigInteger(readBytesWithLength(stream)); }
+    private static String readType(InputStream stream) throws IOException { return new String(readBytesWithLength(stream, 0)); }
+    private static BigInteger readBigInt(InputStream stream, int minLen) throws IOException { return new BigInteger(readBytesWithLength(stream, minLen)); }
 
     public static String encodePublicKey(PublicKey key) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();

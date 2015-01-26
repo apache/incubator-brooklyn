@@ -50,7 +50,9 @@ import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 
 /**
- * Utility methods for generating and working with keys
+ * Utility methods for generating and working with keys,
+ * extending the parent class with useful things provided by BouncyCastle crypto library.
+ * (Parent class is in a different project where BC is not included as a dependency.)
  */
 public class SecureKeys extends SecureKeysWithoutBouncyCastle {
 
