@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.Catalog;
-import brooklyn.cli.itemlister.ClassFinder;
-import brooklyn.cli.itemlister.ItemDescriptors;
+import brooklyn.cli.lister.ClassFinder;
+import brooklyn.cli.lister.ItemDescriptors;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
