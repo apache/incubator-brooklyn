@@ -35,7 +35,6 @@ import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.openssl.PasswordFinder;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
@@ -60,8 +59,8 @@ public class SecureKeys extends SecureKeysWithoutBouncyCastle {
     
     public static class PassphraseProblem extends IllegalStateException {
         private static final long serialVersionUID = -3382824813899223447L;
-        public PassphraseProblem() { super("Passphrase problem with this key"); }
         public PassphraseProblem(String message) { super("Passphrase problem with this key: "+message); }
+        public PassphraseProblem(String message, Exception cause) { super("Passphrase problem with this key: "+message, cause); }
     }
     
     private SecureKeys() {}
@@ -74,7 +73,7 @@ public class SecureKeys extends SecureKeysWithoutBouncyCastle {
     /** reads RSA or DSA / pem style private key files (viz {@link #toPem(KeyPair)}), extracting also the public key if possible
      * @throws IllegalStateException on errors, in particular {@link PassphraseProblem} if that is the problem */
     public static KeyPair readPem(InputStream input, final String passphrase) {
-        // TODO cache is only for fallback "reader" strategy 
+        // TODO cache is only for fallback "reader" strategy (2015-01); delete when Parser confirmed working
         byte[] cache = Streams.readFully(input);
         input = new ByteArrayInputStream(cache);
 
@@ -95,7 +94,7 @@ public class SecureKeys extends SecureKeysWithoutBouncyCastle {
                     kp = converter.getKeyPair(((PEMEncryptedKeyPair) object).decryptKeyPair(decProv));
                 } catch (Exception e) {
                     Exceptions.propagateIfFatal(e);
-                    throw new PassphraseProblem("wrong passphrase");
+                    throw new PassphraseProblem("wrong passphrase", e);
                 }
             } else  if (object instanceof PEMKeyPair) {
                 kp = converter.getKeyPair((PEMKeyPair) object);
@@ -118,17 +117,19 @@ public class SecureKeys extends SecureKeysWithoutBouncyCastle {
             input = new ByteArrayInputStream(cache);
             try {
                 Security.addProvider(new BouncyCastleProvider());
-                PEMReader pr = new PEMReader(new InputStreamReader(input), new PasswordFinder() {
+                @SuppressWarnings("deprecation")
+                org.bouncycastle.openssl.PEMReader pr = new org.bouncycastle.openssl.PEMReader(new InputStreamReader(input), new PasswordFinder() {
                     public char[] getPassword() {
                         return passphrase!=null ? passphrase.toCharArray() : new char[0];
                     }
                 });
+                @SuppressWarnings("deprecation")
                 KeyPair result = (KeyPair) pr.readObject();
                 pr.close();
                 if (result==null)
                     throw Exceptions.propagate(e);
                 
-                log.warn("PEMParser failed when PEMReader succeeded, with "+result+"; had: "+e);
+                log.warn("PEMParser failed when deprecated PEMReader succeeded, with "+result+"; had: "+e);
 
                 return result;
 
@@ -141,7 +142,7 @@ public class SecureKeys extends SecureKeysWithoutBouncyCastle {
 
     /** because KeyPair.equals is not implemented :( */
     public static boolean equal(KeyPair k1, KeyPair k2) {
-        return Objects.equal(k2.getPrivate(), k1.getPrivate()) && Objects.equal(k2.getPrivate(), k1.getPrivate());
+        return Objects.equal(k2.getPrivate(), k1.getPrivate()) && Objects.equal(k2.getPublic(), k1.getPublic());
     }
 
     /** returns the PEM (base64, ie for id_rsa) string for the private key / key pair;

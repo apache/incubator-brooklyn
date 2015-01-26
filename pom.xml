@@ -1200,6 +1200,7 @@
                   <exclude>**/MANIFEST.MF</exclude>
                   <exclude>**/test-output/**</exclude>
                   <exclude>**/*.pem.pub</exclude>
+                  <exclude>**/*.pem</exclude>
                   <exclude>**/*_rsa.pub</exclude>
                   <exclude>**/*_rsa</exclude>
                   <exclude>**/*.svg</exclude>

@@ -73,7 +73,7 @@ public class LocationConfigUtilsTest {
         OsCredential creds = LocationConfigUtils.getOsCredential(config);
         String data = creds.getPublicKeyData();
         assertEquals(data, "mydata");
-        Assert.assertNull(creds.get());
+        Assert.assertNull(creds.getPreferredCredential());
         Assert.assertFalse(creds.hasPassword());
         Assert.assertFalse(creds.hasKey());
         // and not even any warnings here
@@ -86,7 +86,7 @@ public class LocationConfigUtilsTest {
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE_WITH_TILDE);
 
         // don't mind if it has a passphrase
-        String data = LocationConfigUtils.getOsCredential(config).doKeyValidation(false).get();
+        String data = LocationConfigUtils.getOsCredential(config).doKeyValidation(false).getPreferredCredential();
         assertTrue(data != null && data.length() > 0);
     }
     
@@ -96,7 +96,7 @@ public class LocationConfigUtilsTest {
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE_WITH_PASSPHRASE);
 
         OsCredential cred = LocationConfigUtils.getOsCredential(config).doKeyValidation(false);
-        String data = cred.get();
+        String data = cred.getPreferredCredential();
         assertTrue(data != null && data.length() > 0);
         Assert.assertFalse(data.isEmpty());
         
@@ -122,7 +122,7 @@ public class LocationConfigUtilsTest {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, "/path/does/not/exist:"+SSH_PRIVATE_KEY_FILE);
         
-        String data = LocationConfigUtils.getOsCredential(config).get();
+        String data = LocationConfigUtils.getOsCredential(config).getPreferredCredential();
         assertTrue(data != null && data.length() > 0);
     }
     
@@ -130,7 +130,7 @@ public class LocationConfigUtilsTest {
         ConfigBag config = ConfigBag.newInstance();
         config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE+":/path/does/not/exist");
 
-        String data = LocationConfigUtils.getOsCredential(config).get();
+        String data = LocationConfigUtils.getOsCredential(config).getPreferredCredential();
         assertTrue(data != null && data.length() > 0);
     }
     

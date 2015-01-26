@@ -29,20 +29,17 @@ import java.util.Date;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.X509Extension;
-import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.x509.X509V3CertificateGenerator;
-import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
-import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
 
 import brooklyn.util.exceptions.Exceptions;
 
 /** A fluent API which simplifies generating certificates (signed keys) */
-/* we use deprecated X509V3CertificateGenerator for now because official replacement,
- * X509v3CertificateBuilder drags in an add'l dependency (bcmail) and is harder to use. */
-@SuppressWarnings("deprecation")
+/* NB - re deprecation - we use deprecated X509V3CertificateGenerator still
+ * because the official replacement, X509v3CertificateBuilder, 
+ * drags in an add'l dependency (bcmail) and is harder to use. */
 public class FluentKeySigner {
 
     static { Security.addProvider(new BouncyCastleProvider()); }
@@ -56,7 +53,7 @@ public class FluentKeySigner {
     protected BigInteger serialNumber;
     
     protected String signatureAlgorithm = "MD5WithRSAEncryption";
-    protected AuthorityKeyIdentifierStructure authorityKeyIdentifier;
+    protected AuthorityKeyIdentifier authorityKeyIdentifier;
     protected X509Certificate authorityCertificate;
 
     public FluentKeySigner(X500Principal issuerPrincipal, KeyPair issuerKey) {
@@ -86,8 +83,11 @@ public class FluentKeySigner {
         return issuerPrincipal;
     }
     
+    @SuppressWarnings("deprecation")
     public String getCommonName() {
-        return (String) new X509Principal(issuerPrincipal.getName()).getValues(X509Name.CN).elementAt(0);
+//        TODO see deprecation note at top of file
+        // for modernising, would RFC4519Style.cn work ?
+        return (String) new X509Principal(issuerPrincipal.getName()).getValues(org.bouncycastle.asn1.x509.X509Name.CN).elementAt(0);
     }
     
     public X509Certificate getAuthorityCertificate() {
@@ -123,9 +123,10 @@ public class FluentKeySigner {
         return this;
     }
 
+    @SuppressWarnings("deprecation")
     public FluentKeySigner authorityCertificate(X509Certificate certificate) {
         try {
-            authorityKeyIdentifier(new AuthorityKeyIdentifierStructure(certificate));
+            authorityKeyIdentifier(new org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure(certificate));
             this.authorityCertificate = certificate;
             return this;
         } catch (CertificateParsingException e) {
@@ -133,7 +134,7 @@ public class FluentKeySigner {
         }
     }
 
-    public FluentKeySigner authorityKeyIdentifier(AuthorityKeyIdentifierStructure authorityKeyIdentifier) {
+    public FluentKeySigner authorityKeyIdentifier(AuthorityKeyIdentifier authorityKeyIdentifier) {
         this.authorityKeyIdentifier = authorityKeyIdentifier;
         return this;
     }
@@ -143,10 +144,12 @@ public class FluentKeySigner {
         authorityCertificate(newCertificateFor(getCommonName(), getKey()));
         return this;
     }
-    
+
+    // TODO see note re deprecation at start of file
+    @SuppressWarnings("deprecation")
     public X509Certificate newCertificateFor(X500Principal subject, PublicKey keyToCertify) {
         try {
-            X509V3CertificateGenerator v3CertGen = new X509V3CertificateGenerator();
+            org.bouncycastle.x509.X509V3CertificateGenerator v3CertGen = new org.bouncycastle.x509.X509V3CertificateGenerator();
 
             v3CertGen.setSerialNumber(
                     serialNumber != null ? serialNumber :
@@ -161,7 +164,7 @@ public class FluentKeySigner {
             v3CertGen.setPublicKey(keyToCertify);  
 
             v3CertGen.addExtension(X509Extension.subjectKeyIdentifier, false,
-                    new SubjectKeyIdentifierStructure(keyToCertify));
+                    new org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure(keyToCertify));
 
             if (authorityKeyIdentifier!=null)
                 v3CertGen.addExtension(X509Extension.authorityKeyIdentifier, false,

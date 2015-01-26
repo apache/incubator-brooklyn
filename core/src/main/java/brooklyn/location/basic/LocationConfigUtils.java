@@ -126,7 +126,7 @@ public class LocationConfigUtils {
         
         /** returns either the key or password or null; if both a key and a password this prefers the key unless otherwise set
          * via {@link #preferPassword()} */
-        public synchronized String get() {
+        public synchronized String getPreferredCredential() {
             infer();
             
             if (isUsingPassword()) return password;
@@ -324,6 +324,7 @@ public class LocationConfigUtils {
                 }
             } catch (PassphraseProblem e) {
                 if (doKeyValidation) {
+                    log.debug("Encountered error handling key "+label+": "+e, e);
                     if (Strings.isBlank(passphrase))
                         addWarning("Passphrase required for key '"+label+"'");
                     else
