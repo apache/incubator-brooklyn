@@ -87,17 +87,6 @@ public class Networking {
 
         Stopwatch watch = Stopwatch.createStarted();
         try {
-            try {
-                Socket s = new Socket();
-                s.setSoTimeout(250);
-                s.connect(new InetSocketAddress(localAddressNotAny, port), 250);
-                try {
-                    s.close();
-                } catch (Exception e) {}
-                return false;
-            } catch (Exception e) {
-                //expected - shouldn't be able to connect
-            }
             //despite http://stackoverflow.com/questions/434718/sockets-discover-port-availability-using-java
             //(recommending the following) it isn't 100% reliable (e.g. nginx will happily coexist with ss+ds)
             //so we also do the above check
@@ -130,8 +119,7 @@ public class Networking {
                     }
                 }
             }
-            
-            
+
             if (localAddress==null || ANY_NIC.equals(localAddress)) {
                 // sometimes 0.0.0.0 can be bound to even if 127.0.0.1 has the port as in use;
                 // check all interfaces if 0.0.0.0 was requested
