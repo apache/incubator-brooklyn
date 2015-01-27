@@ -595,6 +595,21 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
     }
     
+    public void publishClearNonMaster() {
+        ManagementPlaneSyncRecord plane = getLastManagementPlaneSyncRecord();
+        if (plane==null || persister==null) {
+            LOG.warn("Cannot clear HA node records; HA not active (or not yet loaded)");
+            return;
+        }
+        brooklyn.management.ha.ManagementPlaneSyncRecordDeltaImpl.Builder db = ManagementPlaneSyncRecordDeltaImpl.builder();
+        for (Map.Entry<String,ManagementNodeSyncRecord> node: plane.getManagementNodes().entrySet())
+            if (!ManagementNodeState.MASTER.equals(node.getValue().getStatus()))
+                db.removedNodeId(node.getKey());
+        persister.delta(db.build());
+        // then get, so model is updated
+        loadManagementPlaneSyncRecord(true);
+    }
+    
     protected synchronized void publishDemotion(boolean demotingFromMaster) {
         checkState(getNodeState() != ManagementNodeState.MASTER, "node status must not be master when demoting", getNodeState());
         

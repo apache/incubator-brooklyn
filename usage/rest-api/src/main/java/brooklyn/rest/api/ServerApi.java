@@ -117,6 +117,11 @@ public interface ServerApi {
             responseClass = "brooklyn.rest.domain.HighAvailabilitySummary")
     public HighAvailabilitySummary getHighAvailabilityPlaneStates();
 
+    @POST
+    @Path("/ha/states/clear")
+    @ApiOperation(value = "Clears HA node information for non-master nodes; active nodes will repopulate and other records will be erased")
+    public Response clearHighAvailabilityPlaneStates();
+    
     @GET
     @Path("/ha/priority")
     @ApiOperation(value = "Returns the HA node priority for MASTER failover")
