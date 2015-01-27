@@ -111,7 +111,7 @@ public class Networking {
                 ss.bind(new InetSocketAddress(localAddress, port));
 
                 // Check UDP port
-                ds = new DatagramSocket();
+                ds = new DatagramSocket(null);
                 ds.setSoTimeout(250);
                 ds.setReuseAddress(true);
                 ds.bind(new InetSocketAddress(localAddress, port));
