@@ -417,6 +417,8 @@ public class BrooklynWebServer {
                 sslContextFactory.setTrustStorePassword(trustStorePassword);
             }
 
+            sslContextFactory.addExcludeProtocols("SSLv3");
+
             SslSocketConnector sslSocketConnector = new SslSocketConnector(sslContextFactory);
             sslSocketConnector.setPort(actualPort);
             server.addConnector(sslSocketConnector);

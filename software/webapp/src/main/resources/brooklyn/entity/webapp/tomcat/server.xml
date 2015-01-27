@@ -93,7 +93,7 @@
     <Connector port="${driver.httpsPort?c}" protocol="org.apache.coyote.http11.Http11Protocol"
                maxThreads="150" SSLEnabled="true" scheme="https" secure="true"
                keystoreFile="${driver.httpsSslKeystoreFile}" keystorePass="${entity.httpsSslKeystorePassword}"
-               clientAuth="false" sslProtocol="TLS" />
+               clientAuth="false" sslEnabledProtocols="TLSv1.2,TLSv1.1,TLSv1" />
     [/#if]
 
     <!-- Define an AJP 1.3 Connector on port 8009 -->

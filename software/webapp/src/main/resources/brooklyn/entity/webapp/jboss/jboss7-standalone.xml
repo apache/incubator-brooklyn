@@ -257,7 +257,7 @@
             <connector name="http" protocol="HTTP/1.1" scheme="http" socket-binding="http" enabled="${entity.httpEnabled?string}"/>
             [#if entity.httpsEnabled]
             <connector name="https" protocol="HTTP/1.1" scheme="https" socket-binding="https" secure="true" enabled="${entity.httpsEnabled?string}">
-                <ssl key-alias="${entity.httpsSslKeyAlias}" password="${entity.httpsSslKeystorePassword}" certificate-key-file="${entity.httpsSslKeystoreFile}"/>
+                <ssl key-alias="${entity.httpsSslKeyAlias}" password="${entity.httpsSslKeystorePassword}" certificate-key-file="${entity.httpsSslKeystoreFile}" protocol="TLSv1,TLSv1.1,TLSv1.2"/>
             </connector>
             [/#if]
             <virtual-server name="default-host" enable-welcome-root="${entity.welcomeRootEnabled?string}">
