@@ -49,6 +49,7 @@ import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynServerPaths;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.launcher.config.CustomResourceLocator;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -62,7 +63,6 @@ import brooklyn.rest.filter.HaMasterCheckFilter;
 import brooklyn.rest.filter.LoggingFilter;
 import brooklyn.rest.filter.NoCacheFilter;
 import brooklyn.rest.filter.RequestTaggingFilter;
-import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -449,8 +449,8 @@ public class BrooklynWebServer {
 
         server.setHandler(handlers);
         server.start();
-        //reinit required because grails wipes our language extension bindings
-        BrooklynLanguageExtensions.reinit();
+        //reinit required because some webapps (eg grails) might wipe our language extension bindings
+        BrooklynInitialization.reinitAll();
 
         if (managementContext instanceof ManagementContextInternal) {
             ((ManagementContextInternal) managementContext).setManagementNodeUri(new URI(getRootUrl()));

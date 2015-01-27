@@ -96,10 +96,12 @@ public class BrooklynFeatureEnablement {
      */
     public static final String FEATURE_SSH_ASYNC_EXEC = FEATURE_PROPERTY_PREFIX+".ssh.asyncExec";
 
+    public static final String FEATURE_VALIDATE_LOCATION_SSH_KEYS = "brooklyn.validate.locationSshKeys";
+    
     private static final Map<String, Boolean> FEATURE_ENABLEMENTS = Maps.newLinkedHashMap();
 
     private static final Object MUTEX = new Object();
-    
+
     static void setDefaults() {
         // Idea is here one can put experimental features that are *enabled* by default, but 
         // that can be turned off via system properties, or vice versa.
@@ -115,6 +117,7 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_RENAME_THREADS, false);
         setDefault(FEATURE_INFER_CATALOG_ITEM_ON_REBIND, true);
         setDefault(FEATURE_SSH_ASYNC_EXEC, false);
+        setDefault(FEATURE_VALIDATE_LOCATION_SSH_KEYS, true);
     }
     
     static {

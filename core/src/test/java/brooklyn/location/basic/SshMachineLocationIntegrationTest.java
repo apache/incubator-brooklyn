@@ -67,7 +67,7 @@ public class SshMachineLocationIntegrationTest {
         SshjToolBuilder builder = SshjTool.builder().host(sm.getAddress().getHostName()).user(sm.getUser());
         
         KeyPair data = sm.findKeyPair();
-        if (data!=null) builder.privateKeyData(SecureKeys.stringPem(data));
+        if (data!=null) builder.privateKeyData(SecureKeys.toPem(data));
         String password = sm.findPassword();
         if (password!=null) builder.password(password);
         SshjTool tool = builder.build();

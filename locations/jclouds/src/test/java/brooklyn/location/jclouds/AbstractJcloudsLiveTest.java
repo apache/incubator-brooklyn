@@ -116,6 +116,8 @@ public class AbstractJcloudsLiveTest {
     }
     
     protected void stripBrooklynProperties(BrooklynProperties props) {
+        // remove all location properties except for identity and credential
+        // (so key, scripts, etc settings don't interfere with tests) 
         for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
             if (key.startsWith(BROOKLYN_PROPERTIES_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
                 props.remove(key);

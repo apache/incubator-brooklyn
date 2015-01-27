@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.Charset;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -29,6 +30,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.crypto.SecureKeys.PassphraseProblem;
 import brooklyn.util.os.Os;
 
 import com.google.common.io.Files;
@@ -93,6 +95,40 @@ public class SecureKeysAndSignerTest {
         checkNonTrivial(key);
     }
 
+    @Test(expectedExceptions=IllegalStateException.class)
+    public void testReadRsaPublicKeyAsPemFails() throws Exception {
+        // should fail; see next test
+        SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa.pem.pub"), null);
+    }
+    
+    @Test
+    public void testReadRsaPublicKeyAsAuthKeysWorks() throws Exception {
+        PublicKey key = AuthorizedKeysParser.decodePublicKey(
+            ResourceUtils.create(this).getResourceAsString("classpath://brooklyn/util/crypto/sample_rsa.pem.pub"));
+        KeyPair fromPem = SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa.pem"), null);        
+        Assert.assertEquals(key, fromPem.getPublic());
+    }
+
+    @Test
+    public void testEncodeDecodeRsaPublicKey() throws Exception {
+        String data = ResourceUtils.create(this).getResourceAsString("classpath://brooklyn/util/crypto/sample_rsa.pem.pub");
+        PublicKey key = AuthorizedKeysParser.decodePublicKey(data);
+        String data2 = AuthorizedKeysParser.encodePublicKey(key);
+        Assert.assertTrue(data.contains(data2), "Expected to find '"+data2+"' in '"+data+"'");
+        PublicKey key2 = AuthorizedKeysParser.decodePublicKey(data2);
+        Assert.assertEquals(key2, key);
+    }
+
+    @Test
+    public void testEncodeDecodeDsaPublicKey() throws Exception {
+        String data = ResourceUtils.create(this).getResourceAsString("classpath://brooklyn/util/crypto/sample_dsa.pem.pub");
+        PublicKey key = AuthorizedKeysParser.decodePublicKey(data);
+        String data2 = AuthorizedKeysParser.encodePublicKey(key);
+        Assert.assertTrue(data.contains(data2), "Expected to find '"+data2+"' in '"+data+"'");
+        PublicKey key2 = AuthorizedKeysParser.decodePublicKey(data2);
+        Assert.assertEquals(key2, key);
+    }
+
     @Test
     public void testReadDsaKey() throws Exception {
         KeyPair key = SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_dsa.pem"), null);
@@ -105,6 +141,11 @@ public class SecureKeysAndSignerTest {
         checkNonTrivial(key);
     }
 
+    @Test(expectedExceptions=PassphraseProblem.class)
+    public void testReadRsaPassphraseWithoutKeyFails() throws Exception {
+        SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa_passphrase.pem"), null);
+    }
+    
     @Test
     public void testReadRsaPassphraseKeyAndWriteWithoutPassphrase() throws Exception {
         KeyPair key = SecureKeys.readPem(ResourceUtils.create(this).getResourceFromUrl("classpath://brooklyn/util/crypto/sample_rsa_passphrase.pem"), "passphrase");

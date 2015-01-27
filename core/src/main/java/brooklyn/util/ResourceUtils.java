@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.catalog.internal.CatalogUtils;
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -59,7 +60,6 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpTool.HttpClientBuilder;
 import brooklyn.util.javalang.Threads;
-import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
@@ -80,7 +80,7 @@ public class ResourceUtils {
     private String context = null;
     private Object contextObject = null;
     
-    static { Networking.init(); }
+    static { BrooklynInitialization.initNetworking(); }
     
     /**
      * Creates a {@link ResourceUtils} object with a specific class loader and context.

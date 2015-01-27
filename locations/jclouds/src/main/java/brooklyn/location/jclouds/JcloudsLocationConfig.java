@@ -19,6 +19,7 @@
 package brooklyn.location.jclouds;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import org.jclouds.Constants;
@@ -71,13 +72,25 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_FILE = ConfigKeys.newStringConfigKey("loginUser.privateKeyFile",
             "Custom private key for the user who logs in initially", null); 
     public static final ConfigKey<String> EXTRA_PUBLIC_KEY_DATA_TO_AUTH = ConfigKeys.newStringConfigKey("extraSshPublicKeyData",
-            "Additional public key data to add to authorized_keys", null);
+        "Additional public key data to add to authorized_keys", null);
+    @SuppressWarnings("serial")
+    public static final ConfigKey<List<String>> EXTRA_PUBLIC_KEY_URLS_TO_AUTH = ConfigKeys.newConfigKey(new TypeToken<List<String>>() {}, 
+        "extraSshPublicKeyUrls", "Additional public keys (files or URLs, in SSH2/RFC4716/id_rsa.pub format) to add to authorized_keys", null);
     
     public static final ConfigKey<Boolean> DONT_CREATE_USER = ConfigKeys.newBooleanConfigKey("dontCreateUser", 
             "Whether to skip creation of 'user' when provisioning machines (default false)", false);
     public static final ConfigKey<Boolean> GRANT_USER_SUDO = ConfigKeys.newBooleanConfigKey("grantUserSudo",
             "Whether to grant the created user sudo privileges. Irrelevant if dontCreateUser is true. Default: true.", true);
-
+    public static final ConfigKey<Boolean> DISABLE_ROOT_AND_PASSWORD_SSH = ConfigKeys.newBooleanConfigKey("disableRootAndPasswordSsh",
+        "Whether to disable direct SSH access for root and disable password-based SSH, "
+        + "if creating a user with a key-based login; "
+        + "defaults to true (set false to leave root users alone)", true);
+    public static final ConfigKey<String> CUSTOM_TEMPLATE_OPTIONS_SCRIPT_CONTENTS = ConfigKeys.newStringConfigKey("customTemplateOptionsScriptContents",
+        "A custom script to pass to jclouds as part of template options, run after AdminAccess, "
+        + "for use primarily where a command which must run as root on first login before switching to the admin user, "
+        + "e.g. to customize sudoers; may start in an odd location (e.g. /tmp/bootstrap); "
+        + "NB: most commands should be run by entities, or if VM-specific but sudo is okay, then via setup.script, not via this");
+    
     public static final ConfigKey<LoginCredentials> CUSTOM_CREDENTIALS = new BasicConfigKey<LoginCredentials>(LoginCredentials.class,
             "customCredentials", "Custom jclouds LoginCredentials object to be used to connect to the VM", null);
     

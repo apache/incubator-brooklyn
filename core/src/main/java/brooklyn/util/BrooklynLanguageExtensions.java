@@ -20,9 +20,10 @@ package brooklyn.util;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import brooklyn.location.basic.PortRanges;
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.util.internal.TimeExtras;
 
+/** @deprecated since 0.7.0 use {@link BrooklynInitialization} */
 public class BrooklynLanguageExtensions {
 
     private BrooklynLanguageExtensions() {}
@@ -38,10 +39,9 @@ public class BrooklynLanguageExtensions {
     public synchronized static void init() {
         if (done.getAndSet(true)) return;
         TimeExtras.init();
-        PortRanges.init();
+        BrooklynInitialization.initPortRanges();
     }
     
-    static {
-        init();
-    }
+    static { BrooklynInitialization.initLegacyLanguageExtensions(); }
+    
 }

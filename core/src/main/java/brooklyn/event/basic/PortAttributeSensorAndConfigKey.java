@@ -28,12 +28,12 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.event.Sensor;
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.location.Location;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.location.basic.Locations;
-import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
@@ -55,9 +55,7 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
 
     public static final Logger LOG = LoggerFactory.getLogger(PortAttributeSensorAndConfigKey.class);
 
-    static {
-        PortRanges.init(); // Ensure type coercions are registered
-    }
+    static { BrooklynInitialization.initAll(); }
 
     public PortAttributeSensorAndConfigKey(String name) {
         this(name, name, null);
