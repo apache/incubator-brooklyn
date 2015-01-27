@@ -50,12 +50,12 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+AWS_EC2_EUWEST_REGION_NAME);
     }
 
-    @Test(groups = { "Live" })
+    @Test(groups = { "Live", "Live-sanity" })
     public void testRebindWithIncorrectId() throws Exception {
         try {
             jcloudsLocation.rebindMachine(ImmutableMap.of("id", "incorrectid", "hostname", "myhostname", "user", "myusername"));
         } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("Invalid id")) {
+            if (e.getMessage().contains("node not found")) {
                 // success
             } else {
                 throw e;
@@ -90,7 +90,7 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
         
         // Confirm can release the re-bound machine via the new jclouds location
         loc2.release(machine2);
-        assertFalse(machine2.isSshable());
+        assertFalse(machine.isSshable());
         assertEquals(ImmutableSet.copyOf(loc2.getChildren()), Collections.emptySet());
     }
     
@@ -118,7 +118,7 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
         
         // Confirm can release the re-bound machine via the new jclouds location
         loc2.release(machine2);
-        assertFalse(machine2.isSshable());
+        assertFalse(machine.isSshable());
         assertEquals(ImmutableSet.copyOf(loc2.getChildren()), Collections.emptySet());
     }
 
