@@ -145,6 +145,7 @@ public class WebAppRunnerTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
+                .globalBrooklynPropertiesFile(null)
                 .brooklynProperties("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider")
                 .webapp("/hello", "hello-world.war")
                 .start();

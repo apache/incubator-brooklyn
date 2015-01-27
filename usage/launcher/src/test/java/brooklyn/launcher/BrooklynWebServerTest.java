@@ -58,7 +58,7 @@ public class BrooklynWebServerTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp(){
-        brooklynProperties = BrooklynProperties.Factory.newDefault();
+        brooklynProperties = BrooklynProperties.Factory.newEmpty();
     }
 
     @AfterMethod(alwaysRun=true)
