@@ -40,4 +40,6 @@ public interface JcloudsPortForwarderExtension {
      * will know about the mapped port.
      */
     public HostAndPort openPortForwarding(NodeMetadata node, int targetPort, Optional<Integer> optionalPublicPort, Protocol protocol, Cidr accessingCidr);
+
+    public void closePortForwarding(NodeMetadata node, int targetPort, HostAndPort publicHostAndPort, Protocol protocol);
 }

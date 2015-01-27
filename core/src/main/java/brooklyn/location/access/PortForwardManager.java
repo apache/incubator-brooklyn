@@ -128,6 +128,11 @@ public interface PortForwardManager extends Location {
      */
     public boolean forgetPortMappings(Location location);
     
+    /** 
+     * Clears the port mappings associated with the given publicIpId, returning true if there were any matches.
+     */
+    public boolean forgetPortMappings(String publicIpId);
+    
     public String toVerboseString();
 
     

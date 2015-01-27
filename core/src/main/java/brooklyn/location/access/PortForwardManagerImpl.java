@@ -199,7 +199,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
                 if (publicIpId.equals(m.publicIpId) && privatePort==m.privatePort)
                     return getPublicHostAndPort(m);
             }
-}
+        }
         return null;
     }
     
@@ -227,6 +227,25 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
             }
         }
         if (log.isDebugEnabled()) log.debug("cleared all port mappings for "+l+" - "+result);
+        if (!result.isEmpty()) {
+            onChanged();
+        }
+        return !result.isEmpty();
+    }
+    
+    @Override
+    public boolean forgetPortMappings(String publicIpId) {
+        List<PortMapping> result = Lists.newArrayList();
+        synchronized (mutex) {
+            for (Iterator<PortMapping> iter = mappings.values().iterator(); iter.hasNext();) {
+                PortMapping m = iter.next();
+                if (publicIpId.equals(m.publicIpId)) {
+                    iter.remove();
+                    result.add(m);
+                }
+            }
+        }
+        if (log.isDebugEnabled()) log.debug("cleared all port mappings for "+publicIpId+" - "+result);
         if (!result.isEmpty()) {
             onChanged();
         }

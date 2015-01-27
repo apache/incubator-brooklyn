@@ -96,6 +96,7 @@ import brooklyn.location.MachineManagementMixins.MachineMetadata;
 import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.access.PortForwardManager;
+import brooklyn.location.access.PortMapping;
 import brooklyn.location.basic.BasicMachineMetadata;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
@@ -1581,7 +1582,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             return getManagementContext().getLocationManager().createLocation(LocationSpec.create(JcloudsSshMachineLocation.class)
                     .configure("displayName", vmHostname)
                     .configure("address", address)
-                    .configure("port", sshHostAndPort.isPresent() ? sshHostAndPort.get().getPort() : node.getLoginPort())
+                    .configure(JcloudsSshMachineLocation.SSH_PORT, sshHostAndPort.isPresent() ? sshHostAndPort.get().getPort() : node.getLoginPort())
                     .configure("user", getUser(setup))
                     // don't think "config" does anything
                     .configure(sshConfig)
@@ -1663,14 +1664,27 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         
         LOG.info("Releasing machine {} in {}, instance id {}", new Object[] {machine, this, instanceId});
         
-        removeChild(machine);
-        
+        Exception tothrow = null;
+        try {
+            releasePortForwarding(machine);
+        } catch (Exception e) {
+            LOG.error("Problem releasing port-forwarding for machine "+machine+" in "+this+", instance id "+instanceId+
+                    "; discarding instance and continuing...", e);
+            tothrow = e;
+        }
+
         try {
             releaseNode(instanceId);
         } catch (Exception e) {
             LOG.error("Problem releasing machine "+machine+" in "+this+", instance id "+instanceId+
                     "; discarding instance and continuing...", e);
-            throw Exceptions.propagate(e);
+            tothrow = e;
+        }
+
+        removeChild(machine);
+
+        if (tothrow != null) {
+            throw Exceptions.propagate(tothrow);
         }
     }
 
@@ -1711,6 +1725,56 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
             }
          */
+        }
+    }
+
+    protected void releasePortForwarding(SshMachineLocation machine) {
+        // TODO Implementation needs revisisted. It relies on deprecated PortForwardManager methods.
+        
+        boolean usePortForwarding = Boolean.TRUE.equals(machine.getConfig(USE_PORT_FORWARDING));
+        JcloudsPortForwarderExtension portForwarder = machine.getConfig(PORT_FORWARDER);
+        PortForwardManager portForwardManager = machine.getConfig(PORT_FORWARDING_MANAGER);
+        NodeMetadata node = (machine instanceof JcloudsSshMachineLocation) ? ((JcloudsSshMachineLocation) machine).getNode() : null;
+
+        if (portForwarder == null) {
+            LOG.debug("No port-forwarding to close (because portForwarder null) on release of " + machine);
+        } else {
+            // Release the port-forwarding for the login-port, which was explicilty created by JcloudsLocation 
+            if (usePortForwarding && node != null) {
+                HostAndPort sshHostAndPortOverride = machine.getSshHostAndPort();
+                LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, sshHostAndPortOverride, node.getLoginPort()});
+                portForwarder.closePortForwarding(node, node.getLoginPort(), sshHostAndPortOverride, Protocol.TCP);
+            }
+
+            // Get all the other port-forwarding mappings for this VM, and release all of those
+            Set<PortMapping> mappings;
+            if (portForwardManager != null) {
+                mappings = Sets.newLinkedHashSet();
+                mappings.addAll(portForwardManager.getLocationPublicIpIds(machine));
+                if (node != null) {
+                    mappings.addAll(portForwardManager.getPortMappingWithPublicIpId(node.getId()));
+                }
+            } else {
+                mappings = ImmutableSet.of();
+            }
+            
+            for (PortMapping mapping : mappings) {
+                HostAndPort publicEndpoint = mapping.getPublicEndpoint();
+                int targetPort = mapping.getPrivatePort();
+                Protocol protocol = Protocol.TCP;
+                if (publicEndpoint != null) {
+                    LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, publicEndpoint, targetPort});
+                    portForwarder.closePortForwarding(node, targetPort, publicEndpoint, protocol);
+                }
+            }
+        }
+        
+        // Forget all port mappings associated with this VM
+        if (portForwardManager != null) {
+            portForwardManager.forgetPortMappings(machine);
+            if (node != null) {
+                portForwardManager.forgetPortMappings(node.getId());
+            }
         }
     }
 
