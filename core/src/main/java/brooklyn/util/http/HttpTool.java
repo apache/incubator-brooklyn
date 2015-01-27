@@ -65,6 +65,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.URLParamEncoder;
 import brooklyn.util.text.Strings;
@@ -80,6 +81,10 @@ public class HttpTool {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpTool.class);
 
+    /** Apache HTTP commons utility for trusting all.
+     * <p>
+     * For generic java HTTP usage, see {@link SslTrustUtils#trustAll(java.net.URLConnection)} 
+     * and static constants in the same class. */
     public static class TrustAllStrategy implements TrustStrategy {
         @Override
         public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {

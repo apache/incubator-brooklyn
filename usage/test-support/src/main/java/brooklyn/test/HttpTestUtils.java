@@ -39,12 +39,12 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Time;
@@ -326,7 +326,7 @@ public class HttpTestUtils {
     
     public static String getContent(String url) {
         try {
-            return DefaultGroovyMethods.getText(new URL(url).openStream());
+            return Streams.readFullyString(SslTrustUtils.trustAll(new URL(url).openConnection()).getInputStream());
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }

@@ -31,11 +31,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
 import brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
@@ -103,6 +105,8 @@ public class Main extends AbstractMain {
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) {
+        log.debug("Launching Brooklyn via CLI, with "+Arrays.toString(args));
+        BrooklynVersion.INSTANCE.logSummary();
         new Main().execCli(args);
     }
 
@@ -207,9 +211,14 @@ public class Main extends AbstractMain {
         public String locations;
 
         @Option(name = { "-p", "--port" }, title = "port number",
-                description = "Specifies the port to be used by the Brooklyn Management Console")
-        public String port = "8081+";
+                description = "Specifies the port to be used by the Brooklyn Management Console; "
+                    + "default is 8081+ for http, 8443+ for https.")
+        public String port;
 
+        @Option(name = { "--https" },
+            description = "Specifies that the server should start on https.")
+        public boolean useHttps = false;
+        
         @Option(name = { "-nc", "--noConsole" },
                 description = "Whether to start the web console")
         public boolean noConsole = false;
@@ -519,12 +528,19 @@ public class Main extends AbstractMain {
             BrooklynLauncher launcher;
             launcher = BrooklynLauncher.newInstance();
             launcher.localBrooklynPropertiesFile(localBrooklynProperties)
-                    .webconsolePort(port)
-                    .webconsole(!noConsole)
                     .ignorePersistenceErrors(ignorePersistenceErrors)
                     .ignoreWebErrors(ignoreWebErrors)
                     .ignoreAppErrors(ignoreAppErrors)
                     .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : JavaStringEscapes.unwrapJsonishListIfPossible(locations));
+            
+            launcher.webconsole(!noConsole);
+            if (useHttps) {
+                // true sets it; false (not set) leaves it blank and falls back to config key
+                // (no way currently to override config key, but that could be added)
+                launcher.webconsoleHttps(useHttps);
+            }
+            launcher.webconsolePort(port);
+            
             if (noGlobalBrooklynProperties) {
                 log.debug("Configuring to disable global brooklyn.properties");
                 launcher.globalBrooklynPropertiesFile(null);
@@ -825,7 +841,7 @@ public class Main extends AbstractMain {
     protected CliBuilder<BrooklynCommand> cliBuilder() {
         CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder(cliScriptName())
                 .withDescription("Brooklyn Management Service")
-                .withDefaultCommand(InfoCommand.class)
+                .withDefaultCommand(DefaultInfoCommand.class)
                 .withCommands(
                         HelpCommand.class,
                         InfoCommand.class,

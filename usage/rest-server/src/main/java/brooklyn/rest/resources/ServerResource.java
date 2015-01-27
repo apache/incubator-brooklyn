@@ -219,6 +219,21 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     @Override
     public VersionSummary getVersion() {
+        // TODO reconcile this with BrooklynVersion reading from the OSGi manifest
+        // @ahgittin / @sjcorbett to decide, is there need for this in addition to the OSGi manifest?
+        // TODO as part of this call should we have a strategy for reporting downstream builds in this call?
+        // for instance, we could look for
+        // * ALL "brooklyn-build-metadata.properties" files on the classpath
+        // * and/or ALL items on classpath with a custom header (eg "Brooklyn-OSGi-Feature-Name: My Project") in MANIFEST.MF
+        // i tend to favour the latter as MANIFEST.MF is already recognised; is there a reason to introduce a new file?
+        // whichever we do, i think:
+        // * "build-metadata.properties" is probably the wrong name
+        // * we should include brooklyn.version and a build timestamp in this file
+        // * the authority for brooklyn should probably be core rather than brooklyn-rest-server
+        
+        // TODO in version summary, maybe also have:
+        // features: [ { name: my-project, version: 0.1.0-SNAPSHOT, git-sha1: xxx }, ... ]
+        // osgi: [ /* similar metadata extracted from all active osgi bundles */ ]
         InputStream input = ResourceUtils.create().getResourceFromUrl("classpath://build-metadata.properties");
         Properties properties = new Properties();
         String gitSha1 = null, gitBranch = null;
