@@ -1,16 +1,35 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package brooklyn.entity.database.crate;
 
 import static java.lang.String.format;
 
 import java.util.List;
 
-import brooklyn.util.collections.MutableMap;
 import com.google.common.collect.ImmutableList;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
@@ -34,7 +53,7 @@ public class CrateNodeSshDriver extends JavaSoftwareProcessSshDriver {
 
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
-                .add ("tar xvfz "+saveAs)
+                .add("tar xvfz "+saveAs)
                 .build();
 
         newScript(INSTALLING)
@@ -44,16 +63,19 @@ public class CrateNodeSshDriver extends JavaSoftwareProcessSshDriver {
 
     @Override
     public void customize() {
-
+        newScript(CUSTOMIZING)
+                .body.append("mkdir -p " + getDataLocation())
+                .execute();
+        copyTemplate(entity.getConfig(CrateNode.SERVER_CONFIG_URL), getConfigFileLocation());
     }
 
     @Override
     public void launch() {
         StringBuilder command = new StringBuilder(getExpandedInstallDir())
-                .append("/bin/crate >").append(getLogFileLocation())
-                .append(" 2> err.log < /dev/null")
+                .append("/bin/crate ")
                 .append(" -d")
-                .append(" -p ").append(getPidFileLocation());
+                .append(" -p ").append(getPidFileLocation())
+                .append(" -Des.config=").append(getConfigFileLocation());
         newScript(LAUNCHING)
                 .failOnNonZeroResultCode()
                 .body.append(command).execute();
@@ -68,17 +90,28 @@ public class CrateNodeSshDriver extends JavaSoftwareProcessSshDriver {
 
     @Override
     public void stop() {
-        newScript (MutableMap.of("usePidFile", getPidFileLocation()), STOPPING)
+        // See https://crate.io/docs/stable/cli.html#signal-handling.
+        newScript(STOPPING)
+                .body.append("kill -USR2 `cat " + getPidFileLocation() + "`")
                 .execute();
+    }
 
+    protected String getConfigFileLocation() {
+        return Urls.mergePaths(getRunDir(), "config.yaml");
     }
 
     @Override
-    protected String getLogFileLocation() {
-        return getRunDir() + "/server.log";
+    public String getLogFileLocation() {
+        return Urls.mergePaths(getRunDir(), "crate.log");
     }
 
     protected String getPidFileLocation () {
-        return getRunDir() + "/pid.txt";
+        return Urls.mergePaths(getRunDir(), "pid.txt");
     }
+
+    // public for use in template too.
+    public String getDataLocation() {
+        return Urls.mergePaths(getRunDir(), "data");
+    }
+
 }
