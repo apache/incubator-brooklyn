@@ -41,7 +41,9 @@ import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.ClassCoercionException;
 import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DeferredSupplier;
 
@@ -264,8 +266,13 @@ public class BrooklynDslCommon {
 
         public static <T> T create(Class<T> type, Map<String,?> fields, Map<String,?> config) {
             try {
-                T bean = Reflections.invokeConstructorWithArgs(type).get();
-                BeanUtils.populate(bean, fields);
+                T bean;
+                try {
+                    bean = (T) TypeCoercions.coerce(fields, type);
+                } catch (ClassCoercionException ex) {
+                    bean = Reflections.invokeConstructorWithArgs(type).get();
+                    BeanUtils.populate(bean, fields);
+                }
                 if (bean instanceof Configurable && config.size() > 0) {
                     ConfigBag brooklyn = ConfigBag.newInstance(config);
                     FlagUtils.setFieldsFromFlags(bean, brooklyn);
