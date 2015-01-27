@@ -151,8 +151,8 @@ public class Networking {
     public static int nextAvailablePort(int port) {
         checkArgument(port >= MIN_PORT_NUMBER && port <= MAX_PORT_NUMBER, "requested port %s is outside the valid range of %s to %s", port, MIN_PORT_NUMBER, MAX_PORT_NUMBER);
         int originalPort = port;
-        while (!isPortAvailable(port) && port <= MAX_PORT_NUMBER) port++;
-        if (port > MAX_PORT_NUMBER)
+        while (!isPortAvailable(port) && port < MAX_PORT_NUMBER) port++;
+        if (port >= MAX_PORT_NUMBER)
             throw new RuntimeException("unable to find a free port at or above " + originalPort);
         return port;
     }
