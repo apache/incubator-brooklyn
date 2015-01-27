@@ -104,14 +104,17 @@ public class Networking {
             ServerSocket ss = null;
             DatagramSocket ds = null;
             try {
+                // Check TCP port
                 ss = new ServerSocket();
                 ss.setSoTimeout(250);
-                ss.bind(new InetSocketAddress(localAddress, port));
                 ss.setReuseAddress(true);
-                
-                ds = new DatagramSocket(port);
+                ss.bind(new InetSocketAddress(localAddress, port));
+
+                // Check UDP port
+                ds = new DatagramSocket();
+                ds.setSoTimeout(250);
                 ds.setReuseAddress(true);
-                
+                ds.bind(new InetSocketAddress(localAddress, port));
             } catch (IOException e) {
                 return false;
             } finally {
