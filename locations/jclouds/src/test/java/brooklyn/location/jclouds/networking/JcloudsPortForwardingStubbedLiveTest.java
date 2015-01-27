@@ -62,31 +62,40 @@ public class JcloudsPortForwardingStubbedLiveTest extends AbstractJcloudsStubbed
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsPortForwardingStubbedLiveTest.class);
 
     static class RecordingJcloudsPortForwarderExtension implements JcloudsPortForwarderExtension {
-        int nextPublicPort = 12345;
+        final PortForwardManager pfm;
         final List<List<Object>> opens = Lists.newCopyOnWriteArrayList();
         final List<List<Object>> closes = Lists.newCopyOnWriteArrayList();
+        int nextPublicPort = 12345;
         
+        RecordingJcloudsPortForwarderExtension(PortForwardManager pfm) {
+            this.pfm = pfm;
+        }
         @Override public HostAndPort openPortForwarding(NodeMetadata node, int targetPort, Optional<Integer> optionalPublicPort, Protocol protocol, Cidr accessingCidr) {
             opens.add(ImmutableList.of(node, targetPort, optionalPublicPort, protocol, accessingCidr));
-            return HostAndPort.fromParts("1.2.3.4", nextPublicPort++);
+            HostAndPort result = HostAndPort.fromParts("1.2.3.4", nextPublicPort++);
+            pfm.associate(node.getId(), result, targetPort);
+            return result;
         }
         @Override public void closePortForwarding(NodeMetadata node, int targetPort, HostAndPort publicHostAndPort, Protocol protocol) {
             closes.add(ImmutableList.of(node, targetPort, publicHostAndPort, protocol));
+            pfm.forgetPortMapping(node.getId(), publicHostAndPort.getPort());
         }
     }
 
     @Override
     protected NodeCreator newNodeCreator() {
         return new NodeCreator() {
+            int nextIpSuffix = 2;
             @Override
             protected NodeMetadata newNode(String group, Template template) {
+                int ipSuffix = nextIpSuffix++;
                 NodeMetadata result = new NodeMetadataBuilder()
-                        .id("myid")
+                        .id("myid-"+ipSuffix)
                         .credentials(LoginCredentials.builder().identity("myuser").credential("mypassword").build())
                         .loginPort(22)
                         .status(Status.RUNNING)
-                        .publicAddresses(ImmutableList.of("173.194.32.123"))
-                        .privateAddresses(ImmutableList.of("172.168.10.11"))
+                        .publicAddresses(ImmutableList.of("173.194.32."+ipSuffix))
+                        .privateAddresses(ImmutableList.of("172.168.10."+ipSuffix))
                         .build();
                 return result;
             }
@@ -95,7 +104,8 @@ public class JcloudsPortForwardingStubbedLiveTest extends AbstractJcloudsStubbed
 
     @Test(groups = {"Live", "Live-sanity"})
     protected void testPortForwardingCallsForwarder() throws Exception {
-        RecordingJcloudsPortForwarderExtension portForwarder = new RecordingJcloudsPortForwarderExtension();
+        PortForwardManager pfm = new PortForwardManagerImpl();
+        RecordingJcloudsPortForwarderExtension portForwarder = new RecordingJcloudsPortForwarderExtension(pfm);
         
         JcloudsSshMachineLocation machine = obtainMachine(ImmutableMap.<ConfigKey<?>,Object>of(
                 JcloudsLocation.USE_PORT_FORWARDING, true,
@@ -125,8 +135,7 @@ public class JcloudsPortForwardingStubbedLiveTest extends AbstractJcloudsStubbed
     @Test(groups = {"Live", "Live-sanity"})
     protected void testDeregistersWithPortForwardManagerOnRelease() throws Exception {
         PortForwardManager pfm = new PortForwardManagerImpl();
-        
-        RecordingJcloudsPortForwarderExtension portForwarder = new RecordingJcloudsPortForwarderExtension();
+        RecordingJcloudsPortForwarderExtension portForwarder = new RecordingJcloudsPortForwarderExtension(pfm);
         
         JcloudsSshMachineLocation machine = obtainMachine(ImmutableMap.<ConfigKey<?>,Object>of(
                 JcloudsLocation.PORT_FORWARDER, portForwarder,
@@ -150,5 +159,39 @@ public class JcloudsPortForwardingStubbedLiveTest extends AbstractJcloudsStubbed
         assertEquals(portForwarder.closes.get(0).get(1), 80);
         assertEquals(portForwarder.closes.get(0).get(2), HostAndPort.fromParts("1.2.3.4", 1234));
         assertEquals(portForwarder.closes.get(0).get(3), Protocol.TCP);
+    }
+    
+    @Test(groups = {"Live", "Live-sanity"})
+    protected void testReleaseVmDoesNotImpactOtherVms() throws Exception {
+        PortForwardManager pfm = new PortForwardManagerImpl();
+        RecordingJcloudsPortForwarderExtension portForwarder = new RecordingJcloudsPortForwarderExtension(pfm);
+        
+        JcloudsSshMachineLocation machine1 = obtainMachine(ImmutableMap.<ConfigKey<?>,Object>of(
+                JcloudsLocation.USE_PORT_FORWARDING, true,
+                JcloudsLocation.PORT_FORWARDER, portForwarder,
+                JcloudsLocation.PORT_FORWARDING_MANAGER, pfm));
+        
+        JcloudsSshMachineLocation machine2 = obtainMachine(ImmutableMap.<ConfigKey<?>,Object>of(
+                JcloudsLocation.USE_PORT_FORWARDING, true,
+                JcloudsLocation.PORT_FORWARDER, portForwarder,
+                JcloudsLocation.PORT_FORWARDING_MANAGER, pfm));
+        
+        NodeMetadata node1 = nodeCreator.created.get(0);
+
+        // Add an association for machine2 - expect that not to be touched when machine1 is released.
+        HostAndPort publicHostAndPort = HostAndPort.fromParts("1.2.3.4", 1234);
+        pfm.associate("mypublicip", publicHostAndPort, machine2, 80);
+
+        // Release machine1
+        releaseMachine(machine1);
+        
+        // Expect machine2 to still be registered
+        assertEquals(pfm.lookup(machine2, 80), publicHostAndPort);
+        assertEquals(pfm.lookup("mypublicip", 80), publicHostAndPort);
+        
+        // And no calls to "close" for machine2; just for machine1's port 22
+        assertEquals(portForwarder.closes.size(), 1, "closes="+portForwarder.closes+"; machine1="+machine1);
+        assertEquals(portForwarder.closes.get(0).get(0), node1);
+        assertEquals(portForwarder.closes.get(0).get(1), 22);
     }
 }
