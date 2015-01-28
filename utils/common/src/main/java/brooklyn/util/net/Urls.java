@@ -25,6 +25,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -119,10 +122,18 @@ public class Urls {
     }
     
     /** returns the items with exactly one "/" between items (whether or not the individual items start or end with /),
-     * except where character before the / is a : (url syntax) in which case it will permit multiple (will not remove any) */
+     * except where character before the / is a : (url syntax) in which case it will permit multiple (will not remove any).
+     * Throws a NullPointerException if any elements of 'items' is null.
+     *  */
     public static String mergePaths(String ...items) {
+        List<String> parts = Arrays.asList(items);
+
+        if (parts.contains(null)) {
+            throw new NullPointerException(String.format("Unable to reliably merge path from parts: %s; input contains null values", parts));
+        }
+
         StringBuilder result = new StringBuilder();
-        for (String item: items) {
+        for (String part: parts) {
             boolean trimThisMerge = result.length()>0 && !result.toString().endsWith("://") && !result.toString().endsWith(":///") && !result.toString().endsWith(":");
             if (trimThisMerge) {
                 while (result.length()>0 && result.charAt(result.length()-1)=='/')
@@ -130,7 +141,7 @@ public class Urls {
                 result.append('/');
             }
             int i = result.length();
-            result.append(item);
+            result.append(part);
             if (trimThisMerge) {
                 while (result.length()>i && result.charAt(i)=='/')
                     result.deleteCharAt(i);
