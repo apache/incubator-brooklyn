@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.brooklynnode;
 
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
@@ -27,16 +28,22 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableMap;
+
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 public class BrooklynNodeTest {
 
@@ -44,6 +51,19 @@ public class BrooklynNodeTest {
     
     private TestApplication app;
     private SshMachineLocation loc;
+    
+    public static class SlowStopBrooklynNode extends BrooklynNodeImpl {
+        public SlowStopBrooklynNode() {}
+        
+        @Override
+        protected void postStop() {
+            super.postStop();
+            
+            //Make sure UnmanageTask will wait for the STOP effector to complete.
+            Time.sleep(Duration.FIVE_SECONDS);
+        }
+        
+    }
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -87,6 +107,22 @@ public class BrooklynNodeTest {
         assertTrue(urls.contains(expectedUrl), "urls="+urls);
     }
     
+    @Test(groups = "Integration")
+    public void testUnmanageOnStop() throws Exception {
+        final BrooklynNode node = app.addChild(EntitySpec.create(BrooklynNode.class).impl(SlowStopBrooklynNode.class));
+        Entities.manage(node);
+        assertTrue(Entities.isManaged(node), "Entity " + node + " must be managed.");
+        node.invoke(Startable.STOP, ImmutableMap.<String,Object>of()).asTask().getUnchecked();
+        //The UnmanageTask will unblock after the STOP effector completes, so we are competing with it here.
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                assertFalse(Entities.isManaged(node));
+            }
+        });
+    }
+    
+
     @Test
     public void testCanStartSameNode() throws Exception {
         // not very interesting as do not have REST when run in this project
