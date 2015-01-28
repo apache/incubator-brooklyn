@@ -103,27 +103,20 @@ public class CompoundTransformer {
          */
         // ie TagName/text()[.='foo'] with 'bar' causes <Tag1>foo</Tag1> to <Tag1>bar</Tag1>
         public Builder xmlReplaceItem(String xpathToMatch, String newValue) {
-            return xsltTransformerFromXsltFreemarkerTemplateUrl("classpath://brooklyn/entity/rebind/transformer/xmlReplaceItem.xslt",
-                ImmutableMap.of("xpath_to_match", xpathToMatch, "new_val", newValue));
-            // alternatively:
-//            return xsltTransformerRecursiveCopyWithExtraRules(
-//                "<xsl:template match=\""+xpathToMatch+"\">"
-//                    + newValue
-//                + "</xsl:template>");
+            return xsltTransformerRecursiveCopyWithExtraRules(
+                "<xsl:template match=\""+xpathToMatch+"\">"
+                    + newValue
+                + "</xsl:template>");
         }
         
         /** 
          * Replaces a tag, but while continuing to recurse.
          */
         public Builder xmlRenameTag(String xpathToMatch, String newValue) {
-            return xsltTransformerRecursiveCopyWithExtraRules(
-              "<xsl:template match=\""+xpathToMatch+"\">"
-                  + "<"+newValue+">"
-                      + "<xsl:apply-templates select=\"@*|node()\" />"
-                  + "</"+newValue+">"
-              + "</xsl:template>");
-            // alternatively:
-//            xmlReplaceItem(xpathToMatch, "<"+newValue+">"+"<xsl:apply-templates select=\"@*|node()\" />"+"</"+newValue+">") 
+            return xmlReplaceItem(xpathToMatch, 
+                "<"+newValue+">"
+                    + "<xsl:apply-templates select=\"@*|node()\" />"
+                + "</"+newValue+">"); 
         }
 
         /** Changes the contents inside a "type" tag:
@@ -132,8 +125,10 @@ public class CompoundTransformer {
          * In brooklyn/xstream, a "type" node typically gives the name of a java or catalog type to be used
          * when creating an instance. */
         public Builder renameType(String oldVal, String newVal) {
-            return xsltTransformerFromXsltFreemarkerTemplateUrl("classpath://brooklyn/entity/rebind/transformer/renameType.xslt",
-                ImmutableMap.of("old_val", toXstreamClassnameFormat(oldVal), "new_val", toXstreamClassnameFormat(newVal)));
+            return xmlReplaceItem("type/text()[.='"+toXstreamClassnameFormat(oldVal)+"']", toXstreamClassnameFormat(newVal));
+            // previously this did a more complex looping, essentially
+            // <when .=oldVal>newVal</when><otherwise><apply-templates/></otherwise>
+            // but i think these are equivalent
         }
         /** Changes an XML tag matching a given old value:
          * the tag is changed to the new value.
@@ -141,8 +136,7 @@ public class CompoundTransformer {
          * In xstream many tags correspond to the java class of an object so this is a way to change 
          * the java class (or xstream alias) of a persisted instance (or instance inside them). */
         public Builder renameClass(String oldVal, String newVal) {
-            return xsltTransformerFromXsltFreemarkerTemplateUrl("classpath://brooklyn/entity/rebind/transformer/renameClass.xslt",
-                ImmutableMap.of("old_val", toXstreamClassnameFormat(oldVal), "new_val", toXstreamClassnameFormat(newVal)));
+            return xmlRenameTag(toXstreamClassnameFormat(oldVal), toXstreamClassnameFormat(newVal));
         }
         /** Changes an XML tag inside another tag: 
          * where the outer tag and inner tag match the values given here,
@@ -151,8 +145,7 @@ public class CompoundTransformer {
          * In stream tags corresponding to fields are contained in the tag corresponding to the class name,
          * so this gives a way to change the name of a field which will be deserialized. */
         public Builder renameField(String clazz, String oldVal, String newVal) {
-            return xsltTransformerFromXsltFreemarkerTemplateUrl("classpath://brooklyn/entity/rebind/transformer/renameField.xslt",
-                ImmutableMap.of("class_name", toXstreamClassnameFormat(clazz), "old_val", toXstreamClassnameFormat(oldVal), "new_val", toXstreamClassnameFormat(newVal)));
+            return xmlRenameTag(toXstreamClassnameFormat(clazz)+"/"+toXstreamClassnameFormat(oldVal), toXstreamClassnameFormat(newVal));
         }
 
         private String toXstreamClassnameFormat(String val) {

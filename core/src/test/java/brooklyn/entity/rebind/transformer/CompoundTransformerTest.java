@@ -62,7 +62,8 @@ import com.google.common.collect.Iterables;
 public class CompoundTransformerTest extends RebindTestFixtureWithApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(CompoundTransformerTest.class);
-
+    private static String NEWLINE = Os.LINE_SEPARATOR;
+    
     private File newMementoDir;
     
     @AfterMethod(alwaysRun=true)
@@ -190,6 +191,108 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
 
         RenamedIdEqualToPredicate newPredicate = (RenamedIdEqualToPredicate) newApp.getConfig(CONF1);
         assertTrue(newPredicate.apply(newApp));
+    }
+    
+    @Test
+    public void testRenameTypeInXml() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .renameType("mytype.Before", "mytype.After")
+            .build();
+        
+        String input = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">mytype.Before</type>"+NEWLINE+
+                "  <nested>"+NEWLINE+
+                "    <type myattrib3=\"myval3\">doesNotMatch</type>"+NEWLINE+
+                "    <type myattrib4=\"myval4\">partial.mytype.Before</type>"+NEWLINE+
+                "    <type myattrib5=\"myval5\">mytype.Before</type>"+NEWLINE+
+                "  </nested>"+NEWLINE+
+                "  <id>myid</id>"+NEWLINE+
+                "</entity>";
+        String expected = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">mytype.After</type>"+NEWLINE+
+                "  <nested>"+NEWLINE+
+                "    <type myattrib3=\"myval3\">doesNotMatch</type>"+NEWLINE+
+                "    <type myattrib4=\"myval4\">partial.mytype.Before</type>"+NEWLINE+
+                "    <type myattrib5=\"myval5\">mytype.After</type>"+NEWLINE+
+                "  </nested>"+NEWLINE+
+                "  <id>myid</id>"+NEWLINE+
+                "</entity>";
+        
+        assertSingleXmlTransformation(transformer, input, expected);
+    }
+    
+    @Test
+    public void testRenameFieldInXml() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .renameField("MyClass", "myFieldBefore", "myFieldAfter")
+            .build();
+        
+        String input = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">mytype.Before</type>"+NEWLINE+
+                "  <config>"+NEWLINE+
+                "    <test.conf1>"+NEWLINE+
+                "      <MyClass>"+NEWLINE+
+                "        <myFieldBefore class=\"string\">myfieldval</myFieldBefore>"+NEWLINE+
+                "      </MyClass>"+NEWLINE+
+                "    </test.conf1>"+NEWLINE+
+                "    <test.conf2>"+NEWLINE+
+                "      <MyOtherClass>"+NEWLINE+
+                "        <myFieldBefore class=\"string\">myfieldval</myFieldBefore>"+NEWLINE+
+                "      </MyOtherClass>"+NEWLINE+
+                "    </test.conf2>"+NEWLINE+
+                "  </config>"+NEWLINE+
+                "</entity>";
+        String expected = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">mytype.Before</type>"+NEWLINE+
+                "  <config>"+NEWLINE+
+                "    <test.conf1>"+NEWLINE+
+                "      <MyClass>"+NEWLINE+
+                "        <myFieldAfter class=\"string\">myfieldval</myFieldAfter>"+NEWLINE+
+                "      </MyClass>"+NEWLINE+
+                "    </test.conf1>"+NEWLINE+
+                "    <test.conf2>"+NEWLINE+
+                "      <MyOtherClass>"+NEWLINE+
+                "        <myFieldBefore class=\"string\">myfieldval</myFieldBefore>"+NEWLINE+
+                "      </MyOtherClass>"+NEWLINE+
+                "    </test.conf2>"+NEWLINE+
+                "  </config>"+NEWLINE+
+                "</entity>";
+        
+        assertSingleXmlTransformation(transformer, input, expected);
+    }
+    
+    @Test
+    public void testRenameClassInXml() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .renameClass("MyClassBefore", "MyClassAfter")
+            .build();
+
+        String input = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">mytype.Before</type>"+NEWLINE+
+                "  <config>"+NEWLINE+
+                "    <test.conf1>"+NEWLINE+
+                "      <MyClassBefore>"+NEWLINE+
+                "      </MyClassBefore>"+NEWLINE+
+                "    </test.conf1>"+NEWLINE+
+                "  </config>"+NEWLINE+
+                "</entity>";
+        String expected = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">mytype.Before</type>"+NEWLINE+
+                "  <config>"+NEWLINE+
+                "    <test.conf1>"+NEWLINE+
+                "      <MyClassAfter>"+NEWLINE+
+                "      </MyClassAfter>"+NEWLINE+
+                "    </test.conf1>"+NEWLINE+
+                "  </config>"+NEWLINE+
+                "</entity>";
+        
+        assertSingleXmlTransformation(transformer, input, expected);
     }
     
     protected TestApplication transformAndRebind(CompoundTransformer transformer) throws Exception {

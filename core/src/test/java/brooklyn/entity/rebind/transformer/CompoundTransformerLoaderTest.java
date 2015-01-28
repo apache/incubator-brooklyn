@@ -45,7 +45,7 @@ public class CompoundTransformerLoaderTest {
                 "  old_val: myoldname\n"+
                 "  new_val: mynewname\n"+
                 "xslt:\n"+
-                "  url: classpath://brooklyn/entity/rebind/transformer/renameType.xslt\n"+
+                "  url: classpath://brooklyn/entity/rebind/transformer/impl/renameType.xslt\n"+
                 "  substitutions:\n"+
                 "    old_val: myoldname\n"+
                 "    new_val: mynewname\n"+
