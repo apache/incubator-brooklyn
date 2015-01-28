@@ -44,6 +44,12 @@ public class CompoundTransformerLoaderTest {
                 "  class_name: myclassname\n"+
                 "  old_val: myoldname\n"+
                 "  new_val: mynewname\n"+
+                // low-level mechanism to change catalogItemId; used (and tested) by higher-level methods
+                // which use symbolic_name:version notation to avoid the unpleasant need for yaml quotes
+                "catalogItemId:\n"+
+                "  old_symbolic_name: myclassname\n"+
+                "  new_symbolic_name: myclassname\n"+
+                "  new_version: '2.0'\n"+
                 "xslt:\n"+
                 "  url: classpath://brooklyn/entity/rebind/transformer/impl/renameType.xslt\n"+
                 "  substitutions:\n"+
@@ -58,7 +64,8 @@ public class CompoundTransformerLoaderTest {
         assertTrue(Iterables.get(rawDataTransformers, 1) instanceof XsltTransformer);
         assertTrue(Iterables.get(rawDataTransformers, 2) instanceof XsltTransformer);
         assertTrue(Iterables.get(rawDataTransformers, 3) instanceof XsltTransformer);
-        assertTrue(Iterables.get(rawDataTransformers, 4) instanceof MyRawDataTransformer);
+        assertTrue(Iterables.get(rawDataTransformers, 4) instanceof XsltTransformer);
+        assertTrue(Iterables.get(rawDataTransformers, 5) instanceof MyRawDataTransformer);
     }
     
     public static class MyRawDataTransformer implements RawDataTransformer {

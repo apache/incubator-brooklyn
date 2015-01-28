@@ -294,7 +294,65 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
         
         assertSingleXmlTransformation(transformer, input, expected);
     }
-    
+
+    @Test
+    public void testChangeCatalogItemIdExplicitVersionInXml() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .changeCatalogItemId("foo", "1.0", "bar", "2.0")
+            .build();
+
+        String input = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <catalogItemId>foo:1.0</catalogItemId>"+NEWLINE+
+                "  <config>ignore</config>"+NEWLINE+
+                "</entity>";
+        String expected = 
+            "<entity myattrib=\"myval\">"+NEWLINE+
+            "  <catalogItemId>bar:2.0</catalogItemId>"+NEWLINE+
+            "  <config>ignore</config>"+NEWLINE+
+            "</entity>";
+        
+        assertSingleXmlTransformation(transformer, input, expected);
+    }
+    @Test
+    public void testChangeCatalogItemIdExplicitVersionNonMatchInXml() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .changeCatalogItemId("foo", "1.0", "bar", "2.0")
+            .build();
+
+        String input = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <catalogItemId>foo:1.1</catalogItemId>"+NEWLINE+
+                "  <config>ignore</config>"+NEWLINE+
+                "</entity>";
+        String expected = 
+            "<entity myattrib=\"myval\">"+NEWLINE+
+            "  <catalogItemId>foo:1.1</catalogItemId>"+NEWLINE+
+            "  <config>ignore</config>"+NEWLINE+
+            "</entity>";
+        
+        assertSingleXmlTransformation(transformer, input, expected);
+    }
+    @Test
+    public void testChangeCatalogItemIdAnyVersionInXml() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .changeCatalogItemId("foo", "bar", "2.0")
+            .build();
+
+        String input = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <catalogItemId>foo:1.2</catalogItemId>"+NEWLINE+
+                "  <config>ignore</config>"+NEWLINE+
+                "</entity>";
+        String expected = 
+            "<entity myattrib=\"myval\">"+NEWLINE+
+            "  <catalogItemId>bar:2.0</catalogItemId>"+NEWLINE+
+            "  <config>ignore</config>"+NEWLINE+
+            "</entity>";
+        
+        assertSingleXmlTransformation(transformer, input, expected);
+    }
+
     protected TestApplication transformAndRebind(CompoundTransformer transformer) throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
         BrooklynMementoRawData newRawData = transform(origManagementContext, transformer);
