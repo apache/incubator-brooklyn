@@ -27,16 +27,18 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindExceptionHandler;
-import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.RecordingRebindExceptionHandler;
@@ -46,7 +48,6 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.test.entity.TestApplication;
@@ -55,6 +56,7 @@ import brooklyn.util.os.Os;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 @SuppressWarnings("serial")
 public class CompoundTransformerTest extends RebindTestFixtureWithApp {
@@ -70,6 +72,81 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
         if (newMementoDir != null) FileBasedObjectStore.deleteCompletely(mementoDir);
     }
 
+    @Test
+    public void testXmlReplaceItemText() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .xmlReplaceItem("Tag1/text()[.='foo']", "bar")
+            .build();
+        assertSingleXmlTransformation(transformer, "<Tag1>foo</Tag1>", "<Tag1>bar</Tag1>");
+        assertSingleXmlTransformation(transformer, "<Tag1>baz</Tag1>", "<Tag1>baz</Tag1>");
+        assertSingleXmlTransformation(transformer, "<Tag2>foo</Tag2>", "<Tag2>foo</Tag2>");
+        // works when nested
+        assertSingleXmlTransformation(transformer, "<Tag0><Tag1>foo</Tag1><Tag2/></Tag0>", "<Tag0><Tag1>bar</Tag1><Tag2/></Tag0>");
+        // keeps attributes and other children
+        assertSingleXmlTransformation(transformer, "<Tag1 attr=\"value\">foo</Tag1>", "<Tag1 attr=\"value\">bar</Tag1>");
+        assertSingleXmlTransformation(transformer, "<Tag1>foo<Tag2/></Tag1>", "<Tag1>bar<Tag2/></Tag1>");
+    }
+    
+    @Test
+    public void testXmlReplaceItemTree() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .xmlReplaceItem("Tag1[text()='foo']", "<Tag1>bar</Tag1>")
+            .build();
+        assertSingleXmlTransformation(transformer, "<Tag1>foo</Tag1>", "<Tag1>bar</Tag1>");
+        assertSingleXmlTransformation(transformer, "<Tag1>baz</Tag1>", "<Tag1>baz</Tag1>");
+        assertSingleXmlTransformation(transformer, "<Tag2>foo</Tag2>", "<Tag2>foo</Tag2>");
+        // works when nested
+        assertSingleXmlTransformation(transformer, "<Tag0><Tag1>foo</Tag1><Tag2/></Tag0>", "<Tag0><Tag1>bar</Tag1><Tag2/></Tag0>");
+        // this deletes attributes and other children
+        assertSingleXmlTransformation(transformer, "<Tag1 attr=\"value\">foo</Tag1>", "<Tag1>bar</Tag1>");
+        assertSingleXmlTransformation(transformer, "<Tag1>foo<Tag2/></Tag1>", "<Tag1>bar</Tag1>");
+    }
+    
+    @Test
+    public void testXmlReplaceItemAttribute() throws Exception {
+        // note, the syntax for changing an attribute value is obscure, especially the RHS
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .xmlReplaceItem("Tag1/@attr[.='foo']", "<xsl:attribute name=\"attr\">bar</xsl:attribute>")
+            .build();
+        assertSingleXmlTransformation(transformer, "<Tag1 attr=\"foo\">foo</Tag1>", "<Tag1 attr=\"bar\">foo</Tag1>");
+        assertSingleXmlTransformation(transformer, "<Tag1 attr=\"baz\">foo</Tag1>", "<Tag1 attr=\"baz\">foo</Tag1>");
+    }
+    
+    @Test
+    public void testXmlRenameTag() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .xmlRenameTag("Tag1[text()='foo']", "Tag2")
+            .build();
+        assertSingleXmlTransformation(transformer, "<Tag1>foo</Tag1>", "<Tag2>foo</Tag2>");
+        assertSingleXmlTransformation(transformer, "<Tag1>baz</Tag1>", "<Tag1>baz</Tag1>");
+        assertSingleXmlTransformation(transformer, "<Tag2>foo</Tag2>", "<Tag2>foo</Tag2>");
+        // works when nested
+        assertSingleXmlTransformation(transformer, "<Tag0><Tag1>foo</Tag1><Tag2/></Tag0>", "<Tag0><Tag2>foo</Tag2><Tag2/></Tag0>");
+        // keeps attributes and other children
+        assertSingleXmlTransformation(transformer, "<Tag1 attr=\"value\">foo</Tag1>", "<Tag2 attr=\"value\">foo</Tag2>");
+        assertSingleXmlTransformation(transformer, "<Tag1>foo<Tag2/></Tag1>", "<Tag2>foo<Tag2/></Tag2>");
+    }
+    
+    @Test
+    public void testXmlReplaceItemActuallyAlsoRenamingTag() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .xmlReplaceItem("Tag1[text()='foo']", "<Tag2><xsl:apply-templates select=\"@*|node()\" /></Tag2>")
+            .build();
+        assertSingleXmlTransformation(transformer, "<Tag1>foo</Tag1>", "<Tag2>foo</Tag2>");
+        assertSingleXmlTransformation(transformer, "<Tag1>baz</Tag1>", "<Tag1>baz</Tag1>");
+        assertSingleXmlTransformation(transformer, "<Tag2>foo</Tag2>", "<Tag2>foo</Tag2>");
+        // works when nested
+        assertSingleXmlTransformation(transformer, "<Tag0><Tag1>foo</Tag1><Tag2/></Tag0>", "<Tag0><Tag2>foo</Tag2><Tag2/></Tag0>");
+        // keeps attributes and other children
+        assertSingleXmlTransformation(transformer, "<Tag1 attr=\"value\">foo</Tag1>", "<Tag2 attr=\"value\">foo</Tag2>");
+        assertSingleXmlTransformation(transformer, "<Tag1>foo<Tag2/></Tag1>", "<Tag2>foo<Tag2/></Tag2>");
+    }
+    
+    protected void assertSingleXmlTransformation(CompoundTransformer transformer, String xmlIn, String xmlOutExpected) throws Exception {
+        String xmlOutActual = Iterables.getOnlyElement( transformer.getRawDataTransformers().get(BrooklynObjectType.ENTITY) ).transform(xmlIn);
+        Assert.assertEquals(xmlOutActual, xmlOutExpected);
+    }
+    
     @Test
     public void testNoopTransformation() throws Exception {
         CompoundTransformer transformer = CompoundTransformer.builder()
