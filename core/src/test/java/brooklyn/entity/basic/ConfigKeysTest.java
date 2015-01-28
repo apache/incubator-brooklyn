@@ -22,7 +22,9 @@ import static org.testng.Assert.assertEquals;
 
 import org.testng.annotations.Test;
 
+import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.CaseFormat;
 
@@ -57,4 +59,29 @@ public class ConfigKeysTest {
         assertEquals(key2.getDescription(), "my descr");
         assertEquals(key2.getDefaultValue(), "my default val");
     }
+    
+    @Test
+    public void testConfigKeyBuilder() throws Exception {
+        ConfigKey<String> key = ConfigKeys.builder(String.class, "mykey")
+            .description("my descr")
+            .defaultValue("my default val")
+            .inheritance(ConfigInheritance.NONE)
+            .reconfigurable(true)
+            .build();
+        
+        checkMyKey(key);
+        
+        ConfigKey<String> key2 = BasicConfigKey.builder(key).build();
+        checkMyKey(key2);
+    }
+
+    private void checkMyKey(ConfigKey<String> key) {
+        assertEquals(key.getName(), "mykey");
+        assertEquals(key.getType(), String.class);
+        assertEquals(key.getDescription(), "my descr");
+        assertEquals(key.getDefaultValue(), "my default val");
+        assertEquals(key.isReconfigurable(), true);
+        assertEquals(key.getInheritance(), ConfigInheritance.NONE);
+    }
+
 }

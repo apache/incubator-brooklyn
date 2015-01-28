@@ -21,6 +21,7 @@ package brooklyn.location.basic;
 import java.util.Map;
 
 import brooklyn.basic.BrooklynObjectInternal;
+import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.RebindSupport;
@@ -65,6 +66,10 @@ public interface LocationInternal extends BrooklynObjectInternal, Location {
 
     ConfigBag getLocalConfigBag();
 
+    /** Returns all config, including that inherited from parents.
+     * TODO this method does not respect {@link ConfigInheritance} and so usage is discouraged.  
+     */
+    @Beta  // made beta in 0.7.0 due to inheritance problems
     ConfigBag getAllConfigBag();
 
     /**

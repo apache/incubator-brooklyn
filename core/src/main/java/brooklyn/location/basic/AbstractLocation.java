@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
+import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
@@ -349,7 +350,9 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
         if (hasConfig(key, false)) return getLocalConfigBag().get(key);
-        if (getParent()!=null) return getParent().getConfig(key);
+        if (getParent()!=null && isInherited(key)) {
+            return getParent().getConfig(key);
+        }
         
         // In case this entity class has overridden the given key (e.g. to set default), then retrieve this entity's key
         // TODO when locations become entities, the duplication of this compared to EntityConfigMap.getConfig will disappear.
@@ -363,9 +366,19 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     public boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
         boolean locally = getLocalConfigBag().containsKey(key);
         if (locally) return true;
-        if (!includeInherited) return false;
+        if (!includeInherited || !isInherited(key)) return false;
         if (getParent()!=null) return getParent().hasConfig(key, true);
         return false;
+    }
+
+    private boolean isInherited(ConfigKey<?> key) {
+        ConfigInheritance inheritance = key.getInheritance();
+        if (inheritance==null) inheritance = getDefaultInheritance();
+        return inheritance.isInherited(key, getParent(), this);
+    }
+
+    private ConfigInheritance getDefaultInheritance() {
+        return ConfigInheritance.ALWAYS;
     }
 
     @Override
@@ -376,6 +389,10 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     
     @Override
     public ConfigBag getAllConfigBag() {
+        // TODO see comments in EntityConfigMap and on interface methods. 
+        // here ConfigBag is used exclusively so
+        // we have no information about what to include/exclude inheritance wise.
+        // however few things use getAllConfigBag()
         ConfigBag result = ConfigBag.newInstanceExtending(configBag, ImmutableMap.of());
         Location p = getParent();
         if (p!=null) result.putIfAbsent(((LocationInternal)p).getAllConfigBag().getAllConfig());
