@@ -45,6 +45,7 @@ define([
             'click .refresh':'updateConfigNow',
             'click .filterEmpty':'toggleFilterEmpty',
             'click .toggleAutoRefresh':'toggleAutoRefresh',
+            'click #config-table tr.secret-info td.config-value':'toggleSecrecyVisibility',
 
             'mouseup .valueOpen':'valueOpen',
             'mouseover #config-table tbody tr':'noteFloatMenuActive',
@@ -76,7 +77,10 @@ define([
                 "aoColumnDefs": [
                                  { // name (with tooltip)
                                      "mRender": function ( data, type, row ) {
+                                         // name (column 1) should have tooltip title
                                          var actions = that.getConfigActions(data.name);
+                                         // if data.description or .type is absent we get an error in html rendering (js)
+                                         // unless we set it explicitly (there is probably a nicer way to do this however?)
                                          var context = _.extend(data, { 
                                              description: data['description'], type: data['type']});
                                          return configNameHtml(context);
@@ -93,17 +97,24 @@ define([
                                              configName = row[0],
                                              actions = that.getConfigActions(configName);
                                          
+                                         var $row = $('tr[id="'+configName+'"]');
+                                         
                                          // datatables doesn't seem to expose any way to modify the html in place for a cell,
                                          // so we rebuild
                                          
                                          var result = "<span class='value'>"+(hasEscapedValue ? escapedValue : '')+"</span>";
+                                         
+                                         if (Util.isSecret(configName)) {
+                                            $row.addClass("secret-info");
+                                            result += "<span class='secret-indicator'>(hidden)</span>";
+                                         }
+                                         
                                          if (actions.open)
                                              result = "<a href='"+actions.open+"'>" + result + "</a>";
                                          if (escapedValue==null || escapedValue.length < 3)
                                              // include whitespace so we can click on it, if it's really small
                                              result += "&nbsp;&nbsp;&nbsp;&nbsp;";
 
-                                         var $row = $('tr[id="'+configName+'"]');
                                          var existing = $row.find('.dynamic-contents');
                                          // for the json url, use the full url (relative to window.location.href)
                                          var jsonUrl = actions.json ? new URI(actions.json).resolve(new URI(window.location.href)).toString() : null;
@@ -423,6 +434,10 @@ define([
         enableAutoRefresh: function(isEnabled) {
             this.refreshActive = isEnabled;
             return this;
+        },
+        
+        toggleSecrecyVisibility: function(event) {
+            $(event.target).closest('tr.secret-info').toggleClass('secret-revealed');
         },
         
         /**

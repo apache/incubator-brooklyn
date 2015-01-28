@@ -1453,3 +1453,20 @@ textarea.param-value {
 #catalog-details-accordion {
     margin-top: 12px;
 }
+
+/* For secret things */
+tr.secret-info span.value {
+    display: none;
+}
+tr.secret-info.secret-revealed span.value {
+    display: inherit;
+}
+tr.secret-info.secret-revealed span.secret-indicator {
+    display: none;
+}
+
+.secret-indicator {
+    /* blur */
+    color: transparent;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
