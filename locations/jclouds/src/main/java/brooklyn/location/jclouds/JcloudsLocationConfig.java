@@ -20,6 +20,7 @@ package brooklyn.location.jclouds;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 import org.jclouds.Constants;
@@ -249,6 +250,9 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Registry/Factory for creating jclouds ComputeService; default is almost always fine, except where tests want to customize behaviour",
             ComputeServiceRegistryImpl.INSTANCE);
     
+    public static final ConfigKey<Map<String,String>> TEMPLATE_OPTIONS = ConfigKeys.newConfigKey(
+            new TypeToken<Map<String, String>>() {}, "templateOptions", "Additional jclouds template options");
+
     // TODO
     
 //  "noDefaultSshKeys" - hints that local ssh keys should not be read as defaults

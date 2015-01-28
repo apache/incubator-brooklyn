@@ -30,6 +30,9 @@ import static org.jclouds.scriptbuilder.domain.Statements.exec;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,6 +51,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import com.google.common.reflect.TypeToken;
 import org.jclouds.abiquo.compute.options.AbiquoTemplateOptions;
 import org.jclouds.cloudstack.compute.options.CloudStackTemplateOptions;
 import org.jclouds.compute.ComputeService;
@@ -831,7 +835,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         void apply(TemplateBuilder tb, ConfigBag props, Object v);
     }
     
-    private static interface CustomizeTemplateOptions {
+    public static interface CustomizeTemplateOptions {
         void apply(TemplateOptions tb, ConfigBag props, Object v);
     }
     
@@ -1050,6 +1054,43 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         t.networks((String)v);
                     }})
+              .put(TEMPLATE_OPTIONS, new CustomizeTemplateOptions() {
+                  @Override
+                  public void apply(TemplateOptions options, ConfigBag config, Object v) {
+                      if (v == null) return;
+                      @SuppressWarnings("unchecked") Map<String, String> optionsMap = (Map<String, String>) v;
+                      if (optionsMap.isEmpty()) return;
+
+                      Class<? extends TemplateOptions> clazz = options.getClass();
+                      Iterable<Method> methods = Arrays.asList(clazz.getMethods());
+                      for(final Map.Entry<String, String> option : optionsMap.entrySet()) {
+                          Optional<Method> methodOptional = Iterables.tryFind(methods, new Predicate<Method>() {
+                              @Override
+                              public boolean apply(@Nullable Method input) {
+                                  // Matches a method with the expected name, and a single parameter that TypeCoercions
+                                  // can coerce to
+                                  if (input == null) return false;
+                                  if (!input.getName().equals(option.getKey())) return false;
+                                  Type[] parameterTypes = input.getGenericParameterTypes();
+                                  return parameterTypes.length == 1
+                                          && TypeCoercions.tryCoerce(option.getValue(), TypeToken.of(parameterTypes[0])).isPresentAndNonNull();
+                              }
+                          });
+                          if(methodOptional.isPresent()) {
+                              try {
+                                  Method method = methodOptional.get();
+                                  method.invoke(options, TypeCoercions.coerce(option.getValue(), TypeToken.of(method.getGenericParameterTypes()[0])));
+                              } catch (IllegalAccessException e) {
+                                  throw Exceptions.propagate(e);
+                              } catch (InvocationTargetException e) {
+                                  throw Exceptions.propagate(e);
+                              }
+                          } else {
+                              LOG.warn("Ignoring request to set template option {} because this is not supported by {}", new Object[] { option.getKey(), clazz.getCanonicalName() });
+                          }
+                      }
+                  }
+              })
             .build();
 
     private static boolean listedAvailableTemplatesOnNoSuchTemplate = false;
@@ -1140,7 +1181,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (config.containsKey(key))
                 code.apply(options, config, config.get(key));
         }
-        
+
         return template;
     }
     
