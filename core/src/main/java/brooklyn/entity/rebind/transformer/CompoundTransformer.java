@@ -34,10 +34,11 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
-import com.google.common.annotations.VisibleForTesting;
 
 @Beta
 public class CompoundTransformer {
@@ -119,33 +120,65 @@ public class CompoundTransformer {
                 + "</"+newValue+">"); 
         }
 
-        /** Changes the contents inside a "type" tag:
-         * where the contents match the old value, they are changed to the new value.
+        /** 
+         * Renames an explicit type name reference in brooklyn-xstream serialization.
+         * <p>
+         * Really this changes the contents inside any tag named "type",
+         * where the contents match the oldVal, they are changed to the newVal.
          * <p> 
-         * In brooklyn/xstream, a "type" node typically gives the name of a java or catalog type to be used
-         * when creating an instance. */
+         * In brooklyn-xstream, the "type" node typically gives the name of a java or catalog type to be used
+         * when creating an instance; that's how this works. 
+         */
         public Builder renameType(String oldVal, String newVal) {
             return xmlReplaceItem("type/text()[.='"+toXstreamClassnameFormat(oldVal)+"']", toXstreamClassnameFormat(newVal));
             // previously this did a more complex looping, essentially
             // <when .=oldVal>newVal</when><otherwise><apply-templates/></otherwise>
             // but i think these are equivalent
         }
-        /** Changes an XML tag matching a given old value:
+        /** 
+         * Renames an implicit class name reference (a tag).
+         * <p>
+         * Really this changes any XML tag matching a given old value;
          * the tag is changed to the new value.
          * <p>
-         * In xstream many tags correspond to the java class of an object so this is a way to change 
-         * the java class (or xstream alias) of a persisted instance (or instance inside them). */
+         * In brooklyn-xstream many tags correspond to the java class of an object;
+         * that's how this works to to change the java class (or xstream alias) 
+         * of a persisted instance, included nested instances. 
+         */
         public Builder renameClass(String oldVal, String newVal) {
             return xmlRenameTag(toXstreamClassnameFormat(oldVal), toXstreamClassnameFormat(newVal));
         }
-        /** Changes an XML tag inside another tag: 
-         * where the outer tag and inner tag match the values given here,
-         * the inner tag is changed to the new value.
+        /** 
+         * Renames a field in xstream serialization.
          * <p>
-         * In stream tags corresponding to fields are contained in the tag corresponding to the class name,
-         * so this gives a way to change the name of a field which will be deserialized. */
+         * Really this changes an XML tag inside another tag, 
+         * where the outer tag and inner tag match the clazz and oldVal values given here,
+         * the inner tag is changed to the newVal.
+         * <p>
+         * In brooklyn-xstream, tags corresponding to fields are contained in the tag 
+         * corresponding to the class name; that's how this works.
+         */
         public Builder renameField(String clazz, String oldVal, String newVal) {
             return xmlRenameTag(toXstreamClassnameFormat(clazz)+"/"+toXstreamClassnameFormat(oldVal), toXstreamClassnameFormat(newVal));
+        }
+        /** Changes the contents of an XML tag 'catalogItemId' where the
+         * old text matches oldSymbolicName and optionally oldVersion
+         * to have newSymbolicName and newVersion. 
+         * <p>
+         * This provides a programmatic way to change the catalogItemID. */
+        public Builder changeCatalogItemId(String oldSymbolicName, String oldVersion,
+                String newSymbolicName, String newVersion) {
+            if (oldVersion==null)
+                return changeCatalogItemId(oldSymbolicName, newSymbolicName, newVersion);
+            // warnings use underscore notation because that's what CompoundTransformerLoader uses
+            return xmlReplaceItem("catalogItemId/text()[.='"+
+                Preconditions.checkNotNull(oldSymbolicName, "old_symbolic_name")+":"+Preconditions.checkNotNull(oldVersion, "old_version")+"']", 
+                Preconditions.checkNotNull(newSymbolicName, "new_symbolic_name")+":"+Preconditions.checkNotNull(newVersion, "new_version"));
+        }
+        /** As {@link #changeCatalogItemId(String, String, String, String)} matching any old version. */
+        public Builder changeCatalogItemId(String oldSymbolicName, String newSymbolicName, String newVersion) {
+            return xmlReplaceItem("catalogItemId/text()[starts-with(.,'"+Preconditions.checkNotNull(oldSymbolicName, "old_symbolic_name")+":')]", 
+                Preconditions.checkNotNull(newSymbolicName, "new_symbolic_name")+":"+Preconditions.checkNotNull(newVersion, "new_version"));
         }
 
         private String toXstreamClassnameFormat(String val) {

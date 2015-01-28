@@ -62,13 +62,17 @@ public class CompoundTransformerLoader {
             String oldVal = (String) args.get("old_val");
             String newVal = (String) args.get("new_val");
             builder.renameField(clazz, oldVal, newVal);
+        } else if (name.equals("catalogItemId")) {
+            builder.changeCatalogItemId(
+                (String) args.get("old_symbolic_name"), checkString(args.get("old_version"), "old_version"),
+                (String) args.get("new_symbolic_name"), checkString(args.get("new_version"), "new_version"));
         } else if (name.equals("xslt")) {
             String url = (String) args.get("url");
             @SuppressWarnings("unchecked")
             Map<String,?> substitutions = (Map<String, ?>) args.get("substitutions");
             String xsltTemplate = ResourceUtils.create(CompoundTransformer.class).getResourceAsString(url);
             String xslt = TemplateProcessor.processTemplateContents(xsltTemplate, substitutions == null ? ImmutableMap.<String, String>of() : substitutions);
-            // TODO pass XSLT-style parameters instead, maybe?  that's more normal, 
+            // we could pass XSLT-style parameters instead, maybe?  that's more normal, 
             // but OTOH freemarker is maybe more powerful, given our other support there
             builder.xsltTransformer(xslt);
         } else if (name.equals("rawDataTransformer")) {
@@ -82,5 +86,12 @@ public class CompoundTransformerLoader {
         } else {
             throw new IllegalStateException("Unsupported transform '"+name+"' ("+args+")");
         }
+    }
+
+    private static String checkString(Object object, String name) {
+        if (object!=null && !(object instanceof String)) {
+            throw new IllegalArgumentException("Argument '"+name+"' must be a string; numbers may need explicit quoting in YAML.");
+        }
+        return (String) object;
     }
 }
