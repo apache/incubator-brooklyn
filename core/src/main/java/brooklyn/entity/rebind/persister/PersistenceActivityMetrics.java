@@ -43,7 +43,7 @@ public class PersistenceActivityMetrics {
         count++;
         failureCount++;
         lastFailureTime = System.currentTimeMillis();
-        lastDuration = duration.toMilliseconds();
+        lastDuration = duration!=null ? duration.toMilliseconds() : -1;
     }
 
     public void noteError(String error) {
