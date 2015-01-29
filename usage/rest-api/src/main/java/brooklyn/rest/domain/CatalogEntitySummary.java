@@ -34,6 +34,7 @@ public class CatalogEntitySummary extends CatalogItemSummary {
             @JsonProperty("symbolicName") String symbolicName,
             @JsonProperty("version") String version,
             @JsonProperty("name") String name,
+            @JsonProperty("registeredType") String registeredType,
             @JsonProperty("javaType") String javaType,
             @JsonProperty("planYaml") String planYaml,
             @JsonProperty("description") String description,
@@ -43,7 +44,7 @@ public class CatalogEntitySummary extends CatalogItemSummary {
             @JsonProperty("effectors") Set<EffectorSummary> effectors,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        super(symbolicName, version, name, javaType, planYaml, description, iconUrl, links);
+        super(symbolicName, version, name,registeredType, javaType, planYaml, description, iconUrl, links);
         this.config = config;
         this.sensors = sensors;
         this.effectors = effectors;
