@@ -1242,10 +1242,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         UserCreation userCreation = createUserStatements(image, config);
         
         if (!userCreation.statements.isEmpty()) {
-            org.jclouds.compute.domain.OsFamily osFamily = node.getOperatingSystem().getFamily();
-            org.jclouds.scriptbuilder.domain.OsFamily scriptOsFamily = (osFamily == org.jclouds.compute.domain.OsFamily.WINDOWS) 
-                    ? org.jclouds.scriptbuilder.domain.OsFamily.WINDOWS
-                    : org.jclouds.scriptbuilder.domain.OsFamily.UNIX;
+            // If unsure of OS family, default to unix for rendering statements.
+            org.jclouds.scriptbuilder.domain.OsFamily scriptOsFamily;
+            if (node.getOperatingSystem() == null) {
+                scriptOsFamily = org.jclouds.scriptbuilder.domain.OsFamily.UNIX;
+            } else {
+                scriptOsFamily = (node.getOperatingSystem().getFamily() == org.jclouds.compute.domain.OsFamily.WINDOWS) 
+                        ? org.jclouds.scriptbuilder.domain.OsFamily.WINDOWS
+                        : org.jclouds.scriptbuilder.domain.OsFamily.UNIX;
+            }
             
             List<String> commands = Lists.newArrayList();
             for (Statement statement : userCreation.statements) {
