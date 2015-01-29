@@ -22,7 +22,6 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +37,6 @@ import brooklyn.config.ConfigMap;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
-import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
@@ -298,19 +296,16 @@ public class EntityConfigMap implements ConfigMap {
         }
     }
     
-    private Map<ConfigKey<?>, ?> filterUninheritable(Map<ConfigKey<?>, ?> valsO) {
-        MutableMap<ConfigKey<?>, Object> result = MutableMap.copyOf(valsO);
-        MutableList<ConfigKey<?>> keys = MutableList.copyOf(result.keySet());
-        Iterator<ConfigKey<?>> ki = keys.iterator();
-        while (ki.hasNext()) {
-            ConfigKey<?> key = ki.next();
-            if (isInherited(key)) ki.remove();
+    private Map<ConfigKey<?>, ?> filterUninheritable(Map<ConfigKey<?>, ?> vals) {
+        Map<ConfigKey<?>, Object> result = Maps.newLinkedHashMap();
+        for (Map.Entry<ConfigKey<?>, ?> entry : vals.entrySet()) {
+            if (isInherited(entry.getKey())) {
+                result.put(entry.getKey(), entry.getValue());
+            }
         }
-        for (ConfigKey<?> k: keys)
-            result.remove(k);
         return result;
     }
-
+    
     public void addToLocalBag(Map<String,?> vals) {
         localConfigBag.putAll(vals);
         // quick fix for problem that ownConfig can get out of synch
