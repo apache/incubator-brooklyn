@@ -26,12 +26,11 @@ import static java.lang.String.format;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.OsDetails;
@@ -42,7 +41,6 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -88,22 +86,15 @@ public class CouchbaseSyncGatewaySshDriver extends AbstractSoftwareProcessSshDri
         // Even once the bucket has published its API URL, it can still take a couple of seconds for it to become available
         Time.sleep(10 * 1000);
         if (cbNode instanceof CouchbaseCluster) {
-            Optional<Entity> cbClusterNode = Iterables.tryFind(cbNode.getAttribute(CouchbaseCluster.GROUP_MEMBERS), new Predicate<Entity>() {
-
-                @Override
-                public boolean apply(@Nullable Entity entity) {
-                    // Must either be recognised by a cluster as added, or be the primary node in a cluster of ONE.
-                    return entity instanceof CouchbaseNode
-                        && (Boolean.TRUE.equals(entity.getAttribute(CouchbaseNode.IS_IN_CLUSTER))
-                            || Boolean.TRUE.equals(entity.getAttribute(CouchbaseNode.IS_PRIMARY_NODE)));
-                }
-            });
-            if (cbClusterNode.isPresent()) {
-                cbNode = cbClusterNode.get();
-            } else {
+            // in_cluster now applies even to a node in a cluster of size 1
+            Optional<Entity> cbClusterNode = Iterables.tryFind(cbNode.getAttribute(CouchbaseCluster.GROUP_MEMBERS),
+                Predicates.and(Predicates.instanceOf(CouchbaseNode.class), EntityPredicates.attributeEqualTo(CouchbaseNode.IS_IN_CLUSTER, Boolean.TRUE)));
+            
+            if (!cbClusterNode.isPresent()) {
                 throw new IllegalArgumentException(format("The cluster %s does not contain any suitable Couchbase nodes to connect to..", cbNode.getId()));
             }
-
+            
+            cbNode = cbClusterNode.get();
         }
         String hostname = cbNode.getAttribute(CouchbaseNode.HOSTNAME);
         String webPort = cbNode.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT).toString();
