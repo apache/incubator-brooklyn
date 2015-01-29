@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
+import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.enricher.Enrichers;
@@ -371,10 +372,17 @@ public class ServiceStateLogic {
         /** as {@link #DEFAULT_UNIQUE_TAG}, but when a second distinct instance is responsible for computing service up */
         public final static String DEFAULT_UNIQUE_TAG_UP = "service-not-up-indicators-from-children-and-members";
 
-        public static final ConfigKey<QuorumCheck> UP_QUORUM_CHECK = ConfigKeys.newConfigKey(QuorumCheck.class, "enricher.service_state.children_and_members.quorum.up", 
-            "Logic for checking whether this service is up, based on children and/or members, defaulting to allowing none but if there are any requiring at least one to be up", QuorumCheck.QuorumChecks.atLeastOneUnlessEmpty());
-        public static final ConfigKey<QuorumCheck> RUNNING_QUORUM_CHECK = ConfigKeys.newConfigKey(QuorumCheck.class, "enricher.service_state.children_and_members.quorum.running", 
-            "Logic for checking whether this service is healthy, based on children and/or members running, defaulting to requiring none to be ON-FIRE", QuorumCheck.QuorumChecks.all());
+        public static final ConfigKey<QuorumCheck> UP_QUORUM_CHECK = ConfigKeys.builder(QuorumCheck.class, "enricher.service_state.children_and_members.quorum.up")
+            .description("Logic for checking whether this service is up, based on children and/or members, defaulting to allowing none but if there are any requiring at least one to be up")
+            .defaultValue(QuorumCheck.QuorumChecks.atLeastOneUnlessEmpty())
+            .inheritance(ConfigInheritance.NONE)
+            .build();
+        public static final ConfigKey<QuorumCheck> RUNNING_QUORUM_CHECK = ConfigKeys.builder(QuorumCheck.class, "enricher.service_state.children_and_members.quorum.running") 
+            .description("Logic for checking whether this service is healthy, based on children and/or members running, defaulting to requiring none to be ON-FIRE")
+            .defaultValue(QuorumCheck.QuorumChecks.all())
+            .inheritance(ConfigInheritance.NONE)
+            .build();
+        // TODO items below should probably also have inheritance NONE ?
         public static final ConfigKey<Boolean> DERIVE_SERVICE_NOT_UP = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.service_up.publish", "Whether to derive a service-not-up indicator from children", true);
         public static final ConfigKey<Boolean> DERIVE_SERVICE_PROBLEMS = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.service_problems.publish", "Whether to derive a service-problem indicator from children", true);
         public static final ConfigKey<Boolean> IGNORE_ENTITIES_WITH_SERVICE_UP_NULL = ConfigKeys.newBooleanConfigKey("enricher.service_state.children_and_members.ignore_entities.service_up_null", "Whether to ignore children reporting null values for service up", true);
