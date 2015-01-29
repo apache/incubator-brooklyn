@@ -246,6 +246,8 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     @Override
     public ManagementNodeState getHighAvailabilityNodeState() {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
         return mgmt().getHighAvailabilityManager().getNodeState();
     }
 
@@ -280,6 +282,8 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     @Override
     public HighAvailabilitySummary getHighAvailabilityPlaneStates() {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
         ManagementPlaneSyncRecord memento = mgmt().getHighAvailabilityManager().getLastManagementPlaneSyncRecord();
         if (memento==null) memento = mgmt().getHighAvailabilityManager().loadManagementPlaneSyncRecord(true);
         if (memento==null) return null;

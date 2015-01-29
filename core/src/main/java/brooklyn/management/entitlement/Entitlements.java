@@ -69,6 +69,9 @@ public class Entitlements {
      * secondary check required for any operation which could potentially grant root-level access */ 
     public static EntitlementClass<Void> ROOT = new BasicEntitlementClassDefinition<Void>("root", Void.class);
 
+    /** permission to see the server status API */
+    public static EntitlementClass<Void> SERVER_STATUS = new BasicEntitlementClassDefinition<Void>("server.status", Void.class);
+
     public static enum EntitlementClassesEnum {
         ENTITLEMENT_SEE_ENTITY(SEE_ENTITY),
         ENTITLEMENT_SEE_SENSOR(SEE_SENSOR),
@@ -77,6 +80,7 @@ public class Entitlements {
         ENTITLEMENT_DEPLOY_APPLICATION(DEPLOY_APPLICATION),
         ENTITLEMENT_SEE_ALL_SERVER_INFO(SEE_ALL_SERVER_INFO),
         ENTITLEMENT_ROOT(ROOT),
+        ENTITLEMENT_SERVER_STATUS(SERVER_STATUS),
         ;
         
         private EntitlementClass<?> entitlementClass;
@@ -218,6 +222,11 @@ public class Entitlements {
             FineGrainedEntitlements.allowing(SEE_ENTITY),
             FineGrainedEntitlements.seeNonSecretSensors()
         );
+    }
+
+    /** allow healthcheck */
+    public static EntitlementManager serverStatusOnly() {
+        return FineGrainedEntitlements.allowing(SERVER_STATUS);
     }
 
     // ------------- lookup conveniences -------------
