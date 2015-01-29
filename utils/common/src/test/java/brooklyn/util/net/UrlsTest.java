@@ -42,6 +42,11 @@ public class UrlsTest {
         assertEquals(Urls.mergePaths("/","a","b","/"), "/a/b/");
     }
 
+    @Test(expectedExceptions = NullPointerException.class)
+    public void testMergePathsNPEsOnNulls() {
+        Urls.mergePaths(null, "too");
+    }
+
     @Test
     public void testPathEncode() throws Exception {
         assertEquals(Urls.encode("name_with/%!"), "name_with%2F%25%21");
