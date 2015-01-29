@@ -146,7 +146,7 @@ public class BrooklynRestResourceUtils {
             
             if (app==null || app.equals(findTopLevelApplication(e))) return e;
             throw WebResourceUtils.preconditionFailed("Application '%s' specified does not match application '%s' to which entity '%s' (%s) is associated", 
-                    application, e.getApplication().getId(), entity, e);
+                    application, e.getApplication()==null ? null : e.getApplication().getId(), entity, e);
         }
         if (application==null)
             throw WebResourceUtils.notFound("Cannot find entity '%s': no known ID and application not supplied for searching", entity);

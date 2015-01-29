@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.location.Location;
@@ -43,14 +44,19 @@ public class RebindContextLookupContext implements LookupContext {
     
     protected final RebindContextImpl rebindContext;
     protected final RebindExceptionHandler exceptionHandler;
+    protected final boolean lookInManagementContext;
     
     public RebindContextLookupContext(RebindContextImpl rebindContext, RebindExceptionHandler exceptionHandler) {
         this(null, rebindContext, exceptionHandler);
     }
     public RebindContextLookupContext(ManagementContext managementContext, RebindContextImpl rebindContext, RebindExceptionHandler exceptionHandler) {
+        this(managementContext, rebindContext, exceptionHandler, false);
+    }
+    public RebindContextLookupContext(ManagementContext managementContext, RebindContextImpl rebindContext, RebindExceptionHandler exceptionHandler, boolean lookInManagementContext) {
         this.managementContext = managementContext;
         this.rebindContext = rebindContext;
         this.exceptionHandler = exceptionHandler;
+        this.lookInManagementContext = lookInManagementContext;
     }
     
     @Override public ManagementContext lookupManagementContext() {
@@ -60,6 +66,9 @@ public class RebindContextLookupContext implements LookupContext {
     @Override public Entity lookupEntity(String id) {
         Entity result = rebindContext.getEntity(id);
         if (result == null) {
+            result = managementContext.lookup(id, Entity.class);
+        }
+        if (result == null) {
             result = exceptionHandler.onDanglingEntityRef(id);
         }
         return result;
@@ -67,6 +76,9 @@ public class RebindContextLookupContext implements LookupContext {
     
     @Override public Location lookupLocation(String id) {
         Location result = rebindContext.getLocation(id);
+        if (result == null) {
+            result = managementContext.lookup(id, Location.class);
+        }
         if (result == null) {
             result = exceptionHandler.onDanglingLocationRef(id);
         }
@@ -76,6 +88,9 @@ public class RebindContextLookupContext implements LookupContext {
     @Override public Policy lookupPolicy(String id) {
         Policy result = rebindContext.getPolicy(id);
         if (result == null) {
+            result = managementContext.lookup(id, Policy.class);
+        }
+        if (result == null) {
             result = exceptionHandler.onDanglingPolicyRef(id);
         }
         return result;
@@ -83,6 +98,9 @@ public class RebindContextLookupContext implements LookupContext {
     
     @Override public Enricher lookupEnricher(String id) {
         Enricher result = rebindContext.getEnricher(id);
+        if (result == null) {
+            result = managementContext.lookup(id, Enricher.class);
+        }
         if (result == null) {
             result = exceptionHandler.onDanglingEnricherRef(id);
         }
@@ -92,6 +110,9 @@ public class RebindContextLookupContext implements LookupContext {
     @Override public Feed lookupFeed(String id) {
         Feed result = rebindContext.getFeed(id);
         if (result == null) {
+            result = managementContext.lookup(id, Feed.class);
+        }
+        if (result == null) {
             result = exceptionHandler.onDanglingFeedRef(id);
         }
         return result;
@@ -100,6 +121,9 @@ public class RebindContextLookupContext implements LookupContext {
     @Override
     public CatalogItem<?, ?> lookupCatalogItem(String id) {
         CatalogItem<?, ?> result = rebindContext.getCatalogItem(id);
+        if (result == null) {
+            result = CatalogUtils.getCatalogItemOptionalVersion(managementContext, id);
+        }
         if (result == null) {
             result = exceptionHandler.onDanglingCatalogItemRef(id);
         }

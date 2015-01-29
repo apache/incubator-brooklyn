@@ -75,6 +75,7 @@ public class ScriptResource extends AbstractBrooklynRestResource implements Scri
             if (session!=null)
                 session.setAttribute(USER_LAST_VALUE_SESSION_ATTRIBUTE, value);
         } catch (Throwable t) {
+            log.warn("Problem in user-supplied script: "+t, t);
             problem = t;
         } finally {
             stdout.end();
