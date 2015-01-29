@@ -46,6 +46,7 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -344,6 +345,30 @@ public class BrooklynTaskTags extends TaskTags {
             t = t.getSubmittedByTask();
         }
         return false;
+    }
+
+    /**
+     * finds the task up the {@code child} hierarchy handling the {@code effector} call,
+     * returns null if one doesn't exist. 
+     */
+    @Beta
+    public static Task<?> getClosestEffectorTask(Task<?> child, Effector<?> effector) {
+        Task<?> t = child;
+        while (t != null) {
+            Set<Object> tags = t.getTags();
+            if (tags.contains(EFFECTOR_TAG)) {
+                for (Object tag: tags) {
+                    if (tag instanceof EffectorCallTag) {
+                        EffectorCallTag et = (EffectorCallTag) tag;
+                        if (effector != null && !et.getEffectorName().equals(effector.getName()))
+                            continue;
+                        return t;
+                    }
+                }
+            }
+            t = t.getSubmittedByTask();
+        }
+        return null;
     }
 
     /** finds the first {@link EffectorCallTag} tag on this tag, or optionally on submitters, or null */
