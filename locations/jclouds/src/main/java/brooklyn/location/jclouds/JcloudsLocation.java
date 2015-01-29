@@ -221,7 +221,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     @Override
-    public JcloudsLocation configure(Map properties) {
+    public JcloudsLocation configure(Map<?,?> properties) {
         super.configure(properties);
         
         if (getLocalConfigBag().containsKey("providerLocationId")) {

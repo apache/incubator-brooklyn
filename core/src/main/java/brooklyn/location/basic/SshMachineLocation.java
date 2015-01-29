@@ -35,6 +35,7 @@ import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.KeyPair;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +78,7 @@ import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
+import brooklyn.util.javalang.StackTraceSimplifier;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.net.Urls;
@@ -334,7 +336,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     @Override
-    public SshMachineLocation configure(Map properties) {
+    public SshMachineLocation configure(Map<?,?> properties) {
         super.configure(properties);
 
         // TODO Note that check for addresss!=null is done automatically in super-constructor, in FlagUtils.checkRequiredFields

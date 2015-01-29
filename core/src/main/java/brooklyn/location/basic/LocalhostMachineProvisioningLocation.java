@@ -122,7 +122,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         return LocationSpec.create(LocalhostMachineProvisioningLocation.class);
     }
     
-    public LocalhostMachineProvisioningLocation configure(Map flags) {
+    public LocalhostMachineProvisioningLocation configure(Map<?,?> flags) {
         super.configure(flags);
         
         if (!truth(getDisplayName())) { setDisplayName("localhost"); }
@@ -294,7 +294,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
         }
         
         @Override
-        public LocalhostMachine configure(Map properties) {
+        public LocalhostMachine configure(Map<?,?> properties) {
             if (address==null || !properties.containsKey("address"))
                 address = Networking.getLocalHost();
             super.configure(properties);
