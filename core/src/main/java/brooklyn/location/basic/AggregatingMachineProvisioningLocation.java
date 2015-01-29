@@ -78,7 +78,7 @@ public class AggregatingMachineProvisioningLocation<T extends MachineLocation> e
     }
 
     @Override
-    public AbstractLocation configure(Map properties) {
+    public AbstractLocation configure(Map<?,?> properties) {
         if (lock == null) {
             lock = new Object();
             provisioners = Lists.<MachineProvisioningLocation<T>>newArrayList();

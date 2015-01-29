@@ -179,8 +179,10 @@ public abstract class BasicMasterChooser implements MasterChooser {
     }
 
     @VisibleForTesting
+    //Java 6 compiler workaround, using parameterized types fails
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected List<ScoredRecord<?>> sort(List<ScoredRecord<?>> input) {
-        ArrayList<ScoredRecord<?>> copy = new ArrayList<ScoredRecord<?>>(input);
+        ArrayList copy = new ArrayList<ScoredRecord<?>>(input);
         Collections.sort(copy);
         return copy;
     }

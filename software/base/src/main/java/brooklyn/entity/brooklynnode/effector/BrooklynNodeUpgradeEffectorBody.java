@@ -18,9 +18,7 @@
  */
 package brooklyn.entity.brooklynnode.effector;
 
-import java.util.Collection;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +41,6 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.MapConfigKey;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.config.ConfigBag;
@@ -147,8 +143,8 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
             @Override
             public void run() {
                 DynamicTasks.waitForLast();
-                ((EntityInternal)entity()).setAttribute(SoftwareProcess.INSTALL_DIR, null);
-                entity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, null);
+                ((EntityInternal)entity()).setAttribute(SoftwareProcess.INSTALL_DIR, (String)null);
+                entity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, (String)null);
                 entity().getConfigMap().addToLocalBag(parameters.getAllConfig());
                 entity().setAttribute(BrooklynNode.DOWNLOAD_URL, entity().getConfig(DOWNLOAD_URL));
 
