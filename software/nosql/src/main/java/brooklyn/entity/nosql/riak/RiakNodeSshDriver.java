@@ -126,11 +126,11 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             // TODO osDetails.getName() is returning "linux", instead of debian/ubuntu on AWS with jenkins image,
             //      running as integration test targetting localhost. 
             // TODO Debian support (default debian image fails with 'sudo: command not found')
-            downloadUrl = entity.getAttribute(RiakNode.DOWNLOAD_URL_DEBIAN);
+            downloadUrl = (String)entity.getAttribute(RiakNode.DOWNLOAD_URL_DEBIAN);
             osReleaseCmd = osDetails.getVersion().substring(0, osDetails.getVersion().indexOf("."));
         } else {
             // assume Ubuntu
-            downloadUrl = entity.getAttribute(RiakNode.DOWNLOAD_URL_UBUNTU);
+            downloadUrl = (String)entity.getAttribute(RiakNode.DOWNLOAD_URL_UBUNTU);
             osReleaseCmd = "`lsb_release -sc` && " +
                     "export OS_RELEASE=`([[ \"lucid natty precise\" =~ (^| )\\$OS_RELEASE($| ) ]] && echo $OS_RELEASE || echo precise)`";
         }
