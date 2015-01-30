@@ -1296,8 +1296,8 @@
                 <module>usage/cli</module>
                 <module>usage/all</module>
                 <module>usage/dist</module>
-                <module>usage/archetypes/quickstart</module>
                 <module>usage/downstream-parent</module>
+                <module>usage/archetypes/quickstart</module>
             </modules>
         </profile>
         <profile>
