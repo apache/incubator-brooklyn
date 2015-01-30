@@ -15,7 +15,7 @@ children:
 - entitlements.md
 ---
 
-Java blueprints are much more powerful than YAML but is also rather more difficult.
+Java blueprints are much more powerful than YAML but are also rather more difficult.
 Advanced Java skills are required.
 
 {% include list-children.html %}

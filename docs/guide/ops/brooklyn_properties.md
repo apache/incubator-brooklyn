@@ -163,21 +163,15 @@ or
 
 ## HTTPS Configuration
 
-To enable https, you will need a server certificate in a java keystore. To create a self-signed certificate, you can use the
-following command:
+To enable https, you will need a server certificate in a java keystore. To create a self-signed certificate, you can use the following command:
 
 {% highlight bash %}
 % keytool -genkey -keyalg RSA -alias brooklyn -keystore <path-to-keystore-directory>/server.key -storepass mypassword -validity 360 -keysize 2048
 {% endhighlight %}
 
-You will then be prompted to enter you name and organization details. This will create a keystore with the password `mypassword`
-- you should use your own secure password, which will be the same password used in your brooklyn.properties (below). 
-You will also need to replace `<path-to-keystore-directory>` with the full path of the folder where you wish to store your
-keystore. 
+You will then be prompted to enter your name and organization details. This will create a keystore with the password `mypassword` - you should use your own secure password, which will be the same password used in your brooklyn.properties (below). You will also need to replace `<path-to-keystore-directory>` with the full path of the folder where you wish to store your keystore. 
 
-The certificate generated will be a self-signed certificate and will not have a CN field identifying the website server 
-name, which will cause a warning to be displayed by the browser when viewing the page. For production servers, a valid signed 
-certificate from a trusted certifying authority should be used instead
+The certificate generated will be a self-signed certificate and will not have a CN field identifying the website server name, which will cause a warning to be displayed by the browser when viewing the page. For production servers, a valid signed certificate from a trusted certifying authority should be used instead
 
 To enable HTTPS in Brooklyn, add the following to your brooklyn.properties:
 

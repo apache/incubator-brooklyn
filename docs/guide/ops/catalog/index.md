@@ -41,7 +41,7 @@ services:
 To explain the `brooklyn.catalog` fields:
 
 - The `id: MySQL` line specifies a unique ID used by Brooklyn to identify the catalog item. 
-  Other blueprints can reference the catalog item using this id.
+  Other blueprints can reference the catalog item using this ID.
 - The `version: 1.0` line provides a unique version for the *blueprint*. 
   Note that this is typically *not* the version of the software being installed (in this case MySQL).
 - The `iconUrl: classpath://...` is an optional line where an icon can be specified 
@@ -84,7 +84,7 @@ curl http://127.0.0.1:8081/v1/catalog --data-binary @/path/to/mysql-catalog.yaml
 ### Deleting from the Catalog
 
 You can delete a versioned item from the catalog using the same endpoint at the REST API. 
-For example, to delete the item with id `my-MySQL` and version `1.0` with `curl`:
+For example, to delete the item with ID `my-MySQL` and version `1.0` with `curl`:
 
 {% highlight bash %}
 curl -X DELETE http://127.0.0.1:8081/v1/catalog/entities/MySQL/1.0

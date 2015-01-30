@@ -65,8 +65,8 @@ So to get started:
    namings provided by the `BasicEntityDriverFactory`.
 6. Wire the `public Class getDriverInterface()` method in the entity implementation, to specify
    your driver interface.
-7. Provide the implementation of missing lifecycle methods in your driver class (details below)
-8. Connect the sensors from your entity (e.g. overriding `connectSensors()` of `SoftwareProcessImpl`)..
+7. Provide the implementation of missing lifecycle methods in your driver class (details below).
+8. Connect the sensors from your entity (e.g. overriding `connectSensors()` of `SoftwareProcessImpl`).
    See the sensor feeds, such as `HttpFeed` and `JmxFeed`.
 
 Any JVM language can be used to write an entity. However use of pure Java is encouraged for

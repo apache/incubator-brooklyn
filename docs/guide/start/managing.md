@@ -39,14 +39,14 @@ The Activity tab allows us to drill down into the activities each entity is curr
 It is possible to drill down to all child tasks, and view the commands issued, and any errors or warnings that occured.
 
 Drill into the "My DB" start operation. 
-Working down through  "Start (processes)", then "launch", we can discover the ssh command used including the stdin, stdout and stderr.
+Working down through "Start (processes)", then "launch", we can discover the ssh command used including the stdin, stdout and stderr.
 
 [![My DB Activities.](images/my-db-activities.png)](images/my-db-activities-large.png)
 
 
 ## Stopping the Application
 
-To stop an application, select the application in the tree view (the top/root entity), click on the Effectors tab, and invoke the "Stop" effector. This will cleanly shutdown all components in the application and return any cloud machines that were being used.
+To stop an application, select the application in the tree view (the top/root entity), click on the "Effectors" tab, and invoke the "Stop" effector. This will cleanly shutdown all components in the application and return any cloud machines that were being used.
 
 [![My DB Activities.](images/my-web-cluster-stop-confirm.png)](images/my-web-cluster-stop-confirm-large.png)
 
