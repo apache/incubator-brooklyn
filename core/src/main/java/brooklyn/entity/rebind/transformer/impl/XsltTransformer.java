@@ -38,14 +38,16 @@ import com.google.common.annotations.Beta;
 public class XsltTransformer implements RawDataTransformer {
 
     private final TransformerFactory factory;
-    private final StreamSource xslt;
+    private final String xsltContent;
 
     public XsltTransformer(String xsltContent) {
         factory = TransformerFactory.newInstance();
-        xslt = new StreamSource(new ByteArrayInputStream(xsltContent.getBytes()));
+        this.xsltContent = xsltContent;
     }
     
     public String transform(String input) throws IOException, URISyntaxException, TransformerException {
+        // stream source is single-use
+        StreamSource xslt = new StreamSource(new ByteArrayInputStream(xsltContent.getBytes()));
         Transformer transformer = factory.newTransformer(xslt);
         
         Source text = new StreamSource(new ByteArrayInputStream(input.getBytes()));

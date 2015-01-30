@@ -28,13 +28,45 @@ import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
 
+/**
+ * Tests the low-level XSLT transformer logic.
+ * <p>
+ * Some of the tests use xslt files which are no longer used to perform type/class/field-specific changes,
+ * but they are included here because they are still useful test cases for XSLT. 
+ */
 public class XsltTransformerTest {
 
     private static String NEWLINE = Os.LINE_SEPARATOR;
+
+    @Test
+    public void testRecursiveCopyExtraRules() throws Exception {
+        String xsltTemplate = ResourceUtils.create(XsltTransformerTest.class).getResourceAsString("classpath://brooklyn/entity/rebind/transformer/recursiveCopyWithExtraRules.xslt");
+        String xslt = TemplateProcessor.processTemplateContents(xsltTemplate, ImmutableMap.of(
+            "extra_rules", "<xsl:template match=\"nested\"><empty_nest/></xsl:template>"));
+        String input = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">mytype</type>"+NEWLINE+
+                "  <nested>"+NEWLINE+
+                "    <type myattrib3=\"myval3\">foo</type>"+NEWLINE+
+                "    bar"+NEWLINE+
+                "  </nested>"+NEWLINE+
+                "  <id>myid</id>"+NEWLINE+
+                "</entity>";
+        String expected = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">mytype</type>"+NEWLINE+
+                "  <empty_nest/>"+NEWLINE+
+                "  <id>myid</id>"+NEWLINE+
+                "</entity>";
+        
+        XsltTransformer transformer = new XsltTransformer(xslt);
+        String result = transformer.transform(input);
+        assertEquals(result, expected);
+    }
     
     @Test
     public void testRenameType() throws Exception {
-        String xsltTemplate = ResourceUtils.create(XsltTransformerTest.class).getResourceAsString("classpath://brooklyn/entity/rebind/transformer/renameType.xslt");
+        String xsltTemplate = ResourceUtils.create(XsltTransformerTest.class).getResourceAsString("classpath://brooklyn/entity/rebind/transformer/impl/renameType.xslt");
         String xslt = TemplateProcessor.processTemplateContents(xsltTemplate, ImmutableMap.of("old_val", "mytype.Before", "new_val", "mytype.After"));
         String input = 
                 "<entity myattrib=\"myval\">"+NEWLINE+
@@ -64,7 +96,7 @@ public class XsltTransformerTest {
     
     @Test
     public void testRenameField() throws Exception {
-        String xsltTemplate = ResourceUtils.create(XsltTransformerTest.class).getResourceAsString("classpath://brooklyn/entity/rebind/transformer/renameField.xslt");
+        String xsltTemplate = ResourceUtils.create(XsltTransformerTest.class).getResourceAsString("classpath://brooklyn/entity/rebind/transformer/impl/renameField.xslt");
         String xslt = TemplateProcessor.processTemplateContents(xsltTemplate, ImmutableMap.of("class_name", "MyClass", "old_val", "myFieldBefore", "new_val", "myFieldAfter"));
         String input = 
                 "<entity myattrib=\"myval\">"+NEWLINE+
@@ -106,7 +138,7 @@ public class XsltTransformerTest {
     
     @Test
     public void testRenameClass() throws Exception {
-        String xsltTemplate = ResourceUtils.create(XsltTransformerTest.class).getResourceAsString("classpath://brooklyn/entity/rebind/transformer/renameClass.xslt");
+        String xsltTemplate = ResourceUtils.create(XsltTransformerTest.class).getResourceAsString("classpath://brooklyn/entity/rebind/transformer/impl/renameClass.xslt");
         String xslt = TemplateProcessor.processTemplateContents(xsltTemplate, ImmutableMap.of("old_val", "MyClassBefore", "new_val", "MyClassAfter"));
         String input = 
                 "<entity myattrib=\"myval\">"+NEWLINE+
