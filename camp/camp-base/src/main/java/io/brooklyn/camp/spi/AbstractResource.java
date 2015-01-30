@@ -18,27 +18,26 @@
  */
 package io.brooklyn.camp.spi;
 
-import io.brooklyn.camp.commontypes.RepresentationSkew;
-
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Time;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.text.Identifiers;
+import brooklyn.util.time.Time;
+import io.brooklyn.camp.commontypes.RepresentationSkew;
 
 /** Superclass of CAMP resource implementation objects.
  * Typically used to hold common state of implementation objects
  * and to populate the DTO's used by the REST API.
  * <p>
- * These class instances are typically created using the 
- * static {@link #builder()} methods they contain. 
+ * These class instances are typically created using the
+ * static {@link #builder()} methods they contain.
  * The resulting instances are typically immutable,
  * so where fields can change callers should use a new builder
  * (or update an underlying data store).
@@ -50,7 +49,7 @@ import com.google.common.collect.ImmutableMap;
 public class AbstractResource {
 
     public static final String CAMP_TYPE = "Resource";
-    
+
     private String id = Identifiers.makeRandomId(8);
     private String name;
     private String type;
@@ -59,12 +58,12 @@ public class AbstractResource {
     private Date created = Time.dropMilliseconds(new Date());
     private List<String> tags = Collections.emptyList();
     private RepresentationSkew representationSkew;
-    
+
     private Map<String,Object> customAttributes = new MutableMap<String, Object>();
-    
+
     /** Use {@link #builder()} to create */
     protected AbstractResource() {}
-    
+
     // getters
 
     public String getId() {
@@ -94,66 +93,66 @@ public class AbstractResource {
     public Map<String, Object> getCustomAttributes() {
         return ImmutableMap.copyOf(customAttributes);
     }
-    
+
     // setters
 
-    private void setId(String id) {
+    void setId(String id) {
         this.id = id;
     }
-    private void setName(String name) {
+    void setName(String name) {
         this.name = name;
     }
-    private void setDescription(String description) {
+    void setDescription(String description) {
         this.description = description;
     }
-    private void setSourceCode(String sourceCode) {
+    void setSourceCode(String sourceCode) {
         this.sourceCode = sourceCode;
     }
-    private void setCreated(Date created) {
+    void setCreated(Date created) {
         // precision beyond seconds breaks equals check
         this.created = Time.dropMilliseconds(created);
     }
-    private void setTags(List<String> tags) {
+    void setTags(List<String> tags) {
         this.tags = ImmutableList.copyOf(tags);
     }
-    private void setType(String type) {
+    void setType(String type) {
         this.type = type;
     }
-    private void setRepresentationSkew(RepresentationSkew representationSkew) {
+    void setRepresentationSkew(RepresentationSkew representationSkew) {
         this.representationSkew = representationSkew;
     }
-    public void setCustomAttribute(String key, Object value) {
+    void setCustomAttribute(String key, Object value) {
         this.customAttributes.put(key, value);
     }
-            
+
     // builder
     @SuppressWarnings("rawtypes")
     public static Builder<? extends AbstractResource,? extends Builder> builder() {
         return new AbstractResourceBuilder(CAMP_TYPE);
     }
-    
+
     /** Builder creates the instance up front to avoid repetition of fields in the builder;
      * but prevents object leakage until build and prevents changes after build,
      * so effectively immutable.
      * <p>
      * Similarly setters in the class are private so those objects are also typically effectively immutable. */
     public abstract static class Builder<T extends AbstractResource,U extends Builder<T,U>> {
-        
+
         private boolean built = false;
         private String type = null;
         private T instance = null;
-        
+
         protected Builder(String type) {
             this.type = type;
         }
-        
+
         @SuppressWarnings("unchecked")
         protected T createResource() {
             return (T) new AbstractResource();
         }
-        
+
         protected synchronized T instance() {
-            if (built) 
+            if (built)
                 throw new IllegalStateException("Builder instance from "+this+" cannot be access after build");
             if (instance==null) {
                 instance = createResource();
@@ -165,16 +164,16 @@ public class AbstractResource {
         protected void initialize() {
             if (type!=null) type(type);
         }
-        
+
         public synchronized T build() {
             T result = instance();
             built = true;
             return result;
         }
-        
+
         @SuppressWarnings("unchecked")
         protected U thisBuilder() { return (U)this; }
-        
+
         public U type(String x) { instance().setType(x); return thisBuilder(); }
         public U id(String x) { instance().setId(x); return thisBuilder(); }
         public U name(String x) { instance().setName(x); return thisBuilder(); }
