@@ -26,7 +26,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 
@@ -39,7 +38,7 @@ import com.google.common.collect.Multimap;
 public class NginxTemplateConfigGenerator implements NginxConfigFileGenerator {
 
     public static final ConfigKey<String> SERVER_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
-            "nginx.config.templateUrl", "The server.conf configuration file URL (FreeMarker template)");
+            "nginx.config.templateUrl", "The server.conf configuration file URL (FreeMarker template)", "classpath://brooklyn/entity/proxy/nginx/server.conf");
 
     public NginxTemplateConfigGenerator() { }
 

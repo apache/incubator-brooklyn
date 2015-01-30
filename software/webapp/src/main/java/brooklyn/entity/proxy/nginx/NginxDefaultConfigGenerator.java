@@ -249,6 +249,8 @@ public class NginxDefaultConfigGenerator implements NginxConfigFileGenerator {
                 out.append(prefix);
                 out.append("ssl_certificate_key " + key + ";\n");
             }
+
+            out.append("ssl_protocols TLSv1 TLSv1.1 TLSv1.2;\n");
         }
         return true;
     }
