@@ -418,9 +418,10 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 .pollAttribute(new JmxAttributePollConfig<Set<BigInteger>>(TOKENS)
                         .objectName(storageServiceMBean)
                         .attributeName("TokenToEndpointMap")
-                        .onSuccess((Function) new Function<Map, Set<BigInteger>>() {
+                        .onSuccess(new Function<Object, Set<BigInteger>>() {
                             @Override
-                            public Set<BigInteger> apply(@Nullable Map input) {
+                            public Set<BigInteger> apply(@Nullable Object arg) {
+                                Map input = (Map)arg;
                                 if (input == null || input.isEmpty()) return null;
                                 // FIXME does not work on aws-ec2, uses RFC1918 address
                                 Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS), getAttribute(SUBNET_ADDRESS), getAttribute(SUBNET_HOSTNAME)));
@@ -435,9 +436,10 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 .pollAttribute(new JmxAttributePollConfig<BigInteger>(TOKEN)
                         .objectName(storageServiceMBean)
                         .attributeName("TokenToEndpointMap")
-                        .onSuccess((Function) new Function<Map, BigInteger>() {
+                        .onSuccess(new Function<Object, BigInteger>() {
                             @Override
-                            public BigInteger apply(@Nullable Map input) {
+                            public BigInteger apply(@Nullable Object arg) {
+                                Map input = (Map)arg;
                                 // TODO remove duplication from setting TOKENS
                                 if (input == null || input.isEmpty()) return null;
                                 // FIXME does not work on aws-ec2, uses RFC1918 address
@@ -462,9 +464,10 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 .pollAttribute(new JmxAttributePollConfig<Integer>(PEERS)
                         .objectName(storageServiceMBean)
                         .attributeName("TokenToEndpointMap")
-                        .onSuccess((Function) new Function<Map, Integer>() {
+                        .onSuccess(new Function<Object, Integer>() {
                             @Override
-                            public Integer apply(@Nullable Map input) {
+                            public Integer apply(@Nullable Object arg) {
+                                Map input = (Map)arg;
                                 if (input == null || input.isEmpty()) return 0;
                                 return input.size();
                             }
@@ -473,9 +476,10 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 .pollAttribute(new JmxAttributePollConfig<Integer>(LIVE_NODE_COUNT)
                         .objectName(storageServiceMBean)
                         .attributeName("LiveNodes")
-                        .onSuccess((Function) new Function<List, Integer>() {
+                        .onSuccess(new Function<Object, Integer>() {
                             @Override
-                            public Integer apply(@Nullable List input) {
+                            public Integer apply(@Nullable Object arg) {
+                                List input = (List)arg;
                                 if (input == null || input.isEmpty()) return 0;
                                 return input.size();
                             }

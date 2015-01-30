@@ -183,9 +183,9 @@ public class ServiceStateLogic {
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public static final EnricherSpec<?> newEnricherForServiceUpIfNotUpIndicatorsEmpty() {
             return Enrichers.builder()
-                .transforming(SERVICE_NOT_UP_INDICATORS).publishing(Attributes.SERVICE_UP)
+                .transforming(SERVICE_NOT_UP_INDICATORS).<Object>publishing(Attributes.SERVICE_UP)
                 .suppressDuplicates(true)
-                .computing( /* cast hacks to support removing */ (Function)
+                .computing(
                     Functionals.<Map<String,?>>
                         ifNotEquals(null).<Object>apply(Functions.forPredicate(CollectionFunctionals.<String>mapSizeEquals(0)))
                         .defaultValue(Entities.REMOVE) )
