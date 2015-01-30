@@ -32,14 +32,14 @@ public class PlatformComponent extends AbstractResource {
 
     public static final String CAMP_TYPE = "PlatformComponent";
     static { assert CAMP_TYPE.equals(PlatformComponent.class.getSimpleName()); }
-
+    
     /** Use {@link #builder()} to create */
     protected PlatformComponent() {}
 
     ResourceLookup<ApplicationComponent> applicationComponents;
     ResourceLookup<PlatformComponent> platformComponents;
     String externalManagementUri;
-
+    
     public ResourceLookup<ApplicationComponent> getApplicationComponents() {
         return applicationComponents != null ? applicationComponents : new EmptyResourceLookup<ApplicationComponent>();
     }
@@ -47,58 +47,55 @@ public class PlatformComponent extends AbstractResource {
         return platformComponents != null ? platformComponents : new EmptyResourceLookup<PlatformComponent>();
     }
 
-    void setApplicationComponents(ResourceLookup<ApplicationComponent> applicationComponents) {
+    private void setApplicationComponents(ResourceLookup<ApplicationComponent> applicationComponents) {
         this.applicationComponents = applicationComponents;
     }
-    void setPlatformComponents(ResourceLookup<PlatformComponent> platformComponents) {
+    private void setPlatformComponents(ResourceLookup<PlatformComponent> platformComponents) {
         this.platformComponents = platformComponents;
     }
-
+    
     public String getExternalManagementUri() {
         return externalManagementUri;
     }
-    void setExternalManagementUri(String externalManagementUri) {
+    private void setExternalManagementUri(String externalManagementUri) {
         this.externalManagementUri = externalManagementUri;
     }
-
+    
     // builder
-
+    
     public static Builder<? extends PlatformComponent> builder() {
-        return new Builder<PlatformComponent>(CAMP_TYPE);
+        return new PlatformComponent().new Builder<PlatformComponent>(CAMP_TYPE);
     }
-
-    public static class Builder<T extends PlatformComponent> extends AbstractResource.Builder<T,Builder<T>> {
-
+    
+    public class Builder<T extends PlatformComponent> extends AbstractResource.Builder<T,Builder<T>> {
+        
         protected Builder(String type) { super(type); }
-
-        public Builder<T> externalManagementUri(String x) { instance().setExternalManagementUri(x); return thisBuilder(); }
-        public Builder<T> applicationComponentTemplates(ResourceLookup<ApplicationComponent> x) { instance().setApplicationComponents(x); return thisBuilder(); }
-        public Builder<T> platformComponentTemplates(ResourceLookup<PlatformComponent> x) { instance().setPlatformComponents(x); return thisBuilder(); }
-
+        
+        public Builder<T> externalManagementUri(String x) { PlatformComponent.this.setExternalManagementUri(x); return thisBuilder(); }
+        public Builder<T> applicationComponentTemplates(ResourceLookup<ApplicationComponent> x) { PlatformComponent.this.setApplicationComponents(x); return thisBuilder(); }
+        public Builder<T> platformComponentTemplates(ResourceLookup<PlatformComponent> x) { PlatformComponent.this.setPlatformComponents(x); return thisBuilder(); }
+        
         public synchronized Builder<T> add(ApplicationComponent x) {
-            if (instance().applicationComponents==null) {
-                instance().applicationComponents = new BasicResourceLookup<ApplicationComponent>();
+            if (PlatformComponent.this.applicationComponents==null) {
+                PlatformComponent.this.applicationComponents = new BasicResourceLookup<ApplicationComponent>();
             }
-            if (!(instance().applicationComponents instanceof BasicResourceLookup)) {
-                throw new IllegalStateException("Cannot add to resource lookup "+instance().applicationComponents);
+            if (!(PlatformComponent.this.applicationComponents instanceof BasicResourceLookup)) {
+                throw new IllegalStateException("Cannot add to resource lookup "+PlatformComponent.this.applicationComponents);
             }
-            ((BasicResourceLookup<ApplicationComponent>)instance().applicationComponents).add(x);
+            ((BasicResourceLookup<ApplicationComponent>)PlatformComponent.this.applicationComponents).add(x);
             return thisBuilder();
         }
-
+        
         public synchronized Builder<T> add(PlatformComponent x) {
-            if (instance().platformComponents==null) {
-                instance().platformComponents = new BasicResourceLookup<PlatformComponent>();
+            if (PlatformComponent.this.platformComponents==null) {
+                PlatformComponent.this.platformComponents = new BasicResourceLookup<PlatformComponent>();
             }
-            if (!(instance().platformComponents instanceof BasicResourceLookup)) {
-                throw new IllegalStateException("Cannot add to resource lookup "+instance().platformComponents);
+            if (!(PlatformComponent.this.platformComponents instanceof BasicResourceLookup)) {
+                throw new IllegalStateException("Cannot add to resource lookup "+PlatformComponent.this.platformComponents);
             }
-            ((BasicResourceLookup<PlatformComponent>)instance().platformComponents).add(x);
+            ((BasicResourceLookup<PlatformComponent>)PlatformComponent.this.platformComponents).add(x);
             return thisBuilder();
         }
-
-        @SuppressWarnings("unchecked")
-        protected T createResource() { return (T) new PlatformComponent(); }
     }
 
 }

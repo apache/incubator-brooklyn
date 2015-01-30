@@ -35,15 +35,15 @@ public class AssemblyTemplate extends AbstractResource {
 
     public static final String CAMP_TYPE = "AssemblyTemplate";
     static { assert CAMP_TYPE.equals(AssemblyTemplate.class.getSimpleName()); }
-
+    
     Class<? extends AssemblyTemplateInstantiator> instantiator;
     ResourceLookup<ApplicationComponentTemplate> applicationComponentTemplates;
     ResourceLookup<PlatformComponentTemplate> platformComponentTemplates;
-
+    
     // TODO
 //    "parameterDefinitionUri": URI,
 //    "pdpUri" : URI ?
-
+                    
     /** Use {@link #builder()} to create */
     protected AssemblyTemplate() {}
 
@@ -56,63 +56,61 @@ public class AssemblyTemplate extends AbstractResource {
     public ResourceLookup<PlatformComponentTemplate> getPlatformComponentTemplates() {
         return platformComponentTemplates != null ? platformComponentTemplates : new EmptyResourceLookup<PlatformComponentTemplate>();
     }
-
-    void setInstantiator(Class<? extends AssemblyTemplateInstantiator> instantiator) {
+    
+    private void setInstantiator(Class<? extends AssemblyTemplateInstantiator> instantiator) {
         this.instantiator = instantiator;
     }
-    void setApplicationComponentTemplates(ResourceLookup<ApplicationComponentTemplate> applicationComponentTemplates) {
+    private void setApplicationComponentTemplates(ResourceLookup<ApplicationComponentTemplate> applicationComponentTemplates) {
         this.applicationComponentTemplates = applicationComponentTemplates;
     }
-    void setPlatformComponentTemplates(ResourceLookup<PlatformComponentTemplate> platformComponentTemplates) {
+    private void setPlatformComponentTemplates(ResourceLookup<PlatformComponentTemplate> platformComponentTemplates) {
         this.platformComponentTemplates = platformComponentTemplates;
     }
-
+    
     // builder
-
+    
     public static Builder<? extends AssemblyTemplate> builder() {
-        return new Builder<AssemblyTemplate>(CAMP_TYPE);
+        return new AssemblyTemplate().new Builder<AssemblyTemplate>(CAMP_TYPE);
     }
-
-    public static class Builder<T extends AssemblyTemplate> extends AbstractResource.Builder<T,Builder<T>> {
-
+    
+    public class Builder<T extends AssemblyTemplate> extends AbstractResource.Builder<T,Builder<T>> {
+        
         protected Builder(String type) { super(type); }
-
-        @SuppressWarnings("unchecked")
-        protected T createResource() { return (T) new AssemblyTemplate(); }
-
-        public Builder<T> instantiator(Class<? extends AssemblyTemplateInstantiator> x) { instance().setInstantiator(x); return thisBuilder(); }
-        public Builder<T> applicationComponentTemplates(ResourceLookup<ApplicationComponentTemplate> x) { instance().setApplicationComponentTemplates(x); return thisBuilder(); }
-        public Builder<T> platformComponentTemplates(ResourceLookup<PlatformComponentTemplate> x) { instance().setPlatformComponentTemplates(x); return thisBuilder(); }
+        
+        public Builder<T> instantiator(Class<? extends AssemblyTemplateInstantiator> x) { AssemblyTemplate.this.setInstantiator(x); return thisBuilder(); }
+        public Builder<T> applicationComponentTemplates(ResourceLookup<ApplicationComponentTemplate> x) { AssemblyTemplate.this.setApplicationComponentTemplates(x); return thisBuilder(); }
+        public Builder<T> platformComponentTemplates(ResourceLookup<PlatformComponentTemplate> x) { AssemblyTemplate.this.setPlatformComponentTemplates(x); return thisBuilder(); }
 
         /** allows callers to see the partially formed instance when needed, for example to query instantiators;
          *  could be replaced by specific methods as and when that is preferred */
-        public T peek() { return instance(); }
-
+        @SuppressWarnings("unchecked")
+        public T peek() { return (T) AssemblyTemplate.this; }
+        
         public synchronized Builder<T> add(ApplicationComponentTemplate x) {
-            if (instance().applicationComponentTemplates==null) {
-                instance().applicationComponentTemplates = new BasicResourceLookup<ApplicationComponentTemplate>();
+            if (AssemblyTemplate.this.applicationComponentTemplates==null) {
+                AssemblyTemplate.this.applicationComponentTemplates = new BasicResourceLookup<ApplicationComponentTemplate>();
             }
-            if (!(instance().applicationComponentTemplates instanceof BasicResourceLookup)) {
-                throw new IllegalStateException("Cannot add to resource lookup "+instance().applicationComponentTemplates);
+            if (!(AssemblyTemplate.this.applicationComponentTemplates instanceof BasicResourceLookup)) {
+                throw new IllegalStateException("Cannot add to resource lookup "+AssemblyTemplate.this.applicationComponentTemplates);
             }
-            ((BasicResourceLookup<ApplicationComponentTemplate>)instance().applicationComponentTemplates).add(x);
+            ((BasicResourceLookup<ApplicationComponentTemplate>)AssemblyTemplate.this.applicationComponentTemplates).add(x);
             return thisBuilder();
         }
-
+        
         public synchronized Builder<T> add(PlatformComponentTemplate x) {
-            if (instance().platformComponentTemplates==null) {
-                instance().platformComponentTemplates = new BasicResourceLookup<PlatformComponentTemplate>();
+            if (AssemblyTemplate.this.platformComponentTemplates==null) {
+                AssemblyTemplate.this.platformComponentTemplates = new BasicResourceLookup<PlatformComponentTemplate>();
             }
-            if (!(instance().platformComponentTemplates instanceof BasicResourceLookup)) {
-                throw new IllegalStateException("Cannot add to resource lookup "+instance().platformComponentTemplates);
+            if (!(AssemblyTemplate.this.platformComponentTemplates instanceof BasicResourceLookup)) {
+                throw new IllegalStateException("Cannot add to resource lookup "+AssemblyTemplate.this.platformComponentTemplates);
             }
-            ((BasicResourceLookup<PlatformComponentTemplate>)instance().platformComponentTemplates).add(x);
+            ((BasicResourceLookup<PlatformComponentTemplate>)AssemblyTemplate.this.platformComponentTemplates).add(x);
             return thisBuilder();
         }
-
+        
         @Override
         public synchronized T build() {
-            Preconditions.checkNotNull(instance().instantiator);
+            Preconditions.checkNotNull(AssemblyTemplate.this.instantiator);
             return super.build();
         }
     }

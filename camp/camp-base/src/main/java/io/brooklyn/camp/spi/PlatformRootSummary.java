@@ -53,15 +53,12 @@ public class PlatformRootSummary extends AbstractResource {
     // builder
     
     public static Builder<? extends PlatformRootSummary> builder() {
-        return new Builder<PlatformRootSummary>(CAMP_TYPE);
+        return new PlatformRootSummary().new Builder<PlatformRootSummary>(CAMP_TYPE);
     }
     
-    public static class Builder<T extends PlatformRootSummary> extends AbstractResource.Builder<T,Builder<T>> {
+    public class Builder<T extends PlatformRootSummary> extends AbstractResource.Builder<T,Builder<T>> {
         
         protected Builder(String type) { super(type); }
-        
-        @SuppressWarnings("unchecked")
-        protected T createResource() { return (T) new PlatformRootSummary(); }
         
         protected void initialize() {
             super.initialize();
