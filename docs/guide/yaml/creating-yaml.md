@@ -52,7 +52,7 @@ TODO building up children entities
 
 ### More Information
 
-Topics to explore next on the topic of YAML blueprints are:
+Topics to explore next on the subject of YAML blueprints are:
 
 {% include list-children.html %}
 

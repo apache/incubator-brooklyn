@@ -20,7 +20,7 @@ TODO
 
 - *entity spec* defines an entity, so that one or more such entities can be created; often used by clusters/groups to define how to instantiate new children.
 - *entity factories* are often used by clusters/groups to define how to instantiate new children.
-- *traits* (mixins) providing certain capabilities, such as Resizable and Balanceable
+- *traits* (mixins) providing certain capabilities, such as Resizable and Balanceable.
 - *Resizable* entities can re-sized dynamically, to increase/decrease the number of child entities.
 - *Movable* entities can be migrated between *balanceable containers*.
 - *Balanceable containers* can contain *movable* entities, where each contained entity is normally associated with
@@ -134,7 +134,7 @@ and should be the entry point in most cases.**
 
 ### Subscriptions and the Subscription Manager
 
-In addition to scheduled tasks, tasks can triggered by subscriptions on other events including sensors.
+In addition to scheduled tasks, tasks can be triggered by subscriptions on other events including sensors.
 
 To register low-level listeners to events, use the `SubscriptionManager` API.
 

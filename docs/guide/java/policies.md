@@ -16,7 +16,7 @@ When a policy runs it can:
 
 *	perform calculations,
 *	look up other values,
-*	invoke efectors  (management policies) or,
+*	invoke efectors (management policies) or,
 *	cause the entity associated with the policy to emit sensor values (enricher policies). 
 
 Entities can have zero or more ``Policy`` instances attached to them.
@@ -37,7 +37,7 @@ TODO
 The following recommendations should be considered when designing policies:
 	
 #### Management should take place as "low" as possible in the hierarchy
-*	place management responsibility in policies at the entity, as much as possible ideally management should take run as a policy on the relevant entity
+*	place management responsibility in policies at the entity, as much as possible ideally management should take run as a policy on the relevant entity.
 
 *	place escalated management responsibility at the parent entity. Where this is impractical, perhaps because two aspects of an entity are best handled in two different places, ensure that the separation of responsibilities is documented and there is a group membership relationship between secondary/aspect managers.
 
@@ -47,11 +47,11 @@ The following recommendations should be considered when designing policies:
 TODO Requires Content
 -->
 
-e.g. one policy which takes a sensor and emits a different, enriched sensor, and a second policy which responds to the enriched sensor of the first 	(e.g. a policy detects a process is maxed out and emits a TOO_HOT sensor; a second policy responds to this by scaling up the VM where it is running, requesting more CPU)
-#### Where a policy cannot resolve a situation at an entity, the issue should be escalated to a manager with a compatible policy.
+e.g. one policy which takes a sensor and emits a different, enriched sensor, and a second policy which responds to the enriched sensor of the first (e.g. a policy detects a process is maxed out and emits a TOO_HOT sensor; a second policy responds to this by scaling up the VM where it is running, requesting more CPU).
 
-Typically escalation will go to the entity parent, and then cascade up.
-e.g. if the earlier VM CPU cannot be increased, the TOO_HOT event may go to the parent, a cluster entity, which attempts to balance. If the cluster cannot balance, then to another policy which attempts to scale out the cluster, and should the cluster be unable to scale, to a third policy which emits TOO_HOT for the cluster.
+#### Where a policy cannot resolve a situation at an entity, the issue should be escalated to a manager with a compatible policy
+
+Typically escalation will go to the entity parent, and then cascade up. e.g. if the earlier VM CPU cannot be increased, the TOO_HOT event may go to the parent, a cluster entity, which attempts to balance. If the cluster cannot balance, then to another policy which attempts to scale out the cluster, and should the cluster be unable to scale, to a third policy which emits TOO_HOT for the cluster.
 	
 #### Management escalation should be carefully designed so that policies are not incompatible
 
@@ -64,7 +64,7 @@ For this release, some of the mechanisms for implementing the above practices ar
 
 *This section is not complete. Feel free to [fork]({{site.path.guide}}/dev/code) the docs and lend a hand.*
 
-- extend ``AbstractPolicy``, or override an existing policy
+- extend ``AbstractPolicy``, or override an existing policy.
 
 
 Off-the-Shelf Policies
@@ -93,7 +93,6 @@ TODO - describe how they can be customised (briefly mention sensors)
 
 	Converts absolute sensor values into a delta.
 	
-
 *	Time-weighted Delta
 
 	Converts absolute sensor values into a delta/second.
@@ -119,5 +118,5 @@ TODO
 
 *This section is not yet complete. Feel free to [fork]({{site.path.guide}}/dev/code) the docs and lend a hand.*
 
-Please see the class* ``brooklyn.policy.Policy`` *and implementations.
+Please see the class ``brooklyn.policy.Policy`` and implementations.
 

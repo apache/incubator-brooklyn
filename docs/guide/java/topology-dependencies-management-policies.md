@@ -48,7 +48,7 @@ We now see our app at the Nginx URL:
 
 Finally, we'll bring in some active management: we're going to monitor requests per second,
 and scale out if this exceeds 100 up to a maximum of 5 servers.
-This is a naively simple policy, but it shows Brooklyn's real metier,
+This is a naively simple policy, but it shows Brooklyn's real métier,
 running management policies for applications whose topology it knows. 
 
 {% highlight java %}
