@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
@@ -31,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 
 /** variant of Catalog*ItemDto objects for JS/JSON serialization;
  * see also, subclasses */
+@JsonIgnoreProperties({"registeredType"})
 public class CatalogItemSummary implements HasId, HasName {
 
     private final String id;
