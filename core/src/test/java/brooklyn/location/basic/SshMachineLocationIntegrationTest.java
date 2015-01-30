@@ -21,7 +21,11 @@ package brooklyn.location.basic;
 import java.io.ByteArrayOutputStream;
 import java.security.KeyPair;
 import java.util.Arrays;
+import java.util.Map;
 
+import brooklyn.util.internal.ssh.SshTool;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -37,6 +41,8 @@ import brooklyn.util.internal.ssh.sshj.SshjTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool.SshjToolBuilder;
 
 import com.google.common.base.Preconditions;
+
+import static org.testng.Assert.assertEquals;
 
 public class SshMachineLocationIntegrationTest {
 
@@ -75,7 +81,37 @@ public class SshMachineLocationIntegrationTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int result = tool.execCommands(MutableMap.<String,Object>of("out", out), Arrays.asList("date"));
         Assert.assertTrue(out.toString().contains(" 20"), "out="+out);
-        Assert.assertEquals(result, 0);
+        assertEquals(result, 0);
     }
 
+    @Test(groups = "Integration")
+    public void testExecScriptScriptDirFlagIsRespected() throws Exception {
+        // For explanation of (some of) the magic behind this command, see http://stackoverflow.com/a/229606/68898
+        final String command = "if [[ \"$0\" == \"/var/tmp/\"* ]]; then true; else false; fi";
+
+        LocalhostMachineProvisioningLocation lhp = (LocalhostMachineProvisioningLocation) mgmt.getLocationRegistry().resolve("localhost", true, null).orNull();
+        SshMachineLocation sm = lhp.obtain();
+
+        Map<String, Object> props = ImmutableMap.<String, Object>builder()
+                .put(SshTool.PROP_SCRIPT_DIR.getName(), "/var/tmp")
+                .build();
+        int rc = sm.execScript(props, "Test script directory execution", ImmutableList.of(command));
+        assertEquals(rc, 0);
+    }
+
+    @Test(groups = "Integration")
+    public void testLocationScriptDirConfigIsRespected() throws Exception {
+        // For explanation of (some of) the magic behind this command, see http://stackoverflow.com/a/229606/68898
+        final String command = "if [[ \"$0\" == \"/var/tmp/\"* ]]; then true; else false; fi";
+
+        Map<String, Object> locationConfig = ImmutableMap.<String, Object>builder()
+                .put(SshMachineLocation.SCRIPT_DIR.getName(), "/var/tmp")
+                .build();
+
+        LocalhostMachineProvisioningLocation lhp = (LocalhostMachineProvisioningLocation) mgmt.getLocationRegistry().resolve("localhost", locationConfig);
+        SshMachineLocation sm = lhp.obtain();
+
+        int rc = sm.execScript("Test script directory execution", ImmutableList.of(command));
+        assertEquals(rc, 0);
+    }
 }

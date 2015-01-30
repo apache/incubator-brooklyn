@@ -19,6 +19,8 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+
+import com.google.common.annotations.Beta;
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -110,6 +112,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
 
@@ -215,6 +218,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                     return input.getConfigKey().getName();
                 }
             }));
+
+    /**
+     * The set of config keys on this location which become default values for properties when invoking an SSH
+     * operation.
+     */
+    @Beta
+    public static final Set<ConfigKey<?>> SSH_CONFIG_GIVEN_TO_PROPS = ImmutableSet.<ConfigKey<?>>of(
+            SCRIPT_DIR);
 
     private Task<?> cleanupTask;
     /** callers should use {@link #getSshPoolCache()} */
@@ -610,7 +621,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return execCommands(MutableMap.<String,Object>of(), summaryForLogging, commands, env);
     }
     public int execCommands(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
-        return newExecWithLoggingHelpers().execCommands(props, summaryForLogging, commands, env);
+        return newExecWithLoggingHelpers().execCommands(augmentPropertiesWithSshConfigGivenToProps(props), summaryForLogging, commands, env);
     }
 
     /**
@@ -630,7 +641,16 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return execScript(MutableMap.<String,Object>of(), summaryForLogging, commands, env);
     }
     public int execScript(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
-        return newExecWithLoggingHelpers().execScript(props, summaryForLogging, commands, env);
+        return newExecWithLoggingHelpers().execScript(augmentPropertiesWithSshConfigGivenToProps(props), summaryForLogging, commands, env);
+    }
+
+    private Map<String, Object> augmentPropertiesWithSshConfigGivenToProps(Map<String, ?> props) {
+        Map<String,Object> augmentedProps = Maps.newHashMap(props);
+        for (ConfigKey<?> config : SSH_CONFIG_GIVEN_TO_PROPS) {
+            if (!props.containsKey(config.getName()))
+                augmentedProps.put(config.getName(), getConfig(config));
+        }
+        return augmentedProps;
     }
 
     protected ExecWithLoggingHelpers newExecWithLoggingHelpers() {
