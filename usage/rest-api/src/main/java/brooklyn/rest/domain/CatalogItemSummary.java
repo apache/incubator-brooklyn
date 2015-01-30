@@ -40,7 +40,7 @@ public class CatalogItemSummary implements HasId, HasName {
     //needed for backwards compatibility only (json serializer works on fields, not getters)
     @Deprecated
     private final String type;
-    
+    private final String registeredType;
     private final String javaType;
     
     private final String name;
@@ -56,6 +56,7 @@ public class CatalogItemSummary implements HasId, HasName {
             @JsonProperty("symbolicName") String symbolicName,
             @JsonProperty("version") String version,
             @JsonProperty("name") String displayName,
+            @JsonProperty("registeredType") String registeredType,
             @JsonProperty("javaType") String javaType,
             @JsonProperty("planYaml") String planYaml,
             @JsonProperty("description") String description,
@@ -67,6 +68,7 @@ public class CatalogItemSummary implements HasId, HasName {
         this.type = symbolicName;
         this.version = version;
         this.name = displayName;
+        this.registeredType = registeredType;
         this.javaType = javaType;
         this.planYaml = planYaml;
         this.description = description;
@@ -90,6 +92,10 @@ public class CatalogItemSummary implements HasId, HasName {
     public String getJavaType() {
         return javaType;
     }
+    
+    public String getRegisteredType() {
+		return registeredType;
+	}
 
     public String getType() {
         return type;
