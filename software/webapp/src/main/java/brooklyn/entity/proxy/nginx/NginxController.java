@@ -37,7 +37,6 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.reflect.TypeToken;
 
 /**
  * An entity that represents an Nginx proxy (e.g. for routing requests to servers in a cluster).
