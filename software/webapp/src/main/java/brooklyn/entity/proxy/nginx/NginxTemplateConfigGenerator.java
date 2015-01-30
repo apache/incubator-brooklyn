@@ -33,12 +33,17 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
 /**
- * Processes a FreeMarker template to generate the {@code server.conf} configuration file for an {@link NginxController}.
+ * Processes a FreeMarker template to generate the {@code server.conf} configuration file for an 
+ * {@link NginxController}.
+ * <p>
+ * Note this must be explicitly enabled via {@link NginxController#SERVER_CONF_GENERATOR}.
  */
 public class NginxTemplateConfigGenerator implements NginxConfigFileGenerator {
 
     public static final ConfigKey<String> SERVER_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
-            "nginx.config.templateUrl", "The server.conf configuration file URL (FreeMarker template)", "classpath://brooklyn/entity/proxy/nginx/server.conf");
+            "nginx.config.templateUrl", "The server.conf configuration file URL (FreeMarker template). "
+                + "Only applies if 'nginx.config.generator' specifies a generator which uses a template.", 
+                "classpath://brooklyn/entity/proxy/nginx/server.conf");
 
     public NginxTemplateConfigGenerator() { }
 
