@@ -707,7 +707,7 @@ public class DependentConfiguration {
         // if desired, the use of this multiSource could allow different conditions; 
         // but probably an easier API just for the caller to build the parallel task  
         protected final List<AttributeAndSensorCondition<?>> multiSource = Lists.newArrayList();
-        protected Function<? super List<V>, ? extends V2> postProcessFromMultiple;
+        protected Function<? super List<V>, V2> postProcessFromMultiple;
         
         /** returns a task for parallel execution returning a list of values of the given sensor list on the given entity, 
          * optionally when the values satisfy a given readiness predicate (defaulting to groovy truth if not supplied) */ 
@@ -810,7 +810,7 @@ public class DependentConfiguration {
                             List<V> prePostProgress = DynamicTasks.queue(parallelTask).get();
                             return DynamicTasks.queue(
                                 Tasks.<V2>builder().name("post-processing").description("Applying "+postProcessFromMultiple)
-                                    .body(Functionals.<List<V>,V2>callable((Function)postProcessFromMultiple, prePostProgress))
+                                    .body(Functionals.callable(postProcessFromMultiple, prePostProgress))
                                     .build()).get();
                         }
                     })
