@@ -32,14 +32,14 @@ public class PlatformComponent extends AbstractResource {
 
     public static final String CAMP_TYPE = "PlatformComponent";
     static { assert CAMP_TYPE.equals(PlatformComponent.class.getSimpleName()); }
-
+    
     /** Use {@link #builder()} to create */
     protected PlatformComponent() {}
 
     ResourceLookup<ApplicationComponent> applicationComponents;
     ResourceLookup<PlatformComponent> platformComponents;
     String externalManagementUri;
-
+    
     public ResourceLookup<ApplicationComponent> getApplicationComponents() {
         return applicationComponents != null ? applicationComponents : new EmptyResourceLookup<ApplicationComponent>();
     }
@@ -47,34 +47,34 @@ public class PlatformComponent extends AbstractResource {
         return platformComponents != null ? platformComponents : new EmptyResourceLookup<PlatformComponent>();
     }
 
-    void setApplicationComponents(ResourceLookup<ApplicationComponent> applicationComponents) {
+    private void setApplicationComponents(ResourceLookup<ApplicationComponent> applicationComponents) {
         this.applicationComponents = applicationComponents;
     }
-    void setPlatformComponents(ResourceLookup<PlatformComponent> platformComponents) {
+    private void setPlatformComponents(ResourceLookup<PlatformComponent> platformComponents) {
         this.platformComponents = platformComponents;
     }
-
+    
     public String getExternalManagementUri() {
         return externalManagementUri;
     }
-    void setExternalManagementUri(String externalManagementUri) {
+    private void setExternalManagementUri(String externalManagementUri) {
         this.externalManagementUri = externalManagementUri;
     }
-
+    
     // builder
-
+    
     public static Builder<? extends PlatformComponent> builder() {
         return new Builder<PlatformComponent>(CAMP_TYPE);
     }
-
+    
     public static class Builder<T extends PlatformComponent> extends AbstractResource.Builder<T,Builder<T>> {
-
+        
         protected Builder(String type) { super(type); }
-
+        
         public Builder<T> externalManagementUri(String x) { instance().setExternalManagementUri(x); return thisBuilder(); }
         public Builder<T> applicationComponentTemplates(ResourceLookup<ApplicationComponent> x) { instance().setApplicationComponents(x); return thisBuilder(); }
         public Builder<T> platformComponentTemplates(ResourceLookup<PlatformComponent> x) { instance().setPlatformComponents(x); return thisBuilder(); }
-
+        
         public synchronized Builder<T> add(ApplicationComponent x) {
             if (instance().applicationComponents==null) {
                 instance().applicationComponents = new BasicResourceLookup<ApplicationComponent>();
@@ -85,7 +85,7 @@ public class PlatformComponent extends AbstractResource {
             ((BasicResourceLookup<ApplicationComponent>)instance().applicationComponents).add(x);
             return thisBuilder();
         }
-
+        
         public synchronized Builder<T> add(PlatformComponent x) {
             if (instance().platformComponents==null) {
                 instance().platformComponents = new BasicResourceLookup<PlatformComponent>();
