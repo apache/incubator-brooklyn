@@ -114,4 +114,19 @@ public class SshMachineLocationIntegrationTest {
         int rc = sm.execScript("Test script directory execution", ImmutableList.of(command));
         assertEquals(rc, 0);
     }
+    
+    @Test(groups = "Integration")
+    public void testMissingLocationScriptDirIsAlsoOkay() throws Exception {
+        final String command = "echo hello";
+
+        Map<String, Object> locationConfig = ImmutableMap.<String, Object>builder()
+//                .put(SshMachineLocation.SCRIPT_DIR.getName(), "/var/tmp")
+                .build();
+
+        LocalhostMachineProvisioningLocation lhp = (LocalhostMachineProvisioningLocation) mgmt.getLocationRegistry().resolve("localhost", locationConfig);
+        SshMachineLocation sm = lhp.obtain();
+
+        int rc = sm.execScript("Test script directory execution", ImmutableList.of(command));
+        assertEquals(rc, 0);
+    }
 }

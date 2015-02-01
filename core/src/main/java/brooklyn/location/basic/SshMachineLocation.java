@@ -647,7 +647,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     private Map<String, Object> augmentPropertiesWithSshConfigGivenToProps(Map<String, ?> props) {
         Map<String,Object> augmentedProps = Maps.newHashMap(props);
         for (ConfigKey<?> config : SSH_CONFIG_GIVEN_TO_PROPS) {
-            if (!props.containsKey(config.getName()))
+            if (!augmentedProps.containsKey(config.getName()) && hasConfig(config, true))
                 augmentedProps.put(config.getName(), getConfig(config));
         }
         return augmentedProps;
