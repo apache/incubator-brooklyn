@@ -1694,7 +1694,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     .configureIfNotNull(CLOUD_REGION_ID, nodeRegion)
                     .configure(CALLER_CONTEXT, setup.get(CALLER_CONTEXT))
                     .configure(SshMachineLocation.DETECT_MACHINE_DETAILS, setup.get(SshMachineLocation.DETECT_MACHINE_DETAILS))
-                    .configure(SshMachineLocation.SCRIPT_DIR, setup.get(SshMachineLocation.SCRIPT_DIR))
+                    .configureIfNotNull(SshMachineLocation.SCRIPT_DIR, setup.get(SshMachineLocation.SCRIPT_DIR))
                     .configureIfNotNull(USE_PORT_FORWARDING, setup.get(USE_PORT_FORWARDING))
                     .configureIfNotNull(PORT_FORWARDER, setup.get(PORT_FORWARDER))
                     .configureIfNotNull(PORT_FORWARDING_MANAGER, setup.get(PORT_FORWARDING_MANAGER)));
