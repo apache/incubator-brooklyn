@@ -103,7 +103,7 @@ public class Combiner<T,U> extends AbstractEnricher implements SensorEventListen
                 // TODO Aled didn't you write a convenience to "subscribeAndRunIfSet" ? (-Alex)
                 //      Unfortunately not yet!
                 if (value != null) {
-                    onEvent(new BasicSensorEvent(sourceSensor, producer, value));
+                    onEvent(new BasicSensorEvent(sourceSensor, producer, value, -1));
                 }
             }
         }

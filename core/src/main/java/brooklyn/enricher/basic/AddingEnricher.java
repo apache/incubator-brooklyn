@@ -61,7 +61,7 @@ public class AddingEnricher extends AbstractEnricher implements SensorEventListe
             if (source instanceof AttributeSensor) {
                 Object value = entity.getAttribute((AttributeSensor)source);
                 if (value!=null)
-                    onEvent(new BasicSensorEvent(source, entity, value));
+                    onEvent(new BasicSensorEvent(source, entity, value, -1));
             }
         }
     }

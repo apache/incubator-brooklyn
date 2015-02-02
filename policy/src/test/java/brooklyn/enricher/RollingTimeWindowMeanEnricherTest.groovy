@@ -93,9 +93,17 @@ class RollingTimeWindowMeanEnricherTest {
     }
     
     @Test
-    public void testSingleValueAverage() {
+    public void testSingleValueTimeAverage() {
         averager.onEvent(intSensor.newEvent(producer, 10), 1000)
         average = averager.getAverage(1000)
+        assertEquals(average.confidence, 0d)
+    }
+    
+    @Test
+    public void testTwoValueAverageForPeriod() {
+        averager.onEvent(intSensor.newEvent(producer, 10), 1000)
+        averager.onEvent(intSensor.newEvent(producer, 10), 2000)
+        average = averager.getAverage(2000)
         assertEquals(average.value, 10 /1d)
         assertEquals(average.confidence, 1d)
     }

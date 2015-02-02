@@ -98,7 +98,7 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
             Object value = producer.getAttribute((AttributeSensor<?>)sourceSensor);
             // TODO would be useful to have a convenience to "subscribeAndThenIfItIsAlreadySetRunItOnce"
             if (value!=null) {
-                onEvent(new BasicSensorEvent(sourceSensor, producer, value));
+                onEvent(new BasicSensorEvent(sourceSensor, producer, value, -1));
             }
         }
     }

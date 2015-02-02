@@ -21,17 +21,18 @@ package brooklyn.enricher;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import com.google.common.base.Preconditions;
-
-import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Transforms {@link Sensor} data into a rolling average based on a time window.
@@ -59,6 +60,15 @@ import brooklyn.util.time.Duration;
 //@Catalog(name="Rolling Mean in Time Window", description="Transforms a sensor's data into a rolling average "
 //        + "based on a time window.")
 public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTypeTransformingEnricher<T,Double> {
+    
+    public static ConfigKey<Double> CONFIDENCE_REQUIRED_TO_PUBLISH = ConfigKeys.newDoubleConfigKey("confidenceRequired",
+        "Minimum confidence level (ie period covered) required to publish a rolling average", 0.8d);
+
+    // without this, we will refuse to publish if the server time differs from the publisher time (in a distributed setup);
+    // also we won't publish if a lot of time is spent actually doing the computation
+    public static ConfigKey<Duration> TIMESTAMP_GRACE_TIME = ConfigKeys.newConfigKey(Duration.class, "timestampGraceTime",
+        "When computing windowed average, allow this much slippage time between published metrics and local clock", Duration.millis(500));
+
     public static class ConfidenceQualifiedNumber {
         final Double value;
         final double confidence;
@@ -67,6 +77,12 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
             this.value = value;
             this.confidence = confidence;
         }
+        
+        @Override
+        public String toString() {
+            return ""+value+" ("+(int)(confidence*100)+"%)";
+        } 
+        
     }
     
     private final LinkedList<T> values = new LinkedList<T>();
@@ -103,31 +119,69 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
     public void onEvent(SensorEvent<T> event, long eventTime) {
         values.addLast(event.getValue());
         timestamps.addLast(eventTime);
-        pruneValues(eventTime);
-        entity.setAttribute((AttributeSensor<Double>)target, getAverage(eventTime).value); //TODO this can potentially go stale... maybe we need to timestamp as well?
+        if (eventTime>0) {
+            ConfidenceQualifiedNumber average = getAverage(eventTime, 0);
+
+            if (average.confidence > getConfig(CONFIDENCE_REQUIRED_TO_PUBLISH)) { 
+                // without confidence, we might publish wildly varying estimates,
+                // causing spurious resizes, so allow it to be configured, and
+                // by default require a high value
+
+                // TODO would be nice to include timestamp, etc
+                entity.setAttribute((AttributeSensor<Double>)target, average.value); 
+            }
+        }
     }
     
     public ConfidenceQualifiedNumber getAverage() {
-        return getAverage(System.currentTimeMillis());
+        return getAverage(System.currentTimeMillis(), getConfig(TIMESTAMP_GRACE_TIME).toMilliseconds());
     }
     
-    public ConfidenceQualifiedNumber getAverage(long now) {
-        pruneValues(now);
+    public ConfidenceQualifiedNumber getAverage(long fromTimeExact) {
+        return getAverage(fromTimeExact, 0);
+    }
+    
+    public ConfidenceQualifiedNumber getAverage(long fromTime, long graceAllowed) {
         if (timestamps.isEmpty()) {
             return lastAverage = new ConfidenceQualifiedNumber(lastAverage.value, 0.0d);
         }
-
-        // XXX grkvlt - see email to development list
-
         
+        // (previously there was an old comment here, pre-Jul-2014,  
+        // saying "grkvlt - see email to development list";
+        // but i can't find that email)
+        // some of the more recent confidence and bogus-timestamp + exclusion logic might fix this though
+        
+        long firstTimestamp = -1;
+        Iterator<Long> ti = timestamps.iterator();
+        while (ti.hasNext()) {
+            firstTimestamp = ti.next();
+            if (firstTimestamp>0) break;
+        }
+        if (firstTimestamp<=0) {
+            // no values with reasonable timestamps
+            return lastAverage = new ConfidenceQualifiedNumber(values.get(values.size()-1).doubleValue(), 0.0d);
+        }
+
         long lastTimestamp = timestamps.get(timestamps.size()-1);
-        Double confidence = ((double)(timePeriod.toMilliseconds() - (now - lastTimestamp))) / timePeriod.toMilliseconds();
-        if (confidence <= 0.0d) {
+
+        long now = fromTime;
+        if (lastTimestamp > fromTime - graceAllowed) {
+            // without this, if the computation takes place X seconds after the publish,
+            // we treat X seconds as time for which we have no confidence in the data
+            now = lastTimestamp;
+        }
+        pruneValues(now);
+        
+        long windowStart = Math.max(now-timePeriod.toMilliseconds(), firstTimestamp);
+        long windowEnd = Math.max(now-timePeriod.toMilliseconds(), lastTimestamp);
+        Double confidence = ((double)(windowEnd - windowStart)) / timePeriod.toMilliseconds();
+        if (confidence <= 0.0000001d) {
+            // not enough timestamps in window 
             double lastValue = values.get(values.size()-1).doubleValue();
             return lastAverage = new ConfidenceQualifiedNumber(lastValue, 0.0d);
         }
         
-        long start = (now - timePeriod.toMilliseconds());
+        long start = windowStart;
         long end;
         double weightedAverage = 0.0d;
         
@@ -151,7 +205,8 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
      * Discards out-of-date values, but keeps at least one value.
      */
     private void pruneValues(long now) {
-        while(timestamps.size() > 1 && timestamps.get(0) < (now - timePeriod.toMilliseconds())) {
+        // keep one value from before the period, so that we can tell the window's start time 
+        while(timestamps.size() > 1 && timestamps.get(1) < (now - timePeriod.toMilliseconds())) {
             timestamps.removeFirst();
             values.removeFirst();
         }
