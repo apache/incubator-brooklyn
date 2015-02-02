@@ -1455,13 +1455,13 @@ textarea.param-value {
 }
 
 /* For secret things */
-tr.secret-info span.value {
+.secret-info span.value {
     display: none;
 }
-tr.secret-info.secret-revealed span.value {
+.secret-info.secret-revealed span.value {
     display: inherit;
 }
-tr.secret-info.secret-revealed span.secret-indicator {
+.secret-info.secret-revealed span.secret-indicator {
     display: none;
 }
 

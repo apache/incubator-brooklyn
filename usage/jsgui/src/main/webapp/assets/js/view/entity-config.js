@@ -45,7 +45,7 @@ define([
             'click .refresh':'updateConfigNow',
             'click .filterEmpty':'toggleFilterEmpty',
             'click .toggleAutoRefresh':'toggleAutoRefresh',
-            'click #config-table tr.secret-info td.config-value':'toggleSecrecyVisibility',
+            'click #config-table div.secret-info':'toggleSecrecyVisibility',
 
             'mouseup .valueOpen':'valueOpen',
             'mouseover #config-table tbody tr':'noteFloatMenuActive',
@@ -97,6 +97,7 @@ define([
                                              configName = row[0],
                                              actions = that.getConfigActions(configName);
                                          
+                                         // NB: the row might not yet exist
                                          var $row = $('tr[id="'+configName+'"]');
                                          
                                          // datatables doesn't seem to expose any way to modify the html in place for a cell,
@@ -104,8 +105,8 @@ define([
                                          
                                          var result = "<span class='value'>"+(hasEscapedValue ? escapedValue : '')+"</span>";
                                          
-                                         if (Util.isSecret(configName)) {
-                                            $row.addClass("secret-info");
+                                         var isSecret = Util.isSecret(configName);
+                                         if (isSecret) {
                                             result += "<span class='secret-indicator'>(hidden)</span>";
                                          }
                                          
@@ -159,7 +160,9 @@ define([
                                                 "<div class='floatLeft'><span class='icon-chevron-down hasFloatDown'></span>" +
                                                 downMenu +
                                                 "</div>";
-                                         result = "<div class='floatGroup'>" + result + "</div>";
+                                         result = "<div class='floatGroup"+
+                                            (isSecret ? " secret-info" : "")+
+                                            "'>" + result + "</div>";
                                          // also see updateFloatMenus which wires up the JS for these classes
                                          
                                          return result;
@@ -437,7 +440,7 @@ define([
         },
         
         toggleSecrecyVisibility: function(event) {
-            $(event.target).closest('tr.secret-info').toggleClass('secret-revealed');
+            $(event.target).closest('.secret-info').toggleClass('secret-revealed');
         },
         
         /**
