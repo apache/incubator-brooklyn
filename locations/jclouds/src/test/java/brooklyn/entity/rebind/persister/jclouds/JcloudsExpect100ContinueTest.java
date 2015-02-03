@@ -64,8 +64,7 @@ public class JcloudsExpect100ContinueTest {
                 jcloudsLocation.getProvider(),
                 jcloudsLocation.getEndpoint(),
                 jcloudsLocation.getIdentity(),
-                jcloudsLocation.getCredential(),
-                false);
+                jcloudsLocation.getCredential());
         containerName = BlobStoreTest.CONTAINER_PREFIX+"-"+Identifiers.makeRandomId(8);
         context.getBlobStore().createContainerInLocation(null, containerName);
     }

@@ -91,7 +91,7 @@ public class BlobStoreExpiryTest {
     private String provider;
     private String endpoint;
 
-    public synchronized BlobStoreContext getBlobStoreContext(boolean applyFix) {
+    public synchronized BlobStoreContext getBlobStoreContext() {
         if (context==null) {
             if (location==null) {
                 Preconditions.checkNotNull(locationSpec, "locationSpec required for remote object store when location is null");
@@ -104,7 +104,7 @@ public class BlobStoreExpiryTest {
             provider = checkNotNull(location.getConfig(LocationConfigKeys.CLOUD_PROVIDER), "provider must not be null");
             endpoint = location.getConfig(CloudLocationConfig.CLOUD_ENDPOINT);
 
-            context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential, applyFix);
+            context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential);
         }
         return context;
     }
@@ -122,19 +122,12 @@ public class BlobStoreExpiryTest {
         context = null;
     }
 
-    // test disabled as https://issues.apache.org/jira/browse/JCLOUDS-589 fixed the issue for Keystone greater than 1.1
-    // the test would be applicable if pointed at a Swift endpoint that was using Keystone v1.1.
-    @Test(enabled = false)
-    public void testRenewAuthFailsInKeystoneV1_1() throws IOException {
-        doTestRenewAuth(false);
-    }
-
     public void testRenewAuthSucceedsWithOurOverride() throws IOException {
-        doTestRenewAuth(true);
+        doTestRenewAuth();
     }
     
-    protected void doTestRenewAuth(boolean applyFix) throws IOException {
-        getBlobStoreContext(applyFix);
+    protected void doTestRenewAuth() throws IOException {
+        getBlobStoreContext();
         
         injectShortLivedTokenForKeystoneV1_1();
         
@@ -146,17 +139,6 @@ public class BlobStoreExpiryTest {
         
         Time.sleep(Duration.TEN_SECONDS);
         
-        if (!applyFix) {
-            // with the fix not applied, we have to invalidate the cache manually
-            try {
-                assertContainerFound();
-            } catch (Exception e) {
-                log.info("failed, as expected: "+e);
-            }
-            getAuthCache().invalidateAll();
-            log.info("invalidated, should now succeed");
-        }
-
         assertContainerFound();
 
         context.getBlobStore().deleteContainer(testContainerName);

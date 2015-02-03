@@ -65,9 +65,7 @@ import org.jclouds.util.Predicates2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;
-import brooklyn.location.jclouds.config.AlwaysRetryOnRenew;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -266,10 +264,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
      *  
      *  @since 1.7.0 */
     @Beta
-    public static BlobStoreContext newBlobstoreContext(String provider, @Nullable String endpoint, String identity, String credential, boolean useSoftlayerFix) {
-        AlwaysRetryOnRenew.InterceptRetryOnRenewModule fix = 
-            useSoftlayerFix ? new AlwaysRetryOnRenew.InterceptRetryOnRenewModule() : null;
-
+    public static BlobStoreContext newBlobstoreContext(String provider, @Nullable String endpoint, String identity, String credential) {
         Properties overrides = new Properties();
         // * Java 7,8 bug workaround - sockets closed by GC break the internal bookkeeping
         //   of HttpUrlConnection, leading to invalid handling of the "HTTP/1.1 100 Continue"
@@ -282,17 +277,12 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         overrides.setProperty(Constants.PROPERTY_STRIP_EXPECT_HEADER, "true");
 
         ContextBuilder contextBuilder = ContextBuilder.newBuilder(provider).credentials(identity, credential);
-        contextBuilder.modules(MutableList.copyOf(JcloudsUtil.getCommonModules())
-            .appendIfNotNull(fix));
+        contextBuilder.modules(MutableList.copyOf(JcloudsUtil.getCommonModules()));
         if (!brooklyn.util.text.Strings.isBlank(endpoint)) {
             contextBuilder.endpoint(endpoint);
         }
         contextBuilder.overrides(overrides);
         BlobStoreContext context = contextBuilder.buildView(BlobStoreContext.class);
-
-        if (useSoftlayerFix)
-            fix.inject(context.utils().injector());
-        
         return context;
     }
 
