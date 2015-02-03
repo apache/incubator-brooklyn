@@ -20,46 +20,119 @@ package brooklyn.management.internal;
 
 import brooklyn.management.ManagementContext;
 
+import com.google.common.base.Preconditions;
+
 public class ManagementTransitionInfo {
 
     final ManagementContext mgmtContext;
-    
     final ManagementTransitionMode mode;
     
-    /** true if this transition is an entity whose mastering is migrating from one node to another;
-     * false if the brooklyn mgmt plane is just starting managing of this entity for the very first time  
-     */
+    public enum BrooklynObjectManagementMode {
+        /** item does not exist, not in memory, nor persisted (e.g. creating for first time, or finally destroying) */
+        NONEXISTENT, 
+        /** item exists or existed elsewhere, i.e. there is persisted state, but is not loaded here */
+        UNMANAGED_PERSISTED, 
+        
+        @Deprecated /** @deprecated marking places where we aren't sure */
+        /** either nonexistent or persisted by unmanaged */
+        ITEM_UNKNOWN, 
+        
+        /** item is loaded but read-only (ie not actively managed here) */
+        LOADED_READ_ONLY, 
+        /** item is actively managed here */
+        MANAGED_PRIMARY 
+    }
+    
+    public static class ManagementTransitionMode {
 
-    public enum ManagementTransitionMode {
-        /** Item is being created fresh, for the first time */ 
-        CREATING(false, false, false),
-        /** Item is being destroyed / stopping permanently */ 
-        DESTROYING(false, false, false),
+        // XXX
+//-        CREATING(false, false, false),
+//-        DESTROYING(false, false, false),
+//-        REBINDING_READONLY(true, true, true),
+//-        REBINDING_NO_LONGER_PRIMARY(false, true, true), 
+//-        REBINDING_BECOMING_PRIMARY(true, false, true),
+//-        REBINDING_DESTROYED(true, true, true),
+//-        REBINDING_CREATING(false, false, true);
+//-        
+//-        private final boolean wasReadOnly;
+//-        private final boolean isReadOnly;
+//-        private final boolean isRebinding;
+
+//        /** Item is being created fresh, for the first time */ 
+//        CREATING(NONEXISTENT, MANAGED_PRIMARY),
+//        /** Item is being destroyed / stopping permanently */ 
+//        DESTROYING(MANAGED_PRIMARY, NONEXISTENT),
+//        
+//        /** Item is being mirrored (refreshed or created) here from a serialized/specified state */
+//        REBINDING_READONLY(LOADED_READ_ONLY, LOADED_READ_ONLY),
+//        /** Item management is stopping here, going elsewhere */
+//        REBINDING_NO_LONGER_PRIMARY(MANAGED_PRIMARY, LOADED_READ_ONLY), 
+//        /** Item management is starting here, having previously been running elsewhere */
+//        REBINDING_BECOMING_PRIMARY(LOADED_READ_ONLY, MANAGED_PRIMARY),
+//        /** Item has been managed here, and is being re-read for management again (e.g. applying a transform) */
+//        REBINDING_ACTIVE_AGAIN(MANAGED_PRIMARY, MANAGED_PRIMARY),
+//        /** Item was being mirrored but has now been destroyed  */
+//        REBINDING_DESTROYED(LOADED_READ_ONLY, NONEXISTENT),
+//
+//        /** Item management is starting here, from persisted state */
+//        REBINDING_CREATING(NodeManagementMode.UNMANAGED_PERSISTED, NodeManagementMode.MANAGED_PRIMARY);
         
-        /** Item is being mirrored (or refreshed) here from a serialized/specified state */
-        REBINDING_READONLY(true, true, true),
-        /** Item management is stopping here, going elsewhere */
-        REBINDING_NO_LONGER_PRIMARY(false, true, true), 
-        /** Item management is starting here, having previously been running elsewhere */
-        REBINDING_BECOMING_PRIMARY(true, false, true),
-        /** Item was being mirrored but has now been destroyed  */
-        REBINDING_DESTROYED(true, true, true),
-        /** Item management is starting here, where not sure what previous running state was */
-        REBINDING_CREATING(false, false, true);
-        
-        private final boolean wasReadOnly;
-        private final boolean isReadOnly;
-        private final boolean isRebinding;
-        
-        ManagementTransitionMode(boolean wasReadOnly, boolean isReadOnly, boolean isRebinding) {
-            this.wasReadOnly = wasReadOnly;
-            this.isReadOnly = isReadOnly;
-            this.isRebinding = isRebinding;
+//        private final static ManagementTransitionTargetMode NONE = ManagementTransitionTargetMode.NONE;
+        private final BrooklynObjectManagementMode modeBefore, modeAfter;
+
+        private ManagementTransitionMode(BrooklynObjectManagementMode modeBefore, BrooklynObjectManagementMode modeAfter) {
+            this.modeBefore = modeBefore;
+            this.modeAfter = modeAfter;
         }
         
-        public boolean wasReadOnly() { return wasReadOnly; }
-        public boolean isReadOnly() { return isReadOnly; }
-        public boolean isRebinding() { return isRebinding; }
+        public static ManagementTransitionMode transitioning(BrooklynObjectManagementMode modeBefore, BrooklynObjectManagementMode modeAfter) {
+            return new ManagementTransitionMode(Preconditions.checkNotNull(modeBefore, "modeBefore"), Preconditions.checkNotNull(modeAfter, "modeAfter"));
+        }
+
+        @Deprecated /** @deprecated marking places where we aren't sure */
+        public static ManagementTransitionMode guessing(BrooklynObjectManagementMode modeBefore, BrooklynObjectManagementMode modeAfter) {
+            return transitioning(modeBefore, modeAfter);
+        }
+
+        public BrooklynObjectManagementMode getModeBefore() {
+            return modeBefore;
+        }
+        
+        public BrooklynObjectManagementMode getModeAfter() {
+            return modeAfter;
+        }
+        
+        public boolean wasNotLoaded() {
+            return getModeBefore()==BrooklynObjectManagementMode.NONEXISTENT || getModeBefore()==BrooklynObjectManagementMode.UNMANAGED_PERSISTED || getModeBefore()==BrooklynObjectManagementMode.ITEM_UNKNOWN;
+        }
+
+        public boolean isNoLongerLoaded() {
+            return getModeAfter()==BrooklynObjectManagementMode.NONEXISTENT || getModeAfter()==BrooklynObjectManagementMode.UNMANAGED_PERSISTED || getModeAfter()==BrooklynObjectManagementMode.ITEM_UNKNOWN;
+        }
+
+        public boolean wasPrimary() {
+            return getModeBefore()==BrooklynObjectManagementMode.MANAGED_PRIMARY;
+        }
+        
+        public boolean isPrimary() {
+            return getModeAfter()==BrooklynObjectManagementMode.MANAGED_PRIMARY;
+        }
+
+        public boolean wasReadOnly() {
+            return getModeBefore()==BrooklynObjectManagementMode.LOADED_READ_ONLY;
+        }
+        
+        public boolean isReadOnly() {
+            return getModeAfter()==BrooklynObjectManagementMode.LOADED_READ_ONLY;
+        }
+
+        public boolean isDestroying() {
+            return getModeAfter()==BrooklynObjectManagementMode.NONEXISTENT;
+        }
+
+        public boolean isCreating() {
+            return getModeBefore()==BrooklynObjectManagementMode.NONEXISTENT;
+        }
     }
     
     public ManagementTransitionInfo(ManagementContext mgmtContext, ManagementTransitionMode mode) {

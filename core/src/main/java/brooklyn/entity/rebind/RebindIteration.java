@@ -63,10 +63,12 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.management.internal.BrooklynObjectManagerInternal;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.management.internal.ManagementTransitionInfo.BrooklynObjectManagementMode;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
@@ -600,8 +602,7 @@ public abstract class RebindIteration {
         LocationManagerInternal locationManager = (LocationManagerInternal)managementContext.getLocationManager();
         Set<String> oldLocations = Sets.newLinkedHashSet(locationManager.getLocationIds());
         for (Location location: rebindContext.getLocations()) {
-            ManagementTransitionMode oldMode = locationManager.getLastManagementTransitionMode(location.getId());
-            locationManager.setManagementTransitionMode(location, RebindManagerImpl.computeMode(managementContext, location, oldMode, rebindContext.isReadOnly(location), isRebindingActiveAgain()) );
+            ManagementTransitionMode oldMode = updateTransitionMode(locationManager, location);
             if (oldMode!=null)
                 oldLocations.remove(location.getId());
         }
@@ -623,8 +624,7 @@ public abstract class RebindIteration {
         EntityManagerInternal entityManager = (EntityManagerInternal)managementContext.getEntityManager();
         Set<String> oldEntities = Sets.newLinkedHashSet(entityManager.getEntityIds());
         for (Entity entity: rebindContext.getEntities()) {
-            ManagementTransitionMode oldMode = entityManager.getLastManagementTransitionMode(entity.getId());
-            entityManager.setManagementTransitionMode(entity, RebindManagerImpl.computeMode(managementContext, entity, oldMode, rebindContext.isReadOnly(entity), isRebindingActiveAgain()) );
+            ManagementTransitionMode oldMode = updateTransitionMode(entityManager, entity);
             if (oldMode!=null)
                 oldEntities.remove(entity.getId());
         }
@@ -647,6 +647,73 @@ public abstract class RebindIteration {
         cleanupOldEntities(oldEntities);
 
         this.applications = apps;
+    }
+
+    private <T extends BrooklynObject> ManagementTransitionMode updateTransitionMode(BrooklynObjectManagerInternal<T> boManager, T bo) {
+        ManagementTransitionMode oldTransitionMode = boManager.getLastManagementTransitionMode(bo.getId());
+        
+//        boManager.setManagementTransitionMode(bo, 
+//            RebindManagerImpl.computeMode(managementContext, bo, oldMode, rebindContext.isReadOnly(bo), isRebindingActiveAgain()) );
+
+//        isRebindingActiveAgain();
+        
+        ManagementTransitionMode newTransitionMode;
+        Boolean isNowReadOnly = rebindContext.isReadOnly(bo);
+        BrooklynObjectManagementMode modeBefore, modeAfter; 
+        if (oldTransitionMode==null) {
+            modeBefore = BrooklynObjectManagementMode.UNMANAGED_PERSISTED;
+//            // not previously known
+//            if (Boolean.TRUE.equals(isNowReadOnly)) {
+//                newMode = ManagementTransitionMode.REBINDING_READONLY;
+//            } else {
+//                // TODO is this needed?
+//                return ManagementTransitionMode.REBINDING_CREATING;
+//            }
+        } else {
+            modeBefore = oldTransitionMode.getModeAfter();
+        }
+
+        if (isRebindingActiveAgain()) {
+            Preconditions.checkState(!Boolean.FALSE.equals(isNowReadOnly));
+            Preconditions.checkState(modeBefore==BrooklynObjectManagementMode.MANAGED_PRIMARY);
+            modeAfter = BrooklynObjectManagementMode.MANAGED_PRIMARY;
+        } else if (isNowReadOnly) {
+            modeAfter = BrooklynObjectManagementMode.LOADED_READ_ONLY;
+        } else {
+            modeAfter = BrooklynObjectManagementMode.MANAGED_PRIMARY;
+        }
+        newTransitionMode = ManagementTransitionMode.transitioning(modeBefore, modeAfter);
+
+        boManager.setManagementTransitionMode(bo, newTransitionMode);
+
+        // XXX old logic, from RebindManagerImpl.computeMode, for reference:
+//          if (wasReadOnly==null) {
+//              // not known
+//              if (Boolean.TRUE.equals(isNowReadOnly)) return ManagementTransitionMode.REBINDING_READONLY;
+//              else {
+//                  // TODO is this needed?
+//                  return ManagementTransitionMode.REBINDING_CREATING;
+//              }
+//          } else {
+//              if (isRebindingActiveAgain) {
+//                  if (wasReadOnly || isNowReadOnly)
+//                      throw new IllegalStateException("Cannot be rebinding again to something where read-only before/after is "+wasReadOnly+"/"+isNowReadOnly);
+//                  return ManagementTransitionMode.REBINDING_ACTIVE_AGAIN;
+//              } else if (wasReadOnly && isNowReadOnly)
+//                  return ManagementTransitionMode.REBINDING_READONLY;
+//              else if (wasReadOnly)
+//                  return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
+//              else if (isNowReadOnly)
+//                  return ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY;
+//              else {
+//                  if (isRebindingActiveAgain)
+//                  // for the most part we handle this correctly, although there may be leaks; see HighAvailabilityManagerInMemoryTest.testLocationsStillManagedCorrectlyAfterDoublePromotion
+//                  LOG.warn("Node "+(mgmt!=null ? mgmt.getManagementNodeId() : null)+" rebinding as master when already master (discouraged, may have stale references); for: "+item);
+//                  return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
+//              }
+//          }
+        
+        return oldTransitionMode;
     }
 
     protected abstract boolean isRebindingActiveAgain();

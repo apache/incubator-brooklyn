@@ -296,7 +296,7 @@ public class EntityManagementSupport {
         // TODO framework stopping events - no more sensors, executions, etc
         // (elaborate or remove ^^^ ? -AH, Sept 2014)
         
-        if (!isReadOnly()) {
+        if (!isReadOnly() && info.getMode().isDestroying()) {
             // if we support remote parent of local child, the following call will need to be properly remoted
             if (entity.getParent()!=null) entity.getParent().removeChild(entity.getProxyIfAvailable());
         }

@@ -45,13 +45,11 @@ import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils.CreateBackupMod
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.ExecutionContext;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.MementoCopyMode;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.mementos.TreeNode;
@@ -531,48 +529,6 @@ public class RebindManagerImpl implements RebindManager {
         }
 
         return iteration.getApplications();
-    }
-
-    @Deprecated /** @deprecated since 0.7.0, use method with more args */
-    static ManagementTransitionMode computeMode(ManagementContext mgmt, BrooklynObject item, ManagementTransitionMode oldMode, boolean isNowReadOnly) {
-        return computeMode(mgmt, item, oldMode==null ? null : oldMode.wasReadOnly(), isNowReadOnly, false);
-    }
-
-    @Deprecated /** @deprecated since 0.7.0, use method with more args */
-    static ManagementTransitionMode computeMode(ManagementContext mgmt, BrooklynObject item, Boolean wasReadOnly, boolean isNowReadOnly) {
-        return computeMode(mgmt, item, wasReadOnly, isNowReadOnly, false);
-    }
-
-    static ManagementTransitionMode computeMode(ManagementContext mgmt, BrooklynObject item, ManagementTransitionMode oldMode, boolean isNowReadOnly, boolean isRebindingActiveAgain) {
-        return computeMode(mgmt, item, oldMode==null ? null : oldMode.wasReadOnly(), isNowReadOnly, isRebindingActiveAgain);
-    }
-
-    static ManagementTransitionMode computeMode(ManagementContext mgmt, BrooklynObject item, Boolean wasReadOnly, boolean isNowReadOnly, boolean isRebindingActiveAgain) {
-        if (wasReadOnly==null) {
-            // not known
-            if (Boolean.TRUE.equals(isNowReadOnly)) return ManagementTransitionMode.REBINDING_READONLY;
-            else {
-                // TODO is this needed?
-                return ManagementTransitionMode.REBINDING_CREATING;
-            }
-        } else {
-            if (isRebindingActiveAgain) {
-                if (wasReadOnly || isNowReadOnly)
-                    throw new IllegalStateException("Cannot be rebinding again to something where read-only before/after is "+wasReadOnly+"/"+isNowReadOnly);
-                return ManagementTransitionMode.REBINDING_ACTIVE_AGAIN;
-            } else if (wasReadOnly && isNowReadOnly)
-                return ManagementTransitionMode.REBINDING_READONLY;
-            else if (wasReadOnly)
-                return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
-            else if (isNowReadOnly)
-                return ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY;
-            else {
-                if (isRebindingActiveAgain)
-                // for the most part we handle this correctly, although there may be leaks; see HighAvailabilityManagerInMemoryTest.testLocationsStillManagedCorrectlyAfterDoublePromotion
-                LOG.warn("Node "+(mgmt!=null ? mgmt.getManagementNodeId() : null)+" rebinding as master when already master (discouraged, may have stale references); for: "+item);
-                return ManagementTransitionMode.REBINDING_BECOMING_PRIMARY;
-            }
-        }
     }
 
     /**

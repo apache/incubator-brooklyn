@@ -33,6 +33,7 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.management.internal.ManagementTransitionInfo.BrooklynObjectManagementMode;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.text.Strings;
 
@@ -113,7 +114,8 @@ public class InitialFullRebindIteration extends RebindIteration {
         if (!oldLocations.isEmpty()) BrooklynLogging.log(LOG, overwritingMaster ? BrooklynLogging.LoggingLevel.WARN : BrooklynLogging.LoggingLevel.DEBUG, 
             "Destroying unused locations on rebind: "+oldLocations);
         for (String oldLocationId: oldLocations) {
-           locationManager.unmanage(locationManager.getLocation(oldLocationId), ManagementTransitionMode.REBINDING_DESTROYED); 
+           locationManager.unmanage(locationManager.getLocation(oldLocationId), ManagementTransitionMode.guessing(
+               BrooklynObjectManagementMode.MANAGED_PRIMARY, BrooklynObjectManagementMode.NONEXISTENT)); 
         }
     }
 
@@ -123,7 +125,8 @@ public class InitialFullRebindIteration extends RebindIteration {
         if (!oldEntities.isEmpty()) BrooklynLogging.log(LOG, overwritingMaster ? BrooklynLogging.LoggingLevel.WARN : BrooklynLogging.LoggingLevel.DEBUG, 
             "Destroying unused entities on rebind: "+oldEntities);
         for (String oldEntityId: oldEntities) {
-           entityManager.unmanage(entityManager.getEntity(oldEntityId), ManagementTransitionMode.REBINDING_DESTROYED); 
+           entityManager.unmanage(entityManager.getEntity(oldEntityId), ManagementTransitionMode.guessing(
+               BrooklynObjectManagementMode.MANAGED_PRIMARY, BrooklynObjectManagementMode.NONEXISTENT));
         }
     }
 
