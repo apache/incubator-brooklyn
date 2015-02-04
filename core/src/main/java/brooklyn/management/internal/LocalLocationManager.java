@@ -42,8 +42,6 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.AccessController;
 import brooklyn.management.entitlement.Entitlements;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
-import brooklyn.management.internal.ManagementTransitionInfo.BrooklynObjectManagementMode;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;

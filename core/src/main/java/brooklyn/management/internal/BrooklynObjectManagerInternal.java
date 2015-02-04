@@ -19,7 +19,6 @@
 package brooklyn.management.internal;
 
 import brooklyn.basic.BrooklynObject;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 
 public interface BrooklynObjectManagerInternal<T extends BrooklynObject> {
 

@@ -16,29 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind;
+package brooklyn.management.internal;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotSame;
-
-import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.test.entity.TestEntity;
-
-public class RebindOnlySomeEntitiesTest extends RebindTestFixtureWithApp {
-
-    @Test
-    public void testRebindOnlySomeSimple() throws Exception {
-        TestEntity c1 = origApp.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(c1);
-        
-        // XXX
-        newApp = rebind();
-        
-        assertNotSame(newApp, origApp);
-        assertEquals(newApp.getId(), origApp.getId());
-    }
-    
+public enum BrooklynObjectManagementMode {
+    /** item does not exist, not in memory, nor persisted (e.g. creating for first time, or finally destroying) */
+    NONEXISTENT, 
+    /** item exists or existed elsewhere, i.e. there is persisted state, but is not loaded here */
+    UNMANAGED_PERSISTED, 
+    /** item is loaded but read-only (ie not actively managed here) */
+    LOADED_READ_ONLY, 
+    /** item is actively managed here */
+    MANAGED_PRIMARY 
 }

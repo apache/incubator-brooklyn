@@ -25,7 +25,6 @@ import java.util.Map;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 
 public class NonDeploymentLocationManager implements LocationManagerInternal {
 

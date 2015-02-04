@@ -30,10 +30,10 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.management.internal.BrooklynObjectManagementMode;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocationManagerInternal;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
-import brooklyn.management.internal.ManagementTransitionInfo.BrooklynObjectManagementMode;
+import brooklyn.management.internal.ManagementTransitionMode;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.util.text.Strings;
 

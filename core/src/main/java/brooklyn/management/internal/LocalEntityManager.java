@@ -54,8 +54,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.management.AccessController;
 import brooklyn.management.Task;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
-import brooklyn.management.internal.ManagementTransitionInfo.BrooklynObjectManagementMode;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;

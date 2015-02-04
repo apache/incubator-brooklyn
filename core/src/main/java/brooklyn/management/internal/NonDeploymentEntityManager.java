@@ -27,7 +27,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
