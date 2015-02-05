@@ -77,6 +77,10 @@ public class OsgiVersionMoreEntityTest {
     public static final String BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_URL = "classpath:"+BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_PATH;
     
     public static final String TEST_VERSION = "0.1.0";
+
+    public static final String EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V1 = "Hi BROOKLYN from V1";
+    public static final String EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2 = "HI BROOKLYN FROM V2";
+    public static final String EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2_EVIL_TWIN = "HO BROOKLYN FROM V2 EVIL TWIN";
     
     protected LocalManagementContext mgmt;
     protected TestApplication app;
@@ -172,13 +176,13 @@ public class OsgiVersionMoreEntityTest {
     }
 
     public static void assertV1MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        Assert.assertEquals(doMethodCallBrooklyn(me), "Hi BROOKLYN");
+        Assert.assertEquals(doMethodCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V1);
     }
     public static void assertV2MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        Assert.assertEquals(doMethodCallBrooklyn(me), "HI BROOKLYN");
+        Assert.assertEquals(doMethodCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2);
     }
     public static void assertV2EvilTwinMethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        Assert.assertEquals(doMethodCallBrooklyn(me), "HO BROOKLYN");
+        Assert.assertEquals(doMethodCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2_EVIL_TWIN);
     }
 
     public static Object doMethodCallBrooklyn(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
@@ -186,13 +190,13 @@ public class OsgiVersionMoreEntityTest {
     }
 
     public static void assertV1EffectorCall(Entity me) {
-        Assert.assertEquals(doEffectorCallBrooklyn(me), "Hi BROOKLYN");
+        Assert.assertEquals(doEffectorCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V1);
     }
     public static void assertV2EffectorCall(Entity me) {
-        Assert.assertEquals(doEffectorCallBrooklyn(me), "HI BROOKLYN");
+        Assert.assertEquals(doEffectorCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2);
     }
     public static void assertV2EvilTwinEffectorCall(Entity me) {
-        Assert.assertEquals(doEffectorCallBrooklyn(me), "HO BROOKLYN");
+        Assert.assertEquals(doEffectorCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2_EVIL_TWIN);
     }
 
     public static String doEffectorCallBrooklyn(Entity me) {

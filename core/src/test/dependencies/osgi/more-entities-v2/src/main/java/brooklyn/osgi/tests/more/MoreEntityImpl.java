@@ -41,7 +41,7 @@ public class MoreEntityImpl extends AbstractEntity implements MoreEntity {
     
     /** Unlike v1, this returns "HI " rather than "Hi " */
     public String sayHI(String name) {
-        return "HI "+name.toUpperCase();
+        return "HI "+name.toUpperCase()+" FROM V2";
     }
     
 }

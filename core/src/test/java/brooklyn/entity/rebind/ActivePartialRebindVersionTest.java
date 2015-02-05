@@ -54,16 +54,13 @@ public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
         CatalogItem<?, ?> catV1 = OsgiVersionMoreEntityTest.addMoreEntityV1(origManagementContext, "1.0");
         Entity childV1 = OsgiVersionMoreEntityTest.addItemFromCatalog(origManagementContext, origApp, catV1);
         
-        // v1 says Hi Brooklyn
-        // v2 says HI Brooklyn
-        
-        Assert.assertEquals(OsgiVersionMoreEntityTest.doEffectorCallBrooklyn(childV1), "Hi BROOKLYN");
+        OsgiVersionMoreEntityTest.assertV1EffectorCall(childV1);
         
         // simply adding to catalog doesn't change
         CatalogItem<?, ?> catV2 = OsgiVersionMoreEntityTest.addMoreEntityV2(origManagementContext, "1.1");
-        Assert.assertEquals(OsgiVersionMoreEntityTest.doEffectorCallBrooklyn(childV1), "Hi BROOKLYN");
+        OsgiVersionMoreEntityTest.assertV1EffectorCall(childV1);
         Entity child2V2 = OsgiVersionMoreEntityTest.addItemFromCatalog(origManagementContext, origApp, catV2);
-        Assert.assertEquals(OsgiVersionMoreEntityTest.doEffectorCallBrooklyn(child2V2), "HI BROOKLYN");
+        OsgiVersionMoreEntityTest.assertV2EffectorCall(child2V2);
         
         // now transform, with a version change
         CompoundTransformer transformer = CompoundTransformer.builder().changeCatalogItemId(
@@ -72,12 +69,12 @@ public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
         doPartialRebindByObjectById(transformer, childV1.getId());
 
         Entity childV2 = origManagementContext.lookup(childV1.getId(), Entity.class);
-        Assert.assertEquals(OsgiVersionMoreEntityTest.doEffectorCallBrooklyn(childV2), "HI BROOKLYN");
+        OsgiVersionMoreEntityTest.assertV2EffectorCall(childV2);
         
         // _v1_ child also points to new implementation -- saying HI
-        Assert.assertEquals(OsgiVersionMoreEntityTest.doEffectorCallBrooklyn(childV1), "HI BROOKLYN");
+        OsgiVersionMoreEntityTest.assertV2EffectorCall(childV1);
 
-        // in fact they are the same
+        // (in fact they are the same)
         Assert.assertTrue(childV1==childV2, "Expected same instance: "+childV1+" / "+childV2);
     }
 
