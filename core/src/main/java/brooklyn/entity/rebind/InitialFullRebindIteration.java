@@ -78,15 +78,10 @@ public class InitialFullRebindIteration extends RebindIteration {
 
     protected void loadManifestFiles() throws Exception {
         checkEnteringPhase(1);
-        Preconditions.checkState(mementoRawData==null && mementoManifest==null, "Memento data should not yet be set when calling this");
-        
+        Preconditions.checkState(mementoRawData==null, "Memento raw data should not yet be set when calling this");
         mementoRawData = persistenceStoreAccess.loadMementoRawData(exceptionHandler);
         
-        // TODO building the manifests should be part of this class (or parent)
-        // it does not have anything to do with the persistence store!
-        mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
-
-        determineStateFromManifestFiles();
+        preprocessManifestFiles();
         
         if (mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.HOT_BACKUP) {
             if (!isEmpty) { 

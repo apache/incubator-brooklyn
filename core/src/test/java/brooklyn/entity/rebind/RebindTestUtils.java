@@ -145,6 +145,7 @@ public class RebindTestUtils {
         PersistenceObjectStore objectStore;
         Duration persistPeriod = Duration.millis(100);
         boolean forLive;
+        boolean enableOsgi = false;
         boolean emptyCatalog;
         
         ManagementContextBuilder(File mementoDir, ClassLoader classLoader) {
@@ -178,6 +179,11 @@ public class RebindTestUtils {
             return this;
         }
 
+        public ManagementContextBuilder enableOsgi(boolean val) {
+            this.enableOsgi = val;
+            return this;
+        }
+
         public ManagementContextBuilder emptyCatalog() {
             this.emptyCatalog = true;
             return this;
@@ -199,7 +205,7 @@ public class RebindTestUtils {
             if (forLive) {
                 unstarted = new LocalManagementContext(properties);
             } else {
-                unstarted = new LocalManagementContextForTests(properties);
+                unstarted = LocalManagementContextForTests.builder(true).useProperties(properties).disableOsgi(!enableOsgi).build();
             }
             
             objectStore.injectManagementContext(unstarted);

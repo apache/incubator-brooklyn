@@ -35,9 +35,9 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
 
     private static final Logger log = LoggerFactory.getLogger(ActivePartialRebindTest.class);
     
-    protected void doPartialRebindByObjectById(String ...ids) {
+    protected void doPartialRebindOfIds(String ...objectsToRebindIds) {
         RebindManagerImpl rm = (RebindManagerImpl) origManagementContext.getRebindManager();
-        rm.testRebindNodeXXX(ids);        
+        rm.rebindPartialActive(null, objectsToRebindIds);        
     }
     
     @Test
@@ -46,7 +46,7 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
         Entities.manage(c1);
         AbstractEntity c1r = Entities.deproxy(c1);
         
-        doPartialRebindByObjectById(c1.getId());
+        doPartialRebindOfIds(c1.getId());
         
         BrooklynObject c2 = origManagementContext.lookup(c1.getId());
         AbstractEntity c2r = Entities.deproxy((Entity)c2);
@@ -64,7 +64,7 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
         gcAndLog("before");
         long used0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         for (int i=0; i<500; i++) {
-            doPartialRebindByObjectById(c1.getId());
+            doPartialRebindOfIds(c1.getId());
             origManagementContext.getGarbageCollector().gcIteration();
             gcAndLog("iteration "+i);
             if (i==5) used0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory(); 

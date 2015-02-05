@@ -32,6 +32,7 @@ import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
@@ -215,7 +216,8 @@ public class OsgiManager {
 
                 Throwable cause = e.getCause();
                 if (cause != null && cause.getMessage().contains("Unresolved constraint in bundle")) {
-                    log.warn("Unresolved constraint resolving OSGi bundle "+catalogBundle+" to load "+type+": "+cause.getMessage());
+                    log.warn("Unresolved constraint resolving OSGi bundle "+catalogBundle+" to load "+type+": "+cause.getMessage()+
+                        (BrooklynVersion.isDevelopmentEnvironment() ? " (may be due to IDE / dev env; try a maven build)" : ""));
                     if (log.isDebugEnabled()) log.debug("Trace for OSGi resolution failure", e);
                 }
             }

@@ -20,6 +20,7 @@ package brooklyn.entity.rebind;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -43,6 +44,7 @@ import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils.CreateBackupMode;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
+import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
@@ -362,7 +364,8 @@ public class RebindManagerImpl implements RebindManager {
         if (persistenceStoreAccess != null) persistenceStoreAccess.stop(true);
     }
     
-    public void testRebindNodeXXX(String ...objectsToRebindIds) {
+        
+    public void rebindPartialActive(CompoundTransformer transformer, Iterator<BrooklynObject> objectsToRebind) {
         final ClassLoader classLoader = 
             managementContext.getCatalog().getRootClassLoader();
         final RebindExceptionHandler exceptionHandler = 
@@ -378,15 +381,19 @@ public class RebindManagerImpl implements RebindManager {
         ActivePartialRebindIteration iteration = new ActivePartialRebindIteration(this, mode, classLoader, exceptionHandler,
             rebindActive, readOnlyRebindCount, rebindMetrics, persistenceStoreAccess);
 
+        iteration.setObjectIterator(objectsToRebind);
+        iteration.applyTransformer(transformer);
+        iteration.run();
+    }
+    
+    public void rebindPartialActive(CompoundTransformer transformer, String ...objectsToRebindIds) {
         List<BrooklynObject> objectsToRebind = MutableList.of();
         for (String objectId: objectsToRebindIds) {
             BrooklynObject obj = managementContext.lookup(objectId);
             if (obj instanceof Entity) obj = Entities.deproxy((Entity)obj);
             objectsToRebind.add(obj);
         }
-        
-        iteration.setObjectIterator(objectsToRebind.iterator());
-        iteration.run();
+        rebindPartialActive(transformer, objectsToRebind.iterator());
     }
     
     protected ManagementNodeState getRebindMode() {

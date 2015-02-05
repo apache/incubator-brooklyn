@@ -74,7 +74,8 @@ public class ActivePartialRebindIteration extends RebindIteration {
     }
     
     public void applyTransformer(CompoundTransformer transformer) {
-        transformers.add(transformer);
+        if (transformer!=null)
+            transformers.add(transformer);
     }
     
     @Override
@@ -88,10 +89,7 @@ public class ActivePartialRebindIteration extends RebindIteration {
         Builder mementoRawBuilder = BrooklynMementoRawData.builder();
 
         /*
-         * TODO detail...
-         * This unmanages and re-manages. Not sure if that's ideal.
-         * Probably we should try to pause it, or switch to a model
-         * where each entity can be managed by any node.
+         * Unmanagement is done as part of the "manage" call, entity by entity.
          */
 
         objectsToRebindFinal = MutableSet.of();
@@ -107,7 +105,6 @@ public class ActivePartialRebindIteration extends RebindIteration {
             }
         }
         
-        // TODO unmanage? pause?
         // get serialization
         for (BrooklynObject bo: objectsToRebindFinal) {
             Memento m = ((BrooklynObjectInternal)bo).getRebindSupport().getMemento();
@@ -115,13 +112,10 @@ public class ActivePartialRebindIteration extends RebindIteration {
             String mr = ((BrooklynMementoPersisterToObjectStore)p).getMementoSerializer().toString(m);
             mementoRawBuilder.put(BrooklynObjectType.of(bo), bo.getId(), mr);
         }
-
         // then rebuild
         mementoRawData = mementoRawBuilder.build();
-        // TODO see comment in InitialFullRebindIteration
-        mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
 
-        determineStateFromManifestFiles();
+        preprocessManifestFiles();
 
         // skip this phase, as catalog is not being changed
         // (and we don't want to unload things)
@@ -138,8 +132,11 @@ public class ActivePartialRebindIteration extends RebindIteration {
     }
 
     @Override
-    protected void determineStateFromManifestFiles() {
-        super.determineStateFromManifestFiles();
+    protected void preprocessManifestFiles() throws Exception {
+        for (CompoundTransformer transformer: transformers) {
+            mementoRawData = transformer.transform(mementoRawData);
+        }
+        super.preprocessManifestFiles();
         overwritingMaster = true;
     }
 

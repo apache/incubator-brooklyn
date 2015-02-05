@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 
-import brooklyn.test.TestResourceUnavailableException;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
@@ -44,16 +43,19 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.PolicySpec;
+import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -128,8 +130,12 @@ public class OsgiVersionMoreEntityTest {
     protected CatalogItem<?, ?> addCatalogItemWithTypeAsName(String type, String version, String ...libraries) {
         return addCatalogItemWithNameAndType(type, version, type, libraries);
     }
-    @SuppressWarnings("deprecation")
     protected CatalogItem<?, ?> addCatalogItemWithNameAndType(String symName, String version, String type, String ...libraries) {
+        return addCatalogItemWithNameAndType(mgmt, symName, version, type, libraries);
+    }
+
+    @SuppressWarnings("deprecation")
+    static CatalogItem<?, ?> addCatalogItemWithNameAndType(ManagementContext mgmt, String symName, String version, String type, String ...libraries) {
         CatalogEntityItemDto c1 = newCatalogItemWithNameAndType(symName, version, type, libraries);
         mgmt.getCatalog().addItem(c1);
         CatalogItem<?, ?> c2 = mgmt.getCatalog().getCatalogItem(type, version);
@@ -148,15 +154,20 @@ public class OsgiVersionMoreEntityTest {
         return c1;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected Entity addItemFromCatalog(CatalogItem<?, ?> c2) {
+        return addItemFromCatalog(mgmt, app, c2);
+    }
+    
+    @Beta
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static Entity addItemFromCatalog(ManagementContext mgmt, TestApplication parent, CatalogItem<?, ?> c2) {
         BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, c2);
         EntitySpec spec = EntitySpec.create( (Class)loader.loadClass(c2.getJavaType()) );
         // not a great test as we set the ID here; but:
         // YAML test will do better;
         // and we can check that downstream items are loaded correctly
         spec.catalogItemId(c2.getId());
-        Entity me = app.createAndManageChild(spec);
+        Entity me = parent.createAndManageChild(spec);
         return me;
     }
 
@@ -188,14 +199,27 @@ public class OsgiVersionMoreEntityTest {
         return me.invoke(Effectors.effector(String.class, "sayHI").buildAbstract(), ImmutableMap.of("name", "brooklyn")).getUnchecked();
     }
 
+    public static CatalogItem<?, ?> addMoreEntityV1(ManagementContext mgmt, String versionToRegister) {
+        return addCatalogItemWithNameAndType(mgmt, 
+            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            versionToRegister,
+            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
+    }
+    public static CatalogItem<?, ?> addMoreEntityV2(ManagementContext mgmt, String versionToRegister) {
+        return addCatalogItemWithNameAndType(mgmt,
+            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            versionToRegister,
+            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            BROOKLYN_TEST_MORE_ENTITIES_V2_URL,
+            BROOKLYN_TEST_OSGI_ENTITIES_URL);
+    }
+    
     @Test
     public void testMoreEntitiesV1() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
 
-        CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(
-                OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
-                TEST_VERSION,
-                BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
+        CatalogItem<?, ?> c2 = addMoreEntityV1(mgmt, TEST_VERSION);
         
         // test load and instantiate
         Entity me = addItemFromCatalog(c2);

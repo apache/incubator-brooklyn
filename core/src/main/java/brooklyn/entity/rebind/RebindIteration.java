@@ -278,9 +278,16 @@ public abstract class RebindIteration {
             throw new IllegalStateException("Phase mismatch: should be phase "+targetPhase+" but is currently "+phase);
     }
     
-    protected void determineStateFromManifestFiles() {
+    protected void preprocessManifestFiles() throws Exception {
         checkContinuingPhase(1);
 
+        Preconditions.checkState(mementoRawData!=null, "Memento raw data should be set when calling this");
+        Preconditions.checkState(mementoManifest==null, "Memento data should not yet be set when calling this");
+        
+        // TODO building the manifests should be part of this class (or parent)
+        // it does not have anything to do with the persistence store!
+        mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
+        
         overwritingMaster = false;
         isEmpty = mementoManifest.isEmpty();
     }
