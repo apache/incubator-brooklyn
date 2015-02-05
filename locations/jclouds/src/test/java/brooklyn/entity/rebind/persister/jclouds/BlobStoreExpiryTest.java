@@ -205,8 +205,7 @@ public class BlobStoreExpiryTest {
             .add("X-Auth-New-Token", "" + true)
             .add("X-Auth-Token-Lifetime", "" + expiration.toSeconds())
             );
-//        curl -v https://ams01.objectstorage.softlayer.net/auth/v1.0/v1.0 -H "X-Auth-User: IBMOS321366-2:cloudsoft" -H "X-Auth-Key: 06cef1beff5432cc9453934e06beb85de5f0a53a2340d7e0cd4a4705655e8132" -H "Host: ams01.objectstorage.softlayer.net" -H "X-Auth-New-Token: true" -H "X-Auth-Token-Lifetime: 15"
-//            -H "Host: ams01.objectstorage.softlayer.net" -H "X-Auth-New-Token: true" -H "X-Auth-Token-Lifetime: 15"
+//        curl -v https://ams01.objectstorage.softlayer.net/auth/v1.0/v1.0 -H "X-Auth-User: IBMOS12345-2:username" -H "X-Auth-Key: <API KEY>" -H "Host: ams01.objectstorage.softlayer.net" -H "X-Auth-New-Token: true" -H "X-Auth-Token-Lifetime: 15"
         log.info("Requested token with explicit lifetime: "+expiration+" at "+url+"\n"+response+"\n"+response.getHeaderLists());
         return response;
     }
