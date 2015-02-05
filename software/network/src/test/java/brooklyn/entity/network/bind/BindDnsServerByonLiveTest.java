@@ -20,6 +20,7 @@ package brooklyn.entity.network.bind;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
@@ -33,7 +34,7 @@ public class BindDnsServerByonLiveTest extends BrooklynAppLiveTestSupport {
 
     @Test(groups = "Live")
     @Parameters({"locationSpec"})
-    public void testDns(String locationSpec) throws Exception {
+    public void testDns(@Optional String locationSpec) throws Exception {
         if (Strings.isBlank(locationSpec)) {
             LOG.info("{} got no spec, skipping test", this);
         } else {

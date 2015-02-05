@@ -1059,6 +1059,11 @@
                             <module name="FileTabCharacter">
                                 <property name="eachLine" value="true" />
                             </module>
+                            <module name="TreeWalker">
+                                <module name="IllegalImport">
+                                    <property name="illegalPkgs" value="com.google.api.client.repackaged"/>
+                                </module>
+                            </module>
                         </module>
                     </checkstyleRules>
                 </configuration>
