@@ -262,7 +262,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
      *  <p>
      *  (Marked Beta as that argument will likely be removed.)
      *  
-     *  @since 1.7.0 */
+     *  @since 0.7.0 */
     @Beta
     public static BlobStoreContext newBlobstoreContext(String provider, @Nullable String endpoint, String identity, String credential) {
         Properties overrides = new Properties();
