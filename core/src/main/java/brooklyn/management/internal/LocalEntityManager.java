@@ -65,9 +65,9 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Preconditions;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -285,7 +285,7 @@ public class LocalEntityManager implements EntityManagerInternal {
         }
 
         final List<EntityInternal> allEntities =  Lists.newArrayList();
-        recursively(e, new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
+        Predicate<EntityInternal> manageEntity = new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
             ManagementTransitionMode mode = getLastManagementTransitionMode(it.getId());
             if (mode==null) {
                 setManagementTransitionMode(it, mode = initialMode);
@@ -309,9 +309,13 @@ public class LocalEntityManager implements EntityManagerInternal {
                     // silently bail out
                     return false;
                 } else {
-                    // on rebind, should not have any deployed instances
-                    log.warn("Already deployed "+it+" when managing "+mode+"/"+initialMode+"; ignoring this and all descendants");
-                    return false;
+                    if (mode.wasPrimary() && mode.isPrimary()) {
+                        // active partial rebind; continue
+                    } else {
+                        // on rebind, should not have any deployed instances
+                        log.warn("Already deployed "+it+" when managing "+mode+"/"+initialMode+"; ignoring this and all descendants");
+                        return false;
+                    }
                 }
             }
             
@@ -325,7 +329,12 @@ public class LocalEntityManager implements EntityManagerInternal {
             preManageNonRecursive(it, mode);
             it.getManagementSupport().onManagementStarting( new ManagementTransitionInfo(managementContext, mode) ); 
             return manageNonRecursive(it, mode);
-        } });
+        } };
+        if (initialMode.wasPrimary() && initialMode.isPrimary()) {
+            manageEntity.apply( (EntityInternal)e );
+        } else {
+            recursively(e, manageEntity);
+        }
         
         for (EntityInternal it : allEntities) {
             if (!it.getManagementSupport().isFullyManaged()) {

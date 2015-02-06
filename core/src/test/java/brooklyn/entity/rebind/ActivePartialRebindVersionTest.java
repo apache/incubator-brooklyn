@@ -24,11 +24,14 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
+import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.osgi.OsgiTestResources;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
+import brooklyn.util.collections.MutableList;
 
 public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
 
@@ -64,8 +67,8 @@ public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
         
         // now transform, with a version change
         CompoundTransformer transformer = CompoundTransformer.builder().changeCatalogItemId(
-            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, "1.0",
-            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, "1.1").build();
+            catV1.getSymbolicName(), catV1.getVersion(),
+            catV2.getSymbolicName(), catV2.getVersion()).build();
         doPartialRebindByObjectById(transformer, childV1.getId());
 
         Entity childV2 = origManagementContext.lookup(childV1.getId(), Entity.class);
@@ -76,6 +79,41 @@ public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
 
         // (in fact they are the same)
         Assert.assertTrue(childV1==childV2, "Expected same instance: "+childV1+" / "+childV2);
+    }
+
+    @Test
+    public void testSwitchingVersionsInCluster() throws Exception {
+        CatalogItem<?, ?> catV1 = OsgiVersionMoreEntityTest.addMoreEntityV1(origManagementContext, "1.0");
+        CatalogItem<?, ?> catV2 = OsgiVersionMoreEntityTest.addMoreEntityV2(origManagementContext, "1.1");
+        
+        // could do a yaml test in a downstream project (no camp available here)
+//        CreationResult<List<Entity>, List<String>> clusterR = EntityManagementUtils.addChildren(origApp, 
+//              "services:\n"
+//            + "- type: "+DynamicCluster.class.getName()+"\n"
+//            + "  initialSize: 1\n"
+//            + "  entitySpec: { type: "+catV1.getId()+" }\n", true);
+        DynamicCluster cluster = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+            .configure(DynamicCluster.INITIAL_SIZE, 1)
+            .configure(DynamicCluster.MEMBER_SPEC, CatalogUtils.createEntitySpec(origManagementContext, catV1))
+            );
+        cluster.start(MutableList.of(origApp.newSimulatedLocation()));
+        Entity childV1 = MutableList.copyOf(cluster.getChildren()).get(1);
+        
+        OsgiVersionMoreEntityTest.assertV1EffectorCall(childV1);
+        
+        // now transform, with a version change
+        CompoundTransformer transformer = CompoundTransformer.builder().changeCatalogItemId(
+            catV1.getSymbolicName(), catV1.getVersion(),
+            catV2.getSymbolicName(), catV2.getVersion()).build();
+        doPartialRebindByObjectById(transformer, cluster.getId(), childV1.getId());
+
+        // existing child now points to new implementation -- saying HI
+        OsgiVersionMoreEntityTest.assertV2EffectorCall(childV1);
+
+        // and scale out new child also gets new impl
+        cluster.resize(2);
+        Entity child2 = MutableList.copyOf(cluster.getChildren()).get(2);
+        OsgiVersionMoreEntityTest.assertV2EffectorCall(child2);
     }
 
 }

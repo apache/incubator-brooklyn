@@ -142,7 +142,7 @@ public class ActivePartialRebindIteration extends RebindIteration {
 
     @Override
     protected Collection<String> getMementoRootEntities() {
-        // TODO must parents
+        // all entities are roots here, because we are not recursing
         return memento.getEntityIds();
     }
     
