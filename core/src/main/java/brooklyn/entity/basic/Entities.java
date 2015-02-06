@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -106,6 +107,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
+import com.google.common.util.concurrent.Atomics;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Convenience methods for working with entities.
@@ -716,36 +722,54 @@ public class Entities {
 
     /**
      * Stops, destroys, and unmanages all apps in the given context, and then terminates the management context.
+     * 
+     * Apps will be stopped+destroyed+unmanaged concurrently, waiting for all to complete.
      */
-    public static void destroyAll(ManagementContext mgmt) {
-        Exception error = null;
+    public static void destroyAll(final ManagementContext mgmt) {
         if (mgmt instanceof NonDeploymentManagementContext) {
             // log here because it is easy for tests to destroyAll(app.getMgmtContext())
             // which will *not* destroy the mgmt context if the app has been stopped!
             log.warn("Entities.destroyAll invoked on non-deployment "+mgmt+" - not likely to have much effect! " +
-                    "(This usually means the mgmt context has been taken from entity has been destroyed. " +
+                    "(This usually means the mgmt context has been taken from an entity that has been destroyed. " +
                     "To destroy other things on the management context ensure you keep a handle to the context " +
                     "before the entity is destroyed, such as by creating the management context first.)");
         }
         if (!mgmt.isRunning()) return;
-        log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
-        for (Application app: mgmt.getApplications()) {
-            log.debug("destroying app "+app+" (managed? "+isManaged(app)+"; mgmt is "+mgmt+")");
-            try {
-                destroy(app);
-                log.debug("destroyed app "+app+"; mgmt now "+mgmt);
-            } catch (Exception e) {
-                log.warn("problems destroying app "+app+" (mgmt now "+mgmt+", will rethrow at least one exception): "+e);
-                if (error==null) error = e;
+        
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+        List<ListenableFuture<?>> futures = Lists.newArrayList();
+        final AtomicReference<Exception> error = Atomics.newReference();
+        try {
+            log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
+            for (final Application app: mgmt.getApplications()) {
+                futures.add(executor.submit(new Runnable() {
+                    public void run() {
+                        log.debug("destroying app "+app+" (managed? "+isManaged(app)+"; mgmt is "+mgmt+")");
+                        try {
+                            destroy(app);
+                            log.debug("destroyed app "+app+"; mgmt now "+mgmt);
+                        } catch (Exception e) {
+                            log.warn("problems destroying app "+app+" (mgmt now "+mgmt+", will rethrow at least one exception): "+e);
+                            error.compareAndSet(null, e);
+                        }
+                    }}));
             }
+            Futures.allAsList(futures).get();
+            
+            for (Location loc : mgmt.getLocationManager().getLocations()) {
+                destroyCatching(loc);
+            }
+            if (mgmt instanceof ManagementContextInternal) {
+                ((ManagementContextInternal)mgmt).terminate();
+            }
+            if (error.get() != null) throw Exceptions.propagate(error.get());
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        } catch (ExecutionException e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            executor.shutdownNow();
         }
-        for (Location loc : mgmt.getLocationManager().getLocations()) {
-            destroyCatching(loc);
-        }
-        if (mgmt instanceof ManagementContextInternal) {
-            ((ManagementContextInternal)mgmt).terminate();
-        }
-        if (error!=null) throw Exceptions.propagate(error);
     }
 
     /** Same as {@link #destroyAll(ManagementContext)} but catching all errors */
