@@ -54,12 +54,12 @@ public abstract class AbstractBlueprintTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractBlueprintTest.class);
     
-    private File mementoDir;
-    private ClassLoader classLoader = AbstractBlueprintTest.class.getClassLoader();
+    protected File mementoDir;
+    protected ClassLoader classLoader = AbstractBlueprintTest.class.getClassLoader();
     
-    private ManagementContext mgmt;
-    private SimpleYamlLauncherForTests launcher;
-    private BrooklynLauncher viewer;
+    protected ManagementContext mgmt;
+    protected SimpleYamlLauncherForTests launcher;
+    protected BrooklynLauncher viewer;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -110,6 +110,15 @@ public abstract class AbstractBlueprintTest {
 
     protected void runTest(String yamlFile) throws Exception {
         final Application app = launcher.launchAppYaml(yamlFile);
+        
+        assertNoFires(app);
+        
+        Application newApp = rebind();
+        assertNoFires(newApp);
+    }
+    
+    protected void runTest(Reader yaml) throws Exception {
+        final Application app = launcher.launchAppYaml(yaml);
         
         assertNoFires(app);
         
