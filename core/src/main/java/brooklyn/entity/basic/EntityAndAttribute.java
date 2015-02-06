@@ -26,7 +26,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Supplier;
 
 /**
- * A tuple containing an {@link Entity} and an {@link Attribute}, which is assumed to be present on the entity.
+ * A tuple containing an {@link Entity} and an {@link AttributeSensor}, which is assumed to be present on the entity.
  * <p>
  * Allows retrieval of the attribute {@link #getValue() value} or can be used instead where a {@link Supplier} for
  * the attribute value is required.
@@ -36,8 +36,15 @@ public class EntityAndAttribute<T> implements Supplier<T> {
     private final Entity entity;
     private final AttributeSensor<T> attribute;
 
-    public static <T> EntityAndAttribute<T> supplier(Entity entity, AttributeSensor<T> attribute) {
+    public static <T> EntityAndAttribute<T> create(Entity entity, AttributeSensor<T> attribute) {
         return new EntityAndAttribute<T>(entity, attribute);
+    }
+
+    /**
+     * @deprecated since 0.7.0; use {@link #create(Entity, AttributeSensor)}; this does not relate to {@link Supplier}
+     */
+    public static <T> EntityAndAttribute<T> supplier(Entity entity, AttributeSensor<T> attribute) {
+        return create(entity, attribute);
     }
 
     public EntityAndAttribute(Entity entity, AttributeSensor<T> attribute) {
