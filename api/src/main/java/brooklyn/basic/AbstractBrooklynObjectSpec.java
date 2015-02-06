@@ -121,4 +121,21 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
         if (Modifier.isAbstract(val.getModifiers())) throw new IllegalStateException("Implementation "+val+" is abstract, but must be a non-abstract class");
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj==null) return false;
+        if (!obj.getClass().equals(getClass())) return false;
+        AbstractBrooklynObjectSpec<?,?> other = (AbstractBrooklynObjectSpec<?,?>)obj;
+        if (!Objects.equal(getDisplayName(), other.getDisplayName())) return false;
+        if (!Objects.equal(getCatalogItemId(), other.getCatalogItemId())) return false;
+        if (!Objects.equal(getType(), other.getType())) return false;
+        if (!Objects.equal(getTags(), other.getTags())) return false;
+        return true;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getCatalogItemId(), getDisplayName(), getType(), getTags());
+    }
+    
 }

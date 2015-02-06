@@ -37,17 +37,22 @@ import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
@@ -129,6 +134,12 @@ public class XmlMementoSerializerTest {
     }
 
     @Test
+    public void testClass() throws Exception {
+        Class<?> t = XmlMementoSerializer.class;
+        assertSerializeAndDeserialize(t);
+    }
+
+    @Test
     public void testEntity() throws Exception {
         final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ManagementContext managementContext = app.getManagementContext();
@@ -177,6 +188,27 @@ public class XmlMementoSerializerTest {
         } finally {
             Entities.destroyAll(managementContext);
         }
+    }
+
+    @Test
+    public void testEntitySpec() throws Exception {
+        EntitySpec<?> obj = EntitySpec.create(TestEntity.class);
+        assertSerializeAndDeserialize(obj);
+    }
+    
+    @Test
+    public void testEntitySpecFromOsgi() throws Exception {
+        ManagementContext mgmt = LocalManagementContextForTests.builder(true).disableOsgi(false).build();
+        CatalogItem<?, ?> ci = OsgiVersionMoreEntityTest.addMoreEntityV1(mgmt, "1.0");
+        
+        EntitySpec<DynamicCluster> spec = EntitySpec.create(DynamicCluster.class)
+            .configure(DynamicCluster.INITIAL_SIZE, 1)
+            .configure(DynamicCluster.MEMBER_SPEC, CatalogUtils.createEntitySpec(mgmt, ci));
+
+        serializer.setLookupContext(new LookupContextImpl(mgmt,
+            ImmutableList.<Entity>of(), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),
+            ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.<CatalogItem<?,?>>of(), true));
+        assertSerializeAndDeserialize(spec);
     }
 
     @Test
