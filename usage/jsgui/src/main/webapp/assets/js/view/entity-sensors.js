@@ -48,6 +48,7 @@ define([
             'click .refresh': 'updateSensorsNow',
             'click .filterEmpty':'toggleFilterEmpty',
             'click .toggleAutoRefresh':'toggleAutoRefresh',
+            'click #sensors-table div.secret-info':'toggleSecrecyVisibility',
             
             'mouseup .valueOpen':'valueOpen',
             'mouseover #sensors-table tbody tr':'noteFloatMenuActive',
@@ -104,17 +105,25 @@ define([
                                              sensorName = row[0],
                                              actions = that.getSensorActions(sensorName);
                                          
+                                         // NB: the row might not yet exist
+                                         var $row = $('tr[id="'+sensorName+'"]');
+                                         
                                          // datatables doesn't seem to expose any way to modify the html in place for a cell,
                                          // so we rebuild
                                          
                                          var result = "<span class='value'>"+(hasEscapedValue ? escapedValue : '')+"</span>";
+
+                                         var isSecret = Util.isSecret(sensorName);
+                                         if (isSecret) {
+                                            result += "<span class='secret-indicator'>(hidden)</span>";
+                                         }
+                                         
                                          if (actions.open)
                                              result = "<a href='"+actions.open+"'>" + result + "</a>";
                                          if (escapedValue==null || escapedValue.length < 3)
                                              // include whitespace so we can click on it, if it's really small
                                              result += "&nbsp;&nbsp;&nbsp;&nbsp;";
 
-                                         var $row = $('tr[id="'+sensorName+'"]');
                                          var existing = $row.find('.dynamic-contents');
                                          // for the json url, use the full url (relative to window.location.href)
                                          var jsonUrl = actions.json ? new URI(actions.json).resolve(new URI(window.location.href)).toString() : null;
@@ -159,7 +168,9 @@ define([
                                          		"<div class='floatLeft'><span class='icon-chevron-down hasFloatDown'></span>" +
                                          		downMenu +
                                          		"</div>";
-                                         result = "<div class='floatGroup'>" + result + "</div>";
+                                         result = "<div class='floatGroup"+
+                                            (isSecret ? " secret-info" : "")+
+                                            "'>" + result + "</div>";
                                          // also see updateFloatMenus which wires up the JS for these classes
                                          
                                          return result;
@@ -445,6 +456,10 @@ define([
         enableAutoRefresh: function(isEnabled) {
             this.refreshActive = isEnabled;
             return this;
+        },
+        
+        toggleSecrecyVisibility: function(event) {
+            $(event.target).closest('.secret-info').toggleClass('secret-revealed');
         },
         
         /**

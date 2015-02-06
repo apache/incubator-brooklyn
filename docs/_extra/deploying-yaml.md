@@ -27,6 +27,8 @@ you can:
 $ curl -T ./blueprint.yaml -X POST http://localhost:8081/v1/applications
 {% endhighlight %}
 
+You may also need a `-H "Content-Type: application/yaml"` depending on type configuration.
+(Not usually for this, but often for other calls.)
 
 - In the web-console, select the "YAML" tab in the "Add Application" wizard:
 

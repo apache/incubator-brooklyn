@@ -162,6 +162,17 @@ define([
             return alternateMessage;
         }
     };
+    
+    secretWords = [ "password", "passwd", "credential", "secret", "private", "access.cert", "access.key" ];
+    
+    Util.isSecret = function (key) {
+        if (!key) return false;
+        key = key.toString().toLowerCase();
+        for (secretWord in secretWords)
+            if (key.indexOf(secretWords[secretWord]) >= 0)
+                return true;
+        return false; 
+    };
 
     return Util;
 
