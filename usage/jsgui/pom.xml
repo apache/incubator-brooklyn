@@ -238,17 +238,6 @@
                             <exclude>**/src/main/dev/js/libs/*</exclude>
                             <exclude>**/src/build/requirejs-maven-plugin/r.js</exclude>
                             <exclude>**/src/test/javascript/config.txt</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/js/i18n/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/angular-1.2.19/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/angular-1.2.19/i18n/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/angular-translate/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/angular-translate-loader-static-files/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/angular-translate-loader-url/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/angular-translate-storage-cookie/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/angular-translate-storage-local/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/mcasimir-mobile-angular-ui-be39011/dist/css/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/mcasimir-mobile-angular-ui-be39011/dist/fonts/*</exclude>
-                            <exclude>**/src/main/webapp/assets/mobile/libs/mcasimir-mobile-angular-ui-be39011/dist/js/*</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
