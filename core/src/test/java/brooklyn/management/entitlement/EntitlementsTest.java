@@ -32,6 +32,8 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.entitlement.Entitlements.EntityAndItem;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.test.entity.LocalManagementContextForTests;
 
 @Test
@@ -156,7 +158,7 @@ public class EntitlementsTest {
     public void testAppSpecificRootEntitlement() {
         EntitlementManager root = Entitlements.root();
         assertTrue(root.isEntitled(null, Entitlements.SEE_ENTITY, app));
-        assertTrue(root.isEntitled(null, Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, "any-eff")));
+        assertTrue(root.isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, StringAndArgument.of("any-eff", null))));
         assertTrue(root.isEntitled(null, Entitlements.SEE_SENSOR, Entitlements.EntityAndItem.of(app, "any-sensor")));
         assertTrue(root.isEntitled(null, Entitlements.SEE_SENSOR, Entitlements.EntityAndItem.of(app, "password")));
         assertTrue(root.isEntitled(null, Entitlements.DEPLOY_APPLICATION, Entitlements.EntityAndItem.of(app, null)));
@@ -176,7 +178,7 @@ public class EntitlementsTest {
     public void testAppSpecificMinimalEntitlement() {
         EntitlementManager minimal = Entitlements.minimal();
         assertFalse(minimal.isEntitled(null, Entitlements.SEE_ENTITY, app));
-        assertFalse(minimal.isEntitled(null, Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, "any-eff")));
+        assertFalse(minimal.isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, StringAndArgument.of("any-eff", null))));
         assertFalse(minimal.isEntitled(null, Entitlements.SEE_SENSOR, Entitlements.EntityAndItem.of(app, "any-sensor")));
         assertFalse(minimal.isEntitled(null, Entitlements.SEE_SENSOR, Entitlements.EntityAndItem.of(app, "password")));
         assertFalse(minimal.isEntitled(null, Entitlements.DEPLOY_APPLICATION, Entitlements.EntityAndItem.of(app, null)));
@@ -196,7 +198,7 @@ public class EntitlementsTest {
     public void testAppSpecificReadOnlyEntitlement() {
         EntitlementManager readOnly = Entitlements.readOnly();
         assertTrue(readOnly.isEntitled(null, Entitlements.SEE_ENTITY, app));
-        assertFalse(readOnly.isEntitled(null, Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, "any-eff")));
+        assertFalse(readOnly.isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, StringAndArgument.of("any-eff", null))));
         assertTrue(readOnly.isEntitled(null, Entitlements.SEE_SENSOR, Entitlements.EntityAndItem.of(app, "any-sensor")));
         assertFalse(readOnly.isEntitled(null, Entitlements.SEE_SENSOR, Entitlements.EntityAndItem.of(app, "password")));
         assertFalse(readOnly.isEntitled(null, Entitlements.DEPLOY_APPLICATION, Entitlements.EntityAndItem.of(app, null)));

@@ -59,6 +59,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
@@ -438,7 +439,8 @@ public class BrooklynRestResourceUtils {
     
     public Task<?> expunge(final Entity entity, final boolean release) {
         if (mgmt.getEntitlementManager().isEntitled(Entitlements.getEntitlementContext(),
-                Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(entity, "expunge"))) {
+                Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(entity, 
+                    StringAndArgument.of("expunge", MutableMap.of("release", release))))) {
             return mgmt.getExecutionManager().submit(
                     MutableMap.of("displayName", "expunging " + entity, "description", "REST call to expunge entity "
                             + entity.getDisplayName() + " (" + entity + ")"), new Runnable() {

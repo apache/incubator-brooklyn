@@ -25,6 +25,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.guava.Maybe;
@@ -61,6 +62,9 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         if (mgmt!=null) {
             osgi = ((ManagementContextInternal)mgmt).getOsgiManager();
             if (osgi.isPresent() && getBundles()!=null && !getBundles().isEmpty()) {
+                if (!Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, catalogItemId))
+                    return Maybe.absent("Not entitled to use this catalog entry");
+                
                 clazz = osgi.get().tryResolveClass(className, getBundles());
                 if (clazz.isPresent())
                     return (Maybe)clazz;

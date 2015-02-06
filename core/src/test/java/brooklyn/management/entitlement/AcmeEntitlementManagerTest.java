@@ -24,6 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 
 public class AcmeEntitlementManagerTest extends AcmeEntitlementManagerTestFixture {
 
@@ -48,7 +49,7 @@ public class AcmeEntitlementManagerTest extends AcmeEntitlementManagerTestFixtur
         Entitlements.setEntitlementContext(entitlementContext);
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.ROOT, null));
         Assert.assertTrue(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, app));
-        Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, "any-eff")));
+        Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, StringAndArgument.of("any-eff", null))));
         Assert.assertFalse(Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_SENSOR, EntityAndItem.of(app, "any-sensor")));
         // and cannot invoke methods
         confirmEffectorEntitlement(false);

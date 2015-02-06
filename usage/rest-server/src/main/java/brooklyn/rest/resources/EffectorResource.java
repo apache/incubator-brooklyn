@@ -37,6 +37,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.rest.api.EffectorApi;
 import brooklyn.rest.domain.EffectorSummary;
@@ -61,7 +62,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
                     @Override
                     public boolean apply(@Nullable Effector<?> input) {
                         return Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR,
-                                Entitlements.EntityAndItem.of(entity, input.getName()));
+                                Entitlements.EntityAndItem.of(entity, StringAndArgument.of(input.getName(), null)));
                     }
                 })
                 .transform(new Function<Effector<?>, EffectorSummary>() {
@@ -83,7 +84,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
         if (effector.isAbsentOrNull()) {
             throw WebResourceUtils.notFound("Entity '%s' has no effector with name '%s'", entityToken, effectorName);
         } else if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR,
-                Entitlements.EntityAndItem.of(entity, effector.get().getName()))) {
+                Entitlements.EntityAndItem.of(entity, StringAndArgument.of(effector.get().getName(), null)))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to invoke effector %s on entity %s",
                     Entitlements.getEntitlementContext().user(), effector.get().getName(), entity);
         }
