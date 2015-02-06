@@ -55,7 +55,6 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
 
-import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -162,17 +161,8 @@ public class OsgiVersionMoreEntityTest {
         return addItemFromCatalog(mgmt, app, c2);
     }
     
-    @Beta
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static Entity addItemFromCatalog(ManagementContext mgmt, TestApplication parent, CatalogItem<?, ?> c2) {
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, c2);
-        EntitySpec spec = EntitySpec.create( (Class)loader.loadClass(c2.getJavaType()) );
-        // not a great test as we set the ID here; but:
-        // YAML test will do better;
-        // and we can check that downstream items are loaded correctly
-        spec.catalogItemId(c2.getId());
-        Entity me = parent.createAndManageChild(spec);
-        return me;
+        return parent.createAndManageChild( CatalogUtils.createEntitySpec(mgmt, c2) );
     }
 
     public static void assertV1MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
