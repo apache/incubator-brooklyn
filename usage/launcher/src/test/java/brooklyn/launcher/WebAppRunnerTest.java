@@ -70,7 +70,7 @@ public class WebAppRunnerTest {
         Map attributes = MutableMap.copyOf( (Map) bigProps.get("attributes") );
         bigProps.put("attributes", attributes);
 
-        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newDefault();
+        BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newEmpty();
         brooklynProperties.putAll(bigProps);
         brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider");
         brooklynProperties.put("brooklyn.webconsole.security.https.required","false");
@@ -145,7 +145,7 @@ public class WebAppRunnerTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
-                .globalBrooklynPropertiesFile(null)
+                .brooklynProperties(BrooklynProperties.Factory.newEmpty())
                 .brooklynProperties("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider")
                 .webapp("/hello", "hello-world.war")
                 .start();

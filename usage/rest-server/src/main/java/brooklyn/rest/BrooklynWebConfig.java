@@ -22,6 +22,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigMap;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.location.PortRange;
 import brooklyn.rest.security.provider.DelegatingSecurityProvider;
 import brooklyn.rest.security.provider.ExplicitUsersSecurityProvider;
 
@@ -67,7 +68,11 @@ public class BrooklynWebConfig {
 
     public final static ConfigKey<Boolean> HTTPS_REQUIRED = ConfigKeys.newBooleanConfigKey(
             BASE_NAME+".security.https.required",
-            "Whether HTTPS is required", false); 
+            "Whether HTTPS is required; false here can be overridden by CLI option", false); 
+
+    public final static ConfigKey<PortRange> WEB_CONSOLE_PORT = ConfigKeys.newConfigKey(PortRange.class,
+        BASE_NAME+".port",
+        "Port/range for the web console to listen on; can be overridden by CLI option");
 
     public final static ConfigKey<String> KEYSTORE_URL = ConfigKeys.newStringConfigKey(
             BASE_NAME+".security.keystore.url",

@@ -267,7 +267,7 @@ public class CliTest {
         assertTrue(details.contains("app=null"), details);   
         assertTrue(details.contains("script=null"), details);
         assertTrue(details.contains("location=null"), details);
-        assertTrue(details.contains("port=8081"), details);
+        assertTrue(details.contains("port=null"), details);
         assertTrue(details.contains("noConsole=false"), details);
         assertTrue(details.contains("noConsoleSecurity=false"), details);
         assertTrue(details.contains("noShutdownOnExit=false"), details);

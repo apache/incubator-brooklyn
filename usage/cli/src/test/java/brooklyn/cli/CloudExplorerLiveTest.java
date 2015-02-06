@@ -21,6 +21,7 @@ package brooklyn.cli;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import io.airlift.command.Cli;
+import io.airlift.command.ParseException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,6 +29,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
 
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -49,8 +51,13 @@ public class CloudExplorerLiveTest {
     }
 
     @Test
-    public void testNoArgsReturnsInfo() throws Exception {
-        call(new String[0]);
+    public void testNoArgsThrows() throws Exception {
+        try {
+            call(new String[0]);
+            Assert.fail("No args should fail");
+        } catch (ParseException e) {
+            Assert.assertTrue(e.toString().contains("No command specified"), ""+e);
+        }
     }
 
     // A user running these tests might not have any instances; so don't assert that there will be one
