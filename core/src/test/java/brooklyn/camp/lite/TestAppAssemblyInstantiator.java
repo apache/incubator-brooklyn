@@ -27,6 +27,7 @@ import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.instantiate.BasicAssemblyTemplateInstantiator;
 
 import java.util.Map;
+import java.util.Set;
 
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
@@ -80,6 +81,11 @@ public class TestAppAssemblyInstantiator extends BasicAssemblyTemplateInstantiat
         Object bc = template.getCustomAttributes().get("brooklyn.config");
         if (bc instanceof Map)
             app.configure(ConfigBag.newInstance().putAll((Map)bc).getAllConfigAsConfigKeyMap());
+    }
+
+    @Override
+    public EntitySpec<?> createNestedSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext itemLoader, Set<String> encounteredCatalogTypes) {
+        return createSpec(template, platform, itemLoader, true);
     }
 
 }

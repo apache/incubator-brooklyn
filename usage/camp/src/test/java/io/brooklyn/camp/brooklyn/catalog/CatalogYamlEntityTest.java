@@ -34,6 +34,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;
@@ -368,7 +369,75 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         assertTrue(icon != null);
         icon.close();
     }
+    
+    @Test
+    public void testMissingTypeDoesNotRecurse() {
+        String symbolicName = "my.catalog.app.id.basic";
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  id: " + symbolicName,
+            "  version: " + TEST_VERSION,
+            "",
+            "services:",
+            "- type: brooklyn.entity.basic.BasicEntity");
 
+        try {
+            addCatalogItem(
+                    "brooklyn.catalog:",
+                    "  id: " + symbolicName,
+                    "  version: " + TEST_VERSION + "-update",
+                    "",
+                    "services:",
+                    "- type: " + symbolicName);
+            fail("Catalog addition expected to fail due to non-existent java type " + symbolicName);
+        } catch (IllegalStateException e) {
+            assertEquals(e.getMessage(), "Recursive reference to " + symbolicName + " (and cannot be resolved as a Java type)");
+        }
+    }
+    
+    @Test
+    public void testVersionedTypeDoesNotRecurse() {
+        String symbolicName = "my.catalog.app.id.basic";
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  id: " + symbolicName,
+            "  version: " + TEST_VERSION,
+            "",
+            "services:",
+            "- type: brooklyn.entity.basic.BasicEntity");
+
+        String versionedId = CatalogUtils.getVersionedId(symbolicName, TEST_VERSION);
+        try {
+            addCatalogItem(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName,
+                "  version: " + TEST_VERSION + "-update",
+                "",
+                "services:",
+                "- type: " + versionedId);
+            fail("Catalog addition expected to fail due to non-existent java type " + versionedId);
+        } catch (IllegalStateException e) {
+            assertEquals(e.getMessage(), "Recursive reference to " + versionedId + " (and cannot be resolved as a Java type)");
+        }
+    }
+
+    @Test
+    public void testOsgiNotLeakingToParent() {
+        addCatalogOSGiEntity(SIMPLE_ENTITY_TYPE);
+        try {
+            addCatalogItem(
+                    "brooklyn.catalog:",
+                    "  id: " + SIMPLE_ENTITY_TYPE,
+                    "  version: " + TEST_VERSION + "-update",
+                    "",
+                    "services:",
+                    "- type: " + SIMPLE_ENTITY_TYPE);
+            fail("Catalog addition expected to fail due to non-existent java type " + SIMPLE_ENTITY_TYPE);
+        } catch (IllegalStateException e) {
+            assertEquals(e.getMessage(), "Recursive reference to " + SIMPLE_ENTITY_TYPE + " (and cannot be resolved as a Java type)");
+        }
+    }
+    
     private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {
         addCatalogOSGiEntity(symbolicName, serviceType);
         String yaml = "name: simple-app-yaml\n" +

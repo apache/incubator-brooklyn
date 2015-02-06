@@ -171,7 +171,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         String brooklynType = entityResolver.getBrooklynType();
         CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getCatalogItem();
 
-        boolean firstOccurrence = encounteredCatalogTypes.add(brooklynType);
+        //Take the symoblicName part of the catalog item only for recursion detection to prevent
+        //cross referencing of different versions. Not interested in non-catalog item types.
+        //Prevent catalog items self-referencing even if explicitly different version.
+        boolean firstOccurrence = (item == null || encounteredCatalogTypes.add(item.getSymbolicName()));
         boolean recursiveButTryJava = !firstOccurrence;
         
         if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+brooklynType+"; item="+item+"; loader="+entityResolver.loader+"; encounteredCatalogTypes="+encounteredCatalogTypes);
@@ -223,7 +226,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             return null;
         }
         try {
-            return resolveYamlSpec(mgmt, encounteredCatalogTypes, yaml, itemLoader);
+            return createNestedSpec(mgmt, encounteredCatalogTypes, yaml, itemLoader);
         } finally {
             try {
                 yaml.close();
@@ -242,10 +245,10 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         Reader input = new StringReader(yaml);
         BrooklynClassLoadingContext itemLoader = CatalogUtils.newClassLoadingContext(mgmt, item);
         
-        return resolveYamlSpec(mgmt, encounteredCatalogTypes, input, itemLoader);
+        return createNestedSpec(mgmt, encounteredCatalogTypes, input, itemLoader);
     }
 
-    private EntitySpec<?> resolveYamlSpec(ManagementContext mgmt,
+    private EntitySpec<?> createNestedSpec(ManagementContext mgmt,
             Set<String> encounteredCatalogTypes, Reader input,
             BrooklynClassLoadingContext itemLoader) {
         CampPlatform platform = BrooklynServerConfig.getCampPlatform(mgmt).get();
@@ -257,13 +260,21 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         } finally {
             BrooklynLoaderTracker.unsetLoader(itemLoader);
         }
+        return createNestedSpec(at, platform, itemLoader, encounteredCatalogTypes);
+    }
 
+    @Override
+    public EntitySpec<?> createNestedSpec(
+            AssemblyTemplate template,
+            CampPlatform platform,
+            BrooklynClassLoadingContext itemLoader,
+            Set<String> encounteredCatalogTypes) {
         // In case we want to allow multiple top-level entities in a catalog we need to think
         // about what it would mean to subsequently call buildChildrenEntitySpecs on the list of top-level entities!
         try {
-            AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
+            AssemblyTemplateInstantiator ati = template.getInstantiator().newInstance();
             if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
-                List<EntitySpec<?>> specs = ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecsImpl(itemLoader, at, platform, encounteredCatalogTypes);
+                List<EntitySpec<?>> specs = ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecsImpl(itemLoader, template, platform, encounteredCatalogTypes);
                 if (specs.size() > 1) {
                     throw new UnsupportedOperationException("Only supporting single service in catalog item currently: got "+specs);
                 }
