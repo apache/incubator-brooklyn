@@ -29,42 +29,42 @@ var app = angular.module('BrooklynMobile', [
 app.config(function($routeProvider, $translateProvider) {
 	//Defaults root to applications.  Should change in the future
 	$routeProvider.when('/', {
-		templateUrl : "/assets/mobile/js/templates/applicationsList.html",
+		templateUrl : "assets/mobile/js/templates/applicationsList.html",
 		controller:"ApplicationListController"
 	});
 	
 	//Lists applications
 	$routeProvider.when('/v1/applications', {
-		templateUrl : "/assets/mobile/js/templates/applicationsList.html",
+		templateUrl : "assets/mobile/js/templates/applicationsList.html",
 		controller:"ApplicationListController"
 	});
 	
 	//List entities
 	$routeProvider.when('/v1/applications/:appId/entities/:id', {
-		templateUrl : "/assets/mobile/js/templates/entitiesList.html",
+		templateUrl : "assets/mobile/js/templates/entitiesList.html",
 		controller:"EntityListController"
 	});
 	$routeProvider.when('/v1/applications/:appId/entities', {
-		templateUrl : "/assets/mobile/js/templates/entitiesList.html",
+		templateUrl : "assets/mobile/js/templates/entitiesList.html",
 		controller:"EntityListController"
 	});
 	$routeProvider.when('/v1/applications/:appId', {
-		templateUrl : "/assets/mobile/js/templates/entitiesList.html",
+		templateUrl : "assets/mobile/js/templates/entitiesList.html",
 		controller:"EntityListController"
 	});
 	
 	//Application and entity details
 	$routeProvider.when('/v1/applications/:appId/entities/:id/summary', {
-		templateUrl : "/assets/mobile/js/templates/entitySummary.html",
+		templateUrl : "assets/mobile/js/templates/entitySummary.html",
 		controller:"EntityDetailsController"
 	});
 	$routeProvider.when('/v1/applications/:appId/summary', {
-		templateUrl : "/assets/mobile/js/templates/entitySummary.html",
+		templateUrl : "assets/mobile/js/templates/entitySummary.html",
 		controller:"EntityDetailsController"
 	});
 	
 	$translateProvider.useStaticFilesLoader({
-		  prefix: '/assets/mobile/js/i18n/',
+		  prefix: 'assets/mobile/js/i18n/',
 		  suffix: '.json'
 		});
 	//$translateProvider.useLocalStorage();
