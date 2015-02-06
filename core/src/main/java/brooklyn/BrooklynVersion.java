@@ -197,20 +197,17 @@ public class BrooklynVersion {
   private static boolean computeIsDevelopmentEnvironment() {
       Enumeration<URL> paths;
       try {
-          paths = BrooklynVersion.class.getClassLoader().getResources(MANIFEST_PATH);
+          paths = BrooklynVersion.class.getClassLoader().getResources("brooklyn/BrooklynVersion.class");
       } catch (IOException e) {
           // shouldn't happen
           throw Exceptions.propagate(e);
       }
       while (paths.hasMoreElements()) {
           URL u = paths.nextElement();
-          if (u.getPath().endsWith("core/target/classes/META-INF/MANIFEST.MF")) {
+          if (u.getPath().endsWith("core/target/classes/brooklyn/BrooklynVersion.class")) {
               try {
-                  ManifestHelper mh = Osgis.ManifestHelper.forManifest(u.openStream());
-                  if (BROOKLYN_CORE_SYMBOLIC_NAME.equals(mh.getSymbolicName())) {
-                      log.debug("Brooklyn debug environment detected; core manifest is at: "+u);
-                      return true;
-                  }
+                  log.debug("Brooklyn debug environment detected; BrooklynVersion class is at: "+u);
+                  return true;
               } catch (Exception e) {
                   Exceptions.propagateIfFatal(e);
                   log.warn("Error reading manifest to determine whether this is a development environment: "+e, e);
