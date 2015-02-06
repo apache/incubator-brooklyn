@@ -20,8 +20,7 @@ package brooklyn.entity.nosql.riak;
 
 import java.util.Map;
 
-import com.google.common.reflect.TypeToken;
-
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -32,14 +31,24 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.reflect.TypeToken;
+
+@Catalog(name="Riak Cluster", description="Riak is a distributed NoSQL key-value data store that offers "
+        + "extremely high availability, fault tolerance, operational simplicity and scalability.")
 @ImplementedBy(RiakClusterImpl.class)
 public interface RiakCluster extends DynamicCluster {
 
-    AttributeSensor<Map<Entity, String>> RIAK_CLUSTER_NODES = Sensors.newSensor(new TypeToken<Map<Entity, String>>() {
-    }, "riak.cluster.nodes", "Names of all active Riak nodes in the cluster <Entity,Riak Name>");
+    @SuppressWarnings("serial")
+    AttributeSensor<Map<Entity, String>> RIAK_CLUSTER_NODES = Sensors.newSensor(
+            new TypeToken<Map<Entity, String>>() {}, 
+            "riak.cluster.nodes", "Names of all active Riak nodes in the cluster <Entity,Riak Name>");
 
     @SetFromFlag("delayBeforeAdvertisingCluster")
     ConfigKey<Duration> DELAY_BEFORE_ADVERTISING_CLUSTER = ConfigKeys.newConfigKey(Duration.class, "riak.cluster.delayBeforeAdvertisingCluster", "Delay after cluster is started before checking and advertising its availability", Duration.seconds(2 * 60));
 
-    AttributeSensor<Boolean> IS_CLUSTER_INIT = Sensors.newBooleanSensor("riak.cluster.isClusterInit", "flag to determine if the cluster was already initialized");
+    AttributeSensor<Boolean> IS_CLUSTER_INIT = Sensors.newBooleanSensor("riak.cluster.isClusterInit", "Flag to determine if the cluster was already initialized");
+
+    AttributeSensor<Boolean> IS_FIRST_NODE_SET = Sensors.newBooleanSensor("riak.cluster.isFirstNodeSet", "Flag to determine if the first node has been set");
+
+    AttributeSensor<String> NODE_LIST = Sensors.newStringSensor("riak.cluster.nodeList", "List of nodes (including ports), comma separated");
 }

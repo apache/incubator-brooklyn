@@ -45,6 +45,11 @@ public class QuarantineGroupImpl extends AbstractGroupImpl implements Quarantine
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
 
     @Override
+    protected void initEnrichers() {
+        //don't want enrichers (i.e. quorum checks)
+    }
+
+    @Override
     public void expungeMembers(boolean stopFirst) {
         Set<Entity> members = ImmutableSet.copyOf(getMembers());
         RuntimeException exception = null;

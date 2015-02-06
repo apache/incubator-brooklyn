@@ -56,13 +56,13 @@ public class LocationTransformer {
         Map<String, ?> config = locationSpec.getConfig();
         if (mgmt != null && (level==LocationDetailLevel.FULL_EXCLUDING_SECRET || level==LocationDetailLevel.FULL_INCLUDING_SECRET)) {
             LocationDefinition ld = new BasicLocationDefinition(id, locationSpec.getName(), locationSpec.getSpec(), locationSpec.getConfig());
-            Location ll = mgmt.getLocationRegistry().resolveForPeeking(ld);
+            Location ll = mgmt.getLocationRegistry().resolve(ld, false, null).orNull();
             if (ll!=null) config = ll.getAllConfig(true);
         } else if (level==LocationDetailLevel.LOCAL_EXCLUDING_SECRET) {
             // get displayName
             if (!config.containsKey(LocationConfigKeys.DISPLAY_NAME.getName()) && mgmt!=null) {
                 LocationDefinition ld = new BasicLocationDefinition(id, locationSpec.getName(), locationSpec.getSpec(), locationSpec.getConfig());
-                Location ll = mgmt.getLocationRegistry().resolveForPeeking(ld);
+                Location ll = mgmt.getLocationRegistry().resolve(ld, false, null).orNull();
                 if (ll!=null) {
                     Map<String, Object> configExtra = ll.getAllConfig(true);
                     if (configExtra.containsKey(LocationConfigKeys.DISPLAY_NAME.getName())) {
@@ -92,12 +92,12 @@ public class LocationTransformer {
         // TODO: Can remove null checks on mgmt when newInstance(LocationDefinition) is deleted
         Map<String, Object> config = l.getConfig();
         if (mgmt != null && (level==LocationDetailLevel.FULL_EXCLUDING_SECRET || level==LocationDetailLevel.FULL_INCLUDING_SECRET)) {
-            Location ll = mgmt.getLocationRegistry().resolveForPeeking(l);
+            Location ll = mgmt.getLocationRegistry().resolve(l, false, null).orNull();
             if (ll!=null) config = ll.getAllConfig(true);
         } else if (level==LocationDetailLevel.LOCAL_EXCLUDING_SECRET) {
             // get displayName
             if (mgmt != null && !config.containsKey(LocationConfigKeys.DISPLAY_NAME.getName())) {
-                Location ll = mgmt.getLocationRegistry().resolveForPeeking(l);
+                Location ll = mgmt.getLocationRegistry().resolve(l, false, null).orNull();
                 if (ll!=null) {
                     Map<String, Object> configExtra = ll.getAllConfig(true);
                     if (configExtra.containsKey(LocationConfigKeys.DISPLAY_NAME.getName())) {
@@ -155,7 +155,7 @@ public class LocationTransformer {
         }
         if (specId==null && spec!=null) {
             // fall back to attempting to lookup it
-            Location ll = mgmt.getLocationRegistry().resolveIfPossible(spec);
+            Location ll = mgmt.getLocationRegistry().resolve(spec, false, null).orNull();
             if (ll!=null) specId = ll.getId();
         }
         
@@ -179,7 +179,6 @@ public class LocationTransformer {
             MutableMap.of("self", URI.create("/v1/locations/" + l.getId()))
                 .addIfNotNull("parent", l.getParent()!=null ? URI.create("/v1/locations/"+l.getParent().getId()) : null)
                 .addIfNotNull("spec", specId!=null ? URI.create("/v1/locations/"+specId) : null)
-                .toImmutable() );
+                .asUnmodifiable() );
     }
-    
 }

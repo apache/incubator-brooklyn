@@ -46,6 +46,7 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.CompoundRuntimeException;
@@ -71,6 +72,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     public static final RuntimeException BAIL_OUT_FOR_TESTING = 
             new RuntimeException("early termination for test");
     
+    @SuppressWarnings("serial")
     public static class BailOutJcloudsLocation extends JcloudsLocation {
         public static final ConfigKey<Function<ConfigBag,Void>> BUILD_TEMPLATE_INTERCEPTOR = ConfigKeys.newConfigKey(new TypeToken<Function<ConfigBag,Void>>() {}, "buildtemplateinterceptor");
         
@@ -104,6 +106,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         }
     }
 
+    @SuppressWarnings("serial")
     public static class CountingBailOutJcloudsLocation extends BailOutJcloudsLocation {
         int buildTemplateCount = 0;
         @Override
@@ -113,6 +116,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         }
     }
     
+    @SuppressWarnings("serial")
     public static class BailOutWithTemplateJcloudsLocation extends JcloudsLocation {
         ConfigBag lastConfigBag;
         Template template;
@@ -154,6 +158,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         return newSampleBailOutJcloudsLocationForTesting(ImmutableMap.<ConfigKey<?>,Object>of());
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected BailOutJcloudsLocation newSampleBailOutJcloudsLocationForTesting(Map<?,?> config) {
         Map<ConfigKey<?>,?> allConfig = MutableMap.<ConfigKey<?>,Object>builder()
                 .put(IMAGE_ID, "bogus")
@@ -174,6 +179,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         return newSampleBailOutWithTemplateJcloudsLocation(ImmutableMap.<ConfigKey<?>,Object>of());
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected BailOutWithTemplateJcloudsLocation newSampleBailOutWithTemplateJcloudsLocation(Map<?,?> config) {
         String identity = (String) brooklynProperties.get("brooklyn.location.jclouds.aws-ec2.identity");
         if (identity == null) identity = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.identity");
@@ -181,8 +187,8 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         if (credential == null) credential = (String) brooklynProperties.get("brooklyn.jclouds.aws-ec2.credential");
         
         Map<ConfigKey<?>,?> allConfig = MutableMap.<ConfigKey<?>,Object>builder()
-                .put(CLOUD_PROVIDER, AbstractJcloudsTest.AWS_EC2_PROVIDER)
-                .put(CLOUD_REGION_ID, AbstractJcloudsTest.AWS_EC2_USEAST_REGION_NAME)
+                .put(CLOUD_PROVIDER, AbstractJcloudsLiveTest.AWS_EC2_PROVIDER)
+                .put(CLOUD_REGION_ID, AbstractJcloudsLiveTest.AWS_EC2_USEAST_REGION_NAME)
                 .put(IMAGE_ID, US_EAST_IMAGE_ID) // so it runs faster, without loading all EC2 images
                 .put(ACCESS_IDENTITY, identity)
                 .put(ACCESS_CREDENTIAL, credential)
@@ -222,7 +228,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = LocalManagementContextForTests.newInstance(BrooklynProperties.Factory.builderEmpty().build());
         brooklynProperties = managementContext.getBrooklynProperties();
     }
     
@@ -479,6 +485,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     }
 
     
+    @SuppressWarnings("serial")
     public static class FakeLocalhostWithParentJcloudsLocation extends JcloudsLocation {
         public static final ConfigKey<Function<ConfigBag,Void>> BUILD_TEMPLATE_INTERCEPTOR = ConfigKeys.newConfigKey(new TypeToken<Function<ConfigBag,Void>>() {}, "buildtemplateinterceptor");
         
@@ -522,6 +529,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         Assert.assertEquals(geo.longitude, -20d, 0.00001);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testInheritsGeoFromLocationMetadataProperties() throws Exception {
         // in location-metadata.properties:

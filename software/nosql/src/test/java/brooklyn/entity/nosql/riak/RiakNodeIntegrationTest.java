@@ -24,15 +24,14 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
+
+import com.google.common.collect.ImmutableList;
 
 public class RiakNodeIntegrationTest {
 
@@ -42,7 +41,7 @@ public class RiakNodeIntegrationTest {
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
         localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
     }
 
     @AfterMethod(alwaysRun = true)

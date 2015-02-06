@@ -64,8 +64,6 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
 
             int result = newScript(INSTALLING)
                     .failOnNonZeroResultCode(false)
-                    // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
-                    .environmentVariablesReset()
                     .body.append(commands)
                     .execute();
             

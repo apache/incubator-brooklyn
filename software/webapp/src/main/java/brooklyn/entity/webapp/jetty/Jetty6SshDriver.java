@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
@@ -53,11 +52,15 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
     }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("jetty-%s", getVersion()))));
+    }
+
+    @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName("jetty-"+getVersion()));
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
@@ -107,7 +110,7 @@ public class Jetty6SshDriver extends JavaWebAppSshDriver implements Jetty6Driver
 
         newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)
                 .body.append(
-                        "./bin/jetty.sh start jetty.xml jetty-logging.xml jetty-stats.xml jetty-brooklyn " +
+                        "./bin/jetty.sh start jetty-brooklyn.xml jetty.xml jetty-logging.xml jetty-stats.xml " +
                                 (Strings.isEmpty(getConfigXmlTemplateUrl()) ? "" : "jetty-custom.xml ") +
                                 ">> $RUN_DIR/console 2>&1 < /dev/null",
                         "for i in {1..10} ; do\n" +

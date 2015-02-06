@@ -29,6 +29,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
 
 /**
@@ -42,6 +43,7 @@ public interface TestApplication extends StartableApplication, EntityInternal {
 
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec);
 
+    public SimulatedLocation newSimulatedLocation();
     public LocalhostMachineProvisioningLocation newLocalhostProvisioningLocation();
     public LocalhostMachineProvisioningLocation newLocalhostProvisioningLocation(Map<?,?> flags);
 

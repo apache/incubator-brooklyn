@@ -50,8 +50,8 @@ public class AbstractLocationTest {
         String myfield;
 
         public ConcreteLocation() {
-			super();
-		}
+            super();
+        }
 
         public ConcreteLocation(Map<?,?> properties) {
             super(properties);
@@ -62,7 +62,7 @@ public class AbstractLocationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        mgmt = new LocalManagementContextForTests();
+        mgmt = LocalManagementContextForTests.newInstance();
     }
     
     @AfterMethod(alwaysRun = true)
@@ -165,7 +165,7 @@ public class AbstractLocationTest {
 
     @Test
     public void testFieldSetFromFlag() {
-    	ConcreteLocation loc = createConcrete(MutableMap.of("myfield", "myval"));
+        ConcreteLocation loc = createConcrete(MutableMap.of("myfield", "myval"));
         assertEquals(loc.myfield, "myval");
     }
     
@@ -178,7 +178,7 @@ public class AbstractLocationTest {
     @Test
     public void testLocationTags() throws Exception {
         LocationInternal loc = mgmt.getLocationManager().createLocation(LocationSpec.create(ConcreteLocation.class).tag("x"));
-        assertEquals(loc.getTagSupport().getTags(), MutableSet.of("x"));
+        assertEquals(loc.tags().getTags(), MutableSet.of("x"));
     }
 
 }

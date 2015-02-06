@@ -1,0 +1,9 @@
+# to test for absolute reference problems, prefix each of the paths and set the baseurl
+
+path:
+  style: /brooklyn/style
+  guide: /brooklyn/v/latest
+  website: /brooklyn
+  v: /brooklyn/v
+
+baseurl: /brooklyn

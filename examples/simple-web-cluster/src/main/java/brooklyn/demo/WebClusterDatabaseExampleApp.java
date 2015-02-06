@@ -70,9 +70,9 @@ import com.google.common.collect.Lists;
  **/
 @Catalog(name="Elastic Java Web + DB",
     description="Deploys a WAR to a load-balanced elastic Java AppServer cluster, " +
-    		"with an auto-scaling policy, " +
-    		"wired to a database initialized with the provided SQL; " +
-    		"defaults to a 'Hello World' chatroom app.",
+            "with an auto-scaling policy, " +
+            "wired to a database initialized with the provided SQL; " +
+            "defaults to a 'Hello World' chatroom app.",
     iconUrl="classpath://brooklyn/demo/glossy-3d-blue-web-icon.png")
 public class WebClusterDatabaseExampleApp extends AbstractApplication implements StartableApplication {
     
@@ -117,7 +117,7 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
     public static final AttributeSensor<String> ROOT_URL = WebAppServiceConstants.ROOT_URL;
 
     @Override
-    public void init() {
+    public void initApp() {
         MySqlNode mysql = addChild(
                 EntitySpec.create(MySqlNode.class)
                         .configure(MySqlNode.CREATION_SCRIPT_URL, Entities.getRequiredUrlConfig(this, DB_SETUP_SQL_URL)));

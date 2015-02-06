@@ -94,7 +94,7 @@ public class BasicDownloadTargets implements DownloadTargets {
     
     protected BasicDownloadTargets(Builder builder) {
         primaries = ImmutableList.copyOf(builder.primaries);
-        fallbacks = MutableList.<String>builder().addAll(builder.fallbacks).removeAll(builder.primaries).build().toImmutable();
+        fallbacks = MutableList.<String>builder().addAll(builder.fallbacks).removeAll(builder.primaries).build().asUnmodifiable();
         canContinueResolving = builder.canContinueResolving;
     }
 

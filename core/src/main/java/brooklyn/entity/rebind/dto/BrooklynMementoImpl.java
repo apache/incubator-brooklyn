@@ -26,8 +26,10 @@ import java.util.Map;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.FeedMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
@@ -52,6 +54,9 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         protected final Map<String, LocationMemento> locations = Maps.newConcurrentMap();
         protected final Map<String, PolicyMemento> policies = Maps.newConcurrentMap();
         protected final Map<String, EnricherMemento> enrichers = Maps.newConcurrentMap();
+        protected final Map<String, FeedMemento> feeds = Maps.newConcurrentMap();
+        protected final Map<String, CatalogItemMemento> catalogItems = Maps.newConcurrentMap();
+
         
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
@@ -59,10 +64,10 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         public Builder applicationId(String val) {
             applicationIds.add(val); return this;
         }
-        public Builder applicationIds(List<String> vals) {
+        public Builder applicationIds(Collection<String> vals) {
             applicationIds.addAll(vals); return this;
         }
-        public Builder topLevelLocationIds(List<String> vals) {
+        public Builder topLevelLocationIds(Collection<String> vals) {
             topLevelLocationIds.addAll(vals); return this;
         }
         public void memento(Memento memento) {
@@ -73,7 +78,11 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
             } else if (memento instanceof PolicyMemento) {
                 policy((PolicyMemento)memento);
             } else if (memento instanceof EnricherMemento) {
-                enricher((EnricherMemento)memento);
+                enricher((EnricherMemento) memento);
+            } else if (memento instanceof FeedMemento) {
+                feed((FeedMemento)memento);
+            } else if (memento instanceof CatalogItemMemento) {
+                catalogItem((CatalogItemMemento) memento);
             } else {
                 throw new IllegalStateException("Unexpected memento type :"+memento);
             }
@@ -90,6 +99,9 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         public Builder enricher(EnricherMemento val) {
             enrichers.put(val.getId(), val); return this;
         }
+        public Builder feed(FeedMemento val) {
+            feeds.put(val.getId(), val); return this;
+        }
         public Builder entity(EntityMemento val) {
             entities.put(val.getId(), val);
             if (val.isTopLevelApp()) {
@@ -103,8 +115,17 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         public Builder policies(Map<String, PolicyMemento> vals) {
             policies.putAll(vals); return this;
         }
-        public Builder enricheres(Map<String, EnricherMemento> vals) {
+        public Builder enrichers(Map<String, EnricherMemento> vals) {
             enrichers.putAll(vals); return this;
+        }
+        public Builder feeds(Map<String, FeedMemento> vals) {
+            feeds.putAll(vals); return this;
+        }
+        public Builder catalogItems(Map<String, CatalogItemMemento> vals) {
+            catalogItems.putAll(vals); return this;
+        }
+        public Builder catalogItem(CatalogItemMemento val) {
+            catalogItems.put(val.getId(), val); return this;
         }
         public BrooklynMemento build() {
             return new BrooklynMementoImpl(this);
@@ -119,6 +140,8 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     private Map<String, LocationMemento> locations;
     private Map<String, PolicyMemento> policies;
     private Map<String, EnricherMemento> enrichers;
+    private Map<String, FeedMemento> feeds;
+    private Map<String, CatalogItemMemento> catalogItems;
     
     private BrooklynMementoImpl(Builder builder) {
         brooklynVersion = builder.brooklynVersion;
@@ -128,6 +151,8 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
         locations = builder.locations;
         policies = builder.policies;
         enrichers = builder.enrichers;
+        feeds = builder.feeds;
+        catalogItems = builder.catalogItems;
     }
 
     @Override
@@ -148,6 +173,16 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     @Override
     public EnricherMemento getEnricherMemento(String id) {
         return enrichers.get(id);
+    }
+    
+    @Override
+    public FeedMemento getFeedMemento(String id) {
+        return feeds.get(id);
+    }
+
+    @Override
+    public CatalogItemMemento getCatalogItemMemento(String id) {
+        return catalogItems.get(id);
     }
 
     @Override
@@ -174,6 +209,16 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     public Collection<String> getEnricherIds() {
         return Collections.unmodifiableSet(enrichers.keySet());
     }
+
+    @Override
+    public Collection<String> getCatalogItemIds() {
+        return Collections.unmodifiableSet(catalogItems.keySet());
+    }
+
+    @Override
+    public Collection<String> getFeedIds() {
+        return Collections.unmodifiableSet(feeds.keySet());
+    }
     
     @Override
     public Collection<String> getTopLevelLocationIds() {
@@ -197,5 +242,15 @@ public class BrooklynMementoImpl implements BrooklynMemento, Serializable {
     @Override
     public Map<String, EnricherMemento> getEnricherMementos() {
         return Collections.unmodifiableMap(enrichers);
+    }
+    
+    @Override
+    public Map<String, FeedMemento> getFeedMementos() {
+        return Collections.unmodifiableMap(feeds);
+    }
+
+    @Override
+    public Map<String, CatalogItemMemento> getCatalogItemMementos() {
+        return Collections.unmodifiableMap(catalogItems);
     }
 }

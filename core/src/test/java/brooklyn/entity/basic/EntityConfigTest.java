@@ -38,7 +38,7 @@ public class EntityConfigTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContextForTests();
+        managementContext = LocalManagementContextForTests.newInstance();
     }
     
     @AfterMethod(alwaysRun=true)
@@ -83,7 +83,7 @@ public class EntityConfigTest {
         EntityInternal entity = managementContext.getEntityManager().createEntity(EntitySpec.create(MyEntity.class)
                 .configure("notThere", "notThereVal"));
         
-        assertEquals(entity.getAllConfig(), ImmutableMap.of());
+        assertEquals(entity.getAllConfig(), ImmutableMap.of(ConfigKeys.newConfigKey(Object.class, "notThere"), "notThereVal"));
         assertEquals(entity.getAllConfigBag().getAllConfig(), ImmutableMap.of("notThere", "notThereVal"));
         assertEquals(entity.getLocalConfigBag().getAllConfig(), ImmutableMap.of("notThere", "notThereVal"));
     }
@@ -98,8 +98,10 @@ public class EntityConfigTest {
         EntityInternal child = managementContext.getEntityManager().createEntity(EntitySpec.create(MyChildEntity.class)
                 .parent(entity));
 
-        assertEquals(child.getAllConfig(), ImmutableMap.of(MyChildEntity.MY_CHILD_CONFIG, "myval1", MyChildEntity.MY_CHILD_CONFIG_WITH_FLAGNAME, "myval2"));
-        assertEquals(child.getAllConfigBag().getAllConfig(), ImmutableMap.of("mychildentity.myconfig", "myval1", "mychildentity.myconfigwithflagname", "myval2", "notThere", "notThereVal"));
+        assertEquals(child.getAllConfig(), ImmutableMap.of(MyChildEntity.MY_CHILD_CONFIG, "myval1", 
+            ConfigKeys.newConfigKey(Object.class, "mychildconfigflagname"), "myval2",
+            ConfigKeys.newConfigKey(Object.class, "notThere"), "notThereVal"));
+        assertEquals(child.getAllConfigBag().getAllConfig(), ImmutableMap.of("mychildentity.myconfig", "myval1", "mychildconfigflagname", "myval2", "notThere", "notThereVal"));
         assertEquals(child.getLocalConfigBag().getAllConfig(), ImmutableMap.of());
     }
     
@@ -127,7 +129,8 @@ public class EntityConfigTest {
                 .configure("mychildentity.myconfigwithflagname", "overrideMyval")
                 .configure("notThere", "overrideNotThereVal"));
 
-        assertEquals(child.getAllConfig(), ImmutableMap.of(MyChildEntity.MY_CHILD_CONFIG_WITH_FLAGNAME, "overrideMyval"));
+        assertEquals(child.getAllConfig(), ImmutableMap.of(MyChildEntity.MY_CHILD_CONFIG_WITH_FLAGNAME, "overrideMyval",
+            ConfigKeys.newConfigKey(Object.class, "notThere"), "overrideNotThereVal"));
         assertEquals(child.getAllConfigBag().getAllConfig(), ImmutableMap.of("mychildentity.myconfigwithflagname", "overrideMyval", "notThere", "overrideNotThereVal"));
         assertEquals(child.getLocalConfigBag().getAllConfig(), ImmutableMap.of("mychildentity.myconfigwithflagname", "overrideMyval", "notThere", "overrideNotThereVal"));
     }
@@ -135,7 +138,8 @@ public class EntityConfigTest {
     @Test
     public void testChildCanOverrideConfigUsingFlagName() throws Exception {
         EntityInternal entity = managementContext.getEntityManager().createEntity(EntitySpec.create(MyEntity.class)
-                .configure("mychildconfigflagname", "myval"));
+                .configure(MyChildEntity.MY_CHILD_CONFIG_WITH_FLAGNAME, "myval"));
+        assertEquals(entity.getAllConfig(), ImmutableMap.of(MyChildEntity.MY_CHILD_CONFIG_WITH_FLAGNAME, "myval"));
 
         EntityInternal child = managementContext.getEntityManager().createEntity(EntitySpec.create(MyChildEntity.class)
                 .parent(entity)

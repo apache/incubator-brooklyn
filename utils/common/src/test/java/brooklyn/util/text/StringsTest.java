@@ -324,5 +324,35 @@ public class StringsTest extends FixedLocaleTest {
         // skips E notation and gives extra precision when it's free
         Assert.assertEquals(Strings.makeRealString(123456, 8, 2, 0), "123456");
     }
+
+    @Test
+    public void testCollapseWhitespace() {
+        Assert.assertEquals(Strings.collapseWhitespace(" x\n y\n", ""), "xy");
+        Assert.assertEquals(Strings.collapseWhitespace(" x\n y\n", " "), " x y ");
+        Assert.assertEquals(Strings.collapseWhitespace(" x\n y\n", "\n").trim(), "x\ny");
+    }
     
+    @Test
+    public void testMaxlen() {
+        Assert.assertEquals(Strings.maxlen("hello world", 5), "hello");
+        Assert.assertEquals(Strings.maxlenWithEllipsis("hello world", 9), "hello ...");
+        Assert.assertEquals(Strings.maxlenWithEllipsis("hello world", 7, "--"), "hello--");
+    }
+
+    @Test
+    public void testGetRemainderOfLineAfter() {
+        // Basic test (also tests start is trimmed)
+        Assert.assertEquals(Strings.getRemainderOfLineAfter("the message is hello", "is"), " hello");
+        Assert.assertEquals(Strings.getRemainderOfLineAfter("the message is is hello", "is"), " is hello");
+        // Trim spaces from end
+        Assert.assertEquals(Strings.getRemainderOfLineAfter("the message is is hello    ", "is"), " is hello    ");
+        // Trim non-matching lines from start
+        Assert.assertEquals(Strings.getRemainderOfLineAfter("one\ntwo\nthree\nthe message is is hello    ", "is"), " is hello    ");
+        // Trim lines from end
+        Assert.assertEquals(Strings.getRemainderOfLineAfter("one\ntwo\nthree\nthe message is is hello    \nfour\nfive\nsix\nis not seven", "is"), " is hello    ");
+        // Play nicely with null / non-match
+        Assert.assertEquals(Strings.getRemainderOfLineAfter(null, "is"), null);
+        Assert.assertEquals(Strings.getRemainderOfLineAfter("the message is hello", null), null);
+        Assert.assertEquals(Strings.getRemainderOfLineAfter("the message is hello", "foo"), null);
+    }
 }

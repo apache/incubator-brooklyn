@@ -20,7 +20,14 @@ package io.brooklyn.camp.brooklyn.spi.dsl;
 
 import brooklyn.util.task.DeferredSupplier;
 
+import com.google.common.collect.Iterables;
+
 public class DslUtils {
+
+    /** true iff none of the args are deferred / tasks */
+    public static boolean resolved(Iterable<Object> args) {
+        return resolved(Iterables.toArray(args, Object.class));
+    }
 
     /** true iff none of the args are deferred / tasks */
     public static boolean resolved(final Object... args) {

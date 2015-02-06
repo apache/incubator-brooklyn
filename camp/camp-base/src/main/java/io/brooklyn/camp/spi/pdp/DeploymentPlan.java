@@ -35,19 +35,25 @@ public class DeploymentPlan {
     String name;
     String origin;
     String description;
+    String sourceCode;
     
     List<Artifact> artifacts;
     List<Service> services;
     Map<String,Object> customAttributes;
 
-    @SuppressWarnings("unchecked")
+    @Deprecated /** @deprecated since 0.7.0; supply source code also, for reference */
     public static DeploymentPlan of(Map<String,Object> root) {
+        return of(root, null);
+    }
+    @SuppressWarnings("unchecked")
+    public static DeploymentPlan of(Map<String,Object> root, String optionalSourceCode) {
         Map<String,Object> attrs = MutableMap.copyOf(root);
         
         DeploymentPlan result = new DeploymentPlan();
         result.name = (String) attrs.remove("name");
         result.description = (String) attrs.remove("description");
         result.origin = (String) attrs.remove("origin");
+        result.sourceCode = optionalSourceCode;
         // TODO version
         
         result.services = new ArrayList<Service>();
@@ -97,6 +103,10 @@ public class DeploymentPlan {
         return origin;
     }
 
+    public String getSourceCode() {
+        return sourceCode;
+    }
+    
     public List<Artifact> getArtifacts() {
         return ImmutableList.copyOf(artifacts);
     }

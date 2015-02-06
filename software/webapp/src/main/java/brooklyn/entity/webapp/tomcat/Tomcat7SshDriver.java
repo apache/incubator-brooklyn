@@ -20,12 +20,15 @@ package brooklyn.entity.webapp.tomcat;
 
 import static java.lang.String.format;
 
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
@@ -35,37 +38,35 @@ import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 
+import com.google.common.base.Preconditions;
+
 public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driver {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Tomcat7SshDriver.class);
+    private static final String KEYSTORE_FILE = "keystore";
 
     public Tomcat7SshDriver(TomcatServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
-    protected String getLogFileLocation() {
-        return Os.mergePathsUnix(getRunDir(), "logs/catalina.out");
-    }
-
-    protected String getDeploySubdir() {
-       return "webapps";
-    }
-
-    protected Integer getShutdownPort() {
-        return entity.getAttribute(TomcatServerImpl.SHUTDOWN_PORT);
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName("apache-tomcat-"+getVersion())));
     }
 
     @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName("apache-tomcat-"+getVersion()));
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
-        commands.add(format("tar xvzf %s",saveAs));
+        commands.add(format("tar xvzf %s", saveAs));
 
         newScript(INSTALLING)
+                .environmentVariablesReset()
                 .body.append(commands)
                 .execute();
     }
@@ -73,21 +74,27 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
     @Override
     public void customize() {
         newScript(CUSTOMIZING)
-                .body.append(
-                        "mkdir conf logs webapps temp",
-                        format("cp %s/conf/{server,web}.xml conf/", getExpandedInstallDir()),
-                        format("sed -i.bk s/8080/%s/g conf/server.xml", getHttpPort()),
-                        format("sed -i.bk s/8005/%s/g conf/server.xml", getShutdownPort()),
-                        "sed -i.bk /8009/D conf/server.xml"
-                    )
+                .body.append("mkdir -p conf logs webapps temp")
+                .failOnNonZeroResultCode()
                 .execute();
+
+        copyTemplate(entity.getConfig(TomcatServer.SERVER_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "server.xml"));
+        copyTemplate(entity.getConfig(TomcatServer.WEB_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "web.xml"));
+
+        // Deduplicate same code in JBoss
+        if (isProtocolEnabled("HTTPS")) {
+            String keystoreUrl = Preconditions.checkNotNull(getSslKeystoreUrl(), "keystore URL must be specified if using HTTPS for " + entity);
+            String destinationSslKeystoreFile = getHttpsSslKeystoreFile();
+            InputStream keystoreStream = resource.getResourceFromUrl(keystoreUrl);
+            getMachine().copyTo(keystoreStream, destinationSslKeystoreFile);
+        }
 
         getEntity().deployInitialWars();
     }
 
     @Override
     public void launch() {
-        Map ports = MutableMap.of("httpPort", getHttpPort(), "shutdownPort", getShutdownPort());
+        Map<String, Integer> ports = MutableMap.of("httpPort", getHttpPort(), "shutdownPort", getShutdownPort());
         Networking.checkPortsValid(ports);
 
         // We wait for evidence of tomcat running because, using 
@@ -149,4 +156,23 @@ public class Tomcat7SshDriver extends JavaWebAppSshDriver implements Tomcat7Driv
 
         return shellEnv;
     }
+
+    @Override
+    protected String getLogFileLocation() {
+        return Os.mergePathsUnix(getRunDir(), "logs/catalina.out");
+    }
+
+    @Override
+    protected String getDeploySubdir() {
+       return "webapps";
+    }
+
+    public Integer getShutdownPort() {
+        return entity.getAttribute(TomcatServerImpl.SHUTDOWN_PORT);
+    }
+
+    public String getHttpsSslKeystoreFile() {
+        return Os.mergePathsUnix(getRunDir(), "conf", KEYSTORE_FILE);
+    }
+
 }

@@ -18,15 +18,26 @@
  */
 package brooklyn.enricher.basic;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import java.util.Map;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.BasicEnricherRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.Sensor;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherType;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
+import brooklyn.util.flags.TypeCoercions;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 
 /**
@@ -34,7 +45,11 @@ import com.google.common.collect.Maps;
 */
 public abstract class AbstractEnricher extends AbstractEntityAdjunct implements Enricher {
 
+    public static final ConfigKey<Boolean> SUPPRESS_DUPLICATES = ConfigKeys.newBooleanConfigKey("enricher.suppressDuplicates",
+        "Whether duplicate values published by this enricher should be suppressed");
+
     private final EnricherDynamicType enricherType;
+    protected Boolean suppressDuplicates;
 
     public AbstractEnricher() {
         this(Maps.newLinkedHashMap());
@@ -61,8 +76,40 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
     }
 
     @Override
+    public void setEntity(EntityLocal entity) {
+        super.setEntity(entity);
+        Boolean suppressDuplicates = getConfig(SUPPRESS_DUPLICATES);
+        if (suppressDuplicates!=null) 
+            this.suppressDuplicates = suppressDuplicates;
+    }
+    
+    @Override
     protected void onChanged() {
         requestPersist();
+    }
+
+    @Override
+    protected <T> void emit(Sensor<T> sensor, Object val) {
+        checkState(entity != null, "entity must first be set");
+        if (val == Entities.UNCHANGED) {
+            return;
+        }
+        if (val == Entities.REMOVE) {
+            ((EntityInternal)entity).removeAttribute((AttributeSensor<T>) sensor);
+            return;
+        }
+        
+        T newVal = TypeCoercions.coerce(val, sensor.getTypeToken());
+        if (sensor instanceof AttributeSensor) {
+            if (Boolean.TRUE.equals(suppressDuplicates)) {
+                T oldValue = entity.getAttribute((AttributeSensor<T>)sensor);
+                if (Objects.equal(oldValue, newVal))
+                    return;
+            }
+            entity.setAttribute((AttributeSensor<T>)sensor, newVal);
+        } else { 
+            entity.emit(sensor, newVal);
+        }
     }
     
 }

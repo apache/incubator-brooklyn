@@ -32,17 +32,20 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
  */
-@Catalog(name="Tomcat Server", description="Apache Tomcat is an open source software implementation of the Java Servlet and JavaServer Pages technologies", iconUrl="classpath:///tomcat-logo.png")
+@Catalog(name="Tomcat Server",
+        description="Apache Tomcat is an open source software implementation of the Java Servlet and JavaServer Pages technologies",
+        iconUrl="classpath:///tomcat-logo.png")
 @ImplementedBy(TomcatServerImpl.class)
 public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasShortName {
 
     @SetFromFlag("version")
-    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "7.0.53");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "7.0.56");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
@@ -56,6 +59,16 @@ public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
     @SetFromFlag("shutdownPort")
     PortAttributeSensorAndConfigKey SHUTDOWN_PORT =
             ConfigKeys.newPortSensorAndConfigKey("tomcat.shutdownport", "Suggested shutdown port", PortRanges.fromString("31880+"));
+
+    @SetFromFlag("server.xml")
+    ConfigKey<String> SERVER_XML_RESOURCE = ConfigKeys.newStringConfigKey(
+            "tomcat.serverxml", "The file to template and use as the Tomcat process' server.xml",
+            JavaClassNames.resolveClasspathUrl(TomcatServer.class, "server.xml"));
+
+    @SetFromFlag("web.xml")
+    ConfigKey<String> WEB_XML_RESOURCE = ConfigKeys.newStringConfigKey(
+            "tomcat.webxml", "The file to template and use as the Tomcat process' web.xml",
+            JavaClassNames.resolveClasspathUrl(TomcatServer.class, "web.xml"));
 
     ConfigKey<Duration> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, Duration.FIVE_MINUTES);
 

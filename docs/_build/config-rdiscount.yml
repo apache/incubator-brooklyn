@@ -1,0 +1,28 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# add this file as a config to use "rdiscount" markdown processor
+# instead of the default ruby/jekyll one.
+# rdiscount is the original, and C-based, so a bit faster
+# (but not much, 7s vs 8.5s on my system -alex)
+# and slightly more forgiving, e.g. for <a href="chapter"> tags
+# on a line directly about a section header
+# (ruby markdown seems to want a blank line between the two).
+# NB: this requires adding "rdiscount" to your Gemfile, then `cd ~ ; cd -`
+markdown: rdiscount

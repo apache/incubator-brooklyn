@@ -25,7 +25,7 @@ define([
     "text!tpl/apps/activities.html", "text!tpl/apps/activity-table.html", 
     "text!tpl/apps/activity-row-details.html", "text!tpl/apps/activity-row-details-main.html",
     "text!tpl/apps/activity-full-details.html", 
-    "bootstrap", "formatJson", "jquery-datatables", "datatables-extensions", "moment"
+    "bootstrap", "jquery-datatables", "datatables-extensions", "moment"
 ], function (_, $, Backbone, Util, ViewUtils, ActivityDetailsView, 
     ActivitiesHtml, ActivityTableHtml, ActivityRowDetailsHtml, ActivityRowDetailsMainHtml, ActivityFullDetailsHtml) {
 

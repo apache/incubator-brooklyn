@@ -68,7 +68,7 @@ public class VanillaBashNetcatYamlTest extends AbstractYamlTest {
         Entity netcat = Iterables.getOnlyElement(netcatI);
         
         // make sure netcat is running
-        EntityTestUtils.assertAttributeEventually(netcat, Attributes.SERVICE_STATE, Predicates.equalTo(Lifecycle.RUNNING));
+        EntityTestUtils.assertAttributeEventually(netcat, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.RUNNING));
         
         // find the pinger, now comparing by name
         Iterable<Entity> pingerI = Iterables.filter(app.getChildren(), EntityPredicates.displayNameEqualTo("Simple Pinger"));
@@ -82,13 +82,13 @@ public class VanillaBashNetcatYamlTest extends AbstractYamlTest {
         // and check we get the right result 
         EntityTestUtils.assertAttributeEventually(netcat, SENSOR_OUTPUT_ALL, StringPredicates.containsLiteral("hi netcat"));
         log.info("invoked ping from "+pinger+" to "+netcat+", 'all' sensor shows:\n"+
-            netcat.getAttribute(SENSOR_OUTPUT_ALL));
+                netcat.getAttribute(SENSOR_OUTPUT_ALL));
 
         // netcat should now fail and restart
-        EntityTestUtils.assertAttributeEventually(netcat, Attributes.SERVICE_STATE, Predicates.not(Predicates.equalTo(Lifecycle.RUNNING)));
-        log.info("detected failure, state is: "+netcat.getAttribute(Attributes.SERVICE_STATE));
-        EntityTestUtils.assertAttributeEventually(netcat, Attributes.SERVICE_STATE, Predicates.equalTo(Lifecycle.RUNNING));
-        log.info("detected recovery, state is: "+netcat.getAttribute(Attributes.SERVICE_STATE));
+        EntityTestUtils.assertAttributeEventually(netcat, Attributes.SERVICE_STATE_ACTUAL, Predicates.not(Predicates.equalTo(Lifecycle.RUNNING)));
+        log.info("detected failure, state is: "+netcat.getAttribute(Attributes.SERVICE_STATE_ACTUAL));
+        EntityTestUtils.assertAttributeEventually(netcat, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.RUNNING));
+        log.info("detected recovery, state is: "+netcat.getAttribute(Attributes.SERVICE_STATE_ACTUAL));
 
         // invoke effector again, now with a parameter
         ping = pinger.invoke(EFFECTOR_SAY_HI, MutableMap.<String,Object>of("message", "yo yo yo"));
@@ -96,7 +96,7 @@ public class VanillaBashNetcatYamlTest extends AbstractYamlTest {
         // checking right result
         EntityTestUtils.assertAttributeEventually(netcat, SENSOR_OUTPUT_ALL, StringPredicates.containsLiteral("yo yo yo"));
         log.info("invoked ping again from "+pinger+" to "+netcat+", 'all' sensor shows:\n"+
-            netcat.getAttribute(SENSOR_OUTPUT_ALL));
+                netcat.getAttribute(SENSOR_OUTPUT_ALL));
         
         // and it's propagated to the app
         EntityTestUtils.assertAttributeEventually(app, Sensors.newStringSensor("output.last"), StringPredicates.containsLiteral("yo yo yo"));

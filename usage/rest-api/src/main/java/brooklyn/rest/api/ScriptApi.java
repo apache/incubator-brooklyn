@@ -44,11 +44,9 @@ public interface ScriptApi {
     @Path("/groovy")
     @Consumes("application/text")
     @ApiOperation(value = "Execute a groovy script",
-        responseClass = "brooklyn.rest.domain.SensorSummary")
+            responseClass = "brooklyn.rest.domain.SensorSummary")
     public ScriptExecutionSummary groovy(
             @Context HttpServletRequest request,
             @ApiParam(name = "script", value = "Groovy script to execute", required = true)
-            String script
-            ) ;
-
+            String script);
 }

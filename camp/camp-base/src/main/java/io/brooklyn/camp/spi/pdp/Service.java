@@ -48,7 +48,7 @@ public class Service {
         result.name = (String) fields.remove("name");
         result.description = (String) fields.remove("description");
         // FIXME _type needed in lots of places
-        result.serviceType = (String) (String) Yamls.removeMultinameAttribute(fields, "service_type", "serviceType", "type");
+        result.serviceType = (String) Yamls.removeMultinameAttribute(fields, "service_type", "serviceType", "type");
         
         result.characteristics = new ArrayList<ServiceCharacteristic>();
         Object chars = fields.remove("characteristics");

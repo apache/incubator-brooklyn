@@ -1,0 +1,98 @@
+/* CODE RENDERING
+   ----------------------------------------------------------------------- */
+@mixin nowrap() {
+    white-space: pre;
+    word-wrap: normal;
+    overflow-y: scroll;
+}
+
+@mixin code() {
+    font-family: Consolas, Lucida Console, Monaco, monospace;
+    @include nowrap();
+    font-size: 14px;
+    /* override color and bg-color on 'code' from bootstrap, and a touch more padding on top since font-size is smaller */
+    color: $text_color;
+    background-color: $code_bg_color;
+}
+
+@mixin pre() {
+    @include code();
+    padding: 0.4em 0.8em;
+    overflow-x: scroll;
+    /* override border and line-height on 'pre' from bootstrap */
+    border: none;
+    border-radius: 2px;
+    line-height: 1.4;
+    font-size: 13px;
+}
+
+pre {
+    @include pre();
+    code {
+        /* override settings on 'pre code' from bootstrap */
+        @include pre();
+        line-height: 1;
+        /** and no padding since pre already has some */ 
+        padding: 0px; 
+    }
+}
+code {
+    @include code();
+    padding: 4px 4px 2px 4px;
+    border-radius: 3px;
+}
+a code {
+  color: inherit;
+}
+
+.nowrap { @include nowrap(); }
+
+.highlight { background-color:$code_bg_color; } /* clipboard icon should have the same background color as the code */
+
+.highlight .clipboard_button { display: none; }
+.highlight:hover .clipboard_button { display: inherit; }
+.clipboard_button.zeroclipboard-is-hover { display: inherit; }
+
+.clipboard_container { float: right; padding: 8px; }
+.clipboard_button:before {
+  // fa-copy
+  content: "\f0c5";
+}
+.clipboard_button {
+  font-size: 18px;
+  color: $vibrant_fg_green;
+  @include transform('translateY(-2px)');
+}
+.clipboard_button:hover, .clipboard_button.zeroclipboard-is-hover {
+  color: $a_hover_color;
+  cursor: pointer; cursor: hand;
+}
+.clipboard_button.zeroclipboard-is-active .on-active {
+  display: inherit;
+}
+.clipboard_button .on-active {
+  // z-index often doesn't help here (diff stacking context to the side menu)... but it shouldn't hurt!
+  z-index: 10;
+  font-family: $fonts;
+  display: none;
+  margin-top: -20px;
+  height: 0;
+  width: 0;
+  overflow-x: visible;
+  overflow-y: visible;
+  position: relative;
+  top: -30px;
+}
+.clipboard_button .on-active > div {
+  background-color: $white_dd;
+  border: 1px solid $gray_aa;
+  font-size: 75%;
+  font-weight: normal;
+  left: -50%;
+  color: $blackish;
+  width: auto;
+  display: inline-block;
+  @include nowrap();
+  padding: 3px 7px;
+  @include transform('translateX(-50%)');
+}

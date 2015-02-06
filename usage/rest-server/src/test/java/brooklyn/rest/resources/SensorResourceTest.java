@@ -22,8 +22,8 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -31,8 +31,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.config.render.TestRendererHints;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.rest.api.SensorApi;
@@ -40,14 +40,18 @@ import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
+import brooklyn.test.HttpTestUtils;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.WebResource.Builder;
 
 /**
  * Test the {@link SensorApi} implementation.
@@ -58,15 +62,17 @@ import com.sun.jersey.api.client.GenericType;
 @Test(singleThreaded = true)
 public class SensorResourceTest extends BrooklynRestResourceTest {
 
-    private final ApplicationSpec simpleSpec = ApplicationSpec.builder()
+    final static ApplicationSpec SIMPLE_SPEC = ApplicationSpec.builder()
             .name("simple-app")
             .entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName())))
             .locations(ImmutableSet.of("localhost"))
             .build();
 
-    private static final String sensorsEndpoint = "/v1/applications/simple-app/entities/simple-ent/sensors";
-    private static final String sensorName = "ammphibian.count";
-    private static final AttributeSensor<Integer> sensor = Sensors.newIntegerSensor(sensorName);
+    static final String SENSORS_ENDPOINT = "/v1/applications/simple-app/entities/simple-ent/sensors";
+    static final String SENSOR_NAME = "amphibian.count";
+    static final AttributeSensor<Integer> SENSOR = Sensors.newIntegerSensor(SENSOR_NAME);
+
+    EntityInternal entity;
 
     /**
      * Sets up the application and entity.
@@ -80,21 +86,20 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
         super.setUp();
 
         // Deploy application
-        ClientResponse deploy = clientDeploy(simpleSpec);
+        ClientResponse deploy = clientDeploy(SIMPLE_SPEC);
         waitForApplicationToBeRunning(deploy.getLocation());
 
+        entity = (EntityInternal) Iterables.find(getManagementContext().getEntityManager().getEntities(), EntityPredicates.displayNameEqualTo("simple-ent"));
+        addAmphibianSensor(entity);
+    }
+
+    static void addAmphibianSensor(EntityInternal entity) {
         // Add new sensor
-        EntityInternal entity = (EntityInternal) Iterables.find(getManagementContext().getEntityManager().getEntities(), new Predicate<Entity>() {
-            @Override
-            public boolean apply(@Nullable Entity input) {
-                return "RestMockSimpleEntity".equals(input.getEntityType().getSimpleName());
-            }
-        });
-        entity.getMutableEntityType().addSensor(sensor);
-        entity.setAttribute(sensor, 12345);
+        entity.getMutableEntityType().addSensor(SENSOR);
+        entity.setAttribute(SENSOR, 12345);
 
         // Register display value hint
-        RendererHints.register(sensor, RendererHints.displayValue(Functions.compose(StringFunctions.append(" frogs"), Functions.toStringFunction())));
+        RendererHints.register(SENSOR, RendererHints.displayValue(Functions.compose(StringFunctions.append(" frogs"), Functions.toStringFunction())));
     }
 
     @AfterClass(alwaysRun = true)
@@ -107,13 +112,13 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     /** Check default is to use display value hint. */
     @Test
     public void testBatchSensorRead() throws Exception {
-        ClientResponse response = client().resource(sensorsEndpoint + "/current-state")
+        ClientResponse response = client().resource(SENSORS_ENDPOINT + "/current-state")
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
         Map<String, ?> currentState = response.getEntity(new GenericType<Map<String,?>>(Map.class) {});
 
         for (String sensor : currentState.keySet()) {
-            if (sensor.equals(sensorName)) {
+            if (sensor.equals(SENSOR_NAME)) {
                 assertEquals(currentState.get(sensor), "12345 frogs");
             }
         }
@@ -122,91 +127,146 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     /** Check setting {@code raw} to {@code true} ignores display value hint. */
     @Test(dependsOnMethods = "testBatchSensorRead")
     public void testBatchSensorReadRaw() throws Exception {
-        ClientResponse response = client().resource(sensorsEndpoint + "/current-state")
+        ClientResponse response = client().resource(SENSORS_ENDPOINT + "/current-state")
                 .queryParam("raw", "true")
                 .accept(MediaType.APPLICATION_JSON)
                 .get(ClientResponse.class);
         Map<String, ?> currentState = response.getEntity(new GenericType<Map<String,?>>(Map.class) {});
 
         for (String sensor : currentState.keySet()) {
-            if (sensor.equals(sensorName)) {
+            if (sensor.equals(SENSOR_NAME)) {
                 assertEquals(currentState.get(sensor), Integer.valueOf(12345));
             }
         }
     }
 
-    /** Check default is to use display value hint. */
+    protected ClientResponse doSensorTest(Boolean raw, MediaType acceptsType, Object expectedValue) {
+        return doSensorTestUntyped(
+            raw==null ? null : (""+raw).toLowerCase(), 
+            acceptsType==null ? null : new String[] { acceptsType.getType() }, 
+            expectedValue);
+    }
+    protected ClientResponse doSensorTestUntyped(String raw, String[] acceptsTypes, Object expectedValue) {
+        WebResource req = client().resource(SENSORS_ENDPOINT + "/" + SENSOR_NAME);
+        if (raw!=null) req = req.queryParam("raw", raw);
+        ClientResponse response;
+        if (acceptsTypes!=null) {
+            Builder rb = req.accept(acceptsTypes);
+            response = rb.get(ClientResponse.class);
+        } else {
+            response = req.get(ClientResponse.class);
+        }
+        if (expectedValue!=null) {
+            HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+            Object value = response.getEntity(expectedValue.getClass());
+            assertEquals(value, expectedValue);
+        }
+        return response;
+    }
+    
+    /**
+     * Check we can get a sensor, explicitly requesting json; gives a string picking up the rendering hint.
+     * 
+     * If no "Accepts" header is given, then we don't control whether json or plain text comes back.
+     * It is dependent on the method order, which is compiler-specific.
+     */
     @Test
-    public void testGet() throws Exception {
-        ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
-                .accept(MediaType.APPLICATION_JSON)
-                .get(ClientResponse.class);
-        String value = response.getEntity(String.class);
-        assertEquals(value, "\"12345 frogs\"");
+    public void testGetJson() throws Exception {
+        doSensorTest(null, MediaType.APPLICATION_JSON_TYPE, "\"12345 frogs\"");
+    }
+    
+    @Test
+    public void testGetJsonBytes() throws Exception {
+        ClientResponse response = doSensorTest(null, MediaType.APPLICATION_JSON_TYPE, null);
+        byte[] bytes = Streams.readFully(response.getEntityInputStream());
+        // assert we have one set of surrounding quotes
+        assertEquals(bytes.length, 13);
     }
 
-    /** Check default is to use display value hint. */
-    @Test(dependsOnMethods = "testGet")
+    /** Check that plain returns a string without quotes, with the rendering hint */
+    @Test
     public void testGetPlain() throws Exception {
-        ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
-                .accept(MediaType.TEXT_PLAIN)
-                .get(ClientResponse.class);
-        String value = response.getEntity(String.class);
-        assertEquals(value, "12345 frogs");
+        doSensorTest(null, MediaType.TEXT_PLAIN_TYPE, "12345 frogs");
     }
 
-    /** Check setting {@code raw} to {@code true} ignores display value hint. */
-    @Test(dependsOnMethods = "testGetPlain")
+    /** 
+     * Check that when we set {@code raw = true}, the result ignores the display value hint.
+     *
+     * If no "Accepts" header is given, then we don't control whether json or plain text comes back.
+     * It is dependent on the method order, which is compiler-specific.
+     */
+    @Test
+    public void testGetRawJson() throws Exception {
+        doSensorTest(true, MediaType.APPLICATION_JSON_TYPE, 12345);
+    }
+    
+    /** As {@link #testGetRaw()} but with plain set, returns the number */
+    @Test
     public void testGetPlainRaw() throws Exception {
-        ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
-                .queryParam("raw", "true")
-                .accept(MediaType.TEXT_PLAIN)
-                .get(ClientResponse.class);
-        String value = response.getEntity(String.class);
-        assertEquals(value, "12345");
+        // have to pass a string because that's how PLAIN is deserialized
+        doSensorTest(true, MediaType.TEXT_PLAIN_TYPE, "12345");
     }
 
-    /** Check setting {@code raw} to {@code true} ignores display value hint. */
-    @Test(dependsOnMethods = "testGet")
-    public void testGetRaw() throws Exception {
-        ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
-                .queryParam("raw", "true")
-                .accept(MediaType.APPLICATION_JSON)
-                .get(ClientResponse.class);
-        Integer value = response.getEntity(Integer.class);
-        assertEquals(value, Integer.valueOf(12345));
-    }
-
-    /** Check setting {@code raw} to {@code false} uses display value hint. */
-    @Test(dependsOnMethods = "testGetPlainRaw")
+    /** Check explicitly setting {@code raw} to {@code false} is as before */
+    @Test
     public void testGetPlainRawFalse() throws Exception {
-        ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
-                .queryParam("raw", "false")
-                .accept(MediaType.TEXT_PLAIN)
-                .get(ClientResponse.class);
-        String value = response.getEntity(String.class);
-        assertEquals(value, "12345 frogs");
+        doSensorTest(false, MediaType.TEXT_PLAIN_TYPE, "12345 frogs");
     }
 
     /** Check empty vaue for {@code raw} will revert to using default. */
-    @Test(dependsOnMethods = "testGetPlainRaw")
+    @Test
     public void testGetPlainRawEmpty() throws Exception {
-        ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
-                .queryParam("raw", "")
-                .accept(MediaType.TEXT_PLAIN)
-                .get(ClientResponse.class);
-        String value = response.getEntity(String.class);
-        assertEquals(value, "12345 frogs");
+        doSensorTestUntyped("", new String[] { MediaType.TEXT_PLAIN }, "12345 frogs");
     }
 
     /** Check unparseable vaue for {@code raw} will revert to using default. */
-    @Test(dependsOnMethods = "testGetPlainRaw")
+    @Test
     public void testGetPlainRawError() throws Exception {
-        ClientResponse response = client().resource(sensorsEndpoint + "/" + sensorName)
-                .queryParam("raw", "biscuits")
-                .accept(MediaType.TEXT_PLAIN)
-                .get(ClientResponse.class);
-        String value = response.getEntity(String.class);
-        assertEquals(value, "12345 frogs");
+        doSensorTestUntyped("biscuits", new String[] { MediaType.TEXT_PLAIN }, "12345 frogs");
     }
+    
+    /** Check we can set a value */
+    @Test
+    public void testSet() throws Exception {
+        try {
+            ClientResponse response = client().resource(SENSORS_ENDPOINT + "/" + SENSOR_NAME)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(ClientResponse.class, 67890);
+            assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+
+            assertEquals(entity.getAttribute(SENSOR), (Integer)67890);
+            
+            String value = client().resource(SENSORS_ENDPOINT + "/" + SENSOR_NAME).accept(MediaType.TEXT_PLAIN_TYPE).get(String.class);
+            assertEquals(value, "67890 frogs");
+
+        } finally { addAmphibianSensor(entity); }
+    }
+
+    @Test
+    public void testSetFromMap() throws Exception {
+        try {
+            ClientResponse response = client().resource(SENSORS_ENDPOINT)
+                .type(MediaType.APPLICATION_JSON_TYPE)
+                .post(ClientResponse.class, MutableMap.of(SENSOR_NAME, 67890));
+            assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+            
+            assertEquals(entity.getAttribute(SENSOR), (Integer)67890);
+
+        } finally { addAmphibianSensor(entity); }
+    }
+    
+    /** Check we can delete a value */
+    @Test
+    public void testDelete() throws Exception {
+        try {
+            ClientResponse response = client().resource(SENSORS_ENDPOINT + "/" + SENSOR_NAME)
+                .delete(ClientResponse.class);
+            assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+
+            String value = client().resource(SENSORS_ENDPOINT + "/" + SENSOR_NAME).accept(MediaType.TEXT_PLAIN_TYPE).get(String.class);
+            assertEquals(value, "");
+
+        } finally { addAmphibianSensor(entity); }
+    }
+
 }

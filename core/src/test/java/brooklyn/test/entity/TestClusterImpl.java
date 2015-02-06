@@ -18,6 +18,7 @@
  */
 package brooklyn.test.entity;
 
+import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
 
@@ -35,6 +36,14 @@ public class TestClusterImpl extends DynamicClusterImpl implements TestCluster {
         super.init();
         size = getConfig(INITIAL_SIZE);
         setAttribute(Startable.SERVICE_UP, true);
+    }
+    
+    @Override
+    protected void initEnrichers() {
+        // say this is up if it has no children 
+        setConfig(UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
+        
+        super.initEnrichers();
     }
     
     @Override

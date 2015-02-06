@@ -36,6 +36,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableList;
@@ -47,7 +48,7 @@ public class LocalhostLocationResolverTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newEmpty());
+        managementContext = LocalManagementContextForTests.newInstance();
         brooklynProperties = managementContext.getBrooklynProperties();
     }
     
@@ -137,9 +138,9 @@ public class LocalhostLocationResolverTest {
     @Test
     public void testThrowsOnInvalid() throws Exception {
         assertThrowsNoSuchElement("wrongprefix");
-        assertThrowsIllegalArgument("localhost:(name=abc"); // no closing bracket
-        assertThrowsIllegalArgument("localhost:(name)"); // no value for name
-        assertThrowsIllegalArgument("localhost:(name=)"); // no value for name
+        assertThrowsIllegalArgument("localhost(name=abc"); // no closing bracket
+        assertThrowsIllegalArgument("localhost(name)"); // no value for name
+        assertThrowsIllegalArgument("localhost(name=)"); // no value for name
     }
     
 
@@ -179,7 +180,15 @@ public class LocalhostLocationResolverTest {
     @Test(expectedExceptions={IllegalArgumentException.class})
     public void testRegistryCommaResolutionInListNotAllowed2() throws NoMachinesAvailableException {
         // disallowed since 0.7.0
-        getLocationResolver().resolve(ImmutableList.of("byon:(hosts=\"192.168.0.1\",user=bob),byon:(hosts=\"192.168.0.2\",user=bob2)"));
+        // fails because it interprets the entire string as a single spec, which does not parse
+        getLocationResolver().resolve(ImmutableList.of("localhost(),localhost()"));
+    }
+
+    @Test(expectedExceptions={IllegalArgumentException.class})
+    public void testRegistryCommaResolutionInListNotAllowed3() throws NoMachinesAvailableException {
+        // disallowed since 0.7.0
+        // fails because it interprets the entire string as a single spec, which does not parse
+        getLocationResolver().resolve(ImmutableList.of("localhost(name=a),localhost(name=b)"));
     }
 
     @Test(expectedExceptions={IllegalArgumentException.class})
@@ -189,9 +198,24 @@ public class LocalhostLocationResolverTest {
 
     @Test
     public void testResolvesExplicitName() throws Exception {
+        Location location = resolve("localhost(name=myname)");
+        assertTrue(location instanceof LocalhostMachineProvisioningLocation);
+        assertEquals(location.getDisplayName(), "myname");
+    }
+    
+    @Test
+    public void testWithOldStyleColon() throws Exception {
         Location location = resolve("localhost:(name=myname)");
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location.getDisplayName(), "myname");
+    }
+    
+    @Test
+    public void testResolvesPropertiesInSpec() throws Exception {
+        Location location = resolve("localhost(privateKeyFile=myprivatekeyfile,name=myname)");
+        assertTrue(location instanceof LocalhostMachineProvisioningLocation);
+        assertEquals(location.getDisplayName(), "myname");
+        assertEquals(location.getAllConfig(true).get("privateKeyFile"), "myprivatekeyfile");
     }
     
     @Test
@@ -200,7 +224,7 @@ public class LocalhostLocationResolverTest {
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location.getDisplayName(), "localhost");
 
-        Location location2 = resolve("localhost:()");
+        Location location2 = resolve("localhost()");
         assertTrue(location2 instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location2.getDisplayName(), "localhost");
     }
@@ -222,6 +246,9 @@ public class LocalhostLocationResolverTest {
         } catch (NoSuchElementException e) {
             // success
         }
+
+        // and check the long form returns an Absent (not throwing)
+        Assert.assertTrue(managementContext.getLocationRegistry().resolve(val, false, null).isAbsent());
     }
     
     private void assertThrowsIllegalArgument(String val) {
@@ -231,5 +258,8 @@ public class LocalhostLocationResolverTest {
         } catch (IllegalArgumentException e) {
             // success
         }
+        
+        // and check the long form returns an Absent (not throwing)
+        Assert.assertTrue(managementContext.getLocationRegistry().resolve(val, false, null).isAbsent());
     }
 }

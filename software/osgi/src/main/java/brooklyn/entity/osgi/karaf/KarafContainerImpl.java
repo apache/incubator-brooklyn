@@ -125,7 +125,12 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
                 .pollAttribute(new JmxAttributePollConfig<Map>(KARAF_INSTANCES)
                         .objectName(karafAdminObjectName)
                         .attributeName("Instances")
-                        .onSuccess((Function)JmxValueFunctions.tabularDataToMap())
+                        .onSuccess(new Function<Object, Map>() {
+                            @Override
+                            public Map apply(Object input) {
+                                return JmxValueFunctions.tabularDataToMap((TabularData)input);
+                            }
+                        })
                         .onException(new Function<Exception,Map>() {
                                 @Override public Map apply(Exception input) {
                                     // If MBean is unreachable, then mark as service-down

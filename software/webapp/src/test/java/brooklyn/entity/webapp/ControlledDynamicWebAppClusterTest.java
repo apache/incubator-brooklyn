@@ -19,73 +19,55 @@
 package brooklyn.entity.webapp;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.Callable;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BasicConfigurableEntityFactory;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.TrackingAbstractController;
-import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestJavaWebAppEntity;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-/**
- * TODO clarify test purpose
- */
-public class ControlledDynamicWebAppClusterTest {
+public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSupport {
     private static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppClusterTest.class);
 
-    private static final int TIMEOUT_MS = 10*1000;
-    
-    private URL warUrl;
-    private TestApplication app;
     private LocalhostMachineProvisioningLocation loc;
     private List<LocalhostMachineProvisioningLocation> locs;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        String warPath = "hello-world.war";
-        warUrl = getClass().getClassLoader().getResource(warPath);
-        
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        loc = new LocalhostMachineProvisioningLocation();
+        super.setUp();
+
+        loc = app.newLocalhostProvisioningLocation();
         locs = ImmutableList.of(loc);
     }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+
+    public String getTestWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
+        return "classpath://hello-world.war";
     }
-    
+
     @Test
     public void testUsesCustomController() {
         AbstractController controller = app.createAndManageChild(EntitySpec.create(TrackingAbstractController.class).displayName("mycustom"));
@@ -93,7 +75,7 @@ public class ControlledDynamicWebAppClusterTest {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER, controller)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar())));
         app.start(locs);
 
         EntityTestUtils.assertAttributeEqualsEventually(controller, AbstractController.SERVICE_UP, true);
@@ -110,7 +92,7 @@ public class ControlledDynamicWebAppClusterTest {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 0)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, controllerSpec)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar())));
         app.start(locs);
         LoadBalancer controller = cluster.getController();
         
@@ -122,16 +104,15 @@ public class ControlledDynamicWebAppClusterTest {
         EntityTestUtils.assertAttributeEquals(controller, AbstractController.SERVICE_UP, false);
     }
     
-    @Test(groups="Integration")
-    public void testConfiguresController() {
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
-                .configure("initialSize", 1)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
+    @Test
+    public void testTheTestJavaWebApp() {
+        SoftwareProcess n = app.createAndManageChild(EntitySpec.create(TestJavaWebAppEntity.class));
         app.start(locs);
 
-        String url = cluster.getController().getAttribute(NginxController.ROOT_URL);
-        HttpTestUtils.assertHttpStatusCodeEventuallyEquals(url, 200);
-        HttpTestUtils.assertContentEventuallyContainsText(url, "Hello");
+        EntityTestUtils.assertAttributeEqualsEventually(n, AbstractController.SERVICE_UP, true);
+        
+        app.stop();
+        EntityTestUtils.assertAttributeEqualsEventually(n, AbstractController.SERVICE_UP, false);
     }
     
     @Test
@@ -139,30 +120,11 @@ public class ControlledDynamicWebAppClusterTest {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 2)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         app.start(locs);
 
         Iterable<TestJavaWebAppEntity> webservers = Iterables.filter(cluster.getCluster().getMembers(), TestJavaWebAppEntity.class);
         assertEquals(Iterables.size(webservers), 2, "webservers="+webservers);
-    }
-    
-    @Test(groups="Integration")
-    public void testSetsToplevelHostnameFromController() {
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
-                .configure("initialSize", 1)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", warUrl.toString())));
-        app.start(locs);
-
-        String expectedHostname = cluster.getController().getAttribute(LoadBalancer.HOSTNAME);
-        String expectedRootUrl = cluster.getController().getAttribute(LoadBalancer.ROOT_URL);
-        boolean expectedServiceUp = true;
-        
-        assertNotNull(expectedHostname);
-        assertNotNull(expectedRootUrl);
-        
-        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, ControlledDynamicWebAppCluster.HOSTNAME, expectedHostname);
-        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, ControlledDynamicWebAppCluster.ROOT_URL, expectedRootUrl);
-        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), cluster, ControlledDynamicWebAppCluster.SERVICE_UP, expectedServiceUp);
     }
     
     @Test
@@ -175,67 +137,6 @@ public class ControlledDynamicWebAppClusterTest {
         app.start(locs);
 
         assertEquals(cluster.getCluster().getDisplayName(), "mydisplayname");
-    }
-    
-    @Test(groups="Integration")
-    public void testCustomWebClusterSpecGetsMemberSpec() {
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
-                .configure("initialSize", 1)
-                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class)
-                        .configure(JBoss7Server.ROOT_WAR, warUrl.toString()))
-                .configure(ControlledDynamicWebAppCluster.WEB_CLUSTER_SPEC, EntitySpec.create(DynamicWebAppCluster.class)
-                        .displayName("mydisplayname")));
-        app.start(locs);
-
-        String url = cluster.getController().getAttribute(NginxController.ROOT_URL);
-        HttpTestUtils.assertContentEventuallyContainsText(url, "Hello");
-
-        // and make sure it really was using our custom spec
-        assertEquals(cluster.getCluster().getDisplayName(), "mydisplayname");
-    }
-    
-    // Needs to be integration test because still using nginx controller; could pass in mock controller
-    @Test(groups="Integration")
-    public void testSetsServiceLifecycle() {
-        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
-                .configure("initialSize", 1)
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
-        
-        RecordingSensorEventListener<Lifecycle> listener = new RecordingSensorEventListener<Lifecycle>(true);
-        app.subscribe(cluster, Attributes.SERVICE_STATE, listener);
-        app.start(locs);
-
-        assertEquals(listener.getValues(), ImmutableList.of(Lifecycle.STARTING, Lifecycle.RUNNING), "vals="+listener.getValues());
-        listener.getValues().clear();
-        
-        app.stop();
-        assertEquals(listener.getValues(), ImmutableList.of(Lifecycle.STOPPING, Lifecycle.STOPPED), "vals="+listener.getValues());
-    }
-    
-    @Test(groups="Integration")
-    public void testTomcatAbsoluteRedirect() {
-        final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
-            .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class)
-                    .configure(TomcatServer.ROOT_WAR, "classpath://hello-world.war"))
-            .configure("initialSize", 1)
-            .configure(AbstractController.SERVICE_UP_URL_PATH, "hello/redirectAbsolute")
-        );
-        app.start(locs);
-
-        final NginxController nginxController = (NginxController) cluster.getController();
-        Asserts.succeedsEventually(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return nginxController.getServerPoolAddresses().size() == 1;
-            }
-        });
-        
-        Entity tomcatServer = Iterables.getOnlyElement(cluster.getCluster().getMembers());
-        EntityTestUtils.assertAttributeEqualsEventually(tomcatServer, Attributes.SERVICE_UP, true);
-        
-        EntityTestUtils.assertAttributeEqualsContinually(nginxController, Attributes.SERVICE_UP, true);
-        
-        app.stop();
     }
     
     public static class RecordingSensorEventListener<T> implements SensorEventListener<T> {
@@ -275,7 +176,7 @@ public class ControlledDynamicWebAppClusterTest {
         final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         app.start(locs);
         final DynamicWebAppCluster childCluster = cluster.getCluster();
         
@@ -308,7 +209,7 @@ public class ControlledDynamicWebAppClusterTest {
         final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
                 .configure(ControlledDynamicWebAppCluster.CONTROLLER_SPEC, EntitySpec.create(TrackingAbstractController.class))
-                .configure("factory", new BasicConfigurableEntityFactory<TestJavaWebAppEntity>(TestJavaWebAppEntity.class)));
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TestJavaWebAppEntity.class)) );
         app.start(locs);
         final DynamicWebAppCluster childCluster = cluster.getCluster();
         LoadBalancer controller = cluster.getController();
@@ -317,6 +218,6 @@ public class ControlledDynamicWebAppClusterTest {
         Entities.unmanage(controller);
         
         cluster.stop();
-        EntityTestUtils.assertAttributeEquals(cluster, ControlledDynamicWebAppCluster.SERVICE_STATE, Lifecycle.STOPPED);
+        EntityTestUtils.assertAttributeEquals(cluster, ControlledDynamicWebAppCluster.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
     }
 }

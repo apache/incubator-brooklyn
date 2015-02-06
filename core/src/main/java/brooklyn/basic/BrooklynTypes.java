@@ -21,9 +21,14 @@ package brooklyn.basic;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.basic.EnricherDynamicType;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.event.Sensor;
+import brooklyn.location.Location;
+import brooklyn.policy.Enricher;
+import brooklyn.policy.Policy;
+import brooklyn.policy.basic.PolicyDynamicType;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Maps;
@@ -71,7 +76,7 @@ public class BrooklynTypes {
         return (EntityDynamicType) BrooklynTypes.getDefinedBrooklynType(entityClass);
     }
 
-    private static BrooklynDynamicType<?,?> getDefinedBrooklynType(Class<? extends BrooklynObject> brooklynClass) {
+    public static BrooklynDynamicType<?,?> getDefinedBrooklynType(Class<? extends BrooklynObject> brooklynClass) {
         BrooklynDynamicType<?,?> t = cache.get(brooklynClass);
         if (t!=null) return t;
         return loadDefinedBrooklynType(brooklynClass);
@@ -84,6 +89,12 @@ public class BrooklynTypes {
         
         if (Entity.class.isAssignableFrom(brooklynClass)) {
             type = new ImmutableEntityType((Class<? extends Entity>)brooklynClass);
+        } else if (Location.class.isAssignableFrom(brooklynClass)) {
+            type = new ImmutableEntityType((Class<? extends Entity>)brooklynClass);
+        } else if (Policy.class.isAssignableFrom(brooklynClass)) {
+            type = new PolicyDynamicType((Class<? extends Policy>)brooklynClass); // TODO immutable?
+        } else if (Enricher.class.isAssignableFrom(brooklynClass)) {
+            type = new EnricherDynamicType((Class<? extends Enricher>)brooklynClass); // TODO immutable?
         } else {
             throw new IllegalStateException("Invalid brooklyn type "+brooklynClass);
         }

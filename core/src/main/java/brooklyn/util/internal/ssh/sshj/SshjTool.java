@@ -23,6 +23,7 @@ import static com.google.common.base.Throwables.getCausalChain;
 import static com.google.common.collect.Iterables.any;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -32,7 +33,9 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import net.schmizz.sshj.connection.ConnectionException;
@@ -47,17 +50,23 @@ import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 
 import org.apache.commons.io.input.ProxyInputStream;
-import org.bouncycastle.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeTimeoutException;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;
+import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshAbstractTool;
 import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.stream.InputStreamSupplier;
+import brooklyn.util.io.FileUtil;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.StreamGobbler;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -68,7 +77,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
+import com.google.common.io.CountingOutputStream;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
 
@@ -267,10 +276,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     public int copyFromServer(Map<String,?> props, String pathAndFileOnRemoteServer, File localFile) {
         InputStream contents = acquire(new GetFileAction(pathAndFileOnRemoteServer));
         try {
-            Files.copy(InputStreamSupplier.of(contents), localFile);
+            FileUtil.copyTo(contents, localFile);
             return 0; // TODO Can we assume put will have thrown exception if failed? Rather than exit code != 0?
-        } catch (IOException e) {
-            throw Exceptions.propagate(e);
+        } finally {
+            Streams.closeQuietly(contents);
         }
     }
 
@@ -299,23 +308,252 @@ public class SshjTool extends SshAbstractTool implements SshTool {
      * 
      * So on balance, the script-based approach seems most reliable, even if there is an overhead
      * of separate message(s) for copying the file!
+     * 
+     * Another consideration is long-running scripts. On some clouds when executing a script that takes 
+     * several minutes, we have seen it fail with -1 (e.g. 1 in 20 times). This suggests the ssh connection
+     * is being dropped. To avoid this problem, we can execute the script asynchronously, writing to files
+     * the stdout/stderr/pid/exitStatus. We then periodically poll to retrieve the contents of these files.
+     * Use {@link #PROP_EXEC_ASYNC} to force this mode of execution.
      */
     @Override
     public int execScript(final Map<String,?> props, final List<String> commands, final Map<String,?> env) {
-        return new ToolAbstractExecScript(props) {
+        Boolean execAsync = getOptionalVal(props, PROP_EXEC_ASYNC);
+        if (Boolean.TRUE.equals(execAsync) && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_SSH_ASYNC_EXEC)) {
+            return execScriptAsyncAndPoll(props, commands, env);
+        } else {
+            if (Boolean.TRUE.equals(execAsync)) {
+                if (LOG.isDebugEnabled()) LOG.debug("Ignoring ssh exec-async configuration, because feature is disabled");
+            }
+            return new ToolAbstractExecScript(props) {
+                public int run() {
+                    String scriptContents = toScript(props, commands, env);
+                    if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
+                    copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
+                    return asInt(acquire(new ShellAction(buildRunScriptCommand(), out, err, execTimeout)), -1);
+                }
+            }.run();
+        }
+    }
+
+    /**
+     * Executes the script in the background (`nohup ... &`), and then executes other ssh commands to poll for the
+     * stdout, stderr and exit code of that original process (which will each have been written to separate files).
+     * 
+     * The polling is a "long poll". That is, it executes a long-running ssh command to retrieve the stdout, etc.
+     * If that long-poll command fails, then we just execute another one to pick up from where it left off.
+     * This means we do not need to execute many ssh commands (which are expensive), but can still return promptly
+     * when the command completes.
+     * 
+     * Much of this was motivated by https://issues.apache.org/jira/browse/BROOKLYN-106, which is no longer
+     * an issue. The retries (e.g. in the upload-script) are arguably overkill given that {@link #acquire(SshAction)}
+     * will already retry. However, leaving this in place as it could prove useful when working with flakey
+     * networks in the future.
+     * 
+     * TODO There are (probably) issues with this method when using {@link ShellTool#PROP_RUN_AS_ROOT}.
+     * I (Aled) saw the .pid file having an owner of root:root, and a failure message in stderr of:
+     *   -bash: line 3: /tmp/brooklyn-20150113-161203056-XMEo-move_install_dir_from_user_to_.pid: Permission denied
+     */
+    protected int execScriptAsyncAndPoll(final Map<String,?> props, final List<String> commands, final Map<String,?> env) {
+        return new ToolAbstractAsyncExecScript(props) {
+            private int maxConsecutiveSshFailures = 3;
+            private Duration maxDelayBetweenPolls = Duration.seconds(20);
+            private Duration pollTimeout = getOptionalVal(props, PROP_EXEC_ASYNC_POLLING_TIMEOUT, Duration.FIVE_MINUTES);
+            private int iteration = 0;
+            private int consecutiveSshFailures = 0;
+            private int stdoutCount = 0;
+            private int stderrCount = 0;
+            private Stopwatch timer;
+            
             public int run() {
-                String scriptContents = toScript(props, commands, env);
-                if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as script: {}", host, scriptContents);
-                copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
+                timer = Stopwatch.createStarted();
+                final String scriptContents = toScript(props, commands, env);
+                if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} as async script: {}", host, scriptContents);
                 
-                return asInt(acquire(new ShellAction(buildRunScriptCommand(), out, err)), -1);                
+                // Upload script; try repeatedly because have seen timeout intermittently on vcloud-director (BROOKLYN-106 related).
+                boolean uploadSuccess = Repeater.create("async script upload on "+SshjTool.this.toString()+" (for "+getSummary()+")")
+                        .backoffTo(maxDelayBetweenPolls)
+                        .limitIterationsTo(3)
+                        .rethrowException()
+                        .until(new Callable<Boolean>() {
+                            @Override
+                            public Boolean call() throws Exception {
+                                iteration++;
+                                if (LOG.isDebugEnabled()) {
+                                    String msg = "Uploading (iteration="+iteration+") for async script on "+SshjTool.this.toString()+" (for "+getSummary()+")";
+                                    if (iteration == 1) {
+                                        LOG.trace(msg);
+                                    } else {
+                                        LOG.debug(msg);
+                                    }
+                                }
+                                copyToServer(ImmutableMap.of("permissions", "0700"), scriptContents.getBytes(), scriptPath);
+                                return true;
+                            }})
+                        .run();
+                
+                if (!uploadSuccess) {
+                    // Unexpected! Should have either returned true or have rethrown the exception; should never get false.
+                    String msg = "Unexpected state: repeated failure for async script upload on "+SshjTool.this.toString()+" ("+getSummary()+")";
+                    LOG.warn(msg+"; rethrowing");
+                    throw new IllegalStateException(msg);
+                }
+                
+                // Execute script asynchronously
+                int execResult = asInt(acquire(new ShellAction(buildRunScriptCommand(), out, err, execTimeout)), -1);
+                if (execResult != 0) return execResult;
+
+                // Long polling to get the status
+                try {
+                    final AtomicReference<Integer> result = new AtomicReference<Integer>();
+                    boolean success = Repeater.create("async script long-poll on "+SshjTool.this.toString()+" (for "+getSummary()+")")
+                            .backoffTo(maxDelayBetweenPolls)
+                            .limitTimeTo(execTimeout)
+                            .until(new Callable<Boolean>() {
+                                @Override
+                                public Boolean call() throws Exception {
+                                    iteration++;
+                                    if (LOG.isDebugEnabled()) LOG.debug("Doing long-poll (iteration="+iteration+") for async script to complete on "+SshjTool.this.toString()+" (for "+getSummary()+")");
+                                    Integer exitstatus = longPoll();
+                                    result.set(exitstatus);
+                                    return exitstatus != null;
+                                }})
+                            .run();
+                    
+                    if (!success) {
+                        // Timed out
+                        String msg = "Timeout for async script to complete on "+SshjTool.this.toString()+" ("+getSummary()+")";
+                        LOG.warn(msg+"; rethrowing");
+                        throw new TimeoutException(msg);
+                    }
+                    
+                    return result.get();
+                    
+                } catch (Exception e) {
+                    LOG.debug("Problem polling for async script on "+SshjTool.this.toString()+" (for "+getSummary()+"); rethrowing after deleting temporary files", e);
+                    throw Exceptions.propagate(e);
+                } finally {
+                    // Delete the temporary files created (and the `tail -c` commands that might have been left behind by long-polls).
+                    // Using pollTimeout so doesn't wait forever, but waits for a reasonable (configurable) length of time.
+                    // TODO also execute this if the `buildRunScriptCommand` fails, as that might have left files behind?
+                    try {
+                        int execDeleteResult = asInt(acquire(new ShellAction(deleteTemporaryFilesCommand(), out, err, pollTimeout)), -1);
+                        if (execDeleteResult != 0) {
+                            LOG.debug("Problem deleting temporary files of async script on "+SshjTool.this.toString()+" (for "+getSummary()+"): exit status "+execDeleteResult);
+                        }
+                    } catch (Exception e) {
+                        Exceptions.propagateIfFatal(e);
+                        LOG.debug("Problem deleting temporary files of async script on "+SshjTool.this.toString()+" (for "+getSummary()+"); continuing", e);
+                    }
+                }
+            }
+            
+            Integer longPoll() throws IOException {
+                // Long-polling to get stdout, stderr + exit status of async task.
+                // If our long-poll disconnects, we will just re-execute.
+                // We wrap the stdout/stderr so that we can get the size count. 
+                // If we disconnect, we will pick up from that char of the stream.
+                // TODO Additional stdout/stderr written by buildLongPollCommand() could interfere, 
+                //      causing us to miss some characters.
+                Duration nextPollTimeout = Duration.min(pollTimeout, Duration.millis(execTimeout.toMilliseconds()-timer.elapsed(TimeUnit.MILLISECONDS)));
+                CountingOutputStream countingOut = (out == null) ? null : new CountingOutputStream(out);
+                CountingOutputStream countingErr = (err == null) ? null : new CountingOutputStream(err);
+                List<String> pollCommand = buildLongPollCommand(stdoutCount, stderrCount, nextPollTimeout);
+                Duration sshJoinTimeout = nextPollTimeout.add(Duration.TEN_SECONDS);
+                ShellAction action = new ShellAction(pollCommand, countingOut, countingErr, sshJoinTimeout);
+                
+                int longPollResult;
+                try {
+                    longPollResult = asInt(acquire(action, 3, nextPollTimeout), -1);
+                } catch (RuntimeTimeoutException e) {
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll timed out on "+SshjTool.this.toString()+" (for "+getSummary()+"): "+e);
+                    return null;
+                }
+                stdoutCount += (countingOut == null) ? 0 : countingOut.getCount();
+                stderrCount += (countingErr == null) ? 0 : countingErr.getCount();
+                
+                if (longPollResult == 0) {
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll succeeded (exit status 0) on "+SshjTool.this.toString()+" (for "+getSummary()+")");
+                    return longPollResult; // success
+                    
+                } else if (longPollResult == -1) {
+                    // probably a connection failure; try again
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll received exit status -1; will retry on "+SshjTool.this.toString()+" (for "+getSummary()+")");
+                    return null;
+
+                } else if (longPollResult == 125) {
+                    // 125 is the special code for timeout in long-poll (see buildLongPollCommand).
+                    // However, there is a tiny chance that the underlying command might have returned that exact exit code!
+                    // Don't treat a timeout as a "consecutiveSshFailure".
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll received exit status "+longPollResult+"; most likely timeout; retrieving actual status on "+SshjTool.this.toString()+" (for "+getSummary()+")");
+                    return retrieveStatusCommand();
+
+                } else {
+                    // want to double-check whether this is the exit-code from the async process, or
+                    // some unexpected failure in our long-poll command.
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll received exit status "+longPollResult+"; retrieving actual status on "+SshjTool.this.toString()+" (for "+getSummary()+")");
+                    Integer result = retrieveStatusCommand();
+                    if (result != null) {
+                        return result;
+                    }
+                }
+                    
+                consecutiveSshFailures++;
+                if (consecutiveSshFailures > maxConsecutiveSshFailures) {
+                    LOG.warn("Aborting on "+consecutiveSshFailures+" consecutive ssh connection errors (return -1) when polling for async script to complete on "+SshjTool.this.toString()+" ("+getSummary()+")");
+                    return -1;
+                } else {
+                    LOG.info("Retrying after ssh connection error when polling for async script to complete on "+SshjTool.this.toString()+" ("+getSummary()+")");
+                    return null;
+                }
+            }
+            
+            Integer retrieveStatusCommand() throws IOException {
+                // want to double-check whether this is the exit-code from the async process, or
+                // some unexpected failure in our long-poll command.
+                ByteArrayOutputStream statusOut = new ByteArrayOutputStream();
+                ByteArrayOutputStream statusErr = new ByteArrayOutputStream();
+                int statusResult = asInt(acquire(new ShellAction(buildRetrieveStatusCommand(), statusOut, statusErr, execTimeout)), -1);
+                
+                if (statusResult == 0) {
+                    // The status we retrieved really is valid; return it.
+                    // TODO How to ensure no additional output in stdout/stderr when parsing below?
+                    String statusOutStr = new String(statusOut.toByteArray()).trim();
+                    if (Strings.isEmpty(statusOutStr)) {
+                        // suggests not yet completed; will retry with long-poll
+                        if (LOG.isDebugEnabled()) LOG.debug("Long-poll retrieved status directly; command successful but no result available on "+SshjTool.this.toString()+" (for "+getSummary()+")");
+                        return null;
+                    } else {
+                        if (LOG.isDebugEnabled()) LOG.debug("Long-poll retrieved status directly; returning '"+statusOutStr+"' on "+SshjTool.this.toString()+" (for "+getSummary()+")");
+                        int result = Integer.parseInt(statusOutStr);
+                        return result;
+                    }
+
+                } else if (statusResult == -1) {
+                    // probably a connection failure; try again with long-poll
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll retrieving status directly received exit status -1; will retry on "+SshjTool.this.toString()+" (for "+getSummary()+")");
+                    return null;
+                    
+                } else {
+                    if (out != null) {
+                        out.write(toUTF8ByteArray("retrieving status failed with exit code "+statusResult+" (stdout follow)"));
+                        out.write(statusOut.toByteArray());
+                    }
+                    if (err != null) {
+                        err.write(toUTF8ByteArray("retrieving status failed with exit code "+statusResult+" (stderr follow)"));
+                        err.write(statusErr.toByteArray());
+                    }
+                    
+                    if (LOG.isDebugEnabled()) LOG.debug("Long-poll retrieving status failed; returning "+statusResult+" on "+SshjTool.this.toString()+" (for "+getSummary()+")");
+                    return statusResult;
+                }
             }
         }.run();
     }
-
+    
     public int execShellDirect(Map<String,?> props, List<String> commands, Map<String,?> env) {
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
         OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
+        Duration execTimeout = getOptionalVal(props, PROP_EXEC_TIMEOUT);
         
         List<String> cmdSequence = toCommandSequence(commands, env);
         List<String> allcmds = ImmutableList.<String>builder()
@@ -326,7 +564,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {}: {}", host, allcmds);
         
-        Integer result = acquire(new ShellAction(allcmds, out, err));
+        Integer result = acquire(new ShellAction(allcmds, out, err, execTimeout));
         if (LOG.isTraceEnabled()) LOG.trace("Running shell command at {} completed: return status {}", host, result);
         return asInt(result, -1);
     }
@@ -336,9 +574,17 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         if (Boolean.FALSE.equals(props.get("blocks"))) {
             throw new IllegalArgumentException("Cannot exec non-blocking: command="+commands);
         }
+        
+        // If async is set, then do it as execScript
+        Boolean execAsync = getOptionalVal(props, PROP_EXEC_ASYNC);
+        if (Boolean.TRUE.equals(execAsync) && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_SSH_ASYNC_EXEC)) {
+            return execScriptAsyncAndPoll(props, commands, env);
+        }
+
         OutputStream out = getOptionalVal(props, PROP_OUT_STREAM);
         OutputStream err = getOptionalVal(props, PROP_ERR_STREAM);
         String separator = getOptionalVal(props, PROP_SEPARATOR);
+        Duration execTimeout = getOptionalVal(props, PROP_EXEC_TIMEOUT);
 
         List<String> allcmds = toCommandSequence(commands, env);
         String singlecmd = Joiner.on(separator).join(allcmds);
@@ -349,7 +595,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         
         if (LOG.isTraceEnabled()) LOG.trace("Running command at {}: {}", host, singlecmd);
         
-        Command result = acquire(new ExecAction(singlecmd, out, err));
+        Command result = acquire(new ExecAction(singlecmd, out, err, execTimeout));
         if (LOG.isTraceEnabled()) LOG.trace("Running command at {} completed: exit code {}", host, result.getExitStatus());
         // can be null if no exit status is received (observed on kill `ps aux | grep thing-to-grep-for | awk {print $2}`
         if (result.getExitStatus()==null) LOG.warn("Null exit status running at {}: {}", host, singlecmd);
@@ -368,6 +614,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     }
 
     protected <T, C extends SshAction<T>> T acquire(C action) {
+        return acquire(action, sshTries, sshTriesTimeout == 0 ? Duration.PRACTICALLY_FOREVER : Duration.millis(sshTriesTimeout));
+    }
+    
+    protected <T, C extends SshAction<T>> T acquire(C action, int sshTries, Duration sshTriesTimeout) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         
         for (int i = 0; i < sshTries; i++) {
@@ -403,7 +653,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 String errorMessage = String.format("(%s) error acquiring %s", toString(), action);
                 String fullMessage = String.format("%s (attempt %s/%s, in time %s/%s)", 
                         errorMessage, (i+1), sshTries, Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS)), 
-                        (sshTriesTimeout > 0 ? Time.makeTimeStringRounded(sshTriesTimeout) : "unlimited"));
+                        (sshTriesTimeout.equals(Duration.PRACTICALLY_FOREVER) ? "unlimited" : Time.makeTimeStringRounded(sshTriesTimeout)));
                 try {
                     disconnect();
                 } catch (Exception e2) {
@@ -412,9 +662,9 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 if (i + 1 == sshTries) {
                     LOG.debug("<< {} (rethrowing, out of retries): {}", fullMessage, e.getMessage());
                     throw propagate(e, fullMessage + "; out of retries");
-                } else if (sshTriesTimeout > 0 && stopwatch.elapsed(TimeUnit.MILLISECONDS) > sshTriesTimeout) {
-                    LOG.debug("<< {} (rethrowing, out of time - max {}): {}", new Object[] { fullMessage, Time.makeTimeString(sshTriesTimeout, true), e.getMessage() });
-                    throw propagate(e, fullMessage + "; out of time");
+                } else if (sshTriesTimeout.isShorterThan(stopwatch)) {
+                    LOG.debug("<< {} (rethrowing, out of time - max {}): {}", new Object[] { fullMessage, Time.makeTimeStringRounded(sshTriesTimeout), e.getMessage() });
+                    throw new RuntimeTimeoutException(fullMessage + "; out of time", e);
                 } else {
                     if (LOG.isDebugEnabled()) LOG.debug("<< {}: {}", fullMessage, e.getMessage());
                     backoffForAttempt(i + 1, errorMessage + ": " + e.getMessage());
@@ -601,18 +851,23 @@ public class SshjTool extends SshAbstractTool implements SshTool {
 
     class ExecAction implements SshAction<Command> {
         private final String command;
+        private final OutputStream out;
+        private final OutputStream err;
+        private final Duration timeout;
         
         private Session session;
         private Shell shell;
         private StreamGobbler outgobbler;
         private StreamGobbler errgobbler;
-        private OutputStream out;
-        private OutputStream err;
-
-        ExecAction(String command, OutputStream out, OutputStream err) {
+        
+        ExecAction(String command, OutputStream out, OutputStream err, Duration timeout) {
             this.command = checkNotNull(command, "command");
             this.out = out;
             this.err = err;
+            Duration sessionTimeout = (sshClientConnection.getSessionTimeout() == 0) 
+                    ? Duration.PRACTICALLY_FOREVER 
+                    : Duration.millis(sshClientConnection.getSessionTimeout());
+            this.timeout = (timeout == null) ? sessionTimeout : Duration.min(timeout, sessionTimeout);
         }
 
         @Override
@@ -641,14 +896,16 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                     errgobbler.start();
                 }
                 try {
-                    output.join(sshClientConnection.getSessionTimeout(), TimeUnit.MILLISECONDS);
+                    output.join((int)Math.min(timeout.toMilliseconds(), Integer.MAX_VALUE), TimeUnit.MILLISECONDS);
                     return output;
                     
                 } finally {
                     // wait for all stdout/stderr to have been re-directed
                     try {
-                        if (outgobbler != null) outgobbler.join();
-                        if (errgobbler != null) errgobbler.join();
+                        // Don't use forever (i.e. 0) because BROOKLYN-106: ssh hangs
+                        long joinTimeout = 10*1000;
+                        if (outgobbler != null) outgobbler.join(joinTimeout);
+                        if (errgobbler != null) errgobbler.join(joinTimeout);
                     } catch (InterruptedException e) {
                         LOG.warn("Interrupted gobbling streams from ssh: "+command, e);
                         Thread.currentThread().interrupt();
@@ -667,19 +924,27 @@ public class SshjTool extends SshAbstractTool implements SshTool {
     }
 
     class ShellAction implements SshAction<Integer> {
-        private final List<String> commands;
+        @VisibleForTesting
+        final List<String> commands;
+        @VisibleForTesting
+        final OutputStream out;
+        @VisibleForTesting
+        final OutputStream err;
         
         private Session session;
         private Shell shell;
         private StreamGobbler outgobbler;
         private StreamGobbler errgobbler;
-        private OutputStream out;
-        private OutputStream err;
+        private Duration timeout;
 
-        ShellAction(List<String> commands, OutputStream out, OutputStream err) {
+        ShellAction(List<String> commands, OutputStream out, OutputStream err, Duration timeout) {
             this.commands = checkNotNull(commands, "commands");
             this.out = out;
             this.err = err;
+            Duration sessionTimeout = (sshClientConnection.getSessionTimeout() == 0) 
+                    ? Duration.PRACTICALLY_FOREVER 
+                    : Duration.millis(sshClientConnection.getSessionTimeout());
+            this.timeout = (timeout == null) ? sessionTimeout : Duration.min(timeout, sessionTimeout);
         }
 
         @Override
@@ -714,7 +979,7 @@ public class SshjTool extends SshAbstractTool implements SshTool {
 
                 for (CharSequence cmd : commands) {
                     try {
-                        output.write(Strings.toUTF8ByteArray(cmd+"\n"));
+                        output.write(toUTF8ByteArray(cmd+"\n"));
                         output.flush();
                     } catch (ConnectionException e) {
                         if (!shell.isOpen()) {
@@ -732,9 +997,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                 }
                 closeWhispering(output, this);
                 
+                boolean timedOut = false;
                 try {
-                    long timeout = sshClientConnection.getSessionTimeout();
-                    long timeoutEnd = System.currentTimeMillis() + timeout;
+                    long timeoutMillis = Math.min(timeout.toMilliseconds(), Integer.MAX_VALUE);
+                    long timeoutEnd = System.currentTimeMillis() + timeoutMillis;
                     Exception last = null;
                     do {
                         if (!shell.isOpen() && ((SessionChannel)session).getExitStatus()!=null)
@@ -745,19 +1011,25 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                             (!shell.isOpen() || ((SessionChannel)session).getExitStatus()!=null);
                         try {
                             shell.join(1000, TimeUnit.MILLISECONDS);
-                        } catch (ConnectionException e) { last = e; }
-                        if (endBecauseReturned)
+                        } catch (ConnectionException e) {
+                            last = e;
+                        }
+                        if (endBecauseReturned) {
                             // shell is still open, ie some process is running
                             // but we have a result code, so main shell is finished
                             // we waited one second extra to allow any background process 
                             // which is nohupped to really be in the background (#162)
                             // now let's bail out
                             break;
-                    } while (timeout<=0 || System.currentTimeMillis() < timeoutEnd);
+                        }
+                    } while (System.currentTimeMillis() < timeoutEnd);
                     if (shell.isOpen() && ((SessionChannel)session).getExitStatus()==null) {
-                        LOG.debug("Timeout ({}) in SSH shell to {}", sshClientConnection.getSessionTimeout(), this);
-                        // we timed out, or other problem -- reproduce the error
-                        throw last;
+                        LOG.debug("Timeout ({}) in SSH shell to {}", timeout, this);
+                        // we timed out, or other problem -- reproduce the error.
+                        // The shell.join should always have thrown ConnectionExceptoin (looking at code of
+                        // AbstractChannel), but javadoc of Channel doesn't explicity say that so play it safe.
+                        timedOut = true;
+                        throw (last != null) ? last : new TimeoutException("Timeout after "+timeout+" executing "+this);
                     }
                     return ((SessionChannel)session).getExitStatus();
                 } finally {
@@ -765,8 +1037,16 @@ public class SshjTool extends SshAbstractTool implements SshTool {
                     closeWhispering(shell, this);
                     shell = null;
                     try {
-                        if (outgobbler != null) outgobbler.join();
-                        if (errgobbler != null) errgobbler.join();
+                        // Don't use forever (i.e. 0) because BROOKLYN-106: ssh hangs
+                        long joinTimeout = (timedOut) ? 1000 : 10*1000;
+                        if (outgobbler != null) {
+                            outgobbler.join(joinTimeout);
+                            outgobbler.close();
+                        }
+                        if (errgobbler != null) {
+                            errgobbler.join(joinTimeout);
+                            errgobbler.close();
+                        }
                     } catch (InterruptedException e) {
                         LOG.warn("Interrupted gobbling streams from ssh: "+commands, e);
                         Thread.currentThread().interrupt();
@@ -784,6 +1064,10 @@ public class SshjTool extends SshAbstractTool implements SshTool {
         }
     }
 
+    private byte[] toUTF8ByteArray(String string) {
+        return org.bouncycastle.util.Strings.toUTF8ByteArray(string);
+    }
+    
     private Supplier<InputStream> newInputStreamSupplier(final byte[] contents) {
         return new Supplier<InputStream>() {
             @Override public InputStream get() {

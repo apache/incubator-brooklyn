@@ -130,6 +130,14 @@ div#create-step-template-entries {
     padding-top: 12px;
     padding-bottom: 36px;
 }
+div#catalog-applications-throbber {
+    margin-top: 100px;
+    text-align: center;
+}
+div#catalog-applications-empty {
+    margin-top: 100px;
+    text-align: center;
+}
 /* menu bar */
 .navbar .nav>li {
     display: block;
@@ -196,7 +204,7 @@ li.text-filter input {
     width: 10em;
     margin-top: 3px;
     /* taken from datatables_filter input */    
-    background-image: url("../img/magnifying-glass-right.png");
+    background-image: url("../img/magnifying-glass-right-icon.png");
     background-size:12px 12px;
     background-repeat: no-repeat;
     background-position: 8px 5px;
@@ -360,6 +368,7 @@ input[type="color"]:focus,.uneditable-input:focus {
     padding: 10px 0px 0px 74px !important;
     width: 298px !important;
     height: 201px !important;
+    margin-right: 0;
 }
 
 .addApplication:hover {
@@ -445,7 +454,8 @@ input[type="color"]:focus,.uneditable-input:focus {
 #reload-brooklyn-properties-resource {
 	text-align: right;
 }
-#reload-brooklyn-properties-indicator {
+
+#clear-ha-node-records-resource {
     text-align: right;
 }
 
@@ -904,7 +914,7 @@ padding: 2px 5px;
 margin: 0;
 }
 .dataTables_filter input {
-    background-image: url("../img/magnifying-glass-right.png");
+    background-image: url("../img/magnifying-glass-right-icon.png");
     /* url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJ5JREFUeNpi+P//PwMQMANxERCfAeI/UBrEZwbJQ9WAFR0A4u1AbAnEbFB6O1ScGaawGoi3wHQiYyBYDZKHKbwHxLo4FOqC5GEKf4Ksw6EQ5IyfIDYTkPEUiNUZsAOQ+F9GRkYJEKcFiDficSOIcRjE4QTiY0C8DuRbqAJLKP8/FP9kQArHUiA+jySJjA8w4LAS5KZd0MAHhaccQIABALsMiBZy4YLtAAAAAElFTkSuQmCC); */
     background-size:12px 12px;
     background-repeat: no-repeat;
@@ -1093,6 +1103,9 @@ tr.app-add-wizard-config-entry {
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
 }
+.catalog-details .accordion-body {
+    padding: 0;
+}
 .accordion-head:hover {
     background-color: #E0E4E0;
     cursor: hand; cursor: pointer;
@@ -1115,6 +1128,13 @@ tr.app-add-wizard-config-entry {
 }
 .accordion-nav-row.active {
     font-weight: bold;
+}
+.accordion-nav-child {
+    padding-left: 15px;
+    color: lightgray;
+}
+.accordion-nav-child.active {
+    color: #505050;
 }
 .catalog-details {
     padding-left: 16px;
@@ -1182,8 +1202,10 @@ tr.app-add-wizard-config-entry {
     height: 8em;
     margin-right: 4px;
     font-family: Consolas, Lucida Console, Monaco, monospace;
+    font-size: 8.5pt;
+    line-height: 11pt;
     white-space: pre;
-    word-wrap: normal; 
+    word-wrap: normal;
     overflow-x: scroll;
     overflow-y: scroll;
 }
@@ -1258,6 +1280,10 @@ input[type="file"] {
     width: 300px;
 }
 
+input.error {
+    border-color: #b94a48;
+}
+
 #policy-config-table {
     table-layout: fixed;
 }
@@ -1270,6 +1296,11 @@ input[type="file"] {
 #policy-config-table td.policy-config-value {
     overflow-wrap: break-word;
     word-wrap: break-word;
+}
+
+#policy-config,
+.has-no-policies {
+    margin-bottom: 9px;
 }
 
 .padded-div {
@@ -1344,6 +1375,14 @@ input[type="file"] {
     border-radius: 3px 3px 3px 3px !important;
     display: inline-block;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    max-width: 250px;
+}
+.activity-tag-giftlabel:hover {
+    max-width: 100%;
+    white-space: normal;
 }
 
 /* hover menu at left, as used in sensors view */
@@ -1399,4 +1438,35 @@ the element's children, who probably want to control their opacity separately. *
 
 .capitalized {
     text-transform: capitalize;
+}
+
+.config-key-input-pair {
+    /* matches Bootstrap */
+    margin-bottom: 9px;
+}
+
+textarea.param-value {
+    height: 18px;
+    overflow: auto;
+}
+
+#catalog-details-accordion {
+    margin-top: 12px;
+}
+
+/* For secret things */
+.secret-info span.value {
+    display: none;
+}
+.secret-info.secret-revealed span.value {
+    display: inherit;
+}
+.secret-info.secret-revealed span.secret-indicator {
+    display: none;
+}
+
+.secret-indicator {
+    /* blur */
+    color: transparent;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
 }

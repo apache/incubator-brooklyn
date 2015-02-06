@@ -40,7 +40,11 @@ public class ApplicationUsage {
         private final Lifecycle state;
 
         public ApplicationEvent(Lifecycle state) {
-            this.date = new Date();
+            this(new Date(), state);
+        }
+
+        public ApplicationEvent(Date date, Lifecycle state) {
+            this.date = checkNotNull(date, "date");
             this.state = checkNotNull(state, "state");
         }
 
@@ -50,6 +54,18 @@ public class ApplicationUsage {
 
         public Lifecycle getState() {
             return state;
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof ApplicationEvent)) return false;
+            ApplicationEvent o = (ApplicationEvent) other;
+            return Objects.equal(date, o.date) && Objects.equal(state, o.state);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(date, state);
         }
         
         @Override

@@ -39,6 +39,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Callables;
 
 /**
@@ -301,7 +302,15 @@ public class Repeater {
      * @return true if the exit condition was satisfied; false if the loop terminated for any other reason.
      */
     public boolean run() {
-        return runKeepingError().getMaskingError();
+        return runKeepingError().getWithoutError();
+    }
+    
+    public void runRequiringTrue() {
+        Stopwatch timer = Stopwatch.createStarted();
+        ReferenceWithError<Boolean> result = runKeepingError();
+        result.checkNoError();
+        if (!result.get()) 
+            throw new IllegalStateException(description+" unsatisfied after "+Duration.of(timer));
     }
     
     public ReferenceWithError<Boolean> runKeepingError() {
@@ -373,4 +382,13 @@ public class Repeater {
             Time.sleep(delayThisIteration);
         }
     }
+    
+    public String getDescription() {
+        return description;
+    }
+
+    public Duration getTimeLimit() {
+        return timeLimit;
+    }
+    
 }

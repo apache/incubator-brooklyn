@@ -25,17 +25,35 @@
     <display-name>Brooklyn REST API v1</display-name>
 
     <filter>
+        <filter-name>Brooklyn Request Tagging Filter</filter-name>
+        <filter-class>brooklyn.rest.filter.RequestTaggingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn Request Tagging Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
         <filter-name>Brooklyn Properties Authentication Filter</filter-name>
-        <filter-class>brooklyn.rest.security.BrooklynPropertiesSecurityFilter</filter-class>
+        <filter-class>brooklyn.rest.filter.BrooklynPropertiesSecurityFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>Brooklyn Properties Authentication Filter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
-    
+
+    <filter>
+        <filter-name>Brooklyn Logging Filter</filter-name>
+        <filter-class>brooklyn.rest.filter.LoggingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn Logging Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
     <filter>
         <filter-name>Brooklyn HA Master Filter</filter-name>
-        <filter-class>brooklyn.rest.util.HaMasterCheckFilter</filter-class>
+        <filter-class>brooklyn.rest.filter.HaMasterCheckFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>Brooklyn HA Master Filter</filter-name>

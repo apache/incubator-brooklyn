@@ -32,6 +32,9 @@ import brooklyn.event.basic.BasicNotificationSensor;
  * Represents an elastic group of "container" entities, each of which is capable of hosting "item" entities that perform
  * work and consume the container's available resources (e.g. CPU or bandwidth). Auto-scaling and load-balancing policies can
  * be attached to this pool to provide dynamic elasticity based on workrates reported by the individual item entities.
+ * <p>
+ * The containers must be "up" in order to receive work, thus they must NOT follow the default enricher pattern
+ * for groups which says that the group must be up to receive work.
  */
 @ImplementedBy(BalanceableWorkerPoolImpl.class)
 public interface BalanceableWorkerPool extends Entity, Resizable {

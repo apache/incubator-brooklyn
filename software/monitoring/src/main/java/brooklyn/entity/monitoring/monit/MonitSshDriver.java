@@ -24,12 +24,12 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
@@ -37,18 +37,23 @@ import com.google.common.collect.ImmutableMap;
 
 public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements MonitDriver {
     
-    private String expandedInstallDir;
     private String remoteControlFilePath;
     
     public MonitSshDriver(MonitNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
+
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("monit-%s", getVersion()))));
+    }
+
     @Override
     public void install() {
-        DownloadResolver resolver = ((EntityInternal)entity).getManagementContext().getEntityDownloadsManager().newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        expandedInstallDir = getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("monit-%s", getVersion()));
+
         List<String> commands = ImmutableList.<String>builder()
             .add(BashCommands.INSTALL_TAR)
             .add(BashCommands.INSTALL_CURL)
@@ -70,7 +75,7 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
             .execute();  //create the directory
         String controlFileUrl = getEntity().getConfig(MonitNode.CONTROL_FILE_URL);
         remoteControlFilePath = getRunDir() + "/monit.monitrc";
-        copyTemplate(controlFileUrl, remoteControlFilePath, getEntity().getConfig(MonitNode.CONTROL_FILE_SUBSTITUTIONS));
+        copyTemplate(controlFileUrl, remoteControlFilePath, false, getEntity().getConfig(MonitNode.CONTROL_FILE_SUBSTITUTIONS));
         // Monit demands the control file has permissions <= 0700
         newScript(CUSTOMIZING)
             .body.append("chmod 600 " + remoteControlFilePath)
@@ -82,7 +87,7 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // NOTE: executing monit in daemon mode will spawn a separate process for the monit daemon so the value of $! cannot be used
         // instead we use the -p argument
         String command = format("touch %s && nohup %s/bin/monit -c %s -p %s > out.log 2> err.log < /dev/null &", getMonitPidFile(),
-            expandedInstallDir, remoteControlFilePath, getMonitPidFile());
+            getExpandedInstallDir(), remoteControlFilePath, getMonitPidFile());
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(command)
@@ -126,11 +131,6 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     @Override
     public String getStatusCmd() {
-        return format("%s/bin/monit -c %s status", expandedInstallDir, remoteControlFilePath);
-    }
-    
-    @Override
-    public String getExpandedInstallDir() {
-        return expandedInstallDir;
+        return format("%s/bin/monit -c %s status", getExpandedInstallDir(), remoteControlFilePath);
     }
 }

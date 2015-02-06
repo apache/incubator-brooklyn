@@ -46,9 +46,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.BrooklynServerPaths;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.launcher.config.CustomResourceLocator;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
@@ -57,9 +58,11 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynWebConfig;
-import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
-import brooklyn.rest.util.HaMasterCheckFilter;
-import brooklyn.util.BrooklynLanguageExtensions;
+import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.filter.HaMasterCheckFilter;
+import brooklyn.rest.filter.LoggingFilter;
+import brooklyn.rest.filter.NoCacheFilter;
+import brooklyn.rest.filter.RequestTaggingFilter;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -78,6 +81,7 @@ import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
 import com.sun.jersey.api.core.DefaultResourceConfig;
@@ -106,8 +110,12 @@ public class BrooklynWebServer {
 
     private WebAppContext rootContext;
     
+    /** base port to use, for http if enabled or else https; if not set, it uses httpPort or httpsPort */
+    @SetFromFlag("port")
+    protected PortRange requestedPort = null;
+    
     @SetFromFlag
-    protected PortRange port = PortRanges.fromString("8081+");
+    protected PortRange httpPort = PortRanges.fromString("8081+");
     @SetFromFlag
     protected PortRange httpsPort = PortRanges.fromString("8443+");
     
@@ -126,9 +134,9 @@ public class BrooklynWebServer {
     @SetFromFlag
     protected InetAddress bindAddress = null;
 
-    /** The URI that this server's management context will be publically available on. */
+    /** The address that this server's management context will be publically available on. */
     @SetFromFlag
-    protected URI publicAddress = null;
+    protected InetAddress publicAddress = null;
 
     /**
      * map of context-prefix to file
@@ -151,6 +159,9 @@ public class BrooklynWebServer {
     private String sslCertificate;
 
     @SetFromFlag
+    private String keystoreUrl;
+
+    @SetFromFlag @Deprecated /** @deprecated use keystoreUrl */
     private String keystorePath;
 
     @SetFromFlag
@@ -185,7 +196,7 @@ public class BrooklynWebServer {
         if (!leftovers.isEmpty())
             log.warn("Ignoring unknown flags " + leftovers);
         
-        webappTempDir = BrooklynServerConfig.getBrooklynWebTmpDir(managementContext);
+        webappTempDir = BrooklynServerPaths.getBrooklynWebTmpDir(managementContext);
     }
 
     public BrooklynWebServer(ManagementContext managementContext, int port) {
@@ -203,7 +214,7 @@ public class BrooklynWebServer {
     public BrooklynWebServer setPort(Object port) {
         if (getActualPort()>0)
             throw new IllegalStateException("Can't set port after port has been assigned to server (using "+getActualPort()+")");
-        this.port = TypeCoercions.coerce(port, PortRange.class);
+        this.requestedPort = TypeCoercions.coerce(port, PortRange.class);
         return this;
     }
 
@@ -219,7 +230,7 @@ public class BrooklynWebServer {
     }
     
     public PortRange getRequestedPort() {
-        return port;
+        return requestedPort;
     }
     
     /** returns port where this is running, or -1 if not yet known */
@@ -235,7 +246,7 @@ public class BrooklynWebServer {
     
     /** URL for accessing this web server (root context) */
     public String getRootUrl() {
-        String address = (publicAddress != null) ? publicAddress.toString() : getAddress().getHostName();
+        String address = (publicAddress != null) ? publicAddress.getHostName() : getAddress().getHostName();
         if (getActualPort()>0){
             String protocol = getHttpsEnabled()?"https":"http";
             return protocol+"://"+address+":"+getActualPort()+"/";
@@ -268,7 +279,7 @@ public class BrooklynWebServer {
     /**
      * Sets the public address that the server's management context's REST API will be available on
      */
-    public BrooklynWebServer setPublicAddress(URI address) {
+    public BrooklynWebServer setPublicAddress(InetAddress address) {
         publicAddress = address;
         return this;
     }
@@ -302,9 +313,9 @@ public class BrooklynWebServer {
         for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
 
-        // Accept gzipped requests and responses
+        // Accept gzipped requests and responses, disable caching for dynamic content
         config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS, GZIPContentEncodingFilter.class.getName());
-        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, GZIPContentEncodingFilter.class.getName());
+        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, ImmutableList.of(GZIPContentEncodingFilter.class, NoCacheFilter.class));
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
@@ -322,20 +333,23 @@ public class BrooklynWebServer {
      * Starts the embedded web application server.
      */
     public synchronized void start() throws Exception {
-        if (server!=null) throw new IllegalStateException(""+this+" already running");
+        if (server != null) throw new IllegalStateException(""+this+" already running");
 
-        if (actualPort==-1){
-            actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), getHttpsEnabled()?httpsPort:port);
+        if (actualPort == -1){
+            PortRange portRange = requestedPort;
+            if (portRange==null) {
+                portRange = getHttpsEnabled()? httpsPort : httpPort;
+            }
+            actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), portRange);
             if (actualPort == -1) 
-                throw new IllegalStateException("Unable to provision port for web console (wanted "+(getHttpsEnabled()?httpsPort:port)+")");
+                throw new IllegalStateException("Unable to provision port for web console (wanted "+portRange+")");
         }
 
-        if (bindAddress!=null) {
-            actualAddress = bindAddress;
-            server = new Server(new InetSocketAddress(bindAddress, actualPort));
-        } else {
+        server = new Server(new InetSocketAddress(bindAddress, actualPort));
+        if (bindAddress == null || bindAddress.equals(InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }))) {
             actualAddress = BrooklynNetworkUtils.getLocalhostInetAddress();
-            server = new Server(actualPort);
+        } else {
+            actualAddress = bindAddress;
         }
 
         // use a nice name in the thread pool (otherwise this is exactly the same as Server defaults)
@@ -355,19 +369,28 @@ public class BrooklynWebServer {
 
             SslContextFactory sslContextFactory = new SslContextFactory();
 
-            if (keystorePath==null) keystorePath = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_URL);
+            // allow webconsole keystore & related properties to be set in brooklyn.properties
+            if (Strings.isNonBlank(keystorePath)) {
+                if (keystoreUrl==null) {
+                    log.warn("Deprecated 'keystorePath' used; callers should use 'keystoreUrl'");
+                    keystoreUrl = keystorePath;
+                } else if (!keystoreUrl.equals(keystorePath)) {
+                    log.warn("Deprecated 'keystorePath' supplied with different value than 'keystoreUrl', preferring the latter: "+
+                        keystorePath+" / "+keystoreUrl);
+                }
+            }
+            if (keystoreUrl==null) keystoreUrl = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_URL);
             if (keystorePassword==null) keystorePassword = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_PASSWORD);
             if (keystoreCertAlias==null) keystoreCertAlias = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_CERTIFICATE_ALIAS);
             
-            if (keystorePath!=null) {
-                sslContextFactory.setKeyStorePath(checkFileExists(keystorePath, "keystore"));
+            if (keystoreUrl!=null) {
+                sslContextFactory.setKeyStorePath(ResourceUtils.create(this).checkUrlExists(keystoreUrl, BrooklynWebConfig.KEYSTORE_URL.getName()));
                 if (Strings.isEmpty(keystorePassword))
                     throw new IllegalArgumentException("Keystore password is required and non-empty if keystore is specified.");
                 sslContextFactory.setKeyStorePassword(keystorePassword);
                 if (Strings.isNonEmpty(keystoreCertAlias))
                     sslContextFactory.setCertAlias(keystoreCertAlias);
             } else {
-                // TODO allow webconsole keystore & related properties to be set in brooklyn.properties 
                 log.info("No keystore specified but https enabled; creating a default keystore");
                 
                 if (Strings.isEmpty(keystoreCertAlias))
@@ -394,6 +417,8 @@ public class BrooklynWebServer {
                 sslContextFactory.setTrustStorePassword(trustStorePassword);
             }
 
+            sslContextFactory.addExcludeProtocols("SSLv3");
+
             SslSocketConnector sslSocketConnector = new SslSocketConnector(sslContextFactory);
             sslSocketConnector.setPort(actualPort);
             server.addConnector(sslSocketConnector);
@@ -414,16 +439,18 @@ public class BrooklynWebServer {
         rootContext = deploy("/", rootWar);
         rootContext.setTempDirectory(Os.mkdirs(new File(webappTempDir, "war-root")));
 
+        rootContext.addFilter(RequestTaggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         if (securityFilterClazz != null) {
             rootContext.addFilter(securityFilterClazz, "/*", EnumSet.allOf(DispatcherType.class));
         }
+        rootContext.addFilter(LoggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         rootContext.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         installAsServletFilter(rootContext);
 
         server.setHandler(handlers);
         server.start();
-        //reinit required because grails wipes our language extension bindings
-        BrooklynLanguageExtensions.reinit();
+        //reinit required because some webapps (eg grails) might wipe our language extension bindings
+        BrooklynInitialization.reinitAll();
 
         if (managementContext instanceof ManagementContextInternal) {
             ((ManagementContextInternal) managementContext).setManagementNodeUri(new URI(getRootUrl()));
@@ -449,7 +476,7 @@ public class BrooklynWebServer {
     public synchronized void stop() throws Exception {
         if (server==null) return;
         String root = getRootUrl();
-        Threads.removeShutdownHook(shutdownHook);
+        if (shutdownHook != null) Threads.removeShutdownHook(shutdownHook);
         if (log.isDebugEnabled())
             log.debug("Stopping Brooklyn web console at "+root+ " (" + war + (wars != null ? " and " + wars.values() : "") + ")");
 

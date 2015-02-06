@@ -34,7 +34,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SingleMachineProvisioningLocation;
 
-public class SingleMachineProvisioningLocationJcloudsLiveTest extends AbstractJcloudsTest {
+public class SingleMachineProvisioningLocationJcloudsLiveTest extends AbstractJcloudsLiveTest {
 private static final Logger log = LoggerFactory.getLogger(SingleMachineProvisioningLocation.class);
     
     private SingleMachineProvisioningLocation<JcloudsSshMachineLocation> location;

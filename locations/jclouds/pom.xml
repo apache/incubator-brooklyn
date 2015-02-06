@@ -17,8 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>brooklyn-locations-jclouds</artifactId>
     <packaging>jar</packaging>
@@ -28,7 +27,7 @@
     </description>
 
     <parent>
-        <groupId>io.brooklyn</groupId>
+        <groupId>org.apache.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
         <relativePath>../../pom.xml</relativePath>
@@ -36,22 +35,22 @@
 
     <dependencies>    
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-utils-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-utils-groovy</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -110,13 +109,28 @@
         <dependency>
             <groupId>${jclouds.groupId}.driver</groupId>
             <artifactId>jclouds-sshj</artifactId>
+            <exclusions>
+                <!-- provided versions are LGPL-only -->
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>platform</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- dual-licensed under LGPL and ASL 2 -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>${jclouds.groupId}</groupId>
-            <artifactId>jclouds-blobstore</artifactId>
-            <version>${jclouds.version}</version>
-        </dependency>
         <dependency>
             <groupId>${jclouds.groupId}</groupId>
             <artifactId>jclouds-allblobstore</artifactId>
@@ -128,6 +142,7 @@
             <artifactId>jclouds-allcompute</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+
         <dependency>
             <groupId>${jclouds.groupId}.labs</groupId>
             <artifactId>abiquo</artifactId>
@@ -143,6 +158,12 @@
             <artifactId>docker</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${jclouds.groupId}.labs</groupId>
+            <artifactId>vcloud-director</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+
         <!-- these two seem needed here to prevent Eclipse IDE from getting wrong version of logback-core -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -160,13 +181,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
@@ -175,7 +196,24 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <configuration>
+                            <compilerId>groovy-eclipse-compiler</compilerId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

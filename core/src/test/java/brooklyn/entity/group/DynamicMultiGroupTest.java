@@ -25,7 +25,9 @@ import static brooklyn.entity.group.DynamicMultiGroup.RESCAN_INTERVAL;
 import static brooklyn.entity.group.DynamicMultiGroupImpl.bucketFromAttribute;
 import static com.google.common.base.Predicates.instanceOf;
 import static com.google.common.collect.Iterables.find;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -48,6 +50,7 @@ import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public class DynamicMultiGroupTest {
 
@@ -106,6 +109,41 @@ public class DynamicMultiGroupTest {
         Entities.manage(child2);
         
         checkDistribution(group, dmg, childSpec, child1, child2);
+    }
+
+    @Test
+    public void testRemovesEmptyBuckets() {
+        Group group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
+        final DynamicMultiGroup dmg = app.createAndManageChild(
+                EntitySpec.create(DynamicMultiGroup.class)
+                        .configure(ENTITY_FILTER, instanceOf(TestEntity.class))
+                        .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
+        );
+        app.subscribeToChildren(group, SENSOR, new SensorEventListener<String>() {
+            public void onEvent(SensorEvent<String> event) { dmg.rescanEntities(); }
+        });
+
+        EntitySpec<TestEntity> childSpec = EntitySpec.create(TestEntity.class);
+        TestEntity child1 = app.createAndManageChild(EntitySpec.create(childSpec).displayName("child1"));
+        TestEntity child2 = app.createAndManageChild(EntitySpec.create(childSpec).displayName("child2"));
+
+        // Expect two buckets: bucketA and bucketB 
+        child1.setAttribute(SENSOR, "bucketA");
+        child2.setAttribute(SENSOR, "bucketB");
+        dmg.rescanEntities();
+        Group bucketA = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketA"), null);
+        Group bucketB = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketB"), null);
+        assertNotNull(bucketA);
+        assertNotNull(bucketB);
+        
+        // Expect second bucket to be removed when empty 
+        child1.setAttribute(SENSOR, "bucketA");
+        child2.setAttribute(SENSOR, "bucketA");
+        dmg.rescanEntities();
+        bucketA = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketA"), null);
+        bucketB = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketB"), null);
+        assertNotNull(bucketA);
+        assertNull(bucketB);
     }
 
     private void checkDistribution(final Group group, final DynamicMultiGroup dmg, final EntitySpec<TestEntity> childSpec, final TestEntity child1, final TestEntity child2) {

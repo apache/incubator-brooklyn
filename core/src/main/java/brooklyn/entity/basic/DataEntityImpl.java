@@ -62,7 +62,7 @@ public class DataEntityImpl extends AbstractEntity implements DataEntity {
         if (map != null && map.size() > 0) {
             for (Map.Entry<AttributeSensor<?>, Supplier<?>> entry : map.entrySet()) {
                 final AttributeSensor sensor = entry.getKey();
-                final Supplier supplier = entry.getValue();
+                final Supplier<?> supplier = entry.getValue();
                 builder.poll(new FunctionPollConfig<Object, Object>(sensor)
                         .supplier(supplier)
                         .onFailureOrException(Functions.constant(null)));

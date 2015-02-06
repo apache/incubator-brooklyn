@@ -54,6 +54,7 @@ public class NaiveScriptRunnerTest {
     @BeforeMethod
     private void setup() { commands.clear(); }
     
+    @SuppressWarnings("rawtypes")
     private NaiveScriptRunner newMockRunner(final int result) {
         return new NaiveScriptRunner() {
             @Override
@@ -68,6 +69,7 @@ public class NaiveScriptRunnerTest {
         };
     }
 
+    @SuppressWarnings("rawtypes")
     public static NaiveScriptRunner newLocalhostRunner() {
         return new NaiveScriptRunner() {
             LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
@@ -75,6 +77,7 @@ public class NaiveScriptRunnerTest {
             public int execute(List<String> script, String summaryForLogging) {
                 return execute(new MutableMap(), script, summaryForLogging);
             }
+            @SuppressWarnings("unchecked")
             @Override
             public int execute(Map flags, List<String> script, String summaryForLogging) {
                 try {

@@ -38,6 +38,9 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncher;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.rest.domain.LocationSummary;
+import brooklyn.rest.security.provider.ExplicitUsersSecurityProvider;
+import brooklyn.rest.security.provider.SecurityProvider;
+import brooklyn.rest.security.provider.TestSecurityProvider;
 
 @Test
 public class BrooklynApiRestClientTest {
@@ -69,10 +72,12 @@ public class BrooklynApiRestClientTest {
 
         Server server = BrooklynRestApiLauncher.launcher()
                 .managementContext(manager)
+                .securityProvider(TestSecurityProvider.class)
                 .customContext(context)
                 .start();
 
-        api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/");
+        api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/",
+                TestSecurityProvider.USER, TestSecurityProvider.PASSWORD);
     }
 
     @AfterClass(alwaysRun = true)

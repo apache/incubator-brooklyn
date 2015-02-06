@@ -36,6 +36,9 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
 
+import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.util.BrooklynNetworkUtils;
+
 /**
  * Manages connections to standalone MongoDB servers.
  *
@@ -66,12 +69,10 @@ public class MongoDBClientSupport {
 
     /**
      * Creates a {@link MongoDBClientSupport} instance in standalone mode.
-     * Returns {@link com.google.common.base.Optional#absent} if the server's host and port are unknown.
      */
     public static MongoDBClientSupport forServer(AbstractMongoDBServer standalone) throws UnknownHostException {
-        String hostname = standalone.getAttribute(MongoDBServer.HOSTNAME);
-        Integer port = standalone.getAttribute(MongoDBServer.PORT);
-        ServerAddress address = new ServerAddress(hostname, port);
+        HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(standalone, standalone.getAttribute(MongoDBServer.PORT));
+        ServerAddress address = new ServerAddress(hostAndPort.getHostText(), hostAndPort.getPort());
         return new MongoDBClientSupport(address);
     }
 

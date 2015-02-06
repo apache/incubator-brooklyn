@@ -29,6 +29,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -42,7 +43,7 @@ public class JcloudsLocationMetadataTest implements JcloudsLocationConfig {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = LocalManagementContextForTests.newInstance(BrooklynProperties.Factory.builderEmpty().build());
         brooklynProperties = managementContext.getBrooklynProperties();
     }
 

@@ -34,7 +34,6 @@ import brooklyn.management.TaskQueueingContext;
 import brooklyn.management.TaskWrapper;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;

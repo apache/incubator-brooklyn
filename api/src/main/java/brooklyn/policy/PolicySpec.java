@@ -79,7 +79,7 @@ public class PolicySpec<T extends Policy> extends AbstractBrooklynObjectSpec<T,P
         super(type);
     }
     
-    protected void checkValidType(Class<T> type) {
+    protected void checkValidType(Class<? extends T> type) {
         checkIsImplementation(type, Policy.class);
         checkIsNewStyleImplementation(type);
     }

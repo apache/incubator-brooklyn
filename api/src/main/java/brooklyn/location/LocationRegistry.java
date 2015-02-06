@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import javax.annotation.Nullable;
+
+import brooklyn.util.guava.Maybe;
+
 import com.google.common.annotations.Beta;
 
 /**
@@ -49,35 +53,58 @@ public interface LocationRegistry {
     /** removes the defined location from the registry (applications running there are unaffected) */
     public void removeDefinedLocation(String id);
 
-    /** returns fully populated (config etc) location from the given definition, 
-     * currently by creating it but TODO creation can be a leak so all current 'resolve' methods should be carefully used! */
+    /** Returns a fully populated (config etc) location from the given definition, with optional add'l flags.
+     * the location will be managed by default, unless the manage parameter is false, 
+     * or the manage parameter is null and the CREATE_UNMANAGED flag is set.
+     * <p>
+     * The manage parameter is {@link Boolean} so that null can be used to say rely on anything in the flags.
+     * 
+     * @since 0.7.0, but beta and likely to change as the semantics of this class are tuned */
+    @Beta
+    public Maybe<Location> resolve(LocationDefinition ld, Boolean manage, Map locationFlags);
+    
+    /** As {@link #resolve(LocationDefinition, Boolean, Map), with the location managed, and no additional flags,
+     * unwrapping the result (throwing if not resolvable) */
     public Location resolve(LocationDefinition l);
 
+    /** Returns a location created from the given spec, which might correspond to a definition, or created on-the-fly.
+     * Optional flags can be passed through to underlying the location. 
+     * @since 0.7.0, but beta and likely to change as the semantics of this class are tuned */
+    @Beta
+    public Maybe<Location> resolve(String spec, Boolean manage, Map locationFlags);
+    
     /** efficiently returns for inspection only a fully populated (config etc) location from the given definition; 
      * the value might be unmanaged so it is not meant for any use other than inspection,
      * but callers should prefer this when they don't wish to create a new location which will be managed in perpetuity!
      * 
-     * @since 0.7.0, but beta and likely to change as the semantics of this class are tuned */
-    @Beta   // see impl for notes
+     * @deprecated since 0.7.0, use {@link #resolve(LocationDefinition, Boolean, Map)} */
+    @Deprecated
     public Location resolveForPeeking(LocationDefinition l);
 
-    /** returns fully populated (config etc) location from the given definition */
+    /** returns fully populated (config etc) location from the given definition, with overrides;
+     * @deprecated since 0.7.0, use {@link #resolve(LocationDefinition, Boolean, Map)} */
+    @Deprecated
     public Location resolve(LocationDefinition l, Map<?,?> locationFlags);
     
-    /** See {@link #resolve(String, Map)} (with no options) */
+    /** See {@link #resolve(String, Boolean, Map)}; asks for the location to be managed, and supplies no additional flags,
+     * and unwraps the result (throwing if the spec cannot be resolve) */
     public Location resolve(String spec);
     
     /** Returns true/false depending whether spec seems like a valid location,
-     * that is it has a chance of being resolved (depending on the spec) but NOT guaranteed;
-     * see {@link #resolveIfPossible(String)} which has stronger guarantees */
+     * that is it has a chance of being resolved (depending on the spec) but NOT guaranteed,
+     * as it is not passed to the spec;
+     * see {@link #resolve(String, Boolean, Map)} which has stronger guarantees 
+     * @deprecated since 0.7.0, not really needed, and semantics are weak; use {@link #resolve(String, Boolean, Map)} */
+    @Deprecated
     public boolean canMaybeResolve(String spec);
     
-    /** Returns a location created from the given spec, which might correspond to a definition, or created on-the-fly.
-     * Optional flags can be passed through to underlying the location. 
+    /** As {@link #resolve(String, Boolean, Map)}, but unwrapped
      * @throws NoSuchElementException if the spec cannot be resolved */
-    public Location resolve(String spec, Map locationFlags);
+    public Location resolve(String spec, @Nullable Map locationFlags);
     
-    /** as {@link #resolve(String)} but returning null (never throwing) */
+    /** as {@link #resolve(String)} but returning null (never throwing)
+     * @deprecated since 0.7.0 use {@link #resolve(String, Boolean, Map)} */
+    @Deprecated
     public Location resolveIfPossible(String spec);
 
     /**

@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Storm Sample App
+name: Sample Web App
 services:
 - serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   name: Analytics Web App

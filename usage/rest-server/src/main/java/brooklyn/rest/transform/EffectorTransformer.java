@@ -24,10 +24,17 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import brooklyn.entity.Effector;
+import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.EffectorSummary.ParameterSummary;
+import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -36,7 +43,7 @@ import com.google.common.collect.Iterables;
 
 public class EffectorTransformer {
 
-    public static EffectorSummary effectorSummary(EntityLocal entity, Effector<?> effector) {
+    public static EffectorSummary effectorSummary(final EntityLocal entity, Effector<?> effector) {
         String applicationUri = "/v1/applications/" + entity.getApplicationId();
         String entityUri = applicationUri + "/entities/" + entity.getId();
         return new EffectorSummary(effector.getName(), effector.getReturnTypeName(),
@@ -44,7 +51,7 @@ public class EffectorTransformer {
                 new Function<ParameterType<?>, EffectorSummary.ParameterSummary<?>>() {
                     @Override
                     public EffectorSummary.ParameterSummary<?> apply(@Nullable ParameterType<?> parameterType) {
-                        return parameterSummary(parameterType);
+                        return parameterSummary(entity, parameterType);
                     }
                 })), effector.getDescription(), ImmutableMap.of(
                 "self", URI.create(entityUri + "/effectors/" + effector.getName()),
@@ -58,16 +65,23 @@ public class EffectorTransformer {
                 new Function<ParameterType<?>, EffectorSummary.ParameterSummary<?>>() {
                     @Override
                     public EffectorSummary.ParameterSummary<?> apply(ParameterType<?> parameterType) {
-                        return parameterSummary(parameterType);
+                        return parameterSummary(null, parameterType);
                     }
                 }));
         return new EffectorSummary(effector.getName(),
                 effector.getReturnTypeName(), parameters, effector.getDescription(), null);
     }
     
-    @SuppressWarnings("unchecked")
-    protected static EffectorSummary.ParameterSummary<?> parameterSummary(ParameterType<?> parameterType) {
-        return new ParameterSummary(parameterType.getName(), parameterType.getParameterClassName(), 
-                parameterType.getDescription(), parameterType.getDefaultValue());
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected static EffectorSummary.ParameterSummary<?> parameterSummary(Entity entity, ParameterType<?> parameterType) {
+        try {
+            Maybe<?> defaultValue = Tasks.resolving(parameterType.getDefaultValue()).as(parameterType.getParameterClass())
+                .context(entity!=null ? ((EntityInternal)entity).getExecutionContext() : null).timeout(Duration.millis(50)).getMaybe();
+            return new ParameterSummary(parameterType.getName(), parameterType.getParameterClassName(), 
+                parameterType.getDescription(), 
+                WebResourceUtils.getValueForDisplay(defaultValue.orNull(), true, false));
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
     }
 }

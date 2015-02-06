@@ -20,12 +20,18 @@ package brooklyn.entity.rebind;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collection;
 import java.util.Map;
 
+import brooklyn.basic.BrooklynObject;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.location.Location;
+import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
+import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Maps;
 
@@ -35,8 +41,14 @@ public class RebindContextImpl implements RebindContext {
     private final Map<String, Location> locations = Maps.newLinkedHashMap();
     private final Map<String, Policy> policies = Maps.newLinkedHashMap();
     private final Map<String, Enricher> enrichers = Maps.newLinkedHashMap();
+    private final Map<String, Feed> feeds = Maps.newLinkedHashMap();
+    private final Map<String, CatalogItem<?, ?>> catalogItems = Maps.newLinkedHashMap();
+    
     private final ClassLoader classLoader;
     private final RebindExceptionHandler exceptionHandler;
+    private LookupContext lookupContext;
+    
+    private boolean allAreReadOnly = false;
     
     public RebindContextImpl(RebindExceptionHandler exceptionHandler, ClassLoader classLoader) {
         this.exceptionHandler = checkNotNull(exceptionHandler, "exceptionHandler");
@@ -59,6 +71,14 @@ public class RebindContextImpl implements RebindContext {
         enrichers.put(id, enricher);
     }
     
+    public void registerFeed(String id, Feed feed) {
+        feeds.put(id, feed);
+    }
+    
+    public void registerCatalogItem(String id, CatalogItem<?, ?> catalogItem) {
+        catalogItems.put(id, catalogItem);
+    }
+    
     public void unregisterPolicy(Policy policy) {
         policies.remove(policy.getId());
     }
@@ -67,33 +87,97 @@ public class RebindContextImpl implements RebindContext {
         enrichers.remove(enricher.getId());
     }
 
-    @Override
+    public void unregisterFeed(Feed feed) {
+        feeds.remove(feed.getId());
+    }
+
+    public void unregisterCatalogItem(CatalogItem<?,?> item) {
+        catalogItems.remove(item.getId());
+    }
+
     public Entity getEntity(String id) {
         return entities.get(id);
     }
 
-    @Override
     public Location getLocation(String id) {
         return locations.get(id);
     }
     
-    @Override
     public Policy getPolicy(String id) {
         return policies.get(id);
     }
     
-    @Override
     public Enricher getEnricher(String id) {
         return enrichers.get(id);
     }
+
+    public CatalogItem<?, ?> getCatalogItem(String id) {
+        return catalogItems.get(id);
+    }
+
+    public Feed getFeed(String id) {
+        return feeds.get(id);
+    }
     
-    @Override
     public Class<?> loadClass(String className) throws ClassNotFoundException {
         return classLoader.loadClass(className);
     }
 
-    @Override
     public RebindExceptionHandler getExceptionHandler() {
         return exceptionHandler;
     }
+
+    public Collection<Location> getLocations() {
+        return locations.values();
+    }
+    
+    public Collection<Entity> getEntities() {
+        return entities.values();
+    }
+    
+    public Collection<Policy> getPolicies() {
+        return policies.values();
+    }
+
+    public Collection<Enricher> getEnrichers() {
+        return enrichers.values();
+    }
+    
+    public Collection<Feed> getFeeds() {
+        return feeds.values();
+    }
+
+    public Collection<CatalogItem<?, ?>> getCatalogItems() {
+        return catalogItems.values();
+    }
+    
+    @Override
+    public Map<String,BrooklynObject> getAllBrooklynObjects() {
+        MutableMap<String,BrooklynObject> result = MutableMap.of();
+        result.putAll(locations);
+        result.putAll(entities);
+        result.putAll(policies);
+        result.putAll(enrichers);
+        result.putAll(feeds);
+        result.putAll(catalogItems);
+        return result.asUnmodifiable();
+    }
+
+    public void setAllReadOnly() {
+        allAreReadOnly = true;
+    }
+    
+    public boolean isReadOnly(BrooklynObject item) {
+        return allAreReadOnly;
+    }
+
+    public void setLookupContext(LookupContext lookupContext) {
+        this.lookupContext = lookupContext;
+    }
+    
+    @Override
+    public LookupContext lookup() {
+        return lookupContext;
+    }
+    
 }

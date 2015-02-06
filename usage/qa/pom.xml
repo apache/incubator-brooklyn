@@ -27,7 +27,7 @@
     </description>
 
     <parent>
-        <groupId>io.brooklyn</groupId>
+        <groupId>org.apache.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
         <relativePath>../../pom.xml</relativePath>
@@ -35,7 +35,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -67,9 +67,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -91,19 +98,6 @@
                     </executions>
             </plugin>
         </plugins>
-      <pluginManagement>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.rat</groupId>
-            <artifactId>apache-rat-plugin</artifactId>
-            <configuration>
-              <excludes combine.children="append">
-                <exclude>**/log-exclusions.txt</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </pluginManagement>
     </build> 
 </project>
 

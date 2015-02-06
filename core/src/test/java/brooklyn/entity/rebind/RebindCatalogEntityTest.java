@@ -25,6 +25,7 @@ import static org.testng.Assert.assertNotSame;
 import java.net.URL;
 import java.util.List;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -39,8 +40,10 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.Sensors;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.javalang.UrlClassLoader;
+import brooklyn.util.os.Os;
 
 public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplication> {
 
@@ -57,10 +60,15 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
      * }
      */
 
-    private static final String JAR_PATH = "brooklyn/entity/rebind/brooklyn-AppInCatalog.jar";
+    private static final String JAR_PATH = "/brooklyn/entity/rebind/brooklyn-AppInCatalog.jar";
     private static final String APP_CLASSNAME = "brooklyn.entity.rebind.AppInCatalog";
 
     private URL url;
+
+    @Override
+    protected boolean useEmptyCatalog() {
+        return true;
+    }
 
     @Override
     protected StartableApplication createApp() {
@@ -69,16 +77,15 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
     }
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        url = getClass().getClassLoader().getResource(JAR_PATH);
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), JAR_PATH);
+        url = getClass().getResource(JAR_PATH);
         assertNotNull(url, "Could not find on classpath: "+JAR_PATH);
         super.setUp();
     }
 
-    // TODO Fails with an NPE trying to use:
-    //      managementContext.getCatalog().addToClasspath(url.toString())
-    //      classLoader = origManagementContext.getCatalog().getRootClassLoader();
-    //      appClazz = (Class<? extends AbstractApplication>) classLoader.loadClass(APP_CLASSNAME);
+    // TODO Failed in jenkins (once on 20141104, with invocationCount=100): mysensor was null post-rebind.
     //
     // Note: to test before/after behaviour (i.e. that we're really fixing what we think we are) then comment out the body of:
     //       AbstractMemento.injectTypeClass(Class)
@@ -111,6 +118,7 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
     // TODO Not using RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     //      because that won't have right catalog classpath.
     //      How to reuse that code cleanly?
+    @Override
     protected StartableApplication rebind() throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
 
@@ -121,8 +129,8 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
         newManagementContext.getCatalog().addItem(appClazz);
         
         ClassLoader classLoader = newManagementContext.getCatalog().getRootClassLoader();
-        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
-        newManagementContext.getRebindManager().start();
+        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader, null, ManagementNodeState.MASTER);
+        newManagementContext.getRebindManager().startPersistence();
         return (StartableApplication) newApps.get(0);
     }
 

@@ -18,10 +18,14 @@
  */
 package brooklyn.entity.nosql.mongodb.sharding;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
+import brooklyn.entity.nosql.mongodb.MongoDBServer;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
@@ -29,6 +33,11 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.reflect.TypeToken;
+
+@Catalog(name="MongoDB Sharded Deployment",
+        description="MongoDB (from \"humongous\") is a scalable, high-performance, open source NoSQL database",
+        iconUrl="classpath:///mongodb-logo.png")
 @ImplementedBy(MongoDBShardedDeploymentImpl.class)
 public interface MongoDBShardedDeployment extends Entity, Startable {
     @SetFromFlag("configClusterSize")
@@ -55,6 +64,28 @@ public interface MongoDBShardedDeployment extends Entity, Startable {
     ConfigKey<Group> CO_LOCATED_ROUTER_GROUP = ConfigKeys.newConfigKey(Group.class, "mongodb.colocated.router.group", 
             "Group to be monitored for the addition of new CoLocatedMongoDBRouter entities");
     
+    @SuppressWarnings("serial")
+    ConfigKey<EntitySpec<?>> MONGODB_ROUTER_SPEC = ConfigKeys.newConfigKey(
+            new TypeToken<EntitySpec<?>>() {},
+            "mongodb.router.spec", 
+            "Spec for Router instances",
+            EntitySpec.create(MongoDBRouter.class));
+
+    @SuppressWarnings("serial")
+    ConfigKey<EntitySpec<?>> MONGODB_REPLICA_SET_SPEC = ConfigKeys.newConfigKey(
+            new TypeToken<EntitySpec<?>>() {},
+            "mongodb.replicaset.spec", 
+            "Spec for Replica Set",
+            EntitySpec.create(MongoDBReplicaSet.class)
+                    .configure(MongoDBReplicaSet.MEMBER_SPEC, EntitySpec.create(MongoDBServer.class)));
+
+    @SuppressWarnings("serial")
+    ConfigKey<EntitySpec<?>> MONGODB_CONFIG_SERVER_SPEC = ConfigKeys.newConfigKey(
+            new TypeToken<EntitySpec<?>>() {},
+            "mongodb.configserver.spec", 
+            "Spec for Config Server instances",
+            EntitySpec.create(MongoDBConfigServer.class));
+
     public static AttributeSensor<MongoDBConfigServerCluster> CONFIG_SERVER_CLUSTER = Sensors.newSensor(
             MongoDBConfigServerCluster.class, "mongodbshardeddeployment.configservers", "Config servers");
     public static AttributeSensor<MongoDBRouterCluster> ROUTER_CLUSTER = Sensors.newSensor(

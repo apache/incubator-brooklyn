@@ -33,9 +33,11 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.io.FileUtil;
 import brooklyn.util.stream.InputStreamSupplier;
 
 import com.google.common.base.Throwables;
+import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 
 public class ChefLiveTestSupport extends BrooklynAppLiveTestSupport {
@@ -62,10 +64,10 @@ public class ChefLiveTestSupport extends BrooklynAppLiveTestSupport {
      **/
     @SuppressWarnings("unchecked")
     public static MachineProvisioningLocation<? extends SshMachineLocation> createLocation(ManagementContext mgmt) {
-        Location bestLocation = mgmt.getLocationRegistry().resolveIfPossible("named:ChefTests");
+        Location bestLocation = mgmt.getLocationRegistry().resolve("named:ChefTests", true, null).orNull();
         if (bestLocation==null) {
             log.info("using AWS for chef tests because named:ChefTests does not exist");
-            bestLocation = mgmt.getLocationRegistry().resolveIfPossible("jclouds:aws-ec2:us-east-1");
+            bestLocation = mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:us-east-1");
         }
         if (bestLocation==null) {
             throw new IllegalStateException("Need a location called named:ChefTests or AWS configured for these tests");
@@ -80,9 +82,8 @@ public class ChefLiveTestSupport extends BrooklynAppLiveTestSupport {
         ResourceUtils r = ResourceUtils.create(ChefServerTasksIntegrationTest.class);
         try {
             for (String f: new String[] { "knife.rb", "brooklyn-tests.pem", "brooklyn-validator.pem" }) {
-                Files.copy(InputStreamSupplier.fromString(r.getResourceAsString(
-                        "classpath:///brooklyn/entity/chef/hosted-chef-brooklyn-credentials/"+f)),
-                        new File(tempDir, f));
+                String contents = r.getResourceAsString("classpath:///brooklyn/entity/chef/hosted-chef-brooklyn-credentials/"+f);
+                FileUtil.copyTo(InputStreamSupplier.fromString(contents).getInput(), new File(tempDir, f));
             }
         } catch (IOException e) {
             throw Throwables.propagate(e);

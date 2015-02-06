@@ -30,17 +30,16 @@ require.config({
         "underscore":"libs/underscore",
         "backbone":"libs/backbone",
         "bootstrap":"libs/bootstrap",
-        "formatJson":"libs/json-formatter",
         "jquery-form":"libs/jquery.form",
         "jquery-datatables":"libs/jquery.dataTables",
         "jquery-slideto":"libs/jquery.slideto.min",
         "jquery-wiggle":"libs/jquery.wiggle.min",
         "jquery-ba-bbq":"libs/jquery.ba-bbq.min",
-        "moment":"libs/moment.min",
+        "moment":"libs/moment",
         "handlebars":"libs/handlebars-1.0.rc.1",
-        "brooklyn":"libs/brooklyn",
-        "brooklyn-view":"libs/brooklyn-view",
-        "brooklyn-utils":"libs/brooklyn-utils",
+        "brooklyn":"util/brooklyn",
+        "brooklyn-view":"util/brooklyn-view",
+        "brooklyn-utils":"util/brooklyn-utils",
         "datatables-extensions":"libs/dataTables.extensions",
         "googlemaps":"view/googlemaps",
         "async":"libs/async",  //not explicitly referenced, but needed for google
@@ -80,8 +79,8 @@ require.config({
  * Inclusion of brooklyn module sets up logging.
  */
 require([
-    "backbone", "router", "brooklyn", "model/ha"
-], function (Backbone, Router, Brooklyn, ha) {
+    "backbone", "brooklyn", "router", "model/ha"
+], function (Backbone, Brooklyn, Router, ha) {
     ha.autoUpdate();
     var router = new Router();
     Backbone.history.start();

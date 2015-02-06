@@ -41,6 +41,7 @@ public class StormDeploymentImpl extends BasicStartableImpl implements StormDepl
 
     @Override
     public void init() {
+        super.init();
         new ResourceUtils(this).checkUrlExists(Storm.STORM_CONFIG_TEMPLATE_URL.getDefaultValue());
         
         setDefaultDisplayName("Storm Deployment");

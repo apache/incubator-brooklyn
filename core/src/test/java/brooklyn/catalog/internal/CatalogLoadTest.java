@@ -20,15 +20,16 @@ package brooklyn.catalog.internal;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.catalog.CatalogItem.CatalogBundle;
+import brooklyn.util.ResourceUtils;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-
-import brooklyn.util.ResourceUtils;
 
 public class CatalogLoadTest {
 
@@ -49,16 +50,26 @@ public class CatalogLoadTest {
                 loadFile("classpath://brooklyn/catalog/internal/osgi-catalog.xml"));
         assertNotNull(catalog);
         assertEquals(catalog.name, "OSGi catalogue");
-        assertEquals(catalog.entries.size(), 1, "Catalog entries = " + Joiner.on(", ").join(catalog.entries));
+        assertEquals(Iterables.size(catalog.getUniqueEntries()), 1, "Catalog entries = " + Joiner.on(", ").join(catalog.getUniqueEntries()));
 
-        CatalogItemDtoAbstract<?,?> template = Iterables.getOnlyElement(catalog.entries);
-        assertEquals(template.getName(), "Entity name");
+        CatalogItemDtoAbstract<?,?> template = Iterables.getOnlyElement(catalog.getUniqueEntries());
+        assertEquals(template.getDisplayName(), "Entity name");
         assertEquals(template.getVersion(), "9.1.3");
         assertEquals(template.getJavaType(), "com.example.ExampleApp");
-        assertEquals(template.getLibraries().getBundles().size(), 2,
-                "Template bundles=" + Joiner.on(", ").join(template.getLibraries().getBundles()));
-        assertEquals(Sets.newHashSet(template.getLibraries().getBundles()),
-                Sets.newHashSet("file://path/to/bundle.jar", "http://www.url.com/for/bundle.jar"));
+        assertEquals(template.getLibraries().size(), 2,
+                "Template bundles=" + Joiner.on(", ").join(template.getLibraries()));
+        
+        boolean foundBundle1 = false, foundBundle2 = false;
+        for (CatalogBundle bundle : template.getLibraries()) {
+            if (bundle.getUrl().equals("file://path/to/bundle.jar")) {
+                foundBundle1 = true;
+            }
+            if (bundle.getUrl().equals("http://www.url.com/for/bundle.jar")) {
+                foundBundle2 = true;
+            }
+        }
+        assertTrue(foundBundle1);
+        assertTrue(foundBundle2);
     }
 
 }

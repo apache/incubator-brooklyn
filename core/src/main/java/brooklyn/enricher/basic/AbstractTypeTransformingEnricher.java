@@ -51,6 +51,7 @@ public abstract class AbstractTypeTransformingEnricher<T,U> extends AbstractEnri
         this.target = target;
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
         if (producer==null) producer = entity;

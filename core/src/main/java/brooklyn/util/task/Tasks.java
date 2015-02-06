@@ -18,15 +18,13 @@
  */
 package brooklyn.util.task;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.FutureTask;
 
 import javax.annotation.Nullable;
 
@@ -40,7 +38,11 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.exceptions.ReferenceWithError;
+import brooklyn.util.repeat.Repeater;
+import brooklyn.util.time.CountdownTimer;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -48,9 +50,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 public class Tasks {
     
@@ -105,113 +104,43 @@ public class Tasks {
         }
     }
 
-    /** the {@link Task} where the current thread is executing, if executing in a Task, otherwise null */
+    /** the {@link Task} where the current thread is executing, if executing in a Task, otherwise null;
+     * if the current task is a proxy, this returns the target of that proxy */
     @SuppressWarnings("rawtypes")
-    public static Task current() { return BasicExecutionManager.getPerThreadCurrentTask().get(); }
+    public static Task current() { 
+        return getFinalProxyTarget(BasicExecutionManager.getPerThreadCurrentTask().get());
+    }
+
+    public static Task<?> getFinalProxyTarget(Task<?> task) {
+        if (task==null) return null;
+        Task<?> proxy = ((TaskInternal<?>)task).getProxyTarget();
+        if (proxy==null || proxy.equals(task)) return task;
+        return getFinalProxyTarget(proxy);
+    }
+    
+    /** creates a {@link ValueResolver} instance which allows significantly more customization than
+     * the various {@link #resolveValue(Object, Class, ExecutionContext)} methods here */
+    public static <T> ValueResolver<T> resolving(Object v, Class<T> type) {
+        return new ValueResolver<T>(v, type);
+    }
+
+    public static ValueResolver.ResolverBuilderPretype resolving(Object v) {
+        return new ValueResolver.ResolverBuilderPretype(v);
+    }
 
     /** @see #resolveValue(Object, Class, ExecutionContext, String) */
-    public static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec) throws ExecutionException, InterruptedException {
-        return resolveValue(v, type, exec, null);
+    public static <T> T resolveValue(Object v, Class<T> type, @Nullable ExecutionContext exec) throws ExecutionException, InterruptedException {
+        return new ValueResolver<T>(v, type).context(exec).get();
     }
     
     /** attempt to resolve the given value as the given type, waiting on futures, submitting if necessary,
      * and coercing as allowed by TypeCoercions;
-     * contextMessage (optional) will be displayed in status reports while it waits (e.g. the name of the config key being looked up) */
-    public static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
-        return resolveValue(v, type, exec, contextMessage, false);
+     * contextMessage (optional) will be displayed in status reports while it waits (e.g. the name of the config key being looked up).
+     * if no execution context supplied (null) this method will throw an exception if the object is an unsubmitted task */
+    public static <T> T resolveValue(Object v, Class<T> type, @Nullable ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
+        return new ValueResolver<T>(v, type).context(exec).description(contextMessage).get();
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static <T> T resolveValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage, boolean forceDeep) throws ExecutionException, InterruptedException {
-        if (type==null) 
-            throw new NullPointerException("type cannot be null in resolveValue, for '"+v+"'"+(contextMessage!=null ? ", "+contextMessage : ""));
-        //if the expected type is a closure or map and that's what we have, we're done (or if it's null);
-        //but not allowed to return a future or DeferredSupplier as the resolved value
-        if (v==null || (!forceDeep && type.isInstance(v) && !Future.class.isInstance(v) && !DeferredSupplier.class.isInstance(v)))
-            return (T) v;
-        try {
-            //if it's a task or a future, we wait for the task to complete
-        	if (v instanceof TaskAdaptable<?>) {
-                //if it's a task, we make sure it is submitted
-                //(perhaps could run it here? ... tbd)
-                if (!((TaskAdaptable<?>) v).asTask().isSubmitted() ) {
-                    exec.submit(((TaskAdaptable<?>) v).asTask());
-                }
-            }
-            
-            if (v instanceof Future) {
-                final Future<?> vfuture = (Future<?>) v;
-                
-                //including tasks, above
-                if (!vfuture.isDone()) {
-                    final AtomicReference<Object> vref = new AtomicReference<Object>(v);
-                    
-                    withBlockingDetails("Waiting for "+(contextMessage!=null ? contextMessage : ""+v), 
-                            new Callable<Void>() {
-                        public Void call() throws Exception {
-                            vref.set( vfuture.get() );
-                            return null;
-                        }
-                    });
-                    
-                    v = vref.get();
-                    
-                } else {
-                    v = vfuture.get();
-                }
-                
-            } else if (v instanceof DeferredSupplier<?>) {
-                v = ((DeferredSupplier<?>) v).get();
-                
-            } else if (v instanceof Map) {
-                //and if a map or list we look inside
-                Map result = Maps.newLinkedHashMap();
-                for (Map.Entry<?,?> entry : ((Map<?,?>)v).entrySet()) {
-                    result.put(entry.getKey(), resolveValue(entry.getValue(), type, exec,
-                            (contextMessage!=null ? contextMessage+", " : "") + "map entry "+entry.getKey(), forceDeep));
-                }
-                return (T) result;
-                
-            } else if (v instanceof List) {
-                List result = Lists.newArrayList();
-                int count = 0;
-                for (Object it : (List)v) {
-                    result.add(resolveValue(it, type, exec, 
-                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count, forceDeep));
-                    count++;
-                }
-                return (T) result;
-                
-            } else if (v instanceof Set) {
-                Set result = Sets.newLinkedHashSet();
-                int count = 0;
-                for (Object it : (Set)v) {
-                    result.add(resolveValue(it, type, exec, 
-                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count, forceDeep));
-                    count++;
-                }
-                return (T) result;
-                
-            } else if (v instanceof Iterable) {
-                List result = Lists.newArrayList();
-                int count = 0;
-                for (Object it : (Iterable)v) {
-                    result.add(resolveValue(it, type, exec, 
-                            (contextMessage!=null ? contextMessage+", " : "") + "list entry "+count, forceDeep));
-                    count++;
-                }
-                return (T) result;
-                
-            } else {
-                return TypeCoercions.coerce(v, type);
-            }
-            
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Error resolving "+(contextMessage!=null ? contextMessage+", " : "")+v+", in "+exec+": "+e, e);
-        }
-        return resolveValue(v, type, exec, contextMessage, forceDeep);
-    }
-
     /**
      * @see #resolveDeepValue(Object, Class, ExecutionContext, String)
      */
@@ -225,21 +154,14 @@ public class Tasks {
      * their values to the given type. For example, the following will return a list containing a map with "1"="true":
      * 
      *   {@code Object result = resolveDeepValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)} 
-     * 
-     * This differs from {@link #resolveValue(Object, Class, ExecutionContext, String)} mainly in its 
-     * use of generics and its return type. Even though the {@link #resolveValue(Object, Class, ExecutionContext, String)}
-     * method does "deep" conversion of futures contained within iterables/maps, the return type implies
-     * that it is the top-level object that should be coerced. For example, the following will try to return a String, 
-     * when in fact it is a map, giving a {@link ClassCastException}.
-     * 
-     *   {@code String result = resolveValue(ImmutableList.of(ImmutableMap.of(1, true)), String.class, exec)}
-     *   
-     * The one other difference of note is that this forces the resolution to go deep when the type is vague,
-     * e.g. if the requested type is an Object, {@link #resolveValue(Object, Class, ExecutionContext, String)}
-     * will decide that it matches a Map and not recurse on it, whereas this will recurse on it.
+     *
+     * To perform a deep conversion of futures contained within Iterables or Maps without coercion of each element,
+     * the type should normally be Object, not the type of the collection. This differs from
+     * {@link #resolveValue(Object, Class, ExecutionContext, String)} which will accept Map and Iterable
+     * as the required type.
      */
-    public static Object resolveDeepValue(Object v, Class<?> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
-        return resolveValue(v, type, exec, contextMessage, true);
+    public static <T> T resolveDeepValue(Object v, Class<T> type, ExecutionContext exec, String contextMessage) throws ExecutionException, InterruptedException {
+        return new ValueResolver<T>(v, type).context(exec).deep(true).description(contextMessage).get();
     }
 
     /** sets extra status details on the current task, if possible (otherwise does nothing).
@@ -261,43 +183,44 @@ public class Tasks {
             result[i] = tasks[i].asTask();
         return result;
     }
-    
+
     public static Task<List<?>> parallel(TaskAdaptable<?> ...tasks) {
         return parallelInternal("parallelised tasks", asTasks(tasks));
     }
-    
     public static Task<List<?>> parallel(String name, TaskAdaptable<?> ...tasks) {
         return parallelInternal(name, asTasks(tasks));
     }
-
+    public static Task<List<?>> parallel(Iterable<? extends TaskAdaptable<?>> tasks) {
+        return parallel(asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
+    }
     public static Task<List<?>> parallel(String name, Iterable<? extends TaskAdaptable<?>> tasks) {
         return parallelInternal(name, asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
     }
-    
-    public static Task<List<?>> parallelInternal(String name, Task<?>[] tasks) {
+    private static Task<List<?>> parallelInternal(String name, Task<?>[] tasks) {
         return Tasks.<List<?>>builder().name(name).parallel(true).add(tasks).build();
     }
 
     public static Task<List<?>> sequential(TaskAdaptable<?> ...tasks) {
         return sequentialInternal("sequential tasks", asTasks(tasks));
     }
-    
     public static Task<List<?>> sequential(String name, TaskAdaptable<?> ...tasks) {
         return sequentialInternal(name, asTasks(tasks));
     }
-    
-    private static Task<List<?>> sequentialInternal(String name, Task<?>[] tasks) {
-        return Tasks.<List<?>>builder().name(name).parallel(false).add(tasks).build();
-    }
-
     public static TaskFactory<?> sequential(TaskFactory<?> ...taskFactories) {
         return sequentialInternal("sequential tasks", taskFactories);
     }
-    
     public static TaskFactory<?> sequential(String name, TaskFactory<?> ...taskFactories) {
         return sequentialInternal(name, taskFactories);
     }
-    
+    public static Task<List<?>> sequential(List<? extends TaskAdaptable<?>> tasks) {
+        return sequential(asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
+    }
+    public static Task<List<?>> sequential(String name, List<? extends TaskAdaptable<?>> tasks) {
+        return sequential(name, asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
+    }
+    private static Task<List<?>> sequentialInternal(String name, Task<?>[] tasks) {
+        return Tasks.<List<?>>builder().name(name).parallel(false).add(tasks).build();
+    }
     private static TaskFactory<?> sequentialInternal(final String name, final TaskFactory<?> ...taskFactories) {
         return new TaskFactory<TaskAdaptable<?>>() {
             @Override
@@ -356,6 +279,7 @@ public class Tasks {
         }        
     }
     
+    /** see also {@link #resolving(Object)} which gives much more control about submission, timeout, etc */
     public static <T> Supplier<T> supplier(final TaskAdaptable<T> task) {
         return new Supplier<T>() {
             @Override
@@ -456,4 +380,103 @@ public class Tasks {
         if (t!=null) TaskTags.addTagDynamically(t, tag);
     }
     
+    /** 
+     * Workaround for limitation described at {@link Task#cancel(boolean)};
+     * internal method used to allow callers to wait for underlying tasks to finished in the case of cancellation.
+     * <p> 
+     * It is irritating that {@link FutureTask} sync's object clears the runner thread, 
+     * so even if {@link BasicTask#getInternalFuture()} is used, there is no means of determining if the underlying object is done.
+     * The {@link Task#getEndTimeUtc()} seems the only way.
+     *  
+     * @return true if tasks ended; false if timed out
+     **/ 
+    @Beta
+    public static boolean blockUntilInternalTasksEnded(Task<?> t, Duration timeout) {
+        CountdownTimer timer = timeout.countdownTimer();
+        
+        if (t==null)
+            return true;
+        
+        if (t instanceof ScheduledTask) {
+            boolean result = ((ScheduledTask)t).blockUntilNextRunFinished(timer.getDurationRemaining());
+            if (!result) return false;
+        }
+
+        t.blockUntilEnded(timer.getDurationRemaining());
+        
+        while (true) {
+            if (t.getEndTimeUtc()>=0) return true;
+            // above should be sufficient; but just in case, trying the below
+            Thread tt = t.getThread();
+            if (t instanceof ScheduledTask) {
+                ((ScheduledTask)t).blockUntilNextRunFinished(timer.getDurationRemaining());
+                return true;
+            } else {
+                if (tt==null || !tt.isAlive()) {
+                    if (!t.isCancelled()) {
+                        // may happen for a cancelled task, interrupted after submit but before start
+                        log.warn("Internal task thread is dead or null ("+tt+") but task not ended: "+t.getEndTimeUtc()+" ("+t+")");
+                    }
+                    return true;
+                }
+            }
+            if (timer.isExpired())
+                return false;
+            Time.sleep(Duration.millis(10));
+        }
+    }
+    
+    /** returns true if either the current thread or the current task is interrupted/cancelled */
+    public static boolean isInterrupted() {
+        if (Thread.currentThread().isInterrupted()) return true;
+        Task<?> t = current();
+        if (t==null) return false;
+        return t.isCancelled();
+    }
+
+    private static class WaitForRepeaterCallable implements Callable<Boolean> {
+        protected Repeater repeater;
+        protected boolean requireTrue;
+
+        public WaitForRepeaterCallable(Repeater repeater, boolean requireTrue) {
+            this.repeater = repeater;
+            this.requireTrue = requireTrue;
+        }
+
+        @Override
+        public Boolean call() {
+            ReferenceWithError<Boolean> result = repeater.runKeepingError();
+            if (Boolean.TRUE.equals(result.getWithoutError()))
+                return true;
+            if (result.hasError()) 
+                throw Exceptions.propagate(result.getError());
+            if (requireTrue)
+                throw new IllegalStateException("timeout - "+repeater.getDescription());
+            return false;
+        }
+    }
+
+    /** @return a {@link TaskBuilder} which tests whether the repeater terminates with success in its configured timeframe,
+     * returning true or false depending on whether repeater succeed */
+    public static TaskBuilder<Boolean> testing(Repeater repeater) {
+        return Tasks.<Boolean>builder().body(new WaitForRepeaterCallable(repeater, false))
+            .name("waiting for condition")
+            .description("Testing whether " + getTimeoutString(repeater) + ": "+repeater.getDescription());
+    }
+
+    /** @return a {@link TaskBuilder} which requires that the repeater terminate with success in its configured timeframe,
+     * throwing if it does not */
+    public static TaskBuilder<?> requiring(Repeater repeater) {
+        return Tasks.<Boolean>builder().body(new WaitForRepeaterCallable(repeater, true))
+            .name("waiting for condition")
+            .description("Requiring " + getTimeoutString(repeater) + ": "+repeater);
+    }
+    
+    private static String getTimeoutString(Repeater repeater) {
+        Duration timeout = repeater.getTimeLimit();
+        if (timeout==null || Duration.PRACTICALLY_FOREVER.equals(timeout))
+            return "eventually";
+        return "in "+timeout;
+    }
+
 }

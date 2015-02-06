@@ -1,3 +1,5 @@
+// brooklyn note: same license as jquery.datatables, viz MIT license
+
 /*
  * jQuery DataTables fnStandingRedraw plug-in.
  *

@@ -18,35 +18,48 @@
  */
 package brooklyn.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import brooklyn.catalog.internal.CatalogUtils;
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpTool.HttpClientBuilder;
 import brooklyn.util.javalang.Threads;
-import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
@@ -67,7 +80,7 @@ public class ResourceUtils {
     private String context = null;
     private Object contextObject = null;
     
-    static { Networking.init(); }
+    static { BrooklynInitialization.initNetworking(); }
     
     /**
      * Creates a {@link ResourceUtils} object with a specific class loader and context.
@@ -134,7 +147,7 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(ClassLoader loader, Object contextObject, String contextMessage) {
-        this(new JavaBrooklynClassLoadingContext(null, loader), contextObject, contextMessage);
+        this(getClassLoadingContextInternal(loader, contextObject), contextObject, contextMessage);
     }
     
     public ResourceUtils(BrooklynClassLoadingContext loader, Object contextObject, String contextMessage) {
@@ -144,7 +157,7 @@ public class ResourceUtils {
     }
 
     public ResourceUtils(Object contextObject, String contextMessage) {
-        this(contextObject==null ? null : getClassLoadingContextForObject(contextObject), contextObject, contextMessage);
+        this(contextObject==null ? null : getClassLoadingContextInternal(null, contextObject), contextObject, contextMessage);
     }
 
     public ResourceUtils(Object contextObject) {
@@ -156,7 +169,9 @@ public class ResourceUtils {
         classLoaderProviders.add(provider);
     }
     
-    public static BrooklynClassLoadingContext getClassLoadingContextForObject(Object contextObject) {
+    // TODO rework this class so it accepts but does not require a BCLC ?
+    @SuppressWarnings("deprecation")
+    protected static BrooklynClassLoadingContext getClassLoadingContextInternal(ClassLoader loader, Object contextObject) {
         if (contextObject instanceof BrooklynClassLoadingContext)
             return (BrooklynClassLoadingContext) contextObject;
         
@@ -164,22 +179,23 @@ public class ResourceUtils {
             BrooklynClassLoadingContext result = provider.apply(contextObject);
             if (result!=null) return result;
         }
-        
-        ClassLoader cl = contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
+
+        BrooklynClassLoadingContext bl = BrooklynLoaderTracker.getLoader();
+        ManagementContext mgmt = (bl!=null ? bl.getManagementContext() : null);
+
+        ClassLoader cl = loader;
+        if (cl==null) cl = contextObject instanceof Class ? ((Class<?>)contextObject).getClassLoader() : 
             contextObject instanceof ClassLoader ? ((ClassLoader)contextObject) : 
                 contextObject.getClass().getClassLoader();
-        return getClassLoadingContextForClassLoader(cl);
+            
+        return JavaBrooklynClassLoadingContext.create(mgmt, cl);
     }
     
-    protected static BrooklynClassLoadingContext getClassLoadingContextForClassLoader(ClassLoader loader) {
-        ManagementContext mgmt = null;
-        BrooklynClassLoadingContext bl = BrooklynLoaderTracker.getLoader();
-        if (bl!=null) mgmt = bl.getManagementContext();
-        return new JavaBrooklynClassLoadingContext(mgmt, loader);
-    }
-    
-    public BrooklynClassLoadingContext getLoader() {
-        return (loader!=null ? loader : getClassLoadingContextForClassLoader(getClass().getClassLoader()));
+    /** This should not be exposed as it risks it leaking into places where it would be serialized.
+     * Better for callers use {@link CatalogUtils#getClassLoadingContext(brooklyn.entity.Entity)} or similar. }.
+     */
+    private BrooklynClassLoadingContext getLoader() {
+        return (loader!=null ? loader : getClassLoadingContextInternal(null, contextObject!=null ? contextObject : this));
     }
     
     /**
@@ -224,7 +240,11 @@ public class ResourceUtils {
                 if ("data".equals(protocol)) {
                     return new DataUriSchemeParser(url).lax().parse().getDataAsInputStream();
                 }
-                
+
+                if ("http".equals(protocol) || "https".equals(protocol)) {
+                    return getResourceViaHttp(url);
+                }
+
                 return new URL(url).openStream();
             }
 
@@ -307,7 +327,7 @@ public class ResourceUtils {
         } catch (MalformedURLException e) {
             throw Exceptions.propagate(e);
         }
-        if (!urlOut.equals(in) && log.isDebugEnabled()) {
+        if (!urlOut.equals(url) && log.isDebugEnabled()) {
             log.debug("quietly changing " + url + " to " + urlOut);
         }
         return urlOut;
@@ -388,6 +408,60 @@ public class ResourceUtils {
         }
     }
     
+    //For HTTP(S) targets use HttpClient so
+    //we can do authentication
+    private InputStream getResourceViaHttp(String resource) throws IOException {
+        URI uri = URI.create(resource);
+        HttpClientBuilder builder = HttpTool.httpClientBuilder()
+                .laxRedirect(true)
+                .uri(uri);
+        Credentials credentials = getUrlCredentials(uri.getRawUserInfo());
+        if (credentials != null) {
+            builder.credentials(credentials);
+        }
+        HttpClient client = builder.build();
+        HttpResponse result = client.execute(new HttpGet(resource));
+        int statusCode = result.getStatusLine().getStatusCode();
+        if (HttpTool.isStatusCodeHealthy(statusCode)) {
+            HttpEntity entity = result.getEntity();
+            if (entity != null) {
+                return entity.getContent();
+            } else {
+                return new ByteArrayInputStream(new byte[0]);
+            }
+        } else {
+            EntityUtils.consume(result.getEntity());
+            throw new IllegalStateException("Invalid response invoking " + resource + ": response code " + statusCode);
+        }
+    }
+
+    private Credentials getUrlCredentials(String userInfo) {
+        if (userInfo != null) {
+            String[] arr = userInfo.split(":");
+            String username;
+            String password = null;
+            if (arr.length == 1) {
+                username = urlDecode(arr[0]);
+            } else if (arr.length == 2) {
+                username = urlDecode(arr[0]);
+                password = urlDecode(arr[1]);
+            } else {
+                return null;
+            }
+            return new UsernamePasswordCredentials(username, password);
+        } else {
+            return null;
+        }
+    }
+
+    private String urlDecode(String str) {
+        try {
+            return URLDecoder.decode(str, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
     /** takes {@link #getResourceFromUrl(String)} and reads fully, into a string */
     public String getResourceAsString(String url) {
         try {
@@ -400,13 +474,17 @@ public class ResourceUtils {
 
     /** allows failing-fast if URL cannot be read */
     public String checkUrlExists(String url) {
-        if (url==null) throw new NullPointerException("URL must not be null");
+        return checkUrlExists(url, null);
+    }
+    
+    public String checkUrlExists(String url, String message) {
+        if (url==null) throw new NullPointerException("URL "+(message!=null ? message+" " : "")+"must not be null");
         InputStream s;
         try {
             s = getResourceFromUrl(url);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            throw new IllegalArgumentException("Unable to access URL "+url, e);
+            throw new IllegalArgumentException("Unable to access URL "+(message!=null ? message : "")+": "+url, e);
         }
         Streams.closeQuietly(s); 
         return url;

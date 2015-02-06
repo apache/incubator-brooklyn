@@ -19,22 +19,27 @@
 package brooklyn.launcher;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 
+import com.google.common.base.Joiner;
 import com.google.common.io.Files;
 
 public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTestFixture {
@@ -50,7 +55,8 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
     }
     
     protected void checkPersistenceContainerNameIs(String expected) {
-        assertEquals(getPersistenceDir(lastMgmt()).getAbsolutePath(), expected);
+        String expectedFqp = new File(Os.tidyPath(expected)).getAbsolutePath();
+        assertEquals(getPersistenceDir(lastMgmt()).getAbsolutePath(), expectedFqp);
     }
 
     static File getPersistenceDir(ManagementContext managementContext) {
@@ -60,7 +66,8 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
     }
 
     protected void checkPersistenceContainerNameIsDefault() {
-        checkPersistenceContainerNameIs(BrooklynServerConfig.DEFAULT_PERSISTENCE_DIR_FOR_FILESYSTEM);
+        String expected = BrooklynServerPaths.newMainPersistencePathResolver(BrooklynProperties.Factory.newEmpty()).location(null).dir(null).resolve();
+        checkPersistenceContainerNameIs(expected);
     }
 
     @Test
@@ -70,9 +77,9 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
         String tempFileName = tempF.getAbsolutePath();
         
         try {
-            runRebindFails(PersistMode.AUTO, tempFileName, "not a directory");
-            runRebindFails(PersistMode.REBIND, tempFileName, "not a directory");
-            runRebindFails(PersistMode.CLEAN, tempFileName, "not a directory");
+            runRebindFails(PersistMode.AUTO, tempFileName, "must not be a file");
+            runRebindFails(PersistMode.REBIND, tempFileName, "must not be a file");
+            runRebindFails(PersistMode.CLEAN, tempFileName, "must not be a file");
         } finally {
             new File(tempFileName).delete();
         }
@@ -106,4 +113,41 @@ public class BrooklynLauncherRebindTestToFiles extends BrooklynLauncherRebindTes
         }
     }
 
+    @Test(groups="Integration")
+    public void testCopyPersistedState() throws Exception {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
+        populatePersistenceDir(persistenceDir, appSpec);
+
+        File destinationDir = Files.createTempDir();
+        String destination = destinationDir.getAbsolutePath();
+        String destinationLocation = null; // i.e. file system, rather than object store
+        try {
+            // Auto will rebind if the dir exists
+            BrooklynLauncher launcher = newLauncherDefault(PersistMode.AUTO)
+                    .highAvailabilityMode(HighAvailabilityMode.MASTER)
+                    .webconsole(false);
+            launcher.copyPersistedState(destination, destinationLocation);
+            launcher.terminate();
+            
+            File entities = new File(Os.mergePaths(destination), "entities");
+            assertTrue(entities.isDirectory(), "entities directory should exist");
+            assertEquals(entities.listFiles().length, 1, "entities directory should contain one file (contained: "+
+                    Joiner.on(", ").join(entities.listFiles()) +")");
+
+            File nodes = new File(Os.mergePaths(destination, "nodes"));
+            assertTrue(nodes.isDirectory(), "nodes directory should exist");
+            assertNotEquals(nodes.listFiles().length, 0, "nodes directory should not be empty");
+
+            // Should now have a usable copy in the destinationDir
+            // Auto will rebind if the dir exists
+            newLauncherDefault(PersistMode.AUTO)
+                    .webconsole(false)
+                    .persistenceDir(destinationDir)
+                    .start();
+            assertOnlyApp(lastMgmt(), TestApplication.class);
+            
+        } finally {
+            Os.deleteRecursively(destinationDir);
+        }
+    }
 }

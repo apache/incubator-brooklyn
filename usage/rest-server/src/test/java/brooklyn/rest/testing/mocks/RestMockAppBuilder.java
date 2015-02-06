@@ -22,6 +22,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.util.javalang.Reflections;
 
 public class RestMockAppBuilder extends ApplicationBuilder {
 
@@ -31,6 +32,8 @@ public class RestMockAppBuilder extends ApplicationBuilder {
     
     @Override
     protected void doBuild() {
-        addChild(EntitySpec.create(Entity.class).impl(RestMockSimpleEntity.class).displayName("child1"));
+        addChild(EntitySpec.create(Entity.class).impl(RestMockSimpleEntity.class)
+            .additionalInterfaces(Reflections.getAllInterfaces(RestMockSimpleEntity.class))
+            .displayName("child1"));
     }
 }

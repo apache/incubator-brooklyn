@@ -44,7 +44,8 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
         super();
     }
 
-    private volatile JmxFeed jmxFeed;
+    private volatile JmxFeed jmxWebFeed;
+    private volatile JmxFeed jmxAppFeed;
 
     @Override
     public void connectSensors() {
@@ -52,9 +53,11 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
 
         if (getDriver().isJmxEnabled()) {
             String requestProcessorMbeanName = "Catalina:type=GlobalRequestProcessor,name=\"http-*\"";
-            String connectorMbeanName = format("Catalina:type=Connector,port=%s", getAttribute(HTTP_PORT));
 
-            jmxFeed = JmxFeed.builder()
+            Integer port = isHttpsEnabled() ? getAttribute(HTTPS_PORT) : getAttribute(HTTP_PORT);
+            String connectorMbeanName = format("Catalina:type=Connector,port=%s", port);
+
+            jmxWebFeed = JmxFeed.builder()
                     .entity(this)
                     .period(3000, TimeUnit.MILLISECONDS)
                     .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
@@ -69,14 +72,14 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
                     .pollAttribute(new JmxAttributePollConfig<String>(CONNECTOR_STATUS)
                             .objectName(connectorMbeanName)
                             .attributeName("stateName"))
-                    .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
+                    .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_PROCESS_IS_RUNNING)
                             .objectName(connectorMbeanName)
                             .attributeName("stateName")
                             .onSuccess(Functions.forPredicate(Predicates.<Object>equalTo("STARTED")))
                             .setOnFailureOrException(false))
                     .build();
 
-            JavaAppUtils.connectMXBeanSensors(this);
+            jmxAppFeed = JavaAppUtils.connectMXBeanSensors(this);
         } else {
             // if not using JMX
             LOG.warn("Tomcat running without JMX monitoring; limited visibility of service available");
@@ -88,7 +91,8 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     public void disconnectSensors() {
         super.disconnectSensors();
         if (getDriver() != null && getDriver().isJmxEnabled()) {
-           if (jmxFeed != null) jmxFeed.stop();
+           if (jmxWebFeed != null) jmxWebFeed.stop();
+           if (jmxAppFeed != null) jmxAppFeed.stop();
         } else {
             disconnectServiceUpIsRunning();
         }

@@ -25,6 +25,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
@@ -35,7 +36,12 @@ import brooklyn.util.flags.SetFromFlag;
     iconUrl="classpath:///mongodb-logo.png")
 @ImplementedBy(MongoDBServerImpl.class)
 public interface MongoDBServer extends AbstractMongoDBServer {
-    
+
+    @SetFromFlag("mongodbConfTemplateUrl")
+    ConfigKey<String> MONGODB_CONF_TEMPLATE_URL = ConfigKeys.newConfigKeyWithDefault(
+            AbstractMongoDBServer.MONGODB_CONF_TEMPLATE_URL,
+            "classpath://brooklyn/entity/nosql/mongodb/default-mongod.conf");
+
     // See http://docs.mongodb.org/ecosystem/tools/http-interfaces/#http-console
     // This is *always* 1000 more than port. We disable if it is not available.
     PortAttributeSensorAndConfigKey HTTP_PORT =
@@ -48,8 +54,10 @@ public interface MongoDBServer extends AbstractMongoDBServer {
     AttributeSensor<String> HTTP_INTERFACE_URL = Sensors.newStringSensor(
             "mongodb.server.http_interface", "URL of the server's HTTP console");
 
-    AttributeSensor<BasicBSONObject> STATUS_BSON = Sensors.newSensor(BasicBSONObject.class,
-            "mongodb.server.status.bson", "Server status (BSON/JSON map ojbect)");
+    AttributeSensor<BasicBSONObject> STATUS_BSON = Sensors.builder(BasicBSONObject.class, "mongodb.server.status.bson")
+            .description("Server status (BSON/JSON map ojbect)")
+            .persistence(SensorPersistenceMode.NONE)
+            .build();
     
     AttributeSensor<Double> UPTIME_SECONDS = Sensors.newDoubleSensor(
             "mongodb.server.uptime", "Server uptime in seconds");
@@ -99,7 +107,7 @@ public interface MongoDBServer extends AbstractMongoDBServer {
             "mongodb.server.replicaSet.primary.endpoint", "The host:port of the server which is acting as primary (master) for the replica set");
 
     AttributeSensor<String> MONGO_SERVER_ENDPOINT = Sensors.newStringSensor(
-        "mongodb.server.endpoint", "The host:port where this server is listening");
+            "mongodb.server.endpoint", "The host:port where this server is listening");
 
     /**
      * @return The replica set the server belongs to, or null if the server is a standalone instance.

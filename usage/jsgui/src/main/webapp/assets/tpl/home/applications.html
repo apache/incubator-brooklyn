@@ -37,8 +37,6 @@ under the License.
 
   <div class="apps-summary-container">
 
-    <div id="ha-summary"></div>
-
     <div id="applications">
         <table class="table table-striped table-bordered table-condensed">
             <thead>
@@ -50,19 +48,32 @@ under the License.
         </table>
     </div>
 
+    <div id="ha-summary"></div>
+
     <dl class="dl-horizontal"></dl>
     <div id="new-application-resource">
         <button id="add-new-application" type="button" class="btn btn-info">
             Add Application</button>
     </div>
+    
     <dl class="dl-horizontal"></dl>
     <div id="reload-brooklyn-properties-resource">
         <button id="reload-brooklyn-properties" type="button" class="btn btn-info">
-            Reload properties</button>
+            Reload Properties</button>
     </div>
-    <div id="reload-brooklyn-properties-indicator" class="throbber hide">
+    <div id="reload-brooklyn-properties-indicator" class="throbber hide" style="float: right;">
         <img src="/assets/images/throbber.gif"/>
     </div>
+    
+    <dl class="dl-horizontal"></dl>
+    <div id="clear-ha-node-records-resource">
+        <button id="clear-ha-node-records" type="button" class="btn btn-info">
+            Clear HA Node Records</button>
+    </div>
+    <div id="clear-ha-node-records-indicator" class="throbber hide" style="float: right;">
+        <img src="/assets/images/throbber.gif"/>
+    </div>
+    
   </div>
   
     </div>

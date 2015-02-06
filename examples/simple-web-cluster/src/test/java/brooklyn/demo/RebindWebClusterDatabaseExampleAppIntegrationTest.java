@@ -45,8 +45,8 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixture;
-import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -96,9 +96,11 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
     
     @Override
     protected StartableApplication createApp() {
-        return origManagementContext.getEntityManager().createEntity(EntitySpec.create(StartableApplication.class)
+        StartableApplication result = origManagementContext.getEntityManager().createEntity(EntitySpec.create(StartableApplication.class)
                 .impl(WebClusterDatabaseExampleApp.class)
                 .configure(DynamicCluster.INITIAL_SIZE, 2));
+        Entities.startManagement(result, origManagementContext);
+        return result;
     }
     
     private WebAppMonitor newWebAppMonitor(String url, int expectedResponseCode) {
@@ -111,21 +113,6 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         return monitor;
     }
     
-    @Override
-    protected StartableApplication rebind(boolean checkSerializable) throws Exception {
-        RebindTestUtils.waitForPersisted(origApp);
-        if (checkSerializable) {
-            RebindTestUtils.checkCurrentMementoSerializable(origApp);
-        }
-        
-        // Must also terminate the original management context, otherwise it will keep trying to write 
-        // mementos due to the frequent attribute-changes
-        origManagementContext.terminate();
-        
-        return (StartableApplication) RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
-    }
-
-
     @Test(groups="Integration")
     public void testRestoresSimpleApp() throws Exception {
         origApp.start(ImmutableList.of(origLoc));
@@ -135,7 +122,7 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         String clusterUrl = checkNotNull(origApp.getAttribute(WebClusterDatabaseExampleApp.ROOT_URL), "cluster url");
         WebAppMonitor monitor = newWebAppMonitor(clusterUrl, 200);
         
-        newApp = rebind(false);
+        newApp = rebind(RebindOptions.create().terminateOrigManagementContext(true));
         assertAppFunctional(newApp);
 
         // expect no failures during rebind
@@ -161,16 +148,16 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         final String expectedJdbcUrl = String.format("jdbc:%s%s?user=%s\\&password=%s", dbUrl, WebClusterDatabaseExampleApp.DB_TABLE, 
                 WebClusterDatabaseExampleApp.DB_USERNAME, WebClusterDatabaseExampleApp.DB_PASSWORD);
 
-        WebAppMonitor monitor = newWebAppMonitor(clusterUrl, 200);
-
         // expect web-app to be reachable, and wired up to database
-        HttpTestUtils.assertHttpStatusCodeEquals(clusterUrl, 200);
+        HttpTestUtils.assertHttpStatusCodeEventuallyEquals(clusterUrl, 200);
         for (Entity appserver : appservers) {
             String appserverUrl = checkNotNull(appserver.getAttribute(JBoss7Server.ROOT_URL), "appserver url of "+appserver);
 
-            HttpTestUtils.assertHttpStatusCodeEquals(appserverUrl, 200);
+            HttpTestUtils.assertHttpStatusCodeEventuallyEquals(appserverUrl, 200);
             assertEquals(expectedJdbcUrl, appserver.getConfig(JavaEntityMethods.javaSysProp("brooklyn.example.db.url")), "of "+appserver);
         }
+
+        WebAppMonitor monitor = newWebAppMonitor(clusterUrl, 200);
 
         // expect auto-scaler policy to be there, and to be functional (e.g. can trigger resize)
         AutoScalerPolicy autoScalerPolicy = (AutoScalerPolicy) Iterables.find(webCluster.getPolicies(), Predicates.instanceOf(AutoScalerPolicy.class));

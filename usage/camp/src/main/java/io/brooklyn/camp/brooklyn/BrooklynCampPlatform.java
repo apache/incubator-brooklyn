@@ -46,6 +46,7 @@ public class BrooklynCampPlatform extends AggregatingCampPlatform implements Has
         addInterpreters();
         
         managementContext.addPropertiesReloadListener(new PropertiesReloadListener() {
+            private static final long serialVersionUID = -3739276553334749184L;
             @Override public void reloaded() {
                 setConfigKeyAtManagmentContext();
             }

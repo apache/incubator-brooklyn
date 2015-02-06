@@ -30,6 +30,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
+import brooklyn.test.PerformanceTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestPolicy;
 import brooklyn.util.repeat.Repeater;

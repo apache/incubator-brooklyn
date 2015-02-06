@@ -18,9 +18,9 @@
  */
 package brooklyn.rest.domain;
 
-import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
+import static brooklyn.rest.util.RestApiTestUtils.asJson;
+import static brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 

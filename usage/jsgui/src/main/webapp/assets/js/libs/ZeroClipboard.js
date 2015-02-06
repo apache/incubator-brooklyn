@@ -5,6 +5,11 @@
 * Licensed MIT
 * http://zeroclipboard.org/
 * v1.3.1
+*
+* BROOKLYN NOTE: The accompanying SWF artifact can also be built from source using a free toolchain
+* as described at https://github.com/zeroclipboard/zeroclipboard/blob/master/CONTRIBUTING.md .
+* (It has been included in the Apache project as a binary artifact because building it is tedious.
+* Also- it is small!) This paragraph is the only change to this source file.
 */
 (function() {
   "use strict";

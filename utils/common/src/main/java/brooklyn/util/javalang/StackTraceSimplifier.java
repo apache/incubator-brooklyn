@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -176,5 +178,26 @@ public class StackTraceSimplifier {
         t.printStackTrace(pw);
         return sw.getBuffer().toString();
     }
-    
+
+    /** returns the number of times the calling method occurs elsewhere in the stack trace;
+     * 0 if no recursion, 1 if it has cycled three times, etc. */
+    @Beta  // useful to track down things like https://github.com/apache/incubator-brooklyn/pull/489
+    public static int getRecursiveCallCount() {
+        StackTraceElement[] t = cleanStackTrace(new Throwable().getStackTrace());
+        Iterator<StackTraceElement> ti = Arrays.asList(t).iterator();
+        ti.next();
+        if (!ti.hasNext()) return 0;
+        // t0 is the caller
+        StackTraceElement t0 = ti.next();
+        String l0 = t0.getClassName()+"."+t0.getMethodName()+"("+t0.getFileName()+")";
+        int count = 0;
+        while (ti.hasNext()) {
+            StackTraceElement ta = ti.next();
+            String li = ta.getClassName()+"."+ta.getMethodName()+"("+ta.getFileName()+")";
+            // if we have something in a different method, then something back in the method 
+            // from which the recursive check came, then return true
+            if (li.equals(l0)) count++;
+        }
+        return count;
+    }
 }

@@ -57,6 +57,8 @@ public class JavaWebAppWithDslYamlRebindIntegrationTest extends AbstractYamlTest
     protected LocalManagementContext newTestManagementContext() {
         if (mementoDir!=null) throw new IllegalStateException("already created mgmt context");
         mementoDir = Files.createTempDir();
+        log.info("Test "+getClass()+" persisting to "+mementoDir);
+
         LocalManagementContext mgmt =
             RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         mgmtContexts.add(mgmt);

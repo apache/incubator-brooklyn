@@ -18,8 +18,15 @@
  */
 package brooklyn.util.guava;
 
+import java.util.concurrent.Callable;
+
+import brooklyn.util.guava.IfFunctions.IfFunctionBuilderApplyingFirst;
+
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 public class Functionals {
 
@@ -36,6 +43,109 @@ public class Functionals {
     /** applies f1 to the input, then f2 to that result, then f3 to that result, then f4 to that result */
     public static <A,B,C,D,E> Function<A,E> chain(final Function<A,? extends B> f1, final Function<B,? extends C> f2, final Function<C,? extends D> f3, final Function<D,E> f4) {
         return chain(f1, chain(f2, chain(f3, f4)));
+    }
+
+    /** @see IfFunctions */
+    public static <I> IfFunctionBuilderApplyingFirst<I> ifEquals(I test) {
+        return IfFunctions.ifEquals(test);
+    }
+
+    /** @see IfFunctions */
+    public static <I> IfFunctionBuilderApplyingFirst<I> ifNotEquals(I test) {
+        return IfFunctions.ifNotEquals(test);
+    }
+    
+    /** @see IfFunctions */
+    public static <I> IfFunctionBuilderApplyingFirst<I> ifPredicate(Predicate<I> test) {
+        return IfFunctions.ifPredicate(test);
+    }
+
+    /** like guava equivalent but parametrises the input generic type, and allows tostring to be customised */
+    public static final class ConstantFunction<I, O> implements Function<I, O> {
+        private final O constant;
+        private Object toStringDescription;
+
+        public ConstantFunction(O constant) {
+            this(constant, null);
+        }
+        public ConstantFunction(O constant, Object toStringDescription) {
+            this.constant = constant;
+            this.toStringDescription = toStringDescription;
+        }
+
+        @Override
+        public O apply(I input) {
+            return constant;
+        }
+        
+        @Override
+        public String toString() {
+            return toStringDescription==null ? "constant("+constant+")" : toStringDescription.toString();
+        }
+    }
+
+    /** like guava {@link Functions#forSupplier(Supplier)} but parametrises the input generic type */
+    public static <I,O> Function<I,O> function(final Supplier<O> supplier) {
+        class SupplierAsFunction implements Function<I,O> {
+            @Override public O apply(I input) {
+                return supplier.get();
+            }
+            @Override public String toString() {
+                return "function("+supplier+")";
+            }
+        }
+        return new SupplierAsFunction();
+    }
+
+    public static <I> Function<I,Void> function(final Runnable runnable) {
+        class RunnableAsFunction implements Function<I,Void> {
+            @Override public Void apply(I input) {
+                runnable.run();
+                return null;
+            }
+        }
+        return new RunnableAsFunction();
+    }
+
+    public static Runnable runnable(final Supplier<?> supplier) {
+        class SupplierAsRunnable implements Runnable {
+            @Override
+            public void run() {
+                supplier.get();
+            }
+        }
+        return new SupplierAsRunnable();
+    }
+
+    public static <T> Callable<T> callable(final Supplier<T> supplier) {
+        class SupplierAsCallable implements Callable<T> {
+            @Override
+            public T call() {
+                return supplier.get();
+            }
+            @Override
+            public String toString() {
+                return "callable("+supplier+")";
+            }
+        }
+        return new SupplierAsCallable();
+    }
+    public static <T,U> Callable<U> callable(Function<T,U> f, T x) {
+        return callable(Suppliers.compose(f, Suppliers.ofInstance(x)));
+    }
+
+    public static <T> Predicate<T> predicate(final Function<T,Boolean> f) {
+        class FunctionAsPredicate implements Predicate<T> {
+            @Override
+            public boolean apply(T input) {
+                return f.apply(input);
+            }
+            @Override
+            public String toString() {
+                return "predicate("+f+")";
+            }
+        }
+        return new FunctionAsPredicate();
     }
 
 }

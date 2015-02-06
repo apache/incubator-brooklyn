@@ -33,19 +33,19 @@ public class StringEscapesTest {
     }
 
     
-	@Test
-	public void testBashEscaping() {
-		Assert.assertEquals(
-	        BashStringEscapes.doubleQuoteLiteralsForBash("-Dname=Bob Johnson", "-Dnet.worth=$100"),
-			"\"-Dname=Bob Johnson\" \"-Dnet.worth=\\$100\"");
-	}
+    @Test
+    public void testBashEscaping() {
+        Assert.assertEquals(
+            BashStringEscapes.doubleQuoteLiteralsForBash("-Dname=Bob Johnson", "-Dnet.worth=$100"),
+            "\"-Dname=Bob Johnson\" \"-Dnet.worth=\\$100\"");
+    }
 
-	@Test
-	public void testBashEscapable() {
-		Assert.assertTrue(BashStringEscapes.isValidForDoubleQuotingInBash("Bob Johnson"));
-		Assert.assertFalse(BashStringEscapes.isValidForDoubleQuotingInBash("\""));
-		Assert.assertTrue(BashStringEscapes.isValidForDoubleQuotingInBash("\\\""));
-	}	
+    @Test
+    public void testBashEscapable() {
+        Assert.assertTrue(BashStringEscapes.isValidForDoubleQuotingInBash("Bob Johnson"));
+        Assert.assertFalse(BashStringEscapes.isValidForDoubleQuotingInBash("\""));
+        Assert.assertTrue(BashStringEscapes.isValidForDoubleQuotingInBash("\\\""));
+    }    
     
     /** Bash handles ampersand in double quoted strings without escaping. */
     @Test

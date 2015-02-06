@@ -31,12 +31,11 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -56,6 +55,7 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.ha.ServiceFailureDetector;
 import brooklyn.policy.ha.ServiceReplacer;
@@ -67,9 +67,11 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
@@ -96,7 +98,9 @@ public class CumulusRDFApplication extends AbstractApplication {
     public static final ConfigKey<Boolean> MULTI_REGION_FABRIC = ConfigKeys.newConfigKey(
         "cumulus.cassandra.fabric", "Deploy a multi-region Cassandra fabric", false);
 
-    public static final String DEFAULT_LOCATIONS = "aws-ec2:us-east-1,rackspace-cloudservers-uk";
+    // TODO Fails when given two locations
+    // public static final String DEFAULT_LOCATIONS = "[ jclouds:aws-ec2:us-east-1,jclouds:rackspace-cloudservers-uk ]";
+    public static final String DEFAULT_LOCATIONS = "jclouds:aws-ec2:us-east-1";
 
     private Effector<Void> cumulusConfig = Effectors.effector(Void.class, "cumulusConfig")
             .description("Configure the CumulusRDF web application")
@@ -105,6 +109,7 @@ public class CumulusRDFApplication extends AbstractApplication {
     private Entity cassandra;
     private TomcatServer webapp;
     private HostAndPort endpoint;
+    private final Object endpointMutex = new Object();
 
     /**
      * Create the application entities:
@@ -114,7 +119,7 @@ public class CumulusRDFApplication extends AbstractApplication {
      * </ul>
      */
     @Override
-    public void init() {
+    public void initApp() {
         // Cassandra cluster
         EntitySpec<CassandraDatacenter> clusterSpec = EntitySpec.create(CassandraDatacenter.class)
                 .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
@@ -123,7 +128,7 @@ public class CumulusRDFApplication extends AbstractApplication {
                         .configure(UsesJmx.JMX_PORT, PortRanges.fromString("11099+"))
                         .configure(UsesJmx.RMI_REGISTRY_PORT, PortRanges.fromString("9001+"))
                         .configure(CassandraNode.THRIFT_PORT, PortRanges.fromInteger(getConfig(CASSANDRA_THRIFT_PORT)))
-                        .policy(PolicySpec.create(ServiceFailureDetector.class))
+                        .enricher(EnricherSpec.create(ServiceFailureDetector.class))
                         .policy(PolicySpec.create(ServiceRestarter.class)
                                 .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, ServiceFailureDetector.ENTITY_FAILED)))
                 .policy(PolicySpec.create(ServiceReplacer.class)
@@ -147,7 +152,7 @@ public class CumulusRDFApplication extends AbstractApplication {
                 .configure(UsesJmx.JMX_AGENT_MODE, UsesJmx.JmxAgentModes.JMX_RMI_CUSTOM_AGENT)
                 .configure(UsesJmx.JMX_PORT, PortRanges.fromString("11099+"))
                 .configure(UsesJmx.RMI_REGISTRY_PORT, PortRanges.fromString("9001+"))
-                .configure(JavaWebAppService.ROOT_WAR, "classpath://cumulusrdf.war")
+                .configure(JavaWebAppService.ROOT_WAR, "https://cumulusrdf.googlecode.com/svn/wiki/downloads/cumulusrdf-1.0.1.war")
                 .configure(UsesJava.JAVA_SYSPROPS, MutableMap.of("cumulusrdf.config-file", "/tmp/cumulus.yaml")));
 
         // Add an effector to tomcat to reconfigure with a new YAML config file
@@ -156,9 +161,11 @@ public class CumulusRDFApplication extends AbstractApplication {
             public Void call(ConfigBag parameters) {
                 // Process the YAML template given in the application config
                 String url = Entities.getRequiredUrlConfig(CumulusRDFApplication.this, CUMULUS_RDF_CONFIG_URL);
-                Map<String, Object> config = MutableMap.<String, Object>of("cassandraHostname", endpoint.getHostText(), "cassandraThriftPort", endpoint.getPort());
+                Map<String, Object> config;
+                synchronized (endpointMutex) {
+                    config = MutableMap.<String, Object>of("cassandraHostname", endpoint.getHostText(), "cassandraThriftPort", endpoint.getPort());
+                }
                 String contents = TemplateProcessor.processTemplateContents(ResourceUtils.create(CumulusRDFApplication.this).getResourceAsString(url), config);
-
                 // Copy the file contents to the remote machine
                 return DynamicTasks.queue(SshEffectorTasks.put("/tmp/cumulus.yaml").contents(contents)).get();
             }
@@ -169,7 +176,7 @@ public class CumulusRDFApplication extends AbstractApplication {
             @Override
             public void onEvent(SensorEvent<String> event) {
                 if (Strings.isNonBlank(event.getValue())) {
-                    synchronized (endpoint) {
+                    synchronized (endpointMutex) {
                         String hostname = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraDatacenter.HOSTNAME)).getUnchecked();
                         Integer thriftPort = Entities.submit(CumulusRDFApplication.this, DependentConfiguration.attributeWhenReady(cassandra, CassandraDatacenter.THRIFT_PORT)).getUnchecked();
                         HostAndPort current = HostAndPort.fromParts(hostname, thriftPort);
@@ -204,17 +211,15 @@ public class CumulusRDFApplication extends AbstractApplication {
         // TODO use a multi-region web cluster
         Collection<? extends Location> first = MutableList.copyOf(Iterables.limit(locations, 1));
 
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         try {
             Entities.invokeEffector(this, cassandra, Startable.START, MutableMap.of("locations", locations)).getUnchecked();
             Entities.invokeEffector(this, webapp, Startable.START, MutableMap.of("locations", first)).getUnchecked();
         } catch (Exception e) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
+        } finally {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         }
-        setAttribute(SERVICE_UP, true);
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
-
         log.info("Started CumulusRDF in " + locations);
     }
 
@@ -222,12 +227,12 @@ public class CumulusRDFApplication extends AbstractApplication {
     public static void main(String[] argv) {
         List<String> args = Lists.newArrayList(argv);
         String port =  CommandLineUtil.getCommandLineOption(args, "--port", "8081+");
-        String location = CommandLineUtil.getCommandLineOption(args, "--location", DEFAULT_LOCATIONS);
+        String locations = CommandLineUtil.getCommandLineOption(args, "--locations", DEFAULT_LOCATIONS);
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .application(EntitySpec.create(StartableApplication.class, CumulusRDFApplication.class).displayName("CumulusRDF application using Cassandra"))
                 .webconsolePort(port)
-                .location(location)
+                .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : JavaStringEscapes.unwrapJsonishListIfPossible(locations))
                 .start();
 
         Entities.dumpInfo(launcher.getApplications());

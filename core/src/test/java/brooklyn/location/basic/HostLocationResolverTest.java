@@ -33,6 +33,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -43,7 +44,7 @@ public class HostLocationResolverTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newEmpty());
+        managementContext = LocalManagementContextForTests.newInstance();
         brooklynProperties = managementContext.getBrooklynProperties();
     }
     
@@ -67,6 +68,11 @@ public class HostLocationResolverTest {
     public void resolveHosts() {
         resolve("host:(\"1.1.1.1\")");
         resolve("host:(\"localhost\")");
+    }
+    
+    @Test(groups="Integration")
+    public void resolveRealHosts() {
+        // must be online to resolve this
         resolve("host:(\"www.foo.com\")");
     }
     

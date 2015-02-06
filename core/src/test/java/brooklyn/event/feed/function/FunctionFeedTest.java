@@ -28,11 +28,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.Feed;
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
@@ -48,11 +54,15 @@ import brooklyn.test.entity.TestEntity;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Callables;
 
 public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
 
+    private static final Logger log = LoggerFactory.getLogger(FunctionFeedTest.class);
+    
     final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString", "");
     final static AttributeSensor<Integer> SENSOR_INT = Sensors.newIntegerSensor("aLong", "");
 
@@ -93,6 +103,28 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
                 assertTrue(val != null && val > 2, "val=" + val);
             }
         });
+    }
+    
+    @Test
+    public void testFeedDeDupe() throws Exception {
+        testPollsFunctionRepeatedlyToSetAttribute();
+        entity.addFeed(feed);
+        log.info("Feed 0 is: "+feed);
+        Feed feed0 = feed;
+        
+        testPollsFunctionRepeatedlyToSetAttribute();
+        entity.addFeed(feed);
+        log.info("Feed 1 is: "+feed);
+        Feed feed1 = feed;
+        Assert.assertFalse(feed1==feed0);
+
+        FeedSupport feeds = ((EntityInternal)entity).feeds();
+        Assert.assertEquals(feeds.getFeeds().size(), 1, "Wrong feed count: "+feeds.getFeeds());
+
+        // a couple extra checks, compared to the de-dupe test in other *FeedTest classes
+        Feed feedAdded = Iterables.getOnlyElement(feeds.getFeeds());
+        Assert.assertTrue(feedAdded==feed1);
+        Assert.assertFalse(feedAdded==feed0);
     }
     
     @Test
@@ -187,8 +219,33 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 assertEquals(ints.subList(0, 2), ImmutableList.of(0, 1));
-                assertEquals(strings.subList(0, 2), ImmutableList.of("0", "1"));
+                assertTrue(strings.size()>=2, "wrong strings list: "+strings);
+                assertEquals(strings.subList(0, 2), ImmutableList.of("0", "1"), "wrong strings list: "+strings);
             }});
+    }
+    
+    @Test
+    @SuppressWarnings("unused")
+    public void testFunctionPollConfigBuilding() throws Exception {
+        FunctionPollConfig<Integer, Integer> typeFromCallable = FunctionPollConfig.forSensor(SENSOR_INT)
+                .period(1)
+                .callable(Callables.returning(1))
+                .onSuccess(Functions.constant(-1));
+
+        FunctionPollConfig<Integer, Integer> typeFromSupplier = FunctionPollConfig.forSensor(SENSOR_INT)
+                .period(1)
+                .supplier(Suppliers.ofInstance(1))
+                .onSuccess(Functions.constant(-1));
+
+        FunctionPollConfig<Integer, Integer> usingConstructor = new FunctionPollConfig<Integer, Integer>(SENSOR_INT)
+                .period(1)
+                .supplier(Suppliers.ofInstance(1))
+                .onSuccess(Functions.constant(-1));
+
+        FunctionPollConfig<Integer, Integer> usingConstructorWithFailureOrException = new FunctionPollConfig<Integer, Integer>(SENSOR_INT)
+                .period(1)
+                .supplier(Suppliers.ofInstance(1))
+                .onFailureOrException(Functions.<Integer>constant(null));
     }
     
     private static class IncrementingCallable implements Callable<Integer> {

@@ -26,6 +26,7 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+/** Mock tool */
 public class RecordingSshTool implements SshTool {
     
     public static class ExecCmd {

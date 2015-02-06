@@ -19,6 +19,8 @@
 package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
+
+import com.google.common.annotations.Beta;
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -35,6 +37,7 @@ import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.KeyPair;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +45,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
@@ -52,6 +56,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.BrooklynConfigKeys;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
@@ -66,6 +71,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
@@ -74,6 +80,7 @@ import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
+import brooklyn.util.javalang.StackTraceSimplifier;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.net.Urls;
@@ -83,7 +90,6 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.ReaderInputStream;
 import brooklyn.util.stream.StreamGobbler;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.internal.ExecWithLoggingHelpers;
@@ -106,6 +112,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
 
@@ -129,14 +136,24 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<Duration> SSH_CACHE_EXPIRY_DURATION = ConfigKeys.newConfigKey(Duration.class,
             "sshCacheExpiryDuration", "Expiry time for unused cached ssh connections", Duration.FIVE_MINUTES);
 
+    public static final ConfigKey<MachineDetails> MACHINE_DETAILS = ConfigKeys.newConfigKey(
+            MachineDetails.class,
+            "machineDetails");
+
+    public static final ConfigKey<Boolean> DETECT_MACHINE_DETAILS = ConfigKeys.newBooleanConfigKey("detectMachineDetails",
+            "Attempt to detect machine details automatically. Works with SSH-accessible Linux instances.", true);
+
     @SetFromFlag
     protected String user;
 
     @SetFromFlag(nullable = false)
     protected InetAddress address;
 
+    // TODO should not allow this to be set from flag; it is not persisted so that will be lost
+    // (mainly used for localhost currently so not a big problem)
+    @Nullable  // lazily initialized; use getMutexSupport()
     @SetFromFlag
-    protected transient WithMutexes mutexSupport;
+    private transient WithMutexes mutexSupport;
 
     @SetFromFlag
     private Set<Integer> usedPorts;
@@ -202,8 +219,18 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 }
             }));
 
+    /**
+     * The set of config keys on this location which become default values for properties when invoking an SSH
+     * operation.
+     */
+    @Beta
+    public static final Set<ConfigKey<?>> SSH_CONFIG_GIVEN_TO_PROPS = ImmutableSet.<ConfigKey<?>>of(
+            SCRIPT_DIR);
+
     private Task<?> cleanupTask;
-    private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCache;
+    /** callers should use {@link #getSshPoolCache()} */
+    @Nullable 
+    private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCacheOrNull;
 
     public SshMachineLocation() {
         this(MutableMap.of());
@@ -212,6 +239,18 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public SshMachineLocation(Map properties) {
         super(properties);
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
+    }
+
+    private final transient Object poolCacheMutex = new Object();
+    @Nonnull
+    private LoadingCache<Map<String, ?>, Pool<SshTool>> getSshPoolCache() {
+        synchronized (poolCacheMutex) {
+            if (sshPoolCacheOrNull==null) {
+                sshPoolCacheOrNull = buildSshToolPoolCacheLoader();
+                addSshPoolCacheCleanupTask();
+            }
+        }
+        return sshPoolCacheOrNull;
     }
 
     private LoadingCache<Map<String, ?>, Pool<SshTool>> buildSshToolPoolCacheLoader() {
@@ -281,10 +320,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     private BasicPool<SshTool> buildPool(final Map<String, ?> properties) {
         return BasicPool.<SshTool>builder()
-                .name(getDisplayName()+"@"+address+
+                .name(getDisplayName()+"@"+address+":"+getPort()+
                         (hasConfig(SSH_HOST, true) ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
-                        ":"+
-                        System.identityHashCode(this))
+                        ":hash"+System.identityHashCode(this))
                 .supplier(new Supplier<SshTool>() {
                         @Override public SshTool get() {
                             return connectSsh(properties);
@@ -309,15 +347,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     @Override
-    public SshMachineLocation configure(Map properties) {
+    public SshMachineLocation configure(Map<?,?> properties) {
         super.configure(properties);
 
         // TODO Note that check for addresss!=null is done automatically in super-constructor, in FlagUtils.checkRequiredFields
         // Yikes, dangerous code for accessing fields of sub-class in super-class' constructor! But getting away with it so far!
-
-        if (mutexSupport == null) {
-            mutexSupport = new MutexSupport();
-        }
 
         boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
         if (!deferConstructionChecks) {
@@ -327,19 +361,39 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }
         return this;
     }
-
-    @Override
-    public void init() {
-        super.init();
+    
+    private transient final Object mutexSupportCreationLock = new Object();
+    protected WithMutexes getMutexSupport() {
+        synchronized (mutexSupportCreationLock) {
+            // create on demand so that it is not null after serialization
+            if (mutexSupport == null) {
+                mutexSupport = new MutexSupport();
+            }
+            return mutexSupport;
+        }
+    }
+    
+    protected void addSshPoolCacheCleanupTask() {
+        if (cleanupTask!=null && !cleanupTask.isDone()) {
+            return;
+        }
+        if (getManagementContext()==null || getManagementContext().getExecutionManager()==null) {
+            LOG.debug("No management context for "+this+"; ssh-pool cache will only be closed when machine is closed");
+            return;
+        }
         
-        sshPoolCache = buildSshToolPoolCacheLoader();
-
         Callable<Task<?>> cleanupTaskFactory = new Callable<Task<?>>() {
             @Override public Task<Void> call() {
-                return new BasicTask<Void>(new Callable<Void>() {
+                return Tasks.<Void>builder().dynamic(false).tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
+                    .name("ssh-location cache cleaner").body(new Callable<Void>() {
                     @Override public Void call() {
                         try {
-                            if (sshPoolCache != null) sshPoolCache.cleanUp();
+                            if (sshPoolCacheOrNull != null) sshPoolCacheOrNull.cleanUp();
+                            if (!SshMachineLocation.this.isManaged()) {
+                                if (sshPoolCacheOrNull != null) sshPoolCacheOrNull.invalidateAll();
+                                cleanupTask.cancel(false);
+                                sshPoolCacheOrNull = null;
+                            }
                             return null;
                         } catch (Exception e) {
                             // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
@@ -350,40 +404,61 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                             LOG.warn("Problem cleaning up ssh-pool-cache (rethrowing)", t);
                             throw Exceptions.propagate(t);
                         }
-                    }});
+                    }}).build();
             }
         };
         
         Duration expiryDuration = getConfig(SSH_CACHE_EXPIRY_DURATION);
-        cleanupTask = getManagementContext().getExecutionManager().submit(new ScheduledTask(cleanupTaskFactory).period(expiryDuration));
+        cleanupTask = getManagementContext().getExecutionManager().submit(new ScheduledTask(
+            MutableMap.of("displayName", "scheduled[ssh-location cache cleaner]"), cleanupTaskFactory).period(expiryDuration));
     }
     
+    // TODO close has been used for a long time to perform clean-up wanted on unmanagement, but that's not clear; 
+    // we should probably expose a mechanism such as that in Entity (or re-use Entity for locations!)
     @Override
     public void close() throws IOException {
-        if (sshPoolCache != null) {
+        if (sshPoolCacheOrNull != null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("{} invalidating all entries in ssh pool cache. Final stats: {}", this, sshPoolCache.stats());
+                LOG.debug("{} invalidating all entries in ssh pool cache. Final stats: {}", this, sshPoolCacheOrNull.stats());
             }
-            sshPoolCache.invalidateAll();
+            sshPoolCacheOrNull.invalidateAll();
         }
         if (cleanupTask != null) {
             cleanupTask.cancel(false);
             cleanupTask = null;
+            sshPoolCacheOrNull = null;
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            close();
-        } finally {
-            super.finalize();
-        }
-    }
+    // should not be necessary, and causes objects to be kept around a lot longer than desired
+//    @Override
+//    protected void finalize() throws Throwable {
+//        try {
+//            close();
+//        } finally {
+//            super.finalize();
+//        }
+//    }
 
     @Override
     public InetAddress getAddress() {
         return address;
+    }
+
+    @Override
+    public String getHostname() {
+        String hostname = address.getHostName();
+        return (hostname == null || hostname.equals(address.getHostAddress())) ? null : hostname;
+    }
+    
+    @Override
+    public Set<String> getPublicAddresses() {
+        return ImmutableSet.of(address.getHostAddress());
+    }
+    
+    @Override
+    public Set<String> getPrivateAddresses() {
+        return ImmutableSet.of();
     }
 
     public HostAndPort getSshHostAndPort() {
@@ -412,10 +487,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     }
 
     protected <T> T execSsh(final Map<String, ?> props, final Function<ShellTool, T> task) {
-        if (sshPoolCache == null) {
-            // required for uses that instantiate SshMachineLocation directly, so init() will not have been called
-            sshPoolCache = buildSshToolPoolCacheLoader();
-        }
+        final LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCache = getSshPoolCache();
         Pool<SshTool> pool = sshPoolCache.getUnchecked(props);
         if (LOG.isTraceEnabled()) {
             LOG.trace("{} execSsh got pool: {}", this, pool);
@@ -549,7 +621,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return execCommands(MutableMap.<String,Object>of(), summaryForLogging, commands, env);
     }
     public int execCommands(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
-        return newExecWithLoggingHelpers().execCommands(props, summaryForLogging, commands, env);
+        return newExecWithLoggingHelpers().execCommands(augmentPropertiesWithSshConfigGivenToProps(props), summaryForLogging, commands, env);
     }
 
     /**
@@ -569,7 +641,16 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return execScript(MutableMap.<String,Object>of(), summaryForLogging, commands, env);
     }
     public int execScript(Map<String,?> props, String summaryForLogging, List<String> commands, Map<String,?> env) {
-        return newExecWithLoggingHelpers().execScript(props, summaryForLogging, commands, env);
+        return newExecWithLoggingHelpers().execScript(augmentPropertiesWithSshConfigGivenToProps(props), summaryForLogging, commands, env);
+    }
+
+    private Map<String, Object> augmentPropertiesWithSshConfigGivenToProps(Map<String, ?> props) {
+        Map<String,Object> augmentedProps = Maps.newHashMap(props);
+        for (ConfigKey<?> config : SSH_CONFIG_GIVEN_TO_PROPS) {
+            if (!augmentedProps.containsKey(config.getName()) && hasConfig(config, true))
+                augmentedProps.put(config.getName(), getConfig(config));
+        }
+        return augmentedProps;
     }
 
     protected ExecWithLoggingHelpers newExecWithLoggingHelpers() {
@@ -596,6 +677,11 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         }.logger(logSsh);
     }
 
+    /**
+     * @deprecated since 0.7.0; use {@link #execCommands(Map, String, List, Map), and rely on that calling the execWithLogging
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Deprecated
     protected int execWithLogging(Map<String,?> props, String summaryForLogging, List<String> commands, Map env, final Closure<Integer> execCommand) {
         return newExecWithLoggingHelpers().execWithLogging(props, summaryForLogging, commands, env, new ExecRunner() {
                 @Override public int exec(ShellTool ssh, Map<String, ?> flags, List<String> cmds, Map<String, ?> env) {
@@ -736,14 +822,14 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public String toString() {
-        return "SshMachineLocation["+getDisplayName()+":"+address+"]";
+        return "SshMachineLocation["+getDisplayName()+":"+address+":"+getPort()+"@"+getId()+"]";
     }
 
     @Override
     public String toVerboseString() {
         return Objects.toStringHelper(this).omitNullValues()
                 .add("id", getId()).add("name", getDisplayName())
-                .add("user", getUser()).add("address", getAddress()).add("port", getConfig(SSH_PORT))
+                .add("user", getUser()).add("address", getAddress()).add("port", getPort())
                 .add("parentLocation", getParent())
                 .toString();
     }
@@ -823,51 +909,60 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public MachineDetails getMachineDetails() {
-        MachineDetails details = machineDetails;
-        if (details == null) {
-            // Or could just load and store several times
-            Tasks.setBlockingDetails("Waiting for machine details");
-            try {
-                synchronized (machineDetailsLock) {
-                    details = machineDetails;
-                    if (details == null) {
-                        machineDetails = details = BasicMachineDetails.forSshMachineLocation(this);
-                    }
-                }
-            } finally {
-                Tasks.resetBlockingDetails();
+        synchronized (machineDetailsLock) {
+            if (machineDetails == null) {
+                machineDetails = getConfig(MACHINE_DETAILS);
+            }
+            if (machineDetails == null) {
+                machineDetails = inferMachineDetails();
             }
         }
-        return details;
+        return machineDetails;
+    }
+
+    protected MachineDetails inferMachineDetails() {
+        boolean detectionEnabled = getConfig(DETECT_MACHINE_DETAILS);
+        if (!detectionEnabled)
+            return new BasicMachineDetails(new BasicHardwareDetails(-1, -1), new BasicOsDetails("UNKNOWN", "UNKNOWN", "UNKNOWN"));
+
+        Tasks.setBlockingDetails("Waiting for machine details");
+        try {
+            return BasicMachineDetails.forSshMachineLocation(this);
+        } finally {
+            Tasks.resetBlockingDetails();
+        }
     }
 
     @Override
-    public void acquireMutex(String mutexId, String description) throws InterruptedException {
-        mutexSupport.acquireMutex(mutexId, description);
+    public void acquireMutex(String mutexId, String description) throws RuntimeInterruptedException {
+        try {
+            getMutexSupport().acquireMutex(mutexId, description);
+        } catch (InterruptedException ie) {
+            throw new RuntimeInterruptedException("Interrupted waiting for mutex: " + mutexId, ie);
+        }
     }
 
     @Override
     public boolean tryAcquireMutex(String mutexId, String description) {
-        return mutexSupport.tryAcquireMutex(mutexId, description);
+        return getMutexSupport().tryAcquireMutex(mutexId, description);
     }
 
     @Override
     public void releaseMutex(String mutexId) {
-        mutexSupport.releaseMutex(mutexId);
+        getMutexSupport().releaseMutex(mutexId);
     }
 
     @Override
     public boolean hasMutex(String mutexId) {
-        return mutexSupport.hasMutex(mutexId);
+        return getMutexSupport().hasMutex(mutexId);
     }
 
     //We want the SshMachineLocation to be serializable and therefore the pool needs to be dealt with correctly.
     //In this case we are not serializing the pool (we made the field transient) and create a new pool when deserialized.
     //This fix is currently needed for experiments, but isn't used in normal Brooklyn usage.
-    private void readObject(java.io.ObjectInputStream in)
-            throws IOException, ClassNotFoundException {
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        sshPoolCache = buildSshToolPoolCacheLoader();
+        getSshPoolCache();
     }
 
     /** returns the un-passphrased key-pair info if a key is being used, or else null */

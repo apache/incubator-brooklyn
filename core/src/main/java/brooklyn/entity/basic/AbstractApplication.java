@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
@@ -34,6 +35,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Time;
 
 /**
  * Users can extend this to define the entities in their application, and the relationships between
@@ -55,6 +57,13 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public AbstractApplication() {
     }
 
+    public void init() { 
+        super.init();
+        initApp();
+    }
+    
+    protected void initApp() {}
+    
     /**
      * 
      * @deprecated since 0.6; use EntitySpec so no-arg constructor
@@ -72,11 +81,6 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     @Deprecated
     public AbstractApplication(Map properties, Entity parent) {
         super(properties, parent);
-    }
-
-    @Override
-    public void init() {
-        log.warn("Deprecated: AbstractApplication.init() will be declared abstract in a future release; please override (without calling super) for code instantiating child entities");
     }
 
     @Override
@@ -115,6 +119,16 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         return this;
     }
     
+    /** as {@link AbstractEntity#initEnrichers()} but also adding default service not-up and problem indicators from children */
+    @Override
+    protected void initEnrichers() {
+        super.initEnrichers();
+        
+        // default app logic; easily overridable by adding a different enricher with the same tag
+        ServiceStateLogic.newEnricherFromChildren().checkChildrenAndMembers().addTo(this);
+        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application created but not yet started, at "+Time.makeDateString());
+    }
+    
     /**
      * Default start will start all Startable children (child.start(Collection<? extends Location>)),
      * calling preStart(locations) first and postStart(locations) afterwards.
@@ -123,23 +137,29 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public void start(Collection<? extends Location> locations) {
         this.addLocations(locations);
         Collection<? extends Location> locationsToUse = getLocations();
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+        ServiceProblemsLogic.clearProblemsIndicator(this, START);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
+        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application starting");
         recordApplicationEvent(Lifecycle.STARTING);
         try {
             preStart(locationsToUse);
+            // if there are other items which should block service_up, they should be done in preStart
+            ServiceStateLogic.ServiceNotUpLogic.clearNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL);
+            
             doStart(locationsToUse);
             postStart(locationsToUse);
         } catch (Exception e) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            // TODO should probably remember these problems then clear?  if so, do it here ... or on all effectors?
+//            ServiceProblemsLogic.updateProblemsIndicator(this, START, e);
+            
             recordApplicationEvent(Lifecycle.ON_FIRE);
             // no need to log here; the effector invocation should do that
             throw Exceptions.propagate(e);
+        } finally {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         }
-
-        setAttribute(SERVICE_UP, true);
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.RUNNING);
+        
         deployed = true;
-
         recordApplicationEvent(Lifecycle.RUNNING);
 
         logApplicationLifecycle("Started");
@@ -174,29 +194,33 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     public void stop() {
         logApplicationLifecycle("Stopping");
 
+        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application stopping");
         setAttribute(SERVICE_UP, false);
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         recordApplicationEvent(Lifecycle.STOPPING);
         try {
             doStop();
         } catch (Exception e) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             recordApplicationEvent(Lifecycle.ON_FIRE);
             log.warn("Error stopping application " + this + " (rethrowing): "+e);
             throw Exceptions.propagate(e);
         }
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPED);
+        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application stopping");
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
         recordApplicationEvent(Lifecycle.STOPPED);
 
-        synchronized (this) {
-            deployed = false;
-            //TODO review mgmt destroy lifecycle
-            //  we don't necessarily want to forget all about the app on stop, 
-            //since operator may be interested in things recently stopped;
-            //but that could be handled by the impl at management
-            //(keeping recently unmanaged things)  
-            //  however unmanaging must be done last, _after_ we stop children and set attributes 
-            getEntityManager().unmanage(this);
+        if (getParent()==null) {
+            synchronized (this) {
+                deployed = false;
+                //TODO review mgmt destroy lifecycle
+                //  we don't necessarily want to forget all about the app on stop, 
+                //since operator may be interested in things recently stopped;
+                //but that could be handled by the impl at management
+                //(keeping recently unmanaged things)  
+                //  however unmanaging must be done last, _after_ we stop children and set attributes 
+                getEntityManager().unmanage(this);
+            }
         }
 
         logApplicationLifecycle("Stopped");
@@ -206,15 +230,18 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         StartableMethods.stop(this);
     }
 
+    /** default impl invokes restart on all children simultaneously */
     @Override
     public void restart() {
-        throw new UnsupportedOperationException();
+        StartableMethods.restart(this);
     }
 
     @Override
     public void onManagementStopped() {
         super.onManagementStopped();
-        recordApplicationEvent(Lifecycle.DESTROYED);
+        if (getManagementContext().isRunning()) {
+            recordApplicationEvent(Lifecycle.DESTROYED);
+        }
     }
     
     private void recordApplicationEvent(Lifecycle state) {

@@ -35,7 +35,7 @@ public class SimpleCassandraCluster extends AbstractApplication {
     private static final String DEFAULT_LOCATION = "localhost";
 
     @Override
-    public void init() {
+    public void initApp() {
         addChild(EntitySpec.create(CassandraDatacenter.class)
                 .configure(CassandraDatacenter.INITIAL_SIZE, 1)
                 .configure(CassandraDatacenter.CLUSTER_NAME, "Brooklyn"));

@@ -24,17 +24,25 @@ import static org.testng.Assert.assertEquals;
 import java.util.Map;
 import java.util.Set;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.management.ExecutionContext;
+import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.TestEntity;
+import brooklyn.util.guava.Functionals;
+import brooklyn.util.repeat.Repeater;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.Callables;
 
 
 public class TasksTest extends BrooklynAppUnitTestSupport {
@@ -88,6 +96,7 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
         assertResolvesValue(orig, String.class, expected);
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void testResolvesIterableOfMapsWithAttributeWhenReady() throws Exception {
         app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
@@ -101,4 +110,50 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
         Object result = Tasks.resolveValue(actual, type, executionContext);
         assertEquals(result, expected);
     }
+    
+    @Test
+    public void testErrorsResolvingPropagatesOrSwallowedAllCorrectly() throws Exception {
+        app.setConfig(TestEntity.CONF_OBJECT, ValueResolverTest.newThrowTask(Duration.ZERO));
+        Task<Object> t = Tasks.builder().body(Functionals.callable(EntityFunctions.config(TestEntity.CONF_OBJECT), app)).build();
+        ValueResolver<Object> v = Tasks.resolving(t).as(Object.class).context(app.getExecutionContext());
+        
+        ValueResolverTest.assertThrowsOnMaybe(v);
+        ValueResolverTest.assertThrowsOnGet(v);
+        
+        v.swallowExceptions();
+        ValueResolverTest.assertMaybeIsAbsent(v);
+        ValueResolverTest.assertThrowsOnGet(v);
+        
+        v.defaultValue("foo");
+        ValueResolverTest.assertMaybeIsAbsent(v);
+        assertEquals(v.clone().get(), "foo");
+        assertResolvesValue(v, Object.class, "foo");
+    }
+
+    @Test
+    public void testRepeater() throws Exception {
+        Task<?> t;
+        
+        t = Tasks.requiring(Repeater.create().until(Callables.returning(true)).every(Duration.millis(1))).build();
+        app.getExecutionContext().submit(t);
+        t.get(Duration.TEN_SECONDS);
+        
+        t = Tasks.testing(Repeater.create().until(Callables.returning(true)).every(Duration.millis(1))).build();
+        app.getExecutionContext().submit(t);
+        Assert.assertEquals(t.get(Duration.TEN_SECONDS), true);
+        
+        t = Tasks.requiring(Repeater.create().until(Callables.returning(false)).limitIterationsTo(2).every(Duration.millis(1))).build();
+        app.getExecutionContext().submit(t);
+        try {
+            t.get(Duration.TEN_SECONDS);
+            Assert.fail("Should have failed");
+        } catch (Exception e) {
+            // expected
+        }
+
+        t = Tasks.testing(Repeater.create().until(Callables.returning(false)).limitIterationsTo(2).every(Duration.millis(1))).build();
+        app.getExecutionContext().submit(t);
+        Assert.assertEquals(t.get(Duration.TEN_SECONDS), false);
+    }
+
 }

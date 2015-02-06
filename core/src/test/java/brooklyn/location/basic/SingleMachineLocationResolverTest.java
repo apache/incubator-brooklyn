@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -42,7 +43,7 @@ public class SingleMachineLocationResolverTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newEmpty());
+        managementContext = LocalManagementContextForTests.newInstance();
         brooklynProperties = managementContext.getBrooklynProperties();
     }
     
@@ -59,21 +60,29 @@ public class SingleMachineLocationResolverTest {
     
     @Test
     public void testThrowsOnInvalidTarget() throws Exception {
-        assertThrowsIllegalArgument("single:()");
-        assertThrowsIllegalArgument("single:(wrongprefix:(hosts=\"1.1.1.1\"))");
-        assertThrowsIllegalArgument("single:(foo:bar)");
+        assertThrowsIllegalArgument("single()");
+        assertThrowsIllegalArgument("single(wrongprefix:(hosts=\"1.1.1.1\"))");
+        assertThrowsIllegalArgument("single(foo:bar)");
     }
 
     @Test
     public void resolveHosts() {
+        resolve("single(target=localhost)");
+        resolve("single(target=byon(hosts=\"1.1.1.1\"))");
+
+        brooklynProperties.put("brooklyn.location.named.mynamed", "single(target=byon:(hosts=\"1.1.1.1\"))");
+        managementContext.clearLocationRegistry();
+        resolve("single(target=named:mynamed)");
+    }
+    
+    @Test
+    public void resolveWithOldColonFormat() {
         resolve("single:(target=localhost)");
-        resolve("single:(target=named:foo)");
-        resolve("single:(target=byon:(hosts=\"1.1.1.1\"))");
     }
     
     @Test
     public void testNamedByonLocation() throws Exception {
-        brooklynProperties.put("brooklyn.location.named.mynamed", "single:(target=byon:(hosts=\"1.1.1.1\"))");
+        brooklynProperties.put("brooklyn.location.named.mynamed", "single(target=byon:(hosts=\"1.1.1.1\"))");
         
         SingleMachineProvisioningLocation<SshMachineLocation> loc = resolve("named:mynamed");
         assertEquals(loc.obtain(ImmutableMap.of()).getAddress(), InetAddress.getByName("1.1.1.1"));
@@ -81,7 +90,7 @@ public class SingleMachineLocationResolverTest {
 
     @Test
     public void testPropertyScopePrescedence() throws Exception {
-        brooklynProperties.put("brooklyn.location.named.mynamed", "single:(target=byon:(hosts=\"1.1.1.1\"))");
+        brooklynProperties.put("brooklyn.location.named.mynamed", "single(target=byon:(hosts=\"1.1.1.1\"))");
         
         // prefer those in "named" over everything else
         brooklynProperties.put("brooklyn.location.named.mynamed.privateKeyFile", "privateKeyFile-inNamed");

@@ -45,11 +45,13 @@ public interface RebindSupport<T extends Memento> {
      * Implementations should be very careful to not invoke or inspect these other entities/locations,
      * as they may also be being reconstructed at this time.
      * 
-     * Called before rebind.
+     * Called during rebind, after creation and before the call to start management.
      */
     void reconstruct(RebindContext rebindContext, T memento);
 
     void addPolicies(RebindContext rebindContext, T Memento);
     
     void addEnrichers(RebindContext rebindContext, T Memento);
+    
+    void addFeeds(RebindContext rebindContext, T Memento);
 }

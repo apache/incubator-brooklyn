@@ -1,0 +1,75 @@
+<nav class="navbar navbar-default navbar-fixed-top" id="header" role="navigation">
+    <div class="container-and-sidebars">
+
+        <div class="container-sidebar-left feather{% if page.landing %} landing{% endif %}">
+          <a href="http://www.apache.org/">
+            <img src="{{ site.path.style }}/img/feather.png" alt="[Apache]" width="80" class="flip navbar-feather">
+          </a>
+        </div>
+
+        <div class="container container-between-sidebars top-menu">
+          <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                {% unless page.landing %}<a class="navbar-brand" href="{{site.path.website}}/"><img src="{{site.path.style}}/img/apache-brooklyn-logo-244px-wide.png" alt="brooklyn"></a>{% endunless %}
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                  {% for item in site.data.menu %}
+                   {% if item.menu %}
+                    <li class="dropdown{% if page.breadcrumb_paths contains item.path %} active{% endif %}">
+                        <a href="{{item.url}}">{{ item.title_in_menu | downcase }}</a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a href="{{item.url}}">{{item.title_in_menu}}</a>
+                            </li>
+                            <li class="divider"></li>
+                            {% for item2 in item.menu %}
+                              <li>
+                                {% if item2.menu_customization.dropdown_new_section %}
+                                  <div class="dropdown_new_section"><hr></div>
+                                {% endif %}
+                                <a href="{{item2.url}}">{{item2.title_in_menu}}
+                                  {% if item2.external %}&nbsp;<span class="octicon octicon-link-external"></span>{% endif %}</a>
+                                {% if item2.menu_customization.dropdown_section_header %}
+                                  <div class="dropdown_section_header"><hr></div>
+                                {% endif %}
+                              </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                   {% else %}
+                    <li class="{% if page.breadcrumb_paths contains item.path %}active{% endif %}">
+                      <a href="{{item.url}}">{{ item.title_in_menu | downcase }}</a>
+                    </li>
+                   {% endif %}
+                  {% endfor %}
+                </ul>
+            </div><!-- /.navbar-collapse -->
+          </div><!-- /.container-fluid -->
+        </div><!-- /.container -->
+        
+        <div class="container-sidebar-right">
+          <div class="navbar-sidebar-right-icons">
+            <a href="https://github.com/apache/incubator-brooklyn" class="navbar-icon navbar-icon-shift icon-github"
+              data-toggle="tooltip" data-placement="bottom" title="GitHub: apache/incubator-brooklyn"/>
+            <a href="https://twitter.com/#!/search?q=brooklyncentral" class="navbar-icon navbar-icon-shift icon-twitter"
+              data-toggle="tooltip" data-placement="bottom" title="Twitter: @brooklyncentral"/>
+            <a href="http://webchat.freenode.net/?channels=brooklyncentral" class="navbar-icon icon-irc"
+              data-toggle="tooltip" data-placement="bottom" title="IRC: freenode #brooklyncentral"/>
+            <!-- extra a element seems needed as landing page seems to copy the last element here (!?) 
+            -->
+            <a href="/" style="width: 0px; height: 0px;"></a>
+         </div>
+      </div>
+      
+  </div>
+</nav>

@@ -19,24 +19,31 @@
 -->
 <included>
  
-  <!-- create a separate jclouds log file  -->
-    <appender name="JCLOUDS-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${logging.dir:-./}${logging.basename:-brooklyn}.jclouds.log</file>
-        <append>true</append>
-        <encoder>
-            <pattern>%d %-5level %logger{30} [%thread{15}]: %msg%n</pattern>
-        </encoder>
+    <!--
+    Create one rotating log file for each discriminator given by JcloudsPersistenceThreadDiscriminator.
+    -->
+    <appender name="JCLOUDS-SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator class="brooklyn.logging.JcloudsPersistenceThreadDiscriminator" />
+        <sift>
+            <appender name="JCLOUDS-FILE-${jcloudsPersistSwitch}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${logging.dir:-./}${logging.basename:-brooklyn}.${jcloudsPersistSwitch}.log</file>
+                <append>true</append>
+                <encoder>
+                    <pattern>%d %-5level %logger{30} [%thread{15}]: %msg%n</pattern>
+                </encoder>
 
-        <!-- Truncate log at 100 MB, max history of 10 -->
-        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${logging.dir:-./}${logging.basename:-brooklyn}.jclouds-%i.log.zip</fileNamePattern>
-            <minIndex>1</minIndex>
-            <maxIndex>10</maxIndex>
-        </rollingPolicy>
+                <!-- Truncate log at 100 MB, max history of 10 -->
+                <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                    <fileNamePattern>${logging.dir:-./}${logging.basename:-brooklyn}.${jcloudsPersistSwitch}-%i.log.zip</fileNamePattern>
+                    <minIndex>1</minIndex>
+                    <maxIndex>10</maxIndex>
+                </rollingPolicy>
 
-        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>100MB</maxFileSize>
-        </triggeringPolicy>
+                <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                    <maxFileSize>100MB</maxFileSize>
+                </triggeringPolicy>
+            </appender>
+        </sift>
     </appender>
 
 </included>

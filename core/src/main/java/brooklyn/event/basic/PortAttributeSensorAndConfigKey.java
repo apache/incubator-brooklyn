@@ -26,17 +26,19 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.event.Sensor;
+import brooklyn.internal.BrooklynInitialization;
 import brooklyn.location.Location;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.location.basic.Locations;
-import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
@@ -48,14 +50,12 @@ import com.google.common.collect.Iterables;
  * To convert at runtime a single port is chosen, respecting the entity.
  */
 public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey<PortRange,Integer> {
+
     private static final long serialVersionUID = 4680651022807491321L;
-    
+
     public static final Logger LOG = LoggerFactory.getLogger(PortAttributeSensorAndConfigKey.class);
 
-    static {
-        // ensure type coercions are registered
-        PortRanges.init();
-    }
+    static { BrooklynInitialization.initAll(); }
 
     public PortAttributeSensorAndConfigKey(String name) {
         this(name, name, null);
@@ -87,48 +87,56 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
                 lo = Maybe.of(locations.iterator().next());
             }
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Convert config to sensor for {} found locations: {}. Selected: {}",
-                        new Object[] {entity, locations, lo});
+                LOG.trace("Convert config to sensor for {} found locations: {}. Selected: {}", new Object[] {entity, locations, lo});
             }
             if (lo.isPresent()) {
                 Location l = lo.get();
+                Optional<Boolean> locationRunning = Optional.fromNullable(l.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING));
+                Optional<Boolean> entityRunning = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING));
+                Optional<Boolean> locationInstalled = Optional.fromNullable(l.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+                Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+                Optional<Boolean> entityStarted = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START));
+                boolean skipCheck = locationRunning.or(entityRunning).or(locationInstalled).or(entityInstalled).or(entityStarted).or(false);
                 if (l instanceof PortSupplier) {
-                    int p = ((PortSupplier)l).obtainPort(value);
-                    if (p!=-1) {
-                        LOG.debug(""+entity+" choosing port "+p+" for "+getName());
+                    int p = ((PortSupplier) l).obtainPort(value);
+                    if (p != -1) {
+                        LOG.debug("{}: choosing port {} for {}", new Object[] { entity, p, getName() });
                         return p;
                     }
-                    int rangeSize = Iterables.size(value);
-                    if (rangeSize==0)
-                        LOG.warn(""+entity+" no port available for "+getName()+" (empty range "+value+")");
-                    else if (rangeSize==1) {
-                        Integer pp = value.iterator().next();
-                        if (pp>1024)
-                            LOG.warn(""+entity+" port "+pp+" not available for "+getName());
-                        else
-                            LOG.warn(""+entity+" port "+pp+" not available for "+getName()+" (root may be required?)");
-                    } else {
-                        LOG.warn(""+entity+" no port available for "+getName()+" (tried range "+value+")");
+                    // If we are not skipping install or already started, fail now
+                    if (!skipCheck) {
+                        int rangeSize = Iterables.size(value);
+                        if (rangeSize == 0) {
+                            LOG.warn("{}: no port available for {} (empty range {})", new Object[] { entity, getName(), value });
+                        } else if (rangeSize == 1) {
+                            Integer pp = value.iterator().next();
+                            if (pp > 1024) {
+                                LOG.warn("{}: port {} not available for {}", new Object[] { entity, pp, getName() });
+                            } else {
+                                LOG.warn("{}: port {} not available for {} (root may be required?)", new Object[] { entity, pp, getName() });
+                            }
+                        } else {
+                            LOG.warn("{}: no port available for {} (tried range {})", new Object[] { entity, getName(), value });
+                        }
+                        return null; // Definitively, no ports available
                     }
-                    // definitively, no ports available
-                    return null;
                 }
-                // ports may be available, we just can't tell from the location
+                // Ports may be available, we just can't tell from the location
                 Integer v = (value.isEmpty() ? null : value.iterator().next());
-                LOG.debug(""+entity+" choosing port "+v+" (unconfirmed) for "+getName());
+                LOG.debug("{}: choosing port {} (unconfirmed) for {}", new Object[] { entity, v, getName() });
                 return v;
             } else {
-                LOG.warn(""+entity+" ports not applicable, or not yet applicable, because has multiple locations "+locations+"; ignoring "+getName());
+                LOG.warn("{}: ports not applicable, or not yet applicable, because has multiple locations {}; ignoring ", new Object[] { entity, locations, getName() });
             }
         } else {
-            LOG.warn(""+entity+" ports not applicable, or not yet applicable, bacause has no locations; ignoring "+getName());
+            LOG.warn("{}: ports not applicable, or not yet applicable, bacause has no locations; ignoring {}", entity, getName());
         }
         return null;
     }
-    
+
     @Override
     protected Integer convertConfigToSensor(PortRange value, ManagementContext managementContext) {
-        LOG.warn("ports not applicable, bacause given managementContext rather than entity; ignoring "+getName());
+        LOG.warn("ports not applicable, because given managementContext rather than entity; ignoring {}", getName());
         return null;
     }
 }

@@ -50,7 +50,7 @@ To test a build:
     cd brooklyn-sample
     mvn clean assembly:assembly
     cd target/brooklyn-sample-0.1.0-SNAPSHOT-dist/brooklyn-sample-0.1.0-SNAPSHOT/
-    ./start.sh launch --cluster
+    ./start.sh launch --cluster --location localhost
 
 
 References

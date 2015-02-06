@@ -66,9 +66,7 @@ abstract public class ApidocResource {
     }
     
     protected boolean isSupportedMediaType(String type) {
-        if ("application/json".equals(type)) return true;
-        if ("application/xml".equals(type)) return true;
-        return false;
+        return "application/json".equals(type) || "application/xml".equals(type);
     }
     
     protected boolean isIncludedForDocumentation(Class<?> resource) {
@@ -126,7 +124,7 @@ abstract public class ApidocResource {
     
     @GET
     @ApiOperation(value = "Returns list of all available API resource endpoints", 
-        responseClass = "DocumentationEndPoint", multiValueResponse = true)
+        responseClass = "ApidocRoot", multiValueResponse = true)
     public Response getAllApis(
             @Context ResourceConfig rc,
             @Context HttpHeaders headers,
@@ -138,7 +136,7 @@ abstract public class ApidocResource {
 
         Set<Class<?>> resources = getResourceClasses(rc);
 
-        Documentation allApiDoc = new Documentation();
+        ApidocRoot allApiDoc = new ApidocRoot();
 
         List<ApidocEndpoint> endpoints = new ArrayList<ApidocEndpoint>();
         for (Class<?> resource : resources) {

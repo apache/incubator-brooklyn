@@ -47,42 +47,40 @@ import com.wordnik.swagger.core.ApiParam;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface LocationApi {
 
-  @GET
-  @ApiOperation(value = "Fetch the list of locations",
-      responseClass = "brooklyn.rest.domain.LocationSummary",
-      multiValueResponse = true)
-  public List<LocationSummary> list() ;
+    @GET
+    @ApiOperation(value = "Fetch the list of locations",
+            responseClass = "brooklyn.rest.domain.LocationSummary",
+            multiValueResponse = true)
+    public List<LocationSummary> list();
 
+    // this is here to support the web GUI's circles
+    @GET
+    @Path("/usage/LocatedLocations")
+    @ApiOperation(value = "Return a summary of all usage", notes="interim API, expected to change")
+    public Map<String,Map<String,Object>> getLocatedLocations();
 
-  // this is here to support the web GUI's circles
-  @GET
-  @Path("/usage/LocatedLocations")
-  @ApiOperation(value = "Return a summary of all usage", notes="interim API, expected to change")
-  public Map<String,Map<String,Object>> getLocatedLocations() ;
+    @GET
+    @Path("/{locationId}")
+    @ApiOperation(value = "Fetch details about a location",
+            responseClass = "brooklyn.rest.domain.LocationSummary",
+            multiValueResponse = true)
+    public LocationSummary get(
+            @ApiParam(value = "Location id to fetch", required = true)
+            @PathParam("locationId") String locationId,
+            @ApiParam(value = "Whether full (inherited) config should be compiled", required = false)
+            @DefaultValue("false")
+            @QueryParam("full") String fullConfig);
 
-  @GET
-  @Path("/{locationId}")
-  @ApiOperation(value = "Fetch details about a location",
-      responseClass = "brooklyn.rest.domain.LocationSummary",
-      multiValueResponse = true)
-  public LocationSummary get(
-          @ApiParam(value = "Location id to fetch", required = true)
-          @PathParam("locationId") String locationId,
-          @ApiParam(value = "Whether full (inherited) config should be compiled", required = false)
-          @DefaultValue("false")
-          @QueryParam("full") String fullConfig) ;
+    @POST
+    @ApiOperation(value = "Create a new location", responseClass = "String")
+    public Response create(
+            @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
+            @Valid LocationSpec locationSpec);
 
-  @POST
-  @ApiOperation(value = "Create a new location", responseClass = "String")
-  public Response create(
-          @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
-          @Valid LocationSpec locationSpec) ;
-
-  @DELETE
-  @Path("/{locationId}")
-  @ApiOperation(value = "Delete a location object by id")
-  public void delete(
-      @ApiParam(value = "Location id to delete", required = true)
-      @PathParam("locationId") String locationId) ;
-
+    @DELETE
+    @Path("/{locationId}")
+    @ApiOperation(value = "Delete a location object by id")
+    public void delete(
+            @ApiParam(value = "Location id to delete", required = true)
+            @PathParam("locationId") String locationId);
 }

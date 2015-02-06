@@ -18,38 +18,35 @@
  */
 package brooklyn.cli;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
-import io.airlift.command.Arguments;
 import io.airlift.command.Cli;
 import io.airlift.command.Cli.CliBuilder;
 import io.airlift.command.Command;
-import io.airlift.command.Help;
 import io.airlift.command.Option;
-import io.airlift.command.OptionType;
-import io.airlift.command.ParseException;
 
 import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.BrooklynVersion;
 import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
+import brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
+import brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
+import brooklyn.cli.CloudExplorer.ComputeDefaultTemplateCommand;
+import brooklyn.cli.CloudExplorer.ComputeGetImageCommand;
+import brooklyn.cli.CloudExplorer.ComputeListHardwareProfilesCommand;
+import brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
+import brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
+import brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
+import brooklyn.cli.ItemLister.ListAllCommand;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
@@ -58,13 +55,16 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistMode;
+import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.entity.trait.Startable;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
+import brooklyn.management.ha.OsgiManager;
 import brooklyn.rest.security.PasswordHasher;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -80,7 +80,6 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 
@@ -97,22 +96,7 @@ import com.google.common.collect.ImmutableList;
  *      (typically calling the parent and then customizing the builder)
  * <li> populating a custom catalog using {@link LaunchCommand#populateCatalog(BrooklynCatalog)}
  */
-public class Main {
-
-    // Launch banner
-    public static final String BANNER =
-        " _                     _    _             \n" +
-        "| |__  _ __ ___   ___ | | _| |_   _ _ __ (R)\n" +
-        "| '_ \\| '__/ _ \\ / _ \\| |/ / | | | | '_ \\ \n" +
-        "| |_) | | | (_) | (_) |   <| | |_| | | | |\n" +
-        "|_.__/|_|  \\___/ \\___/|_|\\_\\_|\\__, |_| |_|\n" +
-        "                              |___/             "+BrooklynVersion.get()+"\n";
-
-    // Error codes
-    public static final int SUCCESS = 0;
-    public static final int PARSE_ERROR = 1;
-    public static final int EXECUTION_ERROR = 2;
-    public static final int CONFIGURATION_ERROR = 3;
+public class Main extends AbstractMain {
 
     /** @deprecated since 0.7.0 will become private static, subclasses should define their own logger */
     @Deprecated
@@ -120,98 +104,6 @@ public class Main {
 
     public static void main(String... args) {
         new Main().execCli(args);
-    }
-
-    /** abstract superclass for commands defining global options, but not arguments,
-     * as that prevents Help from being injectable in the {@link HelpCommand} subclass */
-    public static abstract class BrooklynCommand implements Callable<Void> {
-
-        @Option(type = OptionType.GLOBAL, name = { "-v", "--verbose" }, description = "Verbose mode")
-        public boolean verbose = false;
-
-        @Option(type = OptionType.GLOBAL, name = { "-q", "--quiet" }, description = "Quiet mode")
-        public boolean quiet = false;
-
-        @VisibleForTesting
-        protected PrintStream stdout = System.out;
-        
-        @VisibleForTesting
-        protected PrintStream stderr = System.err;
-
-        @VisibleForTesting
-        protected InputStream stdin = System.in;
-
-        public ToStringHelper string() {
-            return Objects.toStringHelper(getClass())
-                    .add("verbose", verbose)
-                    .add("quiet", quiet);
-        }
-
-        @Override
-        public String toString() {
-            return string().toString();
-        }
-    }
-    
-    /** common superclass for commands, defining global options (in our super) and extracting the arguments */
-    public static abstract class BrooklynCommandCollectingArgs extends BrooklynCommand {
-
-        /** extra arguments */
-        @Arguments
-        public List<String> arguments = new ArrayList<String>();
-        
-        /** @return true iff there are arguments; it also sys.errs a warning in that case  */
-        protected boolean warnIfArguments() {
-            if (arguments.isEmpty()) return false;
-            stderr.println("Invalid subcommand arguments: "+Strings.join(arguments, " "));
-            return true;
-        }
-        
-        /** throw {@link ParseException} iff there are arguments */
-        protected void failIfArguments() {
-            if (arguments.isEmpty()) return ;
-            throw new ParseException("Invalid subcommand arguments '"+Strings.join(arguments, " ")+"'");
-        }
-        
-        @Override
-        public ToStringHelper string() {
-            return super.string()
-                    .add("arguments", arguments);
-        }
-    }
-
-    @Command(name = "help", description = "Display help for available commands")
-    public static class HelpCommand extends BrooklynCommand {
-
-        @Inject
-        public Help help;
-
-        @Override
-        public Void call() throws Exception {
-            if (log.isDebugEnabled()) log.debug("Invoked help command: {}", this);
-            return help.call();
-        }
-    }
-
-    @Command(name = "info", description = "Display information about brooklyn")
-    public static class InfoCommand extends BrooklynCommandCollectingArgs {
-        
-        @Override
-        public Void call() throws Exception {
-            if (log.isDebugEnabled()) log.debug("Invoked info command: {}", this);
-            warnIfArguments();
-
-            System.out.println(BANNER);
-            System.out.println("Version:  " + BrooklynVersion.get());
-            System.out.println("Website:  http://brooklyn.incubator.apache.org");
-            System.out.println("Source:   https://github.com/apache/incubator-brooklyn");
-            System.out.println();
-            System.out.println("Copyright 2011-2014 The Apache Software Foundation.");
-            System.out.println("Licensed under the Apache 2.0 License");
-            System.out.println();
-
-            return null;
-        }
     }
 
     @Command(name = "generate-password", description = "Generates a hashed web-console password")
@@ -291,6 +183,10 @@ public class Main {
                 description = "local brooklyn.properties file, specific to this launch (appending to and overriding global properties)")
         public String localBrooklynProperties;
 
+        @Option(name = { "--noGlobalBrooklynProperties" }, title = "do not use any global brooklyn.properties file found",
+            description = "do not use the default global brooklyn.properties file found")
+        public boolean noGlobalBrooklynProperties = false;
+
         @Option(name = { "-a", "--app" }, title = "application class or file",
                 description = "The Application to start. " +
                         "For example, my.AppName, file://my/app.yaml, or classpath://my/AppName.groovy -- "
@@ -323,7 +219,7 @@ public class Main {
         public String bindAddress = null;
 
         @Option(name = { "-pa", "--publicAddress" },
-                description = "Specifies the IP address or URL that the Brooklyn Management Console Rest API will be available on")
+                description = "Specifies the IP address or hostname that the Brooklyn Management Console will be available on")
         public String publicAddress = null;
 
         @Option(name = { "--noConsoleSecurity" },
@@ -343,7 +239,12 @@ public class Main {
                 + "(default is to abort if they fail to start)")
         public boolean ignoreAppErrors = false;
 
-        // Note in some cases, you can get java.util.concurrent.RejectedExecutionException 
+        @Beta
+        @Option(name = { "--startBrooklynNode" },
+                description = "Whether to start a BrooklynNode entity representing this Brooklyn instance")
+        public boolean startBrooklynNode = false;
+
+        // Note in some cases, you can get java.util.concurrent.RejectedExecutionException
         // if shutdown is not co-ordinated, e.g. with Whirr:
         // looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
         @Beta
@@ -405,23 +306,29 @@ public class Main {
         @Option(name = { "--persistenceLocation" }, title = "persistence location",
             description = "The location spec for an object store to read/write persisted state")
         public String persistenceLocation;
-    
 
         final static String HA_OPTION = "--highAvailability";
         protected final static String HA_OPTION_DISABLED = "disabled";
         protected final static String HA_OPTION_AUTO = "auto";
         protected final static String HA_OPTION_MASTER = "master";
         protected final static String HA_OPTION_STANDBY = "standby";
-        static { Enums.checkAllEnumeratedIgnoreCase(HighAvailabilityMode.class, HA_OPTION_AUTO, HA_OPTION_DISABLED, HA_OPTION_MASTER, HA_OPTION_STANDBY); }
+        protected final static String HA_OPTION_HOT_STANDBY = "hot_standby";
+        protected final static String HA_OPTION_HOT_BACKUP = "hot_backup";
+        static { Enums.checkAllEnumeratedIgnoreCase(HighAvailabilityMode.class, HA_OPTION_AUTO, HA_OPTION_DISABLED, HA_OPTION_MASTER, HA_OPTION_STANDBY, HA_OPTION_HOT_STANDBY, HA_OPTION_HOT_BACKUP); }
         
-        @Option(name = { HA_OPTION }, allowedValues = { HA_OPTION_DISABLED, HA_OPTION_AUTO, HA_OPTION_MASTER, HA_OPTION_STANDBY },
+        @Option(name = { HA_OPTION }, allowedValues = { HA_OPTION_DISABLED, HA_OPTION_AUTO, HA_OPTION_MASTER, HA_OPTION_STANDBY, HA_OPTION_HOT_STANDBY, HA_OPTION_HOT_BACKUP },
                 title = "high availability mode",
                 description =
                         "The high availability mode. Possible values are: \n"+
                         "disabled: management node works in isolation - will not cooperate with any other standby/master nodes in management plane; \n"+
                         "auto: will look for other management nodes, and will allocate itself as standby or master based on other nodes' states; \n"+
                         "master: will startup as master - if there is already a master then fails immediately; \n"+
-                        "standby: will start up as standby - if there is not already a master then fails immediately")
+                        "standby: will start up as lukewarm standby with no state - if there is not already a master then fails immediately, "
+                        + "and if there is a master which subsequently fails, this node can promote itself; \n"+
+                        "hot_standby: will start up as hot standby in read-only mode - if there is not already a master then fails immediately, "
+                        + "and if there is a master which subseuqently fails, this node can promote itself; \n"+
+                        "hot_backup: will start up as hot backup in read-only mode - no master is required, and this node will not become a master"
+                        )
         public String highAvailability = HA_OPTION_AUTO;
 
         @VisibleForTesting
@@ -465,12 +372,14 @@ public class Main {
                 launcher.persistMode(persistMode);
                 launcher.persistenceDir(persistenceDir);
                 launcher.persistenceLocation(persistenceLocation);
-                
+
                 launcher.highAvailabilityMode(highAvailabilityMode);
 
                 launcher.stopWhichAppsOnShutdown(stopWhichAppsOnShutdownMode);
                 
                 computeAndSetApp(launcher, utils, loader);
+                
+                customize(launcher);
                 
             } catch (FatalConfigurationRuntimeException e) {
                 throw e;
@@ -517,6 +426,10 @@ public class Main {
             return null;
         }
 
+        /** can be overridden by subclasses which need to customize the launcher and/or management */
+        protected void customize(BrooklynLauncher launcher) {
+        }
+        
         protected void computeLocations() {
             boolean hasLocations = !Strings.isBlank(locations);
             if (app != null) {
@@ -570,8 +483,11 @@ public class Main {
                     if (highAvailabilityMode.get() == HighAvailabilityMode.AUTO)
                         return HighAvailabilityMode.DISABLED;
                     throw new FatalConfigurationRuntimeException("Cannot specify highAvailability when persistence is disabled");
-                } else if (persistMode == PersistMode.CLEAN && highAvailabilityMode.get() == HighAvailabilityMode.STANDBY) {
-                    throw new FatalConfigurationRuntimeException("Cannot specify highAvailability STANDBY when persistence is CLEAN");
+                } else if (persistMode == PersistMode.CLEAN && 
+                        (highAvailabilityMode.get() == HighAvailabilityMode.STANDBY 
+                        || highAvailabilityMode.get() == HighAvailabilityMode.HOT_STANDBY
+                        || highAvailabilityMode.get() == HighAvailabilityMode.HOT_BACKUP)) {
+                    throw new FatalConfigurationRuntimeException("Cannot specify highAvailability "+highAvailabilityMode.get()+" when persistence is CLEAN");
                 }
             }
             return highAvailabilityMode.get();
@@ -609,16 +525,28 @@ public class Main {
                     .ignoreWebErrors(ignoreWebErrors)
                     .ignoreAppErrors(ignoreAppErrors)
                     .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : JavaStringEscapes.unwrapJsonishListIfPossible(locations));
+            if (noGlobalBrooklynProperties) {
+                log.debug("Configuring to disable global brooklyn.properties");
+                launcher.globalBrooklynPropertiesFile(null);
+            }
             if (noConsoleSecurity) {
+                log.info("Configuring to disable console security");
                 launcher.installSecurityFilter(false);
             }
+            if (startBrooklynNode) {
+                log.info("Configuring BrooklynNode entity startup");
+                launcher.startBrooklynNode(true);
+            }
             if (Strings.isNonEmpty(bindAddress)) {
-                launcher.bindAddress( Networking.getInetAddressWithFixedName(bindAddress) );
+                log.debug("Configuring bind address as "+bindAddress);
+                launcher.bindAddress(Networking.getInetAddressWithFixedName(bindAddress));
             }
             if (Strings.isNonEmpty(publicAddress)) {
-                launcher.publicAddress( URI.create(publicAddress) );
+                log.debug("Configuring public address as "+publicAddress);
+                launcher.publicAddress(Networking.getInetAddressWithFixedName(publicAddress));
             }
             if (explicitManagementContext!=null) {
+                log.debug("Configuring explicit management context "+explicitManagementContext);
                 launcher.managementContext(explicitManagementContext);
             }
             return launcher;
@@ -786,8 +714,101 @@ public class Main {
                     .add("stopOnKeyPress", stopOnKeyPress)
                     .add("localBrooklynProperties", localBrooklynProperties)
                     .add("persist", persist)
+                    .add("persistenceLocation", persistenceLocation)
                     .add("persistenceDir", persistenceDir)
                     .add("highAvailability", highAvailability);
+        }
+    }
+
+    @Command(name = "copy-state", description = "Retrieves persisted state")
+    public static class CopyStateCommand extends BrooklynCommandCollectingArgs {
+
+        @Option(name = { "--localBrooklynProperties" }, title = "local brooklyn.properties file",
+                description = "local brooklyn.properties file, specific to this launch (appending to and overriding global properties)")
+        public String localBrooklynProperties;
+
+        @Option(name = { "--persistenceDir" }, title = "persistence dir",
+                description = "The directory to read persisted state (or container name if using an object store)")
+        public String persistenceDir;
+
+        @Option(name = { "--persistenceLocation" }, title = "persistence location",
+            description = "The location spec for an object store to read persisted state")
+        public String persistenceLocation;
+    
+        @Option(name = { "--destinationDir" }, required = true, title = "destination dir",
+                description = "The directory to copy persistence data to")
+            public String destinationDir;
+        
+        @Option(name = { "--destinationLocation" }, title = "persistence location",
+                description = "The location spec for an object store to copy data to")
+            public String destinationLocation;
+        
+        @Option(name = { "--transformations" }, title = "transformations",
+                description = "local transformations file, to be applied to the copy of the data before uploading it")
+        public String transformations;
+        
+        @Override
+        public Void call() throws Exception {
+            checkNotNull(destinationDir, "destinationDir"); // presumably because required=true this will never be null!
+            
+            // Configure launcher
+            BrooklynLauncher launcher;
+            failIfArguments();
+            try {
+                log.info("Retrieving and copying persisted state to "+destinationDir+(Strings.isBlank(destinationLocation) ? "" : " @ "+destinationLocation));
+                
+                if (!quiet) stdout.println(BANNER);
+    
+                PersistMode persistMode = PersistMode.AUTO;
+                HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.DISABLED;
+                
+                launcher = BrooklynLauncher.newInstance()
+                        .localBrooklynPropertiesFile(localBrooklynProperties)
+                        .brooklynProperties(OsgiManager.USE_OSGI, false)
+                        .persistMode(persistMode)
+                        .persistenceDir(persistenceDir)
+                        .persistenceLocation(persistenceLocation)
+                        .highAvailabilityMode(highAvailabilityMode);
+                
+            } catch (FatalConfigurationRuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new FatalConfigurationRuntimeException("Fatal error configuring Brooklyn launch: "+e.getMessage(), e);
+            }
+            
+            try {
+                launcher.copyPersistedState(destinationDir, destinationLocation, loadTransformer(transformations));
+            } catch (FatalRuntimeException e) {
+                // rely on caller logging this propagated exception
+                throw e;
+            } catch (Exception e) {
+                // for other exceptions we log it, possibly redundantly but better too much than too little
+                Exceptions.propagateIfFatal(e);
+                log.error("Error retrieving persisted state: "+Exceptions.collapseText(e), e);
+                Exceptions.propagate(e);
+            } finally {
+                try {
+                    launcher.terminate();
+                } catch (Exception e2) {
+                    log.warn("Subsequent error during termination: "+e2);
+                    log.debug("Details of subsequent error during termination: "+e2, e2);
+                }
+            }
+            
+            return null;
+        }
+
+        protected CompoundTransformer loadTransformer(String transformationsFileUrl) {
+            return BrooklynPersistenceUtils.loadTransformer(ResourceUtils.create(this), transformationsFileUrl);
+        }
+        
+        @Override
+        public ToStringHelper string() {
+            return super.string()
+                    .add("localBrooklynProperties", localBrooklynProperties)
+                    .add("persistenceLocation", persistenceLocation)
+                    .add("persistenceDir", persistenceDir)
+                    .add("destinationDir", destinationDir);
         }
     }
 
@@ -799,16 +820,39 @@ public class Main {
 
     /** method intended for overriding when a different {@link Cli} is desired,
      * or when the subclass wishes to change any of the arguments */
+    @SuppressWarnings("unchecked")
+    @Override
     protected CliBuilder<BrooklynCommand> cliBuilder() {
-        @SuppressWarnings({ "unchecked" })
         CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder(cliScriptName())
                 .withDescription("Brooklyn Management Service")
+                .withDefaultCommand(InfoCommand.class)
                 .withCommands(
                         HelpCommand.class,
                         InfoCommand.class,
                         GeneratePasswordCommand.class,
+                        CopyStateCommand.class,
+                        ListAllCommand.class,
                         cliLaunchCommand()
                 );
+
+        builder.withGroup("cloud-compute")
+                .withDescription("Access compute details of a given cloud")
+                .withDefaultCommand(HelpCommand.class)
+                .withCommands(
+                        ComputeListImagesCommand.class,
+                        ComputeListHardwareProfilesCommand.class,
+                        ComputeListInstancesCommand.class,
+                        ComputeGetImageCommand.class,
+                        ComputeDefaultTemplateCommand.class,
+                        ComputeTerminateInstancesCommand.class);
+
+        builder.withGroup("cloud-blobstore")
+                .withDescription("Access blobstore details of a given cloud")
+                .withDefaultCommand(HelpCommand.class)
+                .withCommands(
+                        BlobstoreListContainersCommand.class, 
+                        BlobstoreListContainerCommand.class,
+                        BlobstoreGetBlobCommand.class);
 
         return builder;
     }
@@ -817,45 +861,4 @@ public class Main {
     protected Class<? extends BrooklynCommand> cliLaunchCommand() {
         return LaunchCommand.class;
     }
-    
-    protected void execCli(String ...args) {
-        execCli(cliBuilder().build(), args);
-    }
-    
-    protected void execCli(Cli<BrooklynCommand> parser, String ...args) {
-        try {
-            log.debug("Parsing command line arguments: {}", Arrays.asList(args));
-            BrooklynCommand command = parser.parse(args);
-            log.debug("Executing command: {}", command);
-            command.call();
-            System.exit(SUCCESS);
-        } catch (ParseException pe) { // looks like the user typed it wrong
-            System.err.println("Parse error: " + pe.getMessage()); // display
-                                                                   // error
-            System.err.println(getUsageInfo(parser)); // display cli help
-            System.exit(PARSE_ERROR);
-        } catch (FatalConfigurationRuntimeException e) {
-            log.error("Configuration error: "+e.getMessage(), e.getCause());
-            System.err.println("Configuration error: " + e.getMessage());
-            System.exit(CONFIGURATION_ERROR);
-        } catch (FatalRuntimeException e) { // anticipated non-configuration error
-            log.error("Startup error: "+e.getMessage(), e.getCause());
-            System.err.println("Startup error: "+e.getMessage());
-            System.exit(EXECUTION_ERROR);
-        } catch (Exception e) { // unexpected error during command execution
-            log.error("Execution error: " + e.getMessage(), e);
-            System.err.println("Execution error: " + e.getMessage());
-            if (!(e instanceof UserFacingException))
-                e.printStackTrace();
-            System.exit(EXECUTION_ERROR);
-        }
-    }
-
-    protected String getUsageInfo(Cli<BrooklynCommand> parser) {
-        StringBuilder help = new StringBuilder();
-        help.append("\n");
-        Help.help(parser.getMetadata(), Collections.<String>emptyList(), help);
-        return help.toString();
-    }
-
 }

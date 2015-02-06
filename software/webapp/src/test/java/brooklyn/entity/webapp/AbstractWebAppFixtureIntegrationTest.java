@@ -25,15 +25,19 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -49,33 +53,31 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
-import brooklyn.entity.rebind.dto.MementosGenerators;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
+import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMemento;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.os.Os;
+import brooklyn.util.crypto.FluentKeySigner;
+import brooklyn.util.crypto.SecureKeys;
+import brooklyn.util.net.Urls;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 /**
  * Test fixture for implementations of JavaWebApp, checking start up and shutdown, 
@@ -105,8 +107,8 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        loc = new LocalhostMachineProvisioningLocation(MutableMap.of("name", "london"));
-        getMgmt().getLocationManager().manage(loc);
+        loc = getMgmt().getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
+            .configure("name", "london"));
     }
     
     /*
@@ -139,11 +141,31 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         }
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun=true)
     public synchronized void shutdownMgmt() {
         if (mgmt != null) {
             Entities.destroyAll(mgmt);
             mgmt = null;
+        }
+    }
+
+    public static File createTemporaryKeyStore(String alias, String password) throws Exception {
+        FluentKeySigner signer = new FluentKeySigner("brooklyn-test").selfsign();
+
+        KeyStore ks = SecureKeys.newKeyStore();
+        ks.setKeyEntry(
+                alias,
+                signer.getKey().getPrivate(),
+                password.toCharArray(),
+                new Certificate[]{signer.getAuthorityCertificate()});
+
+        File file = File.createTempFile("test", "keystore");
+        FileOutputStream fos = new FileOutputStream(file);
+        try {
+            ks.store(fos, password.toCharArray());
+            return file;
+        } finally {
+            Streams.closeQuietly(fos);
         }
     }
 
@@ -212,29 +234,9 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      * Stop the given underlying entity, but without our entity instance being told!
      */
     protected void killEntityBehindBack(Entity tokill) throws Exception {
-        // Previously was calling entity.getDriver().kill(); but now our entity instance is a proxy so can't do that
-        ManagementContext newManagementContext = null;
-        File tempDir = Os.newTempDir(getClass());
-        try {
-            ManagementContext managementContext = ((EntityInternal)tokill).getManagementContext();
-            BrooklynMemento brooklynMemento = MementosGenerators.newBrooklynMemento(managementContext);
-            
-            BrooklynMementoPersisterToMultiFile oldPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
-            oldPersister.checkpoint(brooklynMemento, PersistenceExceptionHandlerImpl.builder().build());
-            oldPersister.waitForWritesCompleted(30*1000, TimeUnit.MILLISECONDS);
-
-            BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
-            newManagementContext = new LocalManagementContextForTests();
-            newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
-            newManagementContext.getRebindManager().rebind(getClass().getClassLoader());
-            newManagementContext.getRebindManager().start();
-            SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(tokill.getId());
-            entity2.stop();
-        } finally {
-            if (newManagementContext != null) ((ManagementContextInternal)newManagementContext).terminate();
-            Os.deleteRecursively(tempDir.getAbsolutePath());
-        }
-        log.info("called to stop {} in parallel mgmt universe", entity);
+        ((JavaWebAppDriver)((DriverDependentEntity<?>)Entities.deproxy(entity)).getDriver()).stop();
+        // old method of doing this did some dodgy legacy rebind and failed due to too many dangling refs; above is better in any case
+        // but TODO we should have some rebind tests for these!
     }
     
     /**
@@ -315,11 +317,11 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
                     while (stopwatch.elapsed(TimeUnit.MILLISECONDS) < WebAppServiceMethods.DEFAULT_WINDOW_DURATION.toMilliseconds()) {
                         long preReqsTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
                         for (int i = 0; i < desiredMsgsPerSec; i++) { connectToUrl(url); }
-                        sleep(1000 - (stopwatch.elapsed(TimeUnit.MILLISECONDS)-preReqsTime));
+                        Time.sleep(1000 - (stopwatch.elapsed(TimeUnit.MILLISECONDS)-preReqsTime));
                         reqsSent.addAndGet(desiredMsgsPerSec);
                     }
     
-                    Asserts.succeedsEventually(MutableMap.of("timeout", 1000), new Runnable() {
+                    Asserts.succeedsEventually(MutableMap.of("timeout", 4000), new Runnable() {
                         public void run() {
                             Double avgReqs = entity.getAttribute(WebAppService.REQUESTS_PER_SECOND_IN_WINDOW);
                             Integer requestCount = entity.getAttribute(WebAppService.REQUEST_COUNT);
@@ -356,7 +358,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         this.entity = entity;
         log.info("test=publishesZeroRequestsPerSecondMetricRepeatedly; entity="+entity+"; app="+entity.getApplication());
         
-        final int MAX_INTERVAL_BETWEEN_EVENTS = 1000; // events should publish every 500ms so this should be enough overhead
+        final int MAX_INTERVAL_BETWEEN_EVENTS = 4000; // TomcatServerImpl publishes events every 3000ms so this should be enough overhead
         final int NUM_CONSECUTIVE_EVENTS = 3;
 
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
@@ -383,7 +385,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
                         assertEquals(event.getSensor(), WebAppService.REQUESTS_PER_SECOND_IN_WINDOW);
                         assertEquals(event.getValue(), 0.0d);
                         if (eventTime > 0) assertTrue(event.getTimestamp()-eventTime < MAX_INTERVAL_BETWEEN_EVENTS,
-    						"events at "+eventTime+" and "+event.getTimestamp()+" exceeded maximum allowable interval "+MAX_INTERVAL_BETWEEN_EVENTS);
+                            "events at "+eventTime+" and "+event.getTimestamp()+" exceeded maximum allowable interval "+MAX_INTERVAL_BETWEEN_EVENTS);
                         eventTime = event.getTimestamp();
                     }
                 }});
@@ -399,16 +401,19 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      * pinging the given URL.
      *
      * Everything can deploy hello world. Some subclasses deploy add'l apps.
+     * We're using the simplest hello-world (with no URL mapping) because JBoss 6 does not
+     * support URL mappings.
      */
     @DataProvider(name = "entitiesWithWarAndURL")
     public Object[][] entitiesWithWar() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world-no-mapping.war");
         List<Object[]> result = Lists.newArrayList();
         
         for (Object[] entity : basicEntities()) {
             result.add(new Object[] {
                     entity[0],
-                    "hello-world.war",
-                    "hello-world/",
+                    "hello-world-no-mapping.war",
+                    "hello-world-no-mapping/",
                     "" // no sub-page path
                     });
         }
@@ -421,45 +426,45 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      */
     @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
     public void initialRootWarDeployments(final SoftwareProcess entity, final String war, 
-			final String urlSubPathToWebApp, final String urlSubPathToPageToQuery) {
+            final String urlSubPathToWebApp, final String urlSubPathToPageToQuery) {
         this.entity = entity;
         log.info("test=initialRootWarDeployments; entity="+entity+"; app="+entity.getApplication());
         
         URL resource = getClass().getClassLoader().getResource(war);
         assertNotNull(resource);
         
-        ((EntityLocal)entity).setConfig(JavaWebAppService.ROOT_WAR, resource.getPath());
+        ((EntityLocal)entity).setConfig(JavaWebAppService.ROOT_WAR, resource.toString());
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
-		//tomcat may need a while to unpack everything
+        //tomcat may need a while to unpack everything
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
-                HttpTestUtils.assertHttpStatusCodeEquals(entity.getAttribute(WebAppService.ROOT_URL)+urlSubPathToPageToQuery, 200);
+                HttpTestUtils.assertHttpStatusCodeEquals(Urls.mergePaths(entity.getAttribute(WebAppService.ROOT_URL), urlSubPathToPageToQuery), 200);
                 
                 assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("/"));
             }});
     }
-	
+    
     @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
     public void initialNamedWarDeployments(final SoftwareProcess entity, final String war, 
-			final String urlSubPathToWebApp, final String urlSubPathToPageToQuery) {
+            final String urlSubPathToWebApp, final String urlSubPathToPageToQuery) {
         this.entity = entity;
         log.info("test=initialNamedWarDeployments; entity="+entity+"; app="+entity.getApplication());
         
         URL resource = getClass().getClassLoader().getResource(war);
         assertNotNull(resource);
         
-        ((EntityLocal)entity).setConfig(JavaWebAppService.NAMED_WARS, ImmutableList.of(resource.getPath()));
+        ((EntityLocal)entity).setConfig(JavaWebAppService.NAMED_WARS, ImmutableList.of(resource.toString()));
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
 
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
-                HttpTestUtils.assertHttpStatusCodeEquals(entity.getAttribute(WebAppService.ROOT_URL)+urlSubPathToWebApp+urlSubPathToPageToQuery, 200);
+                HttpTestUtils.assertHttpStatusCodeEquals(Urls.mergePaths(entity.getAttribute(WebAppService.ROOT_URL), urlSubPathToWebApp, urlSubPathToPageToQuery), 200);
             }});
     }
-	
+    
     @Test(groups = "Integration", dataProvider = "entitiesWithWarAndURL")
     public void testWarDeployAndUndeploy(final JavaWebAppSoftwareProcess entity, final String war, 
             final String urlSubPathToWebApp, final String urlSubPathToPageToQuery) {
@@ -472,11 +477,11 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         // Test deploying
-        entity.deploy(resource.getPath(), "myartifactname.war");
+        entity.deploy(resource.toString(), "myartifactname.war");
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
-                HttpTestUtils.assertHttpStatusCodeEquals(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname/"+urlSubPathToPageToQuery, 200);
+                HttpTestUtils.assertHttpStatusCodeEquals(Urls.mergePaths(entity.getAttribute(WebAppService.ROOT_URL), "myartifactname/", urlSubPathToPageToQuery), 200);
                 assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of("/myartifactname"));
             }});
         
@@ -485,12 +490,8 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
             public void run() {
                 // TODO get this URL from a WAR file entity
-                HttpTestUtils.assertHttpStatusCodeEquals(entity.getAttribute(WebAppService.ROOT_URL)+"myartifactname"+urlSubPathToPageToQuery, 404);
+                HttpTestUtils.assertHttpStatusCodeEquals(Urls.mergePaths(entity.getAttribute(WebAppService.ROOT_URL), "myartifactname", urlSubPathToPageToQuery), 404);
                 assertEquals(entity.getAttribute(JavaWebAppSoftwareProcess.DEPLOYED_WARS), ImmutableSet.of());
             }});
     }
-    	
-    private void sleep(long millis) {
-        if (millis > 0) Time.sleep(millis);
-    }    
 }

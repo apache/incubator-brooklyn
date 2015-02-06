@@ -33,9 +33,10 @@ import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
+import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Optional;
+import com.google.common.base.Function;
 
 /** 
  * Extended Entity interface for use in places where the caller should have certain privileges,
@@ -67,29 +68,30 @@ public interface EntityLocal extends Entity, Configurable {
     <T> T setConfig(HasConfigKey<T> key, Task<T> val);
 
     /**
-     * Sets the {@link Sensor} data for the given attribute to the specified value.
+     * Sets the {@link AttributeSensor} data for the given attribute to the specified value.
      * 
      * This can be used to "enrich" the entity, such as adding aggregated information, 
      * rolling averages, etc.
      * 
      * @return the old value for the attribute (possibly {@code null})
      */
-    <T> T setAttribute(AttributeSensor<T> sensor, T val);
+    <T> T setAttribute(AttributeSensor<T> attribute, T val);
 
-//    /** sets the value of the given attribute sensor from the config key value herein,
-//     * if the config key resolves to a non-null value as a sensor
-//     * 
-//     * @deprecated since 0.5; use {@link #setAttribute(AttributeSensor, Object)}, such as 
-//     * <pre>
-//     * T val = getConfig(KEY.getConfigKey());
-//     * if (val != null) {
-//     *     setAttribute(KEY, val)
-//     * }
-//     * </pre>
-//     * 
-//     * @return old value
-//     */
-//    <T> T setAttribute(AttributeSensorAndConfigKey<?,T> configuredSensor);
+    /**
+     * Atomically modifies the {@link AttributeSensor}, ensuring that only one modification is done
+     * at a time.
+     * 
+     * If the modifier returns {@link Maybe#absent()} then the attribute will be
+     * left unmodified, and the existing value will be returned.
+     * 
+     * For details of the synchronization model used to achieve this, refer to the underlying 
+     * attribute store (e.g. AttributeMap).
+     * 
+     * @return the old value for the attribute (possibly {@code null})
+     * @since 0.7.0-M2
+     */
+    @Beta
+    <T> T modifyAttribute(AttributeSensor<T> attribute, Function<? super T, Maybe<T>> modifier);
 
     /**
      * @deprecated in 0.5; use {@link #getConfig(ConfigKey)}

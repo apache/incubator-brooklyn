@@ -32,6 +32,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -49,6 +50,20 @@ import org.w3c.tidy.Tidy;
 
 import brooklyn.util.text.Strings;
 
+/**
+ * For interacting with the www.geoscaling.com DNS service.
+ * 
+ * If you get the SSL error "peer not authenticated", then it means the required certificate is
+ * not in your trust store. For example, see:
+ * {@linkplain http://stackoverflow.com/questions/373295/digital-certificate-how-to-import-cer-file-in-to-truststore-file-using}. 
+ * The chain of certificates (as of October 2014, found by viewing in Chrome) is:
+ * <ol>
+ *   <li> AddTrust External CA root
+ *   <li> COMODO RSA Certification Authority
+ *   <li> COMODO RSA Domain Validation Secure Server CA
+ *   <li> www.geoscaling.com
+ * </ol>
+ */
 public class GeoscalingWebClient {
     public static final Logger log = LoggerFactory.getLogger(GeoscalingWebClient.class);
     
@@ -60,7 +75,7 @@ public class GeoscalingWebClient {
     
     private static final String HOST ="www.geoscaling.com";
     private static final String PATH ="dns2/index.php";
-    private DefaultHttpClient httpClient;
+    private HttpClient httpClient;
     private Tidy tidy;
     private List<Domain> primaryDomains = null;
     
@@ -160,7 +175,11 @@ public class GeoscalingWebClient {
     
     
     public GeoscalingWebClient() {
-        this.httpClient = new DefaultHttpClient();
+        this(new DefaultHttpClient());
+    }
+
+    public GeoscalingWebClient(HttpClient httpClient) {
+        this.httpClient = httpClient;
         this.tidy = new Tidy();
         // Silently swallow all HTML errors/warnings.
         tidy.setErrout(new PrintWriter(new OutputStream() {

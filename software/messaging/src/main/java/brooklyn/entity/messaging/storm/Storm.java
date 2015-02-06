@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.messaging.storm;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
@@ -35,6 +36,9 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents a Storm node (UI, Nimbus or Supervisor).
  */
+@Catalog(name="Storm Node", description="Apache Storm is a distributed realtime computation system. "
+        + "Storm makes it easy to reliably process unbounded streams of data, doing for realtime processing "
+        + "what Hadoop did for batch processing")
 @ImplementedBy(StormImpl.class)
 public interface Storm extends SoftwareProcess, UsesJmx {
 
@@ -93,7 +97,7 @@ public interface Storm extends SoftwareProcess, UsesJmx {
         public static final AttributeSensor<String> STORM_UI_URL = Sensors.newStringSensor("storm.ui.url", "URL");
 
         static {
-            RendererHints.register(STORM_UI_URL, new RendererHints.NamedActionWithUrl("Open"));
+            RendererHints.register(STORM_UI_URL, RendererHints.namedActionWithUrl());
         }
     }
 

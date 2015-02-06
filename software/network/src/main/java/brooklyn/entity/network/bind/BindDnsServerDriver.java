@@ -18,8 +18,21 @@
  */
 package brooklyn.entity.network.bind;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import brooklyn.entity.basic.SoftwareProcessDriver;
 
 public interface BindDnsServerDriver extends SoftwareProcessDriver {
-    // Marker Interface
+
+    /**
+     * Uploads configuration files and restarts the service.
+     */
+    void updateBindConfiguration();
+
+    /**
+     * @return a support class appropriate for the machine the server is running on.
+     */
+    @VisibleForTesting
+    BindOsSupport getOsSupport();
+
 }

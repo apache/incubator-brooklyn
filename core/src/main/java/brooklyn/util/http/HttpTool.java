@@ -24,15 +24,22 @@ import static com.google.common.base.Preconditions.checkState;
 import java.net.URI;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
@@ -50,6 +57,7 @@ import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
@@ -58,9 +66,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.URLParamEncoder;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 public class HttpTool {
@@ -159,7 +172,8 @@ public class HttpTool {
             return this;
         }
         public HttpClient build() {
-            final DefaultHttpClient httpClient = new DefaultHttpClient(clientConnectionManager, httpParams);
+            final DefaultHttpClient httpClient = new DefaultHttpClient(clientConnectionManager);
+            httpClient.setParams(httpParams);
     
             // support redirects for POST (similar to `curl --post301 -L`)
             // http://stackoverflow.com/questions/3658721/httpclient-4-error-302-how-to-redirect
@@ -278,7 +292,24 @@ public class HttpTool {
             super(new HttpPost(uri));
         }
     }
-    
+
+    public static class HttpFormPostBuilder extends HttpRequestBuilder<HttpFormPostBuilder, HttpPost> {
+        HttpFormPostBuilder(URI uri) {
+            super(new HttpPost(uri));
+        }
+
+        public HttpFormPostBuilder params(Map<String, String> params) {
+            if (params != null) {
+                Collection<NameValuePair> httpParams = new ArrayList<NameValuePair>(params.size());
+                for (Entry<String, String> param : params.entrySet()) {
+                    httpParams.add(new BasicNameValuePair(param.getKey(), param.getValue()));
+                }
+                req.setEntity(new UrlEncodedFormEntity(httpParams));
+            }
+            return self();
+        }
+    }
+
     public static class HttpPutBuilder extends HttpEntityEnclosingRequestBaseBuilder<HttpPutBuilder, HttpPut> {
         public HttpPutBuilder(URI uri) {
             super(new HttpPut(uri));
@@ -289,7 +320,7 @@ public class HttpTool {
         HttpGet req = new HttpGetBuilder(uri).headers(headers).build();
         return execAndConsume(httpClient, req);
     }
-    
+
     public static HttpToolResponse httpPost(HttpClient httpClient, URI uri, Map<String,String> headers, byte[] body) {
         HttpPost req = new HttpPostBuilder(uri).headers(headers).body(body).build();
         return execAndConsume(httpClient, req);
@@ -297,6 +328,11 @@ public class HttpTool {
 
     public static HttpToolResponse httpPut(HttpClient httpClient, URI uri, Map<String, String> headers, byte[] body) {
         HttpPut req = new HttpPutBuilder(uri).headers(headers).body(body).build();
+        return execAndConsume(httpClient, req);
+    }
+
+    public static HttpToolResponse httpPost(HttpClient httpClient, URI uri, Map<String,String> headers, Map<String, String> params) {
+        HttpPost req = new HttpFormPostBuilder(uri).headers(headers).params(params).build();
         return execAndConsume(httpClient, req);
     }
 
@@ -327,4 +363,20 @@ public class HttpTool {
     
     public static boolean isStatusCodeHealthy(int code) { return (code>=200 && code<=299); }
 
+    public static String toBasicAuthorizationValue(UsernamePasswordCredentials credentials) {
+        return "Basic "+Base64.encodeBase64String( (credentials.getUserName()+":"+credentials.getPassword()).getBytes() );
+    }
+
+    public static String encodeUrlParams(Map<?,?> data) {
+        if (data==null) return "";
+        Iterable<String> args = Iterables.transform(data.entrySet(), 
+            new Function<Map.Entry<?,?>,String>() {
+            @Override public String apply(Map.Entry<?,?> entry) {
+                Object k = entry.getKey();
+                Object v = entry.getValue();
+                return URLParamEncoder.encode(Strings.toString(k)) + (v != null ? "=" + URLParamEncoder.encode(Strings.toString(v)) : "");
+            }
+        });
+        return Joiner.on("&").join(args);
+    }
 }

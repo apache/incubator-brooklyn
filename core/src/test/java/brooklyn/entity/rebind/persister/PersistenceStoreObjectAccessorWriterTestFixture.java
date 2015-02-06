@@ -89,7 +89,7 @@ public abstract class PersistenceStoreObjectAccessorWriterTestFixture {
         accessor.waitForCurrentWrites(TIMEOUT);
         Date write2 = accessor.getLastModifiedDate();
         Assert.assertNotNull(write2);
-        Assert.assertTrue(write2.after(write1), "dates are "+write1+" and "+write2);
+        Assert.assertTrue(write2.after(write1), "dates are "+write1+" ("+write1.getTime()+") and "+write2+" ("+write2.getTime()+") ");
     }
     
     @Test

@@ -130,7 +130,7 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     
     protected void restartIfRunning() {
         // TODO for now we simply restart jetty to achieve "hot deployment"; should use the config mechanisms
-        Lifecycle serviceState = getAttribute(SERVICE_STATE);
+        Lifecycle serviceState = getAttribute(SERVICE_STATE_ACTUAL);
         if (serviceState == Lifecycle.RUNNING)
             restart();
         // may need a restart also if deploy effector is done in parallel to starting

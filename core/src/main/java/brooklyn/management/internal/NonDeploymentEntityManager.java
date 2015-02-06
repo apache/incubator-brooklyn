@@ -27,6 +27,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
@@ -129,6 +130,33 @@ public class NonDeploymentEntityManager implements EntityManagerInternal {
     }
 
     @Override
+    public Iterable<String> getEntityIds() {
+        if (isInitialManagementContextReal()) {
+            return ((EntityManagerInternal)initialManagementContext.getEntityManager()).getEntityIds();
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public ManagementTransitionMode getLastManagementTransitionMode(String itemId) {
+        if (isInitialManagementContextReal()) {
+            return ((EntityManagerInternal)initialManagementContext.getEntityManager()).getLastManagementTransitionMode(itemId);
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public void setManagementTransitionMode(Entity item, ManagementTransitionMode mode) {
+        if (isInitialManagementContextReal()) {
+            ((EntityManagerInternal)initialManagementContext.getEntityManager()).setManagementTransitionMode(item, mode);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation");
+        }
+    }
+    
+    @Override
     public boolean isManaged(Entity entity) {
         return false;
     }
@@ -136,6 +164,16 @@ public class NonDeploymentEntityManager implements EntityManagerInternal {
     @Override
     public void manage(Entity e) {
         throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot manage "+e);
+    }
+
+    @Override
+    public void unmanage(Entity e, ManagementTransitionMode info) {
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation");
+    }
+    
+    @Override
+    public void manageRebindedRoot(Entity item) {
+        throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation");
     }
 
     @Override
@@ -155,4 +193,5 @@ public class NonDeploymentEntityManager implements EntityManagerInternal {
             throw new IllegalStateException("Non-deployment context "+this+" (with no initial management context supplied) is not valid for this operation.");
         }
     }
+    
 }

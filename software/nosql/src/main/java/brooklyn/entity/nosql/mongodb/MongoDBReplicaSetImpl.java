@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
@@ -200,7 +201,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 setAttribute(PRIMARY_ENTITY, server);
                 setAttribute(Startable.SERVICE_UP, true);
             } else {
-                setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+                ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             }
         } else {
             if (LOG.isDebugEnabled())
@@ -217,23 +218,35 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
      * seconds time (in the hope that next time the primary will be available).
      */
     private void addSecondaryWhenPrimaryIsNonNull(final MongoDBServer secondary) {
+        // TODO Don't use executor, use ExecutionManager
         executor.submit(new Runnable() {
             @Override
             public void run() {
                 // SERVICE_UP is not guaranteed when additional members are added to the set.
                 Boolean isAvailable = secondary.getAttribute(MongoDBServer.SERVICE_UP);
                 MongoDBServer primary = getPrimary();
+                boolean reschedule;
                 if (Boolean.TRUE.equals(isAvailable) && primary != null) {
-                    primary.addMemberToReplicaSet(secondary, nextMemberId.incrementAndGet());
-                    if (LOG.isInfoEnabled()) {
+                    boolean added = primary.addMemberToReplicaSet(secondary, nextMemberId.incrementAndGet());
+                    if (added) {
                         LOG.info("{} added to replica set {}", secondary, getName());
+                        reschedule = false;
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("{} could not be added to replica set via {}; rescheduling", secondary, getName());
+                        }
+                        reschedule = true;
                     }
                 } else {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("Rescheduling addition of member {} to replica set {}: service_up={}, primary={}",
-                            new Object[]{secondary, getName(), isAvailable, primary});
+                            new Object[] {secondary, getName(), isAvailable, primary});
                     }
-                    // Could limit number of retries
+                    reschedule = true;
+                }
+                
+                if (reschedule) {
+                    // TODO Could limit number of retries
                     executor.schedule(this, 3, TimeUnit.SECONDS);
                 }
             }
@@ -263,16 +276,30 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 Boolean isAvailable = member.getAttribute(MongoDBServer.SERVICE_UP);
                 // Wait for the replica set to elect a new primary if the set is reconfiguring itself.
                 MongoDBServer primary = getPrimary();
+                boolean reschedule;
+                
                 if (primary != null && !isAvailable) {
-                    primary.removeMemberFromReplicaSet(member);
-                    if (LOG.isInfoEnabled()) {
+                    boolean removed = primary.removeMemberFromReplicaSet(member);
+                    if (removed) {
                         LOG.info("Removed {} from replica set {}", member, getName());
+                        reschedule = false;
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("{} could not be removed from replica set via {}; rescheduling", member, getName());
+                        }
+                        reschedule = true;
                     }
+
                 } else {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("Rescheduling removal of member {} from replica set {}: service_up={}, primary={}",
                             new Object[]{member, getName(), isAvailable, primary});
                     }
+                    reschedule = true;
+                }
+                
+                if (reschedule) {
+                    // TODO Could limit number of retries
                     executor.schedule(this, 3, TimeUnit.SECONDS);
                 }
             }
@@ -351,12 +378,18 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         //  - if the set is being stopped forever it's irrelevant
         //  - if the set might be restarted I think it just inconveniences us
         // Terminate the executor immediately.
-        // Note that after this the executor will not run if the set is restarted.
+        // TODO Note that after this the executor will not run if the set is restarted.
         executor.shutdownNow();
         super.stop();
         setAttribute(Startable.SERVICE_UP, false);
     }
 
+    @Override
+    public void onManagementStopped() {
+        super.onManagementStopped();
+        executor.shutdownNow();
+    }
+    
     public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
         @Override protected void onEntityChange(Entity member) {
             // Ignored

@@ -32,16 +32,18 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
+import brooklyn.location.access.BrooklynAccessUtils;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
+import com.google.common.net.HostAndPort;
 
 public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBServerImpl.class);
 
     static {
-        RendererHints.register(HTTP_INTERFACE_URL, new RendererHints.NamedActionWithUrl("Open"));
+        RendererHints.register(HTTP_INTERFACE_URL, RendererHints.namedActionWithUrl());
     }
 
     private FunctionFeed serviceStats;
@@ -61,14 +63,14 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         super.connectSensors();
         connectServiceUpIsRunning();
 
-        int httpConsolePort = getAttribute(PORT) + 1000;
-        if (httpConsolePort != getAttribute(HTTP_PORT)+1000) {
-            // see comment on HTTP_PORT
-            LOG.warn(this+" may not have opened HTTP_PORT correctly as the default was not available");
-            setAttribute(HTTP_PORT, httpConsolePort);
-        }
-        setAttribute(HTTP_INTERFACE_URL, String.format("http://%s:%d", getAttribute(HOSTNAME), httpConsolePort));
-        setAttribute(MONGO_SERVER_ENDPOINT, String.format("http://%s:%d", getAttribute(HOSTNAME), getAttribute(MongoDBServer.PORT)));
+        int port = getAttribute(MongoDBServer.PORT);
+        HostAndPort accessibleAddress = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, port);
+        setAttribute(MONGO_SERVER_ENDPOINT, String.format("http://%s:%d",
+                accessibleAddress.getHostText(), accessibleAddress.getPort()));
+
+        int httpConsolePort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getAttribute(HTTP_PORT)).getPort();
+        setAttribute(HTTP_INTERFACE_URL, String.format("http://%s:%d",
+                accessibleAddress.getHostText(), httpConsolePort));
 
         try {
             client = MongoDBClientSupport.forServer(this);
@@ -155,6 +157,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
     @Override
     protected void disconnectSensors() {
+        super.disconnectSensors();
         disconnectServiceUpIsRunning();
         if (serviceStats != null) serviceStats.stop();
         if (replicaSetStats != null) replicaSetStats.stop();
@@ -177,6 +180,12 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
     @Override
     public boolean addMemberToReplicaSet(MongoDBServer secondary, Integer id) {
+        // TODO The attributes IS_PRIMARY_FOR_REPLICA_SET and REPLICA_SET_MEMBER_STATUS can be out-of-sync.
+        // The former is obtained by an enricher that listens to STATUS_BSON (set by client.getServerStatus()).
+        // The latter is set by a different feed doing client.getReplicaSetStatus().getInt("myState").
+        // The ReplicaSet uses REPLICA_SET_MEMBER_STATUS to determine which node to call.
+        // 
+        // Relying on caller to respect the `false` result, to retry.
         if (!getAttribute(IS_PRIMARY_FOR_REPLICA_SET)) {
             LOG.warn("Attempted to add {} to replica set at server that is not primary: {}", secondary, this);
             return false;

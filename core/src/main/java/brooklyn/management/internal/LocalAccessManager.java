@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.management.AccessController;
-import brooklyn.management.AccessController.Response;
 
 import com.google.common.annotations.Beta;
 

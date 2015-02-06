@@ -18,9 +18,11 @@
  */
 package brooklyn.management;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Collection;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
@@ -98,6 +100,12 @@ public interface ManagementContext {
      * to submit tasks and to observe what tasks are occurring
      */
     ExecutionManager getExecutionManager();
+    
+    /** 
+     * Returns an {@link ExecutionContext} within the {@link ExecutionManager} for tasks
+     * associated to the Brooklyn node's operation (not any entities). 
+     **/
+    ExecutionContext getServerExecutionContext();
 
     /**
      * Returns the {@link EntityDriverManager} entities can use to create drivers. This
@@ -184,13 +192,21 @@ public interface ManagementContext {
     AccessController getAccessController();
 
     /**
-     * Reloads locations from brooklyn.properties. Any changes will apply only to newly created applications
-     * @return 
+     * Reloads locations from {@code brooklyn.properties}. Any changes will apply only to newly created applications
      */
     void reloadBrooklynProperties();
-    
-    interface PropertiesReloadListener {
+
+    /**
+     * Listener for {@code brooklyn.properties} reload events.
+     *
+     * @see {@link #raddPropertiesReloadListenerPropertiesReloadListener)}
+     * @see {@link #removePropertiesReloadListener(PropertiesReloadListener)}
+     */
+    interface PropertiesReloadListener extends Serializable {
+
+        /** Called when {@code brooklyn.properties} is reloaded. */
         void reloaded();
+
     }
     
     /**
@@ -203,7 +219,16 @@ public interface ManagementContext {
      */
     void removePropertiesReloadListener(PropertiesReloadListener listener);
 
-    /** Active entitlements checker instance. */
+    /**
+     * Active entitlements checker instance.
+     */
     EntitlementManager getEntitlementManager();
+ 
+    /** As {@link #lookup(String, Class)} but not constraining the return type */
+    public BrooklynObject lookup(String id);
     
+    /** Finds an entity with the given ID known at this management context */
+    // TODO in future support policies etc
+    public <T extends BrooklynObject> T lookup(String id, Class<T> type); 
+
 }

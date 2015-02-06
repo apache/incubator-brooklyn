@@ -26,9 +26,9 @@
  */
 define([
     "underscore", "jquery", "backbone", "./entity-summary", 
-    "./entity-config", "./entity-sensors", "./entity-effectors", "./entity-policies",
-    "./entity-activities", "./entity-lifecycle", "model/task-summary", "text!tpl/apps/details.html"
-], function (_, $, Backbone, SummaryView, ConfigView, SensorsView, EffectorsView, PoliciesView, ActivitiesView, LifecycleView, TaskSummary, DetailsHtml) {
+    "./entity-sensors", "./entity-effectors", "./entity-policies",
+    "./entity-activities", "./entity-advanced", "model/task-summary", "text!tpl/apps/details.html"
+], function (_, $, Backbone, SummaryView, SensorsView, EffectorsView, PoliciesView, ActivitiesView, AdvancedView, TaskSummary, DetailsHtml) {
 
     var EntityDetailsView = Backbone.View.extend({
         template:_.template(DetailsHtml),
@@ -40,10 +40,6 @@ define([
             var tasks = new TaskSummary.Collection;
             
             this.$el.html(this.template({}))
-            this.configView = new ConfigView({
-                model:this.model,
-                tabView:this,
-            })
             this.sensorsView = new SensorsView({
                 model:this.model,
                 tabView:this,
@@ -61,47 +57,47 @@ define([
                 tabView:this,
                 collection:tasks
             })
+            // summary comes after others because it uses the tasks
             this.summaryView = new SummaryView({
                 model:this.model,
                 tabView:this,
                 application:this.options.application,
                 tasks:tasks,
             })
-            this.lifecycleView = new LifecycleView({
+            this.advancedView = new AdvancedView({
                 model: this.model,
                 tabView:this,
                 application:this.options.application
             });
-            this.lifecycleView.on("entity.expunged", function() {
-                self.trigger("entity.expunged");
-            });
+            // propagate to app tree view 
+            this.advancedView.on("entity.expunged", function() { self.trigger("entity.expunged"); })
+            
             this.$("#summary").html(this.summaryView.render().el);
-            this.$("#lifecycle").html(this.lifecycleView.render().el);
-            this.$("#config").html(this.configView.render().el);
             this.$("#sensors").html(this.sensorsView.render().el);
             this.$("#effectors").html(this.effectorsView.render().el);
             this.$("#policies").html(this.policiesView.render().el);
             this.$("#activities").html(this.activitiesView.render().el);
+            this.$("#advanced").html(this.advancedView.render().el);
         },
         beforeClose:function () {
             this.summaryView.close();
-            this.configView.close();
             this.sensorsView.close();
             this.effectorsView.close();
             this.policiesView.close();
             this.activitiesView.close();
-            this.lifecycleView.close();
+            this.advancedView.close();
         },
         getEntityHref: function() {
             return $("#app-tree .entity_tree_node_wrapper.active a").attr("href");
         },
         render: function(optionalParent) {
             this.summaryView.render()
-            this.configView.render()
             this.sensorsView.render()
             this.effectorsView.render()
             this.policiesView.render()
             this.activitiesView.render()
+            this.advancedView.render()
+            
             if (optionalParent) {
                 optionalParent.html(this.el)
             }

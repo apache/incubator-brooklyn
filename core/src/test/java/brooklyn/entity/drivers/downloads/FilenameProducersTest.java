@@ -28,6 +28,6 @@ public class FilenameProducersTest {
     public void testInferFilename() throws Exception {
         assertEquals(FilenameProducers.inferFilename("myname.tgz"), "myname.tgz");
         assertEquals(FilenameProducers.inferFilename("a/myname.tgz"), "myname.tgz");
-        assertEquals(FilenameProducers.inferFilename("acme.com/download/"), "");
+        assertEquals(FilenameProducers.inferFilename("acme.com/download/"), null);
     }
 }

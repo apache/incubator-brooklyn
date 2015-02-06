@@ -102,12 +102,12 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     
     @VisibleForTesting
     /** allows, when testing, to be able to override file times / blobstore times with time from the ticker */
-    private boolean allowRemoteTimestampInMemento = false;
+    private boolean preferRemoteTimestampInMemento = false;
 
     /**
      * @param mgmt not used much at present but handy to ensure we know it so that obj store is prepared
      * @param objectStore the objectStore use to read/write management-plane data;
-     *   this must have been {@link PersistenceObjectStore#prepareForSharedUse(ManagementContext, brooklyn.entity.rebind.persister.PersistMode)}
+     *   this must have been {@link PersistenceObjectStore#prepareForSharedUse(brooklyn.entity.rebind.persister.PersistMode, HighAvailabilityMode)}
      * @param classLoader ClassLoader to use when deserializing data
      */
     public ManagementPlaneSyncRecordPersisterToObjectStore(ManagementContext mgmt, PersistenceObjectStore objectStore, ClassLoader classLoader) {
@@ -125,14 +125,22 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     protected synchronized void init() {
         if (!started) {
             started = true;
+            //Leading slash causes problems in SL, it's not a correct file name so remove it.
+            //But once removed we can't load the master file from existing persistence stores.
+            //Try to detect if the old file exists, if so use old-style names, otherwise use the correct names.
             masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/master"));
-            changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
+            if (masterWriter.get() != null) {
+                changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("/change.log"));
+            } else {
+                masterWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("master"));
+                changeLogWriter = new StoreObjectAccessorLocking(objectStore.newAccessor("change.log"));
+            }
         }
     }
 
     @VisibleForTesting
-    public void allowRemoteTimestampInMemento() {
-        allowRemoteTimestampInMemento = true;
+    public void preferRemoteTimestampInMemento() {
+        preferRemoteTimestampInMemento = true;
     }
     
     @Override
@@ -210,11 +218,12 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
                 // shouldn't happen
                 throw Exceptions.propagate(new IllegalStateException("Node record "+nodeFile+" could not be deserialized when "+mgmt.getManagementNodeId()+" was scanning: "+nodeContents, problem));
             } else {
-                if (memento.getRemoteTimestamp()!=null) {
+                if (memento.getRemoteTimestamp()!=null && preferRemoteTimestampInMemento) {
                     // in test mode, the remote timestamp is stored in the file
-                    if (!allowRemoteTimestampInMemento)
-                        throw new IllegalStateException("Remote timestamps not allowed in memento: "+nodeContents);
                 } else {
+                    if (memento.getRemoteTimestamp()!=null) {
+                        LOG.debug("Ignoring remote timestamp in memento file ("+memento+"); looks like this data has been manually copied in");
+                    }
                     Date lastModifiedDate = objectAccessor.getLastModifiedDate();
                     ((BasicManagementNodeSyncRecord)memento).setRemoteTimestamp(lastModifiedDate!=null ? lastModifiedDate.getTime() : null);
                 }
@@ -236,7 +245,8 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         }
         init();
         
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of manager-memento; updating {}", delta);
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        if (LOG.isTraceEnabled()) LOG.trace("Checkpointing delta of manager-memento; updating {}", delta);
         
         for (ManagementNodeSyncRecord m : delta.getNodes()) {
             persist(m);
@@ -248,17 +258,29 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         case NO_CHANGE:
             break; // no-op
         case SET_MASTER:
-            persistMaster(checkNotNull(delta.getNewMasterOrNull()));
+            persistMaster(checkNotNull(delta.getNewMasterOrNull()), null);
             break;
         case CLEAR_MASTER:
-            persistMaster("");
+            persistMaster("", delta.getExpectedMasterToClear());
             break; // no-op
         default:
             throw new IllegalStateException("Unknown state for master-change: "+delta.getMasterChange());
         }
+        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of manager-memento in "+Time.makeTimeStringRounded(stopwatch)+": "+delta);
     }
 
-    private void persistMaster(String nodeId) {
+    private void persistMaster(String nodeId, String optionalExpectedId) {
+        if (optionalExpectedId!=null) {
+            String currentRemoteMaster = masterWriter.get();
+            if (currentRemoteMaster==null) {
+                // okay to have nothing at remote
+            } else if (!currentRemoteMaster.trim().equals(optionalExpectedId.trim())) {
+                LOG.warn("Master at server is "+(Strings.isBlank(currentRemoteMaster) ? "<none>" : currentRemoteMaster)+"; expected "+optionalExpectedId+" "
+                    + (Strings.isNonBlank(nodeId) ? "and would set as "+nodeId : "and would clear") 
+                    + ", so not applying (yet)");
+                return;
+            }
+        }
         masterWriter.put(nodeId);
         try {
             masterWriter.waitForCurrentWrites(SYNC_WRITE_TIMEOUT);
@@ -280,6 +302,17 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
             writer.waitForCurrentWrites(timeout);
         }
         masterWriter.waitForCurrentWrites(timeout);
+    }
+
+    public void checkpoint(ManagementPlaneSyncRecord record) {
+        init();
+        for (ManagementNodeSyncRecord node : record.getManagementNodes().values()) {
+            // Check included in case the node in the memento is the one being initialised by
+            // BrooklynLauncher in the copy state command.
+            if (!ManagementNodeState.INITIALIZING.equals(node.getStatus()) && node.getNodeId() != null) {
+                persist(node);
+            }
+        }
     }
 
     private void persist(ManagementNodeSyncRecord node) {
@@ -313,5 +346,5 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         }
         return writer;
     }
-    
+
 }

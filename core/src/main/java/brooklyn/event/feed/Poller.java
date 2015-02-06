@@ -56,7 +56,7 @@ public class Poller<V> {
     private final Set<PollJob<V>> pollJobs = new LinkedHashSet<PollJob<V>>();
     private final Set<Task<?>> oneOffTasks = new LinkedHashSet<Task<?>>();
     private final Set<ScheduledTask> tasks = new LinkedHashSet<ScheduledTask>();
-    private volatile boolean running = false;
+    private volatile boolean started = false;
     
     private static class PollJob<V> {
         final PollHandler<? super V> handler;
@@ -79,8 +79,6 @@ public class Poller<V> {
                             handler.onFailure(val);
                         }
                     } catch (Exception e) {
-                        // 2013-12-21 AH adding add'l logging because seeing strange scheduled task abortion from here
-                        // even though all paths should be catching it
                         if (loggedPreviousException) {
                             if (log.isTraceEnabled()) log.trace("PollJob for {}, repeated consecutive failures, handling {} using {}", new Object[] {job, e, handler});
                         } else {
@@ -106,7 +104,7 @@ public class Poller<V> {
     
     /** Submits a one-off poll job; recommended that callers supply to-String so that task has a decent description */
     public void submit(Callable<?> job) {
-        if (running) {
+        if (started) {
             throw new IllegalStateException("Cannot submit additional tasks after poller has started");
         }
         oneOffJobs.add(job);
@@ -116,7 +114,7 @@ public class Poller<V> {
         scheduleAtFixedRate(job, handler, Duration.millis(period));
     }
     public void scheduleAtFixedRate(Callable<V> job, PollHandler<? super V> handler, Duration period) {
-        if (running) {
+        if (started) {
             throw new IllegalStateException("Cannot schedule additional tasks after poller has started");
         }
         PollJob<V> foo = new PollJob<V>(job, handler, period);
@@ -129,12 +127,12 @@ public class Poller<V> {
         // Is that ok, are can we do better?
         
         if (log.isDebugEnabled()) log.debug("Starting poll for {} (using {})", new Object[] {entity, this});
-        if (running) { 
+        if (started) { 
             throw new IllegalStateException(String.format("Attempt to start poller %s of entity %s when already running", 
                     this, entity));
         }
         
-        running = true;
+        started = true;
         
         for (final Callable<?> oneOffJob : oneOffJobs) {
             Task<?> task = Tasks.builder().dynamic(false).body((Callable<Object>) oneOffJob).name("Poll").description("One-time poll job "+oneOffJob).build();
@@ -158,7 +156,7 @@ public class Poller<V> {
                         return task;
                     }
                 };
-                ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollJob.pollPeriod), pollingTaskFactory);
+                ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollJob.pollPeriod, "displayName", "scheduled:"+scheduleName), pollingTaskFactory);
                 tasks.add((ScheduledTask)Entities.submit(entity, task));
             } else {
                 if (log.isDebugEnabled()) log.debug("Activating poll (but leaving off, as period {}) for {} (using {})", new Object[] {pollJob.pollPeriod, entity, this});
@@ -168,24 +166,34 @@ public class Poller<V> {
     
     public void stop() {
         if (log.isDebugEnabled()) log.debug("Stopping poll for {} (using {})", new Object[] {entity, this});
-        if (!running) { 
+        if (!started) { 
             throw new IllegalStateException(String.format("Attempt to stop poller %s of entity %s when not running", 
                     this, entity));
         }
         
-        running = false;
+        started = false;
         for (Task<?> task : oneOffTasks) {
-            task.cancel(true);
+            if (task != null) task.cancel(true);
         }
         for (ScheduledTask task : tasks) {
-            task.cancel();
+            if (task != null) task.cancel();
         }
         oneOffTasks.clear();
         tasks.clear();
     }
 
     public boolean isRunning() {
-        return running;
+        boolean hasActiveTasks = false;
+        for (Task<?> task: tasks) {
+            if (task.isBegun() && !task.isDone()) {
+                hasActiveTasks = true;
+                break;
+            }
+        }
+        if (!started && hasActiveTasks) {
+            log.warn("Poller should not be running, but has active tasks, tasks: "+tasks);
+        }
+        return started && hasActiveTasks;
     }
     
     protected boolean isEmpty() {

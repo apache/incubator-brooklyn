@@ -17,8 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
     <artifactId>brooklyn-example-simple-nosql-cluster</artifactId>
@@ -29,7 +28,7 @@
     </description>
 
     <parent>
-        <groupId>io.brooklyn.example</groupId>
+        <groupId>org.apache.brooklyn.example</groupId>
         <artifactId>brooklyn-examples-parent</artifactId>
         <version>0.7.0-SNAPSHOT</version>   <!-- BROOKLYN_VERSION -->
         <relativePath>../pom.xml</relativePath>
@@ -37,7 +36,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -51,7 +50,7 @@
         </dependency>
 
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-logback-xml</artifactId>
             <version>${project.version}</version>
             <optional>true</optional>

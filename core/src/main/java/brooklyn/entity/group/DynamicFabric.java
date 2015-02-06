@@ -65,7 +65,7 @@ public interface DynamicFabric extends AbstractGroup, Startable, Fabric {
     public static final MapConfigKey<Object> CUSTOM_CHILD_FLAGS = new MapConfigKey<Object>(
             Object.class, "dynamicfabric.customChildFlags", "Additional flags to be passed to children when they are being created", ImmutableMap.<String,Object>of());
 
-    public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
+    public static final AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
 
     public void setMemberSpec(EntitySpec<?> memberSpec);
     

@@ -44,6 +44,7 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.location.Location;
 import brooklyn.management.AccessController;
@@ -133,7 +134,7 @@ public class LocalManagementContext extends AbstractManagementContext {
      * Creates a LocalManagement with default BrooklynProperties.
      */
     public LocalManagementContext() {
-        this(new Builder());
+        this(BrooklynProperties.Factory.builderDefault());
     }
 
     public LocalManagementContext(BrooklynProperties brooklynProperties) {
@@ -171,22 +172,25 @@ public class LocalManagementContext extends AbstractManagementContext {
     
     public LocalManagementContext(Builder builder, Map<String, Object> brooklynAdditionalProperties, DataGridFactory datagridFactory) {
         super(builder.build(), datagridFactory);
+        
+        checkNotNull(configMap, "brooklynProperties");
+        
         // TODO in a persisted world the planeId may be injected
         this.managementPlaneId = Strings.makeRandomId(8);
-        
         this.managementNodeId = Strings.makeRandomId(8);
-        checkNotNull(configMap, "brooklynProperties");
         this.builder = builder;
         this.brooklynAdditionalProperties = brooklynAdditionalProperties;
         if (brooklynAdditionalProperties != null)
             configMap.addFromMap(brooklynAdditionalProperties);
+        
+        BrooklynFeatureEnablement.init(configMap);
         
         this.locationManager = new LocalLocationManager(this);
         this.accessManager = new LocalAccessManager();
         this.usageManager = new LocalUsageManager(this);
         
         if (configMap.getConfig(OsgiManager.USE_OSGI)) {
-            this.osgiManager = new OsgiManager();
+            this.osgiManager = new OsgiManager(this);
             osgiManager.start();
         }
         
@@ -280,6 +284,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     @Override
     public synchronized Maybe<OsgiManager> getOsgiManager() {
         if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        if (osgiManager==null) return Maybe.absent("OSGi not available in this instance"); 
         return Maybe.of(osgiManager);
     }
 
@@ -308,7 +313,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
         return execution;
     }
-
+    
     @Override
     public void terminate() {
         INSTANCES.remove(this);
@@ -317,6 +322,7 @@ public class LocalManagementContext extends AbstractManagementContext {
             osgiManager.stop();
             osgiManager = null;
         }
+        if (usageManager != null) usageManager.terminate();
         if (execution != null) execution.shutdownNow();
         if (gc != null) gc.shutdownNow();
     }
@@ -329,7 +335,7 @@ public class LocalManagementContext extends AbstractManagementContext {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <T> Task<T> runAtEntity(Map flags, Entity entity, Callable<T> c) {
-		manageIfNecessary(entity, elvis(Arrays.asList(flags.get("displayName"), flags.get("description"), flags, c)));
+        manageIfNecessary(entity, elvis(Arrays.asList(flags.get("displayName"), flags.get("description"), flags, c)));
         return runAtEntity(entity, Tasks.<T>builder().dynamic(true).body(c).flags(flags).build());
     }
 
@@ -381,13 +387,20 @@ public class LocalManagementContext extends AbstractManagementContext {
         }
         this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
 
-        // Force reload of location registry
-        this.locationRegistry = null;
+        clearLocationRegistry();
+        
+        BrooklynFeatureEnablement.init(configMap);
         
         // Notify listeners that properties have been reloaded
         for (PropertiesReloadListener listener : reloadListeners) {
             listener.reloaded();
         }
+    }
+
+    @VisibleForTesting
+    public void clearLocationRegistry() {
+        // Force reload of location registry
+        this.locationRegistry = null;
     }
 
     @Override

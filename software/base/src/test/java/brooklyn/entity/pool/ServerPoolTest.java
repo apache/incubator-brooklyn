@@ -29,17 +29,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import brooklyn.test.EntityTestUtils;
+import brooklyn.test.entity.TestApplication;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
-import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 
 public class ServerPoolTest extends AbstractServerPoolTest {
 
@@ -59,8 +59,7 @@ public class ServerPoolTest extends AbstractServerPoolTest {
     public void testFailureWhenNotEnoughServersAvailable() {
         TestApplication app = createAppWithChildren(getInitialPoolSize() + 1);
         assertNoMachinesAvailableForApp(app);
-        // Not asserting attr = true because the sensor will probably be null
-        assertFalse(Boolean.TRUE.equals(app.getAttribute(Attributes.SERVICE_UP)));
+        EntityTestUtils.assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
     }
 
     @Test
@@ -69,19 +68,19 @@ public class ServerPoolTest extends AbstractServerPoolTest {
         TestApplication app2 = createAppWithChildren(1);
 
         app.start(ImmutableList.of(pool.getDynamicLocation()));
-        assertTrue(app.getAttribute(Attributes.SERVICE_UP));
-        assertAvailableCountEquals(0);
+        EntityTestUtils.assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
+        assertAvailableCountEventuallyEquals(0);
         assertNoMachinesAvailableForApp(app2);
 
         app.stop();
         assertFalse(app.getAttribute(Attributes.SERVICE_UP));
-        assertAvailableCountEquals(getInitialPoolSize());
+        assertAvailableCountEventuallyEquals(getInitialPoolSize());
 
         app2.start(ImmutableList.of(pool.getDynamicLocation()));
-        assertTrue(app2.getAttribute(Attributes.SERVICE_UP));
+        EntityTestUtils.assertAttributeEqualsEventually(app2, Attributes.SERVICE_UP, true);
         
         assertAvailableCountEventuallyEquals(getInitialPoolSize() - 1);
-        assertClaimedCountEquals(1);
+        assertClaimedCountEventuallyEquals(1);
     }
 
     @Test
@@ -106,7 +105,7 @@ public class ServerPoolTest extends AbstractServerPoolTest {
     public void testResizePoolDownSucceedsWhenEnoughMachinesAreFree() {
         TestApplication app = createAppWithChildren(1);
         app.start(ImmutableList.of(pool.getDynamicLocation()));
-        assertAvailableCountEquals(getInitialPoolSize() - 1);
+        assertAvailableCountEventuallyEquals(getInitialPoolSize() - 1);
 
         pool.resize(1);
 
@@ -117,24 +116,23 @@ public class ServerPoolTest extends AbstractServerPoolTest {
     public void testResizeDownDoesNotReleaseClaimedMachines() {
         TestApplication app = createAppWithChildren(getInitialPoolSize() - 1);
         app.start(ImmutableList.of(pool.getDynamicLocation()));
-        assertAvailableCountEquals(1);
-        assertClaimedCountEquals(getInitialPoolSize() - 1);
+        assertAvailableCountEventuallyEquals(1);
+        assertClaimedCountEventuallyEquals(getInitialPoolSize() - 1);
 
-        LOG.info("Test attempting to resize to 0 members. Should only drop one machine.");
+        LOG.info("Test attempting to resize to 0 members. Should only drop the one available machine.");
         pool.resize(0);
 
         assertAvailableCountEventuallyEquals(0);
-
         assertEquals(Iterables.size(pool.getMembers()), getInitialPoolSize() - 1);
-        assertAvailableCountEquals(0);
-        assertClaimedCountEquals(getInitialPoolSize() - 1);
+        assertAvailableCountEventuallyEquals(0);
+        assertClaimedCountEventuallyEquals(getInitialPoolSize() - 1);
     }
 
     @Test
     public void testCanAddExistingMachinesToPool() {
         TestApplication app = createAppWithChildren(getInitialPoolSize());
         app.start(ImmutableList.of(pool.getDynamicLocation()));
-        assertAvailableCountEquals(0);
+        assertAvailableCountEventuallyEquals(0);
 
         LocalhostMachine loc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachine.class));
         Entity added = pool.addExistingMachine(loc);
@@ -143,7 +141,7 @@ public class ServerPoolTest extends AbstractServerPoolTest {
 
         TestApplication app2 = createAppWithChildren(1);
         app2.start(ImmutableList.of(pool.getDynamicLocation()));
-        assertAvailableCountEquals(0);
+        assertAvailableCountEventuallyEquals(0);
     }
 
     @Test
@@ -161,7 +159,7 @@ public class ServerPoolTest extends AbstractServerPoolTest {
     public void testAddExistingMachineFromSpec() {
         TestApplication app = createAppWithChildren(getInitialPoolSize());
         app.start(ImmutableList.of(pool.getDynamicLocation()));
-        assertAvailableCountEquals(0);
+        assertAvailableCountEventuallyEquals(0);
 
         Collection<Entity> added = pool.addExistingMachinesFromSpec("byon:(hosts=\"localhost,localhost\")");
         assertEquals(added.size(), 2, "Added: " + Joiner.on(", ").join(added));
@@ -172,6 +170,6 @@ public class ServerPoolTest extends AbstractServerPoolTest {
 
         TestApplication app2 = createAppWithChildren(2);
         app2.start(ImmutableList.of(pool.getDynamicLocation()));
-        assertAvailableCountEquals(0);
+        assertAvailableCountEventuallyEquals(0);
     }
 }

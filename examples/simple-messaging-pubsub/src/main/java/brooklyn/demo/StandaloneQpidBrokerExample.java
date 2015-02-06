@@ -37,24 +37,24 @@ public class StandaloneQpidBrokerExample extends AbstractApplication {
 
     public static final String CUSTOM_CONFIG_PATH = "classpath://custom-config.xml";
     public static final String PASSWD_PATH = "classpath://passwd";
-    public static final String QPID_BDBSTORE_JAR_PATH = "classpath://qpid-bdbstore-0.14.jar";
+    public static final String QPID_BDBSTORE_JAR_PATH = "classpath://qpid-bdbstore-0.20.jar";
     public static final String BDBSTORE_JAR_PATH = "classpath://je-5.0.34.jar";
 
     public static final String DEFAULT_LOCATION = "localhost";
     
     @Override
-    public void init() {
+    public void initApp() {
         // Configure the Qpid broker entity
-    	QpidBroker broker = addChild(EntitySpec.create(QpidBroker.class)
-    	        .configure("amqpPort", 5672)
-    	        .configure("amqpVersion", AmqpServer.AMQP_0_10)
-    	        .configure("runtimeFiles", ImmutableMap.builder()
-    	                .put(QpidBroker.CONFIG_XML, CUSTOM_CONFIG_PATH)
-    	                .put(QpidBroker.PASSWD, PASSWD_PATH)
-    	                .put("lib/opt/qpid-bdbstore-0.14.jar", QPID_BDBSTORE_JAR_PATH)
-    	                .put("lib/opt/je-5.0.34.jar", BDBSTORE_JAR_PATH)
-    	                .build())
-    	        .configure("queue", "testQueue"));
+        QpidBroker broker = addChild(EntitySpec.create(QpidBroker.class)
+                .configure("amqpPort", 5672)
+                .configure("amqpVersion", AmqpServer.AMQP_0_10)
+                .configure("runtimeFiles", ImmutableMap.builder()
+                        .put(CUSTOM_CONFIG_PATH, QpidBroker.CONFIG_XML)
+                        .put(PASSWD_PATH, QpidBroker.PASSWD)
+                        .put(QPID_BDBSTORE_JAR_PATH, "lib/opt/qpid-bdbstore-0.20.jar")
+                        .put(BDBSTORE_JAR_PATH, "lib/opt/je-5.0.34.jar")
+                        .build())
+                .configure("queue", "testQueue"));
     }
 
     public static void main(String[] argv) {

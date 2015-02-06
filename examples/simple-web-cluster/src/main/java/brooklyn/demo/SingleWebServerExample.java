@@ -44,7 +44,7 @@ public class SingleWebServerExample extends AbstractApplication {
     private static final String WAR_PATH = "classpath://hello-world-webapp.war";
 
     @Override
-    public void init() {
+    public void initApp() {
         addChild(EntitySpec.create(JBoss7Server.class)
                 .configure(JavaWebAppService.ROOT_WAR, WAR_PATH)
                 .configure(Attributes.HTTP_PORT, PortRanges.fromString("8080+")));

@@ -33,6 +33,6 @@ brooklyn.catalog:
   type: io.camp.mock.MyApplication
   version: 0.9
   libraries:
-  - name: lib1
-    version: v1
+  - name: org.apache.brooklyn.test.resources.osgi.brooklyn-test-osgi-entities
+    version: 0.1.0
     url: classpath:/brooklyn/osgi/brooklyn-test-osgi-entities.jar

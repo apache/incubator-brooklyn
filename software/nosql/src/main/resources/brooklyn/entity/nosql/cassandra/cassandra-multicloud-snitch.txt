@@ -1,0 +1,33 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+The file cassandra-multicloud-snitch.jar is a snitch implementation
+that handles Cassandra datacenters in different cloud providers.
+
+The source code for cassandra-multicloud-snitch.jar is in sandbox/cassandra-multicloud-snitch.
+
+The source will be contributed to the Cassandra project; when it is available in the 
+Cassandra distro (and when we don't want to give backwards compatibility support for
+older Cassandra versions), then we can delete it from Brooklyn.
+
+The jar can be uploaded to a Cassandra Node as part of deployment, for if
+this multi-cloud snitch is desired.
+
+Under Apache conventions, binary files are not part of the source
+release. If you are using the source release, you may add this file
+by copying it from the master repository, which is accessible on the
+web at https://github.com/apache/incubator-brooklyn

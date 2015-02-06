@@ -16,11 +16,17 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Couchbase
+name: Couchbase One Bucket
+
+location: softlayer:wdc01
+
 services:
 - type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
+  initialSize: 3
   adminUsername: Administrator
   adminPassword: Password
-  initialSize: 3
-- type: brooklyn.entity.nosql.couchbase.CouchbaseLoadGenerator
-location: aws-ec2
+  createBuckets:
+  - bucket: default
+    bucket-port: 11211
+  - bucket: my_bucket_2
+    bucket-port: 11222

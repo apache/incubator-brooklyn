@@ -19,6 +19,7 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import io.brooklyn.camp.brooklyn.spi.dsl.methods.BrooklynDslCommon;
 import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.ApplicationComponentTemplate;
 import io.brooklyn.camp.spi.AssemblyTemplate;
@@ -32,11 +33,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.BrooklynTags;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.VanillaSoftwareProcess;
@@ -46,8 +53,10 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
@@ -57,19 +66,24 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Reflections;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
-/** this converts PlatformComponentTemplate instances whose type is prefixed "brooklyn:"
- * to Brooklyn EntitySpec instances.
+/**
+ * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code brooklyn:}
+ * to Brooklyn {@link EntitySpec} instances.
+ * <p>
  * but TODO this should probably be done by {@link BrooklynEntityMatcher} 
  * so we have a spec by the time we come to instantiate.
  * (currently privileges "brooklyn.*" key names are checked in both places!)  
  */
 public class BrooklynComponentTemplateResolver {
+
+    private static final Logger log = LoggerFactory.getLogger(BrooklynDslCommon.class);
 
     BrooklynClassLoadingContext loader;
     final ManagementContext mgmt;
@@ -93,7 +107,7 @@ public class BrooklynComponentTemplateResolver {
             return null;
         }
 
-        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext loader, Map<String, Object> childAttrs) {
+        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext loader, Map<String, ?> childAttrs) {
             return newInstance(loader, ConfigBag.newInstance(childAttrs), null);
         }
 
@@ -179,7 +193,7 @@ public class BrooklynComponentTemplateResolver {
     public CatalogItem<Entity,EntitySpec<?>> getCatalogItem() {
         String type = getBrooklynType();
         if (type != null) {
-            return loader.getManagementContext().getCatalog().getCatalogItem(Entity.class, type);
+            return CatalogUtils.getCatalogItemOptionalVersion(mgmt, Entity.class,  type);
         } else {
             return null;
         }
@@ -195,24 +209,15 @@ public class BrooklynComponentTemplateResolver {
 
     /** returns the entity class, if needed in contexts which scan its statics for example */
     public Class<? extends Entity> loadEntityClass() {
-        return tryLoadEntityClass().get();
+        Maybe<Class<? extends Entity>> result = tryLoadEntityClass();
+        if (result.isAbsent())
+            throw new IllegalStateException("Could not find "+getBrooklynType(), ((Maybe.Absent<?>)result).getException());
+        return result.get();
     }
     
     /** tries to load the Java entity class */
     public Maybe<Class<? extends Entity>> tryLoadEntityClass() {
-        CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
-        String typeName = getBrooklynType();
-        
-        if (item!=null) {
-            // add additional bundles
-            loader = new BrooklynClassLoadingContextSequential(mgmt, item.newClassLoadingContext(mgmt), loader);
-            
-            if (item.getJavaType() != null) {
-                typeName = item.getJavaType();
-            }
-        }
-        
-        return loader.tryLoadClass(typeName, Entity.class);
+        return loader.tryLoadClass(getBrooklynType(), Entity.class);
     }
 
     /** resolves the spec, updating the loader if a catalog item is loaded */
@@ -239,15 +244,19 @@ public class BrooklynComponentTemplateResolver {
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
-            @SuppressWarnings("rawtypes")
             Class interfaceclazz = (Application.class.isAssignableFrom(type)) ? Application.class : Entity.class;
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
         }
+        spec.catalogItemId(CatalogUtils.getCatalogItemIdFromLoader(loader));
+        if (template.isPresent() && template.get().getSourceCode()!=null)
+            spec.tag(BrooklynTags.newYamlSpecTag(template.get().getSourceCode()));
+
         return spec;
     }
 
     //called from BrooklynAssemblyTemplateInstantiator as well
+    @SuppressWarnings("unchecked")
     protected <T extends Entity> void populateSpec(EntitySpec<T> spec) {
         String name, templateId=null, planId=null;
         if (template.isPresent()) {
@@ -259,7 +268,23 @@ public class BrooklynComponentTemplateResolver {
         planId = (String)attrs.getStringKey("id");
         if (planId==null)
             planId = (String) attrs.getStringKey(BrooklynCampConstants.PLAN_ID_FLAG);
-        
+
+        Object childrenObj = attrs.getStringKey("brooklyn.children");
+        if (childrenObj != null) {
+            Set<String> encounteredCatalogTypes = MutableSet.of();
+
+            Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
+            for (Map<String,?> childAttrs : children) {
+                BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
+                BrooklynAssemblyTemplateInstantiator instantiator = new BrooklynAssemblyTemplateInstantiator();
+                // TODO: Creating a new set of encounteredCatalogTypes prevents the recursive definition check in
+                // BrooklynAssemblyTemplateInstantiator.resolveSpec from correctly determining if a YAML entity is
+                // defined recursively. However, the number of overrides of newInstance, and the number of places
+                // calling populateSpec make it difficult to pass encounteredCatalogTypes in as a parameter
+                EntitySpec<? extends Entity> childSpec = instantiator.resolveSpec(entityResolver, encounteredCatalogTypes);
+                spec.child(childSpec);
+            }
+        }
         if (!Strings.isBlank(name))
             spec.displayName(name);
         if (templateId != null)
@@ -305,10 +330,22 @@ public class BrooklynComponentTemplateResolver {
         return entity;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void configureEntityConfig(EntitySpec<?> spec) {
         ConfigBag bag = ConfigBag.newInstance((Map<Object, Object>) attrs.getStringKey("brooklyn.config"));
         
+        // first take *recognised* flags and config keys from the top-level, and put them in the bag (of brooklyn.config)
+        // (for component templates this will have been done already by BrooklynEntityMatcher, but for specs it is needed here)
+        ConfigBag bagFlags = ConfigBag.newInstanceCopying(attrs);
+        List<FlagConfigKeyAndValueRecord> topLevelApparentConfig = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bagFlags);
+        for (FlagConfigKeyAndValueRecord r: topLevelApparentConfig) {
+            if (r.getConfigKeyMaybeValue().isPresent())
+                bag.putIfAbsent((ConfigKey)r.getConfigKey(), r.getConfigKeyMaybeValue().get());
+            if (r.getFlagMaybeValue().isPresent())
+                bag.putAsStringKeyIfAbsent(r.getFlagName(), r.getFlagMaybeValue().get());
+        }
+
+        // now set configuration for all the items in the bag
         List<FlagConfigKeyAndValueRecord> records = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bag);
         Set<String> keyNamesUsed = new LinkedHashSet<String>();
         for (FlagConfigKeyAndValueRecord r: records) {
@@ -338,10 +375,20 @@ public class BrooklynComponentTemplateResolver {
     }
 
     protected static class SpecialFlagsTransformer implements Function<Object, Object> {
-        // TODO this may be large when serialized as it includes the context search bundles
-        final BrooklynClassLoadingContext loader;
+        protected final ManagementContext mgmt;
+        /* TODO find a way to make do without loader here?
+         * it is not very nice having to serialize it; but serialization of BLCL is now relatively clean.
+         * 
+         * it is only used to instantiate classes, and now most things should be registered with catalog;
+         * the notable exception is when one entity in a bundle is creating another in the same bundle,
+         * it wants to use his bundle CLC to do that.  but we can set up some unique reference to the entity 
+         * which can be used to find it from mgmt, rather than pass the loader.
+         */
+        private BrooklynClassLoadingContext loader = null;
+        
         public SpecialFlagsTransformer(BrooklynClassLoadingContext loader) {
             this.loader = loader;
+            mgmt = loader.getManagementContext();
         }
         public Object apply(Object input) {
             if (input instanceof Map)
@@ -364,6 +411,16 @@ public class BrooklynComponentTemplateResolver {
             return Iterables.transform(flag, this);
         }
         
+        protected BrooklynClassLoadingContext getLoader() {
+            if (loader!=null) return loader;
+            // TODO currently loader will non-null unless someone has messed with the rebind files,
+            // but we'd like to get rid of it; ideally we'd have a reference to the entity.
+            // for now, this is a slightly naff way to do it, if we have to set loader=null as a workaround
+            Entity entity = BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
+            if (entity!=null) return CatalogUtils.getClassLoadingContext(entity);
+            return JavaBrooklynClassLoadingContext.create(mgmt);
+        }
+        
         /**
          * Makes additional transformations to the given flag with the extra knowledge of the flag's management context.
          * @return The modified flag, or the flag unchanged.
@@ -376,8 +433,13 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(loader, specConfig.getSpecConfiguration()).resolveSpec();
+                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec();
             }
+            if (flag instanceof ManagementContextInjectable) {
+                if (log.isDebugEnabled()) { log.debug("Injecting Brooklyn management context info object: {}", flag); }
+                ((ManagementContextInjectable) flag).injectManagementContext(loader.getManagementContext());
+            }
+
             return flag;
         }
     }

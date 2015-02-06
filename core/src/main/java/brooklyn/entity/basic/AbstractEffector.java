@@ -63,10 +63,14 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
     /** Convenience for named-parameter syntax (needs map in first argument) */
     public T call(@SuppressWarnings("rawtypes") Map parameters, Entity entity) { return call(entity, parameters); }
 
+    /** @deprecated since 0.7.0 use {@link #getFlagsForTaskInvocationAt(Entity, Effector, ConfigBag)} */ @Deprecated
+    protected final Map<Object,Object> getFlagsForTaskInvocationAt(Entity entity) {
+        return getFlagsForTaskInvocationAt(entity, this, null);
+    }
     /** subclasses may override to add additional flags, but they should include the flags returned here 
      * unless there is very good reason not to */
-    protected Map<Object,Object> getFlagsForTaskInvocationAt(Entity entity) {
-        return EffectorUtils.getTaskFlagsForEffectorInvocation(entity, this);
+    protected Map<Object,Object> getFlagsForTaskInvocationAt(Entity entity, Effector<T> effector, ConfigBag parameters) {
+        return EffectorUtils.getTaskFlagsForEffectorInvocation(entity, effector, parameters);
     }
     
     /** not meant for overriding; subclasses should override the abstract {@link #call(Entity, Map)} method in this class */
@@ -75,14 +79,13 @@ public abstract class AbstractEffector<T> extends EffectorBase<T> implements Eff
         return new EffectorTaskFactory<T>() {
             @Override
             public Task<T> newTask(final Entity entity, final Effector<T> effector, final ConfigBag parameters) {
-                return 
-                    new DynamicSequentialTask<T>(
-                        getFlagsForTaskInvocationAt(entity),
-                new Callable<T>() {
-                    @Override public T call() {
-                        return AbstractEffector.this.call(parameters.getAllConfig(), entity);
-                    }
-                });
+                return new DynamicSequentialTask<T>(
+                        getFlagsForTaskInvocationAt(entity, AbstractEffector.this, parameters),
+                        new Callable<T>() {
+                            @Override public T call() {
+                                return AbstractEffector.this.call(parameters.getAllConfig(), entity);
+                            }
+                        });
             }
         };
     }

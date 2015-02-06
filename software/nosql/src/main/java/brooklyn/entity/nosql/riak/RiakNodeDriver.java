@@ -31,4 +31,6 @@ public interface RiakNodeDriver extends SoftwareProcessDriver {
     public void recoverFailedNode(String nodeName);
 
     public void commitCluster();
+
+    public String getOsMajorVersion();
 }

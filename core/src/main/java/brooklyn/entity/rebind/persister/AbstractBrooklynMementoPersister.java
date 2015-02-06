@@ -26,14 +26,15 @@ import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.BrooklynMementoRawData;
+import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 
 /**
- * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToMultiFile} instead; 
- *             this class will be merged with {@link BrooklynMementoPersisterInMemory} in test code.
+ * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToObjectStore} instead 
  */
 @Deprecated
 public abstract class AbstractBrooklynMementoPersister implements BrooklynMementoPersister {
@@ -41,16 +42,31 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     protected volatile MutableBrooklynMemento memento = new MutableBrooklynMemento();
     
     @Override
-    public BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) {
+    public BrooklynMementoRawData loadMementoRawData(RebindExceptionHandler exceptionHandler) {
+        return null;
+    }
+    
+    @Override
+    public BrooklynMemento loadMemento(BrooklynMementoRawData mementoData, LookupContext lookupContext, RebindExceptionHandler exceptionHandler) {
         // Trusting people not to cast+modify, because the in-memory persister wouldn't be used in production code
         return memento;
     }
     
     @Override
+    public BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) {
+        return loadMemento(null, lookupContext, exceptionHandler);
+    }
+    
+    @Override
     public BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) {
+        return loadMementoManifest(null, exceptionHandler);
+    }
+    
+    @Override
+    public BrooklynMementoManifest loadMementoManifest(BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler) {
         BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
         for (EntityMemento entity : memento.getEntityMementos().values()) {
-            builder.entity(entity.getId(), entity.getType());
+            builder.entity(entity.getId(), entity.getType(), entity.getParent(), entity.getCatalogItemId());
         }
         for (LocationMemento entity : memento.getLocationMementos().values()) {
             builder.location(entity.getId(), entity.getType());
@@ -61,18 +77,25 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         for (EnricherMemento entity : memento.getEnricherMementos().values()) {
             builder.enricher(entity.getId(), entity.getType());
         }
+        for (CatalogItemMemento entity : memento.getCatalogItemMementos().values()) {
+            builder.catalogItem(entity);
+        }
         return builder.build();
     }
-    
-    @Override
-    public void stop(boolean graceful) {
-        // no-op
-    }
+
+    @Override public void enableWriteAccess() {}
+    @Override public void disableWriteAccess(boolean graceful) {}
+    @Override public void stop(boolean graceful) {}
     
     @Override
     public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
         memento.reset(checkNotNull(newMemento, "memento"));
     }
+    
+    public void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler) {
+        throw new IllegalStateException("Not supported; use "+BrooklynMementoPersisterToObjectStore.class);
+    }
+    
 
     @Override
     public void delta(Delta delta, PersistenceExceptionHandler exceptionHanlder) {
@@ -80,10 +103,12 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         memento.removeLocations(delta.removedLocationIds());
         memento.removePolicies(delta.removedPolicyIds());
         memento.removeEnrichers(delta.removedEnricherIds());
+        memento.removeCatalogItems(delta.removedCatalogItemIds());
         memento.updateEntityMementos(delta.entities());
         memento.updateLocationMementos(delta.locations());
         memento.updatePolicyMementos(delta.policies());
         memento.updateEnricherMementos(delta.enrichers());
+        memento.updateCatalogItemMementos(delta.catalogItems());
     }
     
     @Override

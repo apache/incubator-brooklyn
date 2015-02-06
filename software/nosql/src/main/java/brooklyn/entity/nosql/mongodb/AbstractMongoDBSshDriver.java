@@ -29,11 +29,11 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.base.Joiner;
@@ -50,11 +50,15 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
     }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(getBaseName())));
+    }
+
+    @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(getBaseName()));
     
         List<String> commands = new LinkedList<String>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));

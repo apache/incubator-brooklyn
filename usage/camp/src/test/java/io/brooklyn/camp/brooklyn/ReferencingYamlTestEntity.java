@@ -36,6 +36,10 @@ public interface ReferencingYamlTestEntity extends Entity {
             .name("test.reference.entity1")
             .build();    
     @SuppressWarnings("serial")
+    public static final ConfigKey<Entity> TEST_REFERENCE_ENTITY1_ALT = BasicConfigKey.builder(new TypeToken<Entity>(){})
+            .name("test.reference.entity1a")
+            .build();    
+    @SuppressWarnings("serial")
     public static final ConfigKey<Entity> TEST_REFERENCE_ENTITY2 = BasicConfigKey.builder(new TypeToken<Entity>(){})
             .name("test.reference.entity2")
             .build();
@@ -54,5 +58,9 @@ public interface ReferencingYamlTestEntity extends Entity {
     @SuppressWarnings("serial")
     public static final ConfigKey<Entity> TEST_REFERENCE_GRANDCHILD2 = BasicConfigKey.builder(new TypeToken<Entity>(){})
             .name("test.reference.grandchild2")
+            .build(); 
+    @SuppressWarnings("serial")
+    public static final ConfigKey<Entity> TEST_REFERENCE_BOGUS = BasicConfigKey.builder(new TypeToken<Entity>(){})
+            .name("test.reference.bogus")
             .build(); 
 }

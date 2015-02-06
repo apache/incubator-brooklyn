@@ -18,9 +18,35 @@
  */
 package brooklyn.event;
 
+import com.google.common.annotations.Beta;
+
 /**
  * The interface implemented by attribute sensors.
  */
 public interface AttributeSensor<T> extends Sensor<T> {
-    // Marker Interface
+    
+    /**
+     * @since 0.7.0
+     */
+    @Beta
+    public enum SensorPersistenceMode {
+        /**
+         * Indicates that this sensor should be persisted, and its value should be read from
+         * persisted state on rebind.
+         */
+        REQUIRED,
+        
+        /**
+         * Indicates that this sensor should not be persisted; therefore its value for any entity
+         * will be null immediately after rebind.
+         */
+        NONE;
+    }
+    
+    /**
+     * The persistence mode of this sensor, to determine its behaviour for rebind.
+     * 
+     * @since 0.7.0
+     */
+    SensorPersistenceMode getPersistenceMode();
 }

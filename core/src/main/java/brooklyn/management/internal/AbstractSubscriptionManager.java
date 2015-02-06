@@ -112,7 +112,7 @@ public abstract class AbstractSubscriptionManager implements SubscriptionManager
     public final  <T> SubscriptionHandle subscribeToChildren(Map<String, Object> flags, final Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         Predicate<SensorEvent<T>> eventFilter = new Predicate<SensorEvent<T>>() {
             public boolean apply(SensorEvent<T> input) {
-                return parent.getChildren().contains(input.getSource());
+                return parent != null && input.getSource() != null && parent.equals(input.getSource().getParent());
             }
         };
         flags.put("eventFilter", eventFilter);

@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.SetFromLiveMap;
 
@@ -53,7 +54,7 @@ import com.google.common.collect.Sets;
  * current number of members.
  */
 public abstract class AbstractGroupImpl extends AbstractEntity implements AbstractGroup {
-    private static final Logger log = LoggerFactory.getLogger(AbstractGroup.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractGroupImpl.class);
 
     private Set<Entity> members = Sets.newLinkedHashSet();
 
@@ -69,17 +70,19 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
     public void setManagementContext(ManagementContextInternal managementContext) {
         super.setManagementContext(managementContext);
 
-        Set<Entity> oldMembers = members;
+        if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE)) {
+            Set<Entity> oldMembers = members;
+            
+            members = SetFromLiveMap.create(managementContext.getStorage().<Entity,Boolean>getMap(getId()+"-members"));
 
-        members = SetFromLiveMap.create(managementContext.getStorage().<Entity,Boolean>getMap(getId()+"-members"));
-
-        // Only override stored defaults if we have actual values. We might be in setManagementContext
-        // because we are reconstituting an existing entity in a new brooklyn management-node (in which
-        // case believe what is already in the storage), or we might be in the middle of creating a new
-        // entity. Normally for a new entity (using EntitySpec creation approach), this will get called
-        // before setting the parent etc. However, for backwards compatibility we still support some
-        // things calling the entity's constructor directly.
-        if (oldMembers.size() > 0) members.addAll(oldMembers);
+            // Only override stored defaults if we have actual values. We might be in setManagementContext
+            // because we are reconstituting an existing entity in a new brooklyn management-node (in which
+            // case believe what is already in the storage), or we might be in the middle of creating a new
+            // entity. Normally for a new entity (using EntitySpec creation approach), this will get called
+            // before setting the parent etc. However, for backwards compatibility we still support some
+            // things calling the entity's constructor directly.
+            if (oldMembers.size() > 0) members.addAll(oldMembers);
+        }
     }
 
     @Override
@@ -87,6 +90,17 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
         super.init();
         setAttribute(GROUP_SIZE, 0);
         setAttribute(GROUP_MEMBERS, ImmutableList.<Entity>of());
+    }
+
+    @Override
+    protected void initEnrichers() {
+        super.initEnrichers();
+        
+        // check states and upness separately so they can be individually replaced if desired
+        // problem if any children or members are on fire
+        ServiceStateLogic.newEnricherFromChildrenState().checkChildrenAndMembers().requireRunningChildren(getConfig(RUNNING_QUORUM_CHECK)).addTo(this);
+        // defaults to requiring at least one member or child who is up
+        ServiceStateLogic.newEnricherFromChildrenUp().checkChildrenAndMembers().requireUpChildren(getConfig(UP_QUORUM_CHECK)).addTo(this);
     }
 
     /**
@@ -102,8 +116,24 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                 log.debug("Group {} ignoring new member {}, because it is no longer managed", this, member);
                 return false;
             }
+
+            // FIXME do not set sensors on members; possibly we don't need FIRST at all, just look at the first in MEMBERS, and take care to guarantee order there
+            Entity first = getAttribute(FIRST);
+            if (first == null) {
+                ((EntityLocal) member).setAttribute(FIRST_MEMBER, true);
+                ((EntityLocal) member).setAttribute(FIRST, member);
+                setAttribute(FIRST, member);
+            } else {
+                if (first.equals(member) || first.equals(member.getAttribute(FIRST))) {
+                    // do nothing (rebinding)
+                } else {
+                    ((EntityLocal) member).setAttribute(FIRST_MEMBER, false);
+                    ((EntityLocal) member).setAttribute(FIRST, first);
+                }
+            }
+
             member.addGroup((Group)getProxyIfAvailable());
-            boolean changed = members.add(member);
+            boolean changed = addMemberInternal(member);
             if (changed) {
                 log.debug("Group {} got new member {}", this, member);
                 setAttribute(GROUP_SIZE, getCurrentSize());
@@ -128,6 +158,13 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
         }
     }
 
+    // visible for rebind
+    public boolean addMemberInternal(Entity member) {
+        synchronized (members) {
+            return members.add(member);
+        }
+    }
+
     /**
      * Returns {@code true} if the group was changed as a result of the call.
      */
@@ -138,9 +175,13 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
             boolean changed = (member != null && members.remove(member));
             if (changed) {
                 log.debug("Group {} lost member {}", this, member);
-                // TODO ideally the following 3 are synched
+                // TODO ideally the following are all synched
                 setAttribute(GROUP_SIZE, getCurrentSize());
                 setAttribute(GROUP_MEMBERS, getMembers());
+                if (member.equals(getAttribute(FIRST))) {
+                    // TODO should we elect a new FIRST ?  as is the *next* will become first.  could we do away with FIRST altogether?
+                    setAttribute(FIRST, null);
+                }
                 // emit after the above so listeners can use getMembers() and getCurrentSize()
                 emit(MEMBER_REMOVED, member);
 

@@ -37,21 +37,27 @@ public abstract class AbstractExecutionContext implements ExecutionContext {
      *   
      * @see ExecutionManager#submit(Map, Task) 
      */
+    @Override
     public Task<?> submit(Map<?,?> properties, Runnable runnable) { return submitInternal(properties, runnable); }
     
     /** @see #submit(Map, Runnable) */
+    @Override
     public Task<?> submit(Runnable runnable) { return submitInternal(Maps.newLinkedHashMap(), runnable); }
  
     /** @see #submit(Map, Runnable) */
+    @Override
     public <T> Task<T> submit(Callable<T> callable) { return submitInternal(Maps.newLinkedHashMap(), callable); }
     
     /** @see #submit(Map, Runnable) */
+    @Override
     public <T> Task<T> submit(Map<?,?> properties, Callable<T> callable) { return submitInternal(properties, callable); }
  
     /** @see #submit(Map, Runnable) */
+    @Override
     public <T> Task<T> submit(TaskAdaptable<T> task) { return submitInternal(Maps.newLinkedHashMap(), task.asTask()); }
 
     /** @see #submit(Map, Runnable) */
+    @Override
     public <T> Task<T> submit(Map<?,?> properties, TaskAdaptable<T> task) { return submitInternal(properties, task.asTask()); }
 
     /**
@@ -66,5 +72,4 @@ public abstract class AbstractExecutionContext implements ExecutionContext {
     /** does the work internally of submitting the task; note that the return value may be a wrapper task even if a task is passed in,
      * if the execution context where the target should run is different (e.g. submitting an effector task cross-context) */
     protected abstract <T> Task<T> submitInternal(Map<?,?> properties, Object task);
-    
 }

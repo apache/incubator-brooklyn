@@ -163,8 +163,14 @@ public class ArchiveUtils {
                     break;
                 }
             case UNKNOWN:
-                if (!sourcePath.equals(Urls.mergePaths(targetDir, fileName)))
+                if (!sourcePath.equals(Urls.mergePaths(targetDir, fileName))) {
                     commands.add("cp " + sourcePath + " " + targetDir);
+                } else {
+                    keepOriginal = true;
+                    // else we'd just end up deleting it!
+                    // this branch will often lead to errors in any case, see the allowNonarchivesOrKeepArchiveAfterDeploy parameter 
+                    // in ArchiveTasks which calls through to here and then fails in the case corresponding to this code branch
+                }
                 break;
         }
         if (!keepOriginal && !commands.isEmpty())
@@ -238,30 +244,36 @@ public class ArchiveUtils {
      * Copies the archive file from the given URL to a file in a temporary directory and extracts
      * the contents in the destination directory. For Java archives of type {@code .jar},
      * {@code .war} or {@code .ear} the file is simply copied.
+     * 
+     * @return true if the archive is downloaded AND unpacked; false if it is downloaded but not unpacked; 
+     * throws if there was an error downloading or, for known archive types, unpacking.
      *
      * @see #deploy(String, SshMachineLocation, String)
      * @see #deploy(Map, String, SshMachineLocation, String, String, String)
      * @see #install(SshMachineLocation, String, String, int)
      */
-    public static void deploy(ResourceUtils resolver, Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String destDir, boolean keepArchiveAfterUnpacking, String optionalTmpDir, String optionalDestFile) {
-        if (optionalDestFile==null) optionalDestFile = Urls.getBasename(Preconditions.checkNotNull(archiveUrl, "archiveUrl"));
-        if (Strings.isBlank(optionalDestFile)) 
+    public static boolean deploy(ResourceUtils resolver, Map<String, ?> props, String archiveUrl, SshMachineLocation machine, String destDir, boolean keepArchiveAfterUnpacking, String optionalTmpDir, String optionalDestFile) {
+        String destFile = optionalDestFile;
+        if (destFile==null) destFile = Urls.getBasename(Preconditions.checkNotNull(archiveUrl, "archiveUrl"));
+        if (Strings.isBlank(destFile)) 
             throw new IllegalStateException("Not given filename and cannot infer archive type from '"+archiveUrl+"'");
-        if (optionalTmpDir==null) optionalTmpDir=Preconditions.checkNotNull(destDir, "destDir");
+        
+        String tmpDir = optionalTmpDir;
+        if (tmpDir==null) tmpDir=Preconditions.checkNotNull(destDir, "destDir");
         if (props==null) props = MutableMap.of();
-        String destPath = Os.mergePaths(optionalTmpDir, optionalDestFile);
+        String destPath = Os.mergePaths(tmpDir, destFile);
 
         // Use the location mutex to prevent package manager locking issues
+        machine.acquireMutex("installing", "installing archive");
         try {
-            machine.acquireMutex("installing", "installing archive");
             int result = install(resolver, props, machine, archiveUrl, destPath, NUM_RETRIES_FOR_COPYING);
             if (result != 0) {
                 throw new IllegalStateException(format("Unable to install archive %s to %s", archiveUrl, machine));
             }
-            
+
             // extract, now using task if available
-            MutableList<String> commands = MutableList.copyOf(installCommands(optionalDestFile))
-                .appendAll(extractCommands(optionalDestFile, optionalTmpDir, destDir, false, keepArchiveAfterUnpacking));
+            MutableList<String> commands = MutableList.copyOf(installCommands(destFile))
+                    .appendAll(extractCommands(destFile, optionalTmpDir, destDir, false, keepArchiveAfterUnpacking));
             if (DynamicTasks.getTaskQueuingContext()!=null) {
                 result = DynamicTasks.queue(SshTasks.newSshExecTaskFactory(machine, commands.toArray(new String[0])).summary("extracting archive").requiringExitCodeZero()).get();
             } else {
@@ -270,8 +282,7 @@ public class ArchiveUtils {
             if (result != 0) {
                 throw new IllegalStateException(format("Failed to expand archive %s on %s", archiveUrl, machine));
             }
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
+            return ArchiveType.of(destFile)!=ArchiveType.UNKNOWN;
         } finally {
             machine.releaseMutex("installing");
         }

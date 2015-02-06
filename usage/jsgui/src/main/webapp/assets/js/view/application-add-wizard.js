@@ -21,7 +21,7 @@
  * Also creates an empty Application model.
  */
 define([
-    "underscore", "jquery", "backbone", "formatJson",
+    "underscore", "jquery", "backbone", "brooklyn-utils",
     "model/entity", "model/application", "model/location",
     "text!tpl/app-add-wizard/modal-wizard.html",
     "text!tpl/app-add-wizard/create.html",
@@ -35,11 +35,11 @@ define([
     "text!tpl/app-add-wizard/preview.html",
     "bootstrap"
     
-], function (_, $, Backbone, FormatJSON, Entity, Application, Location,
+], function (_, $, Backbone, Util, Entity, Application, Location,
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
              DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
-        ) {
+) {
 
     function setVisibility(obj, isVisible) {
         if (isVisible) obj.show();
@@ -48,6 +48,32 @@ define([
 
     function setEnablement(obj, isEnabled) {
         obj.attr("disabled", !isEnabled)
+    }
+    
+    function specToCAMP(spec) {
+        var services;
+        if (spec.type) {
+            services = [entityToCAMP(spec)];
+        } else if (spec.entities) {
+            services = [];
+            var entities = spec.entities;
+            for (var i = 0; i < entities.length; i++) {
+                services.push(entityToCAMP(entities[i]));
+            }
+        }
+        return {
+            name: spec.name,
+            locations: spec.locations,
+            services: services
+        };
+    }
+
+    function entityToCAMP(entity) {
+        return {
+            name: entity.name,
+            type: entity.type,
+            "brooklyn.config": entity.config
+        };
     }
 
     var ModalWizard = Backbone.View.extend({
@@ -166,37 +192,27 @@ define([
             var $modal = $('.add-app #modal-container .modal')
             $modal.fadeTo(500,0.5);
             
+            var yaml;
             if (this.model.mode == "yaml") {
-                $.ajax({
-                    url:'/v1/applications',
-                    type:'post',
-                    contentType:'application/yaml',
-                    processData:false,
-                    data:this.model.yaml,
-                    success:function (data) {
-                        that.onSubmissionComplete(true, data, $modal)
-                    },
-                    error:function (data) {
-                        that.onSubmissionComplete(false, data, $modal)
-                    }
-                })
-
+                yaml = this.model.yaml;
             } else {
-                $.ajax({
-                    url:'/v1/applications',
-                    type:'post',
-                    contentType:'application/json',
-                    processData:false,
-                    data:JSON.stringify(this.model.spec.toJSON()),
-                    success:function (data) {
-                        that.onSubmissionComplete(true, data, $modal)
-                    },
-                    error:function (data) {
-                        that.onSubmissionComplete(false, data, $modal)
-                    }
-                })
+                yaml = JSON.stringify(specToCAMP(this.model.spec.toJSON()));
             }
-            
+
+            $.ajax({
+                url:'/v1/applications',
+                type:'post',
+                contentType:'application/yaml',
+                processData:false,
+                data:yaml,
+                success:function (data) {
+                    that.onSubmissionComplete(true, data, $modal)
+                },
+                error:function (data) {
+                    that.onSubmissionComplete(false, data, $modal)
+                }
+            });
+
             return false
         },
         onSubmissionComplete: function(succeeded, data, $modal) {
@@ -222,7 +238,7 @@ define([
                 that.steps[that.currentStep].view.showFailure(summary)
             }
         },
-        
+
         prevStep:function () {
             this.currentStep -= 1
             this.renderCurrentStep()
@@ -264,9 +280,15 @@ define([
             'click #remove-config':'removeConfigRow',
             'click #add-config':'addConfigRow',
             'click .template-lozenge':'templateClick',
-            'input .text-filter input':'applyFilter',
-            'input #yaml_code':'onYamlCodeChange',
-            'shown a[data-toggle="tab"]':'onTabChange'
+            'keyup .text-filter input':'applyFilter',
+            'change .text-filter input':'applyFilter',
+            'paste .text-filter input':'applyFilter',
+            'keyup #yaml_code':'onYamlCodeChange',
+            'change #yaml_code':'onYamlCodeChange',
+            'paste #yaml_code':'onYamlCodeChange',
+            'shown a[data-toggle="tab"]':'onTabChange',
+            'click #templateTab #catalog-add':'switchToCatalogAdd',
+            'click #templateTab #catalog-yaml':'showYamlTab',
         },
         template:_.template(CreateHtml),
         wizard: null,
@@ -291,7 +313,14 @@ define([
                 self.catalogApplicationItems = result
                 self.catalogApplicationIds = _.map(result, function(item) { return item.id })
                 self.$("#appClassTab .application-type-input").typeahead().data('typeahead').source = self.catalogApplicationIds
-                self.addTemplateLozenges()
+                $('#catalog-applications-throbber').hide();
+                $('#catalog-applications-empty').hide();
+                if (self.catalogApplicationItems && self.catalogApplicationItems.length > 0) {
+                    self.addTemplateLozenges()
+                } else {
+                    $('#catalog-applications-empty').show();
+                    self.showYamlTab();
+                }
             })
         },
         renderConfiguredEntities:function () {
@@ -310,15 +339,16 @@ define([
             return this
         },
         onTabChange: function(e) {
-            if (e.target.text=="Catalog") {
+            var tabText = $(e.target).text();
+            if (tabText=="Catalog") {
                 $("li.text-filter").show()
             } else {
                 $("li.text-filter").hide()
             }
 
-            if (e.target.text=="YAML") {
+            if (tabText=="YAML") {
                 this.model.mode = "yaml";
-            } else if (e.target.text=="Template") {
+            } else if (tabText=="Template") {
                 this.model.mode = "template";
             } else {
                 this.model.mode = "other";
@@ -330,6 +360,15 @@ define([
         onYamlCodeChange: function() {
             if (this.options.wizard)
                 this.options.wizard.updateButtonVisibility();
+        },
+        switchToCatalogAdd: function() {
+            var $modal = $('.add-app #modal-container .modal')
+            $modal.modal('hide');
+            window.location.href="#v1/catalog/new";
+        },
+        showYamlTab: function() {
+            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show')
+            $("#yaml_code").focus();
         },
         applyFilter: function(e) {
             var filter = $(e.currentTarget).val().toLowerCase()
@@ -509,15 +548,16 @@ define([
 
     ModalWizard.StepDeploy = Backbone.View.extend({
         className:'modal-body',
+
         events:{
             'click #add-selector-container':'addLocation',
             'click #remove-app-location':'removeLocation',
-            'change select':'selection',
-            'change option':'selection',
+            'change .select-location': 'selection',
             'blur #application-name':'updateName',
             'click #remove-config':'removeConfigRow',
             'click #add-config':'addConfigRow'
         },
+
         template:_.template(DeployHtml),
         locationRowTemplate:_.template(DeployLocationRowHtml),
         locationOptionTemplate:_.template(DeployLocationOptionHtml),
@@ -545,7 +585,7 @@ define([
                         rowId: li
                     }))
             }
-            var $locationOptions = container.find('#select-location')
+            var $locationOptions = container.find('.select-location')
             this.locations.each(function(aLocation) {
                     if (!aLocation.id) {
                         log("missing id for location:");
@@ -701,7 +741,7 @@ define([
             if (!this.model.spec.get("config") || _.keys(this.model.spec.get("config")).length==0) {
                 delete this.model.spec.attributes["config"]
             }
-            this.$('#app-summary').val(FormatJSON(this.model.spec.toJSON()))
+            this.$('#app-summary').val(Util.toTextAreaString(specToCAMP(this.model.spec.toJSON())))
         },
         render:function () {
             this.delegateEvents()

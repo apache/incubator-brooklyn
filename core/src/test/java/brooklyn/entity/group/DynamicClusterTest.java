@@ -49,14 +49,18 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
+import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.FailingEntity;
+import brooklyn.event.SensorEvent;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
@@ -143,7 +147,8 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class))
                 .configure(DynamicCluster.INITIAL_SIZE, 0));
         cluster.start(ImmutableList.of(loc));
-        assertEquals(cluster.getAttribute(Attributes.SERVICE_STATE), Lifecycle.RUNNING);
+        
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         assertTrue(cluster.getAttribute(Attributes.SERVICE_UP));
     }
 
@@ -176,6 +181,29 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         assertEquals(entity.getCounter().get(), 1);
         assertEquals(entity.getParent(), cluster);
         assertEquals(entity.getApplication(), app);
+    }
+
+    /** This can be sensitive to order, e.g. if TestEntity set expected RUNNING before setting SERVICE_UP, 
+     * there would be a point when TestEntity is ON_FIRE.
+     * <p>
+     * There can also be issues if a cluster is resizing from/to 0 while in a RUNNING state.
+     * To correct that, use {@link ServiceStateLogic#newEnricherFromChildrenUp()}.
+     */
+    @Test
+    public void testResizeFromZeroToOneDoesNotGoThroughFailing() throws Exception {
+        final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+            .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class))
+            .configure(DynamicCluster.INITIAL_SIZE, 1));
+        
+        RecordingSensorEventListener r = new RecordingSensorEventListener();
+        app.subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, r);
+
+        cluster.start(ImmutableList.of(loc));
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        for (SensorEvent<?> evt: r.events) {
+            if (evt.getValue()==Lifecycle.ON_FIRE)
+                Assert.fail("Should not have published "+Lifecycle.ON_FIRE+" during normal start up: "+r.events);
+        }
     }
 
     @Test

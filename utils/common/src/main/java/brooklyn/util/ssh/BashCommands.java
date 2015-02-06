@@ -464,15 +464,15 @@ public class BashCommands {
      */
     public static List<String> commandsToDownloadUrlsAs(List<String> urls, String saveAs) {
         return Arrays.asList(INSTALL_CURL, 
-                require(simpleDownloadUrlAs(urls, saveAs), "Could not retrieve "+saveAs+" (from "+urls.size()+" sites)", 9));
+                require(simpleDownloadUrlAs(urls, saveAs), "Could not retrieve "+saveAs+". Tried: " + Joiner.on(", ").join(urls), 9));
     }
     public static String commandToDownloadUrlsAs(List<String> urls, String saveAs) {
         return chain(INSTALL_CURL, 
-                require(simpleDownloadUrlAs(urls, saveAs), "Could not retrieve "+saveAs+" (from "+urls.size()+" sites)", 9));
+                require(simpleDownloadUrlAs(urls, saveAs), "Could not retrieve "+saveAs+". Tried: " + Joiner.on(", ").join(urls), 9));
     }
     public static String commandToDownloadUrlAs(String url, String saveAs) {
         return chain(INSTALL_CURL, 
-                require(simpleDownloadUrlAs(Arrays.asList(url), saveAs), "Could not retrieve "+saveAs+" (from 1 site)", 9));
+                require(simpleDownloadUrlAs(Arrays.asList(url), saveAs), "Could not retrieve "+saveAs+" from " + url, 9));
     }
 
     /**
@@ -484,7 +484,7 @@ public class BashCommands {
         return chain(
                 INSTALL_CURL + " > /dev/null", 
                 require(simpleDownloadUrlAs(urls, null), 
-                        "Could not retrieve file (from "+urls.size()+" sites)", 9));
+                        "Could not retrieve file. Tried: " + Joiner.on(", ").join(urls), 9));
     }
     
     /** as {@link #downloadToStdout(List)} but varargs for convenience */
@@ -505,7 +505,7 @@ public class BashCommands {
         
         List<String> commands = new ArrayList<String>();
         for (String url : urls) {
-            String command = "curl -f -L -k ";
+            String command = "curl -f -L -k --retry 10 --keepalive-time 30 --speed-time 30 ";
             if (user!=null && password!=null) {
                command = command + format("-u %s:%s ", user, password);
             }
@@ -533,7 +533,7 @@ public class BashCommands {
      * @see #installJava7Or6OrFail()
      * @see #installJavaLatestOrFail()
      */
-    public static String installJava(Integer version) {
+    public static String installJava(int version) {
         Preconditions.checkArgument(version == 6 || version == 7 || version == 8, "Supported Java versions are 6, 7, or 8");
         return installPackageOr(MutableMap.of("apt", "openjdk-" + version + "-jdk","yum", "java-1." + version + ".0-openjdk-devel"), null,
                 ifExecutableElse1("zypper", chainGroup(
@@ -576,6 +576,10 @@ public class BashCommands {
     }
     public static String installJavaLatestOrFail() {
         return alternatives(installJava8(), installJava7(), installJava6(), fail("java latest install failed", 9));
+    }
+
+    public static String installJavaLatestOrWarn() {
+        return alternatives(installJava8(), installJava7(), installJava6(), warn("java latest install failed, entity may subsequently fail"));
     }
 
     /** cats the given text to the given command, using bash << multi-line input syntax */

@@ -22,6 +22,7 @@ import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +35,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
@@ -45,8 +47,10 @@ import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
@@ -108,7 +112,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             return; // no-op
         }
         if (serverPoolMemberTrackerPolicy != null) {
-            LOG.warn("Call to addServerPoolMemberTrackingPolicy when serverPoolMemberTrackingPolicy already exists, in {}", this);
+            LOG.debug("Call to addServerPoolMemberTrackingPolicy when serverPoolMemberTrackingPolicy already exists, removing and re-adding, in {}", this);
             removeServerPoolMemberTrackingPolicy();
         }
         for (Policy p: getPolicies()) {
@@ -177,12 +181,13 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
      * Can pass in the 'serverPool'.
      */
     @Override
-    public void bind(Map flags) {
+    public void bind(Map<?,?> flags) {
         if (flags.containsKey("serverPool")) {
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
         } 
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onManagementNoLongerMaster() {
         super.onManagementNoLongerMaster(); // TODO remove when deprecated method in parent removed
@@ -222,13 +227,16 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     @Override
     public Integer getPort() {
-        return getAttribute(PROXY_HTTP_PORT);
+        if (isSsl())
+            return getAttribute(PROXY_HTTPS_PORT);
+        else
+            return getAttribute(PROXY_HTTP_PORT);
     }
 
     /** primary URL this controller serves, if one can / has been inferred */
     @Override
     public String getUrl() {
-        return getAttribute(ROOT_URL);
+        return Strings.toString( getAttribute(MAIN_URI) );
     }
 
     @Override
@@ -250,7 +258,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     public abstract void reload();
 
     protected String inferProtocol() {
-        return getConfig(SSL_CONFIG)!=null ? "https" : "http";
+        return isSsl() ? "https" : "http";
     }
     
     /** returns URL, if it can be inferred; null otherwise */
@@ -281,14 +289,18 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     protected Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts();
         if (groovyTruth(getAttribute(PROXY_HTTP_PORT))) result.add(getAttribute(PROXY_HTTP_PORT));
+        if (groovyTruth(getAttribute(PROXY_HTTPS_PORT))) result.add(getAttribute(PROXY_HTTPS_PORT));
         return result;
     }
 
     @Override
     protected void preStart() {
         super.preStart();
-
-        AttributeSensor<?> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
+        computePortsAndUrls();
+    }
+    
+    protected void computePortsAndUrls() {
+        AttributeSensor<String> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
         Maybe<Object> hostnameSensor = getConfigRaw(HOSTNAME_SENSOR, true);
         Maybe<Object> portSensor = getConfigRaw(PORT_NUMBER_SENSOR, true);
         if (hostAndPortSensor != null) {
@@ -299,6 +311,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         ConfigToAttributes.apply(this);
 
         setAttribute(PROTOCOL, inferProtocol());
+        setAttribute(MAIN_URI, URI.create(inferUrl()));
         setAttribute(ROOT_URL, inferUrl());
  
         checkNotNull(getPortNumberSensor(), "no sensor configured to infer port number");
@@ -307,8 +320,6 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        if (getUrl()==null) setAttribute(ROOT_URL, inferUrl());
-        
         // TODO when rebind policies, and rebind calls connectSensors, then this will cause problems.
         // Also relying on addServerPoolMemberTrackingPolicy to set the serverPoolAddresses and serverPoolTargets.
 
@@ -325,10 +336,10 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     protected void postRebind() {
         super.postRebind();
-        Lifecycle state = getAttribute(SERVICE_STATE);
+        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state != null && state == Lifecycle.RUNNING) {
             isActive = true;
-            update();
+            updateNeeded();
         }
     }
 
@@ -359,8 +370,14 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     @Override
     public void update() {
-        Task<?> task = updateAsync();
-        if (task != null) task.getUnchecked();
+        try {
+            Task<?> task = updateAsync();
+            if (task != null) task.getUnchecked();
+            ServiceStateLogic.ServiceProblemsLogic.clearProblemsIndicator(this, "update");
+        } catch (Exception e) {
+            ServiceStateLogic.ServiceProblemsLogic.updateProblemsIndicator(this, "update", "update failed with: "+Exceptions.collapseText(e));
+            throw Exceptions.propagate(e);
+        }
     }
     
     public synchronized Task<?> updateAsync() {

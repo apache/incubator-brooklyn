@@ -59,6 +59,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
 
         ClientResponse pResponse = client().resource(policiesEndpoint)
                 .queryParam("type", RestMockSimplePolicy.class.getCanonicalName())
+                .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(ClientResponse.class, Maps.newHashMap());
         PolicySummary response = pResponse.getEntity(PolicySummary.class);
         assertNotNull(response.getId());

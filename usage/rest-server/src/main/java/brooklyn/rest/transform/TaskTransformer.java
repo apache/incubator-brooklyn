@@ -144,5 +144,4 @@ public class TaskTransformer {
         }
         return new LinkWithMetadata("/v1/activities/"+t.getId(), data);
     }
-
 }

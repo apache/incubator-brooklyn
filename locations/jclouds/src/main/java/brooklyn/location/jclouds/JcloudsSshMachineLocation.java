@@ -25,6 +25,7 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -144,24 +145,26 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         return jcloudsParent;
     }
     
-    /** returns the hostname (or sometimes IP) for use by peers in the same subnet,
-     * defaulting to public hostname if nothing special
-     * <p>
-     * for use e.g. in clouds like amazon where other machines
-     * in the same subnet need to use a different IP
-     */
+    @Override
+    public String getHostname() {
+        return node.getHostname();
+    }
+    
+    @Override
+    public Set<String> getPublicAddresses() {
+        return node.getPublicAddresses();
+    }
+    
+    @Override
+    public Set<String> getPrivateAddresses() {
+        return node.getPrivateAddresses();
+    }
+
+    /** In most clouds, the public hostname is the only way to ensure VMs in different zones can access each other. */
     @Override
     public String getSubnetHostname() {
         String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getAllConfigBag());
-        
-        if ("aws-ec2".equals(jcloudsParent.getProvider())) {
-            // prefer hostname over IP for aws (resolves to private ip in subnet, and to public from outside)
-            if (!Networking.isValidIp4(publicHostname)) {
-                return publicHostname; // assume it's a hostname; could check for ip6!
-            }
-        }
-        Optional<String> privateAddress = getPrivateAddress();
-        return privateAddress.isPresent() ? privateAddress.get() : publicHostname;
+        return publicHostname;
     }
 
     @Override
@@ -170,7 +173,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         if (privateAddress.isPresent()) {
             return privateAddress.get();
         }
-        
+
         String hostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), getAllConfigBag());
         if (hostname != null && !Networking.isValidIp4(hostname)) {
             try {
@@ -249,7 +252,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
     }
 
     @Override
-    public MachineDetails getMachineDetails() {
+    protected MachineDetails inferMachineDetails() {
         Optional<String> name = Optional.absent();
         Optional<String> version = Optional.absent();
         Optional<String> architecture = Optional.absent();
@@ -280,14 +283,22 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
             OsDetails osD = new BasicOsDetails(name.get(), architecture.get(), version.get());
             HardwareDetails hwD = new BasicHardwareDetails(cpus.get(), ram.get());
             return new BasicMachineDetails(hwD, osD);
+        } else if ("false".equalsIgnoreCase(getConfig(JcloudsLocation.WAIT_FOR_SSHABLE))) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Machine details for {} missing from Jclouds, but skipping SSH test because waitForSshable=false. name={}, version={}, " +
+                        "arch={}, ram={}, #cpus={}",
+                        new Object[]{this, name, version, architecture, ram, cpus});
+            }
+            OsDetails osD = new BasicOsDetails(name.orNull(), architecture.orNull(), version.orNull());
+            HardwareDetails hwD = new BasicHardwareDetails(cpus.orNull(), ram.orNull());
+            return new BasicMachineDetails(hwD, osD);
         } else {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Machine details for {} missing from Jclouds, using SSH test instead. name={}, version={}, " +
                                 "arch={}, ram={}, #cpus={}",
-                        new Object[]{this, name, version, architecture, ram, cpus}
-                );
+                        new Object[]{this, name, version, architecture, ram, cpus});
             }
-            return super.getMachineDetails();
+            return super.inferMachineDetails();
         }
     }
 
@@ -311,7 +322,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
             OsDetails osDetails = getOsDetails();
             putIfNotNull(builder, "osName", osDetails.getName());
             putIfNotNull(builder, "osArch", osDetails.getArch());
-            putIfNotNull(builder, "64bit", osDetails.is64bit() ? "true" : "false");
+            putIfNotNull(builder, "is64bit", osDetails.is64bit() ? "true" : "false");
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             LOG.warn("Unable to get OS Details for "+node+"; continuing", e);

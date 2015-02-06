@@ -42,6 +42,11 @@ public class UrlsTest {
         assertEquals(Urls.mergePaths("/","a","b","/"), "/a/b/");
     }
 
+    @Test(expectedExceptions = NullPointerException.class)
+    public void testMergePathsNPEsOnNulls() {
+        Urls.mergePaths(null, "too");
+    }
+
     @Test
     public void testPathEncode() throws Exception {
         assertEquals(Urls.encode("name_with/%!"), "name_with%2F%25%21");
@@ -66,5 +71,13 @@ public class UrlsTest {
         assertEquals(Urls.getBasename(""), "");
         assertEquals(Urls.getBasename(null), null);
     }
-    
+
+    @Test
+    public void testDataUrl() throws Exception {
+        String input = "hello world";
+        String url = Urls.asDataUrlBase64(input);
+        Assert.assertEquals(url, "data:text/plain;base64,aGVsbG8gd29ybGQ=");
+        // tests for parsing are in core in ResourceUtilsTest
+    }
+
 }

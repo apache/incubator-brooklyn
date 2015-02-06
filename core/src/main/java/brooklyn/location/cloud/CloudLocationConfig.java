@@ -63,6 +63,11 @@ public interface CloudLocationConfig {
             "Whether and how long to wait for a newly provisioned VM to be accessible via ssh; " +
             "if 'false', won't check; if 'true' uses default duration; otherwise accepts a time string e.g. '5m' (the default) or a number of milliseconds", "5m");
 
+    public static final ConfigKey<Boolean> LOG_CREDENTIALS = ConfigKeys.newBooleanConfigKey(
+            "logCredentials", 
+            "Whether to log credentials of a new VM - strongly recommended never be used in production, as it is a big security hole!",
+            false);
+
     public static final ConfigKey<Object> CALLER_CONTEXT = LocationConfigKeys.CALLER_CONTEXT;
 
     public static final ConfigKey<Boolean> DESTROY_ON_FAILURE = ConfigKeys.newBooleanConfigKey("destroyOnFailure", "Whether to destroy the VM if provisioningLocation.obtain() fails", true);
@@ -72,11 +77,14 @@ public interface CloudLocationConfig {
             "(either a single port as a String, or an Iterable<Integer> or Integer[])", null);
     public static final ConfigKey<Boolean> OS_64_BIT = ConfigKeys.newBooleanConfigKey("os64Bit", 
         "Whether to require 64-bit OS images (true), 32-bit images (false), or either (null)");
-    public static final ConfigKey<Integer> MIN_RAM = new BasicConfigKey<Integer>(Integer.class, "minRam",
-        "Minimum amount of RAM (in MB), for use in selecting the machine/hardware profile", null);
+    
+    public static final ConfigKey<Object> MIN_RAM = new BasicConfigKey<Object>(Object.class, "minRam",
+        "Minimum amount of RAM, either as string (4gb) or number of MB (4096), for use in selecting the machine/hardware profile", null);
+    
     public static final ConfigKey<Integer> MIN_CORES = new BasicConfigKey<Integer>(Integer.class, "minCores",
         "Minimum number of cores, for use in selecting the machine/hardware profile", null);
-    public static final ConfigKey<Double> MIN_DISK = new BasicConfigKey<Double>(Double.class, "minDisk",
-        "Minimum size of disk (in GB), for use in selecting the machine/hardware profile", null);
+    
+    public static final ConfigKey<Object> MIN_DISK = new BasicConfigKey<Object>(Object.class, "minDisk",
+        "Minimum size of disk, either as string (100gb) or number of GB (100), for use in selecting the machine/hardware profile", null);
 
 }

@@ -28,8 +28,10 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.mementos.BrooklynMemento;
+import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
+import brooklyn.mementos.FeedMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 
@@ -56,6 +58,8 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     private final Map<String, LocationMemento> locations = Maps.newLinkedHashMap();
     private final Map<String, PolicyMemento> policies = Maps.newLinkedHashMap();
     private final Map<String, EnricherMemento> enrichers = Maps.newLinkedHashMap();
+    private final Map<String, FeedMemento> feeds = Maps.newLinkedHashMap();
+    private final Map<String, CatalogItemMemento> catalogItems = Maps.newLinkedHashMap();
 
     public MutableBrooklynMemento() {
     }
@@ -91,6 +95,14 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         updateEnricherMementos(ImmutableSet.of(memento));
     }
     
+    public void updateFeedMemento(FeedMemento memento) {
+        updateFeedMementos(ImmutableSet.of(memento));
+    }
+
+    public void updateCatalogItemMemento(CatalogItemMemento memento) {
+        updateCatalogItemMementos(ImmutableSet.of(memento));
+    }
+    
     public void updateEntityMementos(Collection<EntityMemento> mementos) {
         for (EntityMemento memento : mementos) {
             entities.put(memento.getId(), memento);
@@ -123,6 +135,18 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         }
     }
     
+    public void updateFeedMementos(Collection<FeedMemento> mementos) {
+        for (FeedMemento memento : mementos) {
+            feeds.put(memento.getId(), memento);
+        }
+    }
+    
+    public void updateCatalogItemMementos(Collection<CatalogItemMemento> mementos) {
+        for (CatalogItemMemento memento : mementos) {
+            catalogItems.put(memento.getId(), memento);
+        }
+    }
+
     /**
      * Removes the entities with the given ids.
      */
@@ -153,6 +177,20 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         enrichers.keySet().removeAll(ids);
     }
 
+    /**
+     * Removes the feeds with the given ids.
+     */
+    public void removeFeeds(Collection<String> ids) {
+        feeds.keySet().removeAll(ids);
+    }
+
+    /**
+     * Removes the catalog items with the given ids.
+     */
+    public void removeCatalogItems(Collection<String> ids) {
+        catalogItems.keySet().removeAll(ids);
+    }
+
     @Override
     public EntityMemento getEntityMemento(String id) {
         return entities.get(id);
@@ -168,10 +206,19 @@ public class MutableBrooklynMemento implements BrooklynMemento {
         return policies.get(id);
     }
 
-    
     @Override
     public EnricherMemento getEnricherMemento(String id) {
-        return enrichers.get(id);
+            return enrichers.get(id);
+        }
+    
+    @Override
+    public FeedMemento getFeedMemento(String id) {
+        return feeds.get(id);
+    }
+
+    @Override
+    public CatalogItemMemento getCatalogItemMemento(String id) {
+        return catalogItems.get(id);
     }
     
     @Override
@@ -199,7 +246,17 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     public Collection<String> getEnricherIds() {
         return Collections.unmodifiableSet(enrichers.keySet());
     }
+
+    @Override
+    public Collection<String> getFeedIds() {
+        return Collections.unmodifiableSet(feeds.keySet());
+    }
     
+    @Override
+    public Collection<String> getCatalogItemIds() {
+        return Collections.unmodifiableSet(catalogItems.keySet());
+    }
+
     @Override
     public Collection<String> getTopLevelLocationIds() {
         return Collections.unmodifiableCollection(topLevelLocationIds);
@@ -223,5 +280,15 @@ public class MutableBrooklynMemento implements BrooklynMemento {
     @Override
     public Map<String, EnricherMemento> getEnricherMementos() {
         return ImmutableMap.copyOf(enrichers);
+    }
+    
+    @Override
+    public Map<String, FeedMemento> getFeedMementos() {
+        return ImmutableMap.copyOf(feeds);
+    }
+
+    @Override
+    public Map<String, CatalogItemMemento> getCatalogItemMementos() {
+        return ImmutableMap.copyOf(catalogItems);
     }
 }

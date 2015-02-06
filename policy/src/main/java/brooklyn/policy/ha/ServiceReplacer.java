@@ -29,15 +29,15 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.group.StopFailedRuntimeException;
 import brooklyn.entity.trait.MemberReplaceable;
 import brooklyn.event.Sensor;
@@ -57,6 +57,7 @@ import com.google.common.collect.Lists;
 
 /** attaches to a DynamicCluster and replaces a failed member in response to HASensors.ENTITY_FAILED or other sensor;
  * if this fails, it sets the Cluster state to on-fire */
+@Catalog(name="Service Replacer", description="HA policy for replacing a failed member of a group")
 public class ServiceReplacer extends AbstractPolicy {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceReplacer.class);
@@ -172,7 +173,7 @@ public class ServiceReplacer extends AbstractPolicy {
                         LOG.info("ServiceReplacer: ignoring error reported from stopping failed node "+failedEntity);
                         return;
                     }
-                    onReplacementFailed("Replace failure (error "+e+") at "+entity+": "+reason);
+                    onReplacementFailed("Replace failure ("+Exceptions.collapseText(e)+") at "+entity+": "+reason);
                 }
             }
         });
@@ -206,7 +207,7 @@ public class ServiceReplacer extends AbstractPolicy {
         consecutiveReplacementFailureTimes.add(currentTimeMillis());
         
         if (getConfig(SET_ON_FIRE_ON_FAILURE)) {
-            entity.setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceProblemsLogic.updateProblemsIndicator(entity, "ServiceReplacer", "replacement failed: "+msg);
         }
         entity.emit(ENTITY_REPLACEMENT_FAILED, new FailureDescriptor(entity, msg));
     }

@@ -158,6 +158,7 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
         emitAllAttributes(false);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void emitAllAttributes(boolean includeNullValues) {
         for (Sensor s: sensors) {
             if (s instanceof AttributeSensor) {

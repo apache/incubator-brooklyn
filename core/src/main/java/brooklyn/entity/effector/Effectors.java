@@ -50,6 +50,7 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class Effectors {
 
@@ -125,6 +126,11 @@ public class Effectors {
         return builder;
     }
 
+    /** as {@link #invocation(Entity, Effector, Map)} but convenience for passing a {@link ConfigBag} */
+    public static <T> TaskAdaptable<T> invocation(Entity entity, Effector<T> eff, ConfigBag parameters) {
+        return invocation(entity, eff, parameters==null ? ImmutableMap.of() : parameters.getAllConfig());
+    }
+    
     /** returns an unsubmitted task which invokes the given effector; use {@link Entities#invokeEffector(EntityLocal, Entity, Effector, Map)} for a submitted variant */
     public static <T> TaskAdaptable<T> invocation(Entity entity, Effector<T> eff, @Nullable Map<?,?> parameters) {
         @SuppressWarnings("unchecked")

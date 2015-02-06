@@ -24,6 +24,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.mementos.Memento;
+import brooklyn.policy.EntityAdjunct;
+import brooklyn.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
+import brooklyn.util.text.Strings;
 
 public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> implements RebindSupport<T> {
 
@@ -48,12 +51,14 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
         if (LOG.isTraceEnabled()) LOG.trace("Reconstructing: {}", memento.toVerboseString());
 
         instance.setDisplayName(memento.getDisplayName());
+        //catalogItemId already set when creating the object
         addConfig(rebindContext, memento);
         addTags(rebindContext, memento);
         addCustoms(rebindContext, memento);
         
         doReconstruct(rebindContext, memento);
-        instance.rebind();
+        if (!rebindContext.isReadOnly(instance))
+            instance.rebind();
     }
 
     protected abstract void addConfig(RebindContext rebindContext, T memento);
@@ -61,8 +66,11 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
     protected abstract void addCustoms(RebindContext rebindContext, T memento);
     
     protected void addTags(RebindContext rebindContext, T memento) {
+        if (instance instanceof EntityAdjunct && Strings.isNonBlank(memento.getUniqueTag())) {
+            ((AdjunctTagSupport)(instance.tags())).setUniqueTag(memento.getUniqueTag());
+        }
         for (Object tag : memento.getTags()) {
-            instance.getTagSupport().addTag(tag);
+            instance.tags().addTag(tag);
         }
     }
 
@@ -73,6 +81,11 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
 
     @Override
     public void addEnrichers(RebindContext rebindContext, T Memento) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addFeeds(RebindContext rebindContext, T Memento) {
         throw new UnsupportedOperationException();
     }
 

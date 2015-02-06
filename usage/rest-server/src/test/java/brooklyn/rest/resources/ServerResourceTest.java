@@ -31,8 +31,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.domain.HighAvailabilitySummary;
+import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
 
@@ -43,15 +43,10 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ServerResourceTest.class);
 
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
-    }
-
     @Test
     public void testGetVersion() throws Exception {
-        String version = client().resource("/v1/server/version").get(String.class);
-        assertEquals(version, BrooklynVersion.get());
+        VersionSummary version = client().resource("/v1/server/version").get(VersionSummary.class);
+        assertEquals(version.getVersion(), BrooklynVersion.get());
     }
 
     @Test

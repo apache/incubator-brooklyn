@@ -67,7 +67,7 @@ public class SetConfigKey<V> extends AbstractCollectionConfigKey<Set<? extends V
     protected Set<Object> merge(boolean unmodifiable, Iterable<?>... sets) {
         MutableSet<Object> result = MutableSet.of();
         for (Iterable<?> set: sets) result.addAll(set);
-        if (unmodifiable) return result.toImmutable();
+        if (unmodifiable) return result.asUnmodifiable();
         return result;
     }
     

@@ -79,40 +79,28 @@ public class ZooKeeperEnsembleImpl extends DynamicClusterImpl implements ZooKeep
             if (member.getAttribute(ZooKeeperNode.MY_ID) == null) {
                 ((EntityInternal) member).setAttribute(ZooKeeperNode.MY_ID, myId.incrementAndGet());
             }
-            entity.setAttribute(SERVICE_UP, ((ZooKeeperEnsembleImpl)entity).calculateServiceUp());
         }
 
         @Override
         protected void onEntityRemoved(Entity member) {
-            entity.setAttribute(SERVICE_UP, ((ZooKeeperEnsembleImpl)entity).calculateServiceUp());
         }
     };
 
     @Override
-    public synchronized boolean addMember(Entity member) {
-        boolean result = super.addMember(member);
-        setAttribute(SERVICE_UP, calculateServiceUp());
-        return result;
+    protected void initEnrichers() {
+        super.initEnrichers();
+        
     }
-
+    
     @Override
     public void start(Collection<? extends Location> locations) {
         super.start(locations);
-        setAttribute(Startable.SERVICE_UP, calculateServiceUp());
+        
         List<String> zookeeperServers = Lists.newArrayList();
         for (Entity zookeeper : getMembers()) {
             zookeeperServers.add(zookeeper.getAttribute(Attributes.HOSTNAME));
         }
         setAttribute(ZOOKEEPER_SERVERS, zookeeperServers);
-    }
-
-    @Override
-    protected boolean calculateServiceUp() {
-        boolean up = false;
-        for (Entity member : getMembers()) {
-            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) up = true;
-        }
-        return up;
     }
 
 }

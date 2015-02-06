@@ -38,7 +38,7 @@ public interface AbstractGeoDnsService extends Entity {
     public static final ConfigKey<Boolean> INCLUDE_HOMELESS_ENTITIES = ConfigKeys.newBooleanConfigKey("geodns.includeHomeless", "Whether to include entities whose geo-coordinates cannot be inferred", false);
     public static final ConfigKey<Boolean> USE_HOSTNAMES = ConfigKeys.newBooleanConfigKey("geodns.useHostnames", "Whether to use the hostname for the returned value for routing, rather than IP address (defaults to true)", true);
     
-    public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
+    public static final AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
     public static final AttributeSensor<Boolean> SERVICE_UP = Startable.SERVICE_UP;
     public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
     public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS;

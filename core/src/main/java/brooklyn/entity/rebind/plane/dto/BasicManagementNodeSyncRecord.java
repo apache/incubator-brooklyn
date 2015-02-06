@@ -32,7 +32,8 @@ import brooklyn.util.time.Time;
 import com.google.common.base.Objects;
 
 /**
- * Represents the state of a management node within the Brooklyn management plane.
+ * Represents the state of a management node within the Brooklyn management plane
+ * (DTO class).
  * 
  * @author aled
  */
@@ -50,6 +51,7 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
         protected String nodeId;
         protected URI uri;
         protected ManagementNodeState status;
+        protected Long priority;
         protected long localTimestamp;
         protected Long remoteTimestamp;
 
@@ -68,6 +70,9 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
         public Builder status(ManagementNodeState val) {
             status = val; return self();
         }
+        public Builder priority(Long val) {
+            priority = val; return self();
+        }
         public Builder localTimestamp(long val) {
             localTimestamp = val; return self();
         }
@@ -79,12 +84,13 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
         }
         public Builder from(ManagementNodeSyncRecord other, boolean ignoreNulls) {
             if (ignoreNulls && other==null) return this;
-            if (other.getNodeId()!=null) nodeId = other.getNodeId();
             if (other.getBrooklynVersion()!=null) brooklynVersion = other.getBrooklynVersion();
-            if (other.getLocalTimestamp()>0) localTimestamp = other.getLocalTimestamp();
-            if (other.getRemoteTimestamp()!=null) remoteTimestamp = other.getRemoteTimestamp();
+            if (other.getNodeId()!=null) nodeId = other.getNodeId();
             if (other.getUri()!=null) uri = other.getUri();
             if (other.getStatus()!=null) status = other.getStatus();
+            if (other.getPriority()!=null) priority = other.getPriority();
+            if (other.getLocalTimestamp()>0) localTimestamp = other.getLocalTimestamp();
+            if (other.getRemoteTimestamp()!=null) remoteTimestamp = other.getRemoteTimestamp();
             return this;
         }
         public ManagementNodeSyncRecord build() {
@@ -96,6 +102,7 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
     private String nodeId;
     private URI uri;
     private ManagementNodeState status;
+    private Long priority;
     private Long localTimestamp;
     private Long remoteTimestamp;
     
@@ -116,6 +123,7 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
         nodeId = builder.nodeId;
         uri = builder.uri;
         status = builder.status;
+        priority = builder.priority;
         localTimestamp = builder.localTimestamp;
         remoteTimestamp = builder.remoteTimestamp;
     }
@@ -138,6 +146,11 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
     @Override
     public ManagementNodeState getStatus() {
         return status;
+    }
+    
+    @Override
+    public Long getPriority() {
+        return priority;
     }
     
     @Override
@@ -167,6 +180,7 @@ public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, 
                 .add("nodeId", getNodeId())
                 .add("uri", getUri())
                 .add("status", getStatus())
+                .add("priority", getPriority())
                 .add("localTimestamp", getLocalTimestamp()+"="+Time.makeDateString(getLocalTimestamp()))
                 .add("remoteTimestamp", getRemoteTimestamp()+(getRemoteTimestamp()==null ? "" : 
                     "="+Time.makeDateString(getRemoteTimestamp())))

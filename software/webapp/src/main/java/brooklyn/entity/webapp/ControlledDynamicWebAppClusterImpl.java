@@ -19,10 +19,8 @@
 package brooklyn.entity.webapp;
 
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +33,8 @@ import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
@@ -71,7 +71,6 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     @Deprecated
     public ControlledDynamicWebAppClusterImpl(Map<?,?> flags, Entity parent) {
         super(flags, parent);
-        setAttribute(SERVICE_UP, false);
     }
 
     @Override
@@ -137,6 +136,15 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         
         doBind();
     }
+
+    @Override
+    protected void initEnrichers() {
+        if (getConfigRaw(UP_QUORUM_CHECK, false).isAbsent()) {
+            setConfig(UP_QUORUM_CHECK, QuorumChecks.newInstance(2, 1.0, false));
+        }
+        super.initEnrichers();
+        ServiceStateLogic.newEnricherFromChildrenUp().checkChildrenOnly().requireUpChildren(getConfig(UP_QUORUM_CHECK)).addTo(this);
+    }
     
     @Override
     public void rebind() {
@@ -174,7 +182,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     
     @Override
     public void start(Collection<? extends Location> locations) {
-        setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
 
         try {
             if (isLegacyConstruction()) {
@@ -202,13 +210,9 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
             // (will happen asynchronously as members come online, but we want to force it to happen)
             getController().update();
 
-            setAttribute(SERVICE_UP, getCluster().getAttribute(SERVICE_UP));
-            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
-        } catch (InterruptedException e) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
-            throw Exceptions.propagate(e);
-        } catch (ExecutionException e) {
-            setAttribute(Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
+        } catch (Exception e) {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         } finally {
             connectSensors();
@@ -217,7 +221,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
 
     @Override
     public void stop() {
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
 
         try {
             List<Startable> tostop = Lists.newArrayList();
@@ -228,10 +232,9 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
 
             clearLocations();
 
-            setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
-            setAttribute(SERVICE_UP, false);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
         } catch (Exception e) {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         }
     }
@@ -246,49 +249,16 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     }
     
     void connectSensors() {
+        // FIXME no longer needed
         addEnricher(Enrichers.builder()
-                .propagatingAllBut(SERVICE_STATE, SERVICE_UP, ROOT_URL, GROUP_MEMBERS, GROUP_SIZE)
+                .propagatingAllButUsualAnd(Attributes.MAIN_URI, ROOT_URL, GROUP_MEMBERS, GROUP_SIZE)
                 .from(getCluster())
                 .build());
         addEnricher(Enrichers.builder()
                 // include hostname and address of controller (need both in case hostname only resolves to internal/private ip)
-                .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, ROOT_URL)
+                .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, Attributes.MAIN_URI, ROOT_URL)
                 .from(getController())
                 .build());
-
-        SensorEventListener<Boolean> updateServiceUp = new SensorEventListener<Boolean>() {
-            @Override
-            public void onEvent(SensorEvent<Boolean> event) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
-            }
-        };
-        SensorEventListener<Lifecycle> updateServiceState = new SensorEventListener<Lifecycle>() {
-            @Override
-            public void onEvent(SensorEvent<Lifecycle> event) {
-                setAttribute(SERVICE_STATE, calculateServiceState());
-            }
-        };
-        
-        subscribe(getCluster(), SERVICE_STATE, updateServiceState);
-        subscribe(getController(), SERVICE_STATE, updateServiceState);
-        subscribe(getCluster(), SERVICE_UP, updateServiceUp);
-        subscribe(getController(), SERVICE_UP, updateServiceUp);
-    }
-
-    protected Lifecycle calculateServiceState() {
-        Lifecycle currentState = getAttribute(SERVICE_STATE);
-        if (EnumSet.of(Lifecycle.ON_FIRE, Lifecycle.RUNNING).contains(currentState)) {
-            if (getCluster().getAttribute(SERVICE_STATE) == Lifecycle.ON_FIRE) currentState = Lifecycle.ON_FIRE;
-            if (getController().getAttribute(SERVICE_STATE) == Lifecycle.ON_FIRE) currentState = Lifecycle.ON_FIRE;
-        }
-        return currentState;
-    }
-
-    /**
-     * Default impl is to be up when running, and !up otherwise.
-     */
-    protected boolean calculateServiceUp() {
-        return getAttribute(SERVICE_STATE) == Lifecycle.RUNNING;
     }
 
     @Override

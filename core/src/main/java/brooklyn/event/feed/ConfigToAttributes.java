@@ -25,7 +25,7 @@ import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.management.ManagementContext;
 
 
-/** simple config adapter for setting config-attributes from config values */ 
+/** Simple config adapter for setting {@link AttributeSensorAndConfigKey} sensor values from the config value or config default */ 
 public class ConfigToAttributes {
 
     //normally just applied once, statically, not registered...
@@ -38,7 +38,8 @@ public class ConfigToAttributes {
     }
 
     /**
-     * for selectively applying once (e.g. sub-classes of DynamicWebAppCluster that don't want to set HTTP_PORT etc!)
+     * Convenience for ensuring an individual sensor is set from its config key
+     * (e.g. sub-classes of DynamicWebAppCluster that don't want to set HTTP_PORT etc!)
      */
     public static <T> T apply(EntityLocal entity, AttributeSensorAndConfigKey<?,T> key) {
         T v = entity.getAttribute(key);
@@ -49,7 +50,7 @@ public class ConfigToAttributes {
     }
 
     /**
-     * For transforming a config value (e.g. processing a {@link TemplatedStringAttributeSensorAndConfigKey}),
+     * Convenience for transforming a config value (e.g. processing a {@link TemplatedStringAttributeSensorAndConfigKey}),
      * outside of the context of an entity.
      */
     public static <T> T transform(ManagementContext managementContext, AttributeSensorAndConfigKey<?,T> key) {

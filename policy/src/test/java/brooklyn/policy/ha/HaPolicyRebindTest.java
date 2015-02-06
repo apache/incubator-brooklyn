@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
@@ -40,6 +41,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
@@ -131,7 +133,7 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testServiceFailureDetectorWorksAfterRebind() throws Exception {
-        origEntity.addPolicy(PolicySpec.create(ServiceFailureDetector.class));
+        origEntity.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
 
         // rebind
         TestApplication newApp = rebind();
@@ -139,9 +141,10 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
 
         newApp.getManagementContext().getSubscriptionManager().subscribe(newEntity, HASensors.ENTITY_FAILED, eventListener);
 
-        // stimulate the policy
-        newEntity.setAttribute(TestEntity.SERVICE_STATE, Lifecycle.RUNNING);
         newEntity.setAttribute(TestEntity.SERVICE_UP, true);
+        ServiceStateLogic.setExpectedState(newEntity, Lifecycle.RUNNING);
+        
+        // trigger the failure
         newEntity.setAttribute(TestEntity.SERVICE_UP, false);
 
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(newEntity), null);

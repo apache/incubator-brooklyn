@@ -67,7 +67,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * of container resource in the pool respectively. These events may be consumed by a separate policy that is capable
  * of resizing the container pool.
  */
-@Catalog
+@Catalog(name="Load Balancer", description="Policy that is attached to a pool of \"containers\", each of which "
+        + "can host one or more migratable \"items\". The policy monitors the workrates of the items and effects "
+        + "migrations in an attempt to ensure that the containers are all sufficiently utilized without any of "
+        + "them being overloaded.")
 public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movable> extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class);
@@ -87,9 +90,11 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
     private volatile long executorTime = 0;
 
     private int lastEmittedDesiredPoolSize = 0;
-    private String lastEmittedPoolTemperature = null; // "cold" or "hot"
+    private static enum TemperatureStates { COLD, HOT }
+    private TemperatureStates lastEmittedPoolTemperature = null; // "cold" or "hot"
     
     private final SensorEventListener<Object> eventHandler = new SensorEventListener<Object>() {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         public void onEvent(SensorEvent<Object> event) {
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", LoadBalancingPolicy.this, event);
             Entity source = event.getSource();
@@ -119,6 +124,7 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
             BalanceablePoolModel<NodeType, ItemType> model) {
         this(MutableMap.of(), metric, model);
     }
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public LoadBalancingPolicy(Map props, AttributeSensor<? extends Number> metric,
             BalanceablePoolModel<NodeType, ItemType> model) {
         
@@ -133,6 +139,7 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
         executor = Executors.newSingleThreadScheduledExecutor(newThreadFactory());
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public void setEntity(EntityLocal entity) {
         Preconditions.checkArgument(entity instanceof BalanceableWorkerPool, "Provided entity must be a BalanceableWorkerPool");
@@ -185,12 +192,13 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
             long delay = Math.max(0, (executorTime + minPeriodBetweenExecs) - now);
             
             executor.schedule(new Runnable() {
+                @SuppressWarnings("rawtypes")
                 public void run() {
                     try {
                         executorTime = System.currentTimeMillis();
                         executorQueued.set(false);
                         strategy.rebalance();
-                        
+
                         if (LOG.isDebugEnabled()) LOG.debug("{} post-rebalance: poolSize={}; workrate={}; lowThreshold={}; " + 
                                 "highThreshold={}", new Object[] {this, model.getPoolSize(), model.getCurrentPoolWorkrate(), 
                                 model.getPoolLowThreshold(), model.getPoolHighThreshold()});
@@ -206,10 +214,10 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
                             
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolLowThreshold()/model.getPoolSize()));
-                                if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != "cold") {
+                                if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != TemperatureStates.COLD) {
                                     LOG.info("{} emitted COLD (suggesting {}): {}", new Object[] {this, desiredPoolSize, eventVal});
                                     lastEmittedDesiredPoolSize = desiredPoolSize;
-                                    lastEmittedPoolTemperature = "cold";
+                                    lastEmittedPoolTemperature = TemperatureStates.COLD;
                                 }
                             }
                         
@@ -224,10 +232,10 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
                             
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolHighThreshold()/model.getPoolSize()));
-                                if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != "hot") {
+                                if (desiredPoolSize != lastEmittedDesiredPoolSize || lastEmittedPoolTemperature != TemperatureStates.HOT) {
                                     LOG.info("{} emitted HOT (suggesting {}): {}", new Object[] {this, desiredPoolSize, eventVal});
                                     lastEmittedDesiredPoolSize = desiredPoolSize;
-                                    lastEmittedPoolTemperature = "hot";
+                                    lastEmittedPoolTemperature = TemperatureStates.HOT;
                                 }
                             }
                         }

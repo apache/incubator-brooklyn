@@ -34,15 +34,20 @@ public class ArchiveTasks {
         return deploy(optionalResolver, null, archiveUrl, machine, destDir, false, null, null);
     }
     
-    /** returns a task which installs and unpacks the given archive, as per {@link ArchiveUtils#deploy(ResourceUtils, Map, String, SshMachineLocation, String, String, String)} */
-    public static TaskFactory<?> deploy(final ResourceUtils resolver, final Map<String, ?> props, final String archiveUrl, final SshMachineLocation machine, final String destDir, final boolean keepArchiveAfterDeploy, final String tmpDir, final String destFile) {
+    /** returns a task which installs and unpacks the given archive, as per {@link ArchiveUtils#deploy(ResourceUtils, Map, String, SshMachineLocation, String, String, String)};
+     * if allowNonarchivesOrKeepArchiveAfterDeploy is false, this task will fail if the item is not an archive;
+     * in cases where the download type is not clear in the URL but is known by the caller, supply a optionalDestFile including the appropriate file extension */
+    public static TaskFactory<?> deploy(final ResourceUtils resolver, final Map<String, ?> props, final String archiveUrl, final SshMachineLocation machine, final String destDir, final boolean allowNonarchivesOrKeepArchiveAfterDeploy, final String optionalTmpDir, final String optionalDestFile) {
         return new TaskFactory<TaskAdaptable<?>>() {
             @Override
             public TaskAdaptable<?> newTask() {
                 return Tasks.<Void>builder().name("deploying "+Urls.getBasename(archiveUrl)).description("installing "+archiveUrl+" and unpacking to "+destDir).body(new Runnable() {
                     @Override
                     public void run() {
-                        ArchiveUtils.deploy(resolver, props, archiveUrl, machine, destDir, keepArchiveAfterDeploy, tmpDir, destFile);
+                        boolean unpacked = ArchiveUtils.deploy(resolver, props, archiveUrl, machine, destDir, allowNonarchivesOrKeepArchiveAfterDeploy, optionalTmpDir, optionalDestFile);
+                        if (!unpacked && !allowNonarchivesOrKeepArchiveAfterDeploy) {
+                            throw new IllegalStateException("Unable to unpack archive from "+archiveUrl+"; not able to infer archive type");
+                        }
                     }
                 }).build();
             }

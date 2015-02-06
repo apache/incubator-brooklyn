@@ -22,18 +22,27 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.util.collections.MutableMap;
+import brooklyn.test.NetworkingTestUtils;
 import brooklyn.util.math.MathPredicates;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 
 /**
  * Cassandra integration tests.
@@ -42,6 +51,42 @@ import com.google.common.collect.ImmutableList;
  */
 public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
 
+    private static final Logger LOG = LoggerFactory.getLogger(CassandraNodeIntegrationTest.class);
+
+    public static void assertCassandraPortsAvailableEventually() {
+        Map<String, Integer> ports = getCassandraDefaultPorts();
+        NetworkingTestUtils.assertPortsAvailableEventually(ports);
+        LOG.info("Confirmed Cassandra ports are available: "+ports);
+    }
+    
+    public static Map<String, Integer> getCassandraDefaultPorts() {
+        List<PortAttributeSensorAndConfigKey> ports = ImmutableList.of(
+                CassandraNode.GOSSIP_PORT, 
+                CassandraNode.SSL_GOSSIP_PORT, 
+                CassandraNode.THRIFT_PORT, 
+                CassandraNode.NATIVE_TRANSPORT_PORT, 
+                CassandraNode.RMI_REGISTRY_PORT);
+        Map<String, Integer> result = Maps.newLinkedHashMap();
+        for (PortAttributeSensorAndConfigKey key : ports) {
+            result.put(key.getName(), key.getConfigKey().getDefaultValue().iterator().next());
+        }
+        return result;
+    }
+
+    @BeforeMethod(alwaysRun = true)
+    @Override
+    public void setUp() throws Exception {
+        assertCassandraPortsAvailableEventually();
+        super.setUp();
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        assertCassandraPortsAvailableEventually();
+    }
+    
     /**
      * Test that a node starts and sets SERVICE_UP correctly.
      */
@@ -83,6 +128,13 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
      */
     @Test(groups = "Integration")
     public void testCassandraVersion2() throws Exception {
+        // TODO In v2.0.10, the bin/cassandra script changed to add an additional check for JMX connectivity.
+        // This causes cassandera script to hang for us (presumably due to the CLASSPATH/JVM_OPTS we're passing
+        // in, regarding JMX agent).
+        // See:
+        //  - https://issues.apache.org/jira/browse/CASSANDRA-7254
+        //  - https://github.com/apache/cassandra/blame/trunk/bin/cassandra#L211-216
+        
         String version = "2.0.9";
         String majorMinorVersion = "2.0";
         

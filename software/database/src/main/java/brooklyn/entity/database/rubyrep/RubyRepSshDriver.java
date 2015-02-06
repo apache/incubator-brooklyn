@@ -32,9 +32,9 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
 
@@ -51,12 +51,17 @@ public class RubyRepSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     protected String getLogFileLocation() {
-        return getRunDir() + "/log/rubyrep.log";
+        return Os.mergePaths(getRunDir(), "log", "rubyrep.log");
+    }
+
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("rubyrep-%s", getVersion()))));
     }
 
     @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
 
@@ -70,8 +75,6 @@ public class RubyRepSshDriver extends AbstractSoftwareProcessSshDriver implement
                 .body.append(commands)
                 .failOnNonZeroResultCode()
                 .execute();
-
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rubyrep-%s", getVersion())));
     }
 
     @Override

@@ -37,5 +37,4 @@ public class AnyoneSecurityProvider implements SecurityProvider {
     public boolean logout(HttpSession session) { 
         return true;
     }
-    
 }

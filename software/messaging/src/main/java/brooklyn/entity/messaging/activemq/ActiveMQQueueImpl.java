@@ -41,7 +41,7 @@ public class ActiveMQQueueImpl extends ActiveMQDestinationImpl implements Active
     }
     
     public void create() {
-        if (log.isDebugEnabled()) log.debug("{} adding queue {} to broker {}", new Object[] {this, getName(), jmxHelper.getAttribute(brokerMBeanName, "BrokerId")});
+        log.debug("{} adding queue {} to broker {}", new Object[] {this, getName(), jmxHelper.getAttribute(brokerMBeanName, "BrokerName")});
         
         jmxHelper.operation(brokerMBeanName, "addQueue", getName());
         
@@ -55,7 +55,7 @@ public class ActiveMQQueueImpl extends ActiveMQDestinationImpl implements Active
 
     @Override
     protected void connectSensors() {
-        String queue = String.format("org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=%s", getName());
+        String queue = String.format("org.apache.activemq:type=Broker,brokerName=%s,destinationType=Queue,destinationName=%s", getBrokerName(), getName());
         
         jmxFeed = JmxFeed.builder()
                 .entity(this)
@@ -65,4 +65,5 @@ public class ActiveMQQueueImpl extends ActiveMQDestinationImpl implements Active
                         .attributeName("QueueSize"))
                 .build();
     }
+
 }

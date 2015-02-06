@@ -33,6 +33,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynProperties.Factory.Builder;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext.PropertiesReloadListener;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.os.Os;
 
 import com.google.common.base.Charsets;
@@ -40,15 +41,18 @@ import com.google.common.io.Files;
 
 public class LocalManagementContextTest {
     
+    private LocalManagementContext context; 
     private File globalPropertiesFile;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        context = null;
         globalPropertiesFile = Os.newTempFile(getClass(), "global.properties");
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
+        if (context!=null) context.terminate();
         if (globalPropertiesFile != null) globalPropertiesFile.delete();
     }
     
@@ -56,9 +60,10 @@ public class LocalManagementContextTest {
     public void testReloadPropertiesFromBuilder() throws IOException {
         String globalPropertiesContents = "brooklyn.location.localhost.displayName=myname";
         Files.write(globalPropertiesContents, globalPropertiesFile, Charsets.UTF_8);
-        Builder builder = new BrooklynProperties.Factory.Builder()
+        Builder propsBuilder = new BrooklynProperties.Factory.Builder()
             .globalPropertiesFile(globalPropertiesFile.getAbsolutePath());
-        LocalManagementContext context = new LocalManagementContext(builder);
+        // no builder support in LocalManagementContextForTests (we are testing that the builder's files are reloaded so we need it here)
+        context = new LocalManagementContext(propsBuilder);
         Location location = context.getLocationRegistry().resolve("localhost");
         assertEquals(location.getDisplayName(), "myname");
         String newGlobalPropertiesContents = "brooklyn.location.localhost.displayName=myname2";
@@ -76,7 +81,7 @@ public class LocalManagementContextTest {
         BrooklynProperties brooklynProperties = new BrooklynProperties.Factory.Builder()
             .globalPropertiesFile(globalPropertiesFile.getAbsolutePath())
             .build();
-        LocalManagementContext context = new LocalManagementContext(brooklynProperties);
+        context = LocalManagementContextForTests.builder(true).useProperties(brooklynProperties).build();
         Location location = context.getLocationRegistry().resolve("localhost");
         assertEquals(location.getDisplayName(), "myname");
         String newGlobalPropertiesContents = "brooklyn.location.localhost.displayName=myname2";
@@ -91,7 +96,7 @@ public class LocalManagementContextTest {
     public void testPropertiesModified() throws IOException {
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("myname", "myval");
-        LocalManagementContext context = new LocalManagementContext(properties);
+        context = LocalManagementContextForTests.builder(true).useProperties(properties).build();
         assertEquals(context.getBrooklynProperties().get("myname"), "myval");
         properties.put("myname", "newval");
         assertEquals(properties.get("myname"), "newval");
@@ -104,7 +109,7 @@ public class LocalManagementContextTest {
         final AtomicInteger reloadedCallbackCount = new AtomicInteger(0);
         BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
         properties.put("myname", "myval");
-        LocalManagementContext context = new LocalManagementContext(properties);
+        context = LocalManagementContextForTests.builder(true).useProperties(properties).build();
         PropertiesReloadListener listener = new PropertiesReloadListener() {
             public void reloaded() {
                 reloadedCallbackCount.incrementAndGet();

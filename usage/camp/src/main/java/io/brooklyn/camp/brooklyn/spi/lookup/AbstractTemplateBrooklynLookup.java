@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
@@ -40,7 +41,7 @@ public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>
 
     @Override
     public T get(String id) {
-        CatalogItem<?,?> item = bmc.getCatalog().getCatalogItem(id);
+        CatalogItem<?,?> item = getCatalogItem(id);
         if (item==null) {
             log.warn("Could not find item '"+id+"' in Brooklyn catalog; returning null");
             return null;
@@ -48,10 +49,14 @@ public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>
         return adapt(item);
     }
 
+    private CatalogItem<?, ?> getCatalogItem(String versionedId) {
+        return CatalogUtils.getCatalogItemOptionalVersion(bmc, versionedId);
+    }
+
     public abstract T adapt(CatalogItem<?,?> item);
 
     protected ResolvableLink<T> newLink(CatalogItem<? extends Entity,EntitySpec<?>> li) {
-        return newLink(li.getId(), li.getName());
+        return newLink(li.getId(), li.getDisplayName());
     }
 
 }

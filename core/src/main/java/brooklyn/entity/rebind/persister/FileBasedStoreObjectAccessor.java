@@ -22,6 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.io.FileUtil;
 import brooklyn.util.text.Strings;
@@ -38,11 +41,8 @@ import com.google.common.io.Files;
  * @author aled
  */
 public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.StoreObjectAccessor {
+    private static final Logger LOG = LoggerFactory.getLogger(FileBasedStoreObjectAccessor.class);
 
-    /**
-     * @param file
-     * @param executor A sequential executor (e.g. SingleThreadedExecutor, or equivalent)
-     */
     public FileBasedStoreObjectAccessor(File file, String tmpExtension) {
         this.file = file;
         this.tmpFile = new File(file.getParentFile(), file.getName()+(Strings.isBlank(tmpExtension) ? ".tmp" : tmpExtension));
@@ -75,7 +75,6 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
             FileUtil.setFilePermissionsTo600(tmpFile);
             Files.write(val, tmpFile, Charsets.UTF_8);
             FileBasedObjectStore.moveFile(tmpFile, file);
-            
         } catch (IOException e) {
             throw Exceptions.propagate(e);
         } catch (InterruptedException e) {
@@ -97,8 +96,17 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
 
     @Override
     public void delete() {
-        file.delete();
-        tmpFile.delete();
+        if (!file.delete()) {
+            if (!file.exists()) {
+                LOG.debug("Unable to delete " + file.getAbsolutePath() + ". Probably did not exist.");
+            } else {
+                LOG.warn("Unable to delete " + file.getAbsolutePath() + ". Probably still locked.");
+            }
+        }
+        if (tmpFile.exists() && !tmpFile.delete()) {
+            // tmpFile is probably already deleted, so don't even log debug if it does not exist
+            LOG.warn("Unable to delete " + tmpFile.getAbsolutePath() + ". Probably still locked.");
+        }
     }
 
     @Override

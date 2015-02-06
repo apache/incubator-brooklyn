@@ -1,0 +1,84 @@
+
+#content_container {
+  padding-bottom: 48px;
+  img {
+    max-width: 100%;
+  }
+}
+
+
+/* HEADER LINKS 
+   ----------------------------------------------------------------------- */
+
+#content_container h1 {
+  max-width: 95%;
+  font-variant: normal;
+  margin-top: -16px;
+  padding-bottom: 6px;
+  margin-top: 64px;
+  margin-bottom: 24px;
+  border-bottom: 1px dotted $gray_aa;
+  font-weight: 300;
+  font-size: 36px;
+  text-transform: uppercase;
+}
+h4, h5, h6 {
+  margin-top: 20px;
+  margin-bottom: 8px;
+}
+h5 {
+  font-size: 18px;
+  font-weight: 300;
+}
+h6 {
+  font-size: 16px;
+}
+
+/* headings get a tooltip showing the permalink URL, a la github jekyll */
+/* install subset of font-awesome */
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('#{$style_dir}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.eot');
+  src: url('#{$style_dir}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.eot?#iefix&v=4.2.0') format('embedded-opentype'), url('#{$style_dir}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.woff?v=4.2.0') format('woff'), url('#{$style_dir}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.ttf?v=4.2.0') format('truetype'), url('#{$style_dir}/deps/font-awesome-4.2.0/fonts/fontawesome-webfont.svg?v=4.2.0#fontawesomeregular') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+.fa {
+  display: inline-block;
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.fa-link:before {
+  content: "\f0c1";
+}
+.fa-play-circle-o:before {
+  content: "\f01d";
+}
+/*
+ * This code is courtesy Ben Balter, modified by Parker Moore for jekyllrb.com
+ * http://ben.balter.com/2014/03/13/pages-anchor-links/
+ */
+.header-link {
+  position: relative;
+  left: 0.5em;
+  opacity: 0;
+  font-size: 0.8em;
+
+/* not using -- but this is cool!
+  -webkit-transition: opacity 0.2s ease-in-out 0.1s;
+  -moz-transition: opacity 0.2s ease-in-out 0.1s;
+  -ms-transition: opacity 0.2s ease-in-out 0.1s;
+*/
+}
+h2:hover .header-link,
+h3:hover .header-link,
+h4:hover .header-link,
+h5:hover .header-link,
+h6:hover .header-link {
+  opacity: 1;
+}
+a.header-literal-anchor { display: inline !important; }

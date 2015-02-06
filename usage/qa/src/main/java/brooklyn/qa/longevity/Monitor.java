@@ -212,8 +212,8 @@ public class Monitor {
                                         
                                         if (min > prefs.numWebProcesses.lowerEndpoint() || max < prefs.numWebProcesses.upperEndpoint()) {
                                             failureMsg.append("num web processes not increasing/decreasing correctly: " +
-                                            		"pids="+pids+"; size="+pids.size()+"; cyclePeriod="+prefs.webProcessesCyclingPeriod+
-                                            		"; expectedRange="+prefs.numWebProcesses+"; min="+min+"; max="+max+"; history="+values);
+                                                    "pids="+pids+"; size="+pids.size()+"; cyclePeriod="+prefs.webProcessesCyclingPeriod+
+                                                    "; expectedRange="+prefs.numWebProcesses+"; min="+min+"; max="+max+"; history="+values);
                                         }
                                     } else {
                                         int numVals = values.size();

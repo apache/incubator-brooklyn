@@ -64,8 +64,14 @@ if (hadoop!=null) {
     if (mongo!=null) {
 %>
 <li><a href="mongo.jsp">MongoDB chatroom</a></li>
+<%
+    }
+    String riak=System.getProperty("brooklyn.example.riak.nodes");
+    if (riak != null) {
+%>
+<li><a href="riak.jsp">Riak chatroom</a></li>
 <% }
-if (hadoop==null && url==null && mongo==null) {
+if (hadoop==null && url==null && mongo==null && riak==null) {
 %>
 <li><i>None.</i> Try one of the other Brooklyn examples to see SQL or Hadoop.</li>
 <% } %>

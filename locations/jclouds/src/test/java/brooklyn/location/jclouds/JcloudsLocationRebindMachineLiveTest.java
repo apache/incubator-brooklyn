@@ -36,7 +36,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
+public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTest {
     
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationRebindMachineLiveTest.class);
     
@@ -50,12 +50,12 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+AWS_EC2_EUWEST_REGION_NAME);
     }
 
-    @Test(groups = { "Live" })
+    @Test(groups = { "Live", "Live-sanity" })
     public void testRebindWithIncorrectId() throws Exception {
         try {
             jcloudsLocation.rebindMachine(ImmutableMap.of("id", "incorrectid", "hostname", "myhostname", "user", "myusername"));
         } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("Invalid id")) {
+            if (e.getMessage().contains("node not found")) {
                 // success
             } else {
                 throw e;
@@ -71,6 +71,7 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
         // Create a VM through jclouds
         JcloudsSshMachineLocation machine = obtainMachine(ImmutableMap.of("imageId", EUWEST_IMAGE_ID, "imageOwner", IMAGE_OWNER));
         assertTrue(machine.isSshable());
+        LOG.info("obtained "+machine);
 
         String id = checkNotNull(machine.getJcloudsId(), "id");
         InetAddress address = checkNotNull(machine.getAddress(), "address");
@@ -81,13 +82,15 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
         JcloudsLocation loc2 = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+AWS_EC2_EUWEST_REGION_NAME);
         SshMachineLocation machine2 = loc2.rebindMachine(ImmutableMap.of("id", id, "hostname", hostname, "user", user));
         
+        LOG.info("rebinded to "+machine2);
+        
         // Confirm the re-bound machine is wired up
         assertTrue(machine2.isSshable());
         assertEquals(ImmutableSet.copyOf(loc2.getChildren()), ImmutableSet.of(machine2));
         
         // Confirm can release the re-bound machine via the new jclouds location
         loc2.release(machine2);
-        assertFalse(machine2.isSshable());
+        assertFalse(machine.isSshable());
         assertEquals(ImmutableSet.copyOf(loc2.getChildren()), Collections.emptySet());
     }
     
@@ -115,7 +118,7 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsTest {
         
         // Confirm can release the re-bound machine via the new jclouds location
         loc2.release(machine2);
-        assertFalse(machine2.isSshable());
+        assertFalse(machine.isSshable());
         assertEquals(ImmutableSet.copyOf(loc2.getChildren()), Collections.emptySet());
     }
 

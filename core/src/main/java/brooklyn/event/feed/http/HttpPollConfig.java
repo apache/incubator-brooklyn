@@ -25,16 +25,14 @@ import javax.annotation.Nullable;
 
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.PollConfig;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
-import brooklyn.util.net.URLParamEncoder;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollConfig<T>> {
 
@@ -52,6 +50,14 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
             return input != null && input.getResponseCode() >= 200 && input.getResponseCode() <= 399;
         }};
     
+    public static <T> HttpPollConfig<T> forSensor(AttributeSensor<T> sensor) {
+        return new HttpPollConfig<T>(sensor);
+    }
+    
+    public static HttpPollConfig<Void> forMultiple() {
+        return new HttpPollConfig<Void>(PollConfig.NO_SENSOR);
+    }
+    
     public HttpPollConfig(AttributeSensor<T> sensor) {
         super(sensor);
         super.checkSuccess(DEFAULT_SUCCESS);
@@ -63,14 +69,6 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
         vars = other.vars;
         method = other.method;
         headers = other.headers;
-    }
-    
-    public static <T> HttpPollConfig<T> forSensor(AttributeSensor<T> sensor) {
-        return new HttpPollConfig<T>(sensor);
-    }
-    
-    public static HttpPollConfig<Void> forMultiple() {
-        return new HttpPollConfig<Void>(PollConfig.NO_SENSOR);
     }
     
     public String getSuburl() {
@@ -129,15 +127,7 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
         Map<String,String> allvars = concat(baseUriVars, vars);
         
         if (allvars != null && allvars.size() > 0) {
-            Iterable<String> args = Iterables.transform(allvars.entrySet(), 
-                    new Function<Map.Entry<String,String>,String>() {
-                        @Override public String apply(Map.Entry<String,String> entry) {
-                            String k = entry.getKey();
-                            String v = entry.getValue();
-                            return URLParamEncoder.encode(k) + (v != null ? "=" + URLParamEncoder.encode(v) : "");
-                        }
-                    });
-            uri += "?" + Joiner.on("&").join(args);
+            uri += "?" + HttpTool.encodeUrlParams(allvars);
         }
         
         return URI.create(uri);
@@ -159,9 +149,12 @@ public class HttpPollConfig<T> extends PollConfig<HttpToolResponse, T, HttpPollC
         return MutableMap.<K,V>builder().putAll(map1).putAll(map2).build();
     }
 
+    @Override protected String toStringBaseName() { return "http"; }
+    @Override protected String toStringPollSource() { return suburl; }
     @Override
-    public String toString() {
-        return "http["+suburl+"]";
+    protected MutableList<Object> equalsFields() {
+        return super.equalsFields().appendIfNotNull(method).appendIfNotNull(vars).appendIfNotNull(headers)
+            .appendIfNotNull(body).appendIfNotNull(connectionTimeout).appendIfNotNull(socketTimeout);
     }
-    
+
 }

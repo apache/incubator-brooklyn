@@ -47,7 +47,7 @@ public class StormSampleApp extends AbstractApplication implements StartableAppl
     public static final String DEFAULT_LOCATION = "named:gce-europe-west1";
 
     @Override
-    public void init() {
+    public void initApp() {
         addChild(EntitySpec.create(StormDeployment.class)
             .configure(StormDeployment.SUPERVISORS_COUNT, 2)
             .configure(StormDeployment.ZOOKEEPERS_COUNT, 1));

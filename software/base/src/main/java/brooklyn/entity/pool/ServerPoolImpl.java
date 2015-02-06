@@ -253,7 +253,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
 
     @Override
     public Collection<Entity> addExistingMachinesFromSpec(String spec) {
-        Location location = getManagementContext().getLocationRegistry().resolveIfPossible(spec);
+        Location location = getManagementContext().getLocationRegistry().resolve(spec, true, null).orNull();
         List<Entity> additions = Lists.newLinkedList();
         if (location == null) {
             LOG.warn("Spec was unresolvable: {}", spec);
@@ -282,7 +282,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
      */
     @Override
     protected Collection<Entity> shrink(int delta) {
-        if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE))) {
+        if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE_ACTUAL))) {
             return super.shrink(delta);
         }
 
@@ -297,7 +297,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
             }
 
             if (delta < removable) {
-                LOG.info("Too few removable machines in {} to shrink by delta {}. Altered delta to {}",
+                LOG.warn("Too few removable machines in {} to shrink by delta {}. Altered delta to {}",
                         new Object[]{this, delta, removable});
                 delta = removable;
             }
@@ -327,7 +327,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
         public Entity apply(Collection<Entity> members) {
             synchronized (mutex) {
                 Optional<Entity> choice;
-                if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE))) {
+                if (Lifecycle.STOPPING.equals(getAttribute(Attributes.SERVICE_STATE_ACTUAL))) {
                     choice = Optional.of(members.iterator().next());
                 } else {
                     // Otherwise should only choose between removable + unusable or available

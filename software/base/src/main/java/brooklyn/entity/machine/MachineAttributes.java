@@ -29,7 +29,6 @@ import brooklyn.util.guava.Functionals;
 import brooklyn.util.math.MathFunctions;
 import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 
@@ -71,8 +70,6 @@ public class MachineAttributes {
                 return input.longValue();
             }
         };
-
-        RendererHints.register(UPTIME, RendererHints.displayValue(Time.toTimeStringRounded()));
 
         RendererHints.register(CPU_USAGE, RendererHints.displayValue(MathFunctions.percent(2)));
         RendererHints.register(AVERAGE_CPU_USAGE, RendererHints.displayValue(MathFunctions.percent(2)));

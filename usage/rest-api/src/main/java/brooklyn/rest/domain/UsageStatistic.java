@@ -21,7 +21,9 @@ package brooklyn.rest.domain;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
 
+import java.net.URI;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -38,17 +40,21 @@ public class UsageStatistic implements HasId {
     private final long duration;
     private final Map<String,String> metadata;
 
-    public UsageStatistic(@JsonProperty("status") Status status, @JsonProperty("id") String id, @JsonProperty("applicationId") String applicationId,
-                     @JsonProperty("start") String start,
-                     @JsonProperty("end") String end,
-                     @JsonProperty("duration") long duration, @JsonProperty("metadata") Map<String, String> metadata) {
+    public UsageStatistic(
+            @JsonProperty("status") Status status, 
+            @JsonProperty("id") String id, 
+            @JsonProperty("applicationId") String applicationId,
+            @JsonProperty("start") String start,
+            @JsonProperty("end") String end,
+            @JsonProperty("duration") long duration, 
+            @JsonProperty("metadata") Map<String, String> metadata) {
         this.status = checkNotNull(status, "status");
         this.id = checkNotNull(id, "id");
         this.applicationId = applicationId;
         this.start = start;
         this.end = end;
         this.duration = duration;
-        this.metadata = checkNotNull(metadata, "metadata");
+        this.metadata = (metadata == null) ? ImmutableMap.<String, String>of() : metadata;
     }
 
     public Status getStatus() {

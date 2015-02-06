@@ -53,7 +53,7 @@ public class ApplicationSummary implements HasId {
         this.id = id;
         this.spec = checkNotNull(spec, "spec");
         this.status = checkNotNull(status, "status");
-        this.links = links == null ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
+        this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
     }
 
     @Override

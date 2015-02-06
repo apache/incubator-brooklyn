@@ -251,6 +251,10 @@ textarea {
     border-top-color: #549e2b;
     border-bottom-color: #549e2b;
 }
+
+#advanced-summary button.btn {
+    margin-left: 6px;
+}
 /*APP PAGE*/
 
 /* END KROME STYLES */

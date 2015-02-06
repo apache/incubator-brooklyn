@@ -21,11 +21,12 @@ package brooklyn.rest.resources;
 import brooklyn.BrooklynVersion;
 import brooklyn.rest.api.VersionApi;
 
+/** @deprecated since 0.7.0; use /v1/server/version */
+@Deprecated
 public class VersionResource extends AbstractBrooklynRestResource implements VersionApi {
 
-  @Override
-  public String getVersion() {
-    return BrooklynVersion.get();
-  }
-
+    @Override
+    public String getVersion() {
+        return BrooklynVersion.get();
+    }
 }

@@ -1,0 +1,60 @@
+
+#content_container .feature-list {
+  h3 {
+    border: 1px solid $white_dd;
+    margin-top: 48px;
+    padding: 20px 12px 12px 12px;
+    margin-bottom: 0;
+    background-color: $white_f5;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+
+// from bootstrap for panel
+background-image: -webkit-linear-gradient(top, #f5f5f5 0%, #e8e8e8 100%);
+background-image: linear-gradient(to bottom, #f5f5f5 0%, #e8e8e8 100%);
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#ffe8e8e8', GradientType=0);
+background-repeat: repeat-x;    
+  }
+}
+
+#content_container .feature-item {
+  padding-bottom: 24px;
+  margin-bottom: 12px;
+  font-size: 90%;
+  p {
+    margin-top: 6px;
+    margin-bottom: 0;
+  }
+  p:first-child {
+    margin-top: 0px;
+  }
+  img {
+    max-width: 200px;
+    border: 1px solid $white_dd;
+    border-radius: 2px;
+  }
+  div.feature-title {
+    width: 27%;
+    float: left;
+    font-weight: 500;
+  }
+  div.feature-body {
+    width: 70%;
+    margin-left: 30%;
+  }
+  div.feature-image {
+    text-align: center;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+  
+  
+  border: 1px solid $white_dd;
+  margin-top: -1px;
+  margin-bottom: 0;
+  font-size: 90%;
+  padding: 12px;
+  padding-top: 8px;
+  background-color: $white_fa;
+  
+}

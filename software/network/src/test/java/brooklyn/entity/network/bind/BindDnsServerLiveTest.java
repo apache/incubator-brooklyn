@@ -18,64 +18,97 @@
  */
 package brooklyn.entity.network.bind;
 
-import java.util.Map;
+import static brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
+import static org.testng.Assert.assertEquals;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SameServerEntity;
+import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.EntityTestUtils;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.collections.MutableMap;
-
-import com.google.common.collect.ImmutableList;
+import brooklyn.util.repeat.Repeater;
+import brooklyn.util.time.Duration;
 
 public class BindDnsServerLiveTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerLiveTest.class);
 
-    protected TestApplication app;
-    protected Location testLocation;
-    protected BindDnsServer dns;
+    public static void testBindStartsAndUpdates(TestApplication app, Location testLocation) throws Exception {
+        DynamicCluster cluster;
+        BindDnsServer dns;
 
-    @BeforeMethod(alwaysRun = true)
-    public void setup() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        testLocation = new LocalhostMachineProvisioningLocation();
+        SameServerEntity sse = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
+        EntitySpec<EmptySoftwareProcess> memberSpec = EntitySpec.create(EmptySoftwareProcess.class)
+                .enricher(EnricherSpec.create(PrefixAndIdEnricher.class)
+                        .configure(PrefixAndIdEnricher.PREFIX, "dns-live-test-")
+                        .configure(PrefixAndIdEnricher.MONITOR, Attributes.HOSTNAME));
+        cluster = sse.addChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, memberSpec)
+                .configure(DynamicCluster.INITIAL_SIZE, 1));
+        dns = sse.addChild((EntitySpec.create(BindDnsServer.class)
+                .configure(BindDnsServer.ENTITY_FILTER, Predicates.instanceOf(EmptySoftwareProcess.class))
+                .configure(BindDnsServer.HOSTNAME_SENSOR, PrefixAndIdEnricher.SENSOR)));
+        Entities.manage(cluster);
+        Entities.manage(dns);
+
+        app.start(ImmutableList.of(testLocation));
+        assertAttributeEqualsEventually(dns, Attributes.SERVICE_UP, true);
+
+        logDnsMappings(dns);
+        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).entries().size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.A_RECORDS).size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.CNAME_RECORDS).size(), 0);
+        // Harder to make assertions on PTR because the entity servers might not be in the right CIDR
+
+        cluster.resize(2);
+        waitForNumberOfAddressMappings(dns, 2);
+        logDnsMappings(dns);
+        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).entries().size(), 2);
+        assertEquals(dns.getAttribute(BindDnsServer.A_RECORDS).size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.CNAME_RECORDS).size(), 1);
+
+        cluster.resize(1);
+        waitForNumberOfAddressMappings(dns, 1);
+        logDnsMappings(dns);
+        assertEquals(dns.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).entries().size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.A_RECORDS).size(), 1);
+        assertEquals(dns.getAttribute(BindDnsServer.CNAME_RECORDS).size(), 0);
     }
 
-    @AfterMethod(alwaysRun = true)
-    public void shutdown() throws Exception {
-        if (app != null) Entities.destroyAllCatching(app.getManagementContext());
+    private static void logDnsMappings(BindDnsServer dns) {
+        LOG.info("A:     " + Joiner.on(", ").withKeyValueSeparator("=").join(
+                dns.getAttribute(BindDnsServer.A_RECORDS)));
+        LOG.info("CNAME: " + Joiner.on(", ").withKeyValueSeparator("=").join(
+                dns.getAttribute(BindDnsServer.CNAME_RECORDS).asMap()));
+        LOG.info("PTR:   " + Joiner.on(", ").withKeyValueSeparator("=").join(
+                dns.getAttribute(BindDnsServer.PTR_RECORDS)));
     }
 
-    @DataProvider(name = "virtualMachineData")
-    public Object[][] provideVirtualMachineData() {
-        return new Object[][] { // CentOS 6.3
-            new Object[] { "us-east-1/ami-7d7bfc14", "aws-ec2:us-east-1" },
-        };
+    /**
+     * Waits for the Bind entity to have the expected number of mappings or for thirty seconds to have elapsed.
+     */
+    private static void waitForNumberOfAddressMappings(final BindDnsServer dns, final int expectedMappings) {
+        Repeater.create()
+                .every(Duration.seconds(1))
+                .until(dns, new Predicate<BindDnsServer>() {
+                    @Override
+                    public boolean apply(BindDnsServer bindDnsServer) {
+                        return bindDnsServer.getAttribute(BindDnsServer.ADDRESS_MAPPINGS).size() == expectedMappings;
+                    }
+                })
+                .limitTimeTo(Duration.seconds(30))
+                .run();
     }
-
-    @Test(groups = "Live", dataProvider = "virtualMachineData")
-    protected void testOperatingSystemProvider(String imageId, String provider) throws Exception {
-        LOG.info("Testing BIND on {} using {}", provider, imageId);
-
-        Map<String, String> properties = MutableMap.of("image-id", imageId);
-        testLocation = app.getManagementContext().getLocationRegistry().resolve(provider, properties);
-
-        BindDnsServer dns = app.createAndManageChild(EntitySpec.create(BindDnsServer.class));
-        dns.start(ImmutableList.of(testLocation));
-
-        EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.SERVICE_UP, true);
-        Entities.dumpInfo(app);
-    }
-
 }

@@ -18,10 +18,6 @@
  */
 package brooklyn.location.jclouds;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY;
-import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_CC_AMI_QUERY;
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials;
 import static org.jclouds.compute.util.ComputeServiceUtils.execHttpResponse;
 import static org.jclouds.scriptbuilder.domain.Statements.appendFile;
@@ -34,14 +30,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
-import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -72,9 +65,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.jclouds.config.AlwaysRetryOnRenew;
-import brooklyn.location.jclouds.config.BrooklynStandardJcloudsGuiceModule;
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Protocol;
@@ -87,7 +78,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -103,17 +93,33 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsUtil.class);
     
+    /**
+     * @deprecated since 0.7; see {@link BashCommands}
+     */
+    @Deprecated
     public static String APT_INSTALL = "apt-get install -f -y -qq --force-yes";
 
+    /**
+     * @deprecated since 0.7; see {@link BashCommands}
+     */
+    @Deprecated
     public static String installAfterUpdatingIfNotPresent(String cmd) {
        String aptInstallCmd = APT_INSTALL + " " + cmd;
        return String.format("which %s || (%s || (apt-get update && %s))", cmd, aptInstallCmd, aptInstallCmd);
     }
 
+    /**
+     * @deprecated since 0.7
+     */
+    @Deprecated
     public static Predicate<NodeMetadata> predicateMatchingById(final NodeMetadata node) {
         return predicateMatchingById(node.getId());
     }
 
+    /**
+     * @deprecated since 0.7
+     */
+    @Deprecated
     public static Predicate<NodeMetadata> predicateMatchingById(final String id) {
         Predicate<NodeMetadata> nodePredicate = new Predicate<NodeMetadata>() {
             @Override public boolean apply(NodeMetadata arg0) {
@@ -126,6 +132,10 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         return nodePredicate;
     }
 
+    /**
+     * @deprecated since 0.7; see {@link IptablesCommands}
+     */
+    @Deprecated
     public static Statement authorizePortInIpTables(int port) {
         // TODO gogrid rules only allow ports 22, 3389, 80 and 443.
         // the first rule will be ignored, so we have to apply this
@@ -139,7 +149,10 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     /**
      * @throws RunScriptOnNodesException
      * @throws IllegalStateException     If do not find exactly one matching node
+     * 
+     * @deprecated since 0.7
      */
+    @Deprecated
     public static ExecResponse runScriptOnNode(ComputeService computeService, NodeMetadata node, Statement statement, String scriptName) throws RunScriptOnNodesException {
         // TODO Includes workaround for NodeMetadata's equals/hashcode method being wrong.
         
@@ -210,116 +223,33 @@ public class JcloudsUtil implements JcloudsLocationConfig {
           throw new IllegalArgumentException("don't know how to handle" + os.toString());
     }
 
-    static Map<Map<?,?>,ComputeService> cachedComputeServices = new ConcurrentHashMap<Map<?,?>,ComputeService> ();
-
-    private static final Object createComputeServicesMutex = new Object();
-
+    /**
+     * @deprecated since 0.7; see {@link ComputeServiceRegistry#findComputeService(ConfigBag, boolean)}
+     */
+    @Deprecated
     public static ComputeService findComputeService(ConfigBag conf) {
-        return findComputeService(conf, true);
+        return ComputeServiceRegistryImpl.INSTANCE.findComputeService(conf, true);
     }
+    
+    /**
+     * @deprecated since 0.7; see {@link ComputeServiceRegistry#findComputeService(ConfigBag, boolean)}
+     */
+    @Deprecated
     public static ComputeService findComputeService(ConfigBag conf, boolean allowReuse) {
-        String provider = checkNotNull(conf.get(CLOUD_PROVIDER), "provider must not be null");
-        String identity = checkNotNull(conf.get(ACCESS_IDENTITY), "identity must not be null");
-        String credential = checkNotNull(conf.get(ACCESS_CREDENTIAL), "credential must not be null");
-        
-        Properties properties = new Properties();
-        properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true));
-        properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true));
-        properties.setProperty("jclouds.ssh.max-retries", conf.getStringKey("jclouds.ssh.max-retries") != null ? 
-                conf.getStringKey("jclouds.ssh.max-retries").toString() : "50");
-        // Enable aws-ec2 lazy image fetching, if given a specific imageId; otherwise customize for specific owners; or all as a last resort
-        // See https://issues.apache.org/jira/browse/WHIRR-416
-        if ("aws-ec2".equals(provider)) {
-            // TODO convert AWS-only flags to config keys
-            if (groovyTruth(conf.get(IMAGE_ID))) {
-                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "");
-                properties.setProperty(PROPERTY_EC2_CC_AMI_QUERY, "");
-            } else if (groovyTruth(conf.getStringKey("imageOwner"))) {
-                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "owner-id="+conf.getStringKey("imageOwner")+";state=available;image-type=machine");
-            } else if (groovyTruth(conf.getStringKey("anyOwner"))) {
-                // set `anyOwner: true` to override the default query (which is restricted to certain owners as per below), 
-                // allowing the AMI query to bind to any machine
-                // (note however, we sometimes pick defaults in JcloudsLocationFactory);
-                // (and be careful, this can give a LOT of data back, taking several minutes,
-                // and requiring extra memory allocated on the command-line)
-                properties.setProperty(PROPERTY_EC2_AMI_QUERY, "state=available;image-type=machine");
-                /*
-                 * by default the following filters are applied:
-                 * Filter.1.Name=owner-id&Filter.1.Value.1=137112412989&
-                 * Filter.1.Value.2=063491364108&
-                 * Filter.1.Value.3=099720109477&
-                 * Filter.1.Value.4=411009282317&
-                 * Filter.2.Name=state&Filter.2.Value.1=available&
-                 * Filter.3.Name=image-type&Filter.3.Value.1=machine&
-                 */
-            }
-        }
+        return ComputeServiceRegistryImpl.INSTANCE.findComputeService(conf, allowReuse);
+    }
 
-        // FIXME Deprecated mechanism, should have a ConfigKey for overrides
-        Map<String, Object> extra = Maps.filterKeys(conf.getAllConfig(), Predicates.containsPattern("^jclouds\\."));
-        if (extra.size() > 0) {
-            LOG.warn("Jclouds using deprecated property overrides: "+Entities.sanitize(extra));
-        }
-        properties.putAll(extra);
-
-        String endpoint = conf.get(CLOUD_ENDPOINT);
-        if (!groovyTruth(endpoint)) endpoint = getDeprecatedProperty(conf, Constants.PROPERTY_ENDPOINT);
-        if (groovyTruth(endpoint)) properties.setProperty(Constants.PROPERTY_ENDPOINT, endpoint);
-
-        Map<?,?> cacheKey = MutableMap.builder()
-                .putAll(properties)
-                .put("provider", provider)
-                .put("identity", identity)
-                .put("credential", credential)
-                .putIfNotNull("endpoint", endpoint)
-                .build()
-                .toImmutable();
-
-        if (allowReuse) {
-            ComputeService result = cachedComputeServices.get(cacheKey);
-            if (result!=null) {
-                LOG.debug("jclouds ComputeService cache hit for compute service, for "+Entities.sanitize(properties));
-                return result;
-            }
-            LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+Entities.sanitize(properties));
-        }
-
-        Iterable<Module> modules = getCommonModules();
-
-        // Synchronizing to avoid deadlock from sun.reflect.annotation.AnnotationType.
-        // See https://github.com/brooklyncentral/brooklyn/issues/974
-        ComputeServiceContext computeServiceContext;
-        synchronized (createComputeServicesMutex) {
-            computeServiceContext = ContextBuilder.newBuilder(provider)
-                    .modules(modules)
-                    .credentials(identity, credential)
-                    .overrides(properties)
-                    .build(ComputeServiceContext.class);
-        }
-        final ComputeService computeService = computeServiceContext.getComputeService();
-        if (allowReuse) {
-            synchronized (cachedComputeServices) {
-                ComputeService result = cachedComputeServices.get(cacheKey);
-                if (result != null) {
-                    LOG.debug("jclouds ComputeService cache recovery for compute service, for "+Entities.sanitize(cacheKey));
-                    //keep the old one, discard the new one
-                    computeService.getContext().close();
-                    return result;
-                }
-                LOG.debug("jclouds ComputeService created "+computeService+", adding to cache, for "+Entities.sanitize(properties));
-                cachedComputeServices.put(cacheKey, computeService);
-            }
-        }
-        return computeService;
-     }
-
-    /** returns the jclouds modules we typically install */ 
+    /** 
+     * Returns the jclouds modules we typically install
+     * 
+     * @deprecated since 0.7; see {@link ComputeServiceRegistry}
+     */
+    @Deprecated
     public static ImmutableSet<Module> getCommonModules() {
         return ImmutableSet.<Module> of(
                 new SshjSshClientModule(), 
                 new SLF4JLoggingModule(),
-                new BouncyCastleCryptoModule(),
-                new BrooklynStandardJcloudsGuiceModule());
+                new BouncyCastleCryptoModule());
     }
      
     /** 
@@ -351,7 +281,11 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         return context;
     }
 
-     protected static String getDeprecatedProperty(ConfigBag conf, String key) {
+    /**
+     * @deprecated since 0.7
+     */
+    @Deprecated
+    protected static String getDeprecatedProperty(ConfigBag conf, String key) {
         if (conf.containsKey(key)) {
             LOG.warn("Jclouds using deprecated brooklyn-jclouds property "+key+": "+Entities.sanitize(conf.getAllConfig()));
             return (String) conf.getStringKey(key);
@@ -360,17 +294,25 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         }
     }
 
+    /**
+     * @deprecated since 0.7
+     */
+    @Deprecated
     // Do this so that if there's a problem with our USERNAME's ssh key, we can still get in to check
-     // TODO Once we're really confident there are not going to be regular problems, then delete this
-     public static Statement addAuthorizedKeysToRoot(File publicKeyFile) throws IOException {
-         String publicKey = Files.toString(publicKeyFile, Charsets.UTF_8);
-         return addAuthorizedKeysToRoot(publicKey);
-     }
+    // TODO Once we're really confident there are not going to be regular problems, then delete this
+    public static Statement addAuthorizedKeysToRoot(File publicKeyFile) throws IOException {
+        String publicKey = Files.toString(publicKeyFile, Charsets.UTF_8);
+        return addAuthorizedKeysToRoot(publicKey);
+    }
      
-     public static Statement addAuthorizedKeysToRoot(String publicKey) {
-         return newStatementList(
-                 appendFile("/root/.ssh/authorized_keys", Splitter.on('\n').split(publicKey)),
-                 interpret("chmod 600 /root/.ssh/authorized_keys"));
+    /**
+     * @deprecated since 0.7
+     */
+    @Deprecated
+    public static Statement addAuthorizedKeysToRoot(String publicKey) {
+        return newStatementList(
+                appendFile("/root/.ssh/authorized_keys", Splitter.on('\n').split(publicKey)),
+                interpret("chmod 600 /root/.ssh/authorized_keys"));
     }
 
     public static String getFirstReachableAddress(ComputeServiceContext context, NodeMetadata node) {
@@ -473,6 +415,10 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         }
     }
 
+    /**
+     * @deprecated since 0.7
+     */
+    @Deprecated
     public static void mapSecurityGroupRuleToIpTables(ComputeService computeService, NodeMetadata node,
             LoginCredentials credentials, String networkInterface, Iterable<Integer> ports) {
         for (Integer port : ports) {

@@ -21,6 +21,7 @@ package brooklyn.entity.dns.geoscaling;
 import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_CITY_INFO;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Set;
 
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
@@ -69,16 +71,16 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         try {
             applyConfig();
         } catch (Exception e) {
-            // don't prevent management coming up
+            // don't prevent management coming up, but do mark it as on fire
             log.error("Geoscaling did not come up correctly: "+e, e);
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
         }
         super.onManagementBecomingMaster();
     }
 
-	boolean isConfigured = false;
-	
-    public synchronized void applyConfig() {		
+    boolean isConfigured = false;
+    
+    public synchronized void applyConfig() {        
         randomizeSmartSubdomainName = getConfig(RANDOMIZE_SUBDOMAIN_NAME);
         username = getConfig(GEOSCALING_USERNAME);
         password = getConfig(GEOSCALING_PASSWORD);
@@ -139,8 +141,8 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         }
         
         super.destroy();
-		
-		isConfigured = false;
+        
+        isConfigured = false;
     }
     
     protected void reconfigureService(Collection<HostGeoInfo> targetHosts) {
@@ -169,10 +171,14 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
             if (targetHosts.isEmpty()) {
                 setServiceState(Lifecycle.CREATED);
                 setAttribute(ROOT_URL, null);
+                setAttribute(MAIN_URI, null);
             } else {
                 setServiceState(Lifecycle.RUNNING);
                 String domain = getAttribute(MANAGED_DOMAIN);
-                if (!Strings.isEmpty(domain)) setAttribute(ROOT_URL, "http://"+domain+"/");
+                if (!Strings.isEmpty(domain)) {
+                    setAttribute(ROOT_URL, "http://"+domain+"/");
+                    setAttribute(MAIN_URI, URI.create("http://"+domain+"/"));
+                }
             }
         } else {
             log.warn("Failed to retrieve or create GeoScaling smart subdomain '"+smartSubdomainName+"."+primaryDomainName+

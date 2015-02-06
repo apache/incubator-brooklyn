@@ -29,7 +29,6 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
@@ -75,8 +74,6 @@ public interface UrlMapping extends AbstractGroup {
     @SuppressWarnings("serial")
     AttributeSensor<Collection<String>> TARGET_ADDRESSES = Sensors.newSensor(new TypeToken<Collection<String>>() { },
             "urlmapping.target.addresses", "set of addresses which should be forwarded to by this URL mapping");
-
-    AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
 
     String getUniqueLabel();
 

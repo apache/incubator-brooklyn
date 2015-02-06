@@ -25,17 +25,22 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-
 import brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
+import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EntityConfigSummary;
 import brooklyn.rest.domain.EntitySummary;
+import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.URLParamEncoder;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 /**
  * @author Adam Lowe
@@ -58,7 +63,7 @@ public class EntityTransformer {
             lb.put("parent", URI.create(applicationUri+"/entities/"+entity.getParent().getId()));
         String type = entity.getEntityType().getName();
         lb.put("application", URI.create(applicationUri))
-                .put("children", URI.create(entityUri + "/entities"))
+                .put("children", URI.create(entityUri + "/children"))
                 .put("config", URI.create(entityUri + "/config"))
                 .put("sensors", URI.create(entityUri + "/sensors"))
                 .put("effectors", URI.create(entityUri + "/effectors"))
@@ -66,13 +71,19 @@ public class EntityTransformer {
                 .put("activities", URI.create(entityUri + "/activities"))
                 .put("locations", URI.create(entityUri + "/locations"))
                 .put("tags", URI.create(entityUri + "/tags"))
-                .put("catalog", URI.create("/v1/catalog/entities/" + type))
-                .put("expunge", URI.create(entityUri + "/expunge")
-            );
+                .put("expunge", URI.create(entityUri + "/expunge"))
+                .put("rename", URI.create(entityUri + "/name"))
+                .put("spec", URI.create(entityUri + "/spec"))
+            ;
+
+        if (entity.getCatalogItemId() != null) {
+            lb.put("catalog", URI.create("/v1/catalog/entities/" + WebResourceUtils.getPathFromVersionedId(entity.getCatalogItemId())));
+        }
+
         if (entity.getIconUrl()!=null)
             lb.put("iconUrl", URI.create(entityUri + "/icon"));
 
-        return new EntitySummary(entity.getId(), entity.getDisplayName(), type, lb.build());
+        return new EntitySummary(entity.getId(), entity.getDisplayName(), type, entity.getCatalogItemId(), lb.build());
     }
 
     public static List<EntitySummary> entitySummaries(Iterable<? extends Entity> entities) {
@@ -88,7 +99,7 @@ public class EntityTransformer {
 
     protected static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, String label, Double priority, Map<String, URI> links) {
         Map<String, URI> mapOfLinks =  links==null ? null : ImmutableMap.copyOf(links);
-      return new EntityConfigSummary(config, label, priority, mapOfLinks);
+        return new EntityConfigSummary(config, label, priority, mapOfLinks);
     }
     /** generates a representation for a given config key, 
      * with label inferred from annoation in the entity class,
@@ -111,12 +122,20 @@ public class EntityTransformer {
 
         String applicationUri = "/v1/applications/" + entity.getApplicationId();
         String entityUri = applicationUri + "/entities/" + entity.getId();
-        Map<String,URI> links = ImmutableMap.<String, URI>builder()
-                .put("self", URI.create(entityUri + "/config/" + config.getName()))
-                .put("application", URI.create(applicationUri))
-                .put("entity", URI.create(entityUri))
-                .build();
-        return entityConfigSummary(config, label, priority, links);
+        String selfUri = entityUri + "/config/" + URLParamEncoder.encode(config.getName());
+        
+        MutableMap.Builder<String, URI> lb = MutableMap.<String, URI>builder()
+            .put("self", URI.create(selfUri))
+            .put("application", URI.create(applicationUri))
+            .put("entity", URI.create(entityUri))
+            .put("action:json", URI.create(selfUri));
+
+        Iterable<RendererHints.NamedAction> hints = Iterables.filter(RendererHints.getHintsFor(config), RendererHints.NamedAction.class);
+        for (RendererHints.NamedAction na : hints) {
+            SensorTransformer.addNamedAction(lb, na, entity.getConfig(config), config, entity);
+        }
+    
+        return entityConfigSummary(config, label, priority, lb.build());
     }
 
     public static String applicationUri(Application entity) {
@@ -127,11 +146,10 @@ public class EntityTransformer {
         return applicationUri(entity.getApplication()) + "/entities/" + entity.getId();
     }
     
-    protected static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, Field configKeyField) {
+    public static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, Field configKeyField) {
         CatalogConfig catalogConfig = configKeyField!=null ? configKeyField.getAnnotation(CatalogConfig.class) : null;
         String label = catalogConfig==null ? null : catalogConfig.label();
         Double priority = catalogConfig==null ? null : catalogConfig.priority();
         return entityConfigSummary(config, label, priority, null);
     }
-
 }

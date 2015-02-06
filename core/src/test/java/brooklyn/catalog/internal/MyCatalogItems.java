@@ -26,10 +26,6 @@ public class MyCatalogItems {
 
     @Catalog(description="Some silly app test")
     public static class MySillyAppTemplate extends AbstractApplication {
-        @Override
-        public void init() {
-            // no-op
-        }
     }
     
     @Catalog(description="Some silly app builder test")

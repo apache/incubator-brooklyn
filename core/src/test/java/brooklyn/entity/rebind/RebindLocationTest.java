@@ -105,7 +105,7 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testRestoresFieldsWithSetFromFlag() throws Exception {
-    	MyLocation origLoc = new MyLocation(MutableMap.of("myfield", "myval"));
+        MyLocation origLoc = new MyLocation(MutableMap.of("myfield", "myval"));
         origApp.start(ImmutableList.of(origLoc));
 
         newApp = (TestApplication) rebind();
@@ -121,7 +121,7 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
 
         origLoc.myAtomicLong.incrementAndGet();
         assertEquals(origLoc.myAtomicLong.get(), 124L);
-        ((EntityInternal)origApp).getManagementContext().getRebindManager().getChangeListener().onChanged(origLoc);
+        origApp.getManagementContext().getRebindManager().getChangeListener().onChanged(origLoc);
         
         newApp = (TestApplication) rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
@@ -202,10 +202,10 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testHandlesFieldReferencingOtherLocations() throws Exception {
-    	MyLocation origOtherLoc = new MyLocation();
-    	MyLocationReffingOthers origLoc = new MyLocationReffingOthers(MutableMap.of("otherLocs", ImmutableList.of(origOtherLoc), "myfield", "myval"));
-    	origOtherLoc.setParent(origLoc);
-    	
+        MyLocation origOtherLoc = new MyLocation();
+        MyLocationReffingOthers origLoc = new MyLocationReffingOthers(MutableMap.of("otherLocs", ImmutableList.of(origOtherLoc), "myfield", "myval"));
+        origOtherLoc.setParent(origLoc);
+        
         origApp.start(ImmutableList.of(origLoc));
 
         newApp = rebind();
@@ -259,14 +259,14 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     @Test
     public void testLocationTags() throws Exception {
         Location origLoc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class));
-        origLoc.getTagSupport().addTag("foo");
-        origLoc.getTagSupport().addTag(origApp);
+        origLoc.tags().addTag("foo");
+        origLoc.tags().addTag(origApp);
         origApp.start(ImmutableList.of(origLoc));
 
         newApp = rebind();
         Location newLoc = (Location) newManagementContext.getLocationManager().getLocation(origLoc.getId());
 
-        Asserts.assertEqualsIgnoringOrder(newLoc.getTagSupport().getTags(), ImmutableSet.of("foo", newApp));
+        Asserts.assertEqualsIgnoringOrder(newLoc.tags().getTags(), ImmutableSet.of("foo", newApp));
     }
 
     public static class LocationChecksIsRebinding extends AbstractLocation {

@@ -33,6 +33,7 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.location.Location;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskTags;
@@ -44,23 +45,23 @@ import com.google.common.collect.Lists;
 public class StartableMethods {
 
     public static final Logger log = LoggerFactory.getLogger(StartableMethods.class);
-    	
-	private StartableMethods() {}
+        
+    private StartableMethods() {}
 
     /** Common implementation for start in parent nodes; just invokes start on all children of the entity */
-	public static void start(EntityLocal e, Collection<? extends Location> locations) {
+    public static void start(EntityLocal e, Collection<? extends Location> locations) {
         log.debug("Starting entity "+e+" at "+locations);
         DynamicTasks.queueIfPossible(startingChildren(e, locations)).orSubmitAsync(e).getTask().getUnchecked();
-	}
-	
+    }
+    
     /** Common implementation for stop in parent nodes; just invokes stop on all children of the entity */
-	public static void stop(EntityLocal e) {
+    public static void stop(EntityLocal e) {
         log.debug("Stopping entity "+e);
         DynamicTasks.queueIfPossible(stoppingChildren(e)).orSubmitAsync(e).getTask().getUnchecked();
         if (log.isDebugEnabled()) log.debug("Stopped entity "+e);
-	}
+    }
 
-    /** Common implementation for restart in parent nodes; just invokes stop on all children of the entity */
+    /** Common implementation for restart in parent nodes; just invokes restart on all children of the entity */
     public static void restart(EntityLocal e) {
         log.debug("Restarting entity "+e);
         DynamicTasks.queueIfPossible(restartingChildren(e)).orSubmitAsync(e).getTask().getUnchecked();
@@ -68,7 +69,7 @@ public class StartableMethods {
     }
     
     private static <T extends Entity> Iterable<T> filterStartableManagedEntities(Iterable<T> contenders) {
-        return Iterables.filter(contenders, Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.managed()));
+        return Iterables.filter(contenders, Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.isManaged()));
     }
 
     public static void stopSequentially(Iterable<? extends Startable> entities) {
@@ -114,8 +115,12 @@ public class StartableMethods {
     }
 
     /** unsubmitted task for restarting children of the given entity */
-    public static TaskAdaptable<?> restartingChildren(Entity entity) {
-        return Effectors.invocation(Startable.RESTART, Collections.emptyMap(), filterStartableManagedEntities(entity.getChildren()));
+    public static TaskAdaptable<?> restartingChildren(Entity entity, ConfigBag parameters) {
+        return Effectors.invocation(Startable.RESTART, parameters.getAllConfig(), filterStartableManagedEntities(entity.getChildren()));
     }
-    
+    /** as {@link #restartingChildren(Entity, ConfigBag)} with no parameters */
+    public static TaskAdaptable<?> restartingChildren(Entity entity) {
+        return restartingChildren(entity, ConfigBag.EMPTY);
+    }
+
 }

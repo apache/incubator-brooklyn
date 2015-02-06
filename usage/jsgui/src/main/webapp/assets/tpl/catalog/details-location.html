@@ -18,7 +18,7 @@ under the License.
 -->
 <div class="catalog-details">
 
-    <h3><%= model.getPrettyName() %></h3>
+    <h3><%- model.getPrettyName() %></h3>
 
     <div class="float-right">
         <button data-name="<%= model.getPrettyName() %>" class="btn btn-danger delete">Delete</button>
@@ -30,9 +30,9 @@ under the License.
 
     <br/>
     <table>
-        <tr><td><strong>ID:</strong>&nbsp;&nbsp;</td><td><%= model.get("id") || "" %></td></tr>
-        <tr><td><strong>Name:</strong>&nbsp;&nbsp;</td><td><%= model.get("name") || "" %></td></tr>
-        <tr><td><strong>Spec:</strong>&nbsp;&nbsp;</td><td><%= model.get("spec") || "" %></td></tr>
+        <tr><td><strong>ID:</strong>&nbsp;&nbsp;</td><td><%- model.get("id") || "" %></td></tr>
+        <tr><td><strong>Name:</strong>&nbsp;&nbsp;</td><td><%- model.get("name") || "" %></td></tr>
+        <tr><td><strong>Spec:</strong>&nbsp;&nbsp;</td><td><%- model.get("spec") || "" %></td></tr>
     </table>
     
     <br/>

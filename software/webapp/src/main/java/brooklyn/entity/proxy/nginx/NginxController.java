@@ -104,9 +104,12 @@ public interface NginxController extends AbstractController, HasShortName {
     ConfigKey<String> WITH_CC_OPT = ConfigKeys.newStringConfigKey(
             "nginx.install.withCcOpt", "String to pass in with --with-cc-opt=\"<val>\"", "-I /usr/local/include");
 
+    @SetFromFlag("configGenerator")
+    ConfigKey<NginxConfigFileGenerator> SERVER_CONF_GENERATOR = ConfigKeys.newConfigKey(NginxConfigFileGenerator.class,
+            "nginx.config.generator", "The server.conf generator class", new NginxDefaultConfigGenerator());
+
     @SetFromFlag("configTemplate")
-    ConfigKey<String> SERVER_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
-            "nginx.config.templateUrl", "The server.conf configuration file URL (FreeMarker template)");
+    ConfigKey<String> SERVER_CONF_TEMPLATE_URL = NginxTemplateConfigGenerator.SERVER_CONF_TEMPLATE_URL;
 
     @SetFromFlag("staticContentArchive")
     ConfigKey<String> STATIC_CONTENT_ARCHIVE_URL = ConfigKeys.newStringConfigKey(
@@ -132,5 +135,11 @@ public interface NginxController extends AbstractController, HasShortName {
 
     boolean appendSslConfig(String id, StringBuilder out, String prefix, ProxySslConfig ssl, boolean sslBlock, boolean certificateBlock);
     
+    public static final AttributeSensor<Boolean> NGINX_URL_ANSWERS_NICELY = Sensors.newBooleanSensor( "nginx.url.answers.nicely");
     public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "nginx.pid.file", "PID file");
+    
+    public interface NginxControllerInternal {
+        public void doExtraConfigurationDuringStart();
+    }
+
 }

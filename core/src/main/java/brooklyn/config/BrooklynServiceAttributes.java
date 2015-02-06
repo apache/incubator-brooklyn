@@ -35,7 +35,7 @@ public class BrooklynServiceAttributes {
      * or battling maven etc to build web-console as jar available to launcher
      * (which would contain a lot of crap as well).
      */
-	
+    
     /** used to hold the instance of ManagementContext which should be used */
     public static final String BROOKLYN_MANAGEMENT_CONTEXT = ManagementContext.class.getName();
     
@@ -59,5 +59,8 @@ public class BrooklynServiceAttributes {
      * use this to supply a specific address (e.g. "127.0.0.1" or a specific IP on a specific NIC or FW)
      */
     public static StringSystemProperty LOCALHOST_IP_ADDRESS = new StringSystemProperty("brooklyn.location.localhost.address");
+
+    /** Jackson ObjectMapper shared among REST resources */ 
+    public static final String BROOKLYN_REST_OBJECT_MAPPER = "brooklyn.rest.objectMapper";
     
 }

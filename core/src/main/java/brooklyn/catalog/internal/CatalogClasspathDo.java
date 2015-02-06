@@ -58,7 +58,7 @@ public class CatalogClasspathDo {
          * for any catalog which is presented over the internet this is recommended (to prevent loading) and is the default; 
          * (you should explicitly list the items to include; it may be useful to autogenerate it by using a local catalog
          * scanning with ANNOTATIONS, viwing that by running mgmt.getCatalog().toXmlString(),
-         * then editting the resulting XML (e.g. setting the classpath and removing the scan attribute) */
+         * then editing the resulting XML (e.g. setting the classpath and removing the scan attribute) */
         NONE, 
         
         /** types in the classpath are scanned for annotations indicating inclusion in the catalog ({@link Catalog});
@@ -149,7 +149,7 @@ public class CatalogClasspathDo {
                     baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
                     scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
                 } catch (Exception e) {
-                    log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+")");
+                    log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+"): "+e);
                     Exceptions.propagateIfFatal(e);
                 }
             }
@@ -241,13 +241,13 @@ public class CatalogClasspathDo {
     @Deprecated
     public CatalogItem<?,?> addCatalogEntry(CatalogItemDtoAbstract<?,?> item, Class<?> c) {
         Catalog annotations = c.getAnnotation(Catalog.class);
-        item.registeredType = c.getName();
-        item.javaType = c.getName();
-        item.name = firstNonEmpty(c.getSimpleName(), c.getName());
+        item.setSymbolicName(c.getName());
+        item.setJavaType(c.getName());
+        item.setDisplayName(firstNonEmpty(c.getSimpleName(), c.getName()));
         if (annotations!=null) {
-            item.name = firstNonEmpty(annotations.name(), item.name);
-            item.description = firstNonEmpty(annotations.description());
-            item.iconUrl = firstNonEmpty(annotations.iconUrl());
+            item.setDisplayName(firstNonEmpty(annotations.name(), item.getDisplayName()));
+            item.setDescription(firstNonEmpty(annotations.description()));
+            item.setIconUrl(firstNonEmpty(annotations.iconUrl()));
         }
         if (log.isTraceEnabled())
             log.trace("adding to catalog: "+c+" (from catalog "+catalog+")");

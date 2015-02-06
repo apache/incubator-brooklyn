@@ -55,6 +55,7 @@ public class AbstractResource {
     private String name;
     private String type;
     private String description;
+    private String sourceCode;
     private Date created = Time.dropMilliseconds(new Date());
     private List<String> tags = Collections.emptyList();
     private RepresentationSkew representationSkew;
@@ -77,6 +78,9 @@ public class AbstractResource {
     }
     public String getDescription() {
         return description;
+    }
+    public String getSourceCode() {
+        return sourceCode;
     }
     public Date getCreated() {
         return created;
@@ -102,6 +106,9 @@ public class AbstractResource {
     private void setDescription(String description) {
         this.description = description;
     }
+    private void setSourceCode(String sourceCode) {
+        this.sourceCode = sourceCode;
+    }
     private void setCreated(Date created) {
         // precision beyond seconds breaks equals check
         this.created = Time.dropMilliseconds(created);
@@ -122,7 +129,7 @@ public class AbstractResource {
     // builder
     @SuppressWarnings("rawtypes")
     public static Builder<? extends AbstractResource,? extends Builder> builder() {
-        return new AbstractResourceBuilder(CAMP_TYPE);
+        return new AbstractResource().new AbstractResourceBuilder(CAMP_TYPE);
     }
     
     /** Builder creates the instance up front to avoid repetition of fields in the builder;
@@ -130,58 +137,54 @@ public class AbstractResource {
      * so effectively immutable.
      * <p>
      * Similarly setters in the class are private so those objects are also typically effectively immutable. */
-    public abstract static class Builder<T extends AbstractResource,U extends Builder<T,U>> {
+    public abstract class Builder<T extends AbstractResource,U extends Builder<T,U>> {
         
         private boolean built = false;
         private String type = null;
-        private T instance = null;
+        private boolean initialized = false;
         
         protected Builder(String type) {
             this.type = type;
         }
         
-        @SuppressWarnings("unchecked")
-        protected T createResource() {
-            return (T) new AbstractResource();
-        }
-        
-        protected synchronized T instance() {
+        protected final synchronized void check() {
             if (built) 
                 throw new IllegalStateException("Builder instance from "+this+" cannot be access after build");
-            if (instance==null) {
-                instance = createResource();
+            if (!initialized) {
+                initialized = true;
                 initialize();
             }
-            return instance;
         }
 
         protected void initialize() {
             if (type!=null) type(type);
         }
-        
+
+        @SuppressWarnings("unchecked")
         public synchronized T build() {
-            T result = instance();
+            check();
             built = true;
-            return result;
+            return (T) AbstractResource.this;
         }
         
         @SuppressWarnings("unchecked")
         protected U thisBuilder() { return (U)this; }
         
-        public U type(String x) { instance().setType(x); return thisBuilder(); }
-        public U id(String x) { instance().setId(x); return thisBuilder(); }
-        public U name(String x) { instance().setName(x); return thisBuilder(); }
-        public U description(String x) { instance().setDescription(x); return thisBuilder(); }
-        public U created(Date x) { instance().setCreated(x); return thisBuilder(); }
-        public U tags(List<String> x) { instance().setTags(x); return thisBuilder(); }
-        public U representationSkew(RepresentationSkew x) { instance().setRepresentationSkew(x); return thisBuilder(); }
-        public U customAttribute(String key, Object value) { instance().setCustomAttribute(key, value); return thisBuilder(); }
-        
+        public U type(String x) { check(); AbstractResource.this.setType(x); return thisBuilder(); }
+        public U id(String x) { check(); AbstractResource.this.setId(x); return thisBuilder(); }
+        public U name(String x) { check(); AbstractResource.this.setName(x); return thisBuilder(); }
+        public U description(String x) { check(); AbstractResource.this.setDescription(x); return thisBuilder(); }
+        public U created(Date x) { check(); AbstractResource.this.setCreated(x); return thisBuilder(); }
+        public U tags(List<String> x) { check(); AbstractResource.this.setTags(x); return thisBuilder(); }
+        public U representationSkew(RepresentationSkew x) { check(); AbstractResource.this.setRepresentationSkew(x); return thisBuilder(); }
+        public U customAttribute(String key, Object value) { check(); AbstractResource.this.setCustomAttribute(key, value); return thisBuilder(); }
+        public U sourceCode(String x) { check(); AbstractResource.this.setSourceCode(x); return thisBuilder(); }
+
 //        public String type() { return instance().type; }
     }
-
+    
     @VisibleForTesting
-    protected static class AbstractResourceBuilder extends Builder<AbstractResource,AbstractResourceBuilder> {
+    protected class AbstractResourceBuilder extends Builder<AbstractResource,AbstractResourceBuilder> {
         protected AbstractResourceBuilder(String type) {
             super(type);
         }

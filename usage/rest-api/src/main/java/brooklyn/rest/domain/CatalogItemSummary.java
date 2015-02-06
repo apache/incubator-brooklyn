@@ -34,11 +34,14 @@ import com.google.common.collect.ImmutableMap;
 public class CatalogItemSummary implements HasId, HasName {
 
     private final String id;
-    
-    // TODO too many types, see in CatalogItem
+    private final String symbolicName;
+    private final String version;
+
+    //needed for backwards compatibility only (json serializer works on fields, not getters)
+    @Deprecated
     private final String type;
+    
     private final String javaType;
-    private final String registeredType;
     
     private final String name;
     @JsonSerialize(include=Inclusion.NON_EMPTY)
@@ -50,48 +53,52 @@ public class CatalogItemSummary implements HasId, HasName {
     private final Map<String, URI> links;
 
     public CatalogItemSummary(
-            @JsonProperty("id") String id,
-            @JsonProperty("name") String name,
-            @JsonProperty("registeredType") String registeredType,
+            @JsonProperty("symbolicName") String symbolicName,
+            @JsonProperty("version") String version,
+            @JsonProperty("name") String displayName,
             @JsonProperty("javaType") String javaType,
-            @JsonProperty("type") String highLevelType,
             @JsonProperty("planYaml") String planYaml,
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        this.id = id;
-        this.name = name;
+        this.id = symbolicName + ":" + version;
+        this.symbolicName = symbolicName;
+        this.type = symbolicName;
+        this.version = version;
+        this.name = displayName;
         this.javaType = javaType;
-        this.registeredType = registeredType;
-        this.type = highLevelType;
         this.planYaml = planYaml;
         this.description = description;
         this.iconUrl = iconUrl;
-        this.links = ImmutableMap.copyOf(links);
+        this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
     }
-    
+
     @Override
     public String getId() {
         return id;
     }
 
-    public String getType() {
-        return type;
+    public String getSymbolicName() {
+        return symbolicName;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
     public String getJavaType() {
         return javaType;
     }
 
-    public String getRegisteredType() {
-        return registeredType;
+    public String getType() {
+        return type;
     }
 
     public String getPlanYaml() {
         return planYaml;
     }
-    
+
     @Override
     public String getName() {
         return name;
@@ -111,12 +118,15 @@ public class CatalogItemSummary implements HasId, HasName {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("id", id).toString();
+        return Objects.toStringHelper(this)
+                .add("id", symbolicName)
+                .add("version", version)
+                .toString();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id, name, type);
+        return Objects.hashCode(symbolicName, version, name, javaType);
     }
     
     @Override

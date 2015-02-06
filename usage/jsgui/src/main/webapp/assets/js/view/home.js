@@ -39,6 +39,7 @@ define([
         events:{
             'click #add-new-application':'createApplication',
             'click #reload-brooklyn-properties': 'reloadBrooklynProperties',
+            'click #clear-ha-node-records': 'clearHaNodeRecords',
             'click .addApplication':'createApplication'
         },
         
@@ -159,7 +160,7 @@ define([
                 url: "/v1/server/properties/reload",
                 contentType: "application/json",
                 success: function() {
-                    console.log("Reloaded brooklyn properties");
+                    console.log("reloaded brooklyn properties");
                     self.options.locations.fetch();
                     // clear submitted indicator
                     setTimeout(function() { self.$('#reload-brooklyn-properties-indicator').hide(); }, 250);
@@ -173,16 +174,38 @@ define([
                     console.debug(data);
                 }
             });
+        },
+        
+        clearHaNodeRecords: function() {
+            var self = this;
+            // indicate submitted
+            self.$('#clear-ha-node-records-indicator').show();
+            $.ajax({
+                type: "POST",
+                url: "/v1/server/ha/states/clear",
+                contentType: "application/json",
+                success: function() {
+                    console.log("cleared HA node records");
+                    self.haSummaryView.updateNow();
+                    // clear submitted indicator
+                    setTimeout(function() { self.$('#clear-ha-node-records-indicator').hide(); }, 250);
+                },
+                error: function(data) {
+                    // TODO render the error better than poor-man's flashing
+                    // (would just be connection error -- with timeout=0 we get a task even for invalid input)
+                    self.$el.fadeTo(100,1).delay(200).fadeTo(200,0.2).delay(200).fadeTo(200,1);
+                    self.$('#clear-ha-node-records-indicator').hide();
+                    console.error("ERROR clearing HA nodes");
+                    console.debug(data);
+                }
+            });
         }
     })
 
     HomeView.HomeSummariesView = Backbone.View.extend({
         tagName:'div',
         template:_.template(HomeSummariesHtml),
-
-        initialize:function () {
-//            this.apps.on('change', this.render, this)
-        },
+        // no listening needed here; it's done by outer class
         render:function () {
             this.$el.html(this.template({
                 apps:this.options.applications,
@@ -190,9 +213,6 @@ define([
             }))
             return this
         },
-        beforeClose:function () {
-//            this.off("change", this.render)
-        }
     })
     
     HomeView.AppEntryView = Backbone.View.extend({

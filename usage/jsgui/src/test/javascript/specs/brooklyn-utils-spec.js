@@ -130,4 +130,22 @@ define([
             expect(inputs.initialAttribute).toBe("xyz");
         });
     });
+
+    describe("extractError", function () {
+        it("should extract the response message", function () {
+            var m = Util.extractError({ responseText: '{"message": "hello"}'}, "default");
+            expect(m).toBe("hello");
+        });
+
+        it("should return the default on invalid JSON", function () {
+            var m = Util.extractError({ responseText: "<html></html>"}, "default");
+            expect(m).toBe("default");
+        });
+
+        it("should return the default if the response has no message", function () {
+            var m = Util.extractError({ a: '{"b": "c"}'}, "default");
+            expect(m).toBe("default");
+        });
+    });
+
 });

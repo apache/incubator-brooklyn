@@ -32,19 +32,18 @@ import com.google.common.collect.ImmutableMap;
  * @author Aled Sage
  */
 public class UsageStatistics {
-    
-    // TODO populate links with /apps endpoint to link to /usage/applications/{id}, to make it more RESTy
-    
+
+    // TODO populate links with /apps endpoint to link to /usage/applications/{id}, to make it more
+    // RESTy
+
     private final List<UsageStatistic> statistics;
     private final Map<String, URI> links;
 
-    public UsageStatistics(
-            @JsonProperty("statistics") List<UsageStatistic> statistics,
-            @JsonProperty("links") Map<String, URI> links
-    ) {
-        this.statistics = statistics == null ? ImmutableList.<UsageStatistic>of() : ImmutableList.copyOf(statistics);
-        this.links = links == null ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
-      }
+    public UsageStatistics(@JsonProperty("statistics") List<UsageStatistic> statistics,
+                           @JsonProperty("links") Map<String, URI> links) {
+        this.statistics = statistics == null ? ImmutableList.<UsageStatistic> of() : ImmutableList.copyOf(statistics);
+        this.links = (links == null) ? ImmutableMap.<String, URI> of() : ImmutableMap.copyOf(links);
+    }
 
     public List<UsageStatistic> getStatistics() {
         return statistics;
@@ -53,12 +52,13 @@ public class UsageStatistics {
     public Map<String, URI> getLinks() {
         return links;
     }
-    
+
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof UsageStatistics)) return false;
+        if (!(o instanceof UsageStatistics))
+            return false;
         UsageStatistics other = (UsageStatistics) o;
-        return Objects.equal(statistics,  other.statistics);
+        return Objects.equal(statistics, other.statistics);
     }
 
     @Override
@@ -68,9 +68,6 @@ public class UsageStatistics {
 
     @Override
     public String toString() {
-        return "UsageStatistics{" +
-                "statistics=" + statistics +
-                ", links=" + links +
-                '}';
+        return "UsageStatistics{" + "statistics=" + statistics + ", links=" + links + '}';
     }
 }

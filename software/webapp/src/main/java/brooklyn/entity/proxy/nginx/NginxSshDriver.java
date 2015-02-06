@@ -28,16 +28,19 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.entity.proxy.AbstractController;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
@@ -97,7 +100,12 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return format("%s/%s", getRunDir(), NGINX_PID_FILE);
     }
 
+    @Deprecated /** @deprecated since 0.7.0 use #getPort */
     public Integer getHttpPort() {
+        return getEntity().getPort();
+    }
+
+    public Integer getPort() {
         return getEntity().getPort();
     }
 
@@ -109,8 +117,20 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     @Override
     public void postLaunch() {
         entity.setAttribute(NginxController.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
-        entity.setAttribute(Attributes.HTTP_PORT, getHttpPort());
+        if (((AbstractController)entity).isSsl()) {
+            entity.setAttribute(Attributes.HTTPS_PORT, getPort());
+            ((EntityInternal)entity).removeAttribute(Attributes.HTTP_PORT);
+        } else {
+            entity.setAttribute(Attributes.HTTP_PORT, getPort());
+            ((EntityInternal)entity).removeAttribute(Attributes.HTTPS_PORT);
+        }
         super.postLaunch();
+    }
+
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("nginx-%s", getVersion()))));
     }
 
     @Override
@@ -118,10 +138,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // inessential here, installation will fail later if it needs to sudo (eg if using port 80)
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), OnFailingTask.WARN_OR_IF_DYNAMIC_FAIL_MARKING_INESSENTIAL)).orSubmitAndBlock();
 
-        DownloadResolver nginxResolver = mgmt().getEntityDownloadsManager().newDownloader(this);
-        List<String> nginxUrls = nginxResolver.getTargets();
-        String nginxSaveAs = nginxResolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/" + nginxResolver.getUnpackedDirectoryName(format("nginx-%s", getVersion())));
+        List<String> nginxUrls = resolver.getTargets();
+        String nginxSaveAs = resolver.getFilename();
 
         boolean sticky = ((NginxController) entity).isSticky();
         boolean isMac = getMachine().getOsDetails().isMac();
@@ -282,7 +300,6 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         }
 
         customizationCompleted = true;
-        getEntity().doExtraConfigurationDuringStart();
     }
 
     @Override
@@ -295,7 +312,9 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // TODO if can't be root, and ports > 1024 are in the allowed port range,
         // prefer that; could do this on SshMachineLocation which implements PortSupplier,
         // invoked from PortAttrSensorAndConfigKey, which is invoked from MachineLifecycleTasks.preStartCustom
-        Networking.checkPortsValid(MutableMap.of("httpPort", getHttpPort()));
+        Networking.checkPortsValid(MutableMap.of("port", getPort()));
+
+        getEntity().doExtraConfigurationDuringStart();
 
         // We wait for evidence of running because, using
         // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
@@ -305,7 +324,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 .body.append(
                         format("cd %s", getRunDir()),
                         BashCommands.requireExecutable("./sbin/nginx"),
-                        sudoBashCIfPrivilegedPort(getHttpPort(), format(
+                        sudoBashCIfPrivilegedPort(getPort(), format(
                                 "nohup ./sbin/nginx -p %s/ -c conf/server.conf > %s 2>&1 &", getRunDir(), getLogFileLocation())),
                         format("for i in {1..10}\n" +
                                 "do\n" +
@@ -339,7 +358,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
                         format("cd %s", getRunDir()),
                         format("export PID=`cat %s`", getPidFile()),
                         "test -n \"$PID\" || exit 0",
-                        sudoIfPrivilegedPort(getHttpPort(), "kill $PID"))
+                        sudoIfPrivilegedPort(getPort(), "kill $PID"))
                 .execute();
     }
 
@@ -380,8 +399,8 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // calling waitForEntityStart()), we can guarantee that the start-thread's call to update will happen after
         // this call to reload. So we this can be a no-op, and just rely on that subsequent call to update.
 
-        Lifecycle lifecycle = entity.getAttribute(NginxController.SERVICE_STATE);
-        if (!isRunning()) {
+        Lifecycle lifecycle = entity.getAttribute(NginxController.SERVICE_STATE_ACTUAL);
+        if (lifecycle==Lifecycle.STOPPING || lifecycle==Lifecycle.STOPPED || !isRunning()) {
             log.debug("Ignoring reload of nginx "+entity+", because service is not running (state "+lifecycle+")");
             return;
         }
@@ -399,14 +418,14 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         //   sudoIfPrivilegedPort(getHttpPort(), format("./sbin/nginx -p %s/ -c conf/server.conf -s reload", getRunDir()))
         //
         // Note that if conf file is invalid, you'll get no stdout/stderr from `kill` but you
-        // do from using `nginx ... -s reload` so that can be handly when manually debugging.
+        // do from using `nginx ... -s reload` so that can be handy when manually debugging.
 
         log.debug("reloading nginx by simularing restart (kill -HUP) - {}", entity);
         newScript(RESTARTING)
                 .body.append(
                         format("cd %s", getRunDir()),
                         format("export PID=`cat %s`", getPidFile()),
-                        sudoIfPrivilegedPort(getHttpPort(), "kill -HUP $PID"))
+                        sudoIfPrivilegedPort(getPort(), "kill -HUP $PID"))
                 .execute();
     }
 

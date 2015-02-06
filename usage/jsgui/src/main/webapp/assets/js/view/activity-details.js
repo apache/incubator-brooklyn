@@ -20,12 +20,12 @@
  * Displays details on an activity/task
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils", "view/viewutils", "formatJson", "moment",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "view/viewutils", "moment",
     "model/task-summary",
     "text!tpl/apps/activity-details.html", "text!tpl/apps/activity-table.html", 
 
     "bootstrap", "jquery-datatables", "datatables-extensions"
-], function (_, $, Backbone, Util, ViewUtils, FormatJSON, moment,
+], function (_, $, Backbone, Util, ViewUtils, moment,
     TaskSummary,
     ActivityDetailsHtml, ActivityTableHtml) {
 
@@ -158,8 +158,9 @@ define([
                  })
             this.updateFieldWith('tags', function(tags) {
                 var tagBody = "";
-                for (var tag in tags)
-                    tagBody += "<div class='activity-tag-giftlabel'>"+_.escape(tags[tag])+"</div>";
+                for (var tag in tags) {
+                    tagBody += "<div class='activity-tag-giftlabel'>"+Util.toDisplayString(tags[tag])+"</div>";
+                }
                 return tagBody;
             })
             
@@ -171,26 +172,30 @@ define([
                 function(v) { return v <= 0 ? "-" : moment(v).format('D MMM YYYY H:mm:ss.SSS')+" &nbsp; <i>"+moment(v).from(startTimeUtc, true)+" later</i>" })
 
             ViewUtils.updateTextareaWithData(this.$(".task-json .for-textarea"), 
-                FormatJSON(this.task.toJSON()), false, false, 150, 400)
+                Util.toTextAreaString(this.task), false, false, 150, 400)
 
             ViewUtils.updateTextareaWithData(this.$(".task-detail .for-textarea"), 
                 this.task.get('detailedStatus'), false, false, 30, 250)
 
             this.updateFieldWith('streams',
-                function(v) {
+                function(streams) {
+                    // Stream names presented alphabetically
+                    var keys = _.keys(streams);
+                    keys.sort();
                     var result = "";
-                    for (var si in v) {
-                        var sv = v[si];
-                        result += "<div class='activity-stream-div'>"+
-                                  "<span class='activity-label'>"+
-                                    _.escape(si)+
-                                  "</span><span>"+
-                                      "<a href='"+sv.link+"'>download</a>"+
-                                      (sv.metadata["sizeText"] ? " ("+_.escape(sv.metadata["sizeText"])+")" : "")+
-                                  "</span></div>";
+                    for (var i = 0; i < keys.length; i++) {
+                        var name = keys[i];
+                        var stream = streams[name];
+                        result += "<div class='activity-stream-div'>" +
+                                "<span class='activity-label'>" +
+                                _.escape(name) +
+                                "</span><span>" +
+                                "<a href='" + stream.link + "'>download</a>" +
+                                (stream.metadata["sizeText"] ? " (" + _.escape(stream.metadata["sizeText"]) + ")" : "") +
+                                "</span></div>";
                     }
                     return result; 
-                })
+                });
 
             this.updateFieldWith('submittedByTask',
                 function(v) { return "<a class='showDrillDownSubmittedByAnchor handy' link='"+_.escape(v.link)+"' id='"+v.metadata.id+"'>"+

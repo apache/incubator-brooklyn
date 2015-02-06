@@ -18,26 +18,22 @@
  */
 package brooklyn.entity.basic;
 
+import java.io.Serializable;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import brooklyn.config.render.RendererHints;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.StringFunctions;
+
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * An enumeration representing the status of an {@link brooklyn.entity.Entity}.
- *
- * @startuml img/entity-lifecycle.png
- * title Entity Lifecycle
- * 
- * (*) ->  "CREATED"
- *     if "Exception" then
- *     ->  "ON_FIRE"
- *     else
- *     --> "STARTING"
- *     --> "RUNNING"
- *     ->  "STOPPING"
- *     --> "STOPPED"
- *     --> "RUNNING"
- *     --> "DESTROYED"
- *     -left-> (*)
- * @enduml
  */
 public enum Lifecycle {
     /**
@@ -51,9 +47,11 @@ public enum Lifecycle {
 
     /**
      * The entity is starting.
-     *
-     * This stage is entered when the {@link brooklyn.entity.trait.Startable#START} {@link brooklyn.entity.Effector} is called. 
-     * The entity will have its location set and and setup helper object created.
+     * <p>
+     * This stage is typically entered when the {@link brooklyn.entity.trait.Startable#START} {@link brooklyn.entity.Effector} 
+     * is called, to undertake the startup operations from the management plane.
+     * When this completes the entity will normally transition to 
+     * {@link Lifecycle#RUNNING}. 
      */
     STARTING,
 
@@ -120,5 +118,67 @@ public enum Lifecycle {
        } catch (IllegalArgumentException iae) {
           return ON_FIRE;
        }
+    }
+    
+    public static class Transition implements Serializable {
+        private static final long serialVersionUID = 603419184398753502L;
+        
+        final Lifecycle state;
+        final long timestampUtc;
+        
+        public Transition(Lifecycle state, Date timestamp) {
+            this.state = Preconditions.checkNotNull(state, "state");
+            this.timestampUtc = Preconditions.checkNotNull(timestamp, "timestamp").getTime();
+        }
+        
+        public Lifecycle getState() {
+            return state;
+        }
+        public Date getTimestamp() {
+            return new Date(timestampUtc);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(state, timestampUtc);
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof Transition)) return false;
+            if (!state.equals(((Transition)obj).getState())) return false;
+            if (timestampUtc != ((Transition)obj).timestampUtc) return false;
+            return true;
+        }
+        
+        @Override
+        public String toString() {
+            return state+" @ "+timestampUtc+" / "+new Date(timestampUtc);
+        }
+    }
+    
+    protected static class TransitionCoalesceFunction implements Function<String, Transition> {
+        private static final Pattern TRANSITION_PATTERN = Pattern.compile("^(\\w+)\\s+@\\s+(\\d+).*");
+
+        @Override
+        public Transition apply(final String input) {
+            if (input != null) {
+                Matcher m = TRANSITION_PATTERN.matcher(input);
+                if (m.matches()) {
+                    Lifecycle state = Lifecycle.valueOf(m.group(1).toUpperCase());
+                    long time = Long.parseLong(m.group(2));
+                    return new Transition(state, new Date(time));
+                } else {
+                    throw new IllegalStateException("Serialized Lifecycle.Transition can't be parsed: " + input);
+                }
+            } else {
+                return null;
+            }
+        }
+    }
+
+    static {
+        TypeCoercions.registerAdapter(String.class, Transition.class, new TransitionCoalesceFunction());
+        RendererHints.register(Transition.class, RendererHints.displayValue(StringFunctions.toStringFunction()));
     }
 }

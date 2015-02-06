@@ -46,8 +46,10 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.TestUtils;
+import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -110,6 +112,7 @@ public class UrlMappingTest {
     @Test(groups = "Integration")
     public void testTargetMappingsRemovesUnmanagedMember() {
         Iterable<StubAppServer> members = Iterables.filter(cluster.getChildren(), StubAppServer.class);
+        assertEquals(Iterables.size(members), 2);
         StubAppServer target1 = Iterables.get(members, 0);
         StubAppServer target2 = Iterables.get(members, 1);
         
@@ -120,6 +123,11 @@ public class UrlMappingTest {
         Entities.unmanage(target1);
 
         assertExpectedTargetsEventually(ImmutableSet.of(target2));
+    }
+    
+    @Test(groups = "Integration", invocationCount=50)
+    public void testTargetMappingsRemovesUnmanagedMemberManyTimes() {
+        testTargetMappingsRemovesUnmanagedMember();
     }
     
     @Test(groups = "Integration")
@@ -182,13 +190,13 @@ public class UrlMappingTest {
     }
     
     private void assertExpectedTargetsEventually(final Iterable<? extends Entity> members) {
-        TestUtils.executeUntilSucceeds(new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.ONE_MINUTE), new Runnable() {
             public void run() {
                 Iterable<String> expectedTargets = Iterables.transform(members, new Function<Entity,String>() {
                         @Override public String apply(@Nullable Entity input) {
                             return input.getAttribute(Attributes.HOSTNAME)+":"+input.getAttribute(Attributes.HTTP_PORT);
                         }});
-                
+
                 assertEquals(ImmutableSet.copyOf(urlMapping.getAttribute(UrlMapping.TARGET_ADDRESSES)), ImmutableSet.copyOf(expectedTargets));
                 assertEquals(urlMapping.getAttribute(UrlMapping.TARGET_ADDRESSES).size(), Iterables.size(members));
             }});

@@ -1,3 +1,21 @@
+    /*
+     * Licensed to the Apache Software Foundation (ASF) under one
+     * or more contributor license agreements.  See the NOTICE file
+     * distributed with this work for additional information
+     * regarding copyright ownership.  The ASF licenses this file
+     * to you under the Apache License, Version 2.0 (the
+     * "License"); you may not use this file except in compliance
+     * with the License.  You may obtain a copy of the License at
+     *
+     *  http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing,
+     * software distributed under the License is distributed on an
+     * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     * KIND, either express or implied.  See the License for the
+     * specific language governing permissions and limitations
+     * under the License.
+     */
 
     /* Custom configuration for Jasmine tests. */
 
@@ -7,17 +25,16 @@
         "underscore":"js/libs/underscore",
         "backbone":"js/libs/backbone",
         "bootstrap":"js/libs/bootstrap",
-        "formatJson":"js/libs/json-formatter",
         "jquery-form":"js/libs/jquery.form",
         "jquery-datatables":"js/libs/jquery.dataTables",
         "jquery-slideto":"js/libs/jquery.slideto.min",
         "jquery-wiggle":"js/libs/jquery.wiggle.min",
         "jquery-ba-bbq":"js/libs/jquery.ba-bbq.min",
-        "moment":"js/libs/moment.min",
+        "moment":"js/libs/moment",
         "handlebars":"js/libs/handlebars-1.0.rc.1",
-        "brooklyn":"js/libs/brooklyn",
-        "brooklyn-view":"js/libs/brooklyn-view",
-        "brooklyn-utils":"js/libs/brooklyn-utils",
+        "brooklyn":"js/util/brooklyn",
+        "brooklyn-view":"js/util/brooklyn-view",
+        "brooklyn-utils":"js/util/brooklyn-utils",
         "datatables-extensions":"js/libs/dataTables.extensions",
         "googlemaps":"view/googlemaps",
         // async deliberately excluded

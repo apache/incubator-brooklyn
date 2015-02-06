@@ -28,12 +28,16 @@ import org.codehaus.jackson.map.ObjectMapper;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ManagementContextInjectable;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public abstract class AbstractBrooklynRestResource {
+public abstract class AbstractBrooklynRestResource implements ManagementContextInjectable {
 
     @VisibleForTesting
     public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
@@ -46,7 +50,7 @@ public abstract class AbstractBrooklynRestResource {
     
     private ManagementContext managementContext;
     private BrooklynRestResourceUtils brooklynRestResourceUtils;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper;
 
     public synchronized ManagementContext mgmt() {
         if (managementContext!=null) return managementContext;
@@ -71,13 +75,20 @@ public abstract class AbstractBrooklynRestResource {
     }
     
     protected ObjectMapper mapper() {
+        if (mapper==null)
+            mapper = BrooklynJacksonJsonProvider.findAnyObjectMapper(servletContext, managementContext);
         return mapper;
     }
 
     /** returns an object which jersey will handle nicely, converting to json,
      * sometimes wrapping in quotes if needed (for outermost json return types) */ 
     protected Object getValueForDisplay(Object value, boolean preferJson, boolean isJerseyReturnValue) {
-        return WebResourceUtils.getValueForDisplay(value, preferJson, isJerseyReturnValue);
+        Object immediate = getImmediateValue(value);
+        return WebResourceUtils.getValueForDisplay(mapper(), immediate, preferJson, isJerseyReturnValue);
+    }
+
+    private Object getImmediateValue(Object value) {
+        return Tasks.resolving(value).as(Object.class).defaultValue(null).timeout(Duration.ZERO).swallowExceptions().get();
     }
 
     protected CampPlatform camp() {

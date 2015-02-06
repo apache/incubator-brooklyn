@@ -31,12 +31,35 @@ public class ManagementTransitionInfo {
      */
 
     public enum ManagementTransitionMode {
-        /** Entity is being created fresh, for the first time, or stopping permanently */ 
-        NORMAL,
-        /** Entity management is moving from one location to another (ie stopping at one location / starting at another) */
-        MIGRATORY, 
-        /** Entity is being created, from a serialized/specified state */
-        REBIND
+        /** Item is being created fresh, for the first time */ 
+        CREATING(false, false, false),
+        /** Item is being destroyed / stopping permanently */ 
+        DESTROYING(false, false, false),
+        
+        /** Item is being mirrored (or refreshed) here from a serialized/specified state */
+        REBINDING_READONLY(true, true, true),
+        /** Item management is stopping here, going elsewhere */
+        REBINDING_NO_LONGER_PRIMARY(false, true, true), 
+        /** Item management is starting here, having previously been running elsewhere */
+        REBINDING_BECOMING_PRIMARY(true, false, true),
+        /** Item was being mirrored but has now been destroyed  */
+        REBINDING_DESTROYED(true, true, true),
+        /** Item management is starting here, where not sure what previous running state was */
+        REBINDING_CREATING(false, false, true);
+        
+        private final boolean wasReadOnly;
+        private final boolean isReadOnly;
+        private final boolean isRebinding;
+        
+        ManagementTransitionMode(boolean wasReadOnly, boolean isReadOnly, boolean isRebinding) {
+            this.wasReadOnly = wasReadOnly;
+            this.isReadOnly = isReadOnly;
+            this.isRebinding = isRebinding;
+        }
+        
+        public boolean wasReadOnly() { return wasReadOnly; }
+        public boolean isReadOnly() { return isReadOnly; }
+        public boolean isRebinding() { return isRebinding; }
     }
     
     public ManagementTransitionInfo(ManagementContext mgmtContext, ManagementTransitionMode mode) {

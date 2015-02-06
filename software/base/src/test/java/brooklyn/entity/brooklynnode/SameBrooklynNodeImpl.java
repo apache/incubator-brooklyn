@@ -83,4 +83,9 @@ public class SameBrooklynNodeImpl extends AbstractEntity implements BrooklynNode
         if (httpFeed != null) httpFeed.stop();
     }
 
+    @Override
+    public EntityHttpClient http() {
+        throw new UnsupportedOperationException();
+    }
+
 }

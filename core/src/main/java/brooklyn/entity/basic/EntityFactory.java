@@ -18,15 +18,15 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.entity.Entity;
-
 import java.util.Map;
+
+import brooklyn.entity.Entity;
 
 /**
  * A Factory for creating entities.
  *
- * @param <T>
- */
+ * @deprecated since 0.7.0; use EntitySpec instead, as the factory does not put the entity through the initialization process */
+@Deprecated
 public interface EntityFactory<T extends Entity> {
     T newEntity(Map flags, Entity parent);
 }

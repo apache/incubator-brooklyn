@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
@@ -54,15 +55,14 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
-    private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app").
-            entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore"))).
-            locations(ImmutableSet.of("localhost")).
-            build();
+    private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app")
+            .entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")))
+            .locations(ImmutableSet.of("localhost"))
+            .build();
 
     @Test(groups="Integration")
-    public void testDeployRedisApplication() throws InterruptedException, TimeoutException {
-        ClientResponse response = client().resource("/v1/applications/createLegacy")
-                .post(ClientResponse.class, redisSpec);
+    public void testDeployRedisApplication() throws Exception {
+        ClientResponse response = clientDeploy(redisSpec);
 
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 1);
@@ -74,16 +74,14 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     @Test(groups="Integration", dependsOnMethods = "testDeployRedisApplication")
     public void testListEntities() {
         Set<EntitySummary> entities = client().resource("/v1/applications/redis-app/entities")
-                .get(new GenericType<Set<EntitySummary>>() {
-                });
+                .get(new GenericType<Set<EntitySummary>>() {});
 
         for (EntitySummary entity : entities) {
             client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
             // TODO assertions on the above call?
 
             Set<EntitySummary> children = client().resource(entity.getLinks().get("children"))
-                    .get(new GenericType<Set<EntitySummary>>() {
-                    });
+                    .get(new GenericType<Set<EntitySummary>>() {});
             assertEquals(children.size(), 0);
         }
     }
@@ -91,8 +89,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     @Test(groups="Integration", dependsOnMethods = "testDeployRedisApplication")
     public void testListSensorsRedis() {
         Set<SensorSummary> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
-                .get(new GenericType<Set<SensorSummary>>() {
-                });
+                .get(new GenericType<Set<SensorSummary>>() {});
         assertTrue(sensors.size() > 0);
         SensorSummary uptime = Iterables.find(sensors, new Predicate<SensorSummary>() {
             @Override
@@ -104,23 +101,27 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     }
 
     @Test(groups="Integration", dependsOnMethods = { "testListSensorsRedis", "testListEntities" })
-    public void testTriggerRedisStopEffector() throws InterruptedException {
+    public void testTriggerRedisStopEffector() throws Exception {
         ClientResponse response = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
+                .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(ClientResponse.class, ImmutableMap.of());
-
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
         final URI stateSensor = URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/service.state");
-        final String expectedStatus = String.format("\"%s\"", Lifecycle.STOPPED.toString());
+        final String expectedStatus = Lifecycle.STOPPED.toString();
         Asserts.succeedsEventually(MutableMap.of("timeout", 60 * 1000), new Runnable() {
             public void run() {
-                assertEquals(client().resource(stateSensor).get(String.class), expectedStatus);
+                // Accept with and without quotes; if don't specify "Accepts" header, then
+                // might get back json or plain text (depending on compiler / java runtime 
+                // used for SensorApi!)
+                String val = client().resource(stateSensor).get(String.class);
+                assertTrue(expectedStatus.equalsIgnoreCase(val) || ("\""+expectedStatus+"\"").equalsIgnoreCase(val), "state="+val);
             }
         });
     }
 
     @Test(groups="Integration", dependsOnMethods = "testTriggerRedisStopEffector" )
-    public void testDeleteRedisApplication() throws TimeoutException, InterruptedException {
+    public void testDeleteRedisApplication() throws Exception {
         int size = getManagementContext().getApplications().size();
         ClientResponse response = client().resource("/v1/applications/redis-app")
                 .delete(ClientResponse.class);

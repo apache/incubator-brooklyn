@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
@@ -66,7 +67,7 @@ public class ServerPoolRebindTest extends AbstractServerPoolTest {
         LOG.info("Rebind start");
         RebindTestUtils.waitForPersisted(app);
         ((LocalManagementContext) app.getManagementContext()).terminate();
-        Collection<Application> r = RebindTestUtils.rebindAll(mementoDir, getClass().getClassLoader());
+        Collection<Application> r = RebindTestUtils.rebindAll(RebindOptions.create().mementoDir(mementoDir).classLoader(classLoader));
         LOG.info("Rebind complete");
         return r;
     }
@@ -76,8 +77,8 @@ public class ServerPoolRebindTest extends AbstractServerPoolTest {
         TestApplication app = createAppWithChildren(1);
         app.start(ImmutableList.of(pool.getDynamicLocation()));
         assertTrue(app.getAttribute(Attributes.SERVICE_UP));
-        assertAvailableCountEquals(pool, getInitialPoolSize() - 1);
-        assertClaimedCountEquals(pool, 1);
+        assertAvailableCountEventuallyEquals(pool, getInitialPoolSize() - 1);
+        assertClaimedCountEventuallyEquals(pool, 1);
 
         Collection<Application> reboundApps = rebind(poolApp);
         ServerPool reboundPool = null;
@@ -94,14 +95,14 @@ public class ServerPoolRebindTest extends AbstractServerPoolTest {
                 " child. Apps: " + reboundApps);
         assertNotNull(reboundPool.getDynamicLocation());
         assertTrue(reboundPool.getAttribute(Attributes.SERVICE_UP));
-        assertAvailableCountEquals(reboundPool, getInitialPoolSize() - 1);
-        assertClaimedCountEquals(reboundPool, 1);
+        assertAvailableCountEventuallyEquals(reboundPool, getInitialPoolSize() - 1);
+        assertClaimedCountEventuallyEquals(reboundPool, 1);
 
         TestApplication app2 = createAppWithChildren(1);
         app2.start(ImmutableList.of(reboundPool.getDynamicLocation()));
         assertTrue(app2.getAttribute(Attributes.SERVICE_UP));
-        assertAvailableCountEquals(reboundPool, getInitialPoolSize() - 2);
-        assertClaimedCountEquals(reboundPool, 2);
+        assertAvailableCountEventuallyEquals(reboundPool, getInitialPoolSize() - 2);
+        assertClaimedCountEventuallyEquals(reboundPool, 2);
 
     }
 

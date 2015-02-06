@@ -17,8 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>brooklyn-archetype-quickstart</artifactId>
   <packaging>maven-archetype</packaging>
@@ -30,7 +29,7 @@
     </description>
 
   <parent>
-    <groupId>io.brooklyn</groupId>
+    <groupId>org.apache.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
     <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
     <relativePath>../../../pom.xml</relativePath>
@@ -87,7 +86,7 @@
                 <exclude>*.log</exclude> 
               </excludes>
               
-              <replacements/>
+              <replacements />
             </configuration>
           </execution>
           <!-- would be nice to reduce the repetion below, but don't see how;
@@ -149,7 +148,8 @@
                 <exclude>.*</exclude> 
                 <exclude>**/*.png</exclude> 
                 <exclude>.*/**</exclude> 
-                <exclude>*.log</exclude> 
+                <exclude>*.log</exclude>
+                <exclude>**/*.sh</exclude>
               </excludes>
               <replacements>
                 <!-- special chars in velocity have to be escaped.
@@ -178,7 +178,10 @@
               <basedir>${basedir}/src/brooklyn-sample/</basedir>
               <outputBasedir>${basedir}</outputBasedir>
               <outputDir>src/main/resources/archetype-resources/</outputDir>
-              <includes> <include>**/*.png</include> </includes>
+              <includes>
+                <include>**/*.png</include>
+                <include>**/*.sh</include>
+              </includes>
               <excludes> 
                 <exclude>target/**</exclude> 
                 <exclude>test-output/**</exclude> 
@@ -201,10 +204,23 @@
             <artifactId>apache-rat-plugin</artifactId>
             <configuration>
               <excludes combine.children="append">
-                <exclude>**/src/main/resources/archetype-resources/README.md</exclude>
-                <exclude>**/src/brooklyn-sample/README.md</exclude>
-                <exclude>**/src/test/resources/projects/integration-test-1/reference/README.md</exclude>
+                <!-- 
+                    The maven archetype are files "without any degree of creativity". They are intended
+                    purely as a template to generate a new project for a user, where upon the user can
+                    write their code within this new project.
+                    The exclusions seem to need to include code that is auto-generated during a test run.
+                -->
+                <exclude>**/src/main/resources/archetype-resources/**/*</exclude>
                 <exclude>**/src/test/resources/projects/integration-test-1/goal.txt</exclude>
+                <exclude>**/src/test/resources/projects/integration-test-1/reference/**/*</exclude>
+                <exclude>**/src/main/java/sample/**/*Sample*.java</exclude>
+                <exclude>**/src/main/resources/logback-custom.xml</exclude>
+                <exclude>**/src/brooklyn-sample/README.md</exclude>
+                <exclude>**/src/brooklyn-sample/pom.xml</exclude>
+                <exclude>**/src/brooklyn-sample/src/main/assembly/files/conf/*</exclude>
+                <exclude>**/src/brooklyn-sample/src/main/java/**/*.java</exclude>
+                <exclude>**/src/brooklyn-sample/src/main/resources/logback-custom.xml</exclude>
+                <exclude>**/src/brooklyn-sample/src/test/java/**/*.java</exclude>
               </excludes>
             </configuration>
           </plugin>

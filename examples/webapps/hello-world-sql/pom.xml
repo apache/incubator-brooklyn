@@ -24,13 +24,34 @@
     <name>hello-world-sql-webapp Maven Webapp</name>
   
     <parent>
-        <groupId>io.brooklyn.example</groupId>
+        <groupId>org.apache.brooklyn.example</groupId>
         <artifactId>brooklyn-examples-webapps-parent</artifactId>
         <version>0.7.0-SNAPSHOT</version> <!-- BROOKLYN_VERSION -->
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <dependencies>
+      <!-- The riak artifact has a dependency on jackson 2.2.2, but actually requires 2.4.2 to run... -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${fasterxml.jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${fasterxml.jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${fasterxml.jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-joda</artifactId>
+        <version>${fasterxml.jackson.version}</version>
+      </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -40,6 +61,11 @@
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
             <version>${mongodb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.basho.riak</groupId>
+            <artifactId>riak-client</artifactId>
+            <version>${riak.version}</version>
         </dependency>
     </dependencies>
 

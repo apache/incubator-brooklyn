@@ -179,7 +179,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         
         MockContainerEntity containerC = newAsyncContainer(app, "C", 10, 30, CONTAINER_STARTUP_DELAY_MS);
         // New container allows hot ones to offload work.
-        
+
         assertWorkratesEventually(
                 ImmutableList.of(containerA, containerB, containerC), 
                 ImmutableList.of(item1, item2, item3, item4, item5, item6, item7, item8), 
@@ -233,7 +233,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
                 ImmutableList.of(item1, item2, item3, item4, item5, item6), 
                 ImmutableList.of(30d, 30d));
         
-        MockItemEntity item7 = newItem(app, containerA, "7", 40);
+        newItem(app, containerA, "7", 40);
         
         assertWorkratesEventually(
                 ImmutableList.of(containerA, containerB), 
@@ -303,6 +303,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
                 ImmutableList.of(40d, 40d));
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testModelIncludesItemsAndContainersStartedBeforePolicyCreated() {
         pool.removePolicy(policy);
@@ -310,7 +311,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         
         // Set-up containers and items.
         final MockContainerEntity containerA = newContainer(app, "A", 10, 100);
-        MockItemEntity item1 = newItem(app, containerA, "1", 10);
+        newItem(app, containerA, "1", 10);
 
         policy = new LoadBalancingPolicy(MutableMap.of(), TEST_METRIC, model);
         pool.addPolicy(policy);

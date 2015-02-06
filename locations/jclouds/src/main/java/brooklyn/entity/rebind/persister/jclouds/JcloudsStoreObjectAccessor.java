@@ -89,7 +89,7 @@ public class JcloudsStoreObjectAccessor implements PersistenceObjectStore.StoreO
         try {
             Blob blob = blobStore.getBlob(containerName, blobName);
             if (blob==null) return null;
-            return Strings2.toString(blob.getPayload());
+            return Strings2.toStringAndClose(blob.getPayload().openStream());
         } catch (IOException e) {
             Exceptions.propagateIfFatal(e);
             throw new IllegalStateException("Error reading blobstore "+containerName+" "+blobName+": "+e, e);

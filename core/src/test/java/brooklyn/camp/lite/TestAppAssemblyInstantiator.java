@@ -19,19 +19,25 @@
 package brooklyn.camp.lite;
 
 import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.collection.ResolvableLink;
 import io.brooklyn.camp.spi.instantiate.BasicAssemblyTemplateInstantiator;
+
+import java.util.Map;
+import java.util.Set;
+
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 
 /** simple illustrative instantiator which always makes a {@link TestApplication}, populated with {@link TestEntity} children,
  * all setting {@link TestEntity#CONF_NAME} for the name in the plan and in the service specs
@@ -46,40 +52,40 @@ public class TestAppAssemblyInstantiator extends BasicAssemblyTemplateInstantiat
         }
         ManagementContext mgmt = ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
         
-        // TODO when createSpec is working:
-//        TestApplication app = (TestApplication) mgmt.getEntityManager().createEntity( createSpec(template, platform) );
-//        mgmt.getEntityManager().manage(app);
-        
-        // workaround until above is reacy
-        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class)
-            .configure(TestEntity.CONF_NAME, template.getName())
-            .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", template.getType(), "desc", template.getDescription()))
-            , mgmt);
-        for (ResolvableLink<PlatformComponentTemplate> t: template.getPlatformComponentTemplates().links()) {
-            app.createAndManageChild(EntitySpec.create(TestEntity.class)
-                .configure(TestEntity.CONF_NAME, t.getName())
-                .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", t.resolve().getType(), "desc", t.resolve().getDescription()))
-                );
-        }
+        TestApplication app = (TestApplication) mgmt.getEntityManager().createEntity( createSpec(template, platform, null, false) );
+        mgmt.getEntityManager().manage(app);
 
         return new TestAppAssembly(app);
     }
 
     @Override
-    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform) {
+    public EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, boolean autoUnwrap) {
         EntitySpec<TestApplication> app = EntitySpec.create(TestApplication.class)
             .configure(TestEntity.CONF_NAME, template.getName())
             .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", template.getType(), "desc", template.getDescription()));
+        applyBrooklynConfig(template, app);
         
         for (ResolvableLink<PlatformComponentTemplate> t: template.getPlatformComponentTemplates().links()) {
-            // TODO use EntitySpec.child(...)
-//            app.child(EntitySpec.create(TestEntity.class)
-//                .configure(TestEntity.CONF_NAME, t.getName())
-//                .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", t.resolve().getType(), "desc", t.resolve().getDescription()))
-//                );
+            EntitySpec<TestEntity> spec = EntitySpec.create(TestEntity.class)
+                .configure(TestEntity.CONF_NAME, t.getName())
+                .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", t.resolve().getType(), "desc", t.resolve().getDescription()));
+            applyBrooklynConfig(t.resolve(), app);
+            app.child(spec);
         }
         
         return app;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void applyBrooklynConfig(AbstractResource template, EntitySpec<TestApplication> app) {
+        Object bc = template.getCustomAttributes().get("brooklyn.config");
+        if (bc instanceof Map)
+            app.configure(ConfigBag.newInstance().putAll((Map)bc).getAllConfigAsConfigKeyMap());
+    }
+
+    @Override
+    public EntitySpec<?> createNestedSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext itemLoader, Set<String> encounteredCatalogTypes) {
+        return createSpec(template, platform, itemLoader, true);
     }
 
 }

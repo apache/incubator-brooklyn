@@ -36,9 +36,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 
 /**
- * Represents an elastic group of "container" entities, each of which is capable of hosting "item" entities that perform
- * work and consume the container's available resources (e.g. CPU or bandwidth). Auto-scaling and load-balancing policies can
- * be attached to this pool to provide dynamic elasticity based on workrates reported by the individual item entities.
+ * @see BalanceableWorkerPool
  */
 public class BalanceableWorkerPoolImpl extends AbstractEntity implements BalanceableWorkerPool {
 
@@ -60,7 +58,7 @@ public class BalanceableWorkerPoolImpl extends AbstractEntity implements Balance
             if (LOG.isTraceEnabled()) LOG.trace("{} received event {}", BalanceableWorkerPoolImpl.this, event);
             Entity source = event.getSource();
             Object value = event.getValue();
-            Sensor sensor = event.getSensor();
+            Sensor<?> sensor = event.getSensor();
             
             if (sensor.equals(AbstractGroup.MEMBER_ADDED)) {
                 if (source.equals(containerGroup)) {

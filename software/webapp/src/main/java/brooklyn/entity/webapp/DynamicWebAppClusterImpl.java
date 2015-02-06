@@ -37,8 +37,6 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableMap;
@@ -121,45 +119,6 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
                     .computingAverage()
                     .build());
         }
-    }
-    
-    public void onManagementStarted() {
-        super.onManagementStarted();
-        
-        subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
-            @Override public void onEvent(SensorEvent<Boolean> event) {
-                if (!isRebinding()) {
-                    setAttribute(SERVICE_UP, calculateServiceUp());
-                }
-            }
-        });
-    }
-
-    @Override
-    public synchronized boolean addMember(Entity member) {
-        boolean result = super.addMember(member);
-        if (!isRebinding()) {
-            setAttribute(SERVICE_UP, calculateServiceUp());
-        }
-        return result;
-    }
-    
-    @Override
-    public synchronized boolean removeMember(Entity member) {
-        boolean result = super.removeMember(member);
-        if (!isRebinding()) {
-            setAttribute(SERVICE_UP, calculateServiceUp());
-        }
-        return result;
-    }
-
-    @Override    
-    protected boolean calculateServiceUp() {
-        boolean up = false;
-        for (Entity member : getMembers()) {
-            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) up = true;
-        }
-        return up;
     }
     
     // TODO this will probably be useful elsewhere ... but where to put it?

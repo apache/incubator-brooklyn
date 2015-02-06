@@ -20,26 +20,46 @@ package brooklyn.location.access;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Objects;
+import javax.annotation.Nullable;
 
 import brooklyn.location.Location;
 
+import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
+import com.google.common.net.HostAndPort;
+
 public class PortMapping {
+
+    final String publicIpId;
+    final HostAndPort publicEndpoint;
+    final int publicPort;
+
+    final Location target;
+    final int privatePort;
+    // TODO CIDR's ?
+
+    public PortMapping(String publicIpId, HostAndPort publicEndpoint, Location target, int privatePort) {
+        this.publicIpId = checkNotNull(publicIpId, "publicIpId");
+        this.publicEndpoint = checkNotNull(publicEndpoint, "publicEndpoint");
+        this.publicPort = publicEndpoint.getPort();
+        this.target = target;
+        this.privatePort = privatePort;
+    }
     
     public PortMapping(String publicIpId, int publicPort, Location target, int privatePort) {
-        super();
         this.publicIpId = checkNotNull(publicIpId, "publicIpId");
+        this.publicEndpoint = null;
         this.publicPort = publicPort;
         this.target = target;
         this.privatePort = privatePort;
     }
 
-    final String publicIpId;
-    final int publicPort;
-
-    final Location target;
-    final int privatePort;
-    // CIDR's ?
+    // In a release after 0.7.0, this will no longer be @Nullable
+    @Beta
+    @Nullable
+    public HostAndPort getPublicEndpoint() {
+        return publicEndpoint;
+    }
 
     public int getPublicPort() {
         return publicPort;
@@ -48,14 +68,19 @@ public class PortMapping {
     public Location getTarget() {
         return target;
     }
+    
     public int getPrivatePort() {
         return privatePort;
     }
     
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("public", publicIpId+":"+publicPort).
-                add("private", target+":"+privatePort).toString();
+        return Objects.toStringHelper(this)
+                .add("publicIpId", publicIpId+":"+publicPort)
+                .add("publicEndpoint", (publicEndpoint == null ? publicPort : publicEndpoint))
+                .add("targetLocation", target)
+                .add("targetPort", privatePort)
+                .toString();
     }
     
     @Override

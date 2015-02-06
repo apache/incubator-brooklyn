@@ -29,11 +29,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -61,13 +61,17 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
     public RabbitBrokerImpl getEntity() {
         return (RabbitBrokerImpl) super.getEntity();
     }
+
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion()))));
+    }
     
     @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion())));
 
         List<String> commands = ImmutableList.<String>builder()
                 .add(ifExecutableElse0("zypper", chainGroup(

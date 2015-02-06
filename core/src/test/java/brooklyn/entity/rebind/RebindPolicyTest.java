@@ -120,7 +120,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         assertEquals(newPolicy.getDisplayName(), "My Policy");
         
         assertEquals(newPolicy.getUniqueTag(), "tagU");
-        assertEquals(newPolicy.getTagSupport().getTags(), MutableSet.of("tagU", "tag1", "tag2"));
+        assertEquals(newPolicy.tags().getTags(), MutableSet.of("tagU", "tag1", "tag2"));
         
         assertEquals(newPolicy.getConfig(MyPolicy.MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME), "myVal for with setFromFlag noShortName");
         assertEquals(newPolicy.getConfig(MyPolicy.MY_CONFIG_WITH_SETFROMFLAG_WITH_SHORT_NAME), "myVal for setFromFlag withShortName");
@@ -141,7 +141,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         RebindTestUtils.waitForPersisted(origApp);
         
         BrooklynMementoManifest manifest = loadMementoManifest();
-        assertFalse(manifest.getEntityIdToType().containsKey(entity.getId()));
+        assertFalse(manifest.getEntityIdToManifest().containsKey(entity.getId()));
         assertFalse(manifest.getPolicyIdToType().containsKey(policy.getId()));
         assertFalse(manifest.getEnricherIdToType().containsKey(enricher.getId()));
         assertFalse(manifest.getLocationIdToType().containsKey(loc.getId()));
@@ -201,13 +201,13 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     @Test
     public void testPolicyTags() throws Exception {
         Policy origPolicy = origApp.addPolicy(PolicySpec.create(MyPolicy.class));
-        origPolicy.getTagSupport().addTag("foo");
-        origPolicy.getTagSupport().addTag(origApp);
+        origPolicy.tags().addTag("foo");
+        origPolicy.tags().addTag(origApp);
 
         newApp = rebind();
         Policy newPolicy = Iterables.getOnlyElement(newApp.getPolicies());
 
-        Asserts.assertEqualsIgnoringOrder(newPolicy.getTagSupport().getTags(), ImmutableSet.of("foo", newApp));
+        Asserts.assertEqualsIgnoringOrder(newPolicy.tags().getTags(), ImmutableSet.of("foo", newApp));
     }
 
     // Previously, policy+enricher was added to entity as part of entity.reconstitute, so other entities might not

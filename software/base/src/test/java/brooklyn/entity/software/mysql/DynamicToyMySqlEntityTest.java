@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
@@ -43,14 +42,15 @@ public class DynamicToyMySqlEntityTest extends AbstractToyMySqlEntityTest {
     // put right group on test (also help Eclipse IDE pick it up)
     @Override
     @Test(groups = "Integration")
-    public void testMySqlOnProvisioningLocation() throws NoMachinesAvailableException {
+    public void testMySqlOnProvisioningLocation() throws Exception {
         super.testMySqlOnProvisioningLocation();
     }
     
     @Test(groups="Integration")
-    public void testMySqlOnMachineLocation() throws NoMachinesAvailableException {
+    public void testMySqlOnMachineLocation() throws Exception {
         Entity mysql = createMysql();
         SshMachineLocation lh = targetLocation.obtain(MutableMap.of());
+        
         app.start(Arrays.asList(lh));
         checkStartsRunning(mysql);
         checkIsRunningAndStops(mysql, lh);

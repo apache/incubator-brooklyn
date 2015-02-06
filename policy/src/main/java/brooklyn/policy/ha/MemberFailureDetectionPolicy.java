@@ -43,6 +43,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Detects when members of a group have failed/recovered, and emits ENTITY_FAILED or 
@@ -83,8 +84,9 @@ public class MemberFailureDetectionPolicy extends AbstractPolicy {
     @SetFromFlag("useServiceStateRunning")
     public static final ConfigKey<Boolean> USE_SERVICE_STATE_RUNNING = ConfigKeys.newBooleanConfigKey("useServiceStateRunning", "", true);
 
+    @SuppressWarnings("serial")
     @SetFromFlag("memberFilter")
-    public static final ConfigKey<Predicate<? super Entity>> MEMBER_FILTER = (ConfigKey) ConfigKeys.newConfigKey(Predicate.class, "memberFilter", "", Predicates.alwaysTrue());
+    public static final ConfigKey<Predicate<? super Entity>> MEMBER_FILTER = ConfigKeys.newConfigKey(new TypeToken<Predicate<? super Entity>>() {}, "memberFilter", "", Predicates.<Entity>alwaysTrue());
     
     private final Map<Entity, Long> memberFailures = Maps.newLinkedHashMap();
     private final Map<Entity, Long> memberLastUps = Maps.newLinkedHashMap();
@@ -108,7 +110,7 @@ public class MemberFailureDetectionPolicy extends AbstractPolicy {
         super.setEntity(entity);
         
         if (getConfig(USE_SERVICE_STATE_RUNNING)) {
-            subscribeToMembers((Group)entity, Attributes.SERVICE_STATE, new SensorEventListener<Lifecycle>() {
+            subscribeToMembers((Group)entity, Attributes.SERVICE_STATE_ACTUAL, new SensorEventListener<Lifecycle>() {
                 @Override public void onEvent(SensorEvent<Lifecycle> event) {
                     if (!acceptsMember(event.getSource())) return;
                     onMemberStatus(event.getSource(), event.getValue());
@@ -165,7 +167,7 @@ public class MemberFailureDetectionPolicy extends AbstractPolicy {
     
     private synchronized void onMemberAdded(Entity member) {
         if (getConfig(USE_SERVICE_STATE_RUNNING)) {
-            Lifecycle status = member.getAttribute(Attributes.SERVICE_STATE);
+            Lifecycle status = member.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
             onMemberStatus(member, status);
         }
         

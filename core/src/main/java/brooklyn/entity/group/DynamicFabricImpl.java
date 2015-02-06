@@ -39,6 +39,7 @@ import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
@@ -118,7 +119,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
         if (newLocations.isEmpty()) newLocations.addAll(getLocations());
         int locIndex = 0;
         
-        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         try {
             Map<Entity, Task<?>> tasks = Maps.newLinkedHashMap();
             
@@ -158,10 +159,10 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
             }
             
             waitForTasksOnStart(tasks);
-            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
             setAttribute(SERVICE_UP, true);
         } catch (Exception e) {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         }
     }
@@ -183,15 +184,15 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     
     @Override
     public void stop() {
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         try {
             Iterable<Entity> stoppableChildren = Iterables.filter(getChildren(), Predicates.instanceOf(Startable.class));
             Task<?> invoke = Entities.invokeEffector(this, stoppableChildren, Startable.STOP);
-	        if (invoke != null) invoke.get();
-            setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
+            if (invoke != null) invoke.get();
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
             setAttribute(SERVICE_UP, false);
         } catch (Exception e) {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         }
     }

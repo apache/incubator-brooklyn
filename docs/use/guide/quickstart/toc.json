@@ -1,4 +1,0 @@
-[{ "title": "Download & Deploy",
-  "file":  "{{ site.url }}/use/guide/quickstart/index.html" },
-{ "title": "Policies & Catalogs",
-  "file":  "{{ site.url }}/use/guide/quickstart/policies-and-catalogs.html" }]

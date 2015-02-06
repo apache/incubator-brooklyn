@@ -20,7 +20,6 @@ package brooklyn.entity.nosql.elasticsearch;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 
@@ -28,15 +27,6 @@ public class ElasticSearchClusterImpl extends DynamicClusterImpl implements Elas
     
     private AtomicInteger nextMemberId = new AtomicInteger(0);
 
-    @Override
-    protected boolean calculateServiceUp() {
-        boolean up = false;
-        for (Entity member : getMembers()) {
-            if (Boolean.TRUE.equals(member.getAttribute(SERVICE_UP))) up = true;
-        }
-        return up;
-    }
-    
     @Override
     protected EntitySpec<?> getMemberSpec() {
         EntitySpec<?> spec = EntitySpec.create(getConfig(MEMBER_SPEC, EntitySpec.create(ElasticSearchNode.class)));

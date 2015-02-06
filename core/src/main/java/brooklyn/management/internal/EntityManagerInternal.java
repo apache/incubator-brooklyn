@@ -20,11 +20,26 @@ package brooklyn.management.internal;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.location.Location;
 import brooklyn.management.EntityManager;
+import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 
 public interface EntityManagerInternal extends EntityManager {
 
     /** gets all entities currently known to the application, including entities that are not yet managed */
     Iterable<Entity> getAllEntitiesInApplication(Application application);
+
+    public Iterable<String> getEntityIds();
+    
+    ManagementTransitionMode getLastManagementTransitionMode(String itemId);
+    void setManagementTransitionMode(Entity item, ManagementTransitionMode mode);
+
+    /** 
+     * Begins management for the given rebinded root, recursively; 
+     * if rebinding as a read-only copy, {@link #setReadOnly(Location, boolean)} should be called prior to this.
+     */
+    void manageRebindedRoot(Entity item);
+    
+    void unmanage(final Entity e, final ManagementTransitionMode info);
 
 }

@@ -17,8 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <parent>
@@ -27,7 +26,7 @@
         <version>14</version>
     </parent>
 
-    <groupId>io.brooklyn</groupId>
+    <groupId>org.apache.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
     <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
 
@@ -37,14 +36,14 @@
         serving as the ancestor POM for all projects --
         declaring versions, profiles, and the modules to build
     </description>
-    <url>http://brooklyn.io/</url>
+    <url>https://brooklyn.incubator.apache.org/</url>
     <inceptionYear>2012</inceptionYear>
 
     <!-- useful custom properties/defines to specify to control the build:
 
       brooklyn.explicitModules :: only builds explicit modules (instead of default modules)
 
-      brooklyn.deployTo={cloudsoftFilesystem,cloudsoftArtifactory,sonatype,apache} ::
+      brooklyn.deployTo={apache} ::
             :: required when deploying; specify the deployment target
 
       javadoc :: build javadoc (adds a minute or two; enabled automatically for target deploy)
@@ -67,7 +66,8 @@
         <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-brooklyn.git</connection>
         <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-brooklyn.git</developerConnection>
         <url>https://git-wip-us.apache.org/repos/asf?p=incubator-brooklyn.git</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
     <issueManagement>
         <system>JIRA</system>
         <url>https://issues.apache.org/jira/browse/BROOKLYN</url>
@@ -97,32 +97,44 @@
             <releases> <enabled>false</enabled> </releases>
             <snapshots> <enabled>true</enabled> </snapshots>
         </repository>
+        <repository>
+            <id>apache-nexus-snapshots</id>
+            <name>Apache Nexus Snapshots</name>
+            <url>https://repository.apache.org/content/repositories/snapshots</url>
+            <releases> <enabled>false</enabled> </releases>
+            <snapshots> <enabled>true</enabled> </snapshots>
+        </repository>
     </repositories>
 
     <properties>
+        <!-- Compilation -->
+        <java.version>1.6</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
 
-        <cobertura.version>1.9.4.1</cobertura.version>
-        <surefire.version>2.13</surefire.version>
+        <!-- Testing -->
+        <cobertura.plugin.version>2.5.2</cobertura.plugin.version>
+        <surefire.version>2.18</surefire.version>
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
+        <includedTestGroups />
+        <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
 
+        <!-- Dependencies -->
+        <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
         <jclouds.groupId>org.apache.jclouds</jclouds.groupId>
-        <jclouds.version>1.8.0</jclouds.version>
+        <jclouds.version>1.8.1</jclouds.version>
         <guava.version>17.0</guava.version>
-        <groovy.version>1.8.6</groovy.version>
+        <groovy.version>2.3.4</groovy.version> <!-- Version supported by https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-2.9.0-Release-Notes -->
         <logback.version>1.0.7</logback.version>
-        <testng.version>6.8</testng.version>
-        <mockito.version>1.9.5</mockito.version>
+        <testng.version>6.8.8</testng.version>
+        <mockito.version>1.10.8</mockito.version>
         <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
         <xstream.version>1.4.7</xstream.version>
         <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
-        <fasterxml.jackson.version>2.2.0</fasterxml.jackson.version>  <!-- fasterxml (newer) jackson, used by camp -->
-        <jersey.version>1.12</jersey.version> <!-- NB: 1.17 requires changes to how we hanlde multipart in CatalogApi -->
+        <fasterxml.jackson.version>2.4.2</fasterxml.jackson.version>  <!-- more recent jackson, but not compatible with old annotations! -->
+        <jersey.version>1.18.1</jersey.version>
         <swagger.version>1.0.1</swagger.version>
-        <dropwizard.version>0.4.4</dropwizard.version>
         <jansi.version>1.2.1</jansi.version>
         <gson.version>2.2.2</gson.version>
         <jsr305.version>2.0.1</jsr305.version>
@@ -144,6 +156,7 @@
         <commons-compress.version>1.4</commons-compress.version>
         <qpid.version>0.20</qpid.version>
         <mongodb.version>2.11.4</mongodb.version>
+        <riak.version>1.4.0</riak.version>
         <maven-war-plugin.version>2.4</maven-war-plugin.version>
         <snakeyaml.version>1.11</snakeyaml.version>
         <validation-api.version>1.0.0.GA</validation-api.version>
@@ -154,7 +167,7 @@
         <hadoop.version>1.0.2</hadoop.version>
         <commons-cli.version>1.2</commons-cli.version>
         <postgresql.version>9.1-901.jdbc4</postgresql.version>
-        <activemq.version>5.7.0</activemq.version>
+        <activemq.version>5.10.0</activemq.version>
         <rabbitmq-version>2.8.7</rabbitmq-version>
         <kafka.version>0.7.0-incubating</kafka.version>
         <storm.version>0.8.2</storm.version>
@@ -164,7 +177,7 @@
         <solr.version>4.7.0</solr.version>
         <jtidy.version>r8-20060801</jtidy.version>
         <opendmk_jmxremote_optional_jar.version>1.0-b01-ea</opendmk_jmxremote_optional_jar.version>
-        <resteasy.version>3.0.1.Final</resteasy.version>
+        <resteasy.version>3.0.8.Final</resteasy.version>
         <maven-dependency-plugin.version>2.8</maven-dependency-plugin.version>
         <jopt.version>4.3</jopt.version>
         <concurrentlinkedhashmap.version>1.0_jdk5</concurrentlinkedhashmap.version>
@@ -174,7 +187,6 @@
         <jasmine-maven-plugin.version>1.3.1.5</jasmine-maven-plugin.version>
         <requirejs-maven-plugin.version>2.0.0</requirejs-maven-plugin.version>
         <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
-        <eclipse-m2e.version>1.0.0</eclipse-m2e.version>
         <jetty-orbit-javax-servlet.version>3.0.0.v201112011016</jetty-orbit-javax-servlet.version>
         <jcommander.version>1.27</jcommander.version>
         <xml-apis.version>1.0.b2</xml-apis.version>
@@ -186,13 +198,14 @@
         <commons-lang.version>2.4</commons-lang.version>
         <hamcrest.version>1.1</hamcrest.version>
         <jsr311-api.version>1.1.1</jsr311-api.version>
+        <maxmind.version>0.8.1</maxmind.version>
+        <jna.version>4.0.0</jna.version>
+        <coverage.target>${working.dir}</coverage.target>
 
-        <includedTestGroups />
-        <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
-
+        <!-- Release -->
         <!-- no passphrase by default, so we can do automated deploy builds;
              you can still supply your own passphrase with -Dgpg.passphrase=XXX -->
-        <gpg.passphrase></gpg.passphrase>
+        <gpg.passphrase />
     </properties>
 
     <dependencyManagement>
@@ -280,6 +293,12 @@
                 <version>${jersey.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.sun.jersey.jersey-test-framework</groupId>
+                <artifactId>jersey-test-framework-inmemory</artifactId>
+                <version>${jersey.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons-lang3.version}</version>
@@ -318,16 +337,6 @@
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-xc</artifactId>
                 <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>${fasterxml.jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${fasterxml.jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -408,6 +417,12 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
+                <version>${httpclient.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <classifier>tests</classifier>
                 <version>${httpclient.version}</version>
             </dependency>
             <dependency>
@@ -494,11 +509,6 @@
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-json</artifactId>
                 <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yammer.dropwizard</groupId>
-                <artifactId>dropwizard-testing</artifactId>
-                <version>${dropwizard.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
@@ -600,6 +610,21 @@
                 <artifactId>json-path</artifactId>
                 <version>${jsonPath.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.maxmind.geoip2</groupId>
+                <artifactId>geoip2</artifactId>
+                <version>${maxmind.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>${jna.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna-platform</artifactId>
+                <version>${jna.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -615,45 +640,35 @@
             <plugins>
                 <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.3</version>
+                    <version>2.4.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-antrun-plugin</artifactId>
-                    <version>1.6</version>
+                    <version>1.7</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>2.4.1</version>
-                    <configuration>
-                        <filesets>
-                            <fileset>
-                                <directory>.</directory>
-                                <includes>
-                                    <include>brooklyn*.log</include>
-                                    <include>brooklyn*.log.*</include>
-                                    <include>stacktrace.log</include>
-                                    <include>test-output</include>
-                                    <include>prodDb.*</include>
-                                </includes>
-                            </fileset>
-                        </filesets>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.3.2</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-deploy-plugin</artifactId>
                     <version>2.5</version>
                 </plugin>
                 <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.8.2</version>
+                </plugin>
+                <plugin>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>1.0</version>
+                    <version>1.3.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.9</version>
+                    <version>2.17</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
@@ -663,7 +678,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>2.1.2</version>
+                    <version>2.3</version>
                     <inherited>true</inherited>
                     <executions>
                         <execution>
@@ -677,7 +692,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.8</version>
+                    <version>2.9.1</version>
                     <inherited>true</inherited>
                     <configuration>
                         <!-- disabling use because of NPE deploying to sonatype:
@@ -711,9 +726,8 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.1</version>
+                    <version>1.5</version>
                     <executions>
                         <execution>
                             <id>sign-artifacts</id>
@@ -728,22 +742,22 @@
                     <!-- 'release' is not used; easier just to checkout, tag, `mvn deploy` manually
                          with -Dbrooklyn.deployTo=TARGET ... and note we need to update docs and examples,
                          which is a non-maven task!) -->
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>2.1</version>
+                    <version>2.5</version>
                     <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <arguments>-Dbrooklyn.deployTo=sonatype</arguments>
+                        <arguments>-Dbrooklyn.deployTo=apache</arguments>
+                        <goals>deploy</goals>
                     </configuration>
                 </plugin>
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.4.1</version>
+                    <version>2.6</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>1.5</version>
+                    <version>2.3</version>
                     <executions>
                         <execution>
                             <phase>package</phase>
@@ -780,16 +794,20 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.0</version>
+                    <version>3.4</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-eclipse-plugin</artifactId>
-                    <version>2.8</version>
+                    <version>2.9</version>
                     <configuration>
                         <additionalProjectnatures>
                             <projectnature>org.eclipse.jdt.groovy.core.groovyNature</projectnature>
                         </additionalProjectnatures>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-archetype-plugin</artifactId>
+                    <version>2.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
@@ -807,14 +825,9 @@
                     <version>1.7</version>
                 </plugin>
                 <plugin>
-                    <groupId>net.sourceforge.cobertura</groupId>
+                    <groupId>org.codehaus.mojo</groupId>
                     <artifactId>cobertura</artifactId>
-                    <version>${cobertura.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-archetype-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>${cobertura.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>com.google.code.maven-replacer-plugin</groupId>
@@ -822,7 +835,15 @@
                     <version>1.4.0</version>
                 </plugin>
                 <plugin>
-                    <!-- This configuration is used for Eclipse settings only. -->
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>buildnumber-maven-plugin</artifactId>
+                    <version>1.3</version>
+                    <configuration>
+                        <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+                    </configuration>
+                </plugin>
+                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <plugin>
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>lifecycle-mapping</artifactId>
                     <version>1.0.0</version>
@@ -833,24 +854,9 @@
                                     <pluginExecutionFilter>
                                         <groupId>org.apache.maven.plugins</groupId>
                                         <artifactId>maven-dependency-plugin</artifactId>
-                                        <versionRange>[2.1,)</versionRange>
+                                        <versionRange>[2.8,)</versionRange>
                                         <goals>
-                                            <goal>copy</goal>
                                             <goal>copy-dependencies</goal>
-                                            <goal>unpack</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore />
-                                    </action>
-                                </pluginExecution>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>org.apache.felix</groupId>
-                                        <artifactId>maven-bundle-plugin</artifactId>
-                                        <versionRange>[2.3.4,)</versionRange>
-                                        <goals>
-                                            <goal>manifest</goal>
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
@@ -860,10 +866,23 @@
                                 <pluginExecution>
                                     <pluginExecutionFilter>
                                         <groupId>org.apache.maven.plugins</groupId>
-                                        <artifactId>maven-javadoc-plugin</artifactId>
-                                        <versionRange>[2.7,3)</versionRange>
+                                        <artifactId>maven-assembly-plugin</artifactId>
+                                        <versionRange>[2.4.1,)</versionRange>
                                         <goals>
-                                            <goal>jar</goal>
+                                            <goal>single</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>build-helper-maven-plugin</artifactId>
+                                        <versionRange>[1.7,)</versionRange>
+                                        <goals>
+                                            <goal>attach-artifact</goal>
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
@@ -874,7 +893,7 @@
                                     <pluginExecutionFilter>
                                         <groupId>org.apache.maven.plugins</groupId>
                                         <artifactId>maven-enforcer-plugin</artifactId>
-                                        <versionRange>[1.0,)</versionRange>
+                                        <versionRange>[1.3.1,)</versionRange>
                                         <goals>
                                             <goal>enforce</goal>
                                         </goals>
@@ -884,38 +903,183 @@
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
-                                  <pluginExecutionFilter>
-                                    <groupId>com.github.skwakman.nodejs-maven-plugin</groupId>
-                                    <artifactId>nodejs-maven-plugin</artifactId>
-                                    <versionRange>[1.0.3,)</versionRange>
-                                    <goals>
-                                      <goal>extract</goal>
-                                    </goals>
-                                  </pluginExecutionFilter>
-                                  <action>
-                                    <ignore></ignore>
-                                  </action>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-remote-resources-plugin</artifactId>
+                                        <versionRange>[1.5,)</versionRange>
+                                        <goals>
+                                            <goal>process</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-dependency-plugin</artifactId>
+                                        <versionRange>[2.8,)</versionRange>
+                                        <goals>
+                                            <goal>unpack</goal>
+                                            <goal>copy</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>com.github.skwakman.nodejs-maven-plugin</groupId>
+                                        <artifactId>nodejs-maven-plugin</artifactId>
+                                        <versionRange>[1.0.3,)</versionRange>
+                                        <goals>
+                                            <goal>extract</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-war-plugin</artifactId>
+                                        <versionRange>[2.4,)</versionRange>
+                                        <goals>
+                                            <goal>exploded</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
                                 </pluginExecution>
                                 <pluginExecution>
                                   <pluginExecutionFilter>
-                                    <groupId>com.github.mcheely</groupId>
-                                    <artifactId>requirejs-maven-plugin</artifactId>
-                                    <versionRange>[2.0.0,)</versionRange>
+                                    <groupId>
+                                      org.apache.maven.plugins
+                                    </groupId>
+                                    <artifactId>
+                                      maven-checkstyle-plugin
+                                    </artifactId>
+                                    <versionRange>[2.13,)</versionRange>
                                     <goals>
-                                      <goal>optimize</goal>
+                                      <goal>check</goal>
+                                    </goals>
+                                  </pluginExecutionFilter>
+                                  <action>
+                                    <ignore />
+                                  </action>
+                                </pluginExecution>
+<!-- This is suggested if Eclipse runs too many incremental maven plugins, but it also seems to cause NPE's in maven build.
+                                <pluginExecution>
+                                  <action>
+                                    <execute>
+                                      <runOnIncremental>false</runOnIncremental>
+                                    </execute>
+                                  </action>
+                                </pluginExecution>
+-->
+                                <pluginExecution>
+                                  <pluginExecutionFilter>
+                                    <groupId>
+                                      org.apache.felix
+                                    </groupId>
+                                    <artifactId>
+                                      maven-bundle-plugin
+                                    </artifactId>
+                                    <versionRange>
+                                      [2.3.4,)
+                                    </versionRange>
+                                    <goals>
+                                      <goal>manifest</goal>
                                     </goals>
                                   </pluginExecutionFilter>
                                   <action>
                                     <ignore></ignore>
                                   </action>
                                 </pluginExecution>
-                             </pluginExecutions>
-                         </lifecycleMappingMetadata>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <!--
+                                Excluding sandbox because not part of distribution: not in tgz, and not uploaded to maven-central.
+                            -->
+                            <exclude>sandbox/**</exclude>
+                        </excludes>
                     </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
+
         <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>.</directory>
+                            <includes>
+                                <include>brooklyn*.log</include>
+                                <include>brooklyn*.log.*</include>
+                                <include>stacktrace.log</include>
+                                <include>test-output</include>
+                                <include>prodDb.*</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.13</version>
+                <executions>
+                    <execution>
+                        <id>verify-style</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <logViolationsToConsole>true</logViolationsToConsole>
+                    <checkstyleRules>
+                        <module name="Checker">
+                            <!-- Checks for whitespace                               -->
+                            <!-- See http://checkstyle.sf.net/config_whitespace.html -->
+                            <module name="FileTabCharacter">
+                                <property name="eachLine" value="true" />
+                            </module>
+                            <module name="TreeWalker">
+                                <module name="IllegalImport">
+                                    <property name="illegalPkgs" value="com.google.api.client.repackaged"/>
+                                </module>
+                            </module>
+                        </module>
+                    </checkstyleRules>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
@@ -932,7 +1096,7 @@
                         <configuration>
                             <rules>
                                 <requireJavaVersion>
-                                    <version>1.6.0</version>
+                                    <version>${java.version}.0</version>
                                 </requireJavaVersion>
                                 <requireMavenVersion>
                                     <version>[3.0.0,)</version>
@@ -950,23 +1114,21 @@
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <inherited>true</inherited>
                 <configuration>
-                    <compilerId>groovy-eclipse-compiler</compilerId>
                     <fork>true</fork>
                     <verbose>false</verbose>
-                    <source>1.6</source>
-                    <target>1.6</target>
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.codehaus.groovy</groupId>
                         <artifactId>groovy-eclipse-compiler</artifactId>
-                        <version>2.7.0-01</version>
+                        <version>2.9.0-01</version>
                     </dependency>
                     <dependency>
                         <groupId>org.codehaus.groovy</groupId>
                         <artifactId>groovy-eclipse-batch</artifactId>
-                        <version>1.8.6-01</version>
+                        <version>2.3.4-01</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -991,12 +1153,12 @@
                                 <replacement>
                                     <xpath>/classpath/classpathentry[@path='src/main/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
                                     <token>**</token>
-                                    <value></value>
+                                    <value />
                                 </replacement>
                                 <replacement>
                                     <xpath>/classpath/classpathentry[@path='src/test/resources' and @kind='src' and @excluding='**']/@excluding</xpath>
                                     <token>**</token>
-                                    <value></value>
+                                    <value />
                                 </replacement>
                             </replacements>
                         </configuration>
@@ -1042,6 +1204,9 @@
                   <exclude>**/MANIFEST.MF</exclude>
                   <exclude>**/test-output/**</exclude>
                   <exclude>**/*.pem.pub</exclude>
+                  <exclude>**/*.pem</exclude>
+                  <exclude>**/*_rsa.pub</exclude>
+                  <exclude>**/*_rsa</exclude>
                   <exclude>**/*.svg</exclude>
                   <exclude>**/*.crt</exclude>
                   <exclude>**/*.csr</exclude>
@@ -1056,8 +1221,13 @@
                   <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>
                   <exclude>**/sandbox/examples/src/main/scripts/amis.txt</exclude>
                   <!-- see notes in https://issues.apache.org/jira/browse/BROOKLYN-18 -->
-                  <!-- FIXME: Check licences for docs -->
+                  
+                  <!--
+                      docs are not part of the distribution: they are just used to populate 
+                      https://brooklyn.incubator.apache.org
+                  -->
                   <exclude>docs/**</exclude>
+
                 </excludes>
               </configuration>
             </plugin>
@@ -1131,6 +1301,7 @@
                 <module>usage/cli</module>
                 <module>usage/all</module>
                 <module>usage/dist</module>
+                <module>usage/downstream-parent</module>
                 <module>usage/archetypes/quickstart</module>
             </modules>
         </profile>
@@ -1154,9 +1325,9 @@
                 <module>sandbox/extra</module>
                 <module>sandbox/database</module>
                 <module>sandbox/web-acceptance</module>
-                <module>sandbox/dropwizard</module>
                 <module>sandbox/nosql</module>
                 <module>sandbox/monitoring</module>
+                <module>sandbox/examples/simple-open-loop-policy</module>
             </modules>
         </profile>
 
@@ -1250,6 +1421,8 @@
                                     what is really needed.
                                 -->
                                 <Export-Package>brooklyn.*</Export-Package>
+                                <Implementation-SHA-1>${buildNumber}</Implementation-SHA-1>
+                                <Implementation-Branch>${scmBranch}</Implementation-Branch>
                             </instructions>
                         </configuration>
                     </plugin>
@@ -1307,7 +1480,7 @@
                                 </goals>
                                 <configuration>
                                     <forceCreation>true</forceCreation>
-                                    <archive combine.self="override"></archive>
+                                    <archive combine.self="override" />
                                 </configuration>
                             </execution>
                         </executions>
@@ -1461,9 +1634,9 @@
                         <configuration>
                             <failOnViolation>false</failOnViolation>
                             <linkXref>true</linkXref>
-                            <sourceEncoding>utf-8</sourceEncoding>
+                            <sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
                             <minimumTokens>100</minimumTokens>
-                            <targetJdk>1.6</targetJdk>
+                            <targetJdk>${java.version}</targetJdk>
                             <excludes>
                                 <exclude>**/*Test.java</exclude>
                                 <exclude>**/tests/**/*.java</exclude>
@@ -1492,9 +1665,9 @@
             <id>Coverage</id>
             <dependencies>
                 <dependency>
-                    <groupId>net.sourceforge.cobertura</groupId>
-                    <artifactId>cobertura</artifactId>
-                    <version>${cobertura.version}</version>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>cobertura-maven-plugin</artifactId>
+                    <version>${cobertura.plugin.version}</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
@@ -1528,8 +1701,7 @@
                                                 <copy todir="target/cobertura/coverage-classes">
                                                     <fileset erroronmissingdir="false" dir="target/classes" />
                                                 </copy>
-                                                <cobertura-instrument datafile="target/cobertura/cobertura.ser"
-                                                    todir="target/test-classes">
+                                                <cobertura-instrument datafile="target/cobertura/cobertura.ser" todir="target/test-classes">
                                                     <fileset erroronmissingdir="false" dir="target/classes">
                                                         <include name="brooklyn/**/*.class" />
                                                         <exclude name="brooklyn/**/*Test.class" />
@@ -1558,9 +1730,12 @@
                                             <available property="gogocobertura" file="target/cobertura/cobertura.ser" />
                                             <then>
                                                 <echo message="GENERATING COBERTURA COVERAGE REPORT" />
-                                                <cobertura-report format="xml" destdir="target/site/cobertura"
-                                                    datafile="target/cobertura/cobertura.ser">
-                                                    <fileset erroronmissingdir="false" dir="src/java" />
+                                                <cobertura-report format="xml" destdir="target/site/cobertura" datafile="target/cobertura/cobertura.ser">
+                                                    <fileset erroronmissingdir="false" dir="src/main/java" />
+                                                    <fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
+                                                </cobertura-report>
+                                                <cobertura-report format="html" destdir="target/site/cobertura" datafile="target/cobertura/cobertura.ser">
+                                                    <fileset erroronmissingdir="false" dir="src/main/java" />
                                                     <fileset erroronmissingdir="false" dir="target/cobertura/dependency-sources" />
                                                 </cobertura-report>
                                             </then>
@@ -1597,9 +1772,9 @@
                                 <version>${testng.version}</version>
                             </dependency>
                             <dependency>
-                                <groupId>net.sourceforge.cobertura</groupId>
-                                <artifactId>cobertura</artifactId>
-                                <version>${cobertura.version}</version>
+                                <groupId>org.codehaus.mojo</groupId>
+                                <artifactId>cobertura-maven-plugin</artifactId>
+                                <version>${cobertura.plugin.version}</version>
                             </dependency>
                         </dependencies>
                     </plugin>
@@ -1711,58 +1886,6 @@
                 </plugin>
             </plugins></build>
         </profile>
-
-        <!-- different properties used to deploy to different locations depending on profiles;
-             default is cloudsoft filesystem repo, but some sources still use cloudsoft artifactory as source
-             (and soon we will support artifactory) -->
-        <profile>
-            <id>cloudsoft-filesystem-repo</id>
-            <activation> <property><name>brooklyn.deployTo</name><value>cloudsoftFilesystem</value></property> </activation>
-            <distributionManagement>
-                <repository>
-                    <id>cloudsoft-deploy-cloudfront-origin-releases</id>
-                    <name>Cloudsoft Release Filesystem repo (used as origin for cloudfront)</name>
-                    <url>scpexe://root@developers-origin.cloudsoftcorp.com/var/www/developers/maven/releases/</url>
-                </repository>
-                <snapshotRepository>
-                    <id>cloudsoft-deploy-cloudfront-origin-snapshots</id>
-                    <name>Cloudsoft Snapshot Filesystem repo (used as origin for cloudfront)</name>
-                    <url>scpexe://root@developers-origin.cloudsoftcorp.com/var/www/developers/maven/snapshots/</url>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
-        <profile>
-            <id>cloudsoft-artifactory-repo</id>
-            <activation> <property><name>brooklyn.deployTo</name><value>cloudsoftArtifactory</value></property> </activation>
-            <distributionManagement>
-                <repository>
-                    <id>cloudsoft-deploy-artifactory-release</id>
-                    <name>Cloudsoft Artifactory libs-release-local repo</name>
-                    <url>http://ccweb.cloudsoftcorp.com/maven/libs-release-local/</url>
-                </repository>
-                <snapshotRepository>
-                    <id>cloudsoft-deploy-artifactory-snapshot</id>
-                    <name>Cloudsoft Artifactory libs-snapshot-local repo</name>
-                    <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
-        <profile>
-            <id>sonatype-nexus-repo</id>
-            <activation> <property><name>brooklyn.deployTo</name><value>sonatype</value></property> </activation>
-            <distributionManagement>
-                <repository>
-                    <id>sonatype-nexus-staging</id>
-                    <name>Nexus Release Repository</name>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-                </repository>
-                <snapshotRepository>
-                    <id>sonatype-nexus-snapshots</id>
-                    <name>Sonatype Nexus Snapshots</name>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
         <profile>
             <id>apache-repo</id>
             <activation> <property><name>brooklyn.deployTo</name><value>apache</value></property> </activation>
@@ -1784,6 +1907,28 @@
                           </goals>
                         </execution>
                       </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>eclipse-compiler</id>
+            <build>
+                <plugins>
+                    <plugin>
+                       <groupId>org.apache.maven.plugins</groupId>
+                       <artifactId>maven-compiler-plugin</artifactId>
+                       <configuration>
+                           <compilerId>eclipse</compilerId>
+                           <optimize>true</optimize>
+                       </configuration>
+                       <dependencies>
+                               <dependency>
+                                   <groupId>org.codehaus.plexus</groupId>
+                                   <artifactId>plexus-compiler-eclipse</artifactId>
+                                   <version>2.4</version>
+                               </dependency>
+                       </dependencies>
                     </plugin>
                 </plugins>
             </build>

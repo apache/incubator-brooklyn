@@ -32,10 +32,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.location.jclouds.AbstractJcloudsTest;
+import brooklyn.location.jclouds.AbstractJcloudsLiveTest;
 import brooklyn.location.jclouds.JcloudsLocation;
 
-public class JcloudsMachinePoolLiveTest extends AbstractJcloudsTest {
+public class JcloudsMachinePoolLiveTest extends AbstractJcloudsLiveTest {
 
     public static final Logger log = LoggerFactory.getLogger(JcloudsMachinePoolLiveTest.class);
     

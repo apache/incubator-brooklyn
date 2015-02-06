@@ -18,28 +18,34 @@
  */
 package brooklyn.rest.testing;
 
-import brooklyn.rest.util.FormMapProvider;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
-import brooklyn.rest.resources.AbstractBrooklynRestResource;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
-import brooklyn.rest.util.DefaultExceptionMapper;
 import brooklyn.rest.util.NullHttpServletRequestProvider;
 import brooklyn.rest.util.NullServletConfigProvider;
+import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.util.exceptions.Exceptions;
 
-import com.yammer.dropwizard.testing.ResourceTest;
+import com.google.common.base.Preconditions;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.core.DefaultResourceConfig;
+import com.sun.jersey.test.framework.AppDescriptor;
+import com.sun.jersey.test.framework.JerseyTest;
+import com.sun.jersey.test.framework.LowLevelAppDescriptor;
 
-public abstract class BrooklynRestApiTest extends ResourceTest {
+public abstract class BrooklynRestApiTest {
 
     private ManagementContext manager;
     
@@ -69,6 +75,10 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
         return manager;
     }
     
+    protected ObjectMapper mapper() {
+        return BrooklynJacksonJsonProvider.findSharedObjectMapper(null, getManagementContext());
+    }
+    
     @AfterClass
     public void tearDown() throws Exception {
         if (manager!=null) {
@@ -81,30 +91,78 @@ public abstract class BrooklynRestApiTest extends ResourceTest {
         return new BrooklynRestResourceUtils(getManagementContext()).getLocationRegistry();
     }
 
-    @Override
+    private JerseyTest jerseyTest;
+    protected DefaultResourceConfig config = new DefaultResourceConfig();
+    
     protected final void addResource(Object resource) {
-        // seems we have to provide our own injector because the jersey test framework 
-        // doesn't inject ServletConfig and it all blows up
-        addProvider(NullServletConfigProvider.class);
-        addProvider(NullHttpServletRequestProvider.class);
+        Preconditions.checkNotNull(config, "Must run before setUpJersey");
         
-      super.addResource(resource);
-      if (resource instanceof AbstractBrooklynRestResource) {
-          ((AbstractBrooklynRestResource)resource).injectManagementContext(getManagementContext());
-      }
+        if (resource instanceof Class)
+            config.getClasses().add((Class<?>)resource);
+        else
+            config.getSingletons().add(resource);
+        
+        if (resource instanceof ManagementContextInjectable) {
+            ((ManagementContextInjectable)resource).injectManagementContext(getManagementContext());
+        }
     }
     
-    protected void addResources() {
-        addProvider(DefaultExceptionMapper.class);
-        addProvider(FormMapProvider.class);
-        for (Object r: BrooklynRestApi.getBrooklynRestResources())
+    protected final void addProvider(Class<?> provider) {
+        Preconditions.checkNotNull(config, "Must run before setUpJersey");
+        
+        config.getClasses().add(provider);
+    }
+    
+    protected void addDefaultResources() {
+        // seems we have to provide our own injector because the jersey test framework 
+        // doesn't inject ServletConfig and it all blows up
+        // and the servlet config provider must be an instance; addClasses doesn't work for some reason
+        addResource(new NullServletConfigProvider());
+        addProvider(NullHttpServletRequestProvider.class);
+    }
+
+    protected final void setUpResources() {
+        addDefaultResources();
+        addBrooklynResources();
+        for (Object r: BrooklynRestApi.getMiscResources())
             addResource(r);
     }
 
     /** intended for overriding if you only want certain resources added, or additional ones added */
-    @Override
-    protected void setUpResources() throws Exception {
-        addResources();
+    protected void addBrooklynResources() {
+        for (Object r: BrooklynRestApi.getBrooklynRestResources())
+            addResource(r);
     }
 
+    protected void setUpJersey() {
+        setUpResources();
+        
+        jerseyTest = new JerseyTest() {
+            @Override
+            protected AppDescriptor configure() {
+                return new LowLevelAppDescriptor.Builder(config).build();
+            }
+        };
+        config = null;
+        try {
+            jerseyTest.setUp();
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+    protected void tearDownJersey() {
+        if (jerseyTest != null) {
+            try {
+                jerseyTest.tearDown();
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+        }
+        config = new DefaultResourceConfig();
+    }
+
+    public Client client() {
+        Preconditions.checkNotNull(jerseyTest, "Must run setUpJersey first");
+        return jerseyTest.client();
+    }
 }

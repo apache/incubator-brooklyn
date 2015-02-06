@@ -29,11 +29,11 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.rest.BrooklynRestApi;
+import brooklyn.rest.apidoc.ApidocRoot;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.wordnik.swagger.core.Documentation;
 import com.wordnik.swagger.core.DocumentationEndPoint;
 import com.wordnik.swagger.core.DocumentationOperation;
 
@@ -46,41 +46,59 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
     private static final Logger log = LoggerFactory.getLogger(ApiDocResourceTest.class);
 
     @Override
-    protected void setUpResources() throws Exception {
-        super.setUpResources();
+    protected void addBrooklynResources() {
         for (Object o : BrooklynRestApi.getApidocResources()) {
             addResource(o);
         }
+        super.addBrooklynResources();
     }
-
+    
+    @Test
+    public void testRootSerializesSensibly() throws Exception {
+        String data = client().resource("/v1/apidoc/").get(String.class);
+        log.info("apidoc gives: "+data);
+        // make sure no scala gets in
+        Assert.assertFalse(data.contains("$"));
+        Assert.assertFalse(data.contains("scala"));
+    }
+    
     @Test
     public void testCountRestResources() throws Exception {
-        Documentation response = client().resource("/v1/apidoc/").get(Documentation.class);
+        ApidocRoot response = client().resource("/v1/apidoc/").get(ApidocRoot.class);
         assertEquals(response.getApis().size(), 1 + Iterables.size(BrooklynRestApi.getBrooklynRestResources()));
     }
 
     @Test
+    public void testEndpointSerializesSensibly() throws Exception {
+        String data = client().resource("/v1/apidoc/brooklyn.rest.resources.ApidocResource").get(String.class);
+        log.info("apidoc endpoint resource gives: "+data);
+        // make sure no scala gets in
+        Assert.assertFalse(data.contains("$"));
+        Assert.assertFalse(data.contains("scala"));
+    }
+    
+    @Test
     public void testApiDocDetails() throws Exception {
-        Documentation response = client().resource("/v1/apidoc/brooklyn.rest.resources.ApidocResource").get(Documentation.class);
+        ApidocRoot response = client().resource("/v1/apidoc/brooklyn.rest.resources.ApidocResource").get(ApidocRoot.class);
         assertEquals(countOperations(response), 2);
     }
 
     @Test
     public void testEffectorDetails() throws Exception {
-        Documentation response = client().resource("/v1/apidoc/brooklyn.rest.resources.EffectorResource").get(Documentation.class);
+        ApidocRoot response = client().resource("/v1/apidoc/brooklyn.rest.resources.EffectorResource").get(ApidocRoot.class);
         assertEquals(countOperations(response), 2);
     }
 
     @Test
     public void testEntityDetails() throws Exception {
-        Documentation response = client().resource("/v1/apidoc/brooklyn.rest.resources.EntityResource").get(Documentation.class);
-        assertEquals(countOperations(response), 11);
+        ApidocRoot response = client().resource("/v1/apidoc/brooklyn.rest.resources.EntityResource").get(ApidocRoot.class);
+        assertEquals(countOperations(response), 14);
     }
 
     @Test
     public void testCatalogDetails() throws Exception {
-        Documentation response = client().resource("/v1/apidoc/brooklyn.rest.resources.CatalogResource").get(Documentation.class);
-        assertEquals(countOperations(response), 11, "ops="+getOperations(response));
+        ApidocRoot response = client().resource("/v1/apidoc/brooklyn.rest.resources.CatalogResource").get(ApidocRoot.class);
+        assertEquals(countOperations(response), 16, "ops="+getOperations(response));
     }
 
     @SuppressWarnings("rawtypes")
@@ -105,11 +123,11 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
 
     /* Note in some cases we might have more than one Resource method per 'endpoint'
      */
-    private int countOperations(Documentation doc) throws Exception {
+    private int countOperations(ApidocRoot doc) throws Exception {
         return getOperations(doc).size();
     }
     
-    private List<DocumentationOperation> getOperations(Documentation doc) throws Exception {
+    private List<DocumentationOperation> getOperations(ApidocRoot doc) throws Exception {
         List<DocumentationOperation> result = Lists.newArrayList();
         for (DocumentationEndPoint endpoint : doc.getApis()) {
             result.addAll(endpoint.getOperations());

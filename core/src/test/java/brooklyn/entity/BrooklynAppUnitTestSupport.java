@@ -50,8 +50,12 @@ public class BrooklynAppUnitTestSupport {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         if (mgmt == null) {
-            mgmt = new LocalManagementContextForTests();
+            mgmt = LocalManagementContextForTests.newInstance();
         }
+        setUpApp();
+    }
+
+    protected void setUpApp() {
         EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
                 .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, shouldSkipOnBoxBaseDirResolution());
         app = ApplicationBuilder.newManagedApp(appSpec, mgmt);

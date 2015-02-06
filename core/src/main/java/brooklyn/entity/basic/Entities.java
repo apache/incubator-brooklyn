@@ -22,16 +22,19 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -50,6 +53,7 @@ import brooklyn.entity.Group;
 import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.effector.Effectors;
+import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.AttributeSensor;
@@ -66,6 +70,7 @@ import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.management.internal.EffectorUtils;
+import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.NonDeploymentManagementContext;
@@ -89,6 +94,7 @@ import brooklyn.util.task.system.SystemTasks;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -101,6 +107,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
+import com.google.common.util.concurrent.Atomics;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Convenience methods for working with entities.
@@ -116,7 +127,7 @@ public class Entities {
      * Names that, if they appear anywhere in an attribute/config/field indicates that it
      * may be private, so should not be logged etc.
      */
-    private static final List<String> SECRET_NAMES = ImmutableList.of(
+    public static final List<String> SECRET_NAMES = ImmutableList.of(
             "password",
             "passwd",
             "credential",
@@ -125,13 +136,20 @@ public class Entities {
             "access.cert",
             "access.key");
 
-    /** Special object used by some setting methods to indicate that a value should be ignored. 
-     * See specific usages of this field to confirm where. */
+    /**
+     * Special object used by some setting methods to indicate that a value should be ignored.
+     * <p>
+     * See specific usages of this field to confirm where.
+     */
     public static final Object UNCHANGED = new Object();
-    /** Special object used by some setting methods to indicate that a value should be removed. 
-     * See specific usages of this field to confirm where. */
+
+    /**
+     * Special object used by some setting methods to indicate that a value should be removed.
+     * <p>
+     * See specific usages of this field to confirm where.
+     */
     public static final Object REMOVE = new Object();
-    
+
     /**
      * Invokes an {@link Effector} on multiple entities, with the named arguments from the parameters {@link Map}
      * using the context of the provided {@link Entity}.
@@ -167,10 +185,12 @@ public class Entities {
         TaskTags.markInessential(invoke);
         return DynamicTasks.queueIfPossible(invoke).orSubmitAsync(callingEntity).asTask();
     }
+
     public static <T> Task<List<T>> invokeEffectorListWithMap(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         return invokeEffectorList(callingEntity, entitiesToCall, effector, parameters);
     }
+
     @SuppressWarnings("unchecked")
     public static <T> Task<List<T>> invokeEffectorListWithArgs(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<T> effector, Object ...args) {
@@ -178,6 +198,7 @@ public class Entities {
                 // putting into a map, unnecessarily, as it ends up being the array again...
                 EffectorUtils.prepareArgsForEffectorAsMapFromArray(effector, args));
     }
+
     public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<T> effector) {
         return invokeEffectorList(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
@@ -187,31 +208,33 @@ public class Entities {
             final Effector<T> effector, final Map<String,?> parameters) {
         Task<T> t = Effectors.invocation(entityToCall, effector, parameters).asTask();
         TaskTags.markInessential(t);
-        
+
         // we pass to callingEntity for consistency above, but in exec-context it should be re-dispatched to targetEntity
         // reassign t as the return value may be a wrapper, if it is switching execution contexts; see submitInternal's javadoc
         t = ((EntityInternal)callingEntity).getManagementSupport().getExecutionContext().submit(
                 MutableMap.of("tag", BrooklynTaskTags.tagForCallerEntity(callingEntity)), t);
-        
+
         if (DynamicTasks.getTaskQueuingContext()!=null) {
             // include it as a child (in the gui), marked inessential, because the caller is invoking programmatically
             DynamicTasks.queue(t);
         }
-        
+
         return t;
     }
+
     @SuppressWarnings("unchecked")
     public static <T> Task<T> invokeEffectorWithArgs(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector, Object ...args) {
         return invokeEffector(callingEntity, entityToCall, effector,
                 EffectorUtils.prepareArgsForEffectorAsMapFromArray(effector, args));
     }
+
     public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
             final Effector<T> effector) {
         return invokeEffector(callingEntity, entityToCall, effector, Collections.<String,Object>emptyMap());
     }
 
-    /** convenience - invokes in parallel if multiple, but otherwise invokes the item directly */
+    /** Invokes in parallel if multiple, but otherwise invokes the item directly. */
     public static Task<?> invokeEffector(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<?> effector, final Map<String,?> parameters) {
         if (Iterables.size(entitiesToCall)==1)
@@ -219,14 +242,13 @@ public class Entities {
         else
             return invokeEffectorList(callingEntity, entitiesToCall, effector, parameters);
     }
-    /** convenience - invokes in parallel if multiple, but otherwise invokes the item directly */
+
+    /** Invokes in parallel if multiple, but otherwise invokes the item directly. */
     public static Task<?> invokeEffector(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<?> effector) {
         return invokeEffector(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
     }
-    
-    // ------------------------------------
-    
+
     public static boolean isSecret(String name) {
         String lowerName = name.toLowerCase();
         for (String secretName : SECRET_NAMES) {
@@ -241,7 +263,7 @@ public class Entities {
                 return true;
             v = ((Maybe<?>) v).get();
         }
-        
+
         return v==null || (v instanceof Map && ((Map<?,?>)v).isEmpty()) ||
                 (v instanceof Collection && ((Collection<?>)v).isEmpty()) ||
                 (v instanceof CharSequence&& ((CharSequence)v).length() == 0);
@@ -281,7 +303,9 @@ public class Entities {
         dumpInfo(e, new PrintWriter(System.out), currentIndentation, tab);
     }
     public static void dumpInfo(Entity e, Writer out, String currentIndentation, String tab) throws IOException {
-        out.append(currentIndentation+e.toString()+"\n");
+        out.append(currentIndentation+e.toString()+" "+e.getId()+"\n");
+
+        out.append(currentIndentation+tab+tab+"displayName = "+e.getDisplayName()+"\n");
 
         out.append(currentIndentation+tab+tab+"locations = "+e.getLocations()+"\n");
 
@@ -291,7 +315,7 @@ public class Entities {
             // (since the map sometimes contains <object> keys
             ConfigKey<?> realKey = e.getEntityType().getConfigKey(it.getName());
             if (realKey!=null) it = realKey;
-            
+
             Maybe<Object> mv = ((EntityInternal)e).getConfigMap().getConfigRaw(it, false);
             if (!isTrivial(mv)) {
                 Object v = mv.get();
@@ -332,7 +356,8 @@ public class Entities {
         if (e instanceof Group) {
             StringBuilder members = new StringBuilder();
             for (Entity it : ((Group)e).getMembers()) {
-                members.append(it.getId()+", ");
+                if (members.length()>0) members.append(", ");
+                members.append(it.getId());
             }
             out.append(currentIndentation+tab+tab+"Members: "+members.toString()+"\n");
         }
@@ -393,7 +418,6 @@ public class Entities {
                 out.append("\n");
             }
         }
-
 
         for (Map.Entry<String,?> entry : sortMap(FlagUtils.getFieldsWithFlags(loc)).entrySet()) {
             String key = entry.getKey();
@@ -513,8 +537,9 @@ public class Entities {
         return result;
     }
 
-    /** true if the given descendant includes the given ancestor in its chain.
-     * does NOT count a node as its ancestor.
+    /**
+     * Returns true if the given descendant includes the given ancestor in its chain.
+     * Does <i>NOT</i> count a node as its ancestor.
      */
     public static boolean isAncestor(Entity descendant, Entity potentialAncestor) {
         Entity ancestor = descendant.getParent();
@@ -524,10 +549,13 @@ public class Entities {
         }
         return false;
     }
-    
-    /** checks whether the descendants of the given ancestor contains the given potentialDescendant.
-     * in this test, unlike in {@link #descendants(Entity)}, an entity is not counted as a descendant.
-     * note, it is usually preferred to use isAncestor() and swap the order, it is a cheaper method. */
+
+    /**
+     * Checks whether the descendants of the given ancestor contains the given potentialDescendant.
+     * <p>
+     * In this test, unlike in {@link #descendants(Entity)}, an entity is not counted as a descendant.
+     * note, it is usually preferred to use isAncestor() and swap the order, it is a cheaper method.
+     */
     public static boolean isDescendant(Entity ancestor, Entity potentialDescendant) {
         Set<Entity> inspected = Sets.newLinkedHashSet();
         Stack<Entity> toinspect = new Stack<Entity>();
@@ -545,9 +573,12 @@ public class Entities {
 
         return false;
     }
-    
-    /** return all descendants of given entity matching the given predicate.
-     * see {@link EntityPredicates} for useful second arguments! */
+
+    /**
+     * Return all descendants of given entity matching the given predicate and optionally the entity itself.
+     *
+     * @see {@link EntityPredicates} for useful second arguments.
+     */
     public static Iterable<Entity> descendants(Entity root, Predicate<? super Entity> matching, boolean includeSelf) {
         Iterable<Entity> descs = Iterables.concat(Iterables.transform(root.getChildren(), new Function<Entity,Iterable<Entity>>() {
             @Override
@@ -558,25 +589,60 @@ public class Entities {
         return Iterables.filter(Iterables.concat(descs, Collections.singleton(root)), matching);
     }
 
-    /** as {@link #descendants(Entity, Predicate)}, for common case of including self */ 
+    /**
+     * Returns the entity  matching the given predicate
+     *
+     * @see #descendants(Entity, Predicate, boolean)
+     */
     public static Iterable<Entity> descendants(Entity root, Predicate<Entity> matching) {
         return descendants(root, matching, true);
     }
 
     /**
-     * returns the entity, its children, and all its children, and so on. 
-     * as {@link #descendants(Entity, Predicate)}, for common case of matching everything and including self. */ 
+     * Returns the entity, its children, and all its children, and so on.
+     *
+     * @see #descendants(Entity, Predicate, boolean)
+     */
     public static Iterable<Entity> descendants(Entity root) {
         return descendants(root, Predicates.alwaysTrue(), true);
     }
 
-    /** return all descendants of given entity of the given type, potentially including the given root.
-     * as {@link #descendants(Entity, Predicate)}, for common case of {@link Predicates#instanceOf(Class)}, 
-     * including self, and returning the correct generics signature. */
+    /**
+     * Return all descendants of given entity of the given type, potentially including the given root.
+     *
+     * @see #descendants(Entity)
+     * @see Iterables#filter(Iterable, Class)
+     */
     public static <T extends Entity> Iterable<T> descendants(Entity root, Class<T> ofType) {
         return Iterables.filter(descendants(root), ofType);
     }
-    
+
+    /** Returns the entity, its parent, its parent, and so on. */
+    public static Iterable<Entity> ancestors(final Entity root) {
+        return new Iterable<Entity>() {
+            @Override
+            public Iterator<Entity> iterator() {
+                return new Iterator<Entity>() {
+                    Entity next = root;
+                    @Override
+                    public boolean hasNext() {
+                        return next!=null;
+                    }
+                    @Override
+                    public Entity next() {
+                        Entity result = next;
+                        next = next.getParent();
+                        return result;
+                    }
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
+
     /**
      * Registers a {@link BrooklynShutdownHooks#invokeStopOnShutdown(Entity)} to shutdown this entity when the JVM exits.
      * (Convenience method located in this class for easy access.)
@@ -596,20 +662,36 @@ public class Entities {
                 MutableMap.of("locations", locations)).getUnchecked();
     }
 
-    /** stops, destroys, and unmanages the given entity -- does as many as are valid given the type and state */
+    /**
+     * Attempts to stop, destroy, and unmanage the given entity.
+     * <p>
+     * Actual actions performed will depend on the entity type and its current state.
+     */
     public static void destroy(Entity e) {
         if (isManaged(e)) {
-            if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
-            if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
-            unmanage(e);
-            log.debug("destroyed and unmanaged "+e+"; mgmt now "+
+            if (isReadOnly(e)) {
+                unmanage(e);
+                log.debug("destroyed and unmanaged read-only copy of "+e);
+            } else {
+                if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
+                
+                // if destroying gracefully we might also want to do this (currently gets done by GC after unmanage,
+                // which is good enough for leaks, but not sure if that's ideal for subscriptions etc)
+//                ((LocalEntityManager)e.getApplication().getManagementContext().getEntityManager()).stopTasks(e, null);
+                
+                if (e instanceof EntityInternal) ((EntityInternal)e).destroy();
+                
+                unmanage(e);
+                
+                log.debug("destroyed and unmanaged "+e+"; mgmt now "+
                     (e.getApplicationId()==null ? "(no app)" : e.getApplication().getManagementContext())+" - managed? "+isManaged(e));
+            }
         } else {
             log.debug("skipping destroy of "+e+": not managed");
         }
     }
-    
-    /** as {@link #destroy(Entity)} but catching all errors */
+
+    /** Same as {@link #destroy(Entity)} but catching all errors. */
     public static void destroyCatching(Entity entity) {
         try {
             destroy(entity);
@@ -619,17 +701,16 @@ public class Entities {
         }
     }
 
-    /** destroys the given location -- does as many as are valid given the type and state
-     * TODO: unmanage the location, if possible?
-     */
+    /** Destroys the given location. */
     public static void destroy(Location loc) {
+        // TODO unmanage the location, if possible?
         if (loc instanceof Closeable) {
             Streams.closeQuietly((Closeable)loc);
             log.debug("closed "+loc);
         }
     }
-    
-    /** as {@link #destroy(Location)} but catching all errors */
+
+    /** Same as {@link #destroy(Location)} but catching all errors. */
     public static void destroyCatching(Location loc) {
         try {
             destroy(loc);
@@ -639,40 +720,59 @@ public class Entities {
         }
     }
 
-
-    /** stops, destroys, and unmanages all apps in the given context,
-     * and then terminates the management context */
-    public static void destroyAll(ManagementContext mgmt) {
-        Exception error = null;
+    /**
+     * Stops, destroys, and unmanages all apps in the given context, and then terminates the management context.
+     * 
+     * Apps will be stopped+destroyed+unmanaged concurrently, waiting for all to complete.
+     */
+    public static void destroyAll(final ManagementContext mgmt) {
         if (mgmt instanceof NonDeploymentManagementContext) {
             // log here because it is easy for tests to destroyAll(app.getMgmtContext())
             // which will *not* destroy the mgmt context if the app has been stopped!
             log.warn("Entities.destroyAll invoked on non-deployment "+mgmt+" - not likely to have much effect! " +
-            		"(This usually means the mgmt context has been taken from entity has been destroyed. " +
-            		"To destroy other things on the management context ensure you keep a handle to the context " +
-            		"before the entity is destroyed, such as by creating the management context first.)");
+                    "(This usually means the mgmt context has been taken from an entity that has been destroyed. " +
+                    "To destroy other things on the management context ensure you keep a handle to the context " +
+                    "before the entity is destroyed, such as by creating the management context first.)");
         }
         if (!mgmt.isRunning()) return;
-        log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
-        for (Application app: mgmt.getApplications()) {
-            log.debug("destroying app "+app+" (managed? "+isManaged(app)+"; mgmt is "+mgmt+")");
-            try {
-                destroy(app);
-                log.debug("destroyed app "+app+"; mgmt now "+mgmt);
-            } catch (Exception e) {
-                log.warn("problems destroying app "+app+" (mgmt now "+mgmt+", will rethrow at least one exception): "+e);
-                if (error==null) error = e;
+        
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+        List<ListenableFuture<?>> futures = Lists.newArrayList();
+        final AtomicReference<Exception> error = Atomics.newReference();
+        try {
+            log.debug("destroying all apps in "+mgmt+": "+mgmt.getApplications());
+            for (final Application app: mgmt.getApplications()) {
+                futures.add(executor.submit(new Runnable() {
+                    public void run() {
+                        log.debug("destroying app "+app+" (managed? "+isManaged(app)+"; mgmt is "+mgmt+")");
+                        try {
+                            destroy(app);
+                            log.debug("destroyed app "+app+"; mgmt now "+mgmt);
+                        } catch (Exception e) {
+                            log.warn("problems destroying app "+app+" (mgmt now "+mgmt+", will rethrow at least one exception): "+e);
+                            error.compareAndSet(null, e);
+                        }
+                    }}));
             }
+            Futures.allAsList(futures).get();
+            
+            for (Location loc : mgmt.getLocationManager().getLocations()) {
+                destroyCatching(loc);
+            }
+            if (mgmt instanceof ManagementContextInternal) {
+                ((ManagementContextInternal)mgmt).terminate();
+            }
+            if (error.get() != null) throw Exceptions.propagate(error.get());
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        } catch (ExecutionException e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            executor.shutdownNow();
         }
-        for (Location loc : mgmt.getLocationManager().getLocations()) {
-            destroyCatching(loc);
-        }
-        if (mgmt instanceof ManagementContextInternal) 
-            ((ManagementContextInternal)mgmt).terminate();
-        if (error!=null) throw Exceptions.propagate(error);
     }
 
-    /** as {@link #destroyAll(ManagementContext)} but catching all errors */
+    /** Same as {@link #destroyAll(ManagementContext)} but catching all errors */
     public static void destroyAllCatching(ManagementContext mgmt) {
         try {
             destroyAll(mgmt);
@@ -690,14 +790,38 @@ public class Entities {
         return ((EntityInternal)e).getManagementSupport().isNoLongerManaged();
     }
 
-    /** brings this entity under management iff its ancestor is managed, returns true in that case;
-     * otherwise returns false in the expectation that the ancestor will become managed,
-     * or throws exception if it has no parent or a non-application root
-     * (will throw if e is an Application; see also {@link #startManagement(Entity)} ) */
+    /** as {@link EntityManagerInternal#isReadOnly(Entity)} */
+    @Beta
+    public static Boolean isReadOnly(Entity e) {
+        return ((EntityInternal)e).getManagementSupport().isReadOnly();
+    }
+
+    /** Unwraps a proxy to retrieve the real item, if available.
+     * <p>
+     * Only intended for use in tests and occasional internal usage, e.g. persistence.
+     * For normal operations, callers should ensure the method is available on an interface and accessed via the proxy. */
+    @Beta @VisibleForTesting
+    public static AbstractEntity deproxy(Entity e) {
+        if (!(Proxy.isProxyClass(e.getClass()))) {
+            log.warn("Attempt to deproxy non-proxy "+e, new Throwable("Location of attempt to deproxy non-proxy "+e));
+            return (AbstractEntity) e;
+        }
+        return (AbstractEntity) ((EntityProxyImpl)Proxy.getInvocationHandler(e)).getDelegate();
+    }
+    
+    /**
+     * Brings this entity under management only if its ancestor is managed.
+     * <p>
+     * Returns true if successful, otherwise returns false in the expectation that the ancestor
+     * will become managed, or throws exception if it has no parent or a non-application root.
+     *
+     * @throws IllegalStateException if {@literal e} is an {@link Application}.
+     * @see #startManagement(Entity)
+     */
     public static boolean manage(Entity e) {
         Entity o = e.getParent();
-        Entity eum = e; //highest unmanaged ancestor
-        if (o==null) throw new IllegalStateException("Can't manage "+e+" because it is an orphan");
+        Entity eum = e; // Highest unmanaged ancestor
+        if (o==null) throw new IllegalArgumentException("Can't manage "+e+" because it is an orphan");
         while (o.getParent()!=null) {
             if (!isManaged(o)) eum = o;
             o = o.getParent();
@@ -706,25 +830,28 @@ public class Entities {
             ((EntityInternal)o).getManagementContext().getEntityManager().manage(eum);
             return true;
         }
-        if (!(o instanceof Application))
+        if (!(o instanceof Application)) {
             throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
+        }
         return false;
     }
 
-    /** brings this entity under management, creating a local management context if necessary
-     * (assuming root is an application).
-     * returns existing management context if there is one (non-deployment),
-     * or new local mgmt context if not,
-     * or throwing exception if root is not an application
+    /**
+     * Brings this entity under management, creating a local management context if necessary,
+     * assuming root is an application.
      * <p>
-     * callers are recommended to use {@link #manage(Entity)} instead unless they know
-     * a plain-vanilla non-root management context is sufficient (e.g. in tests)
+     * Returns existing management context if there is one (non-deployment) or a new local management
+     * context if not, or throws an exception if root is not an application. Callers are recommended
+     * to use {@link #manage(Entity)} instead unless they know a plain-vanilla non-root management
+     * context is sufficient e.g. in tests.
      * <p>
-     * this method may change, but is provided as a stop-gap to prevent ad-hoc things
-     * being done in the code which are even more likely to break! */
+     * <b>NOTE</b> This method may change, but is provided as a stop-gap to prevent ad-hoc things
+     * being done in the code which are even more likely to break!
+     */
+    @Beta
     public static ManagementContext startManagement(Entity e) {
         Entity o = e;
-        Entity eum = e; //highest unmanaged ancestor
+        Entity eum = e; // Highest unmanaged ancestor
         while (o.getParent()!=null) {
             if (!isManaged(o)) eum = o;
             o = o.getParent();
@@ -736,6 +863,9 @@ public class Entities {
         }
         if (!(o instanceof Application))
             throw new IllegalStateException("Can't manage "+e+" because it is not rooted at an application");
+        
+        log.warn("Deprecated invocation of startManagement for "+e+" without a management context present; "
+            + "a new local management context is being created! (Not recommended unless you really know what you are doing.)");
         ManagementContext mgmt = new LocalManagementContext();
         mgmt.getEntityManager().manage(o);
         return mgmt;
@@ -805,21 +935,16 @@ public class Entities {
         return internal.getManagementContext().getEntityDownloadsManager().newDownloader(driver, addon, properties);
     }
 
-    public static <T> Supplier<T> attributeSupplier(final Entity entity, final AttributeSensor<T> sensor) {
-        return new Supplier<T>() {
-            public T get() { return entity.getAttribute(sensor); }
-        };
+    public static <T> Supplier<T> attributeSupplier(Entity entity, AttributeSensor<T> sensor) {
+        return EntityAndAttribute.supplier(entity, sensor);
     }
 
-    
-    public static <T> Supplier<T> attributeSupplier(final EntityAndAttribute<T> tuple) {
-        return Entities.attributeSupplier(tuple.getEntity(), tuple.getAttribute());
-    }
+    public static <T> Supplier<T> attributeSupplier(EntityAndAttribute<T> tuple) { return tuple; }
 
-    public static <T> Supplier<T> attributeSupplierWhenReady(final EntityAndAttribute<T> tuple) {
+    public static <T> Supplier<T> attributeSupplierWhenReady(EntityAndAttribute<T> tuple) {
         return attributeSupplierWhenReady(tuple.getEntity(), tuple.getAttribute());
     }
-    
+
     @SuppressWarnings({ "unchecked", "serial" })
     public static <T> Supplier<T> attributeSupplierWhenReady(final Entity entity, final AttributeSensor<T> sensor) {
         final Task<T> task = DependentConfiguration.attributeWhenReady(entity, sensor);
@@ -834,16 +959,17 @@ public class Entities {
             }
         };
     }
-    
+
     /**
-     * @since 0.6.0 (added only for backwards compatibility, where locations are being created directly).
-     * @deprecated in 0.6.0; use {@link LocationManager#createLocation(LocationSpec)} instead; or {@link Locations#manage(Location, ManagementContext)}
+     * @since 0.6.0 Added only for backwards compatibility, where locations are being created directly.
+     * @deprecated in 0.6.0; use {@link LocationManager#createLocation(LocationSpec)} instead
      */
+    @Deprecated
     public static void manage(Location loc, ManagementContext managementContext) {
         Locations.manage(loc, managementContext);
     }
-    
-    /** fails-fast if value of the given key is null or unresolveable */
+
+    /** Fails-fast if value of the given key is null or unresolveable. */
     public static String getRequiredUrlConfig(Entity entity, ConfigKey<String> urlKey) {
         String url = entity.getConfig(urlKey);
         Preconditions.checkNotNull(url, "Key %s on %s should not be null", urlKey, entity);
@@ -852,13 +978,13 @@ public class Entities {
         }
         return url;
     }
-    
-    /** as {@link #getRequiredUrlConfig(Entity, ConfigKey)} */
+
+    /** @see #getRequiredUrlConfig(Entity, ConfigKey) */
     public static String getRequiredUrlConfig(Entity entity, HasConfigKey<String> urlKey) {
         return getRequiredUrlConfig(entity, urlKey.getConfigKey());
     }
-    
-    /** fails-fast if value of the given URL is null or unresolveable */
+
+    /** Fails-fast if value of the given URL is null or unresolveable. */
     public static String checkRequiredUrl(Entity entity, String url) {
         Preconditions.checkNotNull(url, "url");
         if (!ResourceUtils.create(entity).doesUrlExist(url)) {
@@ -867,8 +993,11 @@ public class Entities {
         return url;
     }
 
-    /** submits a task factory to construct its task at the entity (in a precursor task) and then to submit it;
-     * important if e.g. task construction relies on an entity being in scope (in tags, via {@link BrooklynTaskTags}) */
+    /**
+     * Submits a {@link TaskFactory} to construct its task at the entity (in a precursor task) and then to submit it.
+     * <p>
+     * Important if task construction relies on an entity being in scope (in tags, via {@link BrooklynTaskTags})
+     */
     public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final TaskFactory<T> taskFactory) {
         // TODO it is messy to have to do this, but not sure there is a cleaner way :(
         final Semaphore s = new Semaphore(0);
@@ -892,34 +1021,40 @@ public class Entities {
         return result.get();
     }
 
-    /** submits a task to run at the entity 
-     * @return the task passed in, for fluency */
+    /**
+     * Submits a task to run at the entity.
+     * 
+     * @return the task passed in, for fluency
+     */
     public static <T extends TaskAdaptable<?>> T submit(final Entity entity, final T task) {
         final ExecutionContext executionContext = ((EntityInternal)entity).getManagementSupport().getExecutionContext();
         executionContext.submit(task.asTask());
         return task;
     }
 
-    /** logs a warning if an entity has a value for a config key */
+    /** Logs a warning if an entity has a value for a config key. */
     public static void warnOnIgnoringConfig(Entity entity, ConfigKey<?> key) {
         if (entity.getConfigRaw(key, true).isPresentAndNonNull())
             log.warn("Ignoring "+key+" set on "+entity+" ("+entity.getConfig(key)+")");
     }
 
-    /** waits until {@link Startable#SERVICE_UP} returns true */
+    /** Waits until {@link Startable#SERVICE_UP} returns true. */
     public static void waitForServiceUp(final Entity entity, Duration timeout) {
         String description = "Waiting for SERVICE_UP on "+entity;
         Tasks.setBlockingDetails(description);
-        if (!Repeater.create(description).limitTimeTo(timeout)
-                .rethrowException().backoffTo(Duration.ONE_SECOND)
-                .until(new Callable<Boolean>() {
-                    public Boolean call() {
-                        return entity.getAttribute(Startable.SERVICE_UP);
-                    }})
-                .run()) {
-            throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+entity);
+        try {
+            if (!Repeater.create(description).limitTimeTo(timeout)
+                    .rethrowException().backoffTo(Duration.ONE_SECOND)
+                    .until(new Callable<Boolean>() {
+                        public Boolean call() {
+                            return Boolean.TRUE.equals(entity.getAttribute(Startable.SERVICE_UP));
+                        }})
+                    .run()) {
+                throw new IllegalStateException("Timeout waiting for SERVICE_UP from "+entity);
+            }
+        } finally {
+            Tasks.resetBlockingDetails();
         }
-        Tasks.resetBlockingDetails();
         log.debug("Detected SERVICE_UP for software {}", entity);
     }
     public static void waitForServiceUp(final Entity entity, long duration, TimeUnit units) {
@@ -930,15 +1065,17 @@ public class Entities {
         waitForServiceUp(entity, timeout);
     }
 
-    /** convenience for creating and submitted a given shell command against the given mgmt context;
-     * primarily intended for use in the groovy GUI console */
+    /**
+     * Convenience for creating and submitted a given shell command against the given mgmt context,
+     * primarily intended for use in the groovy GUI console.
+     */
     @Beta
     public static ProcessTaskWrapper<Integer> shell(ManagementContext mgmt, String command) {
         ProcessTaskWrapper<Integer> t = SystemTasks.exec(command).newTask();
-        mgmt.getExecutionManager().submit(t).getUnchecked();
+        mgmt.getServerExecutionContext().submit(t).getUnchecked();
         System.out.println(t.getStdout());
         System.err.println(t.getStderr());
         return t;
     }
-    
+
 }

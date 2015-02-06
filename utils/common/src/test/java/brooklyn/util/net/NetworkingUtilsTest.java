@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Identifiers;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.net.HostAndPort;
 
 public class NetworkingUtilsTest {
@@ -105,8 +107,11 @@ public class NetworkingUtilsTest {
         if (numFree<=5)
             fail("This test requires that at least some ports near 58769+ not be in use.");
     }
-    
-    @Test
+
+    // Integration because fails in apache jenkins sometimes with "could not get a port".
+    // Could all the ports between 58767 and 60000 be in use (!) or is there a restriction in
+    // the environment?
+    @Test(groups="Integration")
     public void testIsPortAvailableReportsFalseWhenPortIsInUse() throws Exception {
         int port = 58767;
         ServerSocket ss = null;
@@ -132,6 +137,25 @@ public class NetworkingUtilsTest {
             @Override public void run() {
                 assertTrue(Networking.isPortAvailable(portF), "port "+portF+" not made available afterwards");
             }});
+    }
+
+    // See comment on {@link #testIsPortAvailableReportsFalseWhenPortIsInUse()} for why this is integration.
+    @Test(groups="Integration")
+    public void testIsPortAvailableReportsPromptly() throws Exception {
+        // repeat until we can get an available port
+        int port = 58767;
+        boolean available = false;
+        do {
+            port++;
+            Stopwatch watch = Stopwatch.createStarted();
+            if (Networking.isPortAvailable(null, port)) {
+                available = true;
+            }
+            long elapsedMillis = watch.elapsed(TimeUnit.MILLISECONDS);
+            assertTrue(elapsedMillis < 5000, "elapsedMillis="+elapsedMillis+" for isPortAvailable(null, "+port+")");
+        } while (!available && port < 60000);
+
+        Assert.assertTrue(available);
     }
     
     //just some system health-checks... localhost may not resolve properly elsewhere

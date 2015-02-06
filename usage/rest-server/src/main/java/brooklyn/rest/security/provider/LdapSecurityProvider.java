@@ -41,12 +41,11 @@ import brooklyn.util.text.Strings;
  *
  * @author Peter Veentjer.
  */
-public class LdapSecurityProvider implements SecurityProvider {
+public class LdapSecurityProvider extends AbstractSecurityProvider implements SecurityProvider {
 
     public static final Logger LOG = LoggerFactory.getLogger(LdapSecurityProvider.class);
 
     public static final String LDAP_CONTEXT_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
-    public static final String AUTHENTICATED_SESSION_TOKEN_NAME = LdapSecurityProvider.class.getCanonicalName()+":"+"AUTHENTICATED";
 
     private final String ldapUrl;
     private final String ldapRealm;
@@ -55,8 +54,7 @@ public class LdapSecurityProvider implements SecurityProvider {
         StringConfigMap properties = mgmt.getConfig();
         ldapUrl = properties.getConfig(BrooklynWebConfig.LDAP_URL);
         Strings.checkNonEmpty(ldapUrl, "LDAP security provider configuration missing required property "+BrooklynWebConfig.LDAP_URL);
-        ldapRealm = CharMatcher.isNot('"').retainFrom(properties.getConfig
-                (BrooklynWebConfig.LDAP_REALM));
+        ldapRealm = CharMatcher.isNot('"').retainFrom(properties.getConfig(BrooklynWebConfig.LDAP_REALM));
         Strings.checkNonEmpty(ldapRealm, "LDAP security provider configuration missing required property "+BrooklynWebConfig.LDAP_REALM);
     }
 
@@ -78,37 +76,18 @@ public class LdapSecurityProvider implements SecurityProvider {
         env.put(Context.SECURITY_PRINCIPAL, getUserDN(user));
         env.put(Context.SECURITY_CREDENTIALS, password);
 
-        boolean authenticated = false;
         try {
             new InitialDirContext(env);
-            authenticated = true;
+            return allow(session, user);
         } catch (NamingException e) {
-            LOG.warn("Failed to authenticate user: " + user);
+            return false;
         }
-
-        if (session != null)
-            session.setAttribute(AUTHENTICATED_SESSION_TOKEN_NAME, authenticated);
-        return authenticated;
     }
 
     private String getUserDN(String user) {
         return "cn=" + user + "," + ldapRealm;
     }
 
-    @Override
-    public boolean isAuthenticated(HttpSession session) {
-        if (session == null) return false;
-        Boolean authenticatedToken = (Boolean) session.getAttribute(AUTHENTICATED_SESSION_TOKEN_NAME);
-        return authenticatedToken == null ? false : authenticatedToken;
-    }
-
-    @Override
-    public boolean logout(HttpSession session) {
-        if (session != null)
-            session.setAttribute(AUTHENTICATED_SESSION_TOKEN_NAME, null);
-        return true;
-    }
-    
     static boolean triedLoading = false;
     public synchronized static void checkCanLoad() {
         if (triedLoading) return;
@@ -119,5 +98,4 @@ public class LdapSecurityProvider implements SecurityProvider {
             throw Exceptions.propagate(new ClassNotFoundException("Unable to load LDAP classes ("+LDAP_CONTEXT_FACTORY+") required for Brooklyn LDAP security provider"));
         }
     }
-
 }

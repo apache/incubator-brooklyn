@@ -18,8 +18,6 @@
  */
 package brooklyn.entity.software.http;
 
-import static org.testng.Assert.assertEquals;
-
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -35,6 +33,7 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 
@@ -48,7 +47,8 @@ public class HttpRequestSensorTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         app = TestApplication.Factory.newManagedInstanceForTests();
-        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).location(app.newLocalhostProvisioningLocation().obtain()));
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .location(app.newLocalhostProvisioningLocation().obtain()));
         app.start(ImmutableList.<Location>of());
     }
 
@@ -60,15 +60,14 @@ public class HttpRequestSensorTest {
     @Test(groups="Integration")
     public void testHttpSensor() throws Exception {
         HttpRequestSensor<Integer> sensor = new HttpRequestSensor<Integer>(ConfigBag.newInstance()
+                .configure(HttpRequestSensor.SENSOR_PERIOD, Duration.millis(100))
                 .configure(HttpRequestSensor.SENSOR_NAME, SENSOR_STRING.getName())
                 .configure(HttpRequestSensor.SENSOR_TYPE, TARGET_TYPE)
                 .configure(HttpRequestSensor.JSON_PATH, "$.myKey")
                 .configure(HttpRequestSensor.SENSOR_URI, "http://echo.jsontest.com/myKey/myValue"));
-            sensor.apply(entity);
+        sensor.apply(entity);
         entity.setAttribute(Attributes.SERVICE_UP, true);
 
-        EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_STRING, SENSOR_STRING.getName());
-        String val = entity.getConfig(HttpRequestSensor.SENSOR_NAME);
-        assertEquals(val, "myValue", "val=" + val);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_STRING, "myValue");
     }
 }

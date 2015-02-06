@@ -28,7 +28,7 @@
 		Brooklyn entities for OSGi container software processes
 	</description>
 	<parent>
-		<groupId>io.brooklyn</groupId>
+		<groupId>org.apache.brooklyn</groupId>
 		<artifactId>brooklyn-parent</artifactId>
 		<version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
 		<relativePath>../../pom.xml</relativePath>
@@ -36,22 +36,22 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>io.brooklyn</groupId>
+			<groupId>org.apache.brooklyn</groupId>
 			<artifactId>brooklyn-software-base</artifactId>
             <version>${project.version}</version>
 		</dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-utils-common</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -78,20 +78,20 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-software-base</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
@@ -99,11 +99,33 @@
         </dependency>
         <!-- bring in jclouds for testing -->
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 	</dependencies>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <!--
+                                Java code that is copyright OSGi Alliance. It is included in NOTICE.
+                                As the comment at the top of the Java files says:
+                                "BROOKLYN NOTE: This is a verbatim copy of the original in org.osgi.enterprise-4.2.0, 
+                                 reproduced here to avoid pulling in the rest of that bundle and its chain of dependencies.
+                                 The only difference is this comment and the suppress warnings."
+                            -->
+                            <exclude>**/src/main/java/org/osgi/jmx/*</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

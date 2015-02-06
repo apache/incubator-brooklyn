@@ -93,8 +93,7 @@ public class MonitNodeImpl extends SoftwareProcessImpl implements MonitNode {
                     .onSuccess(new Function<SshPollValue, String>() {
                         @Override
                         public String apply(SshPollValue input) {
-                            String status = Strings.getFirstWordAfter(input.getStdout(), "status");
-                            return status;
+                            return Strings.trim(Strings.getRemainderOfLineAfter(input.getStdout(), "status"));
                         }
                     })
                     .setOnFailureOrException(null))

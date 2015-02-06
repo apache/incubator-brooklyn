@@ -66,6 +66,10 @@ under the License.
             <div class="name">ID</div>
             <div class="value"><%= entity.get('id') %></div>
         </div>
+        <div class="info-name-value catalogItemId hide">
+            <div class="name">Catalog Item</div>
+            <div class="value"><a href="#v1/catalog/<%= (isApp ? "applications" : "entities") %>/<%= entity.get('catalogItemId') %>"><%= entity.get('catalogItemId') %></a></div>
+        </div>
 
         <div class="additional-info-on-problem hide" style="margin-top: 12px;">
         </div>
@@ -76,27 +80,28 @@ under the License.
   </div>
  </div>
  
-  <!-- TODO - include much more info in summary (following values not readily available)
-    parent, app (above?)
-    children, members (above? new section here ?)
-    active tasks (new section here)
-    locations / map (new section here ?)
-  -->
-<!-- TODO
-        <div class="info-name-value location">
-            <div class="name">Location</div>
-            <div class="value"><i>Loading...</i></div>
-        </div>
--->
-
-  <div class="toggler-region json" style="margin-top: 18px;">
+ <div id="entity-spec-yaml-toggler" class="toggler-region region-config hide" style="margin-top: 18px;">
     <div class="toggler-header user-hidden">
       <div class="toggler-icon icon-chevron-left"></div>
-      <div><b>JSON</b></div>
+      <div><b>Blueprint</b></div>
     </div>
-    <div class="for-textarea hide">
-      <textarea id="json-textrea" readonly="readonly"><%= entityJson %></textarea>
+    <div id="entity-spec-yaml" class="for-textarea hide">
+      <textarea readonly="readonly" class="code-textarea"/>
     </div>
+ </div>
+
+  <div class="toggler-region region-config" style="margin-top: 18px;">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Config</b></div>
+    </div>
+    <div id="advanced-config" class="hide"/>
   </div>
+
+  <!-- TODO would like to show more info here, nicely; e.g.
+         children, members (above? new section here ?)
+         active tasks (new section here)
+         locations / map (new section here ?)
+  -->
 
 </div>

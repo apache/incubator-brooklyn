@@ -35,7 +35,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
-import com.google.gson.JsonParser;
 import com.jayway.jsonpath.JsonPath;
 
 public class JsonFunctions {
@@ -154,6 +153,7 @@ public class JsonFunctions {
      */
     public static <T> Function<JsonElement,T> getPath(final String path) {
         return new Function<JsonElement, T>() {
+            @SuppressWarnings("unchecked")
             @Override public T apply(JsonElement input) {
                 String jsonString = input.toString();
                 Object rawElement = JsonPath.read(jsonString, path);

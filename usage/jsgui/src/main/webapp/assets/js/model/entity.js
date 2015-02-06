@@ -28,6 +28,21 @@ define(["underscore", "backbone"], function (_, Backbone) {
                 config:{}
             }
         },
+        getVersionedAttr: function(name) {
+            var attr = this.get(name);
+            var version = this.get('version');
+            if (version && version != '0.0.0.SNAPSHOT') {
+                return attr + ':' + version;
+            } else {
+                return attr;
+            }
+        },
+        url: function() {
+            var base = _.result(this, 'urlRoot') || _.result(this.collection, 'url') || urlError();
+            if (this.isNew()) return base;
+            return base + (base.charAt(base.length - 1) === '/' ? '' : '/') + 
+                encodeURIComponent(this.get("symbolicName")) + '/' + encodeURIComponent(this.get("version"));
+        },
         getConfigByName:function (key) {
             if (key) return this.get("config")[key]
         },

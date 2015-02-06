@@ -25,6 +25,7 @@ import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
+import brooklyn.location.jclouds.JcloudsLocation;
 
 import com.google.common.collect.ImmutableList;
 
@@ -33,9 +34,11 @@ public class MariaDbLiveEc2Test extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-
+        // TODO For some CentOS VMs (e.g. in AWS 6.3, us-east-1/ami-a96b01c0), currently need to turn off iptables unfortunately.
+        // Should really just open the ports in iptables.
         MariaDbNode mariadb = app.createAndManageChild(EntitySpec.create(MariaDbNode.class)
-                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MariaDbIntegrationTest.CREATION_SCRIPT));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MariaDbIntegrationTest.CREATION_SCRIPT)
+                .configure(MariaDbNode.PROVISIONING_PROPERTIES.subKey(JcloudsLocation.STOP_IPTABLES.getName()), true));
 
         app.start(ImmutableList.of(loc));
 

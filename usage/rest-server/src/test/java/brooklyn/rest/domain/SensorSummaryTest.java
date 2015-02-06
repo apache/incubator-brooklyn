@@ -18,9 +18,9 @@
  */
 package brooklyn.rest.domain;
 
-import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
+import static brooklyn.rest.util.RestApiTestUtils.asJson;
+import static brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;
@@ -45,58 +45,58 @@ import com.google.common.collect.ImmutableMap;
 
 public class SensorSummaryTest {
 
-  private SensorSummary sensorSummary = new SensorSummary("redis.uptime", "Integer",
-      "Description", ImmutableMap.of(
-      "self", URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/redis.uptime")));
+    private SensorSummary sensorSummary = new SensorSummary("redis.uptime", "Integer",
+            "Description", ImmutableMap.of(
+            "self", URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/redis.uptime")));
 
-  private TestApplication app;
-  private TestEntity entity;
-  private ManagementContext mgmt;
-  
-  @BeforeMethod(alwaysRun=true)
-  public void setUp() throws Exception {
-      app = TestApplication.Factory.newManagedInstanceForTests();
-      mgmt = app.getManagementContext();
-      entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-  }
-  
-  @AfterMethod(alwaysRun=true)
-  public void tearDown() throws Exception {
-      if (mgmt != null) Entities.destroyAll(mgmt);
-  }
-  
-  @Test
-  public void testSerializeToJSON() throws IOException {
-    assertEquals(asJson(sensorSummary), jsonFixture("fixtures/sensor-summary.json"));
-  }
+    private TestApplication app;
+    private TestEntity entity;
+    private ManagementContext mgmt;
 
-  @Test
-  public void testDeserializeFromJSON() throws IOException {
-    assertEquals(fromJson(jsonFixture("fixtures/sensor-summary.json"), SensorSummary.class), sensorSummary);
-  }
-  
-  @Test
-  public void testEscapesUriForSensorName() throws IOException {
-      Sensor<String> sensor = Sensors.newStringSensor("name with space");
-      SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor);
-      URI selfUri = summary.getLinks().get("self");
-      
-      String expectedUri = "/v1/applications/" + entity.getApplicationId() + "/entities/" + entity.getId() + "/sensors/" + "name%20with%20space";
+    @BeforeMethod(alwaysRun = true)
+    public void setUp() throws Exception {
+        app = TestApplication.Factory.newManagedInstanceForTests();
+        mgmt = app.getManagementContext();
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+    }
 
-      assertEquals(selfUri, URI.create(expectedUri));
-  }
-  
-  // Previously failed because immutable-map builder threw exception if put same key multiple times,
-  // and the NamedActionWithUrl did not have equals/hashCode
-  @Test
-  public void testSensorWithMultipleOpenUrlActionsRegistered() throws IOException {
-      AttributeSensor<String> sensor = Sensors.newStringSensor("sensor1");
-      entity.setAttribute(sensor, "http://myval");
-      RendererHints.register(sensor, new RendererHints.NamedActionWithUrl("Open"));
-      RendererHints.register(sensor, new RendererHints.NamedActionWithUrl("Open"));
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() throws Exception {
+        if (mgmt != null) Entities.destroyAll(mgmt);
+    }
 
-      SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor);
-      
-      assertEquals(summary.getLinks().get("action:open"), URI.create("http://myval"));
-  }
+    @Test
+    public void testSerializeToJSON() throws IOException {
+        assertEquals(asJson(sensorSummary), jsonFixture("fixtures/sensor-summary.json"));
+    }
+
+    @Test
+    public void testDeserializeFromJSON() throws IOException {
+        assertEquals(fromJson(jsonFixture("fixtures/sensor-summary.json"), SensorSummary.class), sensorSummary);
+    }
+
+    @Test
+    public void testEscapesUriForSensorName() throws IOException {
+        Sensor<String> sensor = Sensors.newStringSensor("name with space");
+        SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor);
+        URI selfUri = summary.getLinks().get("self");
+
+        String expectedUri = "/v1/applications/" + entity.getApplicationId() + "/entities/" + entity.getId() + "/sensors/" + "name%20with%20space";
+
+        assertEquals(selfUri, URI.create(expectedUri));
+    }
+
+    // Previously failed because immutable-map builder threw exception if put same key multiple times,
+    // and the NamedActionWithUrl did not have equals/hashCode
+    @Test
+    public void testSensorWithMultipleOpenUrlActionsRegistered() throws IOException {
+        AttributeSensor<String> sensor = Sensors.newStringSensor("sensor1");
+        entity.setAttribute(sensor, "http://myval");
+        RendererHints.register(sensor, RendererHints.namedActionWithUrl());
+        RendererHints.register(sensor, RendererHints.namedActionWithUrl());
+
+        SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor);
+
+        assertEquals(summary.getLinks().get("action:open"), URI.create("http://myval"));
+    }
 }

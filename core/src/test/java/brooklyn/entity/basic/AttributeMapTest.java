@@ -19,9 +19,10 @@
 package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -34,75 +35,73 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.SensorEvent;
+import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.AttributeMap;
 import brooklyn.event.basic.Sensors;
-import brooklyn.test.entity.TestApplicationImpl;
+import brooklyn.test.Asserts;
+import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntityImpl;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class AttributeMapTest {
 
     Application app;
+    TestEntityImpl entity;
     AttributeMap map;
-    private final AttributeSensor<Integer> exampleSensor = Sensors.newIntegerSensor("attributeMapTest.exampleSensor", "");
-
+    ExecutorService executor;
+    
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplicationImpl();
-        TestEntityImpl e = new TestEntityImpl(app);
-        map = new AttributeMap(e, Collections.synchronizedMap(new LinkedHashMap()));
-        Entities.startManagement(app);
+        app = TestApplication.Factory.newManagedInstanceForTests();
+        entity = new TestEntityImpl(app);
+        map = new AttributeMap(entity, Collections.synchronizedMap(MutableMap.<Collection<String>,Object>of()));
+        Entities.manage(entity);
+        executor = Executors.newCachedThreadPool();
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
+        if (executor != null) executor.shutdownNow();
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
     
     // See ENGR-2111
     @Test
     public void testConcurrentUpdatesDoNotCauseConcurrentModificationException() throws Exception {
-        ExecutorService executor = Executors.newCachedThreadPool();
-        List<Future> futures = Lists.newArrayList();
+        List<Future<?>> futures = Lists.newArrayList();
         
-        try {
-            for (int i = 0; i < 1000; i++) {
-                final AttributeSensor<String> nextSensor = Sensors.newStringSensor("attributeMapTest.exampleSensor"+i, "");
-                Future<?> future = executor.submit(newUpdateMapRunnable(map, nextSensor, "a"));
-                futures.add(future);
-            }
-            
-            for (Future<?> future : futures) {
-                future.get();
-            }
-            
-        } finally {
-            executor.shutdownNow();
+        for (int i = 0; i < 1000; i++) {
+            final AttributeSensor<String> nextSensor = Sensors.newStringSensor("attributeMapTest.exampleSensor"+i, "");
+            Future<?> future = executor.submit(newUpdateMapRunnable(map, nextSensor, "a"));
+            futures.add(future);
+        }
+        
+        for (Future<?> future : futures) {
+            future.get();
         }
     }
     
     @Test
     public void testConcurrentUpdatesAndGetsDoNotCauseConcurrentModificationException() throws Exception {
-        ExecutorService executor = Executors.newCachedThreadPool();
-        List<Future> futures = Lists.newArrayList();
+        List<Future<?>> futures = Lists.newArrayList();
         
-        try {
-            for (int i = 0; i < 1000; i++) {
-                final AttributeSensor<String> nextSensor = Sensors.newStringSensor("attributeMapTest.exampleSensor"+i, "");
-                Future<?> future = executor.submit(newUpdateMapRunnable(map, nextSensor, "a"));
-                Future<?> future2 = executor.submit(newGetAttributeCallable(map, nextSensor));
-                futures.add(future);
-                futures.add(future2);
-            }
+        for (int i = 0; i < 1000; i++) {
+            final AttributeSensor<String> nextSensor = Sensors.newStringSensor("attributeMapTest.exampleSensor"+i, "");
+            Future<?> future = executor.submit(newUpdateMapRunnable(map, nextSensor, "a"));
+            Future<?> future2 = executor.submit(newGetAttributeCallable(map, nextSensor));
+            futures.add(future);
+            futures.add(future2);
+        }
 
-            for (Future<?> future : futures) {
-                future.get();
-            }
-            
-        } finally {
-            executor.shutdownNow();
+        for (Future<?> future : futures) {
+            future.get();
         }
     }
     
@@ -147,7 +146,7 @@ public class AttributeMapTest {
         assertEquals(map.getValue(childSensor), "childValue");
         assertEquals(map.getValue(sensor), "parentValue");
     }
-        
+    
     @Test
     public void testCanStoreChildThenParentSensor() throws Exception {
         AttributeSensor<String> sensor = Sensors.newStringSensor("a", "");
@@ -158,6 +157,46 @@ public class AttributeMapTest {
         
         assertEquals(map.getValue(childSensor), "childValue");
         assertEquals(map.getValue(sensor), "parentValue");
+    }
+    
+    @Test
+    public void testConcurrentModifyAttributeCalls() throws Exception {
+        AttributeSensor<Integer> sensor = Sensors.newIntegerSensor("a", "");
+        
+        Function<Integer, Maybe<Integer>> modifier = new Function<Integer, Maybe<Integer>>() {
+            @Override public Maybe<Integer> apply(Integer input) {
+                return Maybe.of((input == null) ? 1 : input + 1);
+            }
+        };
+        
+        List<Future<?>> futures = Lists.newArrayList();
+        
+        for (int i = 0; i < 1000; i++) {
+            Future<?> future = executor.submit(newModifyAttributeCallable(map, sensor, modifier));
+            futures.add(future);
+        }
+
+        for (Future<?> future : futures) {
+            future.get();
+        }
+
+        assertEquals(map.getValue(sensor), Integer.valueOf(1000));
+    }
+    
+    @Test
+    public void testModifyAttributeReturningAbsentDoesNotEmit() throws Exception {
+        AttributeSensor<Integer> sensor = Sensors.newIntegerSensor("a", "");
+        AttributeSensor<Integer> childSensor = Sensors.newIntegerSensor("a.b", "");
+        
+        final RecordingSensorEventListener listener = new RecordingSensorEventListener();
+        entity.subscribe(entity, sensor, listener);
+        
+        map.modify(childSensor, Functions.constant(Maybe.<Integer>absent()));
+        
+        Asserts.succeedsContinually(new Runnable() {
+            @Override public void run() {
+                assertTrue(listener.getEvents().isEmpty(), "events="+listener.getEvents());
+            }});
     }
     
     protected <T> Runnable newUpdateMapRunnable(final AttributeMap map, final AttributeSensor<T> attribute, final T val) {
@@ -174,5 +213,25 @@ public class AttributeMapTest {
                 return map.getValue(attribute);
             }
         };
+    }
+    
+    protected <T> Callable<T> newModifyAttributeCallable(final AttributeMap map, final AttributeSensor<T> attribute, final Function<? super T, Maybe<T>> modifier) {
+        return new Callable<T>() {
+            @Override public T call() {
+                return map.modify(attribute, modifier);
+            }
+        };
+    }
+    
+    public static class RecordingSensorEventListener implements SensorEventListener<Object> {
+        private List<SensorEvent<Object>> events = Collections.synchronizedList(Lists.<SensorEvent<Object>>newArrayList());
+
+        @Override public void onEvent(SensorEvent<Object> event) {
+            events.add(event);
+        }
+        
+        public List<SensorEvent<Object>> getEvents() {
+            return ImmutableList.copyOf(events);
+        }
     }
 }

@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.drivers;
 
+import javax.annotation.Nullable;
+
 import brooklyn.entity.Entity;
 
 /**
@@ -28,4 +30,7 @@ import brooklyn.entity.Entity;
 public interface DriverDependentEntity<D extends EntityDriver> extends Entity {
 
     Class<D> getDriverInterface();
+    
+    @Nullable D getDriver();
+    
 }

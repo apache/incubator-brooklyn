@@ -24,6 +24,8 @@ import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 
@@ -56,20 +58,30 @@ public class CatalogPredicates {
         }
     };
 
+    @Deprecated
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> name(final Predicate<? super String> filter) {
+        return displayName(filter);
+    }
+
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> displayName(final Predicate<? super String> filter) {
         return new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
-                return (item != null) && filter.apply(item.getName());
+                return (item != null) && filter.apply(item.getDisplayName());
             }
         };
     }
 
-    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> registeredType(final Predicate<? super String> filter) {
+    @Deprecated
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> registeredTypeName(final Predicate<? super String> filter) {
+        return symbolicName(filter);
+    }
+
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> symbolicName(final Predicate<? super String> filter) {
         return new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
-                return (item != null) && filter.apply(item.getRegisteredTypeName());
+                return (item != null) && filter.apply(item.getSymbolicName());
             }
         };
     }
@@ -91,4 +103,15 @@ public class CatalogPredicates {
             }
         };
     }
+
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> entitledToSee(final ManagementContext mgmt) {
+        return new Predicate<CatalogItem<T,SpecT>>() {
+            @Override
+            public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+                return (item != null) && 
+                    Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, item.getCatalogItemId());
+            }
+        };
+    }
+    
 }

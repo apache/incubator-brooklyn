@@ -22,42 +22,54 @@ import static org.testng.Assert.assertEquals;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.BasicApplication;
-import brooklyn.entity.brooklynnode.BrooklynNodeImpl.DeployBlueprintEffectorBody;
-import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.JsonFunctions;
+import brooklyn.management.EntityManager;
 import brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.util.guava.Functionals;
-import brooklyn.util.http.HttpTool;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class DeployBlueprintTest extends BrooklynRestApiLauncherTestFixture {
 
     private static final Logger log = LoggerFactory.getLogger(DeployBlueprintTest.class);
-    
+
+    Server server;
+
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        useServerForTest(newServer());
+        server = newServer();
+        useServerForTest(server);
     }
 
     @Test
     public void testStartsAppViaEffector() throws Exception {
         URI webConsoleUri = URI.create(getBaseUri());
-        
-        String id = DeployBlueprintEffectorBody.submitPlan(HttpTool.httpClientBuilder().build(), webConsoleUri, 
-            "{ services: [ serviceType: \"java:"+BasicApplication.class.getName()+"\" ] }");
+
+        EntitySpec<BrooklynNode> spec = EntitySpec.create(BrooklynNode.class);
+        EntityManager mgr = getManagementContextFromJettyServerAttributes(server).getEntityManager();
+        BrooklynNode node = mgr.createEntity(spec);
+        ((EntityLocal)node).setAttribute(BrooklynNode.WEB_CONSOLE_URI, webConsoleUri);
+        mgr.manage(node);
+        Map<String, String> params = ImmutableMap.of(DeployBlueprintEffector.BLUEPRINT_CAMP_PLAN.getName(), "{ services: [ serviceType: \"java:"+BasicApplication.class.getName()+"\" ] }");
+        String id = node.invoke(BrooklynNode.DEPLOY_BLUEPRINT, params).getUnchecked();
 
         log.info("got: "+id);
-        
+
         String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
         List<String> appType = parseJsonList(apps, ImmutableList.of("spec", "type"), String.class);
         assertEquals(appType, ImmutableList.of(BasicApplication.class.getName()));

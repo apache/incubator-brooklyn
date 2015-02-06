@@ -28,17 +28,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.render.RendererHints;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.transform.SensorTransformer;
+import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -70,7 +72,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         for (AttributeSensor<?> sensor : sensors) {
             Object value = entity.getAttribute(findSensor(entity, sensor.getName()));
             if (Boolean.FALSE.equals(raw)) {
-                value = applyDisplayValueHint(sensor, value);
+                value = RendererHints.applyDisplayValueHint(sensor, value);
             }
             sensorMap.put(sensor.getName(), getValueForDisplay(value, true, false));
         }
@@ -82,7 +84,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         AttributeSensor<?> sensor = findSensor(entity, sensorName);
         Object value = entity.getAttribute(sensor);
         if (Boolean.FALSE.equals(raw)) {
-            value = applyDisplayValueHint(sensor, value);
+            value = RendererHints.applyDisplayValueHint(sensor, value);
         }
         return getValueForDisplay(value, preferJson, true);
     }
@@ -97,24 +99,54 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         return get(true, application, entityToken, sensorName, raw);
     }
 
-    public static final Object applyDisplayValueHint(AttributeSensor<?> sensor, Object initialValue) {
-        Iterable<RendererHints.DisplayValue> hints = Iterables.filter(RendererHints.getHintsFor(sensor), RendererHints.DisplayValue.class);
-        if (Iterables.size(hints) > 1) {
-            log.warn("Multiple display value hints set for sensor {}; Only one will be applied, using first", sensor);
-        }
-
-        Optional<RendererHints.DisplayValue> hint = Optional.fromNullable(Iterables.getFirst(hints, null));
-        if (hint.isPresent()) {
-            return hint.get().getDisplayValue(initialValue);
-        } else {
-            return initialValue;
-        }
-    }
-
     private AttributeSensor<?> findSensor(EntityLocal entity, String name) {
         Sensor<?> s = entity.getEntityType().getSensor(name);
         if (s instanceof AttributeSensor) return (AttributeSensor<?>) s;
         return new BasicAttributeSensor<Object>(Object.class, name);
     }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void setFromMap(String application, String entityToken, Map newValues) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+                Entitlements.getEntitlementContext().user(), entity);
+        }
 
+        if (log.isDebugEnabled())
+            log.debug("REST user "+Entitlements.getEntitlementContext()+" setting sensors "+newValues);
+        for (Object entry: newValues.entrySet()) {
+            String sensorName = Strings.toString(((Map.Entry)entry).getKey());
+            Object newValue = ((Map.Entry)entry).getValue();
+            
+            AttributeSensor sensor = findSensor(entity, sensorName);
+            entity.setAttribute(sensor, newValue);
+        }
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void set(String application, String entityToken, String sensorName, Object newValue) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
+                Entitlements.getEntitlementContext().user(), entity);
+        }
+        
+        AttributeSensor sensor = findSensor(entity, sensorName);
+        if (log.isDebugEnabled())
+            log.debug("REST user "+Entitlements.getEntitlementContext()+" setting sensor "+sensorName+" to "+newValue);
+        entity.setAttribute(sensor, newValue);
+    }
+    
+    @Override
+    public void delete(String application, String entityToken, String sensorName) {
+        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        AttributeSensor<?> sensor = findSensor(entity, sensorName);
+        if (log.isDebugEnabled())
+            log.debug("REST user "+Entitlements.getEntitlementContext()+" deleting sensor "+sensorName);
+        ((EntityInternal)entity).removeAttribute(sensor);
+    }
+    
 }

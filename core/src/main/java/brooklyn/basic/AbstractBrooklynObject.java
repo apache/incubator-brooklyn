@@ -25,6 +25,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.internal.ApiObjectsFactory;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.management.ManagementContext;
@@ -43,12 +45,15 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractBrooklynObject.class);
 
     private boolean _legacyConstruction;
+    private boolean hasWarnedOfNoManagementContextWhenPersistRequested;
 
-    @SetFromFlag(value="id")
+    @SetFromFlag(value = "id")
     private String id = Identifiers.makeRandomId(8);
-    
+
+    private String catalogItemId;
+
     /** subclasses should synchronize on this for all access */
-    @SetFromFlag(value="tags")
+    @SetFromFlag(value = "tags")
     private final Set<Object> tags = Sets.newLinkedHashSet();
 
     private volatile ManagementContext managementContext;
@@ -58,30 +63,34 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     public AbstractBrooklynObject() {
         this(Maps.newLinkedHashMap());
     }
-    
-    public AbstractBrooklynObject(Map<?,?> properties) {
+
+    public AbstractBrooklynObject(Map<?, ?> properties) {
         _legacyConstruction = !InternalFactory.FactoryConstructionTracker.isConstructing();
-        
-        if (!_legacyConstruction && properties!=null && !properties.isEmpty()) {
-            log.warn("Forcing use of deprecated old-style location construction for "+getClass().getName()+" because properties were specified ("+properties+"); instead use specs (e.g. LocationSpec, EntitySpec, etc)");
+
+        if (!_legacyConstruction && properties != null && !properties.isEmpty()) {
+            log.warn("Forcing use of deprecated old-style construction for {} because properties were " +
+                            "specified ({}); instead use specs (e.g. LocationSpec, EntitySpec, etc)",
+                    getClass().getName(), properties);
             if (log.isDebugEnabled())
                 log.debug("Source of use of old-style construction", new Throwable("Source of use of old-style construction"));
             _legacyConstruction = true;
         }
-        
+
+        catalogItemId = ApiObjectsFactory.get().getCatalogItemIdFromContext();
+
         // rely on sub-class to call configure(properties), because otherwise its fields will not have been initialised
     }
 
     /**
      * See {@link #configure(Map)}
-     * 
+     *
      * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
-     */ 
+     */
     @Deprecated
     protected AbstractBrooklynObject configure() {
         return configure(Collections.emptyMap());
     }
-    
+
     /**
      * Will set fields from flags, and put the remaining ones into the 'leftovers' map.
      * For some types, you can find unused config via {@link ConfigBag#getUnusedConfig()}.
@@ -89,16 +98,16 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
      * To be overridden by AbstractEntity, AbstractLoation, AbstractPolicy, AbstractEnricher, etc.
      * <p>
      * But should not be overridden by specific entity types. If you do, the entity may break in
-     * subsequent releases. Also note that if you require fields to be initialized you must do that 
-     * in this method. You must *not* rely on field initializers because they may not run until *after* 
+     * subsequent releases. Also note that if you require fields to be initialized you must do that
+     * in this method. You must *not* rely on field initializers because they may not run until *after*
      * this method (this method is invoked by the constructor in this class, so initializers
      * in subclasses will not have run when this overridden method is invoked.)
-     * 
+     *
      * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
-     */ 
+     */
     @Deprecated
-    protected abstract AbstractBrooklynObject configure(Map<?,?> flags);
-    
+    protected abstract AbstractBrooklynObject configure(Map<?, ?> flags);
+
     protected boolean isLegacyConstruction() {
         return _legacyConstruction;
     }
@@ -106,9 +115,9 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     /**
      * Called by framework (in new-style instances where spec was used) after configuring etc,
      * but before a reference to this instance is shared.
-     * 
+     * <p>
      * To preserve backwards compatibility for if the instance is constructed directly, one
-     * can call the code below, but that means it will be called after references to this 
+     * can call the code below, but that means it will be called after references to this
      * policy have been shared with other entities.
      * <pre>
      * {@code
@@ -121,21 +130,29 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     public void init() {
         // no-op
     }
-    
+
     /**
-     * Called by framework on rebind (in new-style instances),
-     * after configuring but before the instance is managed (or is attached to an entity, depending on its type), 
-     * and before a reference to this policy is shared.
+     * Called by framework on rebind (in new-style instances):
+     * <ul>
+     * <li> after configuring, but
+     * <li> before the instance is managed, and
+     * <li> before adjuncts are attached to entities, and
+     * <li> before a reference to an object is shared.
+     * </ul>
      * Note that {@link #init()} will not be called on rebind.
+     * <p>
+     * If you need to intercept behaviour <i>after</i> adjuncts are attached,
+     * consider {@link AbstractEntity#onManagementStarting()} 
+     * (but probably worth raising a discussion on the mailing list!)
      */
     public void rebind() {
         // no-op
     }
-    
+
     public void setManagementContext(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
     }
-    
+
     public ManagementContext getManagementContext() {
         return managementContext;
     }
@@ -143,24 +160,50 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     protected boolean isRebinding() {
         return RebindManagerImpl.RebindTracker.isRebinding();
     }
-    
+
     protected void requestPersist() {
         if (getManagementContext() != null) {
             getManagementContext().getRebindManager().getChangeListener().onChanged(this);
+        } else {
+            // Might be nice to log this at debug but it gets hit a lot of times as locations
+            // are created and destroyed for the API. It also might not be an error - the
+            // management context might be null if the object is being recreated by persistence.
+            if (log.isTraceEnabled() && !hasWarnedOfNoManagementContextWhenPersistRequested) {
+                log.trace("Cannot fulfil request to persist {} because it has no management context. " +
+                        "This warning will not be logged for this object again.", this);
+                hasWarnedOfNoManagementContextWhenPersistRequested = true;
+            }
         }
     }
-    
+
     @Override
     public String getId() {
         return id;
     }
-    
+
+    @Override
+    public void setCatalogItemId(String id) {
+        this.catalogItemId = id;
+    }
+
+    @Override
+    public String getCatalogItemId() {
+        return catalogItemId;
+    }
+
     protected void onTagsChanged() {
         requestPersist();
     }
-    
-    public TagSupport getTagSupport() {
+
+    @Override
+    public TagSupport tags() {
         return new BasicTagSupport();
+    }
+
+    @Override
+    @Deprecated
+    public TagSupport getTagSupport() {
+        return tags();
     }
 
     protected class BasicTagSupport implements TagSupport {
@@ -177,7 +220,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
                 return tags.contains(tag);
             }
         }
-        
+
         @Override
         public boolean addTag(Object tag) {
             boolean result;
@@ -186,7 +229,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
             }
             onTagsChanged();
             return result;
-        }    
+        }
 
         @Override
         public boolean addTags(Iterable<?> newTags) {
@@ -196,7 +239,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
             }
             onTagsChanged();
             return result;
-        }    
+        }
 
         @Override
         public boolean removeTag(Object tag) {
@@ -206,7 +249,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
             }
             onTagsChanged();
             return result;
-        }    
+        }
     }
-    
+
 }

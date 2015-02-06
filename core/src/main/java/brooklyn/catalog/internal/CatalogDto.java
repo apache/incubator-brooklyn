@@ -20,18 +20,25 @@ package brooklyn.catalog.internal;
 
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogItem;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.stream.Streams;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
 
 @Beta
 public class CatalogDto {
@@ -39,15 +46,13 @@ public class CatalogDto {
     private static final Logger LOG = LoggerFactory.getLogger(CatalogDto.class);
 
     String id;
-    /** e.g. url */
     String url;
-    
     String contents;
     String contentsDescription;
     String name;
     String description;
     CatalogClasspathDto classpath;
-    List<CatalogItemDtoAbstract<?,?>> entries = null;
+    private List<CatalogItemDtoAbstract<?,?>> entries = null;
     
     // for thread-safety, any dynamic additions to this should be handled by a method 
     // in this class which does copy-on-write
@@ -75,7 +80,7 @@ public class CatalogDto {
     public static CatalogDto newDtoFromXmlContents(String xmlContents, String originDescription) {
         CatalogDto result = (CatalogDto) new CatalogXmlSerializer().deserialize(new StringReader(xmlContents));
         result.contentsDescription = originDescription;
-        
+
         if (LOG.isDebugEnabled()) LOG.debug("Retrieved catalog from: {}", originDescription);
         return result;
     }
@@ -101,10 +106,35 @@ public class CatalogDto {
         return result;
     }
 
+    /** Used when caller wishes to create an explicitly empty catalog */
+    public static CatalogDto newEmptyInstance(String optionalContentsDescription) {
+        CatalogDto result = new CatalogDto();
+        if (optionalContentsDescription!=null) result.contentsDescription = optionalContentsDescription;
+        return result;
+    }
+
     public static CatalogDto newLinkedInstance(String url) {
         CatalogDto result = new CatalogDto();
         result.contentsDescription = url;
         result.contents = ResourceUtils.create().getResourceAsString(url);
+        return result;
+    }
+
+    /** @deprecated since 0.7.0 use {@link #newDtoFromCatalogItems(Collection, String)}, supplying a description for tracking */
+    @Deprecated
+    public static CatalogDto newDtoFromCatalogItems(Collection<CatalogItem<?, ?>> entries) {
+        return newDtoFromCatalogItems(entries, null);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static CatalogDto newDtoFromCatalogItems(Collection<CatalogItem<?, ?>> entries, String description) {
+        CatalogDto result = new CatalogDto();
+        result.contentsDescription = description;
+        // Weird casts because compiler does not seem to like
+        // .copyInto(Lists.<CatalogItemDtoAbstract<?, ?>>newArrayListWithExpectedSize(entries.size()));
+        result.entries = (List<CatalogItemDtoAbstract<?, ?>>) (List) FluentIterable.from(entries)
+                .filter(CatalogItemDtoAbstract.class)
+                .copyInto(Lists.newArrayListWithExpectedSize(entries.size()));
         return result;
     }
     
@@ -114,10 +144,10 @@ public class CatalogDto {
                 contents = ResourceUtils.create().getResourceAsString(url);
                 contentsDescription = url;
             } else if (contentsDescription==null) {
-                LOG.warn("Catalog DTO has no contents and no description; ignoring call to populate it. Description should be set to suppress this warning.");
+                LOG.debug("Catalog DTO has no contents and no description; ignoring call to populate it. Description should be set to suppress this message.");
                 return;
             } else {
-                LOG.debug("Nothing needs doing (no contents or URL) for catalog with contents described as "+contentsDescription+".");
+                LOG.trace("Nothing needs doing (no contents or URL) for catalog with contents described as "+contentsDescription+".");
                 return;
             }
         }
@@ -156,6 +186,35 @@ public class CatalogDto {
                 .add("id", id)
                 .add("contentsDescription", contentsDescription)
                 .toString();
+    }
+
+    // temporary fix for issue where entries might not be unique
+    Iterable<CatalogItemDtoAbstract<?, ?>> getUniqueEntries() {
+        if (entries==null) return null;
+        Map<String, CatalogItemDtoAbstract<?, ?>> result = getEntriesMap();
+        return result.values();
+    }
+
+    private Map<String, CatalogItemDtoAbstract<?, ?>> getEntriesMap() {
+        if (entries==null) return null;
+        Map<String,CatalogItemDtoAbstract<?, ?>> result = MutableMap.of();
+        for (CatalogItemDtoAbstract<?,?> entry: entries) {
+            result.put(entry.getId(), entry);
+        }
+        return result;
+    }
+
+    void removeEntry(CatalogItemDtoAbstract<?, ?> entry) {
+        if (entries!=null)
+            entries.remove(entry);
+    }
+
+    void addEntry(CatalogItemDtoAbstract<?, ?> entry) {
+        if (entries == null) entries = MutableList.of();
+        CatalogItemDtoAbstract<?, ?> oldEntry = getEntriesMap().get(entry.getId());
+        entries.add(entry);
+        if (oldEntry!=null)
+            removeEntry(oldEntry);
     }
 
 }

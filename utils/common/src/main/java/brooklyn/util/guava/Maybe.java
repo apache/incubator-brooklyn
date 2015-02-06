@@ -18,18 +18,26 @@
  */
 package brooklyn.util.guava;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.Serializable;
+import java.lang.ref.SoftReference;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import brooklyn.util.javalang.JavaClassNames;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableSet;
 
 /** Like Guava Optional but permitting null and permitting errors to be thrown. */
@@ -44,29 +52,38 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
     /** Creates an absent whose get throws an {@link IllegalStateException} with the indicated message.
      * Both stack traces (the cause and the callers) are provided, which can be quite handy. */
     public static <T> Maybe<T> absent(final String message) {
-        return new Absent<T>() {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public T get() {
-                throw new IllegalStateException(message);
-            }
-        };
+        return absent(new IllegalStateExceptionSupplier(message));
     }
 
     /** Creates an absent whose get throws an {@link IllegalStateException} with the indicated cause.
      * Both stack traces (the cause and the callers) are provided, which can be quite handy. */
     public static <T> Maybe<T> absent(final Throwable cause) {
-        return new Absent<T>() {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public T get() {
-                throw new IllegalStateException(cause);
-            }
-        };
+        return absent(new IllegalStateExceptionSupplier(cause));
+    }
+    
+    /** Creates an absent whose get throws an {@link IllegalStateException} with the indicated message and underlying cause.
+     * Both stack traces (the cause and the callers) are provided, which can be quite handy. */
+    public static <T> Maybe<T> absent(final String message, final Throwable cause) {
+        return absent(new IllegalStateExceptionSupplier(message, cause));
+    }
+    
+    /** Creates an absent whose get throws an {@link RuntimeException} generated on demand from the given supplier */
+    public static <T> Maybe<T> absent(final Supplier<? extends RuntimeException> exceptionSupplier) {
+        return new Absent<T>(Preconditions.checkNotNull(exceptionSupplier));
     }
     
     public static <T> Maybe<T> of(@Nullable T value) {
         return new Present<T>(value);
+    }
+
+    /** creates an instance wrapping a {@link SoftReference}, so it might go absent later on */
+    public static <T> Maybe<T> soft(T value) {
+        return softThen(value, null);
+    }
+    /** creates an instance wrapping a {@link SoftReference}, using the second item given if lost */
+    public static <T> Maybe<T> softThen(T value, Maybe<T> ifEmpty) {
+        if (value==null) return of((T)null);
+        return new SoftlyPresent<T>(value).usingAfterExpiry(ifEmpty);
     }
 
     /** like {@link Optional#fromNullable(Object)}, returns absent if the argument is null */
@@ -148,16 +165,55 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         };
         return absent();
     }
+
+    /**
+     * Returns the value of each present instance from the supplied {@code maybes}, in order,
+     * skipping over occurrences of {@link Maybe#absent()}. Iterators are unmodifiable and are
+     * evaluated lazily.
+     *
+     * @see Optional#presentInstances(Iterable)
+     */
+    @Beta
+    public static <T> Iterable<T> presentInstances(final Iterable<? extends Maybe<? extends T>> maybes) {
+        checkNotNull(maybes);
+        return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                return new AbstractIterator<T>() {
+                    private final Iterator<? extends Maybe<? extends T>> iterator = checkNotNull(maybes.iterator());
+
+                    @Override
+                    protected T computeNext() {
+                        while (iterator.hasNext()) {
+                            Maybe<? extends T> maybe = iterator.next();
+                            if (maybe.isPresent()) { return maybe.get(); }
+                        }
+                        return endOfData();
+                    }
+                };
+            }
+        };
+    }
     
     public static class Absent<T> extends Maybe<T> {
         private static final long serialVersionUID = -757170462010887057L;
+        private final Supplier<? extends RuntimeException> exception;
+        public Absent() {
+            this(IllegalStateExceptionSupplier.EMPTY_EXCEPTION);
+        }
+        public Absent(Supplier<? extends RuntimeException> exception) {
+            this.exception = exception;
+        }
         @Override
         public boolean isPresent() {
             return false;
         }
         @Override
         public T get() {
-            throw new IllegalStateException();
+            throw getException();
+        }
+        public RuntimeException getException() {
+            return exception.get();
         }
     }
 
@@ -183,9 +239,58 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         }
     }
 
+    public static class SoftlyPresent<T> extends Maybe<T> {
+        private static final long serialVersionUID = 436799990500336015L;
+        private final SoftReference<T> value;
+        private Maybe<T> defaultValue;
+        protected SoftlyPresent(@Nonnull T value) {
+            this.value = new SoftReference<T>(value);
+        }
+        @Override
+        public T get() {
+            T result = value.get();
+            if (result!=null) return result;
+            if (defaultValue==null) throw new IllegalStateException("Softly present item has been GC'd");
+            return defaultValue.get();
+        }
+        @Override
+        public T orNull() {
+            T result = value.get();
+            if (result!=null) return result;
+            if (defaultValue==null) return null;
+            return defaultValue.orNull();
+        }
+        @Override
+        public boolean isPresent() {
+            return value.get()!=null || (defaultValue!=null && defaultValue.isPresent()); 
+        }
+        public Maybe<T> solidify() {
+            return Maybe.fromNullable(value.get());
+        }
+        SoftlyPresent<T> usingAfterExpiry(Maybe<T> defaultValue) {
+            this.defaultValue = defaultValue;
+            return this;
+        }
+    }
+
     @Override
     public String toString() {
         return JavaClassNames.simpleClassName(this)+"["+(isPresent()?"value="+get():"")+"]";
     }
 
+    @Override
+    public int hashCode() {
+        if (!isPresent()) return Objects.hashCode(31, isPresent());
+        return Objects.hashCode(31, get());
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Maybe)) return false;
+        Maybe<?> other = (Maybe<?>)obj;
+        if (!isPresent()) 
+            return !other.isPresent();
+        return Objects.equal(get(), other.get());
+    }
+    
 }

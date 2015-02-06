@@ -285,4 +285,17 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
         Assert.assertEquals(CONTENTS.trim(), contents.trim());
     }
 
+    @Test(groups = {"Integration"})
+    public void testScriptDirPropertiesIsRespected() {
+        // For explanation of (some of) the magic behind this command, see http://stackoverflow.com/a/229606/68898
+        final String command = "if [[ \"$0\" == \"/var/tmp/\"* ]]; then true; else false; fi";
+
+        SshTool sshTool = newTool(ImmutableMap.<String, Object>builder()
+                .put(SshTool.PROP_HOST.getName(), "localhost")
+                .build());
+        int rc = sshTool.execScript(ImmutableMap.<String, Object>builder()
+                .put(SshTool.PROP_SCRIPT_DIR.getName(), "/var/tmp")
+                .build(), ImmutableList.of(command));
+        assertEquals(rc, 0);
+    }
 }

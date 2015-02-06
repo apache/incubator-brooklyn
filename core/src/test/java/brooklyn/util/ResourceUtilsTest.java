@@ -19,7 +19,6 @@
 package brooklyn.util;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -37,8 +36,10 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -145,7 +146,7 @@ public class ResourceUtilsTest {
     public void testClassLoaderDirNotFound() throws Exception {
         String d = utils.getClassLoaderDir("/somewhere/not/found/XXX.xxx");
         // above should fail
-        log.warn("Uh oh found iamginary resource in: "+d);
+        log.warn("Uh oh found imaginary resource in: "+d);
     }
 
     @Test(groups="Integration")
@@ -169,12 +170,11 @@ public class ResourceUtilsTest {
         assertEquals(utils.getResourceAsString("data:hello"), "hello");
         assertEquals(utils.getResourceAsString("data://hello"), "hello");
         assertEquals(utils.getResourceAsString("data:hello world"), "hello world");
+        assertEquals(utils.getResourceAsString(Urls.asDataUrlBase64("hello world")), "hello world");
+        
+        String longString = Identifiers.makeRandomId(256);
+        for (int a=32; a<128; a++) longString += (char)a;
+        assertEquals(utils.getResourceAsString(Urls.asDataUrlBase64(longString)), longString);
     }
-    
-    // See https://github.com/brooklyncentral/brooklyn/issues/1338
-    @Test(groups={"Integration", "WIP"})
-    public void testResourceFromUrlFollowsRedirect() throws Exception {
-        String contents = new ResourceUtils(this).getResourceAsString("http://bit.ly/brooklyn-visitors-creation-script");
-        assertFalse(contents.contains("bit.ly"), "contents="+contents);
-    }
+
 }

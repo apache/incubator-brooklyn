@@ -60,7 +60,7 @@ public class SshEffectorTasksTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         mgmt = app.getManagementContext();
         
         LocalhostMachineProvisioningLocation lhc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));

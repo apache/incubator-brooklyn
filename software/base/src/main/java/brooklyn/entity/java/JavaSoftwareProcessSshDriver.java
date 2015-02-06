@@ -42,10 +42,12 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.task.system.ProcessTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;
@@ -336,19 +338,18 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
 
     protected int tryJavaInstall(String version, String command) {
+        getLocation().acquireMutex("installing", "installing Java at " + getLocation());
         try {
-            getLocation().acquireMutex("installing", "installing Java at " + getLocation());
             log.debug("Installing Java {} at {}@{}", new Object[]{version, getEntity(), getLocation()});
-            ProcessTaskWrapper<Integer> installCommand = Entities.submit(getEntity(),
-                    SshTasks.newSshExecTaskFactory(getLocation(), command));
+            ProcessTaskFactory<Integer> taskFactory = SshTasks.newSshExecTaskFactory(getLocation(), command)
+                    .configure(ShellTool.PROP_EXEC_ASYNC, true);
+            ProcessTaskWrapper<Integer> installCommand = Entities.submit(getEntity(), taskFactory);
             int result = installCommand.get();
             if (result != 0) {
                 log.warn("Installation of Java {} failed at {}@{}: {}",
                         new Object[]{version, getEntity(), getLocation(), installCommand.getStderr()});
             }
            return result;
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
         } finally {
             getLocation().releaseMutex("installing");
         }
@@ -436,26 +437,29 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
             log.warn("Error checking/fixing Java hostname bug (continuing): "+e, e);
         }
     }
-    
+
     @Override
-    public void start() {
+    public void setup() {
         DynamicTasks.queue("install java", new Runnable() { public void run() {
             installJava();
         }});
-            
+
         // TODO check java version
-        
-        if (isJmxEnabled()) {
-            DynamicTasks.queue("install jmx", new Runnable() { public void run() {
-                installJmxSupport(); }}); 
-        }
 
         if (getEntity().getConfig(UsesJava.CHECK_JAVA_HOSTNAME_BUG)) {
             DynamicTasks.queue("check java hostname bug", new Runnable() { public void run() {
                 checkJavaHostnameBug(); }});
         }
+    }
 
-        super.start();
+    @Override
+    public void copyRuntimeResources() {
+        super.copyRuntimeResources();
+
+        if (isJmxEnabled()) {
+            DynamicTasks.queue("install jmx", new Runnable() { public void run() {
+                installJmxSupport(); }});
+        }
     }
 
 }

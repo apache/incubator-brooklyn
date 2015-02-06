@@ -32,6 +32,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.collections.MutableMap;
@@ -105,16 +106,7 @@ public class AbstractEntityLegacyTest {
         assertEquals(entity.getConfigureCount(), 1);
         assertEquals(entity.getConfigureDuringConstructionCount(), 1);
     }
-    
-    @Test
-    public void testNewStyleCallsConfigureAfterConstruction() throws Exception {
-        app = TestApplication.Factory.newManagedInstanceForTests();
-        MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class));
-        
-        assertEquals(entity.getConfigureCount(), 1);
-        assertEquals(entity.getConfigureDuringConstructionCount(), 0);
-    }
-    
+
     @Test
     public void testLegacyConstructionSetsDefaultDisplayName() throws Exception {
         app = new TestApplicationImpl();
@@ -122,7 +114,7 @@ public class AbstractEntityLegacyTest {
 
         assertTrue(entity.getDisplayName().startsWith("MyEntityImpl:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
         
-        Entities.startManagement(app);
+        Entities.startManagement(app, LocalManagementContextForTests.newInstance());
         assertTrue(entity.getDisplayName().startsWith("MyEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
     }
     
@@ -135,22 +127,5 @@ public class AbstractEntityLegacyTest {
         assertEquals(app.getDisplayName(), "appname");
         assertEquals(entity.getDisplayName(), "entityname");
         assertEquals(entity2.getDisplayName(), "entityname2");
-    }
-    
-    @Test
-    public void testNewStyleSetsDefaultDisplayName() throws Exception {
-        app = TestApplication.Factory.newManagedInstanceForTests();
-        MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class));
-        
-        assertTrue(entity.getDisplayName().startsWith("MyEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
-    }
-    
-    @Test
-    public void testNewStyleUsesCustomDisplayName() throws Exception {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("appname"));
-        MyEntity entity = app.addChild(EntitySpec.create(MyEntity.class).displayName("entityname"));
-        
-        assertEquals(app.getDisplayName(), "appname");
-        assertEquals(entity.getDisplayName(), "entityname");
     }
 }

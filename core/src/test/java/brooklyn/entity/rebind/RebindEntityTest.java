@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -52,6 +53,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -61,6 +63,7 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationConfigTest.MyLocation;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.Asserts;
@@ -246,7 +249,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         reffer.myEntity = origE;
         origApp.setConfig(TestEntity.CONF_OBJECT, reffer);
 
-        newApp = rebind(false);
+        newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         ReffingEntity reffer2 = (ReffingEntity)newApp.getConfig(TestEntity.CONF_OBJECT);
         
@@ -266,7 +269,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         reffer.resizable = origE;
         origApp.setConfig(TestEntity.CONF_OBJECT, reffer);
 
-        newApp = rebind(false);
+        newApp = rebind();
         MyEntityWithMultipleInterfaces newE = (MyEntityWithMultipleInterfaces) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntityWithMultipleInterfaces.class));
         ReffingEntity newReffer = (ReffingEntity)newApp.getConfig(TestEntity.CONF_OBJECT);
         
@@ -277,17 +280,17 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
     @Test
     public void testEntityTags() throws Exception {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
-        origE.getTagSupport().addTag("foo");
-        origE.getTagSupport().addTag(origApp);
+        origE.tags().addTag("foo");
+        origE.tags().addTag(origApp);
 
-        newApp = rebind(false);
+        newApp = rebind();
         MyEntity newE = Iterables.getOnlyElement( Entities.descendants(newApp, MyEntity.class) );
 
-        assertTrue(newE.getTagSupport().containsTag("foo"), "tags are "+newE.getTagSupport().getTags());
-        assertFalse(newE.getTagSupport().containsTag("bar"));
-        assertTrue(newE.getTagSupport().containsTag(newE.getParent()));
-        assertTrue(newE.getTagSupport().containsTag(origApp));
-        assertEquals(newE.getTagSupport().getTags(), MutableSet.of("foo", newE.getParent()));
+        assertTrue(newE.tags().containsTag("foo"), "tags are "+newE.tags().getTags());
+        assertFalse(newE.tags().containsTag("bar"));
+        assertTrue(newE.tags().containsTag(newE.getParent()));
+        assertTrue(newE.tags().containsTag(origApp));
+        assertEquals(newE.tags().getTags(), MutableSet.of("foo", newE.getParent()));
     }
 
     public static class ReffingEntity {
@@ -338,7 +341,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         Thread thread = new Thread() {
             public void run() {
                 try {
-                    newManagementContext.getRebindManager().rebind(classLoader);
+                    newManagementContext.getRebindManager().rebind(classLoader, null, ManagementNodeState.MASTER);
                 } catch (Exception e) {
                     throw Throwables.propagate(e);
                 }
@@ -389,7 +392,10 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         Thread thread = new Thread() {
             public void run() {
                 try {
-                    RebindTestUtils.rebind(newManagementContext, mementoDir, getClass().getClassLoader());
+                    RebindTestUtils.rebind(RebindOptions.create()
+                            .newManagementContext(newManagementContext)
+                            .mementoDir(mementoDir)
+                            .classLoader(RebindEntityTest.class.getClassLoader()));
                 } catch (Exception e) {
                     throw Throwables.propagate(e);
                 }
@@ -573,13 +579,32 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
     }
 
     @Test
+    public void testRebindDoesNotPersistTransientAttribute() throws Exception {
+        final String sensorName = "test.mydynamicsensor";
+        final AttributeSensor<Object> MY_DYNAMIC_SENSOR = Sensors.builder(Object.class, sensorName)
+                .persistence(SensorPersistenceMode.NONE)
+                .build();
+        
+        // Anonymous inner class: we will not be able to rebind that.
+        @SuppressWarnings("serial")
+        Semaphore unrebindableObject = new Semaphore(1) {
+        };
+        
+        origApp.setAttribute(MY_DYNAMIC_SENSOR, unrebindableObject);
+        assertEquals(origApp.getAttribute(MY_DYNAMIC_SENSOR), unrebindableObject);
+
+        newApp = rebind();
+        assertNull(newApp.getAttribute(MY_DYNAMIC_SENSOR));
+    }
+
+    @Test
     public void testRebindWhenPreviousAppDestroyedHasNoApp() throws Exception {
         origApp.stop();
 
         RebindTestUtils.waitForPersisted(origManagementContext);
         newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
-        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader);
-        newManagementContext.getRebindManager().start();
+        List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader, null, ManagementNodeState.MASTER);
+        newManagementContext.getRebindManager().startPersistence();
         
         assertEquals(newApps.size(), 0, "apps="+newApps);
         assertEquals(newManagementContext.getApplications().size(), 0, "apps="+newManagementContext.getApplications());

@@ -18,29 +18,33 @@
  */
 package brooklyn.rest.resources;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+import javax.ws.rs.core.Response;
+
+import org.testng.annotations.Test;
+
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import com.sun.jersey.api.client.ClientResponse;
-import javax.ws.rs.core.Response;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import org.testng.annotations.Test;
 
 public class VersionResourceTest extends BrooklynRestResourceTest {
 
-  @Test
-  public void testGetVersion() {
-    ClientResponse response = client().resource("/v1/version")
-        .get(ClientResponse.class);
+    @Test
+    public void testGetVersion() {
+        ClientResponse response = client().resource("/v1/version")
+                .get(ClientResponse.class);
 
-    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-    String version = response.getEntity(String.class);
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        String version = response.getEntity(String.class);
 
-    assertTrue(version.matches("^\\d+\\.\\d+\\.\\d+.*"));
-  }
+        assertTrue(version.matches("^\\d+\\.\\d+\\.\\d+.*"));
+    }
 
-  @Override
-  protected void setUpResources() throws Exception {
-    addResource(new VersionResource());
-  }
+    @SuppressWarnings("deprecation")
+    @Override
+    protected void addBrooklynResources() {
+        addResource(new VersionResource());
+    }
 }

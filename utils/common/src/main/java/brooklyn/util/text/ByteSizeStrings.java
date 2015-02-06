@@ -21,6 +21,8 @@ package brooklyn.util.text;
 import java.util.Formattable;
 import java.util.FormattableFlags;
 import java.util.Formatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -345,4 +347,70 @@ public class ByteSizeStrings implements Function<Long, String> {
         return makeSizeString(input);
     }
 
+    public static long parse(String sizeString) {
+        return parse(sizeString, null);
+    }
+    public static long parse(String sizeString, String defaultUnits) {
+        return parse(sizeString, defaultUnits, null);
+    }
+    /** parses the given string as a byte size string, e.g. "4gb"
+     * @param sizeString string to parse
+     * @param defaultUnit optional units to append if a number (no units) are supplied
+     * @param bytesMode optional evaluation mode to force 1024 or 1000 as the interpretation of the unit prefix;
+     *   if omitted, it will depend on the units supplied,
+     *   1000 for {@link #metric()} (e.g. "1kB"), and   
+     *   1024 for {@link #java()} (e.g. "1k") and {@link #iso()} (e.g. "1KiB")
+     * @return number of bytes represented by this string
+     */
+    public static long parse(String sizeStringOriginal, String defaultUnit, ByteSizeStrings bytesMode) {
+        String sizeString = sizeStringOriginal.trim();
+        String units;
+        Matcher matcher = Pattern.compile("[A-Za-z]+").matcher(sizeString);
+        if (!matcher.find()) {
+            if (defaultUnit==null) {
+                throw new IllegalArgumentException("Cannot parse '"+sizeStringOriginal+"' as a size string");
+            }
+            units = defaultUnit;
+        } else {
+            units = matcher.group();
+            int unitsIndex = sizeString.indexOf(units);
+            if (sizeString.length() > unitsIndex+units.length()) {
+                throw new IllegalArgumentException("Cannot parse '"+sizeStringOriginal+"' as a size string");
+            }
+            sizeString = sizeString.substring(0, unitsIndex).trim();
+        }
+        
+        int exponent = -1;
+        ByteSizeStrings matchedMode = null;
+        for (ByteSizeStrings mode: new ByteSizeStrings[] { ISO, JAVA, METRIC } ) {
+            matchedMode = mode;
+            if (units.equalsIgnoreCase(mode.suffixBytes.trim())) { exponent = 0; break; }
+            if (units.equalsIgnoreCase(mode.suffixKilo.trim())) { exponent = 1; break; }
+            if (units.equalsIgnoreCase(mode.suffixMega.trim())) { exponent = 2; break; }
+            if (units.equalsIgnoreCase(mode.suffixGiga.trim())) { exponent = 3; break; }
+            if (units.equalsIgnoreCase(mode.suffixTera.trim())) { exponent = 4; break; }
+        }
+        
+        if (exponent==-1) {
+            // did not match; try other standard ones 
+            if (units.equalsIgnoreCase("t")) { 
+                exponent = 4;
+                matchedMode = java();
+            } else {
+                throw new IllegalArgumentException("Cannot parse '"+sizeStringOriginal+"' as a size string (as '"+sizeString+"' "+units+")");
+            }
+        }
+        
+        double base = Double.parseDouble(sizeString.trim());
+        
+        if (bytesMode==null) bytesMode=matchedMode;
+        
+        while (exponent>0) {
+            base *= bytesMode.bytesPerMetricUnit;
+            exponent--;
+        }
+        
+        return (long)base;
+    }
+    
 }

@@ -18,10 +18,57 @@
  */
 package brooklyn.management.ha;
 
+import brooklyn.util.guava.Maybe;
+
 public enum ManagementNodeState {
+    /** @deprecated since 0.7.0 synonym for maintenance (plus, it should have been US English!) */
     UNINITIALISED,
+    /** Node is either coming online, or is in some kind of recovery/transitioning mode */
+    INITIALIZING,
+    
+    /** Node is in "lukewarm standby" mode, where it is available to be promoted to master,
+     * but does not have entities loaded and will require some effort to be promoted */
     STANDBY,
+    /** Node is acting as read-only proxy available to be promoted to master on existing master failure */
+    HOT_STANDBY,
+    /** Node is acting as a read-only proxy but not making itself available for promotion to master */
+    HOT_BACKUP,
+    /** Node is running as primary/master, able to manage entities and create new ones */
+    // the semantics are intended to support multi-master here; we could have multiple master nodes,
+    // but we need to look up who is master for any given entity
     MASTER,
+
+    /** Node has failed and requires maintenance attention */
     FAILED,
+    /** Node has gone away; maintenance not possible */
     TERMINATED;
+
+    /** Converts a {@link HighAvailabilityMode} to a {@link ManagementNodeState}, if possible */
+    public static Maybe<ManagementNodeState> of(HighAvailabilityMode startMode) {
+        switch (startMode) {
+        case AUTO:
+        case DISABLED:
+            return Maybe.absent("Requested "+HighAvailabilityMode.class+" mode "+startMode+" cannot be converted to "+ManagementNodeState.class);
+        case HOT_BACKUP:
+            return Maybe.of(HOT_BACKUP);
+        case HOT_STANDBY:
+            return Maybe.of(HOT_STANDBY);
+        case MASTER:
+            return Maybe.of(MASTER);
+        case STANDBY:
+            return Maybe.of(STANDBY);
+        }
+        // above should be exhaustive
+        return Maybe.absent("Requested "+HighAvailabilityMode.class+" mode "+startMode+" was not expected");
+    }
+
+    /** true for hot non-master modes, where we are proxying the data from the persistent store */
+    public static boolean isHotProxy(ManagementNodeState state) {
+        return state==HOT_BACKUP || state==HOT_STANDBY;
+    }
+
+    /** true for non-master modes which can be promoted to master */
+    public static boolean isStandby(ManagementNodeState state) {
+        return state==ManagementNodeState.STANDBY || state==ManagementNodeState.HOT_STANDBY;
+    }
 }

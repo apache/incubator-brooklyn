@@ -29,7 +29,6 @@ import java.util.Map;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
@@ -90,11 +89,15 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
     }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("jboss-%s", getVersion()))));
+    }
+
+    @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/" + resolver.getUnpackedDirectoryName("jboss-"+getVersion()));
 
         // Note the -o option to unzip, to overwrite existing files without warning.
         // The JBoss zip file contains lgpl.txt (at least) twice and the prompt to

@@ -48,14 +48,14 @@ public class BrooklynMementoPersisterToMultiFileTest extends BrooklynMementoPers
         persister = new BrooklynMementoPersisterToMultiFile(mementoDir, BrooklynMementoPersisterToMultiFileTest.class.getClassLoader());
         mgmt.getRebindManager().setPersister(persister, PersistenceExceptionHandlerImpl.builder().build());
         mgmt.getHighAvailabilityManager().disabled();
-        mgmt.getRebindManager().start();
+        mgmt.getRebindManager().startPersistence();
         return mgmt;
     }
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();
         super.tearDown();
+        mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();
     }
 
     // to have this picked up in the IDE

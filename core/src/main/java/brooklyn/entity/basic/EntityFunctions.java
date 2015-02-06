@@ -28,51 +28,60 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
+import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.Iterables;
 
 public class EntityFunctions {
 
     public static <T> Function<Entity, T> attribute(final AttributeSensor<T> attribute) {
-        return new Function<Entity, T>() {
+        class GetEntityAttributeFunction implements Function<Entity, T> {
             @Override public T apply(Entity input) {
                 return (input == null) ? null : input.getAttribute(attribute);
             }
         };
+        return new GetEntityAttributeFunction();
     }
     
     public static <T> Function<Entity, T> config(final ConfigKey<T> key) {
-        return new Function<Entity, T>() {
+        class GetEntityConfigFunction implements Function<Entity, T> {
             @Override public T apply(Entity input) {
                 return (input == null) ? null : input.getConfig(key);
             }
         };
+        return new GetEntityConfigFunction();
     }
     
     public static Function<Entity, String> displayName() {
-        return new Function<Entity, String>() {
+        class GetEntityDisplayName implements Function<Entity, String> {
             @Override public String apply(Entity input) {
                 return (input == null) ? null : input.getDisplayName();
             }
         };
+        return new GetEntityDisplayName();
     }
     
     public static Function<Identifiable, String> id() {
-        return new Function<Identifiable, String>() {
+        class GetIdFunction implements Function<Identifiable, String> {
             @Override public String apply(Identifiable input) {
                 return (input == null) ? null : input.getId();
             }
         };
+        return new GetIdFunction();
     }
 
     /** returns a function which sets the given sensors on the entity passed in,
      * with {@link Entities#UNCHANGED} and {@link Entities#REMOVE} doing those actions. */
     public static Function<Entity,Void> settingSensorsConstant(final Map<AttributeSensor<?>,Object> values) {
         checkNotNull(values, "values");
-        return new Function<Entity,Void>() {
+        class SettingSensorsConstantFunction implements Function<Entity, Void> {
             @SuppressWarnings({ "unchecked", "rawtypes" })
             @Override public Void apply(Entity input) {
                 for (Map.Entry<AttributeSensor<?>,Object> entry : values.entrySet()) {
@@ -83,48 +92,60 @@ public class EntityFunctions {
                     } else if (value==Entities.REMOVE) {
                         ((EntityInternal)input).removeAttribute(sensor);
                     } else {
-                        value = TypeCoercions.coerce(value, sensor.getType());
+                        value = TypeCoercions.coerce(value, sensor.getTypeToken());
                         ((EntityInternal)input).setAttribute(sensor, value);
                     }
                 }
                 return null;
             }
-        };
+        }
+        return new SettingSensorsConstantFunction();
     }
 
     /** as {@link #settingSensorsConstant(Map)} but as a {@link Runnable} */
-    public static Runnable settingSensorsConstantRunnable(final Entity entity, final Map<AttributeSensor<?>,Object> values) {
+    public static Runnable settingSensorsConstant(final Entity entity, final Map<AttributeSensor<?>,Object> values) {
         checkNotNull(entity, "entity");
         checkNotNull(values, "values");
-        return new Runnable() {
-            @Override
-            public void run() {
-                settingSensorsConstant(values).apply(entity);
-            }
-        };
+        return Functionals.runnable(Suppliers.compose(settingSensorsConstant(values), Suppliers.ofInstance(entity)));
     }
 
-
-    /** as {@link #settingSensorsConstant(Map)} but creating a {@link Function} which ignores its input,
-     * suitable for use with sensor feeds where the input is ignored */
-    public static <T> Function<T,Void> settingSensorsConstantFunction(final Entity entity, final Map<AttributeSensor<?>,Object> values) {
-        checkNotNull(entity, "entity");
-        checkNotNull(values, "values");
-        return new Function<T,Void>() {
-            @Override
-            public Void apply(T input) {
-                return settingSensorsConstant(values).apply(entity);
+    public static <K,V> Function<Entity, Void> updatingSensorMapEntry(final AttributeSensor<Map<K,V>> mapSensor, final K key, final Supplier<? extends V> valueSupplier) {
+        class UpdatingSensorMapEntryFunction implements Function<Entity, Void> {
+            @Override public Void apply(Entity input) {
+                ServiceStateLogic.updateMapSensorEntry((EntityLocal)input, mapSensor, key, valueSupplier.get());
+                return null;
             }
-        };
+        }
+        return new UpdatingSensorMapEntryFunction();
+    }
+    public static <K,V> Runnable updatingSensorMapEntry(final Entity entity, final AttributeSensor<Map<K,V>> mapSensor, final K key, final Supplier<? extends V> valueSupplier) {
+        return Functionals.runnable(Suppliers.compose(updatingSensorMapEntry(mapSensor, key, valueSupplier), Suppliers.ofInstance(entity)));
     }
 
     public static Supplier<Collection<Application>> applications(final ManagementContext mgmt) {
-        return new Supplier<Collection<Application>>() {
+        class AppsSupplier implements Supplier<Collection<Application>> {
             @Override
             public Collection<Application> get() {
                 return mgmt.getApplications();
             }
-        };
+        }
+        return new AppsSupplier();
     }
-
+    
+    public static Function<Entity, Location> locationMatching(Predicate<? super Location> filter) {
+        return new LocationMatching(filter);
+    }
+    
+    private static class LocationMatching implements Function<Entity, Location> {
+        private Predicate<? super Location> filter;
+        
+        private LocationMatching() { /* for xstream */
+        }
+        public LocationMatching(Predicate<? super Location> filter) {
+            this.filter = filter;
+        }
+        @Override public Location apply(Entity input) {
+            return Iterables.find(input.getLocations(), filter);
+        }
+    }
 }

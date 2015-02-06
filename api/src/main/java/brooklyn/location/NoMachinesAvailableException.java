@@ -22,7 +22,7 @@ package brooklyn.location;
 /**
  * Indicates no machines are available in a given location.
  */
-public class NoMachinesAvailableException extends Exception {
+public class NoMachinesAvailableException extends LocationNotAvailableException {
     private static final long serialVersionUID = 1079817235289265761L;
     
     public NoMachinesAvailableException(String s) {

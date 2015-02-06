@@ -25,10 +25,10 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Objects;
-
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+
+import com.google.common.base.Objects;
 
 public class HostGeoLookupIntegrationTest {
 
@@ -39,7 +39,7 @@ public class HostGeoLookupIntegrationTest {
         SshMachineLocation l = new LocalhostMachineProvisioningLocation().obtain();
         HostGeoInfo geo = HostGeoInfo.fromLocation(l);
         log.info("localhost is in "+geo);
-        Assert.assertNotNull(geo, "couldn't load data; must be online and with credit with the HostGeoLookup impl (e.g. GeoBytes)");
+        Assert.assertNotNull(geo, "couldn't load data; must have a valid HostGeoLookup impl (e.g. MaxMind installed, or online and with Utrace credit)");
         Assert.assertTrue(-90 <= geo.latitude && geo.latitude <= 90); 
     }
 
@@ -61,15 +61,11 @@ public class HostGeoLookupIntegrationTest {
 
     @Test(groups = "Integration")
     public void testMaxmindLookup() throws Exception {
-        HostGeoInfo geo = new MaxMindHostGeoLookup().getHostGeoInfo(InetAddress.getByName("maxmind.com"));
+        HostGeoInfo geo = new MaxMind2HostGeoLookup().getHostGeoInfo(InetAddress.getByName("maxmind.com"));
         log.info("maxmind.com at "+geo);
         
-        // used to be Washington; now Dalas - in case this is temporary failover will accept either!
-        // Also saw variation in lat/lon reported, so happy to within one degree now.
-//      Assert.assertEquals(geo.displayName, "Washington, DC (US)");
-//      Assert.assertEquals(geo.latitude, 38.90, 0.1);
-//      Assert.assertEquals(geo.longitude, -77.02, 0.1);
-        
+        // used to be Washington; now Dallas - in case this changes again, we will accept either!
+        // also have seen variation in lat/lon reported, so happy to within one degree now
         Assert.assertTrue(Objects.equal(geo.displayName, "Washington, DC (US)") || Objects.equal(geo.displayName, "Dallas, TX (US)"), "name="+geo.displayName);
         Assert.assertTrue(Math.abs(geo.latitude - 38.90) <= 1 || Math.abs(geo.latitude - 32.78) <= 1, "lat="+geo.latitude);
         Assert.assertTrue(Math.abs(geo.longitude - -77.02) <= 1 || Math.abs(geo.longitude - -96.82) <= 1, "lon="+geo.longitude);

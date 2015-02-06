@@ -115,33 +115,39 @@ public class BrooklynImageChooser {
         score += punishmentForOldOsVersions(img, OsFamily.CENTOS, 6);
 
         OperatingSystem os = img.getOperatingSystem();
-        if (os!=null && os.getFamily()!=null) {
-            // preference for these open, popular OS (but only wrt versions above) 
-            if (os.getFamily().equals(OsFamily.CENTOS)) score += 2;
-            else if (os.getFamily().equals(OsFamily.UBUNTU)) {
-                score += 1;
-                
-                // 12.04 is LTS, so prefer it slightly above others
-                if ("12.04".equals(os.getVersion())) score += 1;
-                
-                // NB some 13.10 images take 20m+ before they are sshable on AWS
-                // with "vesafb: module verification error" showing in the AWS system log
+        if (os!=null) {
+            if (os.getFamily()!=null) {
+                // preference for these open, popular OS (but only wrt versions above) 
+                if (os.getFamily().equals(OsFamily.CENTOS)) score += 2;
+                else if (os.getFamily().equals(OsFamily.UBUNTU)) {
+                    score += 2;
+
+                    // prefer these LTS releases slightly above others (including above CentOS)
+                    // (but note in AWS Virginia, at least, version is empty for the 14.04 images for some reason, as of Aug 2014)
+                    if ("14.04".equals(os.getVersion())) score += 0.2;
+                    else if ("12.04".equals(os.getVersion())) score += 0.1;
+
+                    // NB some 13.10 images take 20m+ before they are sshable on AWS
+                    // with "vesafb: module verification error" showing in the AWS system log
+                }
+
+                // slight preference for these 
+                else if (os.getFamily().equals(OsFamily.RHEL)) score += 1;
+                else if (os.getFamily().equals(OsFamily.AMZN_LINUX)) score += 1;
+                else if (os.getFamily().equals(OsFamily.DEBIAN)) score += 1;
+
+                // prefer to take our chances with unknown / unlabelled linux than something explicitly windows
+                else if (os.getFamily().equals(OsFamily.WINDOWS)) score -= 1;
             }
-
-            // slight preference for these 
-            else if (os.getFamily().equals(OsFamily.RHEL)) score += 1;
-            else if (os.getFamily().equals(OsFamily.AMZN_LINUX)) score += 1;
-            else if (os.getFamily().equals(OsFamily.DEBIAN)) score += 1;
-
-            // prefer to take our chances with unknown / unlabelled linux than something explicitly windows
-            else if (os.getFamily().equals(OsFamily.WINDOWS)) score -= 1;
+            // prefer 64-bit
+            if (os.is64Bit()) score += 0.5;
         }
 
         // TODO prefer known providerIds
 
         if (log.isTraceEnabled())
             log.trace("initial score "+score+" for "+img);
-
+        
         return score;
     }
 

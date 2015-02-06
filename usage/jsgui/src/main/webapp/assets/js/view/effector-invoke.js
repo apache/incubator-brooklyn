@@ -87,7 +87,12 @@ define([
                         initialValue : chosenLocation,
                         rowId : 0
                     }))
-                    var $selectLocations = container.find('#select-location')
+                    var $selectLocations = container.find('.select-location')
+                        .append(this.locationOptionTemplate({
+                                id: "",
+                                name: "None"
+                            }))
+                        .append("<option disabled>------</option>");
                     this.locations.each(function(aLocation) {
                         var $option = that.locationOptionTemplate({
                             id:aLocation.id,
@@ -115,7 +120,10 @@ define([
                 var value = $(this).find(".param-value").attr('id') == 'selector-container' ? 
                         $(this).find(".param-value option:selected").attr("value") : 
                         $(this).find(".param-value").val();
-                parameters[key] = value;
+                //treat empty field as null value
+                if (value !== '') {
+                    parameters[key] = value;
+                }
             })
             return parameters
         },

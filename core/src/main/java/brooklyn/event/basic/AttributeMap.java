@@ -27,11 +27,14 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -53,7 +56,7 @@ public final class AttributeMap implements Serializable {
     
     private final AbstractEntity entity;
 
-    // Note that we synchronize on the top-level map, to handle concurrent updates and and gets (ENGR-2111)
+    // Assumed to be something like a ConcurrentMap passed in.
     private final Map<Collection<String>, Object> values;
 
     /**
@@ -132,10 +135,27 @@ public final class AttributeMap implements Serializable {
         return (isNull(oldValue)) ? null : oldValue;
     }
 
-    public void remove(AttributeSensor<?> attribute) {
-        if (log.isDebugEnabled()) {
-            log.debug("removing attribute {} on {}", attribute.getName(), entity);
+    /**
+     * Where atomicity is desired, the methods in this class synchronize on the {@link #values} map.
+     */
+    public <T> T modify(AttributeSensor<T> attribute, Function<? super T, Maybe<T>> modifier) {
+        synchronized (values) {
+            T oldValue = getValue(attribute);
+            Maybe<? extends T> newValue = modifier.apply(oldValue);
+
+            if (newValue.isPresent()) {
+                if (log.isTraceEnabled()) log.trace("modified attribute {} to {} (was {}) on {}", new Object[] {attribute.getName(), newValue, oldValue, entity});
+                return update(attribute, newValue.get());
+            } else {
+                if (log.isTraceEnabled()) log.trace("modified attribute {} unchanged; not emitting on {}", new Object[] {attribute.getName(), newValue, this});
+                return oldValue;
+            }
         }
+    }
+
+    public void remove(AttributeSensor<?> attribute) {
+        BrooklynLogging.log(log, BrooklynLogging.levelDebugOrTraceIfReadOnly(entity),
+            "removing attribute {} on {}", attribute.getName(), entity);
 
         remove(attribute.getNameParts());
     }

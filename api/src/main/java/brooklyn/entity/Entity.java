@@ -122,12 +122,20 @@ public interface Entity extends BrooklynObject {
     /** 
      * Add a child {@link Entity}, and set this entity as its parent,
      * returning the added child.
+     * <p>
+     * As with {@link #addChild(EntitySpec)} the child is <b>not</b> brought under management
+     * as part of this call.  It should not be managed prior to this call either.
      */
     <T extends Entity> T addChild(T child);
     
     /** 
      * Creates an {@link Entity} from the given spec and adds it, setting this entity as the parent,
-     * returning the added child. */
+     * returning the added child.
+     * <p>
+     * The added child is <b>not</b> managed as part of this call, even if the parent is managed,
+     * so if adding post-management an explicit call to manage the child will be needed;
+     * see the convenience method <code>Entities.manage(...)</code>. 
+     * */
     <T extends Entity> T addChild(EntitySpec<T> spec);
     
     /** 
@@ -214,7 +222,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
      */
-    Policy addPolicy(Policy policy);
+    void addPolicy(Policy policy);
     
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
@@ -230,7 +238,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
      */
-    Enricher addEnricher(Enricher enricher);
+    void addEnricher(Enricher enricher);
     
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
@@ -243,27 +251,32 @@ public interface Entity extends BrooklynObject {
      */
     boolean removeEnricher(Enricher enricher);
     
+    /**
+     * Adds the given feed to this entity. Also calls feed.setEntity if available.
+     */
+    <T extends Feed> T addFeed(T feed);
+    
     /** 
      * @since 0.7
-     * @deprecated since 0.7; see {@link #getTagSupport()}
+     * @deprecated since 0.7; see {@link #tags()}
      */
     @Deprecated
     Set<Object> getTags();
     /** 
      * @since 0.7
-     * @deprecated since 0.7; see {@link #getTagSupport()}
+     * @deprecated since 0.7; see {@link #tags()}
      */
     @Deprecated
     boolean addTag(@Nonnull Object tag);
     /** 
      * @since 0.7
-     * @deprecated since 0.7; see {@link #getTagSupport()}
+     * @deprecated since 0.7; see {@link #tags()}
      */
     @Deprecated
     boolean removeTag(@Nonnull Object tag);
     /** 
      * @since 0.7
-     * @deprecated since 0.7; see {@link #getTagSupport()}
+     * @deprecated since 0.7; see {@link #tags()}
      */
     @Deprecated
     boolean containsTag(@Nonnull Object tag);

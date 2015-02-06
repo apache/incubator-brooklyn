@@ -62,12 +62,17 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Policy that is attached to a {@link Resizable} entity and dynamically adjusts its size in response to
- * emitted {@code POOL_COLD} and {@code POOL_HOT} events. (This policy does not itself determine whether
- * the pool is hot or cold, but instead relies on these events being emitted by the monitored entity itself, or
- * by another policy that is attached to it; see, for example, {@link LoadBalancingPolicy}.)
+ * emitted {@code POOL_COLD} and {@code POOL_HOT} events. Alternatively, the policy can be configured to
+ * keep a given metric within a required range.
+ * <p>
+ * TThis policy does not itself determine whether the pool is hot or cold, but instead relies on these 
+ * events being emitted by the monitored entity itself, or by another policy that is attached to it; see, 
+ * for example, {@link LoadBalancingPolicy}.)
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-@Catalog
+@Catalog(name="Auto-scaler", description="Policy that is attached to a Resizable entity and dynamically "
+        + "adjusts its size in response to either keep a metric within a given range, or in response to "
+        + "POOL_COLD and POOL_HOT events")
 public class AutoScalerPolicy extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(AutoScalerPolicy.class);
@@ -85,16 +90,16 @@ public class AutoScalerPolicy extends AbstractPolicy {
         private Number metricLowerBound;
         private int minPoolSize = 0;
         private int maxPoolSize = Integer.MAX_VALUE;
-        private long minPeriodBetweenExecs = 100;
-        private long resizeUpStabilizationDelay;
-        private long resizeDownStabilizationDelay;
+        private Duration minPeriodBetweenExecs;
+        private Duration resizeUpStabilizationDelay;
+        private Duration resizeDownStabilizationDelay;
         private ResizeOperator resizeOperator;
         private Function<Entity,Integer> currentSizeOperator;
         private BasicNotificationSensor<?> poolHotSensor;
         private BasicNotificationSensor<?> poolColdSensor;
         private BasicNotificationSensor<?> poolOkSensor;
         private BasicNotificationSensor<? super MaxPoolSizeReachedEvent> maxSizeReachedSensor;
-        private long maxReachedNotificationDelay;
+        private Duration maxReachedNotificationDelay;
         
         public Builder id(String val) {
             this.id = val; return this;
@@ -130,13 +135,34 @@ public class AutoScalerPolicy extends AbstractPolicy {
             maxPoolSize = max;
             return this;
         }
+        /**
+         * @deprecated since 0.7; use {@link #minPeriodBetweenExecs(Duration)}
+         */
+        @Deprecated
         public Builder minPeriodBetweenExecs(long val) {
+            return minPeriodBetweenExecs(Duration.of(val, TimeUnit.MILLISECONDS));
+        }
+        public Builder minPeriodBetweenExecs(Duration val) {
             this.minPeriodBetweenExecs = val; return this;
         }
+        /**
+         * @deprecated since 0.7; use {@link #resizeUpStabilizationDelay(Duration)}
+         */
+        @Deprecated
         public Builder resizeUpStabilizationDelay(long val) {
+            return resizeUpStabilizationDelay(Duration.of(val, TimeUnit.MILLISECONDS));
+        }
+        public Builder resizeUpStabilizationDelay(Duration val) {
             this.resizeUpStabilizationDelay = val; return this;
         }
+        /**
+         * @deprecated since 0.7; use {@link #resizeDownStabilizationDelay(Duration)}
+         */
+        @Deprecated
         public Builder resizeDownStabilizationDelay(long val) {
+            return resizeDownStabilizationDelay(Duration.of(val, TimeUnit.MILLISECONDS));
+        }
+        public Builder resizeDownStabilizationDelay(Duration val) {
             this.resizeDownStabilizationDelay = val; return this;
         }
         public Builder resizeOperator(ResizeOperator val) {
@@ -157,7 +183,14 @@ public class AutoScalerPolicy extends AbstractPolicy {
         public Builder maxSizeReachedSensor(BasicNotificationSensor<? super MaxPoolSizeReachedEvent> val) {
             this.maxSizeReachedSensor = val; return this;
         }
+        /**
+         * @deprecated since 0.7; use {@link #maxReachedNotificationDelay(Duration)}
+         */
+        @Deprecated
         public Builder maxReachedNotificationDelay(long val) {
+            return maxReachedNotificationDelay(Duration.of(val, TimeUnit.MILLISECONDS));
+        }
+        public Builder maxReachedNotificationDelay(Duration val) {
             this.maxReachedNotificationDelay = val; return this;
         }
         public AutoScalerPolicy build() {
@@ -322,13 +355,16 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @SetFromFlag("maxSizeReachedSensor")
     public static final ConfigKey<BasicNotificationSensor<? super MaxPoolSizeReachedEvent>> MAX_SIZE_REACHED_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? super MaxPoolSizeReachedEvent>>() {})
             .name("autoscaler.maxSizeReachedSensor")
-            .description("Sensor for which a notification will be emitted (on the associated entity) when we consistently wanted to resize the pool above the max allowed size, for maxReachedNotificationDelay milliseconds")
+            .description("Sensor for which a notification will be emitted (on the associated entity) when " +
+                    "we consistently wanted to resize the pool above the max allowed size, for " +
+                    "maxReachedNotificationDelay milliseconds")
             .build();
     
     @SetFromFlag("maxReachedNotificationDelay")
     public static final ConfigKey<Duration> MAX_REACHED_NOTIFICATION_DELAY = BasicConfigKey.builder(Duration.class)
             .name("autoscaler.maxReachedNotificationDelay")
-            .description("Time that we consistently wanted to go above the maxPoolSize for, after which the maxSizeReachedSensor (if any) will be emitted")
+            .description("Time that we consistently wanted to go above the maxPoolSize for, after which the " +
+                    "maxSizeReachedSensor (if any) will be emitted")
             .defaultValue(Duration.ZERO)
             .build();
     

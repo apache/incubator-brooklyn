@@ -22,6 +22,8 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
+import brooklyn.entity.Feed;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Enricher;
@@ -105,7 +107,11 @@ public class InternalPolicyFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractPolicy)pol).setDisplayName(spec.getDisplayName());
             
-            pol.getTagSupport().addTags(spec.getTags());
+            if (spec.getCatalogItemId()!=null) {
+                ((AbstractPolicy)pol).setCatalogItemId(spec.getCatalogItemId());
+            }
+            
+            pol.tags().addTags(spec.getTags());
             
             if (isNewStyle(clazz)) {
                 ((AbstractPolicy)pol).setManagementContext(managementContext);
@@ -142,7 +148,11 @@ public class InternalPolicyFactory extends InternalFactory {
             if (spec.getDisplayName()!=null)
                 ((AbstractEnricher)enricher).setDisplayName(spec.getDisplayName());
             
-            enricher.getTagSupport().addTags(spec.getTags());
+            if (spec.getCatalogItemId()!=null) {
+                ((AbstractEnricher)enricher).setCatalogItemId(spec.getCatalogItemId());
+            }
+            
+            enricher.tags().addTags(spec.getTags());
             
             if (isNewStyle(clazz)) {
                 ((AbstractEnricher)enricher).setManagementContext(managementContext);
@@ -176,6 +186,13 @@ public class InternalPolicyFactory extends InternalFactory {
      * Constructs a new-style enricher (fails if no no-arg constructor).
      */
     public <T extends Enricher> T constructEnricher(Class<T> clazz) {
+        return super.constructNewStyle(clazz);
+    }
+    
+    /**
+     * Constructs a new-style feed (fails if no no-arg constructor).
+     */
+    public <T extends Feed> T constructFeed(Class<T> clazz) {
         return super.constructNewStyle(clazz);
     }
 }

@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.nosql.elasticsearch;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -35,6 +36,9 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents an ElasticSearch node
  */
+@Catalog(name="Elastic Search Node", description="Elasticsearch is an open-source search server based on Lucene. "
+        + "It provides a distributed, multitenant-capable full-text search engine with a RESTful web interface and "
+        + "schema-free JSON documents.")
 @ImplementedBy(ElasticSearchNodeImpl.class)
 public interface ElasticSearchNode extends SoftwareProcess, DatastoreMixins.HasDatastoreUrl {
     @SetFromFlag("version")

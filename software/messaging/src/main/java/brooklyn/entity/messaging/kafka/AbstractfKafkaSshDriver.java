@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -58,14 +57,18 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
     protected abstract String getProcessIdentifier();
 
     @Override
-    protected String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(), "console.out"); }
+    protected String getLogFileLocation() { return Os.mergePaths(getRunDir(), "console.out"); }
+
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("kafka-%s-src", getVersion()))));
+    }
 
     @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("kafka-%s-src", getVersion())));
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));

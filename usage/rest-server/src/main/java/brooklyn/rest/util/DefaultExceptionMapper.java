@@ -55,47 +55,48 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
      * mapping is found a {@link Status#INTERNAL_SERVER_ERROR} is assumed.
      */
     @Override
-    public Response toResponse(Throwable throwable) {
+    public Response toResponse(Throwable throwable1) {
 
-        LOG.debug("REST request running as {} threw: {}", Entitlements.getEntitlementContext(), throwable);
+        LOG.debug("REST request running as {} threw: {}", Entitlements.getEntitlementContext(), 
+            Exceptions.collapse(throwable1));
         if (LOG.isTraceEnabled()) {
-            LOG.trace("Full details of "+Entitlements.getEntitlementContext()+" "+throwable, throwable);
+            LOG.trace("Full details of "+Entitlements.getEntitlementContext()+" "+throwable1, throwable1);
         }
 
+        Throwable throwable2 = Exceptions.getFirstInteresting(throwable1);
         // Some methods will throw this, which gets converted automatically
-        if (throwable instanceof WebApplicationException) {
-            WebApplicationException wae = (WebApplicationException) throwable;
+        if (throwable2 instanceof WebApplicationException) {
+            WebApplicationException wae = (WebApplicationException) throwable2;
             return wae.getResponse();
         }
 
         // The nicest way for methods to provide errors, wrap as this, and the stack trace will be suppressed
-        if (throwable instanceof UserFacingException) {
-            return ApiError.of(throwable.getMessage()).asBadRequestResponseJson();
+        if (throwable2 instanceof UserFacingException) {
+            return ApiError.of(throwable2.getMessage()).asBadRequestResponseJson();
         }
 
         // For everything else, a trace is supplied
         
         // Assume ClassCoercionExceptions are caused by TypeCoercions from input parameters gone wrong
         // And IllegalArgumentException for malformed input parameters.
-        if (throwable instanceof ClassCoercionException || throwable instanceof IllegalArgumentException) {
-            return ApiError.of(throwable).asBadRequestResponseJson();
+        if (throwable2 instanceof ClassCoercionException || throwable2 instanceof IllegalArgumentException) {
+            return ApiError.of(throwable2).asBadRequestResponseJson();
         }
 
         // YAML exception 
-        if (throwable instanceof YAMLException) {
-            return ApiError.builder().message(throwable.getMessage()).prefixMessage("Invalid YAML").build().asBadRequestResponseJson();
+        if (throwable2 instanceof YAMLException) {
+            return ApiError.builder().message(throwable2.getMessage()).prefixMessage("Invalid YAML").build().asBadRequestResponseJson();
         }
 
-        if (!Exceptions.isPrefixBoring(throwable)) {
-            if ( warnedUnknownExceptions.add( throwable.getClass() )) {
-                LOG.warn("REST call generated exception type "+throwable.getClass()+" unrecognized in "+getClass()+" (subsequent occurrences will be logged debug only): " + throwable);
+        if (!Exceptions.isPrefixBoring(throwable2)) {
+            if ( warnedUnknownExceptions.add( throwable2.getClass() )) {
+                LOG.warn("REST call generated exception type "+throwable2.getClass()+" unrecognized in "+getClass()+" (subsequent occurrences will be logged debug only): " + throwable2, throwable2);
             }
         }
         
-        Builder rb = ApiError.builderFromThrowable(throwable);
+        Builder rb = ApiError.builderFromThrowable(Exceptions.collapse(throwable2));
         if (Strings.isBlank(rb.getMessage()))
             rb.message("Internal error. Contact server administrator to consult logs for more details.");
         return rb.build().asResponse(Status.INTERNAL_SERVER_ERROR, MediaType.APPLICATION_JSON_TYPE);
     }
-
 }

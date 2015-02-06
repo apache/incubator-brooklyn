@@ -24,13 +24,14 @@ import static java.lang.String.format;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
+import brooklyn.entity.drivers.downloads.DownloadSubstituters;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
@@ -67,16 +68,58 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
     @Override
     protected String getLogFileLocation() {
-        return format("%s/console", getRunDir());
+        return Os.mergePathsUnix(getRunDir(), "console");
     }
     
-    private String getPidFile() {
-        return "pid_java";
+    protected String getPidFile() {
+        return Os.mergePathsUnix(getRunDir(), "pid_java");
     }
     
     @Override
     protected String getInstallLabelExtraSalt() {
-        return Identifiers.makeIdFromHash(Objects.hashCode(entity.getConfig(BrooklynNode.DOWNLOAD_URL), entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL)));
+        String downloadUrl = entity.getConfig(BrooklynNode.DOWNLOAD_URL);
+        String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
+        if (Objects.equal(downloadUrl, BrooklynNode.DOWNLOAD_URL.getConfigKey().getDefaultValue()) &&
+                Objects.equal(uploadUrl, BrooklynNode.DISTRO_UPLOAD_URL.getDefaultValue())) {
+            // if both are at the default value, then no salt
+            return null;
+        }
+        return Identifiers.makeIdFromHash(Objects.hashCode(downloadUrl, uploadUrl));
+    }
+
+    @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        String subpath = entity.getConfig(BrooklynNode.SUBPATH_IN_ARCHIVE);
+        if (subpath==null) {
+            // assume the dir name is `basename-VERSION` where download link is `basename-VERSION-dist.tar.gz`
+            String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
+            String origDownloadName = uploadUrl;
+            if (origDownloadName==null) 
+                origDownloadName = entity.getAttribute(BrooklynNode.DOWNLOAD_URL);
+            if (origDownloadName!=null) {
+                // BasicDownloadResolver makes it crazy hard to get the template-evaluated value of DOWNLOAD_URL
+                origDownloadName = DownloadSubstituters.substitute(origDownloadName, DownloadSubstituters.getBasicEntitySubstitutions(this));
+                origDownloadName = Urls.decode(origDownloadName);
+                origDownloadName = Urls.getBasename(origDownloadName);
+                String downloadName = origDownloadName;
+                downloadName = Strings.removeFromEnd(downloadName, ".tar.gz");
+                downloadName = Strings.removeFromEnd(downloadName, ".tgz");
+                downloadName = Strings.removeFromEnd(downloadName, ".zip");
+                if (!downloadName.equals(origDownloadName)) {
+                    downloadName = Strings.removeFromEnd(downloadName, "-dist");
+                    subpath = downloadName;
+                }
+            }
+        }
+        if (subpath==null) subpath = format("brooklyn-%s", getVersion());
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(subpath)));
+    }
+
+    @Override
+    public void clearInstallDir() {
+        super.setInstallDir(null);
+        super.setExpandedInstallDir(null);
     }
     
     @Override
@@ -87,13 +130,8 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         // This filename is used to generate the first URL to try: 
         // file://$HOME/.brooklyn/repository/BrooklynNode/0.6.0-SNAPSHOT/brooklyn-0.6.0-SNAPSHOT-dist.tar.gz
         // (DOWNLOAD_URL overrides this and has a default which comes from maven)
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        
-        String subpath = entity.getConfig(BrooklynNode.SUBPATH_IN_ARCHIVE);
-        if (Strings.isBlank(subpath)) subpath = format("brooklyn-%s", getVersion());
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(subpath));
         
         newScript("createInstallDir")
                 .body.append("mkdir -p "+getInstallDir())
@@ -157,20 +195,26 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
 
         // Override the ~/.brooklyn/brooklyn.properties if required
         if (brooklynGlobalPropertiesContents != null || brooklynGlobalPropertiesUri != null) {
+            ExistingFileBehaviour onExisting = entity.getConfig(BrooklynNode.ON_EXISTING_PROPERTIES_FILE);
             Integer checkExists = DynamicTasks.queue(SshEffectorTasks.ssh("ls \""+brooklynGlobalPropertiesRemotePath+"\"").allowingNonZeroExitCode()).get();
             boolean doUpload = true;
             if (checkExists==0) {
-                ExistingFileBehaviour response = entity.getConfig(BrooklynNode.ON_EXISTING_PROPERTIES_FILE);
-                switch (response) {
+                switch (onExisting) {
                 case USE_EXISTING: doUpload = false; break;
                 case OVERWRITE: break;
+                case DO_NOT_USE: 
+                    throw new IllegalStateException("Properties file "+brooklynGlobalPropertiesContents+" already exists and "+
+                        "even though it is not being used, content for it was supplied");
                 case FAIL: 
-                    throw new IllegalStateException("Properties file "+brooklynCatalogRemotePath+" already exists and "+
+                    throw new IllegalStateException("Properties file "+brooklynGlobalPropertiesContents+" already exists and "+
                         BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response is to fail");
                 default:
-                    throw new IllegalStateException("Properties file "+brooklynCatalogRemotePath+" already exists and "+
-                        BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response "+response+" is unknown");
+                    throw new IllegalStateException("Properties file "+brooklynGlobalPropertiesContents+" already exists and "+
+                        BrooklynNode.ON_EXISTING_PROPERTIES_FILE+" response "+onExisting+" is unknown");
                 }
+            }
+            if (onExisting==ExistingFileBehaviour.DO_NOT_USE) {
+                log.warn("Global properties supplied when told not to use them; no global properties exists, so it will be installed, but it will not be used.");
             }
             if (doUpload)
                 uploadFileContents(brooklynGlobalPropertiesContents, brooklynGlobalPropertiesUri, brooklynGlobalPropertiesRemotePath);
@@ -215,20 +259,22 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         }
         
         String cmd = entity.getConfig(BrooklynNode.EXTRA_CUSTOMIZATION_SCRIPT);
-        if (!Strings.isBlank(cmd)) {
+        if (Strings.isNonBlank(cmd)) {
             DynamicTasks.queueIfPossible( SshEffectorTasks.ssh(cmd).summary("Bespoke BrooklynNode customization script")
                 .requiringExitCodeZero() )
                 .orSubmitAndBlock(getEntity());
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void launch() {
         String app = getEntity().getAttribute(BrooklynNode.APP);
         String locations = getEntity().getAttribute(BrooklynNode.LOCATIONS);
         boolean hasLocalBrooklynProperties = getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_CONTENTS) != null || getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_URI) != null;
         String localBrooklynPropertiesPath = processTemplateContents(getEntity().getConfig(BrooklynNode.BROOKLYN_LOCAL_PROPERTIES_REMOTE_PATH));
-        String bindAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS);
+        InetAddress bindAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_BIND_ADDRESS);
+        InetAddress publicAddress = getEntity().getAttribute(BrooklynNode.WEB_CONSOLE_PUBLIC_ADDRESS);
 
         String cmd = entity.getConfig(BrooklynNode.LAUNCH_COMMAND);
         if (Strings.isBlank(cmd)) cmd = "./bin/brooklyn";
@@ -238,6 +284,9 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         }
         if (locations != null) {
             cmd += " --locations "+locations;
+        }
+        if (entity.getConfig(BrooklynNode.ON_EXISTING_PROPERTIES_FILE)==ExistingFileBehaviour.DO_NOT_USE) {
+            cmd += " --noGlobalBrooklynProperties";
         }
         if (hasLocalBrooklynProperties) {
             cmd += " --localBrooklynProperties "+localBrooklynPropertiesPath;
@@ -260,14 +309,20 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 + "("+getEntity().getEnabledHttpProtocols()+"); expecting 'http' or 'https'");
         }
         
-        if (Strings.isNonEmpty(bindAddress)) {
-            cmd += " --bindAddress "+bindAddress;
+        if (bindAddress != null) {
+            cmd += " --bindAddress "+bindAddress.getHostAddress();
+        }
+        if (publicAddress != null) {
+            cmd += " --publicAddress "+publicAddress.getHostName();
         }
         if (getEntity().getAttribute(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION)) {
             cmd += " --noConsoleSecurity";
         }
         if (getEntity().getConfig(BrooklynNode.NO_SHUTDOWN_ON_EXIT)) {
             cmd += " --noShutdownOnExit ";
+        }
+        if (Strings.isNonBlank(getEntity().getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS))) {
+            cmd += " "+getEntity().getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS);
         }
         cmd += format(" >> %s/console 2>&1 </dev/null &", getRunDir());
         

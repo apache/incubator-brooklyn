@@ -43,7 +43,6 @@ public class SensorTransformer {
                 sensor.getDescription(), null);
     }
 
-    @SuppressWarnings("rawtypes")
     public static SensorSummary sensorSummary(Entity entity, Sensor<?> sensor) {
         String applicationUri = "/v1/applications/" + entity.getApplicationId();
         String entityUri = applicationUri + "/entities/" + entity.getId();
@@ -55,24 +54,30 @@ public class SensorTransformer {
                 .put("entity", URI.create(entityUri))
                 .put("action:json", URI.create(selfUri));
 
-        Iterable<RendererHints.NamedAction> hints = Iterables.filter(RendererHints.getHintsFor(sensor), RendererHints.NamedAction.class);
-        for (RendererHints.NamedAction na : hints) addNamedAction(lb, na , entity, sensor);
+        if (sensor instanceof AttributeSensor) {
+            Iterable<RendererHints.NamedAction> hints = Iterables.filter(RendererHints.getHintsFor((AttributeSensor<?>)sensor), RendererHints.NamedAction.class);
+            for (RendererHints.NamedAction na : hints) addNamedAction(lb, na , entity, sensor);
+        }
 
         return new SensorSummary(sensor.getName(), sensor.getTypeName(), sensor.getDescription(), lb.build());
     }
 
-    @SuppressWarnings("rawtypes")
-    private static void addNamedAction(MutableMap.Builder<String, URI> lb, RendererHints.NamedAction na , Entity entity, Sensor<?> sensor) {
+    private static <T> void addNamedAction(MutableMap.Builder<String, URI> lb, RendererHints.NamedAction na , Entity entity, Sensor<T> sensor) {
+        addNamedAction(lb, na, entity.getAttribute( ((AttributeSensor<T>) sensor) ), sensor, entity);
+    }
+    
+    @SuppressWarnings("unchecked")
+    static <T> void addNamedAction(MutableMap.Builder<String, URI> lb, RendererHints.NamedAction na, T value, Object context, Entity contextEntity) {
         if (na instanceof RendererHints.NamedActionWithUrl) {
             try {
-                String v = ((RendererHints.NamedActionWithUrl) na).getUrl(entity, (AttributeSensor<?>) sensor);
+                String v = ((RendererHints.NamedActionWithUrl<T>) na).getUrlFromValue(value);
                 if (Strings.isNonBlank(v)) {
                     String action = na.getActionName().toLowerCase();
                     lb.putIfAbsent("action:"+action, URI.create(v));
                 }
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                log.warn("Unable to make use of URL sensor "+sensor+" on "+entity+": "+e);
+                log.warn("Unable to make action "+na+" from "+context+" on "+contextEntity+": "+e, e);
             }
         }
     }

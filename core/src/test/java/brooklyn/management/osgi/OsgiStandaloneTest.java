@@ -26,6 +26,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarInputStream;
 
+import brooklyn.test.TestResourceUnavailableException;
+import brooklyn.util.exceptions.Exceptions;
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -39,51 +41,47 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.InternalEntityFactory;
-import brooklyn.entity.proxying.InternalPolicyFactory;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
 import brooklyn.util.osgi.Osgis.ManifestHelper;
 import brooklyn.util.stream.Streams;
 
-/** tests some assumptions about OSGi behaviour, in standalone mode (not part of brooklyn).
- * 
- * relies on the following bundles, which exist in the classpath (and contain their sources):
- * 
- * <li>brooklyn-osgi-test-a_0.1.0 -
- *     defines TestA which has a "times" method and a static multiplier field;
- *     we set the multiplier to determine when we are sharing versions and when not
- *     
- *  */
+/** 
+ * Tests some assumptions about OSGi behaviour, in standalone mode (not part of brooklyn).
+ * See {@link OsgiTestResources} for description of test resources.
+ */
 public class OsgiStandaloneTest {
 
     private static final Logger log = LoggerFactory.getLogger(OsgiStandaloneTest.class);
 
-    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:/brooklyn/osgi/brooklyn-osgi-test-a_0.1.0.jar";
-    
-    public static final String BROOKLYN_TEST_OSGI_ENTITIES_PATH = "/brooklyn/osgi/brooklyn-test-osgi-entities.jar";
+    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_PATH = OsgiTestResources.BROOKLYN_OSGI_TEST_A_0_1_0_PATH;
+    public static final String BROOKLYN_OSGI_TEST_A_0_1_0_URL = "classpath:"+BROOKLYN_OSGI_TEST_A_0_1_0_PATH;
+
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_PATH = OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH;
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_URL = "classpath:"+BROOKLYN_TEST_OSGI_ENTITIES_PATH;
-    
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_NAME = "org.apache.brooklyn.test.resources.osgi.brooklyn-test-osgi-entities";
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_VERSION = "0.1.0";
+
     protected Framework framework = null;
     private File storageTempDir;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         storageTempDir = Os.newTempDir("osgi-standalone");
         framework = Osgis.newFrameworkStarted(storageTempDir.getAbsolutePath(), true, null);
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun=true)
     public void tearDown() throws BundleException, IOException, InterruptedException {
+        tearDownOsgiFramework(framework, storageTempDir);
+    }
+
+    public static void tearDownOsgiFramework(Framework framework, File storageTempDir) throws BundleException, InterruptedException, IOException {
         if (framework!=null) {
             framework.stop();
             Assert.assertEquals(framework.waitForStop(1000).getType(), FrameworkEvent.STOPPED);
@@ -103,15 +101,24 @@ public class OsgiStandaloneTest {
         }
     }
 
+    protected Bundle installFromClasspath(String resourceName) throws BundleException {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), resourceName);
+        try {
+            return Osgis.install(framework, String.format("classpath:%s", resourceName));
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
     @Test
     public void testInstallBundle() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle, 3, 6);
     }
 
     @Test
     public void testBootBundle() throws Exception {
-        Bundle bundle = install(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+        Bundle bundle = installFromClasspath(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         Class<?> bundleCls = bundle.loadClass("brooklyn.osgi.tests.SimpleEntity");
         Assert.assertEquals(Entity.class,  bundle.loadClass(Entity.class.getName()));
         Assert.assertEquals(Entity.class, bundleCls.getClassLoader().loadClass(Entity.class.getName()));
@@ -119,12 +126,18 @@ public class OsgiStandaloneTest {
 
     @Test
     public void testDuplicateBundle() throws Exception {
-        helperDuplicateBundle(MavenRetriever.localUrl(new MavenArtifact("io.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT")));
+        MavenArtifact artifact = new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT"); // BROOKLYN_VERSION
+        String localUrl = MavenRetriever.localUrl(artifact);
+        if ("file".equals(Urls.getProtocol(localUrl))) {
+            helperDuplicateBundle(localUrl);
+        } else {
+            log.warn("Skipping test OsgiStandaloneTest.testDuplicateBundle due to " + artifact + " not available in local repo.");
+        }
     }
 
     @Test(groups="Integration")
     public void testRemoteDuplicateBundle() throws Exception {
-        helperDuplicateBundle(MavenRetriever.hostedUrl(new MavenArtifact("io.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT")));
+        helperDuplicateBundle(MavenRetriever.hostedUrl(new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.7.0-SNAPSHOT"))); // BROOKLYN_VERSION
     }
 
     public void helperDuplicateBundle(String url) throws Exception {
@@ -135,38 +148,9 @@ public class OsgiStandaloneTest {
         Assert.assertTrue(Osgis.isExtensionBundle(bundle));
     }
 
-
-    /**
-     * Test fix for
-     * java.lang.NoClassDefFoundError: brooklyn.event.AttributeSensor not found by io.brooklyn.brooklyn-test-osgi-entities [41]
-     */
-    @Test
-    public void testEntityProxy() throws Exception {
-        ManagementContextInternal managementContext;
-        InternalEntityFactory factory;
-
-        managementContext = new LocalManagementContextForTests();
-        InternalPolicyFactory policyFactory = new InternalPolicyFactory(managementContext);
-        factory = new InternalEntityFactory(managementContext, managementContext.getEntityManager().getEntityTypeRegistry(), policyFactory);
-
-        Bundle bundle = install(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
-        @SuppressWarnings("unchecked")
-        Class<? extends Entity> bundleCls = (Class<? extends Entity>) bundle.loadClass("brooklyn.osgi.tests.SimpleEntityImpl");
-        @SuppressWarnings("unchecked")
-        Class<? extends Entity> bundleInterface = (Class<? extends Entity>) bundle.loadClass("brooklyn.osgi.tests.SimpleEntity");
-
-        TestApplicationImpl app = new TestApplicationImpl();
-        @SuppressWarnings("unchecked")
-        EntitySpec<Entity> spec = (EntitySpec<Entity>) (((EntitySpec<Entity>)EntitySpec.create(bundleInterface))).impl(bundleCls);
-        Entity entity = bundleCls.newInstance();
-        factory.createEntityProxy(spec, entity);
-
-        if (managementContext != null) Entities.destroyAll(managementContext);
-    }
-
     @Test
     public void testAMultiplier() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle, 3, 6);
         setAMultiplier(bundle, 5);
         checkMath(bundle, 3, 15);
@@ -176,7 +160,7 @@ public class OsgiStandaloneTest {
      * on a fresh install the multiplier is reset */
     @Test
     public void testANOtherMultiple() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle, 3, 6);
         setAMultiplier(bundle, 14);
         checkMath(bundle, 3, 42);
@@ -184,23 +168,23 @@ public class OsgiStandaloneTest {
 
     @Test
     public void testGetBundle() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         setAMultiplier(bundle, 3);
 
         // can look it up based on the same location string (no other "location identifier" reference string seems to work here, however) 
-        Bundle bundle2 = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle2 = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle2, 3, 9);
     }
 
     @Test
     public void testUninstallAndReinstallBundle() throws Exception {
-        Bundle bundle = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle, 3, 6);
         setAMultiplier(bundle, 3);
         checkMath(bundle, 3, 9);
         bundle.uninstall();
         
-        Bundle bundle2 = install(BROOKLYN_OSGI_TEST_A_0_1_0_URL);
+        Bundle bundle2 = installFromClasspath(BROOKLYN_OSGI_TEST_A_0_1_0_PATH);
         checkMath(bundle2, 3, 6);
     }
 
@@ -236,6 +220,7 @@ public class OsgiStandaloneTest {
     
     @Test
     public void testReadKnownManifest() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         InputStream in = this.getClass().getResourceAsStream(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         JarInputStream jarIn = new JarInputStream(in);
         ManifestHelper helper = Osgis.ManifestHelper.forManifest(jarIn.getManifest());
@@ -246,7 +231,7 @@ public class OsgiStandaloneTest {
     
     @Test
     public void testLoadOsgiBundleDependencies() throws Exception {
-        Bundle bundle = install(BROOKLYN_TEST_OSGI_ENTITIES_URL);
+        Bundle bundle = installFromClasspath(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         Assert.assertNotNull(bundle);
         Class<?> aClass = bundle.loadClass("brooklyn.osgi.tests.SimpleApplicationImpl");
         Object aInst = aClass.newInstance();

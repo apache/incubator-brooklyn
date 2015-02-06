@@ -28,6 +28,8 @@
 # the argument can be a variable or a filename literal (not quoted)
 # TODO: figure out how to accept a quoted string as an argument
 
+require 'pathname'
+
 module JekyllRead
   class ReadTag < Liquid::Tag
     def initialize(tag_name, text, tokens)
@@ -35,18 +37,18 @@ module JekyllRead
       @text = text
     end
     def render(context)
-	jekyllSite = context.registers[:site]
-	dir = jekyllSite.source+'/'+File.dirname(context['page']['url'])
-	filename = @text.strip
-        filename = context[filename] || filename
-	if !filename.match(/^\/.*/) 
-		filename = dir + '/' + filename
-	else
-		filename = jekyllSite.source+'/'+filename
-	end
-	filename = filename.gsub(/\/\/+/,'/')
-	file = File.open(filename, "rb")
-	return file.read
+      filename = @text.strip
+      filename = context[filename] || filename
+
+      # Pathname API ignores first arg below if second is absolute
+      file = Pathname.new(File.dirname(context['page']['path'])) + filename
+      file = file.cleanpath
+      # is there a better way to trim a leading / ?
+      file = file.relative_path_from(Pathname.new("/")) unless file.relative?
+      raise "No such file #{file} in read call (from #{context['page']['path']})" unless file.exist?
+
+      file = File.open(file, "rb")
+      return file.read
     end
   end
 
@@ -56,24 +58,24 @@ module JekyllRead
       @text = text
     end
     def render(context)
-	jekyllSite = context.registers[:site]
-	filename = @text.strip
-	filename = context[filename] || filename
-# support vars (above) and relative paths in filename (below - need the right path if there is a subsequent link)
-        dir = filename
-	if !filename.match(/^\/.*/) 
-		dir = File.dirname(context['page']['url']) + '/' + filename
-	end
-	dir = dir.gsub(/\/\/+/,'/')
-	filename = dir.sub(/^.*\//, '')
-	dir = dir.gsub(/\/[^\/]*$/, '/')
-	targetPage = Jekyll::Page.new(jekyllSite, jekyllSite.source, dir, filename)
-	targetPage.render(jekyllSite.layouts, jekyllSite.site_payload)
-	targetPage.output
+      filename = @text.strip
+      filename = context[filename] || filename
+      # Pathname API ignores first arg below if second is absolute
+      page = context['page'] || context.registers[:page]
+      file = Pathname.new(File.dirname(page['path'])) + filename
+      file = file.cleanpath
+      # is there a better way to trim a leading / ?
+      file = file.relative_path_from(Pathname.new("/")) unless file.relative?
+      raise "No such file #{file} in readj call (from #{context['page']['path']})" unless file.exist?
+
+      # with readj we support vars and paths relative to a file being readj'd
+      jekyllSite = context.registers[:site]
+      targetPage = Jekyll::Page.new(jekyllSite, jekyllSite.source, File.dirname(file), File.basename(file))
+      targetPage.render(jekyllSite.layouts, jekyllSite.site_payload)
+      return targetPage.output
     end
   end
 end
 
 Liquid::Template.register_tag('read', JekyllRead::ReadTag)
 Liquid::Template.register_tag('readj', JekyllRead::ReadjTag)
-

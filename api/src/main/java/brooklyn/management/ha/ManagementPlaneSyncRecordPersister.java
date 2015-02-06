@@ -63,5 +63,6 @@ public interface ManagementPlaneSyncRecordPersister {
         Collection<String> getRemovedNodeIds();
         MasterChange getMasterChange();
         String getNewMasterOrNull();
+        String getExpectedMasterToClear();
     }
 }

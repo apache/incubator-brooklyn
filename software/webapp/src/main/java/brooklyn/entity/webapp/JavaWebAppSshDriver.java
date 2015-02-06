@@ -21,6 +21,7 @@ package brooklyn.entity.webapp;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Set;
 
 import brooklyn.entity.basic.Attributes;
@@ -101,6 +102,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
     @Override
     public void postLaunch() {
         String rootUrl = inferRootUrl();
+        entity.setAttribute(Attributes.MAIN_URI, URI.create(rootUrl));
         entity.setAttribute(WebAppService.ROOT_URL, rootUrl);
     }
 

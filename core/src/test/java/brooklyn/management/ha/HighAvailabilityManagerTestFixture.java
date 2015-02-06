@@ -34,8 +34,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
@@ -60,7 +58,7 @@ public abstract class HighAvailabilityManagerTestFixture {
     private static final Logger log = LoggerFactory.getLogger(HighAvailabilityManagerTestFixture.class);
     
     private ManagementPlaneSyncRecordPersister persister;
-    private ManagementContextInternal managementContext;
+    protected ManagementContextInternal managementContext;
     private String ownNodeId;
     private HighAvailabilityManagerImpl manager;
     private Ticker ticker;
@@ -85,13 +83,13 @@ public abstract class HighAvailabilityManagerTestFixture {
         objectStore.injectManagementContext(managementContext);
         objectStore.prepareForSharedUse(PersistMode.CLEAN, HighAvailabilityMode.DISABLED);
         persister = new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext, objectStore, classLoader);
-        ((ManagementPlaneSyncRecordPersisterToObjectStore)persister).allowRemoteTimestampInMemento();
+        ((ManagementPlaneSyncRecordPersisterToObjectStore)persister).preferRemoteTimestampInMemento();
         BrooklynMementoPersisterToObjectStore persisterObj = new BrooklynMementoPersisterToObjectStore(
                 objectStore, 
                 managementContext.getBrooklynProperties(), 
                 classLoader);
         managementContext.getRebindManager().setPersister(persisterObj, PersistenceExceptionHandlerImpl.builder().build());
-        manager = new HighAvailabilityManagerImpl(managementContext)
+        manager = ((HighAvailabilityManagerImpl)managementContext.getHighAvailabilityManager())
                 .setPollPeriod(getPollPeriod())
                 .setHeartbeatTimeout(Duration.THIRTY_SECONDS)
                 .setPromotionListener(promotionListener)
@@ -99,15 +97,13 @@ public abstract class HighAvailabilityManagerTestFixture {
                 .setRemoteTicker(getRemoteTicker())
                 .setPersister(persister);
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
-            .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY))
+            .node(newManagerMemento(ownNodeId, ManagementNodeState.HOT_STANDBY))
             .build());
 
     }
 
     protected ManagementContextInternal newLocalManagementContext() {
-        BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
-        props.put(BrooklynServerConfig.PERSISTENCE_BACKUPS_REQUIRED, false);
-        return new LocalManagementContextForTests(props);
+        return LocalManagementContextForTests.newInstance();
     }
 
     protected abstract PersistenceObjectStore newPersistenceObjectStore();
@@ -142,7 +138,7 @@ public abstract class HighAvailabilityManagerTestFixture {
     // next poll fixes it.
     public void testPromotes() throws Exception {
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
-                .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY))
+                .node(newManagerMemento(ownNodeId, ManagementNodeState.HOT_STANDBY))
                 .node(newManagerMemento("node1", ManagementNodeState.MASTER))
                 .setMaster("node1")
                 .build());
@@ -160,7 +156,7 @@ public abstract class HighAvailabilityManagerTestFixture {
     @Test(groups="Integration") // because one second wait in succeedsContinually
     public void testDoesNotPromoteIfMasterTimeoutNotExpired() throws Exception {
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
-                .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY))
+                .node(newManagerMemento(ownNodeId, ManagementNodeState.HOT_STANDBY))
                 .node(newManagerMemento("node1", ManagementNodeState.MASTER))
                 .setMaster("node1")
                 .build());
@@ -190,7 +186,7 @@ public abstract class HighAvailabilityManagerTestFixture {
         tickerAdvance(Duration.FIVE_SECONDS);
         
         manager.start(HighAvailabilityMode.AUTO);
-        ManagementPlaneSyncRecord memento = manager.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento = manager.loadManagementPlaneSyncRecord(true);
         
         // Note can assert timestamp because not "real" time; it's using our own Ticker
         assertEquals(memento.getMasterNodeId(), ownNodeId);
@@ -211,22 +207,22 @@ public abstract class HighAvailabilityManagerTestFixture {
     @Test
     public void testGetManagementPlaneSyncStateInfersTimedOutNodeAsFailed() throws Exception {
         persister.delta(ManagementPlaneSyncRecordDeltaImpl.builder()
-                .node(newManagerMemento(ownNodeId, ManagementNodeState.STANDBY))
+                .node(newManagerMemento(ownNodeId, ManagementNodeState.HOT_STANDBY))
                 .node(newManagerMemento("node1", ManagementNodeState.MASTER))
                 .setMaster("node1")
                 .build());
         
-        manager.start(HighAvailabilityMode.AUTO);
+        manager.start(HighAvailabilityMode.HOT_STANDBY);
         
-        ManagementPlaneSyncRecord state = manager.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord state = manager.loadManagementPlaneSyncRecord(true);
         assertEquals(state.getManagementNodes().get("node1").getStatus(), ManagementNodeState.MASTER);
-        assertEquals(state.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.STANDBY);
+        assertEquals(state.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.HOT_STANDBY);
         
         // Simulate passage of time; ticker used by this HA-manager so it will "correctly" publish
         // its own heartbeat with the new time; but node1's record is now out-of-date.
         tickerAdvance(Duration.seconds(31));
         
-        ManagementPlaneSyncRecord state2 = manager.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord state2 = manager.loadManagementPlaneSyncRecord(true);
         assertEquals(state2.getManagementNodes().get("node1").getStatus(), ManagementNodeState.FAILED);
         assertNotEquals(state.getManagementNodes().get(ownNodeId).getStatus(), ManagementNodeState.FAILED);
     }
@@ -279,5 +275,5 @@ public abstract class HighAvailabilityManagerTestFixture {
                     assertCalled();
                 }});
         }
-    };
+    }
 }

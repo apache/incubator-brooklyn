@@ -48,7 +48,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     public static final Logger log = LoggerFactory.getLogger(CustomAggregatingEnricherTest.class);
             
     private static final long TIMEOUT_MS = 10*1000;
-    private static final long SHORT_WAIT_MS = 250;
+    private static final long SHORT_WAIT_MS = 50;
     
     TestEntity entity;
     SimulatedLocation loc;

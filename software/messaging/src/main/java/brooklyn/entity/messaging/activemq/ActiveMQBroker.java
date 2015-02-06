@@ -45,7 +45,7 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
     ConfigKey<Duration> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
     
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.7.0");
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.10.1");
 
     @SetFromFlag("downloadUrl")
     public static final AttributeSensorAndConfigKey<String,String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(
@@ -54,10 +54,14 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
     /** download mirror, if desired */
     @SetFromFlag("mirrorUrl")
     public static final BasicConfigKey<String> MIRROR_URL = new BasicConfigKey<String>(String.class, "activemq.install.mirror.url", "URL of mirror",
-        "http://www.mirrorservice.org/sites/ftp.apache.org/activemq/apache-activemq");
+        "http://www.mirrorservice.org/sites/ftp.apache.org/activemq");
+
+    @SetFromFlag("brokerName")
+    public static final AttributeSensorAndConfigKey<String,String> BROKER_NAME = 
+        ConfigKeys.newStringSensorAndConfigKey("activemq.brokerName", "ActiveMQ Broker Name", "localhost");
 
     @SetFromFlag("openWirePort")
-	public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = new PortAttributeSensorAndConfigKey("openwire.port", "OpenWire port", "61616+");
+    public static final PortAttributeSensorAndConfigKey OPEN_WIRE_PORT = new PortAttributeSensorAndConfigKey("openwire.port", "OpenWire port", "61616+");
 
     @SetFromFlag("jettyPort")
     public static final PortAttributeSensorAndConfigKey AMQ_JETTY_PORT = new PortAttributeSensorAndConfigKey("activemq.jetty.port", "jetty port", "8161+");
@@ -72,4 +76,5 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
     public static final BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new BasicAttributeSensorAndConfigKey<String>(
             String.class, "activemq.templateConfigurationUrl", "Template file (in freemarker format) for the conf/activemq.xml file", 
             "classpath://brooklyn/entity/messaging/activemq/activemq.xml");
+
 }

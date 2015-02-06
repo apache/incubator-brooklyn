@@ -40,11 +40,15 @@ import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.BrooklynMementoRawData;
+import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.io.FileUtil;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 import brooklyn.util.xstream.XmlUtil;
@@ -74,12 +78,14 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     private final File locationsDir;
     private final File policiesDir;
     private final File enrichersDir;
+    private final File catalogItemsDir;
 
     private final ConcurrentMap<String, MementoFileWriter<EntityMemento>> entityWriters = new ConcurrentHashMap<String, MementoFileWriter<EntityMemento>>();
     private final ConcurrentMap<String, MementoFileWriter<LocationMemento>> locationWriters = new ConcurrentHashMap<String, MementoFileWriter<LocationMemento>>();
     private final ConcurrentMap<String, MementoFileWriter<PolicyMemento>> policyWriters = new ConcurrentHashMap<String, MementoFileWriter<PolicyMemento>>();
     private final ConcurrentMap<String, MementoFileWriter<EnricherMemento>> enricherWriters = new ConcurrentHashMap<String, MementoFileWriter<EnricherMemento>>();
-    
+    private final ConcurrentMap<String, MementoFileWriter<CatalogItemMemento>> catalogItemWriters = new ConcurrentHashMap<String, MementoFileWriter<CatalogItemMemento>>();
+
     private final MementoSerializer<Object> serializer;
 
     private final ListeningExecutorService executor;
@@ -112,6 +118,10 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         enrichersDir.mkdir();
         checkDirIsAccessible(enrichersDir);
 
+        catalogItemsDir = new File(dir, "catalog");
+        catalogItemsDir.mkdir();
+        checkDirIsAccessible(catalogItemsDir);
+
         File planeDir = new File(dir, "plane");
         planeDir.mkdir();
         checkDirIsAccessible(planeDir);
@@ -121,6 +131,14 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         LOG.info("Memento-persister will use directory {}", dir);
     }
     
+    @Override public void enableWriteAccess() {
+        // no-op -- means subsequent writes will not be enabled
+    }
+    
+    @Override public void disableWriteAccess(boolean graceful) {
+        stop(graceful);
+    }
+
     @Override
     public void stop(boolean graceful) {
         running = false;
@@ -137,7 +155,17 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     }
     
     @Override
+    public BrooklynMementoRawData loadMementoRawData(RebindExceptionHandler exceptionHandler) {
+        return null;
+    }
+    
+    @Override
     public BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) throws IOException {
+        return loadMementoManifest(null, exceptionHandler);
+    }
+    
+    @Override
+    public BrooklynMementoManifest loadMementoManifest(BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler) throws IOException {
         if (!running) {
             throw new IllegalStateException("Persister not running; cannot load memento manifest from "+dir);
         }
@@ -153,11 +181,13 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         File[] locationFiles;
         File[] policyFiles;
         File[] enricherFiles;
+        File[] catalogItemFiles;
         try {
             entityFiles = entitiesDir.listFiles(fileFilter);
             locationFiles = locationsDir.listFiles(fileFilter);
             policyFiles = policiesDir.listFiles(fileFilter);
             enricherFiles = enrichersDir.listFiles(fileFilter);
+            catalogItemFiles = catalogItemsDir.listFiles(fileFilter);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             exceptionHandler.onLoadMementoFailed(BrooklynObjectType.UNKNOWN, "Failed to list files", e);
@@ -175,7 +205,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String contents = readFile(file);
                     String id = (String) XmlUtil.xpath(contents, "/entity/id");
                     String type = (String) XmlUtil.xpath(contents, "/entity/type");
-                    builder.entity(id, type);
+                    String parentId = (String) XmlUtil.xpath(contents, "/entity/parent");
+                    String catalogItemId = (String) XmlUtil.xpath(contents, "/entity/catalogItemId");
+                    builder.entity(id, type, Strings.emptyToNull(parentId), Strings.emptyToNull(catalogItemId));
                 } catch (Exception e) {
                     exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENTITY, "File "+file, e);
                 }
@@ -210,7 +242,17 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENRICHER, "File "+file, e);
                 }
             }
-            
+            for (File file : catalogItemFiles) {
+                try {
+                    String contents = readFile(file);
+                    String id = (String) XmlUtil.xpath(contents, "/catalogItem/id");
+                    String type = (String) XmlUtil.xpath(contents, "/catalogItem/type");
+                    builder.enricher(id, type);
+                } catch (Exception e) {
+                    exceptionHandler.onLoadMementoFailed(BrooklynObjectType.CATALOG_ITEM, "File "+file, e);
+                }
+            }
+
             if (LOG.isDebugEnabled()) LOG.debug("Loaded memento manifest; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS))); 
             return builder.build();
             
@@ -221,6 +263,11 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
 
     @Override
     public BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) throws IOException {
+        return loadMemento(null, lookupContext, exceptionHandler);
+    }
+    
+    @Override
+    public BrooklynMemento loadMemento(BrooklynMementoRawData mementoData, LookupContext lookupContext, RebindExceptionHandler exceptionHandler) throws IOException {
         if (!running) {
             throw new IllegalStateException("Persister not running; cannot load memento from "+dir);
         }
@@ -236,19 +283,21 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         File[] locationFiles;
         File[] policyFiles;
         File[] enricherFiles;
+        File[] catalogItemFiles;
         try {
             entityFiles = entitiesDir.listFiles(fileFilter);
             locationFiles = locationsDir.listFiles(fileFilter);
             policyFiles = policiesDir.listFiles(fileFilter);
             enricherFiles = enrichersDir.listFiles(fileFilter);
+            catalogItemFiles = catalogItemsDir.listFiles(fileFilter);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             exceptionHandler.onLoadMementoFailed(BrooklynObjectType.UNKNOWN, "Failed to list files", e);
             throw new IllegalStateException("Failed to list memento files in "+dir, e);
         }
 
-        LOG.info("Loading memento from {}; {} entities, {} locations, {} policies and {} enrichers", 
-                new Object[] {dir, entityFiles.length, locationFiles.length, policyFiles.length}, enricherFiles.length);
+        LOG.info("Loading memento from {}; {} entities, {} locations, {} policies, {} enrichers and {} catalog items",
+                new Object[] {dir, entityFiles.length, locationFiles.length, policyFiles.length, enricherFiles.length, catalogItemFiles.length});
         
         BrooklynMementoImpl.Builder builder = BrooklynMementoImpl.builder();
         
@@ -301,7 +350,15 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     builder.enricher(memento);
                 }
             }
-            
+            for (File file : catalogItemFiles) {
+                CatalogItemMemento memento = (CatalogItemMemento) serializer.fromString(readFile(file));
+                if (memento == null) {
+                    LOG.warn("No catalog-item-memento deserialized from file "+file+"; ignoring and continuing");
+                } else {
+                    builder.catalogItem(memento);
+                }
+            }
+
             if (LOG.isDebugEnabled()) LOG.debug("Loaded memento; took {}", Time.makeTimeStringRounded(stopwatch.elapsed(TimeUnit.MILLISECONDS))); 
             return builder.build();
             
@@ -330,6 +387,15 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         for (EnricherMemento m : newMemento.getEnricherMementos().values()) {
             persist(m);
         }
+        for (CatalogItemMemento m : newMemento.getCatalogItemMementos().values()) {
+            persist(m);
+        }
+        LOG.warn("Using legacy persister; feeds will not be persisted");
+    }
+    
+    @Override
+    public void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler) {
+        throw new IllegalStateException("Not supported; use "+BrooklynMementoPersisterToObjectStore.class);
     }
     
     @Override
@@ -339,7 +405,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             return;
         }
         if (LOG.isTraceEnabled()) LOG.trace("Checkpointed delta of memento; updating {} entities, {} locations, {} policies and {} enrichers; " +
-        		"removing {} entities, {} locations {} policies and {} enrichers", 
+                "removing {} entities, {} locations {} policies and {} enrichers", 
                 new Object[] {delta.entities(), delta.locations(), delta.policies(), delta.enrichers(),
                 delta.removedEntityIds(), delta.removedLocationIds(), delta.removedPolicyIds(), delta.removedEnricherIds()});
         
@@ -355,6 +421,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         for (EnricherMemento enricher : delta.enrichers()) {
             persist(enricher);
         }
+        for (CatalogItemMemento catalogItem : delta.catalogItems()) {
+            persist(catalogItem);
+        }
         for (String id : delta.removedEntityIds()) {
             deleteEntity(id);
         }
@@ -366,6 +435,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         }
         for (String id : delta.removedEnricherIds()) {
             deleteEnricher(id);
+        }
+        for (String id : delta.removedCatalogItemIds()) {
+            deleteCatalogItem(id);
         }
     }
 
@@ -391,6 +463,9 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
             writer.waitForWriteCompleted(timeout);
         }
         for (MementoFileWriter<?> writer : enricherWriters.values()) {
+            writer.waitForWriteCompleted(timeout);
+        }
+        for (MementoFileWriter<?> writer : catalogItemWriters.values()) {
             writer.waitForWriteCompleted(timeout);
         }
     }
@@ -446,6 +521,15 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         writer.write(enricher);
     }
 
+    private void persist(CatalogItemMemento catalogItem) {
+        MementoFileWriter<CatalogItemMemento> writer = catalogItemWriters.get(catalogItem.getId());
+        if (writer == null) {
+            catalogItemWriters.putIfAbsent(catalogItem.getId(), new MementoFileWriter<CatalogItemMemento>(getFileFor(catalogItem), executor, serializer));
+            writer = catalogItemWriters.get(catalogItem.getId());
+        }
+        writer.write(catalogItem);
+    }
+
     private void deleteEntity(String id) {
         MementoFileWriter<EntityMemento> writer = entityWriters.get(id);
         if (writer != null) {
@@ -474,22 +558,37 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         }
     }
 
+    private void deleteCatalogItem(String id) {
+        MementoFileWriter<CatalogItemMemento> writer = catalogItemWriters.get(id);
+        if (writer != null) {
+            writer.delete();
+        }
+    }
+
     private File getFileFor(EntityMemento entity) {
-        return new File(entitiesDir, entity.getId());
+        return getFileFor(entitiesDir, entity.getId());
     }
     
     private File getFileFor(LocationMemento location) {
-        return new File(locationsDir, location.getId());
+        return getFileFor(locationsDir, location.getId());
     }
     
     private File getFileFor(PolicyMemento policy) {
-        return new File(policiesDir, policy.getId());
+        return getFileFor(policiesDir, policy.getId());
     }
     
     private File getFileFor(EnricherMemento enricher) {
-        return new File(enrichersDir, enricher.getId());
+        return getFileFor(enrichersDir, enricher.getId());
     }
-    
+
+    private File getFileFor(CatalogItemMemento catalogItem) {
+        return getFileFor(catalogItemsDir, catalogItem.getId());
+    }
+
+    private File getFileFor(File parent, String id) {
+        return new File(parent, Strings.makeValidFilename(id));
+    }
+
     @Override
     public String getBackingStoreDescription() {
         return toString();

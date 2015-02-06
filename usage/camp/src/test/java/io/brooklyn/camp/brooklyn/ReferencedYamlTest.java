@@ -20,6 +20,7 @@ package io.brooklyn.camp.brooklyn;
 
 import java.util.Collection;
 
+import brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -95,6 +96,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
         addCatalogItem(
             "brooklyn.catalog:",
             "  id: yaml.reference",
+            "  version: " + TEST_VERSION,
             "services:",
             "- type: classpath://yaml-ref-entity.yaml");
         
@@ -102,7 +104,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
         Entity app = createAndStartApplication(
             "services:",
             "- name: " + entityName,
-            "  type: yaml.reference");
+            "  type: " + ver("yaml.reference"));
         
         checkChildEntitySpec(app, entityName);
     }
@@ -112,6 +114,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
         addCatalogItem(
             "brooklyn.catalog:",
             "  id: yaml.basic",
+            "  version: " + TEST_VERSION,
             "services:",
             "- type: brooklyn.entity.basic.BasicEntity");
         
@@ -130,10 +133,13 @@ public class ReferencedYamlTest extends AbstractYamlTest {
      */
     @Test
     public void testCatalogLeaksBundlesToReferencedYaml() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
         String parentCatalogId = "my.catalog.app.id.url.parent";
         addCatalogItem(
             "brooklyn.catalog:",
             "  id: " + parentCatalogId,
+            "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "",
@@ -142,7 +148,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
 
         Entity app = createAndStartApplication(
             "services:",
-                "- type: " + parentCatalogId);
+                "- type: " + ver(parentCatalogId));
         
         Collection<Entity> children = app.getChildren();
         Assert.assertEquals(children.size(), 1);

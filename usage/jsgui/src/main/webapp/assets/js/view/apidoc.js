@@ -54,14 +54,12 @@ define([
                     discoveryUrl:"/v1/apidoc",
                     dom_id:"swagger-ui-container",
                     supportHeaderParams: false,
-                    supportedSubmitMethods: ['get', 'post', 'put'],
+                    supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
                     onComplete: function(swaggerApi, swaggerUi){
                         that.$el.fadeTo(200, 1);
                         $('.throbber', that.$el).hide();
                         $('div#message-bar.swagger-ui-wrap', that.$el).hide();
                         console.info("Loaded SwaggerUI");
-                        console.debug(swaggerApi);
-                        console.debug(swaggerUi);
                     },
                     onFailure: function(data) {
                         that.$el.fadeTo(200, 0.2);

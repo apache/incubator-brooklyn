@@ -23,6 +23,7 @@ import java.util.LinkedList;
 
 import com.google.common.base.Preconditions;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
@@ -55,6 +56,8 @@ import brooklyn.util.time.Duration;
  * <p>
  * The default average when no data has been received is 0, with a confidence of 0
  */
+//@Catalog(name="Rolling Mean in Time Window", description="Transforms a sensor's data into a rolling average "
+//        + "based on a time window.")
 public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTypeTransformingEnricher<T,Double> {
     public static class ConfidenceQualifiedNumber {
         final Double value;

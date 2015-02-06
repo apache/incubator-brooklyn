@@ -18,6 +18,10 @@
  */
 package brooklyn.entity.webapp;
 
+import java.util.Map;
+
+import brooklyn.util.guava.Maybe;
+
 public class HttpsSslConfig {
 
     private String keystoreUrl;
@@ -49,5 +53,22 @@ public class HttpsSslConfig {
     
     public String getKeyAlias() {
         return keyAlias;
+    }
+
+    // method naming convention allows it to be used by TypeCoercions
+    public static HttpsSslConfig fromMap(Map<String,String> map) {
+        HttpsSslConfig result = new HttpsSslConfig();
+        result.keystoreUrl = first(map, "keystoreUrl", "url").orNull();
+        result.keystorePassword = first(map, "keystorePassword", "password").orNull();
+        result.keyAlias = first(map, "keyAlias", "alias", "key").orNull();
+        return result;
+    }
+
+    private static Maybe<String> first(Map<String,String> map, String ...keys) {
+        for (String key: keys) {
+            if (map.containsKey(key))
+                return Maybe.of(map.get(key));
+        }
+        return Maybe.<String>absent();
     }
 }

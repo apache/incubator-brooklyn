@@ -26,10 +26,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.enricher.basic.Aggregator;
 import brooklyn.enricher.basic.Combiner;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.enricher.basic.Transformer;
+import brooklyn.enricher.basic.UpdatingMap;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -38,12 +40,14 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -55,8 +59,8 @@ public class Enrichers {
 
     private Enrichers() {}
     
-    public static InitialBuilder<?> builder() {
-        return new ConcreteInitialBuilder();
+    public static InitialBuilder builder() {
+        return new InitialBuilder();
     }
 
     public abstract static class Builder<B extends Builder<B>> {
@@ -66,41 +70,106 @@ public class Enrichers {
         }
     }
     
-    public abstract static class InitialBuilder<B extends InitialBuilder<B>> extends Builder<B> {
-        public PropagatorBuilder<?> propagating(Map<? extends Sensor<?>, ? extends Sensor<?>> vals) {
-            return new ConcretePropagatorBuilder(vals);
+    public abstract static class AbstractEnricherBuilder<B extends AbstractEnricherBuilder<B>> extends Builder<B> {
+        final Class<? extends Enricher> enricherType;
+        Boolean suppressDuplicates;
+        String uniqueTag;
+        Set<Object> tags = MutableSet.of();
+        
+        public AbstractEnricherBuilder(Class<? extends Enricher> enricherType) {
+            this.enricherType = enricherType;
         }
-        public PropagatorBuilder<?> propagating(Iterable<? extends Sensor<?>> vals) {
-            return new ConcretePropagatorBuilder(vals);
+        
+        public B uniqueTag(String tag) {
+            uniqueTag = Preconditions.checkNotNull(tag);
+            return self();
         }
-        public PropagatorBuilder<?> propagating(Sensor<?>... vals) {
-            return new ConcretePropagatorBuilder(vals);
+        public B addTag(Object tag) {
+            tags.add(Preconditions.checkNotNull(tag));
+            return self();
         }
-        public PropagatorBuilder<?> propagatingAll() {
-            return new ConcretePropagatorBuilder(true, null);
+        public B suppressDuplicates(Boolean suppressDuplicates) {
+            this.suppressDuplicates = suppressDuplicates;
+            return self();
         }
-        public PropagatorBuilder<?> propagatingAllBut(Sensor<?>... vals) {
-            return new ConcretePropagatorBuilder(true, ImmutableSet.copyOf(vals));
+
+        protected abstract String getDefaultUniqueTag();
+        
+        protected EnricherSpec<? extends Enricher> build() {
+            EnricherSpec<? extends Enricher> spec = EnricherSpec.create(enricherType);
+            
+            String uniqueTag2 = uniqueTag;
+            if (uniqueTag2==null)
+                uniqueTag2 = getDefaultUniqueTag();
+            if (uniqueTag2!=null)
+                spec.uniqueTag(uniqueTag2);
+            
+            if (!tags.isEmpty()) spec.tags(tags);
+            if (suppressDuplicates!=null)
+                spec.configure(AbstractEnricher.SUPPRESS_DUPLICATES, suppressDuplicates);
+            
+            return spec;
         }
-        public PropagatorBuilder<?> propagatingAllBut(Iterable<? extends Sensor<?>> vals) {
-            return new ConcretePropagatorBuilder(true, vals);
+    }
+    
+    protected abstract static class AbstractInitialBuilder<B extends AbstractInitialBuilder<B>> extends Builder<B> {
+        public PropagatorBuilder propagating(Map<? extends Sensor<?>, ? extends Sensor<?>> vals) {
+            return new PropagatorBuilder(vals);
         }
-        public <S> TransformerBuilder<S, Object, ?> transforming(AttributeSensor<S> val) {
-            return new ConcreteTransformerBuilder<S, Object>(val);
+        public PropagatorBuilder propagating(Iterable<? extends Sensor<?>> vals) {
+            return new PropagatorBuilder(vals);
         }
-        public <S> CombinerBuilder<S, Object, ?> combining(AttributeSensor<? extends S>... vals) {
-            return new ConcreteCombinerBuilder<S, Object>(vals);
+        public PropagatorBuilder propagating(Sensor<?>... vals) {
+            return new PropagatorBuilder(vals);
         }
-        public <S> CombinerBuilder<S, Object, ?> combining(Collection<AttributeSensor<? extends S>> vals) {
-            return new ConcreteCombinerBuilder<S, Object>(vals);
+        public PropagatorBuilder propagatingAll() {
+            return new PropagatorBuilder(true, null);
         }
-        public <S> AggregatorBuilder<S, Object, ?> aggregating(AttributeSensor<S> val) {
-            return new ConcreteAggregatorBuilder<S,Object>(val);
+        public PropagatorBuilder propagatingAllButUsualAnd(Sensor<?>... vals) {
+            return new PropagatorBuilder(true, ImmutableSet.<Sensor<?>>builder().addAll(Propagator.SENSORS_NOT_USUALLY_PROPAGATED).add(vals).build());
+        }
+        public PropagatorBuilder propagatingAllBut(Sensor<?>... vals) {
+            return new PropagatorBuilder(true, ImmutableSet.copyOf(vals));
+        }
+        public PropagatorBuilder propagatingAllBut(Iterable<? extends Sensor<?>> vals) {
+            return new PropagatorBuilder(true, vals);
+        }
+        
+        /**
+         * Builds an enricher which transforms a given sensor:
+         * <li> applying a (required) function ({@link TransformerBuilder#computing(Function)}, or
+         *      {@link AbstractAggregatorBuilder#computingAverage()}/
+         *      {@link AbstractAggregatorBuilder#computingSum()}, mandatory);
+         * <li> and publishing it on the entity where the enricher is attached;
+         * <li> optionally taking the sensor from a different source entity ({@link TransformerBuilder#from(Entity)});
+         * <li> and optionally publishing it as a different sensor ({@link TransformerBuilder#publishing(AttributeSensor)});
+         * <p> You must supply at least one of the optional values, of course, otherwise the enricher may loop endlessly!
+         */
+        public <S> TransformerBuilder<S, Object> transforming(AttributeSensor<S> val) {
+            return new TransformerBuilder<S, Object>(val);
+        }
+        /** as {@link #transforming(AttributeSensor)} but accepting multiple sensors, with the function acting on the set of values */
+        public <S> CombinerBuilder<S, Object> combining(Collection<AttributeSensor<? extends S>> vals) {
+            return new CombinerBuilder<S, Object>(vals);
+        }
+        /** as {@link #combining(Collection)} */
+        public <S> CombinerBuilder<S, Object> combining(AttributeSensor<? extends S>... vals) {
+            return new CombinerBuilder<S, Object>(vals);
+        }
+        /** as {@link #combining(Collection)} but the collection of values comes from the given sensor on multiple entities */
+        public <S> AggregatorBuilder<S, Object> aggregating(AttributeSensor<S> val) {
+            return new AggregatorBuilder<S,Object>(val);
+        }
+        /** creates an {@link UpdatingMap} enricher: 
+         * {@link UpdatingMapBuilder#from(AttributeSensor)} and {@link UpdatingMapBuilder#computing(Function)} are required
+         **/
+        public <S,TKey,TVal> UpdatingMapBuilder<S, TKey, TVal> updatingMap(AttributeSensor<Map<TKey,TVal>> target) {
+            return new UpdatingMapBuilder<S, TKey, TVal>(target);
         }
     }
 
 
-    public abstract static class AggregatorBuilder<S, T, B extends AggregatorBuilder<S, T, B>> extends Builder<B> {
+    protected abstract static class AbstractAggregatorBuilder<S, T, B extends AbstractAggregatorBuilder<S, T, B>> extends AbstractEnricherBuilder<B> {
         protected final AttributeSensor<S> aggregating;
         protected AttributeSensor<T> publishing;
         protected Entity fromEntity;
@@ -114,13 +183,14 @@ public class Enrichers {
         protected Object defaultValueForUnreportedSensors;
         protected Object valueToReportIfNoSensors;
         
-        public AggregatorBuilder(AttributeSensor<S> aggregating) {
+        public AbstractAggregatorBuilder(AttributeSensor<S> aggregating) {
+            super(Aggregator.class);
             this.aggregating = aggregating;
         }
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        public B publishing(AttributeSensor<? extends T> val) {
+        public <T2 extends T> AggregatorBuilder<S,T2> publishing(AttributeSensor<? extends T2> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
-            return self();
+            return (AggregatorBuilder) self();
         }
         public B from(Entity val) {
             this.fromEntity = checkNotNull(val);
@@ -178,6 +248,11 @@ public class Enrichers {
             this.excludingBlank = true;
             return self();
         }
+        @Override
+        protected String getDefaultUniqueTag() {
+            if (publishing==null) return null;
+            return "aggregator:"+publishing.getName();
+        }
         public EnricherSpec<?> build() {
             Predicate<Object> valueFilter;
             if (Boolean.TRUE.equals(excludingBlank)) {
@@ -191,9 +266,7 @@ public class Enrichers {
                 valueFilter = null;
             }
             // FIXME excludingBlank; use valueFilter? exclude means ignored entirely or substituted for defaultMemberValue?
-            return EnricherSpec.create(Aggregator.class)
-                    .uniqueTag("aggregator:"+publishing)
-                    .configure(MutableMap.builder()
+            return super.build().configure(MutableMap.builder()
                             .putIfNotNull(Aggregator.PRODUCER, fromEntity)
                             .put(Aggregator.TARGET_SENSOR, publishing)
                             .put(Aggregator.SOURCE_SENSOR, aggregating)
@@ -227,7 +300,7 @@ public class Enrichers {
         }
     }
     
-    public abstract static class CombinerBuilder<S, T, B extends CombinerBuilder<S, T, B>> extends Builder<B> {
+    protected abstract static class AbstractCombinerBuilder<S, T, B extends AbstractCombinerBuilder<S, T, B>> extends AbstractEnricherBuilder<B> {
         protected final List<AttributeSensor<? extends S>> combining;
         protected AttributeSensor<T> publishing;
         protected Entity fromEntity;
@@ -239,17 +312,18 @@ public class Enrichers {
         // For summing/averaging
         protected Object defaultValueForUnreportedSensors;
         
-        public CombinerBuilder(AttributeSensor<? extends S>... vals) {
+        public AbstractCombinerBuilder(AttributeSensor<? extends S>... vals) {
             this(ImmutableList.copyOf(vals));
         }
-        public CombinerBuilder(Collection<AttributeSensor<? extends S>> vals) {
+        public AbstractCombinerBuilder(Collection<AttributeSensor<? extends S>> vals) {
+            super(Combiner.class);
             checkArgument(checkNotNull(vals).size() > 0, "combining-sensors must be non-empty");
             this.combining = ImmutableList.<AttributeSensor<? extends S>>copyOf(vals);
         }
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        public B publishing(AttributeSensor<? extends T> val) {
+        public <T2 extends T> CombinerBuilder<S,T2> publishing(AttributeSensor<? extends T2> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
-            return self();
+            return (CombinerBuilder) this;
         }
         public B from(Entity val) {
             this.fromEntity = checkNotNull(val);
@@ -289,10 +363,13 @@ public class Enrichers {
             this.excludingBlank = true;
             return self();
         }
+        @Override
+        protected String getDefaultUniqueTag() {
+            if (publishing==null) return null;
+            return "combiner:"+publishing.getName();
+        }
         public EnricherSpec<?> build() {
-            return EnricherSpec.create(Combiner.class)
-                    .uniqueTag("combiner:"+publishing)
-                    .configure(MutableMap.builder()
+            return super.build().configure(MutableMap.builder()
                             .putIfNotNull(Combiner.PRODUCER, fromEntity)
                             .put(Combiner.TARGET_SENSOR, publishing)
                             .put(Combiner.SOURCE_SENSORS, combining)
@@ -316,26 +393,21 @@ public class Enrichers {
         }
     }
 
-    /** builds an enricher which transforms a given sensor:
-     * <li> applying a function ({@link #computing(Function)}, or {@link #computingAverage()}/{@link #computingSum()}, mandatory);
-     * <li> and publishing it on the entity where the enricher is attached;
-     * <li> optionally taking the sensor from a different source entity ({@link #from(Entity)});
-     * <li> and optionally publishing it as a different sensor ({@link #publishing(AttributeSensor)});
-     * <p> (You should supply at least one of the optional values, of course, otherwise the enricher may loop endlessly!) */
-    public abstract static class TransformerBuilder<S, T, B extends TransformerBuilder<S, T, B>> extends Builder<B> {
+    protected abstract static class AbstractTransformerBuilder<S, T, B extends AbstractTransformerBuilder<S, T, B>> extends AbstractEnricherBuilder<B> {
         protected final AttributeSensor<S> transforming;
         protected AttributeSensor<T> publishing;
         protected Entity fromEntity;
         protected Function<? super S, ?> computing;
         protected Function<? super SensorEvent<S>, ?> computingFromEvent;
 
-        public TransformerBuilder(AttributeSensor<S> val) {
+        public AbstractTransformerBuilder(AttributeSensor<S> val) {
+            super(Transformer.class);
             this.transforming = checkNotNull(val);
         }
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        public B publishing(AttributeSensor<? extends T> val) {
+        public <T2 extends T> TransformerBuilder<S,T2> publishing(AttributeSensor<? extends T2> val) {
             this.publishing = (AttributeSensor) checkNotNull(val);
-            return self();
+            return (TransformerBuilder) this;
         }
         public B from(Entity val) {
             this.fromEntity = checkNotNull(val);
@@ -349,10 +421,13 @@ public class Enrichers {
             this.computingFromEvent = checkNotNull(val);
             return self();
         }
+        @Override
+        protected String getDefaultUniqueTag() {
+            if (publishing==null) return null;
+            return "transformer:"+publishing.getName();
+        }
         public EnricherSpec<?> build() {
-            return EnricherSpec.create(Transformer.class)
-                    .uniqueTag("transformer:"+publishing)
-                    .configure(MutableMap.builder()
+            return super.build().configure(MutableMap.builder()
                             .putIfNotNull(Transformer.PRODUCER, fromEntity)
                             .put(Transformer.TARGET_SENSOR, publishing)
                             .put(Transformer.SOURCE_SENSOR, transforming)
@@ -373,25 +448,27 @@ public class Enrichers {
         }
     }
 
-    public abstract static class PropagatorBuilder<B extends PropagatorBuilder<B>> extends Builder<B> {
+    protected abstract static class AbstractPropagatorBuilder<B extends AbstractPropagatorBuilder<B>> extends AbstractEnricherBuilder<B> {
         protected final Map<? extends Sensor<?>, ? extends Sensor<?>> propagating;
         protected final Boolean propagatingAll;
         protected final Iterable<? extends Sensor<?>> propagatingAllBut;
         protected Entity fromEntity;
         
-        public PropagatorBuilder(Map<? extends Sensor<?>, ? extends Sensor<?>> vals) {
+        public AbstractPropagatorBuilder(Map<? extends Sensor<?>, ? extends Sensor<?>> vals) {
+            super(Propagator.class);
             checkArgument(checkNotNull(vals).size() > 0, "propagating-sensors must be non-empty");
             this.propagating = vals;
             this.propagatingAll = null;
             this.propagatingAllBut = null;
         }
-        public PropagatorBuilder(Iterable<? extends Sensor<?>> vals) {
+        public AbstractPropagatorBuilder(Iterable<? extends Sensor<?>> vals) {
             this(newIdentityMap(ImmutableSet.copyOf(vals)));
         }
-        public PropagatorBuilder(Sensor<?>... vals) {
+        public AbstractPropagatorBuilder(Sensor<?>... vals) {
             this(newIdentityMap(ImmutableSet.copyOf(vals)));
         }
-        public PropagatorBuilder(boolean propagatingAll, Iterable<? extends Sensor<?>> butVals) {
+        AbstractPropagatorBuilder(boolean propagatingAll, Iterable<? extends Sensor<?>> butVals) {
+            super(Propagator.class);
             // Ugly constructor! Taking boolean to differentiate it from others; could use a static builder
             // but feels like overkill having a builder for a builder, being called by a builder!
             checkArgument(propagatingAll, "Not propagating all; use PropagatingAll(vals)");
@@ -403,7 +480,8 @@ public class Enrichers {
             this.fromEntity = checkNotNull(val);
             return self();
         }
-        public EnricherSpec<? extends Enricher> build() {
+        @Override
+        protected String getDefaultUniqueTag() {
             List<String> summary = MutableList.of();
             if (propagating!=null) {
                 for (Map.Entry<? extends Sensor<?>, ? extends Sensor<?>> entry: propagating.entrySet()) {
@@ -421,9 +499,10 @@ public class Enrichers {
                 summary.add("ALL_BUT:"+Joiner.on(",").join(allBut));
             }
             
-            return EnricherSpec.create(Propagator.class)
-                    .uniqueTag("propagating["+fromEntity.getId()+":"+Joiner.on(",").join(summary)+"]")
-                    .configure(MutableMap.builder()
+            return "propagating["+fromEntity.getId()+":"+Joiner.on(",").join(summary)+"]";
+        }
+        public EnricherSpec<? extends Enricher> build() {
+            return super.build().configure(MutableMap.builder()
                             .putIfNotNull(Propagator.PRODUCER, fromEntity)
                             .putIfNotNull(Propagator.SENSOR_MAPPING, propagating)
                             .putIfNotNull(Propagator.PROPAGATING_ALL, propagatingAll)
@@ -443,41 +522,106 @@ public class Enrichers {
         }
     }
 
-    private static class ConcreteInitialBuilder extends InitialBuilder<ConcreteInitialBuilder> {
+    public abstract static class AbstractUpdatingMapBuilder<S, TKey, TVal, B extends AbstractUpdatingMapBuilder<S, TKey, TVal, B>> extends AbstractEnricherBuilder<B> {
+        protected AttributeSensor<Map<TKey,TVal>> targetSensor;
+        protected AttributeSensor<? extends S> fromSensor;
+        protected TKey key;
+        protected Function<S, ? extends TVal> computing;
+        protected Boolean removingIfResultIsNull;
+        
+        public AbstractUpdatingMapBuilder(AttributeSensor<Map<TKey,TVal>> target) {
+            super(UpdatingMap.class);
+            this.targetSensor = target;
+        }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public <S2 extends S> UpdatingMapBuilder<S2,TKey,TVal> from(AttributeSensor<S2> fromSensor) {
+            this.fromSensor = checkNotNull(fromSensor);
+            return (UpdatingMapBuilder) this;
+        }
+        public B computing(Function<S,? extends TVal> val) {
+            this.computing = checkNotNull(val);
+            return self();
+        }
+        /** sets an explicit key to use; defaults to using the name of the source sensor specified in {@link #from(AttributeSensor)} */
+        public B key(TKey key) {
+            this.key = key;
+            return self();
+        }
+        /** sets explicit behaviour for treating <code>null</code> return values;
+         * default is to remove */
+        public B removingIfResultIsNull(boolean val) {
+            this.removingIfResultIsNull = val;
+            return self();
+        }
+        @Override
+        protected String getDefaultUniqueTag() {
+            if (targetSensor==null || fromSensor==null) return null;
+            return "updating:"+targetSensor.getName()+"<-"+fromSensor.getName();
+        }
+        public EnricherSpec<?> build() {
+            return super.build().configure(MutableMap.builder()
+                            .put(UpdatingMap.TARGET_SENSOR, targetSensor)
+                            .put(UpdatingMap.SOURCE_SENSOR, fromSensor)
+                            .putIfNotNull(UpdatingMap.KEY_IN_TARGET_SENSOR, key)
+                            .put(UpdatingMap.COMPUTING, computing)
+                            .putIfNotNull(UpdatingMap.REMOVING_IF_RESULT_IS_NULL, removingIfResultIsNull)
+                            .build());
+        }
+        
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .omitNullValues()
+                    .add("publishing", targetSensor)
+                    .add("fromSensor", fromSensor)
+                    .add("key", key)
+                    .add("computing", computing)
+                    .add("removingIfResultIsNull", removingIfResultIsNull)
+                    .toString();
+        }
     }
 
-    private static class ConcreteAggregatorBuilder<S, T> extends AggregatorBuilder<S, T, ConcreteAggregatorBuilder<S, T>> {
-        public ConcreteAggregatorBuilder(AttributeSensor<S> aggregating) {
+    public static class InitialBuilder extends AbstractInitialBuilder<InitialBuilder> {
+    }
+
+    public static class AggregatorBuilder<S, T> extends AbstractAggregatorBuilder<S, T, AggregatorBuilder<S, T>> {
+        public AggregatorBuilder(AttributeSensor<S> aggregating) {
             super(aggregating);
         }
     }
 
-    private static class ConcretePropagatorBuilder extends PropagatorBuilder<ConcretePropagatorBuilder> {
-        public ConcretePropagatorBuilder(Map<? extends Sensor<?>, ? extends Sensor<?>> vals) {
+    public static class PropagatorBuilder extends AbstractPropagatorBuilder<PropagatorBuilder> {
+        public PropagatorBuilder(Map<? extends Sensor<?>, ? extends Sensor<?>> vals) {
             super(vals);
         }
-        public ConcretePropagatorBuilder(Iterable<? extends Sensor<?>> vals) {
+        public PropagatorBuilder(Iterable<? extends Sensor<?>> vals) {
             super(vals);
         }
-        public ConcretePropagatorBuilder(Sensor<?>... vals) {
+        public PropagatorBuilder(Sensor<?>... vals) {
             super(vals);
         }
-        public ConcretePropagatorBuilder(boolean propagatingAll, Iterable<? extends Sensor<?>> butVals) {
+        PropagatorBuilder(boolean propagatingAll, Iterable<? extends Sensor<?>> butVals) {
             super(propagatingAll, butVals);
         }
     }
 
-    private static class ConcreteCombinerBuilder<S, T> extends CombinerBuilder<S, T, ConcreteCombinerBuilder<S, T>> {
-        public ConcreteCombinerBuilder(AttributeSensor<? extends S>... vals) {
+    public static class CombinerBuilder<S, T> extends AbstractCombinerBuilder<S, T, CombinerBuilder<S, T>> {
+        public CombinerBuilder(AttributeSensor<? extends S>... vals) {
             super(vals);
         }
-        public ConcreteCombinerBuilder(Collection<AttributeSensor<? extends S>> vals) {
+        public CombinerBuilder(Collection<AttributeSensor<? extends S>> vals) {
             super(vals);
         }
     }
 
-    private static class ConcreteTransformerBuilder<S, T> extends TransformerBuilder<S, T, ConcreteTransformerBuilder<S, T>> {
-        public ConcreteTransformerBuilder(AttributeSensor<S> val) {
+    public static class TransformerBuilder<S, T> extends AbstractTransformerBuilder<S, T, TransformerBuilder<S, T>> {
+        public TransformerBuilder(AttributeSensor<S> val) {
+            super(val);
+        }
+    }
+
+    public static class UpdatingMapBuilder<S, TKey, TVal> extends AbstractUpdatingMapBuilder<S, TKey, TVal, UpdatingMapBuilder<S, TKey, TVal>> {
+        public UpdatingMapBuilder(AttributeSensor<Map<TKey,TVal>> val) {
             super(val);
         }
     }
@@ -529,4 +673,6 @@ public class Enrichers {
         }
         return result;
     }
+    
+
 }

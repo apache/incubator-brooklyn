@@ -21,4 +21,14 @@ package brooklyn.entity.webapp;
 import brooklyn.entity.basic.SoftwareProcess;
 
 public interface JavaWebAppSoftwareProcess extends SoftwareProcess, JavaWebAppService, JavaWebAppService.CanDeployAndUndeploy {
+    
+    // exist on the interface for freemarker to pick it up
+    
+    public boolean isHttpEnabled();
+    public boolean isHttpsEnabled();
+    public Integer getHttpPort();
+    public Integer getHttpsPort();
+    public String getHttpsSslKeyAlias();
+    public String getHttpsSslKeystorePassword();
+
 }

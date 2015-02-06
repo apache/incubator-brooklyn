@@ -24,12 +24,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
@@ -50,6 +53,8 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -87,13 +92,20 @@ import com.google.gson.JsonObject;
  */
 public class ChefAttributeFeed extends AbstractFeed {
 
+    private static final Logger log = LoggerFactory.getLogger(ChefAttributeFeed.class);
+
     /**
      * Prefix for attribute sensor names.
      */
     public static final String CHEF_ATTRIBUTE_PREFIX = "chef.attribute.";
 
-    private static final Logger log = LoggerFactory.getLogger(ChefAttributeFeed.class);
+    @SuppressWarnings("serial")
+    public static final ConfigKey<Set<ChefAttributePollConfig<?>>> POLLS = ConfigKeys.newConfigKey(
+            new TypeToken<Set<ChefAttributePollConfig<?>>>() {},
+            "polls");
 
+    public static final ConfigKey<String> NODE_NAME = ConfigKeys.newStringConfigKey("nodeName");
+    
     public static Builder builder() {
         return new Builder();
     }
@@ -103,9 +115,9 @@ public class ChefAttributeFeed extends AbstractFeed {
         private EntityLocal entity;
         private boolean onlyIfServiceUp = false;
         private String nodeName;
-        private Map<String, AttributeSensor<?>> sensors = Maps.newHashMap();
-        private long period = 30;
-        private TimeUnit periodUnits = TimeUnit.SECONDS;
+        private Set<ChefAttributePollConfig> polls = Sets.newLinkedHashSet();
+        private Duration period = Duration.of(30, TimeUnit.SECONDS);
+        private String uniqueTag;
         private volatile boolean built;
 
         public Builder entity(EntityLocal val) {
@@ -121,12 +133,18 @@ public class ChefAttributeFeed extends AbstractFeed {
             this.nodeName = checkNotNull(nodeName, "nodeName");
             return this;
         }
-        public Builder addSensor(String chefAttributePath, AttributeSensor sensor) {
-            sensors.put(checkNotNull(chefAttributePath, "chefAttributePath"), checkNotNull(sensor, "sensor"));
+        public Builder addSensor(ChefAttributePollConfig config) {
+            polls.add(config);
             return this;
         }
+        @SuppressWarnings("unchecked")
+        public Builder addSensor(String chefAttributePath, AttributeSensor sensor) {
+            return addSensor(new ChefAttributePollConfig(sensor).chefAttributePath(chefAttributePath));
+        }
         public Builder addSensors(Map<String, AttributeSensor> sensors) {
-            sensors.putAll(checkNotNull(sensors, "sensors"));
+            for (Map.Entry<String, AttributeSensor> entry : sensors.entrySet()) {
+                addSensor(entry.getKey(), entry.getValue());
+            }
             return this;
         }
         public Builder addSensors(AttributeSensor[] sensors) {
@@ -141,19 +159,23 @@ public class ChefAttributeFeed extends AbstractFeed {
             return this;
         }
         public Builder period(Duration period) {
-            return period(checkNotNull(period, "period").toMilliseconds(), TimeUnit.MILLISECONDS);
+            this.period = period;
+            return this;
         }
         public Builder period(long millis) {
-            return period(millis, TimeUnit.MILLISECONDS);
+            return period(Duration.of(millis, TimeUnit.MILLISECONDS));
         }
         public Builder period(long val, TimeUnit units) {
-            this.period = val;
-            this.periodUnits = checkNotNull(units, "units");
+            return period(Duration.of(val, units));
+        }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
             return this;
         }
         public ChefAttributeFeed build() {
             built = true;
             ChefAttributeFeed result = new ChefAttributeFeed(this);
+            result.setEntity(checkNotNull(entity, "entity"));
             result.start();
             return result;
         }
@@ -163,26 +185,41 @@ public class ChefAttributeFeed extends AbstractFeed {
         }
     }
 
-    private final EntityLocal entity;
-    private final String nodeName;
-    private final long period;
-    private final TimeUnit periodUnits;
-    private final Map<String, AttributeSensor<?>> chefAttributeSensors;
-    private final KnifeTaskFactory<String> knifeTaskFactory;
+    private KnifeTaskFactory<String> knifeTaskFactory;
 
+    /**
+     * For rebind; do not call directly; use builder
+     */
+    public ChefAttributeFeed() {
+    }
+    
     protected ChefAttributeFeed(Builder builder) {
-        super(checkNotNull(builder.entity, "builder.entity"), builder.onlyIfServiceUp);
-        entity = builder.entity;
-        nodeName = checkNotNull(builder.nodeName, "builder.nodeName");
-        period = builder.period;
-        periodUnits = builder.periodUnits;
-        chefAttributeSensors = builder.sensors;
-        knifeTaskFactory = new KnifeNodeAttributeQueryTaskFactory(nodeName);
+        setConfig(ONLY_IF_SERVICE_UP, builder.onlyIfServiceUp);
+        setConfig(NODE_NAME, checkNotNull(builder.nodeName, "builder.nodeName"));
+
+        Set<ChefAttributePollConfig<?>> polls = Sets.newLinkedHashSet();
+        for (ChefAttributePollConfig<?> config : builder.polls) {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            ChefAttributePollConfig<?> configCopy = new ChefAttributePollConfig(config);
+            if (configCopy.getPeriod() < 0) configCopy.period(builder.period);
+            polls.add(configCopy);
+        }
+        setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void preStart() {
+        final String nodeName = getConfig(NODE_NAME);
+        final Set<ChefAttributePollConfig<?>> polls = getConfig(POLLS);
+        
+        long minPeriod = Integer.MAX_VALUE;
+        for (ChefAttributePollConfig<?> config : polls) {
+            minPeriod = Math.min(minPeriod, config.getPeriod());
+        }
+
+        knifeTaskFactory = new KnifeNodeAttributeQueryTaskFactory(nodeName);
+        
         final Callable<SshPollValue> getAttributesFromKnife = new Callable<SshPollValue>() {
             public SshPollValue call() throws Exception {
                 ProcessTaskWrapper<String> taskWrapper = knifeTaskFactory.newTask();
@@ -195,10 +232,15 @@ public class ChefAttributeFeed extends AbstractFeed {
             }
         };
 
-        ((Poller<SshPollValue>) poller).scheduleAtFixedRate(
+        getPoller().scheduleAtFixedRate(
                 new CallInEntityExecutionContext<SshPollValue>(entity, getAttributesFromKnife),
-                new SendChefAttributesToSensors(entity, chefAttributeSensors),
-                periodUnits.toMillis(period));
+                new SendChefAttributesToSensors(entity, polls),
+                minPeriod);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Poller<SshPollValue> getPoller() {
+        return (Poller<SshPollValue>) super.getPoller();
     }
 
     /**
@@ -248,12 +290,15 @@ public class ChefAttributeFeed extends AbstractFeed {
         private static final Iterable<String> PREFIXES = ImmutableList.of("", "automatic", "force_override", "override", "normal", "force_default", "default");
         private static final Splitter SPLITTER = Splitter.on('.');
 
-        private Map<String, AttributeSensor<?>> chefAttributeSensors;
-        private EntityLocal entity;
+        private final EntityLocal entity;
+        private final Map<String, AttributeSensor<?>> chefAttributeSensors;
 
-        public SendChefAttributesToSensors(EntityLocal entity, Map<String, AttributeSensor<?>> chefAttributeSensors) {
-            this.chefAttributeSensors = chefAttributeSensors;
+        public SendChefAttributesToSensors(EntityLocal entity, Set<ChefAttributePollConfig<?>> polls) {
             this.entity = entity;
+            chefAttributeSensors = Maps.newLinkedHashMap();
+            for (ChefAttributePollConfig<?> config : polls) {
+                chefAttributeSensors.put(config.getChefAttributePath(), config.getSensor());
+            }
         }
 
         @Override
@@ -307,7 +352,7 @@ public class ChefAttributeFeed extends AbstractFeed {
                     }
                 }
                 if (elementForSensor != null) {
-                    entity.setAttribute((AttributeSensor)sensor, TypeCoercions.coerce(elementForSensor.getAsString(), sensor.getType()));
+                    entity.setAttribute((AttributeSensor)sensor, TypeCoercions.coerce(elementForSensor.getAsString(), sensor.getTypeToken()));
                 } else {
                     log.debug("Entity {}: no Chef attribute matching {}; setting sensor {} to null", new Object[]{
                             entity.getDisplayName(),
@@ -362,5 +407,4 @@ public class ChefAttributeFeed extends AbstractFeed {
             return ""+chefAttributeSensors;
         }
     }
-    
 }

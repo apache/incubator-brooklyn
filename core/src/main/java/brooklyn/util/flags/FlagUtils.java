@@ -67,11 +67,11 @@ public class FlagUtils {
         return setFieldsFromFlagsInternal(o, Arrays.asList(o.getClass().getFields()), flags, null, true);
     }
 
-    /** see {@link #setFieldsFromFlags(Object o, ConfigBag)} */
+    /** see {@link #setFieldsFromFlags(Object, ConfigBag)} */
     public static Map<?, ?> setFieldsFromFlags(Map<?, ?> flags, Object o) {
         return setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), flags, null, true);
     }
-	
+    
     /** sets all fields (including private and static, local and inherited) annotated {@link SetFromFlag} on the given object, 
      * from the given flags map, returning just those flag-value pairs passed in which do not correspond to SetFromFlags fields 
      * annotated ConfigKey and HasConfigKey fields are _configured_ (and we assume the object in that case is {@link Configurable});
@@ -82,12 +82,12 @@ public class FlagUtils {
         setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), configBag.getAllConfig(), configBag, true);
     }
 
-    /** as {@link #setFieldsFromFlags(Object o, ConfigBag)} */
+    /** as {@link #setFieldsFromFlags(Object, ConfigBag)}, but allowing control over whether default values should be set */
     public static void setFieldsFromFlags(Object o, ConfigBag configBag, boolean setDefaultVals) {
         setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), configBag.getAllConfig(), configBag, setDefaultVals);
     }
 
-    /** as {@link #setFieldsFromFlags(Object o, ConfigBag)}, but specifying a subset of flags to use */
+    /** as {@link #setFieldsFromFlags(Object, ConfigBag)}, but specifying a subset of flags to use */
     public static void setFieldsFromFlagsWithBag(Object o, Map<?,?> flags, ConfigBag configBag, boolean setDefaultVals) {
         setFieldsFromFlagsInternal(o, getAllFields(o.getClass()), flags, configBag, setDefaultVals);
     }
@@ -109,12 +109,12 @@ public class FlagUtils {
     public static Map<String, ?> getFieldsWithFlags(Object o) {
         return getFieldsWithFlagsInternal(o, getAllFields(o.getClass()));
     }
-	
+    
     /**
      * Finds the {@link Field} on the given object annotated with the given name flag.
      */
     public static Field findFieldForFlag(String flagName, Object o) {
-    	return findFieldForFlagInternal(flagName, o, getAllFields(o.getClass()));
+        return findFieldForFlagInternal(flagName, o, getAllFields(o.getClass()));
     }
 
     /** get all fields (including private and static) and their values on the given object and all supertypes, 
@@ -123,11 +123,11 @@ public class FlagUtils {
     public static Map<String, Object> getFieldsWithFlagsExcludingModifiers(Object o, int excludingModifiers) {
         List<Field> filteredFields = Lists.newArrayList();
         for (Field contender : getAllFields(o.getClass())) {
-        	if ((contender.getModifiers() & excludingModifiers) == 0) {
-        		filteredFields.add(contender);
-        	}
+            if ((contender.getModifiers() & excludingModifiers) == 0) {
+                filteredFields.add(contender);
+            }
         }
-		return getFieldsWithFlagsInternal(o, filteredFields);
+        return getFieldsWithFlagsInternal(o, filteredFields);
     }
     
     /** get all fields with the given modifiers, and their values on the given object and all supertypes, 
@@ -170,8 +170,9 @@ public class FlagUtils {
             ConfigKey<?> key = getFieldAsConfigKey(o, f);
             if (key!=null) {
                 FlagConfigKeyAndValueRecord record = getFlagConfigKeyRecord(f, key, bag);
-                if (record.isValuePresent())
+                if ((includeFlags && record.isValuePresent()) || record.getConfigKeyMaybeValue().isPresent()) {
                     setField(o, f, record.getValueOrNullPreferringConfigKey(), null);
+                }
             }
         }
     }
@@ -243,35 +244,35 @@ public class FlagUtils {
         return result;
     }
 
-	/** returns all fields on the given class, superclasses, and interfaces thereof, in that order of preference,
-	 * (excluding fields on Object) */
+    /** returns all fields on the given class, superclasses, and interfaces thereof, in that order of preference,
+     * (excluding fields on Object) */
     public static List<Field> getAllFields(Class<?> base, Closure<Boolean> filter) {
         return getAllFields(base, GroovyJavaMethods.<Field>predicateFromClosure(filter));
     }
     public static List<Field> getAllFields(Class<?> base) {
         return getAllFields(base, Predicates.<Field>alwaysTrue());
     }
-	public static List<Field> getAllFields(Class<?> base, Predicate<Field> filter) {
-		return getLocalFields(getAllAssignableTypes(base), filter);
-	}
-	/** returns all fields explicitly declared on the given classes */
+    public static List<Field> getAllFields(Class<?> base, Predicate<Field> filter) {
+        return getLocalFields(getAllAssignableTypes(base), filter);
+    }
+    /** returns all fields explicitly declared on the given classes */
     public static List<Field> getLocalFields(List<Class<?>> classes) {
         return getLocalFields(classes, Predicates.<Field>alwaysTrue());
     }
     public static List<Field> getLocalFields(List<Class<?>> classes, Closure<Boolean> filter) {
         return getLocalFields(classes, GroovyJavaMethods.<Field>predicateFromClosure(filter));
     }
-	public static List<Field> getLocalFields(List<Class<?>> classes, Predicate<Field> filter) {
-		List<Field> fields = Lists.newArrayList();
-		for (Class<?> c : classes) {
-		    for (Field f : c.getDeclaredFields()) {
-		        if (filter.apply(f)) fields.add(f);
-	        }
-	    }
-		return fields;
-	}
-	
-	/** returns base, superclasses, then interfaces */
+    public static List<Field> getLocalFields(List<Class<?>> classes, Predicate<Field> filter) {
+        List<Field> fields = Lists.newArrayList();
+        for (Class<?> c : classes) {
+            for (Field f : c.getDeclaredFields()) {
+                if (filter.apply(f)) fields.add(f);
+            }
+        }
+        return fields;
+    }
+    
+    /** returns base, superclasses, then interfaces */
     public static List<Class<?>> getAllAssignableTypes(Class<?> base) {
         return getAllAssignableTypes(base, new Predicate<Class<?>>() {
             @Override public boolean apply(Class<?> it) {
@@ -282,19 +283,19 @@ public class FlagUtils {
     public static List<Class<?>> getAllAssignableTypes(Class<?> base, Closure<Boolean> filter) {
         return getAllAssignableTypes(base, GroovyJavaMethods.<Class<?>>predicateFromClosure(filter));
     }
-	public static List<Class<?>> getAllAssignableTypes(Class<?> base, Predicate<Class<?>> filter) {
-		List<Class<?>> classes = Lists.newArrayList();
-		for (Class<?> c = base; c != null; c = c.getSuperclass()) {
-		    if (filter.apply(c)) classes.add(c);
-	    }
-		for (int i=0; i<classes.size(); i++) {
-			for (Class<?> interf : classes.get(i).getInterfaces()) {
-			    if (filter.apply(interf) && !(classes.contains(interf))) classes.add(interf);
-		    }
-		}
-		return classes;
-	}
-	
+    public static List<Class<?>> getAllAssignableTypes(Class<?> base, Predicate<Class<?>> filter) {
+        List<Class<?>> classes = Lists.newArrayList();
+        for (Class<?> c = base; c != null; c = c.getSuperclass()) {
+            if (filter.apply(c)) classes.add(c);
+        }
+        for (int i=0; i<classes.size(); i++) {
+            for (Class<?> interf : classes.get(i).getInterfaces()) {
+                if (filter.apply(interf) && !(classes.contains(interf))) classes.add(interf);
+            }
+        }
+        return classes;
+    }
+    
     private static Map<String, Object> getFieldsWithFlagsInternal(Object o, Collection<Field> fields) {
         Map<String, Object> result = Maps.newLinkedHashMap();
         for (Field f: fields) {
@@ -302,9 +303,9 @@ public class FlagUtils {
             if (cf != null) {
                 String flagName = elvis(cf.value(), f.getName());
                 if (truth(flagName)) {
-                	result.put(flagName, getField(o, f));
+                    result.put(flagName, getField(o, f));
                 } else {
-                	log.warn("Ignoring field {} of object {} as no flag name available", f, o);
+                    log.warn("Ignoring field {} of object {} as no flag name available", f, o);
                 }
             }
         }
@@ -315,9 +316,9 @@ public class FlagUtils {
         for (Field f: fields) {
             SetFromFlag cf = f.getAnnotation(SetFromFlag.class);
             if (cf != null) {
-            	String contenderName = elvis(cf.value(), f.getName());
+                String contenderName = elvis(cf.value(), f.getName());
                 if (flagName.equals(contenderName)) {
-                	return f;
+                    return f;
                 }
             }
         }
@@ -506,11 +507,11 @@ public class FlagUtils {
         return result;
     }
 
-	/** returns a map of all fields which are annotated 'SetFromFlag' with their current values;
-	 * useful if you want to clone settings from one object
-	 */
-	public static Map<String,Object> getFieldsWithValues(Object o) {
-	    try {
+    /** returns a map of all fields which are annotated 'SetFromFlag' with their current values;
+     * useful if you want to clone settings from one object
+     */
+    public static Map<String,Object> getFieldsWithValues(Object o) {
+        try {
             Map<String, Object> result = Maps.newLinkedHashMap();
             for (Map.Entry<Field, SetFromFlag> entry : getAnnotatedFields(o.getClass()).entrySet()) {
                 Field f = entry.getKey();
@@ -520,12 +521,12 @@ public class FlagUtils {
                     if (!f.isAccessible()) f.setAccessible(true);
                     result.put(flagName, f.get(o));
                 }
-    		}
-    		return result;
+            }
+            return result;
         } catch (IllegalAccessException e) {
             throw Throwables.propagate(e);
         }
-	}
+    }
         
     /**
      * @throws an IllegalStateException if there are fields required (nullable=false) which are unset 

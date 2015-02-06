@@ -23,8 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -35,19 +33,22 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroupImpl;
+import brooklyn.entity.basic.DelegateEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
-import brooklyn.entity.basic.EntityFunctions;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
+import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
@@ -113,6 +114,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         });
     }
 
+    static {
+        RendererHints.register(FIRST, RendererHints.namedActionWithUrl("Open", DelegateEntity.EntityUrl.entityUrl()));
+        RendererHints.register(CLUSTER, RendererHints.namedActionWithUrl("Open", DelegateEntity.EntityUrl.entityUrl()));
+    }
+
+
     private static final Logger LOG = LoggerFactory.getLogger(DynamicClusterImpl.class);
 
     /**
@@ -143,9 +150,22 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public void init() {
         super.init();
-        setAttribute(SERVICE_UP, false);
     }
 
+    @Override
+    protected void initEnrichers() {
+        if (getConfigRaw(UP_QUORUM_CHECK, true).isAbsent() && getConfig(INITIAL_SIZE)==0) {
+            // if initial size is 0 then override up check to allow zero if empty
+            setConfig(UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
+            setAttribute(SERVICE_UP, true);
+        } else {
+            setAttribute(SERVICE_UP, false);
+        }
+        super.initEnrichers();
+        // override previous enricher so that only members are checked
+        ServiceStateLogic.newEnricherFromChildrenUp().checkMembersOnly().requireUpChildren(getConfig(UP_QUORUM_CHECK)).addTo(this);
+    }
+    
     @Override
     public void setRemovalStrategy(Function<Collection<Entity>, Entity> val) {
         setConfig(REMOVAL_STRATEGY, checkNotNull(val, "removalStrategy"));
@@ -247,104 +267,86 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             setAttribute(SUB_LOCATIONS, findSubLocations(loc));
         }
 
-        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
-        setAttribute(SERVICE_UP, calculateServiceUp());
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
+        ServiceProblemsLogic.clearProblemsIndicator(this, START);
         try {
-            if (isQuarantineEnabled()) {
-                QuarantineGroup quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
+            doStart();
+            DynamicTasks.waitForLast();
+            
+        } catch (Exception e) {
+            ServiceProblemsLogic.updateProblemsIndicator(this, START, "start failed with error: "+e);
+            throw Exceptions.propagate(e);
+        } finally {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
+        }
+    }
+
+    protected void doStart() {
+        if (isQuarantineEnabled()) {
+            QuarantineGroup quarantineGroup = getAttribute(QUARANTINE_GROUP);
+            if (quarantineGroup==null || !Entities.isManaged(quarantineGroup)) {
+                quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
                 Entities.manage(quarantineGroup);
                 setAttribute(QUARANTINE_GROUP, quarantineGroup);
             }
+        }
 
-            int initialSize = getConfig(INITIAL_SIZE).intValue();
-            int initialQuorumSize = getInitialQuorumSize();
+        int initialSize = getConfig(INITIAL_SIZE).intValue();
+        int initialQuorumSize = getInitialQuorumSize();
+        Exception internalError = null;
 
-            try {
-                resize(initialSize);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                // apart from logging, ignore problems here; we extract them below
-                LOG.debug("Error resizing "+this+" to size "+initialSize+" (collecting and handling): "+e, e);
-            }
-
-            Iterable<Task<?>> failed = Tasks.failed(Tasks.children(Tasks.current()));
-            Iterator<Task<?>> fi = failed.iterator();
-            boolean noFailed=true, severalFailed=false;
-            if (fi.hasNext()) {
-                noFailed = false;
-                fi.next();
-                if (fi.hasNext())
-                    severalFailed = true;
-            }
-
-            int currentSize = getCurrentSize().intValue();
-            if (currentSize < initialQuorumSize) {
-                String message;
-                if (currentSize == 0 && !noFailed) {
-                    if (severalFailed)
-                        message = "All nodes in cluster "+this+" failed";
-                    else
-                        message = "Node in cluster "+this+" failed";
-                } else {
-                    message = "On start of cluster " + this + ", failed to get to initial size of " + initialSize
-                        + "; size is " + getCurrentSize()
-                        + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : "");
-                }
-                Throwable firstError = Tasks.getError(Maybe.next(failed.iterator()).orNull());
-                if (firstError!=null) {
-                    if (severalFailed)
-                        message += "; first failure is: "+Exceptions.collapseText(firstError);
-                    else
-                        message += ": "+Exceptions.collapseText(firstError);
-                }
-                throw new IllegalStateException(message, firstError);
-            } else if (currentSize < initialSize) {
-                LOG.warn(
-                        "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",
-                        new Object[] { this, currentSize, initialQuorumSize, initialSize });
-            }
-
-            for (Policy it : getPolicies()) {
-                it.resume();
-            }
-            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
-            setAttribute(SERVICE_UP, calculateServiceUp());
+        try {
+            resize(initialSize);
         } catch (Exception e) {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
-            throw Exceptions.propagate(e);
-        } finally {
-            connectSensors();
+            Exceptions.propagateIfFatal(e);
+            // Apart from logging, ignore problems here; we extract them below.
+            // But if it was this thread that threw the exception (rather than a sub-task), then need
+            // to record that failure here.
+            LOG.debug("Error resizing "+this+" to size "+initialSize+" (collecting and handling): "+e, e);
+            internalError = e;
         }
-    }
 
-    protected void connectSensors() {
-        subscribeToChildren(this, SERVICE_STATE, new SensorEventListener<Lifecycle>() {
-            @Override
-            public void onEvent(SensorEvent<Lifecycle> event) {
-                setAttribute(SERVICE_STATE, calculateServiceState());
-            }
-        });
-        subscribeToChildren(this, SERVICE_UP, new SensorEventListener<Boolean>() {
-            @Override
-            public void onEvent(SensorEvent<Boolean> event) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
-            }
-        });
-    }
+        Iterable<Task<?>> failed = Tasks.failed(Tasks.children(Tasks.current()));
+        boolean noFailed = Iterables.isEmpty(failed);
+        boolean severalFailed = Iterables.size(failed) > 1;
 
-    protected Lifecycle calculateServiceState() {
-        Lifecycle currentState = getAttribute(SERVICE_STATE);
-        if (EnumSet.of(Lifecycle.ON_FIRE, Lifecycle.RUNNING).contains(currentState)) {
-            Iterable<Lifecycle> memberStates = Iterables.transform(getMembers(), EntityFunctions.attribute(SERVICE_STATE));
-            int running = Iterables.frequency(memberStates, Lifecycle.RUNNING);
-            int onFire = Iterables.frequency(memberStates, Lifecycle.ON_FIRE);
-            if ((getInitialQuorumSize() > 0 ? running < getInitialQuorumSize() : true) && onFire > 0) {
-                currentState = Lifecycle.ON_FIRE;
-            } else if (onFire == 0 && running > 0) {
-                currentState = Lifecycle.RUNNING;
+        int currentSize = getCurrentSize().intValue();
+        if (currentSize < initialQuorumSize) {
+            String message;
+            if (currentSize == 0 && !noFailed) {
+                if (severalFailed)
+                    message = "All nodes in cluster "+this+" failed";
+                else
+                    message = "Node in cluster "+this+" failed";
+            } else {
+                message = "On start of cluster " + this + ", failed to get to initial size of " + initialSize
+                    + "; size is " + getCurrentSize()
+                    + (initialQuorumSize != initialSize ? " (initial quorum size is " + initialQuorumSize + ")" : "");
             }
+            Throwable firstError = Tasks.getError(Maybe.next(failed.iterator()).orNull());
+            if (firstError==null && internalError!=null) {
+                // only use the internal error if there were no nested task failures
+                // (otherwise the internal error should be a wrapper around the nested failures)
+                firstError = internalError;
+            }
+            if (firstError!=null) {
+                if (severalFailed) {
+                    message += "; first failure is: "+Exceptions.collapseText(firstError);
+                } else {
+                    message += ": "+Exceptions.collapseText(firstError);
+                }
+            }
+            throw new IllegalStateException(message, firstError);
+            
+        } else if (currentSize < initialSize) {
+            LOG.warn(
+                    "On start of cluster {}, size {} reached initial minimum quorum size of {} but did not reach desired size {}; continuing",
+                    new Object[] { this, currentSize, initialQuorumSize, initialSize });
         }
-        return currentState;
+
+        for (Policy it : getPolicies()) {
+            it.resume();
+        }
     }
 
     protected List<Location> findSubLocations(Location loc) {
@@ -386,10 +388,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     @Override
     public void stop() {
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         try {
-            setAttribute(SERVICE_UP, calculateServiceUp());
-
             for (Policy it : getPolicies()) { it.suspend(); }
 
             // run shrink without mutex to make things stop even if starting,
@@ -403,10 +403,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             // (this ignores the quarantine node which is not stoppable)
             StartableMethods.stop(this);
 
-            setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
-            setAttribute(SERVICE_UP, calculateServiceUp());
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
         } catch (Exception e) {
-            setAttribute(SERVICE_STATE, Lifecycle.ON_FIRE);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         }
     }
@@ -419,12 +418,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public Integer resize(Integer desiredSize) {
         synchronized (mutex) {
-            int currentSize = getCurrentSize();
-            int delta = desiredSize - currentSize;
+            int originalSize = getCurrentSize();
+            int delta = desiredSize - originalSize;
             if (delta != 0) {
-                LOG.info("Resize {} from {} to {}", new Object[] {this, currentSize, desiredSize});
+                LOG.info("Resize {} from {} to {}", new Object[] {this, originalSize, desiredSize});
             } else {
-                if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, currentSize, desiredSize});
+                if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, originalSize, desiredSize});
             }
             resizeByDelta(delta);
         }
@@ -488,7 +487,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         synchronized (mutex) {
             ReferenceWithError<Optional<Entity>> added = addInSingleLocation(memberLoc, extraFlags);
 
-            if (!added.getMaskingError().isPresent()) {
+            if (!added.getWithoutError().isPresent()) {
                 String msg = String.format("In %s, failed to grow, to replace %s; not removing", this, member);
                 if (added.hasError())
                     throw new IllegalStateException(msg, added.getError());
@@ -502,7 +501,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 throw new StopFailedRuntimeException("replaceMember failed to stop and remove old member "+member.getId(), e);
             }
 
-            return added.getThrowingError().get();
+            return added.getWithError().get();
         }
     }
 
@@ -585,7 +584,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         // create and start the entities
-        return addInEachLocation(chosenLocations, ImmutableMap.of()).getThrowingError();
+        return addInEachLocation(chosenLocations, ImmutableMap.of()).getWithError();
     }
 
     /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
@@ -619,7 +618,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     protected ReferenceWithError<Optional<Entity>> addInSingleLocation(Location location, Map<?,?> flags) {
         ReferenceWithError<Collection<Entity>> added = addInEachLocation(ImmutableList.of(location), flags);
         
-        Optional<Entity> result = Iterables.isEmpty(added.getMaskingError()) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added.get()));
+        Optional<Entity> result = Iterables.isEmpty(added.getWithoutError()) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added.get()));
         if (!added.hasError()) {
             return ReferenceWithError.newInstanceWithoutError( result );
         } else {
@@ -697,13 +696,6 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
 
-    /**
-     * Default impl is to be up when running, and !up otherwise.
-     */
-    protected boolean calculateServiceUp() {
-        return getAttribute(SERVICE_STATE) == Lifecycle.RUNNING;
-    }
-
     protected Map<Entity, Throwable> waitForTasksOnEntityStart(Map<? extends Entity,? extends Task<?>> tasks) {
         // TODO Could have CompoundException, rather than propagating first
         Map<Entity, Throwable> errors = Maps.newLinkedHashMap();
@@ -739,7 +731,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getConfig(CUSTOM_CHILD_FLAGS);
     }
 
-    protected Entity addNode(Location loc, Map<?,?> extraFlags) {
+    @Override
+    public Entity addNode(Location loc, Map<?,?> extraFlags) {
         Map<?,?> createFlags = MutableMap.builder()
                 .putAll(getCustomChildFlags())
                 .putAll(extraFlags)
@@ -749,6 +742,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         Entity entity = createNode(loc, createFlags);
+
+        ((EntityLocal) entity).setAttribute(CLUSTER_MEMBER, true);
+        ((EntityLocal) entity).setAttribute(CLUSTER, this);
+
         Entities.manage(entity);
         addMember(entity);
         return entity;
@@ -785,7 +782,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             return Lists.newArrayList();
         
         if (delta == 1 && !isAvailabilityZoneEnabled()) {
-            return ImmutableList.of(pickAndRemoveMember()); // for backwards compatibility in sub-classes
+            Maybe<Entity> member = tryPickAndRemoveMember();
+            return (member.isPresent()) ? ImmutableList.of(member.get()) : ImmutableList.<Entity>of();
         }
 
         // TODO inefficient impl
@@ -806,28 +804,29 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         } else {
             List<Entity> entities = Lists.newArrayList();
             for (int i = 0; i < delta; i++) {
-                entities.add(pickAndRemoveMember());
+                // don't assume we have enough members; e.g. if shrinking to zero and someone else concurrently stops a member,
+                // then just return what we were able to remove.
+                Maybe<Entity> member = tryPickAndRemoveMember();
+                if (member.isPresent()) entities.add(member.get());
             }
             return entities;
         }
     }
 
-    /**
-     * @deprecated since 0.6.0; subclasses should instead override {@link #pickAndRemoveMembers(int)} if they really need to!
-     */
-    protected Entity pickAndRemoveMember() {
+    private Maybe<Entity> tryPickAndRemoveMember() {
         assert !isAvailabilityZoneEnabled() : "should instead call pickAndRemoveMembers(int) if using availability zones";
 
         // TODO inefficient impl
-        Preconditions.checkState(getMembers().size() > 0, "Attempt to remove a node when members is empty, from cluster "+this);
-        if (LOG.isDebugEnabled()) LOG.debug("Removing a node from {}", this);
+        Collection<Entity> members = getMembers();
+        if (members.isEmpty()) return Maybe.absent();
 
-        Entity entity = getRemovalStrategy().apply(getMembers());
+        if (LOG.isDebugEnabled()) LOG.debug("Removing a node from {}", this);
+        Entity entity = getRemovalStrategy().apply(members);
         Preconditions.checkNotNull(entity, "No entity chosen for removal from "+getId());
         Preconditions.checkState(entity instanceof Startable, "Chosen entity for removal not stoppable: cluster="+this+"; choice="+entity);
 
         removeMember(entity);
-        return entity;
+        return Maybe.of(entity);
     }
 
     protected void discardNode(Entity entity) {

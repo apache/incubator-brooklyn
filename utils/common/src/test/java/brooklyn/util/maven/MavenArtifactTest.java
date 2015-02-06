@@ -19,8 +19,8 @@
 package brooklyn.util.maven;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -39,13 +39,14 @@ public class MavenArtifactTest {
     // only *integration* tests require these to be *installed*;
     // note this may vary from machine to machine so version should be aligned with that in parent pom
     final static String MAVEN_JAR_PLUGIN_COORDINATE = "org.apache.maven.plugins:maven-jar-plugin:jar:2.3.2";
-    final static String THIS_PROJECT_COORDINATE = "io.brooklyn:brooklyn-utils-common:jar:0.7.0-SNAPSHOT";  // BROOKLYN_VERSION
+    final static String THIS_PROJECT_COORDINATE = "org.apache.brooklyn:brooklyn-utils-common:jar:0.7.0-SNAPSHOT";  // BROOKLYN_VERSION
 
     // Don't need to be installed, only used as examples
     final static String RELEASED_SOURCES_COORDINATE = "io.brooklyn:brooklyn-core:jar:sources:0.6.0";
     final static String EXAMPLE_BZIP_COORDINATE = "com.example:example-artifact:tar.bz2:server-windows:2.0.1";
 
-    public void testArtifact() {
+    @Test
+    public void testArtifact() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(MAVEN_JAR_PLUGIN_COORDINATE);
         
         Assert.assertEquals(m.getGroupId(), "org.apache.maven.plugins");
@@ -60,7 +61,8 @@ public class MavenArtifactTest {
         Assert.assertEquals(m.isSnapshot(), false);
     }
 
-    public void testArtifactWithClassifier() {
+    @Test
+    public void testArtifactWithClassifier() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(RELEASED_SOURCES_COORDINATE);
 
         Assert.assertEquals(m.getGroupId(), "io.brooklyn");
@@ -73,7 +75,8 @@ public class MavenArtifactTest {
 
     }
 
-    public void testRetrieval() {
+    @Test
+    public void testRetrieval() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(MAVEN_JAR_PLUGIN_COORDINATE);
 
         String hostedUrl = new MavenRetriever().getHostedUrl(m);
@@ -85,7 +88,8 @@ public class MavenArtifactTest {
                 localPath);
     }
 
-    public void testRetrievalWithClassifier() {
+    @Test
+    public void testRetrievalWithClassifier() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(RELEASED_SOURCES_COORDINATE);
 
         String localPath = new MavenRetriever().getLocalPath(m);
@@ -94,7 +98,8 @@ public class MavenArtifactTest {
                 localPath);
     }
 
-    public void testRetrievalWithUnusualClassifier() {
+    @Test
+    public void testRetrievalWithUnusualClassifier() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(EXAMPLE_BZIP_COORDINATE);
 
         String localPath = new MavenRetriever().getLocalPath(m);
@@ -103,7 +108,8 @@ public class MavenArtifactTest {
                 localPath);
     }
 
-    public void testSnapshotRetrieval() {
+    @Test
+    public void testSnapshotRetrieval() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(THIS_PROJECT_COORDINATE);
 
         if (!m.isSnapshot()) {
@@ -112,15 +118,15 @@ public class MavenArtifactTest {
         }
 
         String hostedUrl = new MavenRetriever().getHostedUrl(m);
-        Assert.assertTrue(hostedUrl.contains("sonatype"), hostedUrl);
+        Assert.assertTrue(hostedUrl.contains("repository.apache.org"), hostedUrl);
         
         String localPath = new MavenRetriever().getLocalPath(m);
         Assert.assertTrue(localPath.contains(
-                "/repository/io/brooklyn"));
+                "/repository/org/apache/brooklyn"));
     }
 
     @Test(groups="Integration")
-    public void testRetrievalLocalIntegration() throws IOException {
+    public void testRetrievalLocalIntegration() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(MAVEN_JAR_PLUGIN_COORDINATE);
 
         String localPath = new MavenRetriever().getLocalPath(m);
@@ -128,17 +134,17 @@ public class MavenArtifactTest {
         if (!f.exists())
             Assert.fail("Could not load "+localPath+" when testing MavenRetriever: do a maven build with no integration tests first to ensure this is installed, then rerun");
         
-        checkValidMavenJarUrl(MavenRetriever.localUrl(m));
+        checkValidMavenJarUrl(MavenRetriever.localUrl(m), "org/apache/maven/plugin/jar/JarMojo.class");
     }
 
     @Test(groups="Integration")
-    public void testRetrievalHostedReleaseIntegration() {
+    public void testRetrievalHostedReleaseIntegration() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(MAVEN_JAR_PLUGIN_COORDINATE);
 
-        checkValidMavenJarUrl(new MavenRetriever().getHostedUrl(m));
+        checkValidMavenJarUrl(new MavenRetriever().getHostedUrl(m), "org/apache/maven/plugin/jar/JarMojo.class");
     }
 
-    protected void checkAvailableUrl(String url) {
+    protected void checkAvailableUrl(String url) throws Exception {
         try {
             InputStream stream = new URL(url).openStream();
             stream.read();
@@ -147,21 +153,20 @@ public class MavenArtifactTest {
             throw Exceptions.propagate(e);
         }
     }
-    protected void checkValidMavenJarUrl(String url) {
-        try {
-            URL innerU = new URLClassLoader(new URL[] { new URL(url) }).findResource(
-                    "org/apache/maven/plugin/jar/JarMojo.class");
-            InputStream innerUin = innerU.openConnection().getInputStream();
-            innerUin.close();
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
+    protected void checkValidMavenJarUrl(String url, String resource) throws Exception {
+        // URLClassLoader doesn't follow redirects; find out the real URL
+        // Note URLClassLoader.close was only added in Java 7; do not call it until Java 6 support is not needed!
+        URL realUrl = followRedirects(new URL(url));
+        URLClassLoader classLoader = new URLClassLoader(new URL[] { realUrl });
+        URL innerU = classLoader.findResource(resource);
+        InputStream innerUin = innerU.openConnection().getInputStream();
+        innerUin.close();
     }
 
     @Test(groups="Integration")
-    public void testRetrievalHostedSnapshotIntegration() {
+    public void testRetrievalHostedSnapshotIntegration() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(
-                "io.brooklyn:brooklyn-utils-common:jar:0.7.0-SNAPSHOT");  // BROOKLYN_VERSION
+                "org.apache.brooklyn:brooklyn-utils-common:jar:0.7.0-SNAPSHOT");  // BROOKLYN_VERSION
         
         String localPath = new MavenRetriever().getLocalPath(m);
         File f = new File(localPath);
@@ -169,7 +174,7 @@ public class MavenArtifactTest {
             Assert.fail("Could not load "+localPath+" when testing MavenRetriever: do a maven build with no integration tests first to ensure this is installed, then rerun");
         
         String l = new MavenRetriever().getLocalUrl(m);
-        Assert.assertEquals(l, "file://"+localPath);
+        Assert.assertEquals(new URL(l), new URL("file://"+localPath));
         
         checkAvailableUrl(l);
         
@@ -177,7 +182,7 @@ public class MavenArtifactTest {
         if (!m.isSnapshot()) {
             log.info("Skipping SNAPSHOT testing as this is not a snapshot build");
         } else {
-            Assert.assertTrue(h.contains("sonatype.org"));
+            Assert.assertTrue(h.contains("repository.apache.org"), "h="+h);
         }
 
         try {
@@ -188,5 +193,23 @@ public class MavenArtifactTest {
         }
     }
 
-
+    private URL followRedirects(URL url) throws Exception {
+        if ("file".equalsIgnoreCase(url.getProtocol())) return url;
+        
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setReadTimeout(5000);
+     
+        // normally, 3xx is redirect
+        int status = conn.getResponseCode();
+        boolean redirect = (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER);
+     
+        if (redirect) {
+            // get redirect url from "location" header field
+            String newUrl = conn.getHeaderField("Location");
+            log.debug("Following redirect for "+url+", to "+newUrl);
+            return followRedirects(new URL(newUrl));
+        } else {
+            return url;
+        }
+    }
 }

@@ -89,7 +89,8 @@ public class StringEscapes {
     
     
     public static class BashStringEscapes {
-        // single quotes don't permit escapes!  e.g. echo 'hello \' world'    doesn't work
+        // single quotes don't permit escapes!  e.g. echo 'hello \' world' doesn't work;
+        // you must do 'hello '\'' world' (to get "hello ' world")
         
         /** wraps plain text in double quotes escaped for use in bash double-quoting */
         public static String wrapBash(String value) {
@@ -223,7 +224,8 @@ public class StringEscapes {
         public static void escapeJavaString(String value, Appendable out) throws IOException {
             for (int i=0; i<value.length(); i++) {
                 char c = value.charAt(i);
-                if (c=='\\' || c=='"' || c=='\'') {
+                if (c=='\\' || c=='"') {
+                    // NB do NOT escape single quotes; while valid for java, it is not in JSON (breaks jQuery.parseJSON)
                     appendEscaped(out, c);
                 } else if (c=='\n') {
                     appendEscaped(out, 'n');

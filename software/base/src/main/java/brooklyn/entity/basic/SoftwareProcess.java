@@ -24,8 +24,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.MachineProvisioningLocation;
@@ -33,65 +32,142 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
+import com.google.common.reflect.TypeToken;
+
 public interface SoftwareProcess extends Entity, Startable {
 
-    public static final AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
-    public static final AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
-    public static final AttributeSensor<String> SUBNET_HOSTNAME = Attributes.SUBNET_HOSTNAME;
-    public static final AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
+    AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;
+    AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
+    AttributeSensor<String> SUBNET_HOSTNAME = Attributes.SUBNET_HOSTNAME;
+    AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
 
     @SetFromFlag("startTimeout")
-    public static final ConfigKey<Duration> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
+    ConfigKey<Duration> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
 
     @SetFromFlag("startLatch")
-    public static final ConfigKey<Boolean> START_LATCH = BrooklynConfigKeys.START_LATCH;
+    ConfigKey<Boolean> START_LATCH = BrooklynConfigKeys.START_LATCH;
+
+    @SetFromFlag("setupLatch")
+    ConfigKey<Boolean> SETUP_LATCH = BrooklynConfigKeys.SETUP_LATCH;
+
+    @SetFromFlag("installResourcesLatch")
+    ConfigKey<Boolean> INSTALL_RESOURCES_LATCH = BrooklynConfigKeys.INSTALL_RESOURCES_LATCH;
 
     @SetFromFlag("installLatch")
-    public static final ConfigKey<Boolean> INSTALL_LATCH = BrooklynConfigKeys.INSTALL_LATCH;
+    ConfigKey<Boolean> INSTALL_LATCH = BrooklynConfigKeys.INSTALL_LATCH;
+
+    @SetFromFlag("runtimeResourcesLatch")
+    ConfigKey<Boolean> RUNTIME_RESOURCES_LATCH = BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH;
 
     @SetFromFlag("customizeLatch")
-    public static final ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
-    
-    @SetFromFlag("preLaunchCommand")
-    public static final ConfigKey<String> PRE_LAUNCH_COMMAND = BrooklynConfigKeys.PRE_LAUNCH_COMMAND;
-    
-    @SetFromFlag("postLaunchCommand")
-    public static final ConfigKey<String> POST_LAUNCH_COMMAND = BrooklynConfigKeys.POST_LAUNCH_COMMAND;
+    ConfigKey<Boolean> CUSTOMIZE_LATCH = BrooklynConfigKeys.CUSTOMIZE_LATCH;
 
     @SetFromFlag("launchLatch")
-    public static final ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
+    ConfigKey<Boolean> LAUNCH_LATCH = BrooklynConfigKeys.LAUNCH_LATCH;
+
+    @SetFromFlag("skipStart")
+    ConfigKey<Boolean> ENTITY_STARTED = BrooklynConfigKeys.SKIP_ENTITY_START;
+
+    @SetFromFlag("skipStartIfRunning")
+    ConfigKey<Boolean> SKIP_ENTITY_START_IF_RUNNING = BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING;
+
+    @SetFromFlag("skipInstall")
+    ConfigKey<Boolean> SKIP_INSTALLATION = BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION;
+
+    @SetFromFlag("preInstallCommand")
+    ConfigKey<String> PRE_INSTALL_COMMAND = BrooklynConfigKeys.PRE_INSTALL_COMMAND;
+
+    @SetFromFlag("postInstallCommand")
+    ConfigKey<String> POST_INSTALL_COMMAND = BrooklynConfigKeys.POST_INSTALL_COMMAND;
+
+    @SetFromFlag("preLaunchCommand")
+    ConfigKey<String> PRE_LAUNCH_COMMAND = BrooklynConfigKeys.PRE_LAUNCH_COMMAND;
+
+    @SetFromFlag("postLaunchCommand")
+    ConfigKey<String> POST_LAUNCH_COMMAND = BrooklynConfigKeys.POST_LAUNCH_COMMAND;
 
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
+    ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
 
     @SetFromFlag("downloadUrl")
-    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = Attributes.DOWNLOAD_URL;
+    AttributeSensorAndConfigKey<String,String> DOWNLOAD_URL = Attributes.DOWNLOAD_URL;
 
     @SetFromFlag("downloadAddonUrls")
-    BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = Attributes.DOWNLOAD_ADDON_URLS;
+    AttributeSensorAndConfigKey<Map<String,String>,Map<String,String>> DOWNLOAD_ADDON_URLS = Attributes.DOWNLOAD_ADDON_URLS;
 
     @SetFromFlag("installLabel")
-    public static final ConfigKey<String> INSTALL_UNIQUE_LABEL = BrooklynConfigKeys.INSTALL_UNIQUE_LABEL;
-    
+    ConfigKey<String> INSTALL_UNIQUE_LABEL = BrooklynConfigKeys.INSTALL_UNIQUE_LABEL;
+
     @SetFromFlag("expandedInstallDir")
-    BasicAttributeSensorAndConfigKey<String> EXPANDED_INSTALL_DIR = BrooklynConfigKeys.EXPANDED_INSTALL_DIR;
+    AttributeSensorAndConfigKey<String,String> EXPANDED_INSTALL_DIR = BrooklynConfigKeys.EXPANDED_INSTALL_DIR;
 
     @SetFromFlag("installDir")
-    BasicAttributeSensorAndConfigKey<String> INSTALL_DIR = BrooklynConfigKeys.INSTALL_DIR;
+    AttributeSensorAndConfigKey<String,String> INSTALL_DIR = BrooklynConfigKeys.INSTALL_DIR;
     @Deprecated
-    public static final ConfigKey<String> SUGGESTED_INSTALL_DIR = BrooklynConfigKeys.SUGGESTED_INSTALL_DIR;
+    ConfigKey<String> SUGGESTED_INSTALL_DIR = BrooklynConfigKeys.SUGGESTED_INSTALL_DIR;
 
     @SetFromFlag("runDir")
-    BasicAttributeSensorAndConfigKey<String> RUN_DIR = BrooklynConfigKeys.RUN_DIR;
+    AttributeSensorAndConfigKey<String,String> RUN_DIR = BrooklynConfigKeys.RUN_DIR;
     @Deprecated
-    public static final ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
+    ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
+
+    /**
+     * Files to be copied to the server before install.
+     * <p>
+     * Map of {@code classpath://foo/file.txt} (or other url) source to destination path,
+     * as {@code subdir/file} relative to installation directory or {@code /absolute/path/to/file}.
+     *
+     * @see #INSTALL_TEMPLATES
+     */
+    @Beta
+    @SuppressWarnings("serial")
+    @SetFromFlag("installFiles")
+    ConfigKey<Map<String, String>> INSTALL_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "files.install", "Mapping of files, to be copied before install, to destination name relative to installDir");
+
+    /**
+     * Templates to be filled in and then copied to the server before install.
+     *
+     * @see #INSTALL_FILES
+     */
+    @Beta
+    @SuppressWarnings("serial")
+    @SetFromFlag("installTemplates")
+    ConfigKey<Map<String, String>> INSTALL_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "templates.install", "Mapping of templates, to be filled in and copied before install, to destination name relative to installDir");
+
+    /**
+     * Files to be copied to the server after customisation.
+     * <p>
+     * Map of {@code classpath://foo/file.txt} (or other url) source to destination path,
+     * as {@code subdir/file} relative to runtime directory or {@code /absolute/path/to/file}.
+     *
+     * @see #RUNTIME_TEMPLATES
+     */
+    @Beta
+    @SuppressWarnings("serial")
+    @SetFromFlag("runtimeFiles")
+    ConfigKey<Map<String, String>> RUNTIME_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "files.runtime", "Mapping of files, to be copied before customisation, to destination name relative to runDir");
+
+    /**
+     * Templates to be filled in and then copied to the server after customisation.
+     *
+     * @see #RUNTIME_FILES
+     */
+    @Beta
+    @SuppressWarnings("serial")
+    @SetFromFlag("runtimeTemplates")
+    ConfigKey<Map<String, String>> RUNTIME_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "templates.runtime", "Mapping of templates, to be filled in and copied before customisation, to destination name relative to runDir");
 
     @SetFromFlag("env")
-    public static final MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class,
+    MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class,
             "shell.env", "Map of environment variables to pass to the runtime shell", MutableMap.<String,Object>of());
 
     @SetFromFlag("provisioningProperties")
-    public static final MapConfigKey<Object> PROVISIONING_PROPERTIES = new MapConfigKey<Object>(Object.class,
+    MapConfigKey<Object> PROVISIONING_PROPERTIES = new MapConfigKey<Object>(Object.class,
             "provisioning.properties", "Custom properties to be passed in when provisioning a new machine", MutableMap.<String,Object>of());
 
     @SetFromFlag("maxRebindSensorsDelay")
@@ -108,7 +184,7 @@ public interface SoftwareProcess extends Entity, Startable {
      * (NB: restarts are currently not propagated to children in the default {@link SoftwareProcess}
      * due to the various semantics which may be desired; this may change, but if entities have specific requirements for restart,
      * developers should either subclass the {@link SoftwareProcessDriverLifecycleEffectorTasks} and/or lean on sensors from the parent */
-    public enum ChildStartableMode {
+    enum ChildStartableMode {
         /** do nothing with {@link Startable} children */
         NONE(true, false, false),
         /** start (stop) {@link Startable} children concurrent with *driver* start (stop),
@@ -147,14 +223,63 @@ public interface SoftwareProcess extends Entity, Startable {
     }
 
     @SetFromFlag("childStartMode")
-    public static final ConfigKey<ChildStartableMode> CHILDREN_STARTABLE_MODE = ConfigKeys.newConfigKey(ChildStartableMode.class, "children.startable.mode");
+    ConfigKey<ChildStartableMode> CHILDREN_STARTABLE_MODE = ConfigKeys.newConfigKey(ChildStartableMode.class, "children.startable.mode");
 
     @SuppressWarnings("rawtypes")
-    public static final AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = new BasicAttributeSensor<MachineProvisioningLocation>(
+    AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = Sensors.newSensor(
             MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");
 
-    public static final AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
+    AttributeSensor<Boolean> SERVICE_PROCESS_IS_RUNNING = Sensors.newBooleanSensor("service.process.isRunning", 
+            "Whether the process for the service is confirmed as running");
+    
+    AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
  
-    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor("softwareprocess.pid.file", "PID file");
+    AttributeSensor<String> PID_FILE = Sensors.newStringSensor("softwareprocess.pid.file", "PID file");
+
+    @Beta
+    public static class RestartSoftwareParameters {
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<Boolean> RESTART_CHILDREN = ConfigKeys.newConfigKey(Boolean.class, "restartChildren",
+            "Whether to restart children; default false", false);
+
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<Object> RESTART_MACHINE = ConfigKeys.newConfigKey(Object.class, "restartMachine",
+            "Whether to restart/replace the machine provisioned for this entity:  'true', 'false', or 'auto' are supported, "
+            + "with the default being 'auto' which means to restart or reprovision the machine if there is no simpler way known to restart the entity "
+            + "(for example, if the machine is unhealthy, it would not be possible to restart the process, not even via a stop-then-start sequence); "
+            + "if the machine was not provisioned for this entity, this parameter has no effect", 
+            RestartMachineMode.AUTO.toString().toLowerCase());
+        
+        // we supply a typed variant for retrieval; we want the untyped (above) to use lower case as the default in the GUI
+        // (very hard if using enum, since enum takes the name, and RendererHints do not apply to parameters) 
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<RestartMachineMode> RESTART_MACHINE_TYPED = ConfigKeys.newConfigKey(RestartMachineMode.class, "restartMachine");
+            
+        public enum RestartMachineMode { TRUE, FALSE, AUTO }
+    }
+
+    @Beta
+    public static class StopSoftwareParameters {
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<Boolean> STOP_MACHINE = ConfigKeys.newBooleanConfigKey("stopMachine",
+                "Whether to stop the machine provisioned for this entity:  'true', or 'false' are supported, "
+                        + "with the default being 'true'", true);
+
+        //IF_NOT_STOPPED includes STARTING, STOPPING, RUNNING
+        public enum StopMode { ALWAYS, IF_NOT_STOPPED, NEVER };
+
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<StopMode> STOP_PROCESS_MODE = ConfigKeys.newConfigKey(StopMode.class, "stopProcessMode",
+                "When to stop the process with regard to the entity state", StopMode.IF_NOT_STOPPED);
+
+        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        public static final ConfigKey<StopMode> STOP_MACHINE_MODE = ConfigKeys.newConfigKey(StopMode.class, "stopMachineMode",
+                "When to stop the machine with regard to the entity state. " +
+                "ALWAYS will try to stop the machine even if the entity is already stopped, " +
+                "IF_NOT_STOPPED stops the machine only if the entity is not already stopped, " +
+                "NEVER doesn't stop the machine.", StopMode.IF_NOT_STOPPED);
+    }
+    
+    // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks
 
 }

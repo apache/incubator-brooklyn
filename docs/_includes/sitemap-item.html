@@ -1,0 +1,36 @@
+{% pop site_items item %}
+{% set_hash_entry item path item_path %}
+{% set_hash_entry item url item_url %}
+
+{% unless item_path %}
+ {% unless item_url %}
+  {% puts error, null item_url %}
+  {% putp item %}
+  {% putv item_url %}
+  {% fail item missing path and url (jekyll block evaluation order can cause this) %}
+ {% endunless %}
+{% endunless %}
+
+<a id="{{ item_path }}" name="{{ item_path }}" href="javascript:void(0);"></a>
+<li>
+ {% if visited contains item_path %}
+  {{ item['title'] }} &nbsp; <a href="#{{ item_path }}"><span class="octicon octicon-link-external flip"></span></a>
+ {% elsif item['external'] %}
+  {{ item['title'] }} &nbsp; <a href="{{ item['url'] }}"><span class="octicon octicon-link-external"></span></a>
+  
+ {% else %}
+  <a href="{{ item['url'] }}">{{ item['title'] }}</a>
+  {% if item['menu'] %}
+   {% push visited item_path %}
+   <ul>
+    {% push site_items item %}
+    {% assign last_item = site_items[-1] %}
+    {% for item in last_item['menu'] %}
+     {% push site_items item %}
+     {% include sitemap-item.html %}
+    {% endfor %}
+    {% pop site_items item %}
+   </ul>
+  {% endif %}
+ {% endif %}
+</li>

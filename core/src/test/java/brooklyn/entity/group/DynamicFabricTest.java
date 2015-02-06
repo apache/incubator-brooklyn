@@ -226,7 +226,7 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
                         @Override public Boolean call() {
                             return latches.size() == locs.size();
                         }})
-                .run();
+                .runRequiringTrue();
 
         assertFalse(task.isDone());
 
@@ -356,9 +356,9 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
         fabric.stop();
     }
 
-	@Test
+    @Test
     public void testDynamicFabricPropagatesProperties() throws Exception {
-		final EntityFactory<Entity> entityFactory = new EntityFactory<Entity>() {
+        final EntityFactory<Entity> entityFactory = new EntityFactory<Entity>() {
             @Override public Entity newEntity(Map flags, Entity parent) {
                 return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class)
                         .parent(parent)
@@ -385,16 +385,16 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
             .configure("customChildFlags", ImmutableMap.of("fromFabric", "passed to cluster but not base entity"))
             .configure(Attributes.HTTP_PORT, PortRanges.fromInteger(1234))); // for inheritance by children (as a port range)
 
-		app.start(ImmutableList.of(loc1));
+        app.start(ImmutableList.of(loc1));
 
-		assertEquals(fabric.getChildren().size(), 1);
-		DynamicCluster child = (DynamicCluster) getChild(fabric, 0);
-		assertEquals(child.getMembers().size(), 1);
-		assertEquals(getMember(child, 0).getConfig(Attributes.HTTP_PORT.getConfigKey()), PortRanges.fromInteger(1234));
-		assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("a"), null);
-		assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("b"), "avail");
-		assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("fromCluster"), "passed to base entity");
-		assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("fromFabric"), null);
+        assertEquals(fabric.getChildren().size(), 1);
+        DynamicCluster child = (DynamicCluster) getChild(fabric, 0);
+        assertEquals(child.getMembers().size(), 1);
+        assertEquals(getMember(child, 0).getConfig(Attributes.HTTP_PORT.getConfigKey()), PortRanges.fromInteger(1234));
+        assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("a"), null);
+        assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("b"), "avail");
+        assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("fromCluster"), "passed to base entity");
+        assertEquals(((TestEntity)getMember(child, 0)).getConfigureProperties().get("fromFabric"), null);
 
         child.resize(2);
         assertEquals(child.getMembers().size(), 2);
@@ -403,7 +403,7 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
         assertEquals(((TestEntity)getMember(child, 1)).getConfigureProperties().get("b"), "avail");
         assertEquals(((TestEntity)getMember(child, 1)).getConfigureProperties().get("fromCluster"), "passed to base entity");
         assertEquals(((TestEntity)getMember(child, 1)).getConfigureProperties().get("fromFabric"), null);
-	}
+    }
 
     @Test
     public void testExistingChildrenStarted() throws Exception {
@@ -482,10 +482,10 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
         }
     }
 
-	private Entity getGrandchild(Entity entity, int childIndex, int grandchildIndex) {
+    private Entity getGrandchild(Entity entity, int childIndex, int grandchildIndex) {
         Entity child = getChild(entity, childIndex);
         return Iterables.get(child.getChildren(), grandchildIndex);
-	}
+    }
 
     private Entity getChild(Entity entity, int childIndex) {
         return Iterables.get(entity.getChildren(), childIndex);

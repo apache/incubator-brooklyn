@@ -370,16 +370,16 @@ public class BasicTaskExecutionTest {
                 allowCompletion.await();
                 return 42;
             }});
-        assertEquals(null, t.submittedByTask);
+        assertEquals(null, t.getSubmittedByTask());
         assertEquals(-1, t.submitTimeUtc);
-        assertNull(t.getResult());
+        assertNull(t.getInternalFuture());
 
         em.submit(MutableMap.of("tag", "A"), t);
         assertTrue(signalStarted.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
         
         assertTrue(t.submitTimeUtc > 0);
         assertTrue(t.startTimeUtc >= t.submitTimeUtc);
-        assertNotNull(t.getResult());
+        assertNotNull(t.getInternalFuture());
         assertEquals(-1, t.endTimeUtc);
         assertEquals(false, t.isCancelled());
         
@@ -411,9 +411,9 @@ public class BasicTaskExecutionTest {
         BasicTask<?> tb = (BasicTask<?>) em.getTasksWithTag("B").iterator().next();
         assertEquals( 46, tb.get() );
         assertEquals( t, em.getTasksWithTag("A").iterator().next() );
-        assertNull( t.submittedByTask );
+        assertNull( t.getSubmittedByTask() );
         
-        BasicTask<?> submitter = (BasicTask<?>) tb.submittedByTask;
+        BasicTask<?> submitter = (BasicTask<?>) tb.getSubmittedByTask();
         assertNotNull(submitter);
         assertEquals("sample", submitter.displayName);
         assertEquals("some descr", submitter.description);

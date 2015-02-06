@@ -103,7 +103,7 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
     ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = ConfigKeys.newBooleanConfigKey(
             "dynamiccluster.quarantineFailedEntities", "If true, will quarantine entities that fail to start; if false, will get rid of them (i.e. delete them)", true);
 
-    AttributeSensor<Lifecycle> SERVICE_STATE = Attributes.SERVICE_STATE;
+    AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
 
     BasicNotificationSensor<Entity> ENTITY_QUARANTINED = new BasicNotificationSensor<Entity>(Entity.class, "dynamiccluster.entityQuarantined", "Entity failed to start, and has been quarantined");
 
@@ -166,6 +166,12 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
             new TypeToken<Set<Location>>() {},
             "dynamiccluster.failedSubLocations", "Sub locations that seem to have failed");
 
+    AttributeSensor<Boolean> CLUSTER_MEMBER = Sensors.newBooleanSensor(
+            "cluster.member", "Set on an entity if it is a member of a cluster");
+
+    AttributeSensor<Entity> CLUSTER = Sensors.newSensor(Entity.class,
+            "cluster.entity", "The cluster an entity is a member of");
+
     /**
      * Changes the cluster size by the given number.
      *
@@ -187,4 +193,6 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
     /** @deprecated since 0.7.0; use {@link #setMemberSpec(EntitySpec)} */
     @Deprecated
     void setFactory(EntityFactory<?> factory);
+
+    Entity addNode(Location loc, Map<?,?> extraFlags);
 }

@@ -84,7 +84,7 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
      * Can pass in the 'serverPool'.
      */
     @Override
-    public void bind(Map flags) {
+    public void bind(Map<?,?> flags) {
         if (flags.containsKey("serverPool")) {
             setConfigEvenIfOwned(SERVER_POOL, (Group) flags.get("serverPool"));
         }

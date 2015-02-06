@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.AbstractFeed;
@@ -50,6 +52,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Provides a feed of attribute values, by executing shell commands (on the local machine where 
@@ -96,6 +99,11 @@ public class ShellFeed extends AbstractFeed {
 
     public static final Logger log = LoggerFactory.getLogger(ShellFeed.class);
 
+    @SuppressWarnings("serial")
+    private static final ConfigKey<SetMultimap<ShellPollIdentifier, ShellPollConfig<?>>> POLLS = ConfigKeys.newConfigKey(
+            new TypeToken<SetMultimap<ShellPollIdentifier, ShellPollConfig<?>>>() {},
+            "polls");
+
     public static Builder builder() {
         return new Builder();
     }
@@ -105,6 +113,7 @@ public class ShellFeed extends AbstractFeed {
         private long period = 500;
         private TimeUnit periodUnits = TimeUnit.MILLISECONDS;
         private List<ShellPollConfig<?>> polls = Lists.newArrayList();
+        private String uniqueTag;
         private volatile boolean built;
         
         public Builder entity(EntityLocal val) {
@@ -123,9 +132,14 @@ public class ShellFeed extends AbstractFeed {
             polls.add(config);
             return this;
         }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
+            return this;
+        }
         public ShellFeed build() {
             built = true;
             ShellFeed result = new ShellFeed(this);
+            result.setEntity(checkNotNull(entity, "entity"));
             result.start();
             return result;
         }
@@ -171,12 +185,16 @@ public class ShellFeed extends AbstractFeed {
         }
     }
     
-    // Treat as immutable once built
-    private final SetMultimap<ShellPollIdentifier, ShellPollConfig<?>> polls = HashMultimap.<ShellPollIdentifier,ShellPollConfig<?>>create();
-    
+    /**
+     * For rebind; do not call directly; use builder
+     */
+    public ShellFeed() {
+    }
+
     protected ShellFeed(Builder builder) {
-        super(builder.entity);
-        
+        super();
+
+        SetMultimap<ShellPollIdentifier, ShellPollConfig<?>> polls = HashMultimap.<ShellPollIdentifier,ShellPollConfig<?>>create();
         for (ShellPollConfig<?> config : builder.polls) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
             ShellPollConfig<?> configCopy = new ShellPollConfig(config);
@@ -190,10 +208,14 @@ public class ShellFeed extends AbstractFeed {
 
             polls.put(new ShellPollIdentifier(command, env, dir, input, context, timeout), configCopy);
         }
+        setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls.values());
     }
 
     @Override
     protected void preStart() {
+        SetMultimap<ShellPollIdentifier, ShellPollConfig<?>> polls = getConfig(POLLS);
+        
         for (final ShellPollIdentifier pollInfo : polls.keySet()) {
             Set<ShellPollConfig<?>> configs = polls.get(pollInfo);
             long minPeriod = Integer.MAX_VALUE;
@@ -223,8 +245,8 @@ public class ShellFeed extends AbstractFeed {
     }
     
     @SuppressWarnings("unchecked")
-    private Poller<SshPollValue> getPoller() {
-        return (Poller<SshPollValue>) poller;
+    protected Poller<SshPollValue> getPoller() {
+        return (Poller<SshPollValue>) super.getPoller();
     }
     
     /**

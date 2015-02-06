@@ -20,6 +20,9 @@ package brooklyn.entity.chef;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -27,6 +30,7 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveTasks;
+import brooklyn.util.file.ArchiveUtils.ArchiveType;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
@@ -43,6 +47,8 @@ import com.google.gson.GsonBuilder;
 @Beta
 public class ChefTasks {
 
+    private static final Logger log = LoggerFactory.getLogger(ChefTasks.class);
+    
     public static TaskFactory<?> installChef(String chefDirectory, boolean force) {
         // TODO check on entity whether it is chef _server_
         String installCmd = cdAndRun(chefDirectory, ChefBashCommands.INSTALL_FROM_OPSCODE);
@@ -81,7 +87,13 @@ public class ChefTasks {
 //                    // remove reference to 'force' below
 //                }
                 
-                tb.add(ArchiveTasks.deploy(null, cookbookArchiveUrl, EffectorTasks.findSshMachine(), privateTmpDirContainingUnpackedCookbook).newTask());
+                String destName = null;
+                if (ArchiveType.of(cookbookArchiveUrl)==ArchiveType.UNKNOWN) {
+                    destName = cookbookName + ".tgz";
+                    log.debug("Assuming TGZ type for chef cookbook url "+cookbookArchiveUrl+"; it will be downloaded as "+destName);
+                }
+                tb.add(ArchiveTasks.deploy(null, null, cookbookArchiveUrl, EffectorTasks.findSshMachine(), privateTmpDirContainingUnpackedCookbook,
+                    false, null, destName).newTask());
                 
                 String installCmd = BashCommands.chain(
                     "cd "+privateTmpDirContainingUnpackedCookbook,  

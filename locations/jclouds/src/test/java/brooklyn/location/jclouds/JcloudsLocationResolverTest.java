@@ -34,6 +34,8 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.util.collections.MutableMap;
 
 public class JcloudsLocationResolverTest {
 
@@ -45,7 +47,7 @@ public class JcloudsLocationResolverTest {
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext(BrooklynProperties.Factory.newEmpty());
+        managementContext = LocalManagementContextForTests.newInstance();
         brooklynProperties = managementContext.getBrooklynProperties();
 
         brooklynProperties.put("brooklyn.location.jclouds.aws-ec2.identity", "aws-ec2-id");
@@ -231,6 +233,23 @@ public class JcloudsLocationResolverTest {
         assertJcloudsEquals(resolve("jclouds:rackspace-cloudservers-uk"), "rackspace-cloudservers-uk", null);
     }
 
+    @Test
+    public void testJcloudsRegionOverridesParent() {
+        Map<String, Object> conf;
+        
+        brooklynProperties.put("brooklyn.location.named.softlayer-was", "jclouds:softlayer:was01");
+        brooklynProperties.put("brooklyn.location.named.softlayer-was2", "jclouds:softlayer:was01");
+        brooklynProperties.put("brooklyn.location.named.softlayer-was2.region", "was02");
+        conf = resolve("named:softlayer-was").getAllConfig(true);
+        assertEquals(conf.get("region"), "was01");
+        
+        conf = resolve("named:softlayer-was2").getAllConfig(true);
+        assertEquals(conf.get("region"), "was02");
+        
+        conf = managementContext.getLocationRegistry().resolve("named:softlayer-was2", MutableMap.of("region", "was03")).getAllConfig(true);
+        assertEquals(conf.get("region"), "was03");
+    }
+    
     // TODO Visual inspection test that it logs warnings
     @Test
     public void testLogsWarnings() throws Exception {

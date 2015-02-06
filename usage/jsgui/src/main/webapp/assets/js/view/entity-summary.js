@@ -21,9 +21,10 @@
  * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone", "view/viewutils",
-    "text!tpl/apps/summary.html", "formatJson"
-], function (_, $, Backbone, ViewUtils, SummaryHtml, FormatJSON) {
+    "underscore", "jquery", "backbone", "brooklyn", "brooklyn-utils", "view/viewutils",
+    "text!tpl/apps/summary.html", "view/entity-config", 
+], function (_, $, Backbone, Brooklyn, Util, ViewUtils, 
+        SummaryHtml, EntityConfigView) {
 
     var EntitySummaryView = Backbone.View.extend({
         events:{
@@ -31,28 +32,43 @@ define([
         },
         template:_.template(SummaryHtml),
         initialize: function() {
-            _.bindAll(this)
-            var that = this
-            var ej = FormatJSON(this.model.toJSON());
+            _.bindAll(this);
+            var that = this;
             this.$el.html(this.template({
                 entity:this.model,
                 application:this.options.application,
-                entityJson:ej,
-                applicationJson:FormatJSON(this.options.application.toJSON())
-            }))
-            ViewUtils.updateTextareaWithData($(".for-textarea", this.$el), ej, true, false, 150, 400)
-            ViewUtils.attachToggler(this.$el)
+                isApp: this.isApp()
+            }));
+            if (this.model.get('catalogItemId'))
+                this.$("div.catalogItemId").show();
+            else
+                this.$("div.catalogItemId").hide();
+            
+            this.options.tabView.configView = new EntityConfigView({
+                model:this.options.model,
+                tabView:this.options.tabView,
+            });
+            this.$("div#advanced-config").html(this.options.tabView.configView.render().el);
+
+            ViewUtils.attachToggler(this.$el);
 
             // TODO we should have a backbone object exported from the sensors view which we can listen to here
             // (currently we just take the URL from that view) - and do the same for active tasks;
             ViewUtils.getRepeatedlyWithDelay(this, this.model.getSensorUpdateUrl(),
-                function(data) { that.updateWithData(data) });
+                function(data) { that.updateWithData(data); });
             // however if we only use external objects we must either subscribe to their errors also
             // or do our own polling against the server, so we know when to disable ourselves
 //            ViewUtils.fetchRepeatedlyWithDelay(this, this.model, { period: 10*1000 })
+
+            this.loadSpec();
+        },
+        isApp: function() {
+            var id = this.model.get('id');
+            var selfLink = this.model.get('links').self;
+            return selfLink.indexOf("/applications/" + id) != -1;
         },
         render:function () {
-            return this
+            return this;
         },
         revealIfHasValue: function(sensor, $div, renderer, values) {
             var that = this;
@@ -87,18 +103,17 @@ define([
             this.revealIfHasValue("service.isUp", this.$(".serviceUp"), null, data)
             
             var renderAsLink = function(data) { return "<a href='"+_.escape(data)+"'>"+_.escape(data)+"</a>" };
-            this.revealIfHasValue("webapp.url", this.$(".url"), renderAsLink, data)
+            this.revealIfHasValue("main.uri", this.$(".url"), renderAsLink, data)
 
             var status = this.updateStatusIcon();
+            
+            this.updateCachedProblemIndicator(data);
             
             if (status.problem) {
                 this.updateAddlInfoForProblem();
             } else {
                 this.$(".additional-info-on-problem").html("").hide()
             }
-        },
-        updateSensorsNow: function() {
-            this.updateWithData();
         },
         updateStatusIcon: function() {
             var statusIconInfo = ViewUtils.computeStatusIconInfo(this.$(".serviceUp .value").html(), this.$(".status .value").html());
@@ -109,6 +124,14 @@ define([
                 this.$('#status-icon').html('');
             }
             return statusIconInfo;
+        },
+        updateCachedProblemIndicator: function(data) {
+            if (!data) return;
+            this.problemIndicators = data['service.problems'];
+            if (!this.problemIndicators || !_.size(this.problemIndicators))
+                this.problemIndicators = data['service.notUp.indicators'];
+            if (!this.problemIndicators || !_.size(this.problemIndicators))
+                this.problemIndicators = null;
         },
         updateAddlInfoForProblem: function(tasksReloaded) {
             if (!this.options.tasks)
@@ -127,18 +150,32 @@ define([
                 }
             } );
 
+            if (this.problemIndicators) {
+                var indicatorText = _.values(this.problemIndicators);
+                for (var error in indicatorText) {
+                    if (problemDetails) {
+                        problemDetails = problemDetails + "<br style='line-height: 24px;'>";
+                    }
+                    problemDetails = problemDetails + _.escape(indicatorText[error]);
+                }
+            }
             if (lastFailedTask) {
                 var path = "activities/subtask/"+lastFailedTask.id;
                 var base = this.model.getLinkByName("self");
-                problemDetails = "<b>"+_.escape("Failure running task ")
+                if (problemDetails)
+                    problemDetails = problemDetails + "<br style='line-height: 24px;'>";
+                problemDetails = problemDetails + "<b>"+_.escape("Failure running task ")
                     +"<a class='open-tab' tab-target='"+path+"'" +
                     		"href='#"+base+"/"+path+"'>" +
             				"<i>"+_.escape(lastFailedTask.attributes.displayName)+"</i> "
                     +"("+lastFailedTask.id+")</a>: </b>"+
                     _.escape(lastFailedTask.attributes.result);
-            } else if (!that.problemTasksLoaded) {
+            }
+            if (!that.problemTasksLoaded && this.options.tasks) {
                 // trigger callback to get tasks
-                problemDetails = "<i>Loading problem details...</i>";
+                if (!problemDetails)
+                    problemDetails = "<i>Loading problem details...</i>";
+                
                 ViewUtils.get(this, this.options.tasks.url, function() {
                     that.problemTasksLoaded = true;
                     that.updateAddlInfoForProblem();
@@ -169,6 +206,22 @@ define([
             // and prevent the a from firing
             event.preventDefault();
             return false;
+        },
+        loadSpec: function(flushCache) {
+            if (!flushCache && this.spec) {
+                this.renderSpec(this.spec);
+                return;
+            }
+            ViewUtils.get(this, this.model.get('links').spec, this.renderSpec);
+        },
+        renderSpec: function(data) {
+            if (!data) data=this.spec;
+            if (!data) {
+                this.$('#entity-spec-yaml-toggler').hide();
+            } else {
+                ViewUtils.updateTextareaWithData($("#entity-spec-yaml", this.$el), data, true, false, 150, 400);
+                this.$('#entity-spec-yaml-toggler').show();
+            }
         }
     });
 

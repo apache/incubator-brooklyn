@@ -25,12 +25,13 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
-
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
+
+import com.google.common.base.Objects;
 
 public final class BrooklynClassLoadingContextSequential extends AbstractBrooklynClassLoadingContext {
 
@@ -66,18 +67,23 @@ public final class BrooklynClassLoadingContextSequential extends AbstractBrookly
     }
     
     public Maybe<Class<?>> tryLoadClass(String className) {
+        List<Throwable> errors = MutableList.of();
         for (BrooklynClassLoadingContext target: primaries) {
             Maybe<Class<?>> clazz = target.tryLoadClass(className);
             if (clazz.isPresent())
                 return clazz;
+            errors.add( ((Maybe.Absent<?>)clazz).getException() );
         }
+        boolean noPrimaryErrors = errors.isEmpty();
         for (BrooklynClassLoadingContext target: secondaries) {
             Maybe<Class<?>> clazz = target.tryLoadClass(className);
             if (clazz.isPresent())
                 return clazz;
+            if (noPrimaryErrors)
+                errors.add( ((Maybe.Absent<?>)clazz).getException() );
         }
 
-        return Maybe.absent("Unable to load "+className+" from "+primaries);
+        return Maybe.absent(Exceptions.create("Unable to load "+className+" from "+primaries, errors));
     }
 
 

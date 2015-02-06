@@ -42,6 +42,7 @@ import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -100,7 +101,7 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     }
     
     /**
-     * Wraps an entity spec so its configuration can be overridden without modifying the 
+     * Copies entity spec so its configuration can be overridden without modifying the 
      * original entity spec.
      */
     public static <T extends Entity> EntitySpec<T> create(EntitySpec<T> spec) {
@@ -117,7 +118,9 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
                 .addInitializers(spec.getInitializers())
                 .children(spec.getChildren())
                 .members(spec.getMembers())
-                .groups(spec.getGroups());
+                .groups(spec.getGroups())
+                .catalogItemId(spec.getCatalogItemId())
+                .locations(spec.getLocations());
         
         if (spec.getParent() != null) result.parent(spec.getParent());
         if (spec.getImplementation() != null) result.impl(spec.getImplementation());
@@ -151,8 +154,13 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
         super(type);
     }
     
+    @SuppressWarnings("unchecked")
+    public Class<T> getType() {
+        return (Class<T>)super.getType();
+    }
+    
     @Override
-    protected void checkValidType(Class<T> type) {
+    protected void checkValidType(Class<? extends T> type) {
         // EntitySpec does nothing.  Other specs do check it's an implementation etc.
     }
     
@@ -222,6 +230,11 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
      */
     public Map<ConfigKey<?>, Object> getConfig() {
         return Collections.unmodifiableMap(config);
+    }
+
+    /** Clears the config map, removing any config previously set. */
+    public void clearConfig() {
+        config.clear();
     }
         
     public List<PolicySpec<?>> getPolicySpecs() {
@@ -374,6 +387,12 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     }
 
     public <V> EntitySpec<T> configure(ConfigKey<V> key, Task<? extends V> val) {
+        checkMutable();
+        config.put(checkNotNull(key, "key"), val);
+        return this;
+    }
+
+    public <V> EntitySpec<T> configure(ConfigKey<V> key, Supplier<? extends V> val) {
         checkMutable();
         config.put(checkNotNull(key, "key"), val);
         return this;

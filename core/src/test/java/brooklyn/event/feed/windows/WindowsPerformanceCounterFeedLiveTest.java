@@ -20,13 +20,10 @@ package brooklyn.event.feed.windows;
 
 import java.util.Map;
 
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
@@ -34,9 +31,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
@@ -64,29 +59,20 @@ import com.google.common.collect.ImmutableMap;
  * use a jclouds location, as adding a dependency on brooklyn-locations-jclouds would cause a
  * cyclic dependency.
  */
-public class WindowsPerformanceCounterFeedLiveTest {
+public class WindowsPerformanceCounterFeedLiveTest extends BrooklynAppLiveTestSupport {
 
-    final static AttributeSensor<Double> CPU_IDLE_TIME =
-            Sensors.newDoubleSensor("cpu.idleTime", "");
-    final static AttributeSensor<Integer> TELEPHONE_LINES =
-            Sensors.newIntegerSensor("telephone.lines", "");
+    final static AttributeSensor<Double> CPU_IDLE_TIME = Sensors.newDoubleSensor("cpu.idleTime", "");
+    final static AttributeSensor<Integer> TELEPHONE_LINES = Sensors.newIntegerSensor("telephone.lines", "");
 
     private static final String LOCATION_SPEC = "named:WindowsLiveTest";
 
-    private ManagementContext mgmt;
-    private TestApplication app;
     private Location loc;
     private EntityLocal entity;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        if (mgmt!=null) {
-            app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
-        } else {
-            app = ApplicationBuilder.newManagedApp(TestApplication.class);
-            mgmt = ((EntityInternal)app).getManagementContext();
-        }
-
+        super.setUp();
+        
         Map<String,?> allFlags = MutableMap.<String,Object>builder()
                 .put("tags", ImmutableList.of(getClass().getName()))
                 .build();
@@ -97,12 +83,6 @@ public class WindowsPerformanceCounterFeedLiveTest {
 
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(ImmutableList.of(loc));
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (mgmt != null) Entities.destroyAllCatching(mgmt);
-        mgmt = null;
     }
 
     @Test(groups={"Live","Disabled"}, enabled=false)

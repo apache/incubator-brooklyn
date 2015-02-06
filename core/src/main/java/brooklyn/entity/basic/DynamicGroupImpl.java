@@ -26,6 +26,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.BrooklynLogging;
+import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
@@ -60,7 +62,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
         super.init();
         setAttribute(RUNNING, true);
     }
-
+    
     @Override
     public void setEntityFilter(Predicate<? super Entity> filter) {
         // TODO Sould this be "evenIfOwned"?
@@ -192,7 +194,8 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
                 return;
             }
             if (getApplication() == null) {
-                log.warn("{} not (yet) scanning for children: no application defined", this);
+                BrooklynLogging.log(log, BrooklynLogging.levelDependingIfReadOnly(this, LoggingLevel.WARN, LoggingLevel.TRACE, LoggingLevel.TRACE),
+                    "{} not (yet) scanning for children: no application defined", this);
                 return;
             }
             boolean changed = false;

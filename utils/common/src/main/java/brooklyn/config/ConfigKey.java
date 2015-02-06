@@ -20,6 +20,8 @@ package brooklyn.config;
 
 import java.util.Collection;
 
+import javax.annotation.Nullable;
+
 import com.google.common.reflect.TypeToken;
 
 /**
@@ -77,6 +79,11 @@ public interface ConfigKey<T> {
      * @return True if the configuration can be changed at runtime.
      */
     boolean isReconfigurable();
+    
+    /**
+     * @return The inheritance model, or <code>null</code> for the default in any context.
+     */
+    @Nullable ConfigInheritance getInheritance();
 
     /** Interface for elements which want to be treated as a config key without actually being one
      * (e.g. config attribute sensors).

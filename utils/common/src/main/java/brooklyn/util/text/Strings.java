@@ -24,13 +24,16 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.annotation.Nullable;
 
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.CharMatcher;
@@ -43,6 +46,9 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.Ordering;
 
 public class Strings {
+
+    /** The empty {@link String}. */
+    public static final String EMPTY = "";
 
     /**
      * Checks if the given string is null or is an empty string.
@@ -103,6 +109,12 @@ public class Strings {
         return !isBlank(s);
     }
 
+    /** @return a {@link Maybe} object which is absent if the argument {@link #isBlank(CharSequence)} */
+    public static <T extends CharSequence> Maybe<T> maybeNonBlank(T s) {
+        if (isNonBlank(s)) return Maybe.of(s);
+        return Maybe.absent();
+    }
+
     /** throws IllegalArgument if string not empty; cf. guava Preconditions.checkXxxx */
     public static void checkNonEmpty(CharSequence s) {
         if (s==null) throw new IllegalArgumentException("String must not be null");
@@ -113,16 +125,16 @@ public class Strings {
         if (isEmpty(s)) throw new IllegalArgumentException(message);
     }
 
-	/** removes the first suffix in the list which is present at the end of string
-	 * and returns that string; ignores subsequent suffixes if a matching one is found;
-	 * returns the original string if no suffixes are at the end
-	 */
-	public static String removeFromEnd(String string, String ...suffixes) {
-	    if (isEmpty(string)) return string;
-		for (String suffix : suffixes)
-			if (suffix!=null && string.endsWith(suffix)) return string.substring(0, string.length() - suffix.length());
-		return string;
-	}
+    /** removes the first suffix in the list which is present at the end of string
+     * and returns that string; ignores subsequent suffixes if a matching one is found;
+     * returns the original string if no suffixes are at the end
+     */
+    public static String removeFromEnd(String string, String ...suffixes) {
+        if (isEmpty(string)) return string;
+        for (String suffix : suffixes)
+            if (suffix!=null && string.endsWith(suffix)) return string.substring(0, string.length() - suffix.length());
+        return string;
+    }
 
     /** as removeFromEnd, but repeats until all such suffixes are gone */
     public static String removeAllFromEnd(String string, String ...suffixes) {
@@ -139,7 +151,7 @@ public class Strings {
         }
         return string;
     }
-    
+
     /** removes the first prefix in the list which is present at the start of string
      * and returns that string; ignores subsequent prefixes if a matching one is found;
      * returns the original string if no prefixes match
@@ -147,7 +159,7 @@ public class Strings {
     public static String removeFromStart(String string, String ...prefixes) {
         if (isEmpty(string)) return string;
         for (String prefix : prefixes)
-            if (string.startsWith(prefix)) return string.substring(prefix.length());
+            if (prefix!=null && string.startsWith(prefix)) return string.substring(prefix.length());
         return string;
     }
 
@@ -168,33 +180,33 @@ public class Strings {
     }
 
     /** convenience for {@link com.google.common.base.Joiner} */
-	public static String join(Iterable<? extends Object> list, String seperator) {
-		boolean app = false;
-		StringBuilder out = new StringBuilder();
-		for (Object s: list) {
-			if (app) out.append(seperator);
-			out.append(s);
-			app = true;
-		}
-		return out.toString();
-	}
-	/** convenience for {@link com.google.common.base.Joiner} */
-	public static String join(Object[] list, String seperator) {
-		boolean app = false;
-		StringBuilder out = new StringBuilder();
-		for (Object s: list) {
-			if (app) out.append(seperator);
-			out.append(s);
-			app = true;
-		}
-		return out.toString();
-	}
-	
-	/** convenience for joining lines together */
-	public static String lines(String ...lines) {
-	    return Joiner.on("\n").join(Arrays.asList(lines));
-	}
-    
+    public static String join(Iterable<? extends Object> list, String seperator) {
+        boolean app = false;
+        StringBuilder out = new StringBuilder();
+        for (Object s: list) {
+            if (app) out.append(seperator);
+            out.append(s);
+            app = true;
+        }
+        return out.toString();
+    }
+    /** convenience for {@link com.google.common.base.Joiner} */
+    public static String join(Object[] list, String seperator) {
+        boolean app = false;
+        StringBuilder out = new StringBuilder();
+        for (Object s: list) {
+            if (app) out.append(seperator);
+            out.append(s);
+            app = true;
+        }
+        return out.toString();
+    }
+
+    /** convenience for joining lines together */
+    public static String lines(String ...lines) {
+        return Joiner.on("\n").join(Arrays.asList(lines));
+    }
+
     /** replaces all key->value entries from the replacement map in source (non-regex) */
     @SuppressWarnings("rawtypes")
     public static String replaceAll(String source, Map replacements) {
@@ -204,7 +216,7 @@ public class Strings {
         }
         return source;
     }
-    
+
     /** NON-REGEX replaceAll -
      * replaces all instances in source, of the given pattern, with the given replacement
      * (not  interpreting any arguments as regular expressions)
@@ -223,7 +235,7 @@ public class Strings {
         }
         return result.toString();
     }
-    
+
     /** NON-REGEX replacement -- explicit method name for reabaility, doing same as Strings.replaceAll */
     public static String replaceAllNonRegex(String source, String pattern, String replacement) {
         return replaceAll(source, pattern, replacement);
@@ -237,13 +249,13 @@ public class Strings {
     /** Valid non alphanumeric characters for filenames. */
     public static final String VALID_NON_ALPHANUM_FILE_CHARS = "-_.";
 
-    /** 
-     * Returns a valid filename based on the input. 
+    /**
+     * Returns a valid filename based on the input.
      *
      * A valid filename starts with the first alphanumeric character, then include
      * all alphanumeric characters plus those in {@link #VALID_NON_ALPHANUM_FILE_CHARS},
      * with any runs of invalid characters being replaced by {@literal _}.
-     * 
+     *
      * @throws NullPointerException if the input string is null.
      * @throws IllegalArgumentException if the input string is blank.
      */
@@ -269,7 +281,7 @@ public class Strings {
 
     /**
      * Returns a valid Java identifier name based on the input.
-     * 
+     *
      * Removes certain characterss (like apostrophe), replaces one or more invalid
      * characterss with {@literal _}, and prepends {@literal _} if the first character
      * is only valid as an identifier part (not start).
@@ -289,7 +301,7 @@ public class Strings {
 
     /**
      * Returns a unique valid java identifier name based on the input.
-     * 
+     *
      * Translated as per {@link #makeValidJavaName(String)} but with {@link String#hashCode()}
      * appended where necessary to guarantee uniqueness.
      *
@@ -305,187 +317,186 @@ public class Strings {
     }
 
     /** @see {@link Identifiers#makeRandomId(int)} */
-	public static String makeRandomId(int l) {
-	    return Identifiers.makeRandomId(l);
-	}
+    public static String makeRandomId(int l) {
+        return Identifiers.makeRandomId(l);
+    }
 
-	/** pads the string with 0's at the left up to len; no padding if i longer than len */
-	public static String makeZeroPaddedString(int i, int len) {
-		return makePaddedString(""+i, len, "0", "");
-	}
+    /** pads the string with 0's at the left up to len; no padding if i longer than len */
+    public static String makeZeroPaddedString(int i, int len) {
+        return makePaddedString(""+i, len, "0", "");
+    }
 
-	/** pads the string with "pad" at the left up to len; no padding if base longer than len */
-	public static String makePaddedString(String base, int len, String left_pad, String right_pad) {
-		String s = ""+(base==null ? "" : base);
-		while (s.length()<len) s=left_pad+s+right_pad;
-		return s;
-	}
+    /** pads the string with "pad" at the left up to len; no padding if base longer than len */
+    public static String makePaddedString(String base, int len, String left_pad, String right_pad) {
+        String s = ""+(base==null ? "" : base);
+        while (s.length()<len) s=left_pad+s+right_pad;
+        return s;
+    }
 
-	public static void trimAll(String[] s) {
-		for (int i=0; i<s.length; i++)
-			s[i] = (s[i]==null ? "" : s[i].trim());
-	}
+    public static void trimAll(String[] s) {
+        for (int i=0; i<s.length; i++)
+            s[i] = (s[i]==null ? "" : s[i].trim());
+    }
 
-	/** creates a string from a real number, with specified accuracy (more iff it comes for free, ie integer-part);
-	 * switches to E notation if needed to fit within maxlen; can be padded left up too (not useful)
-	 * @param x number to use
-	 * @param maxlen maximum length for the numeric string, if possible (-1 to suppress)
-	 * @param prec number of digits accuracy desired (more kept for integers)
-	 * @param leftPadLen will add spaces at left if necessary to make string this long (-1 to suppress) [probably not usef]
-	 * @return such a string
-	 */
-	public static String makeRealString(double x, int maxlen, int prec, int leftPadLen) {
-		return makeRealString(x, maxlen, prec, leftPadLen, 0.00000000001, true);
-	}
-	/** creates a string from a real number, with specified accuracy (more iff it comes for free, ie integer-part);
-	 * switches to E notation if needed to fit within maxlen; can be padded left up too (not useful)
-	 * @param x number to use
-	 * @param maxlen maximum length for the numeric string, if possible (-1 to suppress)
-	 * @param prec number of digits accuracy desired (more kept for integers)
-	 * @param leftPadLen will add spaces at left if necessary to make string this long (-1 to suppress) [probably not usef]
-	 * @param skipDecimalThreshhold if positive it will not add a decimal part if the fractional part is less than this threshhold
-	 *    (but for a value 3.00001 it would show zeroes, e.g. with 3 precision and positive threshhold <= 0.00001 it would show 3.00);
-	 *    if zero or negative then decimal digits are always shown
-	 * @param useEForSmallNumbers whether to use E notation for numbers near zero (e.g. 0.001)
-	 * @return such a string
-	 */
-	public static String makeRealString(double x, int maxlen, int prec, int leftPadLen, double skipDecimalThreshhold, boolean useEForSmallNumbers) {
-	    if (x<0) return 
-	        "-"+makeRealString(-x, maxlen, prec, leftPadLen);
-		NumberFormat df = DecimalFormat.getInstance();		
-		//df.setMaximumFractionDigits(maxlen);
-		df.setMinimumFractionDigits(0);
-		//df.setMaximumIntegerDigits(prec);
-		df.setMinimumIntegerDigits(1);
-		df.setGroupingUsed(false);
-		String s;
-		if (x==0) {
-			if (skipDecimalThreshhold>0 || prec<=1) s="0";
-			else {
-				s="0.0";
-				while (s.length()<prec+1) s+="0";
-			}
-		} else {
-//			long bits= Double.doubleToLongBits(x);
-//			int s = ((bits >> 63) == 0) ? 1 : -1;
-//			int e = (int)((bits >> 52) & 0x7ffL);
-//			long m = (e == 0) ?
-//			(bits & 0xfffffffffffffL) << 1 :
-//			(bits & 0xfffffffffffffL) | 0x10000000000000L;
-//			//s*m*2^(e-1075);
-			int log = (int)Math.floor(Math.log10(x));
-			int numFractionDigits = (log>=prec ? 0 : prec-log-1);			
-			if (numFractionDigits>0) { //need decimal digits
-				if (skipDecimalThreshhold>0) { 
-					int checkFractionDigits = 0;
-					double multiplier = 1;
-					while (checkFractionDigits < numFractionDigits) {
-						if (Math.abs(x - Math.rint(x*multiplier)/multiplier)<skipDecimalThreshhold)
-							break;
-						checkFractionDigits++;
-						multiplier*=10;
-					}
-					numFractionDigits = checkFractionDigits;
-				}
-				df.setMinimumFractionDigits(numFractionDigits);
-				df.setMaximumFractionDigits(numFractionDigits);
-			} else {
-				//x = Math.rint(x);
-				df.setMaximumFractionDigits(0);
-			}
-			s = df.format(x);
-			if (maxlen>0 && s.length()>maxlen) {
-				//too long:
-				double signif = x/Math.pow(10,log);
-				if (s.indexOf(getDefaultDecimalSeparator())>=0) {
-					//have a decimal point; either we are very small 0.000001
-					//or prec is larger than maxlen
-					if (Math.abs(x)<1 && useEForSmallNumbers) {
-						//very small-- use alternate notation
-						s = makeRealString(signif, -1, prec, -1) + "E"+log;
-					} else {
-						//leave it alone, user error or E not wanted
-					}
-				} else {
-					//no decimal point, integer part is too large, use alt notation
-					s = makeRealString(signif, -1, prec, -1) + "E"+log;
-				}
-			}
-		}
-		if (leftPadLen>s.length())
-			return makePaddedString(s, leftPadLen, " ", "");
-		else
-			return s;
-	}
+    /** creates a string from a real number, with specified accuracy (more iff it comes for free, ie integer-part);
+     * switches to E notation if needed to fit within maxlen; can be padded left up too (not useful)
+     * @param x number to use
+     * @param maxlen maximum length for the numeric string, if possible (-1 to suppress)
+     * @param prec number of digits accuracy desired (more kept for integers)
+     * @param leftPadLen will add spaces at left if necessary to make string this long (-1 to suppress) [probably not usef]
+     * @return such a string
+     */
+    public static String makeRealString(double x, int maxlen, int prec, int leftPadLen) {
+        return makeRealString(x, maxlen, prec, leftPadLen, 0.00000000001, true);
+    }
+    /** creates a string from a real number, with specified accuracy (more iff it comes for free, ie integer-part);
+     * switches to E notation if needed to fit within maxlen; can be padded left up too (not useful)
+     * @param x number to use
+     * @param maxlen maximum length for the numeric string, if possible (-1 to suppress)
+     * @param prec number of digits accuracy desired (more kept for integers)
+     * @param leftPadLen will add spaces at left if necessary to make string this long (-1 to suppress) [probably not usef]
+     * @param skipDecimalThreshhold if positive it will not add a decimal part if the fractional part is less than this threshhold
+     *    (but for a value 3.00001 it would show zeroes, e.g. with 3 precision and positive threshhold <= 0.00001 it would show 3.00);
+     *    if zero or negative then decimal digits are always shown
+     * @param useEForSmallNumbers whether to use E notation for numbers near zero (e.g. 0.001)
+     * @return such a string
+     */
+    public static String makeRealString(double x, int maxlen, int prec, int leftPadLen, double skipDecimalThreshhold, boolean useEForSmallNumbers) {
+        if (x<0) return "-"+makeRealString(-x, maxlen, prec, leftPadLen);
+        NumberFormat df = DecimalFormat.getInstance();
+        //df.setMaximumFractionDigits(maxlen);
+        df.setMinimumFractionDigits(0);
+        //df.setMaximumIntegerDigits(prec);
+        df.setMinimumIntegerDigits(1);
+        df.setGroupingUsed(false);
+        String s;
+        if (x==0) {
+            if (skipDecimalThreshhold>0 || prec<=1) s="0";
+            else {
+                s="0.0";
+                while (s.length()<prec+1) s+="0";
+            }
+        } else {
+//            long bits= Double.doubleToLongBits(x);
+//            int s = ((bits >> 63) == 0) ? 1 : -1;
+//            int e = (int)((bits >> 52) & 0x7ffL);
+//            long m = (e == 0) ?
+//            (bits & 0xfffffffffffffL) << 1 :
+//            (bits & 0xfffffffffffffL) | 0x10000000000000L;
+//            //s*m*2^(e-1075);
+            int log = (int)Math.floor(Math.log10(x));
+            int numFractionDigits = (log>=prec ? 0 : prec-log-1);
+            if (numFractionDigits>0) { //need decimal digits
+                if (skipDecimalThreshhold>0) {
+                    int checkFractionDigits = 0;
+                    double multiplier = 1;
+                    while (checkFractionDigits < numFractionDigits) {
+                        if (Math.abs(x - Math.rint(x*multiplier)/multiplier)<skipDecimalThreshhold)
+                            break;
+                        checkFractionDigits++;
+                        multiplier*=10;
+                    }
+                    numFractionDigits = checkFractionDigits;
+                }
+                df.setMinimumFractionDigits(numFractionDigits);
+                df.setMaximumFractionDigits(numFractionDigits);
+            } else {
+                //x = Math.rint(x);
+                df.setMaximumFractionDigits(0);
+            }
+            s = df.format(x);
+            if (maxlen>0 && s.length()>maxlen) {
+                //too long:
+                double signif = x/Math.pow(10,log);
+                if (s.indexOf(getDefaultDecimalSeparator())>=0) {
+                    //have a decimal point; either we are very small 0.000001
+                    //or prec is larger than maxlen
+                    if (Math.abs(x)<1 && useEForSmallNumbers) {
+                        //very small-- use alternate notation
+                        s = makeRealString(signif, -1, prec, -1) + "E"+log;
+                    } else {
+                        //leave it alone, user error or E not wanted
+                    }
+                } else {
+                    //no decimal point, integer part is too large, use alt notation
+                    s = makeRealString(signif, -1, prec, -1) + "E"+log;
+                }
+            }
+        }
+        if (leftPadLen>s.length())
+            return makePaddedString(s, leftPadLen, " ", "");
+        else
+            return s;
+    }
 
-	/** creates a string from a real number, with specified accuracy (more iff it comes for free, ie integer-part);
-	 * switches to E notation if needed to fit within maxlen; can be padded left up too (not useful)
-	 * @param x number to use
-	 * @param maxlen maximum length for the numeric string, if possible (-1 to suppress)
-	 * @param prec number of digits accuracy desired (more kept for integers)
-	 * @param leftPadLen will add spaces at left if necessary to make string this long (-1 to suppress) [probably not usef]
-	 * @return such a string
-	 */
-	public static String makeRealStringNearZero(double x, int maxlen, int prec, int leftPadLen) {
-		if (Math.abs(x)<0.0000000001) x=0;
-		NumberFormat df = DecimalFormat.getInstance();		
-		//df.setMaximumFractionDigits(maxlen);
-		df.setMinimumFractionDigits(0);
-		//df.setMaximumIntegerDigits(prec);
-		df.setMinimumIntegerDigits(1);
-		df.setGroupingUsed(false);
-		String s;
-		if (x==0) {
-			if (prec<=1) s="0";
-			else {
-				s="0.0";
-				while (s.length()<prec+1) s+="0";
-			}
-		} else {
-//			long bits= Double.doubleToLongBits(x);
-//			int s = ((bits >> 63) == 0) ? 1 : -1;
-//			int e = (int)((bits >> 52) & 0x7ffL);
-//			long m = (e == 0) ?
-//			(bits & 0xfffffffffffffL) << 1 :
-//			(bits & 0xfffffffffffffL) | 0x10000000000000L;
-//			//s*m*2^(e-1075);
-			int log = (int)Math.floor(Math.log10(x));
-			int scale = (log>=prec ? 0 : prec-log-1);			
-			if (scale>0) { //need decimal digits
-				double scale10 = Math.pow(10, scale);
-				x = Math.rint(x*scale10)/scale10;
-				df.setMinimumFractionDigits(scale);
-				df.setMaximumFractionDigits(scale);
-			} else {
-				//x = Math.rint(x);
-				df.setMaximumFractionDigits(0);
-			}
-			s = df.format(x);
-			if (maxlen>0 && s.length()>maxlen) {
-				//too long:
-				double signif = x/Math.pow(10,log);
-				if (s.indexOf('.')>=0) {
-					//have a decimal point; either we are very small 0.000001
-					//or prec is larger than maxlen
-					if (Math.abs(x)<1) {
-						//very small-- use alternate notation
-						s = makeRealString(signif, -1, prec, -1) + "E"+log;
-					} else {
-						//leave it alone, user error
-					}
-				} else {
-					//no decimal point, integer part is too large, use alt notation
-					s = makeRealString(signif, -1, prec, -1) + "E"+log;
-				}
-			}
-		}
-		if (leftPadLen>s.length())
-			return makePaddedString(s, leftPadLen, " ", "");
-		else
-			return s;
-	}
+    /** creates a string from a real number, with specified accuracy (more iff it comes for free, ie integer-part);
+     * switches to E notation if needed to fit within maxlen; can be padded left up too (not useful)
+     * @param x number to use
+     * @param maxlen maximum length for the numeric string, if possible (-1 to suppress)
+     * @param prec number of digits accuracy desired (more kept for integers)
+     * @param leftPadLen will add spaces at left if necessary to make string this long (-1 to suppress) [probably not usef]
+     * @return such a string
+     */
+    public static String makeRealStringNearZero(double x, int maxlen, int prec, int leftPadLen) {
+        if (Math.abs(x)<0.0000000001) x=0;
+        NumberFormat df = DecimalFormat.getInstance();
+        //df.setMaximumFractionDigits(maxlen);
+        df.setMinimumFractionDigits(0);
+        //df.setMaximumIntegerDigits(prec);
+        df.setMinimumIntegerDigits(1);
+        df.setGroupingUsed(false);
+        String s;
+        if (x==0) {
+            if (prec<=1) s="0";
+            else {
+                s="0.0";
+                while (s.length()<prec+1) s+="0";
+            }
+        } else {
+//            long bits= Double.doubleToLongBits(x);
+//            int s = ((bits >> 63) == 0) ? 1 : -1;
+//            int e = (int)((bits >> 52) & 0x7ffL);
+//            long m = (e == 0) ?
+//            (bits & 0xfffffffffffffL) << 1 :
+//            (bits & 0xfffffffffffffL) | 0x10000000000000L;
+//            //s*m*2^(e-1075);
+            int log = (int)Math.floor(Math.log10(x));
+            int scale = (log>=prec ? 0 : prec-log-1);
+            if (scale>0) { //need decimal digits
+                double scale10 = Math.pow(10, scale);
+                x = Math.rint(x*scale10)/scale10;
+                df.setMinimumFractionDigits(scale);
+                df.setMaximumFractionDigits(scale);
+            } else {
+                //x = Math.rint(x);
+                df.setMaximumFractionDigits(0);
+            }
+            s = df.format(x);
+            if (maxlen>0 && s.length()>maxlen) {
+                //too long:
+                double signif = x/Math.pow(10,log);
+                if (s.indexOf('.')>=0) {
+                    //have a decimal point; either we are very small 0.000001
+                    //or prec is larger than maxlen
+                    if (Math.abs(x)<1) {
+                        //very small-- use alternate notation
+                        s = makeRealString(signif, -1, prec, -1) + "E"+log;
+                    } else {
+                        //leave it alone, user error
+                    }
+                } else {
+                    //no decimal point, integer part is too large, use alt notation
+                    s = makeRealString(signif, -1, prec, -1) + "E"+log;
+                }
+            }
+        }
+        if (leftPadLen>s.length())
+            return makePaddedString(s, leftPadLen, " ", "");
+        else
+            return s;
+    }
 
-	/** returns the first word (whitespace delimited text), or null if there is none (input null or all whitespace) */
+    /** returns the first word (whitespace delimited text), or null if there is none (input null or all whitespace) */
     public static String getFirstWord(String s) {
         if (s==null) return null;
         int start = 0;
@@ -504,9 +515,9 @@ public class Strings {
         }
         return s.substring(start, end);
     }
-	
+
     /** returns the last word (whitespace delimited text), or null if there is none (input null or all whitespace) */
-	public static String getLastWord(String s) {
+    public static String getLastWord(String s) {
         if (s==null) return null;
         int end = s.length()-1;
         while (end >= 0) {
@@ -523,10 +534,10 @@ public class Strings {
             start--;
         }
         return s.substring(start+1, end+1);
-	}
+    }
 
     /** returns the first word after the given phrase, or null if no such phrase;
-     * if the character immediately after the phrase is not whitespace, the non-whitespace 
+     * if the character immediately after the phrase is not whitespace, the non-whitespace
      * sequence starting with that character will be returned */
     public static String getFirstWordAfter(String context, String phrase) {
         if (context==null || phrase==null) return null;
@@ -535,48 +546,64 @@ public class Strings {
         return getFirstWord(context.substring(index + phrase.length()));
     }
 
-	/** @deprecated use {@link Time#makeTimeStringRounded(long)} */
-	@Deprecated
-	public static String makeTimeString(long utcMillis) {
-		return Time.makeTimeStringRounded(utcMillis);
-	}
+   /**
+    * searches in context for the given phrase, and returns the <b>untrimmed</b> remainder of the first line
+    * on which the phrase is found
+    */
+    public static String getRemainderOfLineAfter(String context, String phrase) {
+        if (context == null || phrase == null) return null;
+        int index = context.indexOf(phrase);
+        if (index < 0) return null;
+        int lineEndIndex = context.indexOf("\n", index);
+        if (lineEndIndex <= 0) {
+            return context.substring(index + phrase.length());
+        } else {
+            return context.substring(index + phrase.length(), lineEndIndex);
+        }
+    }
 
-	/** returns e.g. { "prefix01", ..., "prefix96" };
-	 * see more functional NumericRangeGlobExpander for "prefix{01-96}" 
-	 */
-	public static String[] makeArray(String prefix, int count) {
-		String[] result = new String[count];
-		int len = (""+count).length();
-		for (int i=1; i<=count; i++)
-			result[i-1] = prefix + makePaddedString("", len, "0", ""+i);
-		return result;
-	}
+    /** @deprecated use {@link Time#makeTimeStringRounded(long)} */
+    @Deprecated
+    public static String makeTimeString(long utcMillis) {
+        return Time.makeTimeStringRounded(utcMillis);
+    }
 
-	public static String[] combineArrays(String[] ...arrays) {
-		int totalLen = 0;
-		for (String[] array : arrays) {
-			if (array!=null) totalLen += array.length;
-		}
-		String[] result = new String[totalLen];
-		int i=0;
-		for (String[] array : arrays) {
-			if (array!=null) for (String s : array) {
-				result[i++] = s;
-			}
-		}
-		return result;
-	}
+    /** returns e.g. { "prefix01", ..., "prefix96" };
+     * see more functional NumericRangeGlobExpander for "prefix{01-96}"
+     */
+    public static String[] makeArray(String prefix, int count) {
+        String[] result = new String[count];
+        int len = (""+count).length();
+        for (int i=1; i<=count; i++)
+            result[i-1] = prefix + makePaddedString("", len, "0", ""+i);
+        return result;
+    }
 
-	public static String toInitialCapOnly(String value) {
-		if (value==null || value.length()==0) return value;
-		return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
-	}
+    public static String[] combineArrays(String[] ...arrays) {
+        int totalLen = 0;
+        for (String[] array : arrays) {
+            if (array!=null) totalLen += array.length;
+        }
+        String[] result = new String[totalLen];
+        int i=0;
+        for (String[] array : arrays) {
+            if (array!=null) for (String s : array) {
+                result[i++] = s;
+            }
+        }
+        return result;
+    }
 
-	public static String reverse(String name) {
-		return new StringBuffer(name).reverse().toString();
-	}
+    public static String toInitialCapOnly(String value) {
+        if (value==null || value.length()==0) return value;
+        return value.substring(0, 1).toUpperCase(Locale.ENGLISH) + value.substring(1).toLowerCase(Locale.ENGLISH);
+    }
 
-	public static boolean isLowerCase(String s) {
+    public static String reverse(String name) {
+        return new StringBuffer(name).reverse().toString();
+    }
+
+    public static boolean isLowerCase(String s) {
         return s.toLowerCase().equals(s);
     }
 
@@ -600,8 +627,19 @@ public class Strings {
 
     /** returns up to maxlen characters from the start of s */
     public static String maxlen(String s, int maxlen) {
+        return maxlenWithEllipsis(s, maxlen, "");
+    }
+
+    /** as {@link #maxlenWithEllipsis(String, int, String) with "..." as the ellipsis */
+    public static String maxlenWithEllipsis(String s, int maxlen) {
+        return maxlenWithEllipsis(s, maxlen, "...");
+    }
+    /** as {@link #maxlenWithEllipsis(String, int) but replacing the last few chars with the given ellipsis */
+    public static String maxlenWithEllipsis(String s, int maxlen, String ellipsis) {
         if (s==null) return null;
-        return s.substring(0, Math.min(s.length(), maxlen));
+        if (ellipsis==null) ellipsis="";
+        if (s.length()<=maxlen) return s;
+        return s.substring(0, Math.max(maxlen-ellipsis.length(), 0))+ellipsis;
     }
 
     /** returns toString of the object if it is not null, otherwise null */
@@ -672,7 +710,7 @@ public class Strings {
     }
 
     /** wraps a call to {@link String#format(String, Object...)} in a toString, i.e. using %s syntax,
-     * useful for places where we want deferred evaluation 
+     * useful for places where we want deferred evaluation
      * (e.g. as message to {@link Preconditions} to skip concatenation when not needed) */
     public static FormattedString format(String pattern, Object... args) {
         return new FormattedString(pattern, args);
@@ -695,7 +733,7 @@ public class Strings {
     public static String s(Iterator<?> x) {
         int count = 0;
         if (x==null || !x.hasNext()) {}
-        else { 
+        else {
             x.next(); count++;
             if (x.hasNext()) count++;
         }
@@ -719,7 +757,7 @@ public class Strings {
     public static String ies(Iterator<?> x) {
         int count = 0;
         if (x==null || !x.hasNext()) {}
-        else { 
+        else {
             x.next(); count++;
             if (x.hasNext()) count++;
         }
@@ -751,6 +789,11 @@ public class Strings {
         return Ordering.<Integer>natural().onResultOf(StringFunctions.length()).compound(Ordering.<String>natural()).nullsFirst();
     }
 
+    public static boolean isMultiLine(String s) {
+        if (s==null) return false;
+        if (s.indexOf('\n')>=0 || s.indexOf('\r')>=0) return true;
+        return false;
+    }
     public static String getFirstLine(String s) {
         int idx = s.indexOf('\n');
         if (idx==-1) return s;
@@ -783,14 +826,55 @@ public class Strings {
         else
             return Collections.list(new StringTokenizer(phrase)).size();
     }
-    
+
     public static char getDecimalSeparator(Locale locale) {
         DecimalFormatSymbols dfs = new DecimalFormatSymbols(locale);
         return dfs.getDecimalSeparator();
     }
-    
+
     public static char getDefaultDecimalSeparator() {
         return getDecimalSeparator(Locale.getDefault());
+    }
+
+    /** replaces each sequence of whitespace in the first string with the replacement in the second string */
+    public static String collapseWhitespace(String x, String whitespaceReplacement) {
+        if (x==null) return null;
+        return replaceAllRegex(x, "\\s+", whitespaceReplacement);
+    }
+
+    public static String toLowerCase(String value) {
+        if (value==null || value.length()==0) return value;
+        return value.toLowerCase(Locale.ENGLISH);
+    }
+
+    /**
+     * @return null if var is null or empty string, otherwise return var
+     */
+    public static String emptyToNull(String var) {
+        if (isNonEmpty(var)) {
+            return var;
+        } else {
+            return null;
+        }
+    }
+    
+    /** Returns canonicalized string from the given object, made "unique" by:
+     * <li> putting sets into the toString order
+     * <li> appending a hash code if it's longer than the max (and the max is bigger than 0) */
+    public static String toUniqueString(Object x, int optionalMax) {
+        if (x instanceof Iterable && !(x instanceof List)) {
+            // unsorted collections should have a canonical order imposed
+            MutableList<String> result = MutableList.of();
+            for (Object xi: (Iterable<?>)x) {
+                result.add(toUniqueString(xi, optionalMax));
+            }
+            Collections.sort(result);
+            x = result.toString();
+        }
+        if (x==null) return "{null}";
+        String xs = x.toString();
+        if (xs.length()<=optionalMax || optionalMax<=0) return xs;
+        return maxlenWithEllipsis(xs, optionalMax-8)+"/"+Integer.toHexString(xs.hashCode());
     }
 
 }

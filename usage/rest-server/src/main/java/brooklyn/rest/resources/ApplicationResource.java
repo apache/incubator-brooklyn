@@ -22,12 +22,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
-import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
-import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -48,12 +44,12 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
@@ -64,6 +60,9 @@ import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
+import brooklyn.management.internal.EntityManagementUtils;
+import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.rest.api.ApplicationApi;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.ApplicationSummary;
@@ -76,14 +75,12 @@ import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
-import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
-
 
 public class ApplicationResource extends AbstractBrooklynRestResource implements ApplicationApi {
 
@@ -111,7 +108,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         Boolean serviceUp = entity.getAttribute(Attributes.SERVICE_UP);
         if (serviceUp!=null) aRoot.put("serviceUp", serviceUp);
 
-        Lifecycle serviceState = entity.getAttribute(Attributes.SERVICE_STATE);
+        Lifecycle serviceState = entity.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
         if (serviceState!=null) aRoot.put("serviceState", serviceState.toString());
 
         String iconUrl = entity.getIconUrl();
@@ -150,8 +147,12 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         if (!entity.getChildren().isEmpty())
             aRoot.put("children", entitiesIdAndNameAsArray(entity.getChildren()));
 
-        if ((entity instanceof Group) && !((Group) entity).getMembers().isEmpty())
-            aRoot.put("members", entitiesIdAndNameAsArray(((Group) entity).getMembers()));
+        if (entity instanceof Group) {
+            // use attribute instead of method in case it is read-only
+            Collection<Entity> members = entity.getAttribute(AbstractGroup.GROUP_MEMBERS);
+            if (members!=null && !members.isEmpty())
+                aRoot.put("members", entitiesIdAndNameAsArray(members));
+        }
 
         return aRoot;
     }
@@ -266,8 +267,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         }
 
         log.debug("Creating app from yaml:\n{}", yaml);
-        Reader input = new StringReader(yaml);
-        AssemblyTemplate at = camp().pdp().registerDeploymentPlan(input);
+        AssemblyTemplate at = camp().pdp().registerDeploymentPlan( new StringReader(yaml) );
         
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, at)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
@@ -279,33 +279,21 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
 
     private Response launch(AssemblyTemplate at) {
         try {
-            AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
-            Assembly assembly;
-            Task<?> task = null;
-            if (instantiator instanceof BrooklynAssemblyTemplateInstantiator) {
-                Application app = ((BrooklynAssemblyTemplateInstantiator) instantiator).create(at, camp());
-                assembly = camp().assemblies().get(app.getApplicationId());
-
-                task = Entities.invokeEffector((EntityLocal)app, app, Startable.START,
-                        // locations already set in the entities themselves;
-                        // TODO make it so that this arg does not have to be supplied to START !
-                        MutableMap.of("locations", MutableList.of()));
-            } else {
-                assembly = instantiator.instantiate(at, camp());
-            }
-            Entity app = mgmt().getEntityManager().getEntity(assembly.getId());
+            CreationResult<? extends Application, Void> result = EntityManagementUtils.createStarting(mgmt(), at);
             
-            if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, Startable.START.getName()))) {
+            Application app = result.get();
+            if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, 
+                StringAndArgument.of(Startable.START.getName(), null)))) {
                 throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
                     Entitlements.getEntitlementContext().user(), at.getType());
             }
 
-            log.info("Launched from YAML: " + assembly + " (" + task + ")");
+            log.info("Launched from YAML: " + at + " -> " + app + " (" + result.task() + ")");
 
             URI ref = URI.create(app.getApplicationId());
             ResponseBuilder response = created(ref);
-            if (task != null)
-                response.entity(TaskTransformer.FROM_TASK.apply(task));
+            if (result.task() != null) 
+                response.entity(TaskTransformer.FROM_TASK.apply(result.task()));
             return response.build();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
@@ -372,7 +360,8 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     @Override
     public Response delete(String application) {
         Application app = brooklyn().getApplication(application);
-        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, Entitlements.LifecycleEffectors.DELETE))) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, 
+            StringAndArgument.of(Entitlements.LifecycleEffectors.DELETE, null)))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to delete application %s",
                 Entitlements.getEntitlementContext().user(), app);
         }
@@ -399,7 +388,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     private void checkEntityTypeIsValid(String type) {
-        if (brooklyn().getCatalog().getCatalogItem(type) == null) {
+        if (CatalogUtils.getCatalogItemOptionalVersion(mgmt(), type) == null) {
             try {
                 brooklyn().getCatalog().getRootClassLoader().loadClass(type);
             } catch (ClassNotFoundException e) {

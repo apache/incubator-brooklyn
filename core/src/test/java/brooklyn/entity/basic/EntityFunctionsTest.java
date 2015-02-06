@@ -26,17 +26,23 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.Location;
 import brooklyn.test.entity.TestEntity;
+
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 
 public class EntityFunctionsTest extends BrooklynAppUnitTestSupport {
 
     private TestEntity entity;
+    private Location loc;
     
     @BeforeMethod(alwaysRun=true)
     @Override
     public void setUp() throws Exception {
         super.setUp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("mydisplayname"));
+        loc = app.getManagementContext().getLocationRegistry().resolve("localhost");
     }
 
     @Test
@@ -61,5 +67,11 @@ public class EntityFunctionsTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testId() throws Exception {
         assertEquals(EntityFunctions.id().apply(entity), entity.getId());
+    }
+    
+    @Test
+    public void testLocationMatching() throws Exception {
+        entity.addLocations(ImmutableList.of(loc));
+        assertEquals(EntityFunctions.locationMatching(Predicates.alwaysTrue()).apply(entity), loc);
     }
 }

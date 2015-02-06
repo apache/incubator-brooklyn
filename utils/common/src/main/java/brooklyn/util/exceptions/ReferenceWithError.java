@@ -20,9 +20,11 @@ package brooklyn.util.exceptions;
 
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Supplier;
 
 /** A reference to an object which can carry an object alongside it. */
+@Beta
 public class ReferenceWithError<T> implements Supplier<T> {
 
     private final T object;
@@ -31,12 +33,12 @@ public class ReferenceWithError<T> implements Supplier<T> {
 
     /** returns a reference which includes an error, and where attempts to get the content cause the error to throw */
     public static <T> ReferenceWithError<T> newInstanceThrowingError(T object, Throwable error) {
-        return new ReferenceWithError<T>(object, error, true);
+        return new ReferenceWithError<T>(object, error, false);
     }
     
     /** returns a reference which includes an error, but attempts to get the content do not cause the error to throw */
     public static <T> ReferenceWithError<T> newInstanceMaskingError(T object, Throwable error) {
-        return new ReferenceWithError<T>(object, error, false);
+        return new ReferenceWithError<T>(object, error, true);
     }
     
     /** returns a reference which includes an error, but attempts to get the content do not cause the error to throw */
@@ -44,10 +46,10 @@ public class ReferenceWithError<T> implements Supplier<T> {
         return new ReferenceWithError<T>(object, null, false);
     }
     
-    protected ReferenceWithError(@Nullable T object, @Nullable Throwable error, boolean throwErrorOnAccess) {
+    protected ReferenceWithError(@Nullable T object, @Nullable Throwable error, boolean maskError) {
         this.object = object;
         this.error = error;
-        this.maskError = throwErrorOnAccess;
+        this.maskError = maskError;
     }
 
     /** whether this will mask any error on an attempt to {@link #get()};
@@ -57,19 +59,21 @@ public class ReferenceWithError<T> implements Supplier<T> {
         return maskError;
     }
 
-    /** returns the underlying value, throwing if there is an error and {@link #throwsErrorOnAccess()} is set */
+    /** returns the underlying value, throwing if there is an error which is not masked (ie {@link #throwsErrorOnAccess()} is set) */
     public T get() {
         if (masksErrorIfPresent()) {
-            return getMaskingError();
+            return getWithoutError();
         }
-        return getThrowingError();
+        return getWithError();
     }
 
-    public T getMaskingError() {
+    /** returns the object, ignoring any error (even non-masked) */
+    public T getWithoutError() {
         return object;
     }
 
-    public T getThrowingError() {
+    /** throws error, even if there is one (even if masked), else returns the object */
+    public T getWithError() {
         checkNoError();
         return object;
     }
@@ -89,5 +93,9 @@ public class ReferenceWithError<T> implements Supplier<T> {
     public boolean hasError() {
         return error!=null;
     }
-    
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName()+"["+object+(error!=null?"/"+(maskError?"masking:":"throwing:")+error:"")+"]";
+    }
 }

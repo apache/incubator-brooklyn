@@ -40,7 +40,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
@@ -114,7 +113,17 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         public static final FailureHandlingConfig SWALLOWING_CHILDREN_FAILURES = new FailureHandlingConfig(false, false, false, false, false, false);
     }
     
-    
+    public static class QueueAbortedException extends IllegalStateException {
+        private static final long serialVersionUID = -7569362887826818524L;
+        
+        public QueueAbortedException(String msg) {
+            super(msg);
+        }
+        public QueueAbortedException(String msg, Throwable cause) {
+            super(msg, cause);
+        }
+    }
+
     /**
      * Constructs a new compound task containing the specified units of work.
      * 
@@ -139,6 +148,8 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         synchronized (jobTransitionLock) {
             if (primaryFinished)
                 throw new IllegalStateException("Cannot add a task to "+this+" which is already finished (trying to add "+t+")");
+            if (secondaryQueueAborted)
+                throw new QueueAbortedException("Cannot add a task to "+this+" whose queue has been aborted (trying to add "+t+")");
             secondaryJobsAll.add(t);
             secondaryJobsRemaining.add(t);
             BrooklynTaskTags.addTagsDynamically(t, ManagementContextInternal.SUB_TASK_TAG);
@@ -153,7 +164,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     }
     public boolean cancel(boolean mayInterruptTask, boolean interruptPrimaryThread, boolean alsoCancelChildren) {
         if (isDone()) return false;
-        log.trace("cancelling {}", this);
+        if (log.isTraceEnabled()) log.trace("cancelling {}", this);
         boolean cancel = super.cancel(mayInterruptTask);
         if (alsoCancelChildren) {
             for (Task<?> t: secondaryJobsAll)
@@ -162,7 +173,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         synchronized (jobTransitionLock) {
             if (primaryThread!=null) {
                 if (interruptPrimaryThread) {
-                    log.trace("cancelling {} - interrupting", this);
+                    if (log.isTraceEnabled()) log.trace("cancelling {} - interrupting", this);
                     primaryThread.interrupt();
                 }
                 cancel = true;
@@ -230,6 +241,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         @SuppressWarnings("unchecked")
         @Override
         public T call() throws Exception {
+
             synchronized (jobTransitionLock) {
                 primaryStarted = true;
                 primaryThread = Thread.currentThread();
@@ -241,6 +253,10 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             // or use some kind of single threaded executor for the queued tasks
             Task<List<Object>> secondaryJobMaster = Tasks.<List<Object>>builder().dynamic(false)
                     .name("DST manager (internal)")
+                    // TODO marking it transient helps it be GC'd sooner, 
+                    // but ideally we wouldn't have this,
+                    // or else it would be a child
+                    .tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
                     .body(new Callable<List<Object>>() {
 
                 @Override
@@ -308,18 +324,29 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                     return result;
                 }
             }).build();
+            ((BasicTask<?>)secondaryJobMaster).proxyTargetTask = DynamicSequentialTask.this;
+            
             submitBackgroundInheritingContext(secondaryJobMaster);
             
             T result = null;
-            Throwable error=null;
-            boolean errorIsFromChild=false;
+            Throwable error = null;
+            Throwable uninterestingSelfError = null;
+            boolean errorIsFromChild = false;
             try {
-                log.trace("calling primary job for {}", this);
+                if (log.isTraceEnabled()) log.trace("calling primary job for {}", this);
                 if (primaryJob!=null) result = primaryJob.call();
             } catch (Throwable selfException) {
                 Exceptions.propagateIfFatal(selfException);
-                error = selfException;
-                errorIsFromChild = false;
+                if (Exceptions.getFirstThrowableOfType(selfException, QueueAbortedException.class) != null) {
+                    // Error was caused by the task already having failed, and this thread calling queue() to try
+                    // to queue more work. The underlying cause will be much more interesting.
+                    // Without this special catch, we record error = "Cannot add a task to ... whose queue has been aborted",
+                    // which gets propagated instead of the more interesting child exception.
+                    uninterestingSelfError = selfException;
+                } else {
+                    error = selfException;
+                    errorIsFromChild = false;
+                }
                 if (failureHandlingConfig.abortSecondaryQueueOnPrimaryFailure) {
                     if (log.isDebugEnabled())
                         log.debug("Secondary job queue for "+DynamicSequentialTask.this+" aborting with "+secondaryJobsRemaining.size()+" remaining, due to error in primary task: "+selfException);
@@ -338,7 +365,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                 }
             } finally {
                 try {
-                    log.trace("cleaning up for {}", this);
+                    if (log.isTraceEnabled()) log.trace("cleaning up for {}", this);
                     synchronized (jobTransitionLock) {
                         // semaphore might be nicer here (aled notes as it is this is a little hard to read)
                         primaryThread = null;
@@ -346,7 +373,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                         jobTransitionLock.notifyAll();
                     }
                     if (!isCancelled() && !Thread.currentThread().isInterrupted()) {
-                        log.trace("waiting for secondaries for {}", this);
+                        if (log.isTraceEnabled()) log.trace("waiting for secondaries for {}", this);
                         // wait on tasks sequentially so that blocking information is more interesting
                         DynamicTasks.waitForLast();
                         List<Object> result2 = secondaryJobMaster.get();
@@ -360,12 +387,16 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                         error = childException;
                         errorIsFromChild = true;
                     } else {
-                        log.debug("Parent task "+this+" ignoring child error ("+childException+") in presence of our own error ("+error+")");
+                        if (log.isDebugEnabled()) log.debug("Parent task "+this+" ignoring child error ("+childException+") in presence of our own error ("+error+")");
                     }
                 }
             }
-            if (error!=null)
+            if (error!=null) {
                 handleException(error, errorIsFromChild);
+            }
+            if (uninterestingSelfError != null) {
+                handleException(uninterestingSelfError, false);
+            }
             return result;
         }
         

@@ -23,15 +23,16 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
-import brooklyn.entity.webapp.HttpsSslConfig;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.policy.Enricher;
+import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
@@ -39,25 +40,24 @@ import com.google.common.net.HostAndPort;
 
 public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements JBoss7Server {
 
-	public static final Logger log = LoggerFactory.getLogger(JBoss7ServerImpl.class);
+    public static final Logger log = LoggerFactory.getLogger(JBoss7ServerImpl.class);
 
     private volatile HttpFeed httpFeed;
-    private Enricher serviceUpEnricher;
     
     public JBoss7ServerImpl(){
         super();
     }
 
-    public JBoss7ServerImpl(Map flags){
+    public JBoss7ServerImpl(@SuppressWarnings("rawtypes") Map flags){
         this(flags, null);
     }
 
-    public JBoss7ServerImpl(Map flags, Entity parent) {
+    public JBoss7ServerImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
         super(flags, parent);
     }
 
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return JBoss7Driver.class;
     }
 
@@ -66,6 +66,10 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         return (JBoss7Driver) super.getDriver();
     }
     
+    static {
+        RendererHints.register(MANAGEMENT_URL, RendererHints.namedActionWithUrl());
+    }
+
     @Override
     protected void connectSensors() {
         super.connectSensors();
@@ -103,6 +107,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                         .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class)))
                 .poll(new HttpPollConfig<Long>(BYTES_RECEIVED)
                         .vars(includeRuntimeUriVars)
+                        // jboss seems to report 0 even if it has received lots of requests; dunno why.
                         .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class)))
                 .poll(new HttpPollConfig<Long>(BYTES_SENT)
                         .vars(includeRuntimeUriVars)
@@ -113,14 +118,16 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
     
     protected void connectServiceUp() {
-        serviceUpEnricher = addEnricher(Enrichers.builder()
-                .propagating(ImmutableMap.of(MANAGEMENT_URL_UP, SERVICE_UP))
-                .from(this)
-                .build());
+        connectServiceUpIsRunning();
+        
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            .from(MANAGEMENT_URL_UP)
+            .computing(Functionals.ifNotEquals(true).value("Management URL not reachable") )
+            .build());
     }
     
     protected void disconnectServiceUp() {
-        if (serviceUpEnricher != null) removeEnricher(serviceUpEnricher);
+        disconnectServiceUpIsRunning();
     }
     
     @Override
@@ -172,32 +179,6 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         return getConfig(DEPLOYMENT_TIMEOUT);
     }
 
-    public boolean isHttpEnabled() {
-        return isProtocolEnabled("HTTP");
-    }
-    
-    public boolean isHttpsEnabled() {
-        return isProtocolEnabled("HTTPS");
-    }
-    
-    public Integer getHttpPort() {
-        return getAttribute(HTTP_PORT);
-    }
-    
-    public Integer getHttpsPort() {
-        return getAttribute(HTTPS_PORT);
-    }
-    
-    public String getHttpsSslKeyAlias() {
-        HttpsSslConfig config = getAttribute(HTTPS_SSL_CONFIG);
-        return (config == null) ? null : config.getKeyAlias();
-    }
-    
-    public String getHttpsSslKeystorePassword() {
-        HttpsSslConfig config = getAttribute(HTTPS_SSL_CONFIG);
-        return (config == null) ? null : config.getKeystorePassword();
-    }
-    
     /** Path of the keystore file on the AS7 server */
     public String getHttpsSslKeystoreFile() {
         return getDriver().getSslKeystoreFile();

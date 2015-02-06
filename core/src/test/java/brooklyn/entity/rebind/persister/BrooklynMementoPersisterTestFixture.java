@@ -23,9 +23,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
-
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -35,6 +33,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.PersistenceExceptionHandler;
+import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindContextImpl;
 import brooklyn.entity.rebind.RebindContextLookupContext;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
@@ -46,6 +46,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.test.entity.TestApplication;
@@ -99,7 +100,7 @@ public abstract class BrooklynMementoPersisterTestFixture {
         persister = null;
     }
 
-    protected BrooklynMemento loadMemento() throws IOException, InterruptedException, TimeoutException {
+    protected BrooklynMemento loadMemento() throws Exception {
         RebindTestUtils.waitForPersisted(localManagementContext);
         
         RecordingRebindExceptionHandler failFast = new RecordingRebindExceptionHandler(RebindFailureMode.FAIL_FAST, RebindFailureMode.FAIL_FAST);
@@ -110,23 +111,31 @@ public abstract class BrooklynMementoPersisterTestFixture {
         rebindContext.registerEntity(app.getId(), app);
         rebindContext.registerEntity(entity.getId(), entity);
         
-        BrooklynMemento reloadedMemento = persister.loadMemento(lookupContext, failFast);
+        BrooklynMemento reloadedMemento = persister.loadMemento(null, lookupContext, failFast);
         return reloadedMemento;
     }
     
+    protected BrooklynMementoRawData loadRawMemento(BrooklynMementoPersisterToObjectStore persister) throws Exception {
+        RebindTestUtils.waitForPersisted(localManagementContext);
+        
+        RecordingRebindExceptionHandler failFast = new RecordingRebindExceptionHandler(RebindFailureMode.FAIL_FAST, RebindFailureMode.FAIL_FAST);
+        BrooklynMementoRawData rawMemento = persister.loadMementoRawData(failFast);
+        return rawMemento;
+    }
+    
     @Test
-    public void testCheckPointAndLoadMemento() throws IOException, TimeoutException, InterruptedException {
+    public void testCheckPointAndLoadMemento() throws Exception {
         BrooklynMemento reloadedMemento = loadMemento();
         
         assertNotNull(reloadedMemento);
         assertTrue(Iterables.contains(reloadedMemento.getEntityIds(), entity.getId()));
         assertEquals(Iterables.getOnlyElement(reloadedMemento.getLocationIds()), location.getId());
         assertEquals(Iterables.getOnlyElement(reloadedMemento.getPolicyIds()), policy.getId());
-        assertEquals(Iterables.getOnlyElement(reloadedMemento.getEnricherIds()), enricher.getId());
+        assertTrue(reloadedMemento.getEnricherIds().contains(enricher.getId()));
     }
 
     @Test
-    public void testDeleteAndLoadMemento() throws TimeoutException, InterruptedException, IOException {
+    public void testDeleteAndLoadMemento() throws Exception {
         Entities.destroy(entity);
 
         BrooklynMemento reloadedMemento = loadMemento();
@@ -134,5 +143,24 @@ public abstract class BrooklynMementoPersisterTestFixture {
         assertNotNull(reloadedMemento);
         assertFalse(Iterables.contains(reloadedMemento.getEntityIds(), entity.getId()));
         assertEquals(Iterables.getOnlyElement(reloadedMemento.getLocationIds()), location.getId());
+    }
+    
+    @Test
+    public void testLoadAndCheckpointRawMemento() throws Exception {
+        if (persister instanceof BrooklynMementoPersisterToObjectStore) {
+            // Test loading
+            BrooklynMementoRawData rawMemento = loadRawMemento((BrooklynMementoPersisterToObjectStore)persister);
+            assertNotNull(rawMemento);
+            assertTrue(Iterables.contains(rawMemento.getEntities().keySet(), entity.getId()));
+            assertEquals(Iterables.getOnlyElement(rawMemento.getLocations().keySet()), location.getId());
+            assertEquals(Iterables.getOnlyElement(rawMemento.getPolicies().keySet()), policy.getId());
+            assertTrue(rawMemento.getEnrichers().keySet().contains(enricher.getId()));
+            
+            // And test persisting
+            PersistenceExceptionHandler exceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
+            ((BrooklynMementoPersisterToObjectStore) persister).checkpoint(rawMemento, exceptionHandler);
+        } else {
+            throw new SkipException("Persister "+persister+" not a "+BrooklynMementoPersisterToObjectStore.class.getSimpleName());
+        }
     }
 }

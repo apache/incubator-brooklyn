@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
@@ -53,6 +54,8 @@ import com.google.common.net.HostAndPort;
  * Monitors a given {@link HostAndPort}, to emit HASensors.CONNECTION_FAILED and HASensors.CONNECTION_RECOVERED 
  * if the connection is lost/restored.
  */
+@Catalog(name="Connection Failure Detector", description="HA policy for monitoring a host:port, "
+        + "emitting an event if the connection is lost/restored")
 public class ConnectionFailureDetector extends AbstractPolicy {
 
     // TODO Remove duplication from ServiceFailureDetector, particularly for the stabilisation delays.

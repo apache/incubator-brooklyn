@@ -36,6 +36,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -66,44 +67,99 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
     /**
      * Start the entity.
-     *
-     * this installs, configures and launches the application process. However,
+     * <p>
+     * This installs, configures and launches the application process. However,
      * users can also call the {@link #install()}, {@link #customize()} and
      * {@link #launch()} steps independently. The {@link #postLaunch()} will
      * be called after the {@link #launch()} metheod is executed, but the
      * process may not be completely initialised at this stage, so care is
      * required when implementing these stages.
+     * <p>
+     * The {@link BrooklynConfigKeys#ENTITY_RUNNING} key can be set on the location
+     * or the entity to skip the startup process if the entity is already running,
+     * according to the {@link #isRunning()} method. To force the startup to be
+     * skipped, {@link BrooklynConfigKeys#SKIP_ENTITY_START} can be set on the entity.
+     * The {@link BrooklynConfigKeys#SKIP_ENTITY_INSTALLATION} key can also be used to
+     * skip the {@link #setup()}, {@link #copyInstallResources()} and
+     * {@link #install()} methods if set on the entity or location. 
      *
      * @see #stop()
      */
     @Override
     public void start() {
-        DynamicTasks.queue("install", new Runnable() { public void run() {
-            waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
-            install();
-        }});
-
-        DynamicTasks.queue("customize", new Runnable() { public void run() {
-            waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
-            customize();
-        }});
-
-        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
-            DynamicTasks.queue("pre-launch command", new Runnable() { public void run() {
-                runPreLaunchCommand(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND));
+        boolean skipStart = false;
+        Optional<Boolean> locationRunning = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING));
+        Optional<Boolean> entityRunning = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START_IF_RUNNING));
+        Optional<Boolean> entityStarted = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_START));
+        if (locationRunning.or(entityRunning).or(false)) {
+            skipStart = isRunning();
+        } else {
+            skipStart = entityStarted.or(false);
+        }
+        if (!skipStart) {
+            DynamicTasks.queue("pre-install", new Runnable() { public void run() {
+                preInstall();
             }});
-        };
-        
-        DynamicTasks.queue("launch", new Runnable() { public void run() {
-            waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
-            launch();
-        }});
-        
-        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
-            DynamicTasks.queue("post-launch command", new Runnable() { public void run() {
-                runPostLaunchCommand(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND));
+
+            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND))) {
+                DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
+                    runPreInstallCommand(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND));
+                }});
+            };
+
+            Optional<Boolean> locationInstalled = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+            Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+            boolean skipInstall = locationInstalled.or(entityInstalled).or(false);
+            if (!skipInstall) {
+                DynamicTasks.queue("setup", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.SETUP_LATCH);
+                    setup();
+                }});
+
+                DynamicTasks.queue("copy-install-resources", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.INSTALL_RESOURCES_LATCH);
+                    copyInstallResources();
+                }});
+
+                DynamicTasks.queue("install", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
+                    install();
+                }});
+            }
+
+            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND))) {
+                DynamicTasks.queue("post-install-command", new Runnable() { public void run() {
+                    runPostInstallCommand(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND));
+                }});
+            };
+
+            DynamicTasks.queue("customize", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
+                customize();
             }});
-        };
+
+            DynamicTasks.queue("copy-runtime-resources", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
+                copyRuntimeResources();
+            }});
+
+            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
+                DynamicTasks.queue("pre-launch-command", new Runnable() { public void run() {
+                    runPreLaunchCommand(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND));
+                }});
+            };
+
+            DynamicTasks.queue("launch", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
+                launch();
+            }});
+
+            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
+                DynamicTasks.queue("post-launch-command", new Runnable() { public void run() {
+                    runPostLaunchCommand(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND));
+                }});
+            };
+        }
 
         DynamicTasks.queue("post-launch", new Runnable() { public void run() {
             postLaunch();
@@ -113,12 +169,21 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     @Override
     public abstract void stop();
 
+    /**
+     * Implement this method in child classes to add some post-launch behavior
+     */
+    public void preInstall() {}
+
+    public abstract void runPreInstallCommand(String command);
+    public abstract void setup();
+    public abstract void copyInstallResources();
     public abstract void install();
+    public abstract void runPostInstallCommand(String command);
+    public abstract void copyRuntimeResources();
     public abstract void customize();
     public abstract void runPreLaunchCommand(String command);
     public abstract void launch();
     public abstract void runPostLaunchCommand(String command);
-    
 
     @Override
     public void kill() {
@@ -136,7 +201,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             DynamicTasks.markInessential();
             boolean previouslyRunning = isRunning();
             try {
-                getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STOPPING);
+                ServiceStateLogic.setExpectedState(getEntity(), Lifecycle.STOPPING);
                 stop();
             } catch (Exception e) {
                 // queue a failed task so that there is visual indication that this task had a failure,
@@ -154,11 +219,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
         if (doFullStartOnRestart()) {
             DynamicTasks.waitForLast();
-            getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+            ServiceStateLogic.setExpectedState(getEntity(), Lifecycle.STARTING);
             start();
         } else {
             DynamicTasks.queue("launch", new Runnable() { public void run() {
-                getEntity().setAttribute(Attributes.SERVICE_STATE, Lifecycle.STARTING);
+                ServiceStateLogic.setExpectedState(getEntity(), Lifecycle.STARTING);
                 launch();
             }});
             DynamicTasks.queue("post-launch", new Runnable() { public void run() {

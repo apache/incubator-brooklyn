@@ -50,7 +50,7 @@ public interface TaskQueueingContext {
 
     /** Drains the task queue for this context to complete, ie waits for this context to complete (or terminate early)
      * @param optionalTimeout null to run forever
-     * @param includePrimary whether the parent (this context) should also be joined on;
+     * @param includePrimaryThread whether the parent (this context) should also be joined on;
      *   should only be true if invoking this from another task, as otherwise it will be waiting for itself!
      * @param throwFirstError whether to throw the first exception encountered
      * <p>

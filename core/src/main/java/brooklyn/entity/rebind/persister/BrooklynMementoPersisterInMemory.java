@@ -28,9 +28,13 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import brooklyn.basic.BrooklynObject;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntityProxy;
+import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindExceptionHandler;
@@ -55,7 +59,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 
 /**
- * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToMultiFile} instead; class be moved to tests
+ * @deprecated since 0.7.0 for production use {@link BrooklynMementoPersisterToObjectStore} instead; class be moved to tests
  * <code>
  * new BrooklynMementoPersisterToObjectStore(new InMemoryObjectStore(), classLoader)
  * </code>
@@ -113,7 +117,7 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                         .build();
                 PersistenceExceptionHandler persistenceExceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
                 persister.checkpoint(memento, persistenceExceptionHandler);
-                final BrooklynMementoManifest manifest = persister.loadMementoManifest(rebindExceptionHandler);
+                final BrooklynMementoManifest manifest = persister.loadMementoManifest(null, rebindExceptionHandler);
                 LookupContext dummyLookupContext = new LookupContext() {
                     @Override
                     public ManagementContext lookupManagementContext() {
@@ -122,7 +126,8 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                     @Override public Entity lookupEntity(String id) {
                         List<Class<?>> types = MutableList.<Class<?>>builder()
                                 .add(Entity.class, EntityInternal.class, EntityProxy.class)
-                                .add(loadClass(manifest.getEntityIdToType().get(id)))
+                                //TODO Doesn't support loading from catalog item osgi bundles
+                                .add(loadClass(manifest.getEntityIdToManifest().get(id).getType()))
                                 .build();
                         return (Entity) java.lang.reflect.Proxy.newProxyInstance(
                                 classLoader,
@@ -145,6 +150,33 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                         Class<?> clazz = loadClass(manifest.getEnricherIdToType().get(id));
                         return (Enricher) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
+                    @Override public Feed lookupFeed(String id) {
+                        Class<?> clazz = loadClass(manifest.getFeedIdToType().get(id));
+                        return (Feed) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
+                    }
+                    @Override public CatalogItem<?, ?> lookupCatalogItem(String id) {
+                        Class<?> clazz = loadClass(manifest.getCatalogItemMemento(id).getType());
+                        return (CatalogItem<?,?>) invokeConstructor(clazz, new Object[0]);
+                    }
+                    
+                    @Override
+                    public BrooklynObject lookup(BrooklynObjectType type, String id) {
+                        switch (type) {
+                        case CATALOG_ITEM: return lookupCatalogItem(id);
+                        case ENRICHER: return lookupEnricher(id);
+                        case ENTITY: return lookupEntity(id);
+                        case FEED: return lookupFeed(id);
+                        case LOCATION: return lookupLocation(id);
+                        case POLICY: return lookupPolicy(id);
+                        case UNKNOWN: return null;
+                        }
+                        throw new IllegalStateException("Unexpected type "+type+" / id "+id);
+                    }
+                    @Override
+                    public BrooklynObject peek(BrooklynObjectType type, String id) {
+                        return lookup(type, id);
+                    }
+
                     private Class<?> loadClass(String name) {
                         try {
                             return classLoader.loadClass(name);
@@ -168,7 +200,7 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                 };
 
                 // Not actually reconstituting, because need to use a real lookupContext to reconstitute all the entities
-                persister.loadMemento(dummyLookupContext, rebindExceptionHandler);
+                persister.loadMemento(null, dummyLookupContext, rebindExceptionHandler);
             } finally {
                 Os.deleteRecursively(tempDir);
             }

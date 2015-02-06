@@ -81,6 +81,7 @@ define([
                 url:"/v1/script/groovy",
                 data:script,
                 contentType:"application/text",
+                headers: { "Brooklyn-Allow-Non-Master-Access": true },
                 success:function (data) {
                     $(".output .throbber", that.$el).hide()
                     that.updateTextareaWithData($(".output .result"), data.result, true, true);

@@ -22,14 +22,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.AbstractEc2LiveTest;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.Location;
+import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
+
+import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
-import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.location.Location;
-import brooklyn.test.EntityTestUtils;
 
 public class RiakClusterEc2LiveTest extends AbstractEc2LiveTest {
     @SuppressWarnings("unused")
@@ -47,11 +51,21 @@ public class RiakClusterEc2LiveTest extends AbstractEc2LiveTest {
         RiakNode first = (RiakNode) Iterables.get(cluster.getMembers(), 0);
         RiakNode second = (RiakNode) Iterables.get(cluster.getMembers(), 1);
 
-        EntityTestUtils.assertAttributeEqualsEventually(first, RiakNode.SERVICE_UP, true);
-        EntityTestUtils.assertAttributeEqualsEventually(second, RiakNode.SERVICE_UP, true);
-
-        EntityTestUtils.assertAttributeEqualsEventually(first, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true);
-        EntityTestUtils.assertAttributeEqualsEventually(second, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true);
+        assertNodesUpAndInCluster(first, second);
+        
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_UP, true);
+    }
+    
+    private void assertNodesUpAndInCluster(final RiakNode... nodes) {
+        for (final RiakNode node : nodes) {
+            EntityTestUtils.assertAttributeEqualsEventually(node, RiakNode.SERVICE_UP, true);
+            EntityTestUtils.assertAttributeEqualsEventually(node, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true);
+            Asserts.eventually(new Supplier<Boolean>() {
+                @Override public Boolean get() {
+                    return node.hasJoinedCluster();
+                }
+            }, Predicates.alwaysTrue());
+        }
     }
 
     @Test(enabled = false)

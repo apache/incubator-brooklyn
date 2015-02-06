@@ -23,10 +23,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
 /**
@@ -155,13 +160,17 @@ public class AttributePollHandler<V> implements PollHandler<V> {
             // get a non-volatile value
             Long currentProblemStartTimeCache = currentProblemStartTime;
             long expiryTime = 
-                    lastSuccessTime!=null ? lastSuccessTime+logWarningGraceTime.toMilliseconds() :
+                    (lastSuccessTime!=null && !isTransitioningOrStopped()) ? lastSuccessTime+logWarningGraceTime.toMilliseconds() :
                     currentProblemStartTimeCache!=null ? currentProblemStartTimeCache+logWarningGraceTimeOnStartup.toMilliseconds() :
                     nowTime+logWarningGraceTimeOnStartup.toMilliseconds();
             if (!lastWasProblem) {
                 if (expiryTime <= nowTime) {
                     currentProblemLoggedAsWarning = true;
-                    log.warn("Read of " + getBriefDescription() + " gave " + type + ": " + val);
+                    if (entity==null || !Entities.isNoLongerManaged(entity)) {
+                        log.warn("Read of " + getBriefDescription() + " gave " + type + ": " + val);
+                    } else {
+                        log.debug("Read of " + getBriefDescription() + " gave " + type + ": " + val);
+                    }
                     if (log.isDebugEnabled() && val instanceof Throwable)
                         log.debug("Trace for "+type+" reading "+getBriefDescription()+": "+val, (Throwable)val);
                 } else {
@@ -174,7 +183,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
                 if (expiryTime <= nowTime) {
                     currentProblemLoggedAsWarning = true;
                     log.warn("Read of " + getBriefDescription() + " gave " + type + 
-                            " (grace period expired, occurring for "+Duration.millis(nowTime - currentProblemStartTimeCache)+", " +
+                            " (grace period expired, occurring for "+Duration.millis(nowTime - currentProblemStartTimeCache)+
                             (config.hasExceptionHandler() ? "" : ", no exception handler set for sensor")+
                             ")"+
                             ": " + val);
@@ -188,8 +197,20 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         }
     }
 
+    protected boolean isTransitioningOrStopped() {
+        if (entity==null) return false;
+        Transition expected = entity.getAttribute(Attributes.SERVICE_STATE_EXPECTED);
+        if (expected==null) return false;
+        return (expected.getState()==Lifecycle.STARTING || expected.getState()==Lifecycle.STOPPING || expected.getState()==Lifecycle.STOPPED);
+    }
+
     @SuppressWarnings("unchecked")
     protected void setSensor(Object v) {
+        if (Entities.isNoLongerManaged(entity)) {
+            if (Tasks.isInterrupted()) return;
+            log.warn(""+entity+" is not managed; feed "+this+" setting "+sensor+" to "+v+" at this time is not supported ("+Tasks.current()+")");
+        }
+        
         if (v == FeedConfig.UNCHANGED) {
             // nothing
         } else if (v == FeedConfig.REMOVE) {

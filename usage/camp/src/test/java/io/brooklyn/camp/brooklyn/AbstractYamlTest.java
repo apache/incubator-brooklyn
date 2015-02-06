@@ -25,14 +25,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Set;
 
-import org.codehaus.groovy.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.common.base.Joiner;
-
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
@@ -42,13 +40,17 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
 
+import com.google.common.base.Joiner;
+
 public abstract class AbstractYamlTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractYamlTest.class);
+    protected static final String TEST_VERSION = "0.1.2";
 
     private ManagementContext brooklynMgmt;
     protected BrooklynCampPlatform platform;
     protected BrooklynCampPlatformLauncherNoServer launcher;
+    private boolean forceUpdate;
     
     public AbstractYamlTest() {
         super();
@@ -58,6 +60,7 @@ public abstract class AbstractYamlTest {
     
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
+        forceUpdate = false;
         launcher = new BrooklynCampPlatformLauncherNoServer() {
             @Override
             protected LocalManagementContext newMgmtContext() {
@@ -70,7 +73,8 @@ public abstract class AbstractYamlTest {
     }
 
     protected LocalManagementContext newTestManagementContext() {
-        return new LocalManagementContextForTests();
+        // TODO they don't all need osgi, just a few do, so could speed it up by specifying when they do
+        return LocalManagementContextForTests.newInstanceWithOsgi();
     }
     
     @AfterMethod(alwaysRun = true)
@@ -133,13 +137,13 @@ public abstract class AbstractYamlTest {
     }
 
     protected void addCatalogItem(String catalogYaml) {
-        mgmt().getCatalog().addItem(catalogYaml);
+        mgmt().getCatalog().addItem(catalogYaml, forceUpdate);
     }
 
     protected void deleteCatalogEntity(String catalogItem) {
-        mgmt().getCatalog().deleteCatalogItem(catalogItem);
+        mgmt().getCatalog().deleteCatalogItem(catalogItem, TEST_VERSION);
     }
-    
+
     protected Logger getLogger() {
         return LOG;
     }
@@ -147,5 +151,12 @@ public abstract class AbstractYamlTest {
     private String join(String[] catalogYaml) {
         return Joiner.on("\n").join(catalogYaml);
     }
-    
+
+    protected String ver(String id) {
+        return CatalogUtils.getVersionedId(id, TEST_VERSION);
+    }
+
+    public void forceCatalogUpdate() {
+        forceUpdate = true;
+    }
 }

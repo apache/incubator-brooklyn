@@ -1,0 +1,36 @@
+
+$fonts: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+$header_fonts: Avenir, $fonts;
+
+// colors
+
+/* this green is approx what is in the logo (taken from image picker) */
+$brooklyn_green: #6db34b;
+$bootstrap_theme_green_gradient_upper: #5cb85c;
+$bootstrap_theme_green_gradient_lower: #48a648;
+$vibrant_bg_green: $bootstrap_theme_green_gradient_lower;
+$vibrant_fg_green: #483;
+
+$white_fa: #fafafa;
+$white_f5: #f5f5f5;
+$white_ee: #eee;
+$white_dd: #ddd;  // for borders and tooltip bg
+$gray_aa: #aaa;
+$gray_88: #888;
+$gray_66: #666;
+
+$blackish: #393939;
+
+$bootstrap_blue_border: #428bca;
+
+// roles for colors
+
+$text_color: $blackish;
+
+$a_color: $vibrant_fg_green;
+$a_hover_color: $brooklyn_green;
+
+//$code_bg_color: #e8eded;
+$code_bg_color: $white_f5;
+
+$footer_icon_gray: $gray_88;

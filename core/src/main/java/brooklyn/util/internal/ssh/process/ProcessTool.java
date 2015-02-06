@@ -45,6 +45,7 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
@@ -87,7 +88,7 @@ public class ProcessTool extends ShellAbstractTool implements ShellTool {
                     if (LOG.isTraceEnabled()) LOG.trace("Running shell process (process) as script:\n{}", scriptContents);
                     File to = new File(scriptPath);
                     Files.createParentDirs(to);
-                    Files.copy(ByteStreams.newInputStreamSupplier(scriptContents.getBytes()), to);
+                    ByteSource.wrap(scriptContents.getBytes()).copyTo(Files.asByteSink(to));
 
                     List<String> cmds = buildRunScriptCommand();
                     cmds.add(0, "chmod +x "+scriptPath);

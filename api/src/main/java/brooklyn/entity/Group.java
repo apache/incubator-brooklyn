@@ -30,6 +30,7 @@ import brooklyn.entity.proxying.EntitySpec;
  * or dynamic (i.e. contains all entities that match some filter).
  */
 public interface Group extends Entity {
+    
     /**
      * Return the entities that are members of this group.
      */

@@ -18,31 +18,35 @@
  */
 package brooklyn.entity.rebind;
 
-import brooklyn.entity.Entity;
-import brooklyn.location.Location;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
+import java.util.Map;
+
+import brooklyn.basic.BrooklynObject;
+import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+
+import com.google.common.annotations.Beta;
 
 /**
  * Gives access to things that are being currently rebinding. This is used during a
  * rebind to wire everything back together again, e.g. to find the necessary entity 
  * instances even before they are available through 
  * {@code managementContext.getEntityManager().getEnties()}.
- * 
+ * <p>
  * Users are not expected to implement this class. It is for use by {@link Rebindable} 
  * instances, and will generally be created by the {@link RebindManager}.
+ * <p>
  */
+@Beta
 public interface RebindContext {
 
-    Entity getEntity(String id);
-
-    Location getLocation(String id);
-
-    Policy getPolicy(String id);
-
-    Enricher getEnricher(String id);
-
+    /** Returns an unmodifiable view of all objects by ID */ 
+    Map<String,BrooklynObject> getAllBrooklynObjects();
+    
     Class<?> loadClass(String typeName) throws ClassNotFoundException;
     
     RebindExceptionHandler getExceptionHandler();
+    
+    boolean isReadOnly(BrooklynObject item);
+    
+    LookupContext lookup();
+    
 }

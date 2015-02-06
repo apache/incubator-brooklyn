@@ -39,6 +39,7 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 
@@ -56,7 +57,7 @@ public class LocalhostMachineProvisioningLocationTest {
     
     @BeforeClass
     protected void setup() {
-        mgmt = new LocalManagementContext();
+        mgmt = LocalManagementContextForTests.newInstance();
     }
     
     @AfterClass
@@ -120,8 +121,18 @@ public class LocalhostMachineProvisioningLocationTest {
     public void obtainTwoAddressesInRangeThenDontObtain() throws Exception {
         LocalhostMachineProvisioningLocation p = newLocalhostProvisioner();
         SshMachineLocation m = p.obtain();
+
+        // Find two ports that are free, rather than risk false-negatives if a port was left open by something else.
         int start = 48311;
+        while (true) {
+            if (Networking.isPortAvailable(m.getAddress(), start) && Networking.isPortAvailable(m.getAddress(), start+1)) {
+                break;
+            } else {
+                start++;
+            }
+        }
         PortRange r = PortRanges.fromString(""+start+"-"+(start+1));
+        
         try {
             int i1 = m.obtainPort(r);
             Assert.assertEquals(i1, start);
@@ -161,11 +172,21 @@ public class LocalhostMachineProvisioningLocationTest {
     public void obtainPortFailsIfInUse() throws Exception {
         LocalhostMachineProvisioningLocation p = newLocalhostProvisioner();
         SshMachineLocation m = p.obtain();
+        
+        // Find two ports that are free, rather than risk false-negatives if a port was left open by something else.
         int start = 48311;
+        while (true) {
+            if (Networking.isPortAvailable(m.getAddress(), start) && Networking.isPortAvailable(m.getAddress(), start+1)) {
+                break;
+            } else {
+                start++;
+            }
+        }
         PortRange r = PortRanges.fromString(""+start+"-"+(start+1));
+
         ServerSocket ss = null;
         try {
-            ss = new ServerSocket(start);
+            ss = new ServerSocket(start, 0, m.getAddress());
             int i1 = m.obtainPort(r);
             Assert.assertEquals(i1, start+1);
         } finally {

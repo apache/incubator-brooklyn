@@ -18,11 +18,18 @@ under the License.
 -->
 <div class="catalog-details">
 
-    <h2><%= model.get("name") %></h2>
-    <p><%= model.get("id") %></p>
-    <p><%= model.get("description") %></p>
+    <% if (model.get("name") != model.get("symbolicName")) { %>
+        <h2><%- model.get("name") %></h2>
+        <p><%- model.getVersionedAttr("symbolicName") %></p>
+    <% } else { %>
+        <h2><%- model.getVersionedAttr("symbolicName") %></h2>
+    <% } %>
+    <% if (model.get("description")) { %>
+        <p><%- model.get("description") %></p>
+    <% } %>
 
     <div id="catalog-details-accordion" class="accordion">
+      <% if (model.get("planYaml")) { %>
         <div class="accordion-group">
             <div class="accordion-heading">
                 <a class="accordion-toggle" data-toggle="collapse" data-parent="#catalog-details-accordion" href="#collapseYaml">
@@ -31,14 +38,12 @@ under the License.
             </div>
             <div id="collapseYaml" class="accordion-body collapse">
                 <div class="accordion-inner">
-                    <% if (model.get("planYaml")) { %>
-                    <textarea rows="15" readonly><%= model.get("planYaml") %></textarea>
-                    <% } else { %>
-                    <p>No plan</p>
-                    <% } %>
+                    <textarea rows="15" readonly><%- model.get("planYaml") %></textarea>
                 </div>
             </div>
         </div>
+      <% } %>
+        <% if (viewName != "policies") { %>
         <div class="accordion-group">
             <div class="accordion-heading">
                 <a class="accordion-toggle" data-toggle="collapse" data-parent="#catalog-details-accordion" href="#collapseConfiguration">
@@ -62,19 +67,22 @@ under the License.
                             'reconfigurable'
                         ]; %>
                         <% _.each(model.get("config"), function(object, index) { %>
-                        <p><strong><%= object.name %></strong>: <%= object.description %></p>
+                        <div style="padding-bottom: 12px;">
+                        <p><strong><%- object.name %></strong>: <%- object.description %></p>
+                        <div style="margin-left: 24px;">
                         <table class="table table-striped table-condensed nonDatatables">
                             <tbody>
                             <% _.each(object, function(value, key) { %>
                             <% if (!_.contains(skip, key)) { %>
                             <tr>
-                                <td><%= key %></td>
-                                <td><%= value %></td>
+                                <td><%- key %></td>
+                                <td><%- typeof value === "string" ? value : JSON.stringify(value) %></td>
                             </tr>
                             <% } %>
                             <% }); %>
                             </tbody>
-                        </table>
+                        </table></div>
+                        </div>
                         <% }); %>
                     <% } %>
                 </div>
@@ -106,9 +114,9 @@ under the License.
                             <tbody>
                             <% _.each(model.get("sensors"), function(object, index) { %>
                                 <tr>
-                                    <td><%= object.name %></td>
-                                    <td><%= object.type %></td>
-                                    <td><%= object.description %></td>
+                                    <td><%- object.name %></td>
+                                    <td><%- object.type %></td>
+                                    <td><%- object.description %></td>
                                 </tr>
                             <% }); %>
                             </tbody>
@@ -133,28 +141,33 @@ under the License.
                     <p>No effectors</p>
                 <% } else { %>
                     <% _.each(model.get("effectors"), function(object, index) { %>
-                        <p><strong><%= object.name %></strong>: <%= object.description %></p>
+                        <div style="padding-bottom: 12px;">
+                        <p><strong><%- object.name %></strong>: <%- object.description %></p>
                         <% if (!object.parameters || _.isEmpty(object.parameters)) { %>
                             <p>No parameters</p>
                         <% } else { %>
+                            <div style="margin-left: 24px;">
                             <table class="table table-striped table-condensed nonDatatables">
                                 <tbody>
                                     <% _.each(object.parameters, function(parameter, index) { %>
                                         <% _.each(parameter, function(value, key) { %>
                                         <tr>
-                                            <td><%= key %></td>
-                                            <td><%= value %></td>
+                                            <td><%- key %></td>
+                                            <td><%- value %></td>
                                         </tr>
                                         <% }); %>
                                     <% }); %>
                                 </tbody>
                             </table>
+                            </div>
                         <% } %>
+                        </div>
                     <% }); %>
                 <% } %>
                 </div>
             </div>
         </div>
+        <% } %>
     </div>
 
 </div>

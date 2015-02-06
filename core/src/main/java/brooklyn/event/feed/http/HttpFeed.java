@@ -34,6 +34,8 @@ import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.AbstractFeed;
@@ -55,6 +57,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Provides a feed of attribute values, by polling over http.
@@ -104,6 +107,11 @@ public class HttpFeed extends AbstractFeed {
 
     public static final Logger log = LoggerFactory.getLogger(HttpFeed.class);
 
+    @SuppressWarnings("serial")
+    public static final ConfigKey<SetMultimap<HttpPollIdentifier, HttpPollConfig<?>>> POLLS = ConfigKeys.newConfigKey(
+            new TypeToken<SetMultimap<HttpPollIdentifier, HttpPollConfig<?>>>() {},
+            "polls");
+
     public static Builder builder() {
         return new Builder();
     }
@@ -119,6 +127,7 @@ public class HttpFeed extends AbstractFeed {
         private Map<String, String> headers = Maps.newLinkedHashMap();
         private boolean suspended = false;
         private Credentials credentials;
+        private String uniqueTag;
         private volatile boolean built;
 
         public Builder entity(EntityLocal val) {
@@ -190,14 +199,19 @@ public class HttpFeed extends AbstractFeed {
             return this;
         }
         public Builder credentialsIfNotNull(String username, String password) {
-            if (username != null) {
+            if (username != null && password != null) {
                 this.credentials = new UsernamePasswordCredentials(username, password);
             }
+            return this;
+        }
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
             return this;
         }
         public HttpFeed build() {
             built = true;
             HttpFeed result = new HttpFeed(this);
+            result.setEntity(checkNotNull(entity, "entity"));
             if (suspended) result.suspend();
             result.start();
             return result;
@@ -253,13 +267,17 @@ public class HttpFeed extends AbstractFeed {
         }
     }
     
-    // Treat as immutable once built
-    private final SetMultimap<HttpPollIdentifier, HttpPollConfig<?>> polls = HashMultimap.<HttpPollIdentifier,HttpPollConfig<?>>create();
+    /**
+     * For rebind; do not call directly; use builder
+     */
+    public HttpFeed() {
+    }
     
     protected HttpFeed(Builder builder) {
-        super(builder.entity, builder.onlyIfServiceUp);
+        setConfig(ONLY_IF_SERVICE_UP, builder.onlyIfServiceUp);
         Map<String,String> baseHeaders = ImmutableMap.copyOf(checkNotNull(builder.headers, "headers"));
         
+        SetMultimap<HttpPollIdentifier, HttpPollConfig<?>> polls = HashMultimap.<HttpPollIdentifier,HttpPollConfig<?>>create();
         for (HttpPollConfig<?> config : builder.polls) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
             HttpPollConfig<?> configCopy = new HttpPollConfig(config);
@@ -280,16 +298,20 @@ public class HttpFeed extends AbstractFeed {
                 URI uri = config.buildUri(builder.baseUri, baseUriVars);
                 baseUriProvider = Suppliers.ofInstance(uri);
             } else if (!builder.baseUriVars.isEmpty()) {
-                throw new IllegalStateException("Not permitted to supply URI vars when using a URI provider");
+                throw new IllegalStateException("Not permitted to supply URI vars when using a URI provider; pass the vars to the provider instead");
             }
             checkNotNull(baseUriProvider);
 
             polls.put(new HttpPollIdentifier(method, baseUriProvider, headers, body, credentials, connectionTimeout, socketTimeout), configCopy);
         }
+        setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls.values());
     }
 
     @Override
     protected void preStart() {
+        SetMultimap<HttpPollIdentifier, HttpPollConfig<?>> polls = getConfig(POLLS);
+        
         for (final HttpPollIdentifier pollInfo : polls.keySet()) {
             // Though HttpClients are thread safe and can take advantage of connection pooling
             // and authentication caching, the httpcomponents documentation says:
@@ -354,7 +376,7 @@ public class HttpFeed extends AbstractFeed {
     }
 
     @SuppressWarnings("unchecked")
-    private Poller<HttpToolResponse> getPoller() {
-        return (Poller<HttpToolResponse>) poller;
+    protected Poller<HttpToolResponse> getPoller() {
+        return (Poller<HttpToolResponse>) super.getPoller();
     }
 }

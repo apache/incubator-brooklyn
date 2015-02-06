@@ -20,6 +20,8 @@ package brooklyn.entity.webapp;
 
 import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
+
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.event.AttributeSensor;
@@ -27,8 +29,6 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
-
-import com.google.common.collect.ImmutableList;
 
 public interface WebAppServiceConstants extends WebAppServiceMetrics {
 
@@ -41,7 +41,7 @@ public interface WebAppServiceConstants extends WebAppServiceMetrics {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("enabledProtocols")
     public static final BasicAttributeSensorAndConfigKey<Set<String>> ENABLED_PROTOCOLS = new BasicAttributeSensorAndConfigKey(
-            Set.class, "webapp.enabledProtocols", "List of enabled protocols (e.g. http, https)", ImmutableList.of("http"));
+            Set.class, "webapp.enabledProtocols", "List of enabled protocols (e.g. http, https)", ImmutableSet.of("http"));
 
     @SetFromFlag("httpsSsl")
     public static final BasicAttributeSensorAndConfigKey<HttpsSslConfig> HTTPS_SSL_CONFIG = new BasicAttributeSensorAndConfigKey<HttpsSslConfig>(
@@ -56,6 +56,6 @@ class RootUrl {
     public static final AttributeSensor<String> ROOT_URL = Sensors.newStringSensor("webapp.url", "URL");
 
     static {
-        RendererHints.register(ROOT_URL, new RendererHints.NamedActionWithUrl("Open"));
+        RendererHints.register(ROOT_URL, RendererHints.namedActionWithUrl());
     }
 }

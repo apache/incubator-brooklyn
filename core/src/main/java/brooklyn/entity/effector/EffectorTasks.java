@@ -47,6 +47,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
 /**
+ * Miscellaneous tasks which are useful in effectors.
  * @since 0.6.0
  */
 @Beta
@@ -72,7 +73,7 @@ public class EffectorTasks {
             final AtomicReference<DynamicSequentialTask<T>> dst = new AtomicReference<DynamicSequentialTask<T>>();
 
             dst.set(new DynamicSequentialTask<T>(
-                    getFlagsForTaskInvocationAt(entity, effector), 
+                    getFlagsForTaskInvocationAt(entity, effector, parameters), 
                     new Callable<T>() {
                         @Override
                         public T call() throws Exception {
@@ -91,17 +92,21 @@ public class EffectorTasks {
                     });
             return dst.get();
         };
-        
+
+        /** @deprecated since 0.7.0 use {@link #getFlagsForTaskInvocationAt(Entity, Effector, ConfigBag)} */ @Deprecated
+        protected final Map<Object,Object> getFlagsForTaskInvocationAt(Entity entity, Effector<?> effector) {
+            return getFlagsForTaskInvocationAt(entity, effector, null);
+        }
         /** subclasses may override to add additional flags, but they should include the flags returned here 
          * unless there is very good reason not to; default impl returns a MutableMap */
-        protected Map<Object,Object> getFlagsForTaskInvocationAt(Entity entity, Effector<?> effector) {
-            return EffectorUtils.getTaskFlagsForEffectorInvocation(entity, effector);
+        protected Map<Object,Object> getFlagsForTaskInvocationAt(Entity entity, Effector<?> effector, ConfigBag parameters) {
+            return EffectorUtils.getTaskFlagsForEffectorInvocation(entity, effector, parameters);
         }
     }
     
     /** wrapper for {@link EffectorTaskFactory} which ensures effector task tags are applied to it if needed
      * (wrapping in a task if needed); without this, {@link EffectorBody}-based effectors get it by
-     * virtue of the call to {@link #getFlagsForTaskInvocationAt(Entity, Effector)} therein
+     * virtue of the call to {@link #getFlagsForTaskInvocationAt(Entity,Effector,ConfigBag)} therein
      * but {@link EffectorTaskFactory}-based effectors generate a task without the right tags
      * to be able to tell using {@link BrooklynTaskTags} the effector-context of the task 
      * <p>

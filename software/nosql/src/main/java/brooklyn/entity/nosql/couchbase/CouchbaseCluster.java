@@ -19,10 +19,10 @@
 package brooklyn.entity.nosql.couchbase;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import com.google.common.reflect.TypeToken;
-
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -33,6 +33,10 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
+import com.google.common.reflect.TypeToken;
+
+@Catalog(name="CouchBase Cluster", description="Couchbase is an open source, distributed (shared-nothing architecture) "
+        + "NoSQL document-oriented database that is optimized for interactive applications.")
 @ImplementedBy(CouchbaseClusterImpl.class)
 public interface CouchbaseCluster extends DynamicCluster {
 
@@ -50,19 +54,31 @@ public interface CouchbaseCluster extends DynamicCluster {
 
     AttributeSensor<Boolean> IS_CLUSTER_INITIALIZED = Sensors.newBooleanSensor("couchbase.cluster.isClusterInitialized", "flag to emit if the couchbase cluster was intialized");
 
+    @SetFromFlag("clusterName")
+    ConfigKey<String> CLUSTER_NAME = ConfigKeys.newStringConfigKey("couchbase.cluster.name", "Optional name for this cluster");
+
     @SetFromFlag("intialQuorumSize")
     ConfigKey<Integer> INITIAL_QUORUM_SIZE = ConfigKeys.newIntegerConfigKey("couchbase.cluster.intialQuorumSize", "Initial cluster quorum size - number of initial nodes that must have been successfully started to report success (if < 0, then use value of INITIAL_SIZE)",
             -1);
 
     @SetFromFlag("delayBeforeAdvertisingCluster")
-    ConfigKey<Duration> DELAY_BEFORE_ADVERTISING_CLUSTER = ConfigKeys.newConfigKey(Duration.class, "couchbase.cluster.delayBeforeAdvertisingCluster", "Delay after cluster is started before checking and advertising its availability", Duration.THIRTY_SECONDS);
+    ConfigKey<Duration> DELAY_BEFORE_ADVERTISING_CLUSTER = ConfigKeys.newConfigKey(Duration.class, "couchbase.cluster.delayBeforeAdvertisingCluster", "Delay after cluster is started before checking and advertising its availability", Duration.TEN_SECONDS);
 
-    @SetFromFlag("serviceUpTimeOut")
-    ConfigKey<Duration> SERVICE_UP_TIME_OUT = ConfigKeys.newConfigKey(Duration.class, "couchbase.cluster.serviceUpTimeOut", "Service up time out duration for all the couchbase nodes", Duration.seconds(3 * 60));
+    // TODO not sure if this is needed; previously waited 3m (SERVICE_UP_TIME_OUT) but that seems absurdly long
+    @SetFromFlag("postStartStabilizationDelay")
+    ConfigKey<Duration> NODES_STARTED_STABILIZATION_DELAY = ConfigKeys.newConfigKey(Duration.class, "couchbase.cluster.postStartStabilizationDelay", "Delay after nodes have been started before treating it as a cluster", Duration.TEN_SECONDS);
     
+    @SetFromFlag("adminUsername")
+    ConfigKey<String> COUCHBASE_ADMIN_USERNAME = CouchbaseNode.COUCHBASE_ADMIN_USERNAME;
+
+    @SetFromFlag("adminPassword")
+    ConfigKey<String> COUCHBASE_ADMIN_PASSWORD = CouchbaseNode.COUCHBASE_ADMIN_PASSWORD;
+
     @SuppressWarnings("serial")
     AttributeSensor<List<String>> COUCHBASE_CLUSTER_UP_NODE_ADDRESSES = Sensors.newSensor(new TypeToken<List<String>>() {},
-        "couchbase.cluster.node.addresses", "List of host:port of all active nodes in the cluster (http admin port, and public hostname/IP)");
+            "couchbase.cluster.node.addresses", "List of host:port of all active nodes in the cluster (http admin port, and public hostname/IP)");
+    AttributeSensor<String> COUCHBASE_CLUSTER_CONNECTION_URL = Sensors.newStringSensor(
+            "couchbase.cluster.connection.url", "Couchbase-style URL to connect to the cluster (e.g. http://127.0.0.1:8091/ or couchbase://10.0.0.1,10.0.0.2/)");
     
     // Interesting stats
     AttributeSensor<Double> OPS_PER_NODE = Sensors.newDoubleSensor("couchbase.stats.cluster.per.node.ops", 
@@ -90,4 +106,28 @@ public interface CouchbaseCluster extends DynamicCluster {
             "Average across cluster for pools/nodes/<current node>/interestingStats/couch_docs_actual_disk_size");
     AttributeSensor<Long> COUCH_VIEWS_DATA_SIZE_PER_NODE = Sensors.newLongSensor("couchbase.stats.cluster.per.node.couch.views.data.size", 
             "Average across cluster for pools/nodes/<current node>/interestingStats/couch_views_data_size");
+    
+    AttributeSensor<Boolean> BUCKET_CREATION_IN_PROGRESS = Sensors.newBooleanSensor("couchbase.cluster.bucketCreationInProgress", "Indicates that a bucket is currently being created, and" +
+            "further bucket creation should be deferred");
+
+    /**
+     * createBuckets is a list of all the buckets to be created on the couchbase cluster
+     * the buckets will be created on the primary node of the cluster
+     * each map entry for a bucket should contain the following parameters:
+     * - <"bucket",(String) name of the bucket (default: default)>
+     * - <"bucket-type",(String) name of bucket type (default: couchbase)>
+     * - <"bucket-port",(Integer) the bucket port to connect to (default: 11222)>
+     * - <"bucket-ramsize",(Integer) ram size allowed for bucket (default: 200)>
+     * - <"bucket-replica",(Integer) number of replicas for the bucket (default: 1)>
+     */
+    @SuppressWarnings("serial")
+    @SetFromFlag("createBuckets")
+    ConfigKey<List<Map<String, Object>>> CREATE_BUCKETS = ConfigKeys.newConfigKey(new TypeToken<List<Map<String, Object>>>() {}, 
+            "couchbase.cluster.createBuckets", "a list of all dedicated port buckets to be created on the couchbase cluster");
+    
+    @SuppressWarnings("serial")
+    @SetFromFlag("replication")
+    ConfigKey<List<Map<String,Object>>> REPLICATION = ConfigKeys.newConfigKey(new TypeToken<List<Map<String,Object>>>() {}, 
+            "couchbase.cluster.replicationConfiguration", "List of replication rules to configure, each rule including target (id of another cluster) and mode (unidirectional or bidirectional)");
+
 }

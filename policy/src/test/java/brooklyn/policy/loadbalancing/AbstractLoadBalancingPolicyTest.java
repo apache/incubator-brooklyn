@@ -91,7 +91,7 @@ public class AbstractLoadBalancingPolicyTest {
         
         model = new DefaultBalanceablePoolModel<Entity, Entity>("pool-model");
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         containerGroup = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .displayName("containerGroup")
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(MockContainerEntity.class)));

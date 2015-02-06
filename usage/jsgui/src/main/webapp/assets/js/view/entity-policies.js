@@ -17,20 +17,25 @@
  * under the License.
 */
 /**
- * Render the policies tab.You must supply the model and optionally the element
+ * Render the policies tab. You must supply the model and optionally the element
  * on which the view binds itself.
- *
- * @type {*}
  */
 define([
-    "underscore", "jquery", "backbone",
-    "model/policy-summary", "model/policy-config-summary", "view/viewutils", "view/policy-config-invoke", "text!tpl/apps/policy.html", "text!tpl/apps/policy-row.html", "text!tpl/apps/policy-config-row.html",
+    "underscore", "jquery", "backbone", "brooklyn",
+    "model/policy-summary", "model/policy-config-summary",
+    "view/viewutils", "view/policy-config-invoke", "view/policy-new",
+    "text!tpl/apps/policy.html", "text!tpl/apps/policy-row.html", "text!tpl/apps/policy-config-row.html",
     "jquery-datatables", "datatables-extensions"
-], function (_, $, Backbone, PolicySummary, PolicyConfigSummary, ViewUtils, PolicyConfigInvokeView, PolicyHtml, PolicyRowHtml, PolicyConfigRowHtml) {
+], function (_, $, Backbone, Brooklyn,
+        PolicySummary, PolicyConfigSummary,
+        ViewUtils, PolicyConfigInvokeView, NewPolicyView,
+        PolicyHtml, PolicyRowHtml, PolicyConfigRowHtml) {
 
     var EntityPoliciesView = Backbone.View.extend({
-        template:_.template(PolicyHtml),
-        policyRow:_.template(PolicyRowHtml),
+
+        template: _.template(PolicyHtml),
+        policyRow: _.template(PolicyRowHtml),
+
         events:{
             'click .refresh':'refreshPolicyConfigNow',
             'click .filterEmpty':'toggleFilterEmpty',
@@ -38,8 +43,10 @@ define([
             "click .policy-start":"callStart",
             "click .policy-stop":"callStop",
             "click .policy-destroy":"callDestroy",
-            "click .show-policy-config-modal":"showPolicyConfigModal"
+            "click .show-policy-config-modal":"showPolicyConfigModal",
+            "click .add-new-policy": "showNewPolicyModal"
         },
+
         initialize:function () {
             _.bindAll(this)
             this.$el.html(this.template({ }));
@@ -52,11 +59,12 @@ define([
             ViewUtils.fadeToIndicateInitialLoad(this.$('#policies-table'));
             that.render();
             this._policies.on("all", this.render, this)
-            ViewUtils.fetchRepeatedlyWithDelay(this, this._policies,
-                    { doitnow: true, success: function() {
-                        that.loadedData = true;
-                        ViewUtils.cancelFadeOnceLoaded(that.$('#policies-table'));
-                    }})
+            ViewUtils.fetchRepeatedlyWithDelay(this, this._policies, {
+                doitnow: true,
+                success: function () {
+                    that.loadedData = true;
+                    ViewUtils.cancelFadeOnceLoaded(that.$('#policies-table'));
+                }});
         },
 
         render:function () {
@@ -115,16 +123,16 @@ define([
                 $("#policy-config-none-selected").slideDown(100);
             } else {
                 row.addClass("selected");
-                var that = this;
                 // fetch the list of policy config entries
-                that._config = new PolicyConfigSummary.Collection();
-                that._config.url = policy.getLinkByName("config");
-                ViewUtils.fadeToIndicateInitialLoad($('#policy-config-table'))
-                that.showPolicyConfig(id);
-                that._config.fetch({ success:function () {
+                this._config = new PolicyConfigSummary.Collection();
+                this._config.url = policy.getLinkByName("config");
+                ViewUtils.fadeToIndicateInitialLoad($('#policy-config-table'));
+                this.showPolicyConfig(id);
+                var that = this;
+                this._config.fetch().done(function () {
                     that.showPolicyConfig(id);
                     ViewUtils.cancelFadeOnceLoaded($('#policy-config-table'))
-                }});
+                });
             }
         },
 
@@ -133,7 +141,8 @@ define([
             if (activePolicyId != null && that.activePolicy != activePolicyId) {
                 // TODO better to use a json array, as we do elsewhere
                 var $table = $('#policy-config-table'),
-                    $tbody = $('#policy-config-table tbody').empty();
+                    $tbody = $table.find('tbody');
+                $table.dataTable().fnClearTable();
                 $("#policy-config-none-selected").slideUp(100);
                 if (that._config.length==0) {
                     $(".has-no-policy-config").show();
@@ -149,7 +158,7 @@ define([
                             type:config.get("type"),
                             reconfigurable:config.get("reconfigurable"),
                             link:config.getLinkByName('self'),
-                            value:'' // will be set later
+                            value: config.get("defaultValue")
                         }));
                         $tbody.find('*[rel="tooltip"]').tooltip();
                     });
@@ -172,7 +181,7 @@ define([
 
         refreshPolicyConfig:function() {
             var that = this;
-            if (that.viewIsClosed) return;
+            if (that.viewIsClosed || !that.currentStateUrl) return;
             var $table = that.$('#policy-config-table').dataTable(),
                 $rows = that.$("tr.policy-config-row");
             $.get(that.currentStateUrl, function (data) {
@@ -181,23 +190,36 @@ define([
                 $rows.each(function (index, row) {
                     var key = $(this).find(".policy-config-name").text();
                     var v = data[key];
-                    if (v === undefined) v = "";
-                    $table.fnUpdate(_.escape(v), row, 1, false);
+                    if (v !== undefined) {
+                        $table.fnUpdate(_.escape(v), row, 1, false);
+                    }
                 });
             });
             $table.dataTable().fnStandingRedraw();
         },
 
-        showPolicyConfigModal:function (evt) {
-            evt.stopPropagation();
-            // get the model that we need to show, create its view and show it
+        showPolicyConfigModal: function (evt) {
             var cid = $(evt.currentTarget).attr("id");
-            this._modal = new PolicyConfigInvokeView({
-                el:"#policy-config-modal",
-                model:this._config.get(cid),
-                policy:this.model
-            });
-            this._modal.render().$el.modal('show');
+            var currentValue = $(evt.currentTarget)
+                .parent().parent()
+                .find(".policy-config-value")
+                .text();
+            Brooklyn.view.showModalWith(new PolicyConfigInvokeView({
+                model: this._config.get(cid),
+                policy: this.model,
+                currentValue: currentValue
+            }));
+        },
+
+        showNewPolicyModal: function () {
+            var self = this;
+            Brooklyn.view.showModalWith(new NewPolicyView({
+                entity: this.model,
+                onSave: function (policy) {
+                    console.log("New policy", policy);
+                    self._policies.add(policy);
+                }
+            }));
         },
 
         callStart:function(event) { this.doPost(event, "start"); },

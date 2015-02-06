@@ -21,14 +21,17 @@ package brooklyn.entity.pool;
 import java.util.Collection;
 import java.util.Map;
 
+import com.google.common.annotations.Beta;
+
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.machine.MachineEntity;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.machine.MachineEntity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
@@ -62,7 +65,9 @@ import brooklyn.location.dynamic.LocationOwner;
  *     </li>
  * </ul>
  */
+@Catalog(name="Server Pool", description="Creates a pre-allocated server pool, which other applications can deploy to")
 @ImplementedBy(ServerPoolImpl.class)
+@Beta
 public interface ServerPool extends DynamicCluster, LocationOwner<ServerPoolLocation, ServerPool> {
 
     ConfigKey<Integer> INITIAL_SIZE = ConfigKeys.newConfigKeyWithDefault(DynamicCluster.INITIAL_SIZE, 2);

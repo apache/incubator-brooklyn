@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.zookeeper;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -31,6 +32,8 @@ import brooklyn.util.flags.SetFromFlag;
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Apache ZooKeeper instance.
  */
+@Catalog(name="ZooKeeper Node", description="Apache ZooKeeper is a server which enables "
+        + "highly reliable distributed coordination.")
 @ImplementedBy(ZooKeeperNodeImpl.class)
 public interface ZooKeeperNode extends SoftwareProcess {
 

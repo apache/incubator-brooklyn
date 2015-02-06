@@ -26,7 +26,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessDriver;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
@@ -36,7 +35,7 @@ import brooklyn.util.text.Identifiers;
 
 public class MyEntityImpl extends SoftwareProcessImpl implements MyEntity {
     @Override
-    public Class getDriverInterface() {
+    public Class<?> getDriverInterface() {
         return MyEntityDriver.class;
     }
 

@@ -30,9 +30,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
@@ -50,9 +52,10 @@ public class FixedListMachineProvisioningLocationTest {
     FixedListMachineProvisioningLocation<SshMachineLocation> provisioner;
     FixedListMachineProvisioningLocation<SshMachineLocation> provisioner2;
     
+    @SuppressWarnings("unchecked")
     @BeforeMethod(alwaysRun=true)
     public void createProvisioner() throws UnknownHostException {
-        mgmt = new LocalManagementContext();
+        mgmt = LocalManagementContextForTests.newInstance();
         
         machine = mgmt.getLocationManager().createLocation(MutableMap.of("address", Inet4Address.getByName("192.168.144.200")), SshMachineLocation.class);
         provisioner = mgmt.getLocationManager().createLocation(
@@ -64,12 +67,13 @@ public class FixedListMachineProvisioningLocationTest {
     public void tearDown() throws Exception {
         if (provisioner != null) Streams.closeQuietly(provisioner);
         if (provisioner2 != null) Streams.closeQuietly(provisioner2);
+        Entities.destroyAll(mgmt);
     }
     
     @Test
     public void testSetsChildLocations() throws NoMachinesAvailableException {
         // Available machines should be listed as children
-		assertEquals(ImmutableList.copyOf(provisioner.getChildren()), ImmutableList.of(machine));
+        assertEquals(ImmutableList.copyOf(provisioner.getChildren()), ImmutableList.of(machine));
         
         // In-use machines should also be listed as children
         provisioner.obtain();
@@ -82,6 +86,7 @@ public class FixedListMachineProvisioningLocationTest {
         assertEquals(obtained, machine);
     }
 
+    @SuppressWarnings("unused")
     @Test(expectedExceptions = { NoMachinesAvailableException.class })
     public void throwsExceptionIfNoMachinesAvailable() throws NoMachinesAvailableException {
         SshMachineLocation machine1 = provisioner.obtain();
@@ -153,6 +158,7 @@ public class FixedListMachineProvisioningLocationTest {
     
     @Test(expectedExceptions = { IllegalStateException.class })
     public void throwsExceptionIfTryingToReleaseUnallocationMachine() throws NoMachinesAvailableException, UnknownHostException {
+        @SuppressWarnings("unused")
         SshMachineLocation obtained = provisioner.obtain();
         provisioner.release(new SshMachineLocation(MutableMap.of("address", Inet4Address.getByName("192.168.144.201"))));
         fail("Did not throw IllegalStateException as expected");
@@ -213,7 +219,7 @@ public class FixedListMachineProvisioningLocationTest {
 
         // So no machines left; cannot re-obtain
         try {
-            SshMachineLocation obtained2 = provisioner2.obtain();
+            SshMachineLocation obtained2 = provisioner.obtain();
             fail("obtained="+obtained2);
         } catch (NoMachinesAvailableException e) {
             // success

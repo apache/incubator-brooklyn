@@ -19,13 +19,16 @@
 package brooklyn.rest;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
-import java.util.Set;
+import java.util.List;
+
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 
@@ -39,29 +42,31 @@ import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.io.Files;
-import com.sun.jersey.api.core.DefaultResourceConfig;
-import com.sun.jersey.api.core.ResourceConfig;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
-
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.rest.security.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
+import brooklyn.rest.filter.HaMasterCheckFilter;
+import brooklyn.rest.filter.LoggingFilter;
+import brooklyn.rest.filter.NoCacheFilter;
+import brooklyn.rest.filter.RequestTaggingFilter;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.security.provider.SecurityProvider;
-import brooklyn.rest.util.HaMasterCheckFilter;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
+import com.sun.jersey.api.core.DefaultResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -85,13 +90,15 @@ public class BrooklynRestApiLauncher {
         FILTER, SERVLET, WEB_XML
     }
 
-    public static final Set<Class<? extends Filter>> DEFAULT_FILTERS = ImmutableSet.of(
+    public static final List<Class<? extends Filter>> DEFAULT_FILTERS = ImmutableList.of(
+            RequestTaggingFilter.class,
             BrooklynPropertiesSecurityFilter.class,
+            LoggingFilter.class,
             HaMasterCheckFilter.class);
 
     private boolean forceUseOfDefaultCatalogWithJavaClassPath = false;
     private Class<? extends SecurityProvider> securityProvider;
-    private Set<Class<? extends Filter>> filters = DEFAULT_FILTERS;
+    private List<Class<? extends Filter>> filters = DEFAULT_FILTERS;
     private StartMode mode = StartMode.FILTER;
     private ManagementContext mgmt;
     private ContextHandler customContext;
@@ -115,11 +122,11 @@ public class BrooklynRestApiLauncher {
     }
 
     /**
-     * Runs the server with the given set of filters. Replaces {@link #DEFAULT_FILTERS}.
+     * Runs the server with the given set of filters. 
+     * Overrides any previously supplied set (or {@link #DEFAULT_FILTERS} which is used by default).
      */
-    @SuppressWarnings("unchecked")
     public BrooklynRestApiLauncher filters(Class<? extends Filter>... filters) {
-        this.filters = Sets.newHashSet(filters);
+        this.filters = Lists.newArrayList(filters);
         return this;
     }
 
@@ -151,6 +158,7 @@ public class BrooklynRestApiLauncher {
         BrooklynCampPlatformLauncherAbstract platform = new BrooklynCampPlatformLauncherNoServer()
                 .useManagementContext(mgmt)
                 .launch();
+        log.debug("started "+platform);
 
         ContextHandler context;
         String summary;
@@ -178,8 +186,8 @@ public class BrooklynRestApiLauncher {
         }
 
         if (securityProvider != null) {
-            ((BrooklynProperties) mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
-                    securityProvider.getName());
+            ((BrooklynProperties) mgmt.getConfig()).put(
+                    BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME, securityProvider.getName());
         }
 
         if (forceUseOfDefaultCatalogWithJavaClassPath) {
@@ -198,6 +206,12 @@ public class BrooklynRestApiLauncher {
         context.setContextPath("/");
         // here we run with the JS GUI, for convenience, if we can find it, else set up an empty dir
         // TODO pretty sure there is an option to monitor this dir and load changes to static content
+        // NOTE: When running Brooklyn from an IDE (i.e. by launching BrooklynJavascriptGuiLauncher.main())
+        // you will need to ensure that the working directory is set to the jsgui folder. For IntelliJ,
+        // set the 'Working directory' of the Run/Debug Configuration to $MODULE_DIR/../jsgui.
+        // For Eclipse, use the default option of ${workspace_loc:brooklyn-jsgui}.
+        // If the working directory is not set correctly, Brooklyn will be unable to find the jsgui .war
+        // file and the 'gui not available' message will be shown.
         context.setWar(this.deployJsgui && findJsguiWebapp() != null
                        ? findJsguiWebapp()
                        : createTempWebDirWithIndexHtml("Brooklyn REST API <p> (gui not available)"));
@@ -239,7 +253,7 @@ public class BrooklynRestApiLauncher {
 
     /** starts a server, on all NICs if security is configured,
      * otherwise (no security) only on loopback interface */
-    private Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
+    public static Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
         // TODO this repeats code in BrooklynLauncher / WebServer. should merge the two paths.
         boolean secure = mgmt != null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig());
         if (secure) {
@@ -259,7 +273,7 @@ public class BrooklynRestApiLauncher {
         return startServer(context, summary, bindLocation);
     }
 
-    private Server startServer(ContextHandler context, String summary, InetSocketAddress bindLocation) {
+    public static Server startServer(ContextHandler context, String summary, InetSocketAddress bindLocation) {
         Server server = new Server(bindLocation);
         server.setHandler(context);
         try {
@@ -304,7 +318,7 @@ public class BrooklynRestApiLauncher {
         installAsServletFilter(context, DEFAULT_FILTERS);
     }
 
-    private static void installAsServletFilter(ServletContextHandler context, Set<Class<? extends Filter>> filters) {
+    private static void installAsServletFilter(ServletContextHandler context, List<Class<? extends Filter>> filters) {
         installBrooklynFilters(context, filters);
 
         // now set up the REST servlet resources
@@ -312,6 +326,9 @@ public class BrooklynRestApiLauncher {
         // load all our REST API modules, JSON, and Swagger
         for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
+
+        // disable caching for dynamic content
+        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, NoCacheFilter.class.getName());
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
@@ -322,7 +339,7 @@ public class BrooklynRestApiLauncher {
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
     }
 
-    private static void installBrooklynFilters(ServletContextHandler context, Set<Class<? extends Filter>> filters) {
+    private static void installBrooklynFilters(ServletContextHandler context, List<Class<? extends Filter>> filters) {
         for (Class<? extends Filter> filter : filters) {
             context.addFilter(filter, "/*", EnumSet.allOf(DispatcherType.class));
         }
@@ -334,9 +351,7 @@ public class BrooklynRestApiLauncher {
      */
     @Deprecated
     public static Server startServer(ContextHandler context, String summary) {
-        return launcher()
-                .customContext(context)
-                .startServer(context, summary,
+        return BrooklynRestApiLauncher.startServer(context, summary,
                 new InetSocketAddress(Networking.ANY_NIC, Networking.nextAvailablePort(FAVOURITE_PORT)));
     }
 
@@ -360,6 +375,7 @@ public class BrooklynRestApiLauncher {
      * supports globs in the filename portion only, in which case it returns the _newest_ matching file.
      * <p>
      * otherwise returns null */
+    @Beta // public because used in dependent test projects
     public static Optional<String> findMatchingFile(String filename) {
         final File f = new File(filename);
         if (f.exists()) return Optional.of(filename);

@@ -27,6 +27,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.effector.EffectorTaskTest;
 import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 
 public class DynamicEntityTest {
@@ -35,7 +36,7 @@ public class DynamicEntityTest {
     
     @BeforeMethod(alwaysRun=true)
     public void setup() throws Exception {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(BasicApplication.class));
+        app = ApplicationBuilder.newManagedApp(EntitySpec.create(BasicApplication.class), LocalManagementContextForTests.newInstance());
     }
     
     @AfterMethod(alwaysRun=true)

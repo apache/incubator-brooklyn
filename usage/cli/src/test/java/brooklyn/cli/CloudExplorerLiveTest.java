@@ -20,9 +20,7 @@ package brooklyn.cli;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 import io.airlift.command.Cli;
-import io.airlift.command.ParseCommandMissingException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,7 +31,7 @@ import java.util.List;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.cli.Main.BrooklynCommand;
+import brooklyn.cli.AbstractMain.BrooklynCommand;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -51,19 +49,14 @@ public class CloudExplorerLiveTest {
     }
 
     @Test
-    public void testNoArgsThrowsException() throws Exception {
-        try {
-            call(new String[0]);
-            fail();
-        } catch (ParseCommandMissingException e) {
-            // expected
-        }
+    public void testNoArgsReturnsInfo() throws Exception {
+        call(new String[0]);
     }
 
     // A user running these tests might not have any instances; so don't assert that there will be one
     @Test(groups={"Live", "Live-sanity"})
     public void testListInstances() throws Exception {
-        call("compute", "list-instances", "--location", "jclouds:aws-ec2:eu-west-1");
+        call("cloud-compute", "list-instances", "--location", "jclouds:aws-ec2:eu-west-1");
         
         String errmsg = "stdout="+stdout+"; stderr="+stderr;
         
@@ -75,7 +68,7 @@ public class CloudExplorerLiveTest {
 
     @Test(groups={"Live", "Live-sanity"})
     public void testListImages() throws Exception {
-        call("compute", "list-images", "--location", "jclouds:softlayer:ams01");
+        call("cloud-compute", "list-images", "--location", "jclouds:softlayer:ams01");
         
         String errmsg = "stdout="+stdout+"; stderr="+stderr;
         
@@ -92,7 +85,7 @@ public class CloudExplorerLiveTest {
 
     @Test(groups={"Live", "Live-sanity"})
     public void testListHardwareProfiles() throws Exception {
-        call("compute", "list-hardware-profiles", "--location", "jclouds:softlayer:ams01");
+        call("cloud-compute", "list-hardware-profiles", "--location", "jclouds:softlayer:ams01");
         
         String errmsg = "stdout="+stdout+"; stderr="+stderr;
         
@@ -109,7 +102,7 @@ public class CloudExplorerLiveTest {
 
     @Test(groups={"Live", "Live-sanity"})
     public void testGetImage() throws Exception {
-        call("compute", "get-image", "--location", "jclouds:softlayer:ams01", "CENTOS_6_64");
+        call("cloud-compute", "get-image", "--location", "jclouds:softlayer:ams01", "CENTOS_6_64");
         
         String errmsg = "stdout="+stdout+"; stderr="+stderr;
         
@@ -126,7 +119,7 @@ public class CloudExplorerLiveTest {
 
     @Test(groups={"Live", "Live-sanity"})
     public void testGetDefaultTemplate() throws Exception {
-        call("compute", "default-template", "--location", "jclouds:softlayer:ams01");
+        call("cloud-compute", "default-template", "--location", "jclouds:softlayer:ams01");
         
         String errmsg = "stdout="+stdout+"; stderr="+stderr;
         
@@ -152,7 +145,7 @@ public class CloudExplorerLiveTest {
      */
     @Test(groups={"Live", "Live-sanity"})
     public void testListContainers() throws Exception {
-        call("blobstore", "list-containers", "--location", "named:softlayer-swift-ams01");
+        call("cloud-blobstore", "list-containers", "--location", "named:softlayer-swift-ams01");
         
         String errmsg = "stdout="+stdout+"; stderr="+stderr;
         
@@ -171,7 +164,7 @@ public class CloudExplorerLiveTest {
         ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
         ByteArrayOutputStream stderrStream = new ByteArrayOutputStream();
         
-        Cli<BrooklynCommand> parser = new CloudExplorer().cliBuilder().build();
+        Cli<BrooklynCommand> parser = new Main().cliBuilder().build();
         
         BrooklynCommand command = parser.parse(args);
         command.stdout = new PrintStream(stdoutStream);

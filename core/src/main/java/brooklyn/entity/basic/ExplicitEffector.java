@@ -38,7 +38,7 @@ public abstract class ExplicitEffector<I,T> extends AbstractEffector<T> {
     }
 
     public T call(Entity entity, Map parameters) {
-        return invokeEffector((I) entity, parameters );
+        return invokeEffector((I) entity, (Map<String,?>)parameters );
     }
 
     public abstract T invokeEffector(I trait, Map<String,?> parameters);

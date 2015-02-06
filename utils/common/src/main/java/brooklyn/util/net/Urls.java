@@ -23,7 +23,11 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -31,6 +35,8 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
+import com.google.common.io.BaseEncoding;
+import com.google.common.net.MediaType;
 
 public class Urls {
 
@@ -116,10 +122,18 @@ public class Urls {
     }
     
     /** returns the items with exactly one "/" between items (whether or not the individual items start or end with /),
-     * except where character before the / is a : (url syntax) in which case it will permit multiple (will not remove any) */
+     * except where character before the / is a : (url syntax) in which case it will permit multiple (will not remove any).
+     * Throws a NullPointerException if any elements of 'items' is null.
+     *  */
     public static String mergePaths(String ...items) {
+        List<String> parts = Arrays.asList(items);
+
+        if (parts.contains(null)) {
+            throw new NullPointerException(String.format("Unable to reliably merge path from parts: %s; input contains null values", parts));
+        }
+
         StringBuilder result = new StringBuilder();
-        for (String item: items) {
+        for (String part: parts) {
             boolean trimThisMerge = result.length()>0 && !result.toString().endsWith("://") && !result.toString().endsWith(":///") && !result.toString().endsWith(":");
             if (trimThisMerge) {
                 while (result.length()>0 && result.charAt(result.length()-1)=='/')
@@ -127,7 +141,7 @@ public class Urls {
                 result.append('/');
             }
             int i = result.length();
-            result.append(item);
+            result.append(part);
             if (trimThisMerge) {
                 while (result.length()>i && result.charAt(i)=='/')
                     result.deleteCharAt(i);
@@ -141,6 +155,11 @@ public class Urls {
     @SuppressWarnings("deprecation")
     public static String encode(String text) {
         return URLEncoder.encode(text);
+    }
+    /** As {@link #encode(String)} */
+    @SuppressWarnings("deprecation")
+    public static String decode(String text) {
+        return URLDecoder.decode(text);
     }
 
     /** returns the protocol (e.g. http) if one appears to be specified, or else null;
@@ -200,6 +219,28 @@ public class Urls {
         } else {
             return new File(fileUrl);
         }
+    }
+
+    /** as {@link #asDataUrlBase64(String)} with plain text */
+    public static String asDataUrlBase64(String data) {
+        return asDataUrlBase64(MediaType.PLAIN_TEXT_UTF_8, data.getBytes());
+    }
+    
+    /** 
+     * Creates a "data:..." scheme URL for use with supported parsers, using Base64 encoding.
+     * (But note, by default Java's URL is not one of them, although Brooklyn's ResourceUtils does support it.)
+     * <p>
+     * It is not necessary (at least for Brookyn's routines) to base64 encode it, but recommended as that is likely more
+     * portable and easier to work with if odd characters are included.
+     * <p>
+     * It is worth noting that Base64 uses '+' which can be replaced by ' ' in some URL parsing.  
+     * But in practice it does not seem to cause issues.
+     * An alternative is to use {@link BaseEncoding#base64Url()} but it is not clear how widely that is supported
+     * (nor what parameter should be given to indicate that type of encoding, as the spec calls for 'base64'!)
+     * <p>
+     * null type means no type info will be included in the URL. */
+    public static String asDataUrlBase64(MediaType type, byte[] bytes) {
+        return "data:"+(type!=null ? type.withoutParameters().toString() : "")+";base64,"+new String(BaseEncoding.base64().encode(bytes));
     }
 
 }

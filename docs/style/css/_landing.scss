@@ -1,0 +1,26 @@
+
+/* LANDING PAGE
+   ----------------------------------------------------------------------- */
+
+.jumbotron {
+    margin-top: 18px;
+}
+
+#apachebrooklynbanner {
+    background-image: url("../img/apache-brooklyn-logo-817px-wide.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 817px;
+    height: 99px;
+    margin-bottom: 50px;
+}
+
+div.feather.landing {
+    overflow: visible;
+    max-height: 10px;
+    img {
+        width: 200px;
+        margin-left: 40px;
+        margin-top: 0px;
+    }
+}

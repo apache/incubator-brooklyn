@@ -23,29 +23,26 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
-import java.util.List;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.location.OsDetails;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.TestApplication;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.OsDetails;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
-
-public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
+public class RebindJcloudsLocationLiveTest extends AbstractJcloudsLiveTest {
 
     public static final String AWS_EC2_REGION_NAME = AWS_EC2_USEAST_REGION_NAME;
     public static final String AWS_EC2_LOCATION_SPEC = "jclouds:" + AWS_EC2_PROVIDER + ":" + AWS_EC2_REGION_NAME;
@@ -132,17 +129,18 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsTest {
     }
 
     private void assertConfigBagEquals(ConfigBag actual, ConfigBag expected, String errmsg) {
-        // TODO Can we include all of these things (e.g. when locations are entities, so flagged fields not treated special)?
-        List<String> configToIgnore = ImmutableList.of("id", "template", "usedPorts", "machineCreationSemaphore", "config");
-        MutableMap<Object, Object> actualMap = MutableMap.builder().putAll(actual.getAllConfig())
-                .removeAll(configToIgnore)
-                .build();
-        MutableMap<Object, Object> expectedMap = MutableMap.builder().putAll(expected.getAllConfig())
-                .removeAll(configToIgnore)
-                .build();
-        
         // TODO revisit the strong assertion that configBags are equal
-        //assertEquals(actualMap, expectedMap, errmsg+"; actualBag="+actualMap+"; expectedBag="+expectedMap);
+        
+//        // TODO Can we include all of these things (e.g. when locations are entities, so flagged fields not treated special)?
+//        List<String> configToIgnore = ImmutableList.of("id", "template", "usedPorts", "machineCreationSemaphore", "config");
+//        MutableMap<Object, Object> actualMap = MutableMap.builder().putAll(actual.getAllConfig())
+//                .removeAll(configToIgnore)
+//                .build();
+//        MutableMap<Object, Object> expectedMap = MutableMap.builder().putAll(expected.getAllConfig())
+//                .removeAll(configToIgnore)
+//                .build();
+//        
+//        assertEquals(actualMap, expectedMap, errmsg+"; actualBag="+actualMap+"; expectedBag="+expectedMap);
     }
     
     private TestApplication rebind() throws Exception {

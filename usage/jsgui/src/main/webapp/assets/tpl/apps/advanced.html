@@ -1,0 +1,75 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div id="advanced-summary">
+  <button id="change-name" class="btn pull-right">Change Name</button>
+  <h3><span id="entity-name">Entity</span></h3>
+
+<div style="text-align: center; padding-top: 24px;">
+  <button id="add-child" class="btn">Add Child</button>
+  <button id="add-new-policy" class="btn">Attach New Policy</button>
+  <button id="reset-problems" class="btn">Reset Problems</button>
+<!-- TODO:
+  <button id="set-config" class="btn">Set Config</button>
+  <button id="edit-sensor" class="btn">Set Sensor</button>
+ -->
+  <button id="expunge" class="btn">Expunge</button>
+  <button id="unmanage" class="btn">Unmanage</button>
+</div>
+
+<div id="change-name-modal" class="modal hide fade"></div>
+<div id="add-child-modal" class="modal hide fade"></div>
+<div id="policy-modal" class="modal hide fade"></div>
+
+<div id="advanced-tab-error-section" class="hide" style="margin-top: 36px; color: red;">
+  <div id="advanced-tab-error-closer" style="float: right;"><button type="button" class="close" data-dismiss="modal">x</button></div>
+  <div id="advanced-tab-error-message"></div>
+</div>
+
+  <div class="toggler-region region-config" style="margin-top: 18px;">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Tags</b></div>
+    </div>
+    <div id="advanced-entity-tags" class="hide">Tags not loaded</div>
+  </div>
+
+  <!-- TODO persistence -->
+  
+  <div class="toggler-region region-config" style="margin-top: 18px;">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Entity Resource JSON</b></div>
+    </div>
+    <div id="advanced-entity-json" class="for-textarea hide">
+      <textarea readonly="readonly" class="code-textarea"/>
+    </div>
+  </div>
+
+  <div class="toggler-region region-config" style="margin-top: 18px;">
+    <div class="toggler-header user-hidden">
+      <div class="toggler-icon icon-chevron-left"></div>
+      <div><b>Locations JSON</b></div>
+    </div>
+    <div id="advanced-locations" class="for-textarea hide">
+      <!-- TODO a nicer view than just the JSON -->
+      <textarea readonly="readonly" class="code-textarea"/>
+    </div>
+  </div>

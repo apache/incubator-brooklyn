@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -37,6 +40,8 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.QuorumCheck;
+import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity;
@@ -54,6 +59,7 @@ import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -65,6 +71,8 @@ import com.google.common.collect.Sets;
 
 public class ServiceReplacerTest {
 
+    private static final Logger log = LoggerFactory.getLogger(ServiceReplacerTest.class);
+    
     private ManagementContext managementContext;
     private TestApplication app;
     private SimulatedLocation loc;
@@ -116,6 +124,11 @@ public class ServiceReplacerTest {
                 assertFalse(Entities.isManaged(e1));
             }});
     }
+
+    @Test(invocationCount=100)
+    public void testSetsOnFireWhenFailToReplaceMemberManyTimes() throws Exception {
+        testSetsOnFireWhenFailToReplaceMember();
+    }
     
     // fails the startup of the replacement entity (but not the original). 
     @Test
@@ -126,8 +139,17 @@ public class ServiceReplacerTest {
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
                         .configure(FailingEntity.FAIL_ON_START_CONDITION, predicateOnlyTrueForCallAtOrAfter(2)))
                 .configure(DynamicCluster.INITIAL_SIZE, 1)
-                .configure(DynamicCluster.QUARANTINE_FAILED_ENTITIES, true));
+                .configure(DynamicCluster.QUARANTINE_FAILED_ENTITIES, true)
+                .configure(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumCheck.QuorumChecks.alwaysTrue())
+                .configure(ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK, QuorumCheck.QuorumChecks.alwaysTrue()));
         app.start(ImmutableList.<Location>of(loc));
+        
+        // should not be on fire
+        Assert.assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE_ACTUAL), Lifecycle.ON_FIRE);
+        // and should eventually be running
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        
+        log.info("started "+app+" for "+JavaClassNames.niceClassAndMethod());
         
         ServiceReplacer policy = new ServiceReplacer(new ConfigBag().configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
         cluster.addPolicy(policy);
@@ -136,11 +158,14 @@ public class ServiceReplacerTest {
         final TestEntity e1 = (TestEntity) Iterables.get(initialMembers, 0);
         
         e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
-        
+
         // Expect cluster to go on-fire when fails to start replacement
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE, Lifecycle.ON_FIRE);
-        
-        // And expect to have the second failed entity still kicking around as proof (in quarantine)
+        // Note that we've set up-quorum and running-quorum to be "alwaysTrue" so that we don't get a transient onFire
+        // when the failed node fails to start (but before it has been removed from the group to be put in quarantine).
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+
+        // Expect to have the second failed entity still kicking around as proof (in quarantine)
+        // The cluster should NOT go on fire until after the 2nd failure
         Iterable<Entity> members = Iterables.filter(managementContext.getEntityManager().getEntities(), Predicates.instanceOf(FailingEntity.class));
         assertEquals(Iterables.size(members), 2);
 
@@ -177,7 +202,7 @@ public class ServiceReplacerTest {
         // Configured to not mark cluster as on fire
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
-                assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE), Lifecycle.ON_FIRE);
+                assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE_ACTUAL), Lifecycle.ON_FIRE);
             }});
         
         // And will have received notification event about it
@@ -217,7 +242,7 @@ public class ServiceReplacerTest {
         // Failure to stop the failed member should not cause "on-fire" of cluster
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
-                assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE), Lifecycle.ON_FIRE);
+                assertNotEquals(cluster.getAttribute(Attributes.SERVICE_STATE_ACTUAL), Lifecycle.ON_FIRE);
             }});
     }
 

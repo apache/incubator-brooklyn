@@ -23,6 +23,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigMapTest.MyOtherEntity;
@@ -30,7 +31,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 
 /**
  * There is a bug where:
@@ -45,7 +45,7 @@ public class ConfigEntityInheritanceTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        app = new TestApplicationImpl();
+        app = TestApplication.Factory.newManagedInstanceForTests();
         Entities.startManagement(app);
     }
 
@@ -162,6 +162,27 @@ public class ConfigEntityInheritanceTest {
     }
     
     public static class MyEntityHereExtendingAndImplementingInterfaceImplementingTwoRight extends MyEntityHere implements MyInterfaceExtendingRight {
+    }
+
+    // --------------------
+
+    @Test
+    public void testConfigKeysInheritance() throws Exception {
+        app.setConfig(MyEntityWithPartiallyHeritableConfig.HERITABLE, "heritable");
+        app.setConfig(MyEntityWithPartiallyHeritableConfig.UNINHERITABLE, "uninheritable");
+        app.setConfig(MyEntityWithPartiallyHeritableConfig.ALWAYS_HERITABLE, "always_heritable");
+        Entity child = app.addChild(EntitySpec.create(MyEntityWithPartiallyHeritableConfig.class));
+        
+        Assert.assertNotNull(child.getConfig(MyEntityWithPartiallyHeritableConfig.HERITABLE));
+        Assert.assertNull(child.getConfig(MyEntityWithPartiallyHeritableConfig.UNINHERITABLE), null);
+        Assert.assertNotNull(child.getConfig(MyEntityWithPartiallyHeritableConfig.ALWAYS_HERITABLE));
+    }
+    
+    public static class MyEntityWithPartiallyHeritableConfig extends AbstractEntity {
+        public static final ConfigKey<String> HERITABLE = ConfigKeys.builder(String.class, "herit.default").build();
+        public static final ConfigKey<String> UNINHERITABLE = ConfigKeys.builder(String.class, "herit.none").inheritance(ConfigInheritance.NONE).build();
+        // i find a strange joy in words where the prefix "in-" does not mean not, like inflammable 
+        public static final ConfigKey<String> ALWAYS_HERITABLE = ConfigKeys.builder(String.class, "herit.always").inheritance(ConfigInheritance.ALWAYS).build();
     }
 
 }

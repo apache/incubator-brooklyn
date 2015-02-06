@@ -19,6 +19,7 @@
 package brooklyn.enricher;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
+import brooklyn.catalog.Catalog;
 import brooklyn.enricher.basic.AbstractTransformingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
@@ -29,6 +30,8 @@ import brooklyn.util.flags.TypeCoercions;
 /**
  * Converts an absolute sensor into a delta sensor (i.e. the diff between the current and previous value)
  */
+//@Catalog(name="Delta", description="Converts an absolute sensor into a delta sensor "
+//        + "(i.e. the diff between the current and previous value)")
 public class DeltaEnricher<T extends Number> extends AbstractTransformingEnricher<T> {
     Number last = 0;
 

@@ -36,7 +36,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -47,6 +49,7 @@ import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -57,6 +60,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Callables;
 import com.google.common.util.concurrent.ExecutionList;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -81,14 +86,17 @@ public class BasicTask<T> implements TaskInternal<T> {
     public final String displayName;
     public final String description;
 
-    protected final Set<Object> tags = new LinkedHashSet<Object>();
+    protected final Set<Object> tags = Sets.newConcurrentHashSet();
     // for debugging, to record where tasks were created
 //    { tags.add(new Throwable("Creation stack trace")); }
+    
+    protected Task<?> proxyTargetTask = null;
 
     protected String blockingDetails = null;
     protected Task<?> blockingTask = null;
     Object extraStatusText = null;
 
+    /** listeners attached at task level; these are stored here, but run on the underlying ListenableFuture */
     protected final ExecutionList listeners = new ExecutionList();
     
     /**
@@ -186,17 +194,18 @@ public class BasicTask<T> implements TaskInternal<T> {
     protected long submitTimeUtc = -1;
     protected long startTimeUtc = -1;
     protected long endTimeUtc = -1;
-    protected Task<?> submittedByTask;
+    protected Maybe<Task<?>> submittedByTask;
 
     protected volatile Thread thread = null;
     private volatile boolean cancelled = false;
-    protected volatile Future<T> result = null;
+    /** normally a {@link ListenableFuture}, except for scheduled tasks when it may be a {@link ScheduledFuture} */
+    protected volatile Future<T> internalFuture = null;
     
     @Override
-    public synchronized void initResult(ListenableFuture<T> result) {
-        if (this.result != null) 
+    public synchronized void initInternalFuture(ListenableFuture<T> result) {
+        if (this.internalFuture != null) 
             throw new IllegalStateException("task "+this+" is being given a result twice");
-        this.result = result;
+        this.internalFuture = result;
         notifyAll();
     }
 
@@ -220,10 +229,13 @@ public class BasicTask<T> implements TaskInternal<T> {
     public long getEndTimeUtc() { return endTimeUtc; }
 
     @Override
-    public Future<T> getResult() { return result; }
+    public Future<T> getInternalFuture() { return internalFuture; }
     
     @Override
-    public Task<?> getSubmittedByTask() { return submittedByTask; }
+    public Task<?> getSubmittedByTask() { 
+        if (submittedByTask==null) return null;
+        return submittedByTask.orNull(); 
+    }
 
     /** the thread where the task is running, if it is running */
     @Override
@@ -264,7 +276,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     }
 
     @Override
-    public synchronized boolean cancel() { return cancel(true); }
+    public final synchronized boolean cancel() { return cancel(true); }
 
     /** doesn't resume it, just means if something was cancelled but not submitted it could now be submitted;
      * probably going to be removed and perhaps some mechanism for running again made available
@@ -281,8 +293,8 @@ public class BasicTask<T> implements TaskInternal<T> {
         if (isDone()) return false;
         boolean cancel = true;
         cancelled = true;
-        if (result!=null) { 
-            cancel = result.cancel(mayInterruptIfRunning);
+        if (internalFuture!=null) { 
+            cancel = internalFuture.cancel(mayInterruptIfRunning);
         }
         notifyAll();
         return cancel;
@@ -290,12 +302,15 @@ public class BasicTask<T> implements TaskInternal<T> {
 
     @Override
     public boolean isCancelled() {
-        return cancelled || (result!=null && result.isCancelled());
+        return cancelled || (internalFuture!=null && internalFuture.isCancelled());
     }
 
     @Override
     public boolean isDone() {
-        return cancelled || (result!=null && result.isDone());
+        // if endTime is set, result might not be completed yet, but it will be set very soon 
+        // (the two values are set close in time, result right after the endTime;
+        // but callback hooks might not see the result yet)
+        return cancelled || (internalFuture!=null && internalFuture.isDone()) || endTimeUtc>0;
     }
 
     /**
@@ -325,7 +340,7 @@ public class BasicTask<T> implements TaskInternal<T> {
             if (!isDone())
                 Tasks.setBlockingTask(this);
             blockUntilStarted();
-            return result.get();
+            return internalFuture.get();
         } finally {
             Tasks.resetBlockingTask();
         }
@@ -350,7 +365,7 @@ public class BasicTask<T> implements TaskInternal<T> {
         Long endTime = timeout==null ? null : System.currentTimeMillis() + timeout.toMillisecondsRoundingUp();
         while (true) {
             if (cancelled) throw new CancellationException();
-            if (result==null)
+            if (internalFuture==null)
                 try {
                     if (timeout==null) {
                         wait();
@@ -365,7 +380,7 @@ public class BasicTask<T> implements TaskInternal<T> {
                     Thread.currentThread().interrupt();
                     Throwables.propagate(e);
                 }
-            if (result!=null) return true;
+            if (internalFuture!=null) return true;
         }
     }
 
@@ -381,11 +396,11 @@ public class BasicTask<T> implements TaskInternal<T> {
             boolean started = blockUntilStarted(timeout);
             if (!started) return false;
             if (timeout==null) {
-                result.get();
+                internalFuture.get();
             } else {
                 long remaining = endTime - System.currentTimeMillis();
                 if (remaining>0)
-                    result.get(remaining, TimeUnit.MILLISECONDS);
+                    internalFuture.get(remaining, TimeUnit.MILLISECONDS);
             }
             return isDone();
         } catch (Throwable t) {
@@ -407,22 +422,22 @@ public class BasicTask<T> implements TaskInternal<T> {
         Long end  = duration==null ? null : start + duration.toMillisecondsRoundingUp();
         while (end==null || end > System.currentTimeMillis()) {
             if (cancelled) throw new CancellationException();
-            if (result == null) {
+            if (internalFuture == null) {
                 synchronized (this) {
                     long remaining = end - System.currentTimeMillis();
-                    if (result==null && remaining>0)
+                    if (internalFuture==null && remaining>0)
                         wait(remaining);
                 }
             }
-            if (result != null) break;
+            if (internalFuture != null) break;
         }
         Long remaining = end==null ? null : end -  System.currentTimeMillis();
         if (isDone()) {
-            return result.get(1, TimeUnit.MILLISECONDS);
+            return internalFuture.get(1, TimeUnit.MILLISECONDS);
         } else if (remaining == null) {
-            return result.get();
+            return internalFuture.get();
         } else if (remaining > 0) {
-            return result.get(remaining, TimeUnit.MILLISECONDS);
+            return internalFuture.get(remaining, TimeUnit.MILLISECONDS);
         } else {
             throw new TimeoutException();
         }
@@ -537,7 +552,7 @@ public class BasicTask<T> implements TaskInternal<T> {
                             rv += "\n\n" + (v==null ? "No return value (null)" : "Result: "+v);
                         } catch (Exception e) {
                             rv += " at first\n" +
-                            		"Error accessing result ["+e+"]"; //shouldn't happen
+                                    "Error accessing result ["+e+"]"; //shouldn't happen
                         }
                         if (verbosity >= 2 && getExtraStatusText()!=null) {
                             rv += "\n\n"+getExtraStatusText();
@@ -546,7 +561,7 @@ public class BasicTask<T> implements TaskInternal<T> {
                 }
             }
         } else {
-			rv = getActiveTaskStatusString(verbosity);
+            rv = getActiveTaskStatusString(verbosity);
         }
         return rv;
     }
@@ -557,28 +572,28 @@ public class BasicTask<T> implements TaskInternal<T> {
         return s;
     }
 
-	protected String getActiveTaskStatusString(int verbosity) {
-		String rv = "";
-		Thread t = getThread();
-	
-		// Normally, it's not possible for thread==null as we were started and not ended
-		
-		// However, there is a race where the task starts sand completes between the calls to getThread()
-		// at the start of the method and this call to getThread(), so both return null even though
-		// the intermediate checks returned started==true isDone()==false.
-		if (t == null) {
-			if (isDone()) {
-				return getStatusString(verbosity);
-			} else {
-			    //should only happen for repeating task which is not active
+    protected String getActiveTaskStatusString(int verbosity) {
+        String rv = "";
+        Thread t = getThread();
+    
+        // Normally, it's not possible for thread==null as we were started and not ended
+        
+        // However, there is a race where the task starts sand completes between the calls to getThread()
+        // at the start of the method and this call to getThread(), so both return null even though
+        // the intermediate checks returned started==true isDone()==false.
+        if (t == null) {
+            if (isDone()) {
+                return getStatusString(verbosity);
+            } else {
+                //should only happen for repeating task which is not active
                 return "Sleeping";
-			}
-		}
+            }
+        }
 
-		ThreadInfo ti = ManagementFactory.getThreadMXBean().getThreadInfo(t.getId(), (verbosity<=0 ? 0 : verbosity==1 ? 1 : Integer.MAX_VALUE));
-		if (getThread()==null)
-			//thread might have moved on to a new task; if so, recompute (it should now say "done")
-			return getStatusString(verbosity);
+        ThreadInfo ti = ManagementFactory.getThreadMXBean().getThreadInfo(t.getId(), (verbosity<=0 ? 0 : verbosity==1 ? 1 : Integer.MAX_VALUE));
+        if (getThread()==null)
+            //thread might have moved on to a new task; if so, recompute (it should now say "done")
+            return getStatusString(verbosity);
         
         if (verbosity >= 1 && Strings.isNonBlank(blockingDetails)) {
             if (verbosity==1)
@@ -596,70 +611,70 @@ public class BasicTask<T> implements TaskInternal<T> {
             rv = "Waiting on "+blockingTask + "\n\n";
         }
 
-		if (verbosity>=2) {
+        if (verbosity>=2) {
             if (getExtraStatusText()!=null) {
                 rv += getExtraStatusText()+"\n\n";
             }
             
-		    rv += ""+toString()+"\n";
-		    if (submittedByTask!=null) {
-		        rv += "Submitted by "+submittedByTask+"\n";
-		    }
+            rv += ""+toString()+"\n";
+            if (submittedByTask!=null) {
+                rv += "Submitted by "+submittedByTask+"\n";
+            }
 
-		    if (this instanceof HasTaskChildren) {
-		        // list children tasks for compound tasks
-		        try {
-		            Iterable<Task<?>> childrenTasks = ((HasTaskChildren)this).getChildren();
-		            if (childrenTasks.iterator().hasNext()) {
-		                rv += "Children:\n";
-		                for (Task<?> child: childrenTasks) {
-		                    rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
-		                }
-		            }
-		        } catch (ConcurrentModificationException exc) {
-		            rv += "  (children not available - currently being modified)\n";
-		        }
-		    }
-		    rv += "\n";
-		}
-		
-		LockInfo lock = ti.getLockInfo();
-		rv += "In progress";
-		if (verbosity>=1) {
-		    if (lock==null && ti.getThreadState()==Thread.State.RUNNABLE) {
-		        //not blocked
-		        if (ti.isSuspended()) {
-		            // when does this happen?
-		            rv += ", thread suspended";
-		        } else {
-		            if (verbosity >= 2) rv += " ("+ti.getThreadState()+")";
-		        }
-		    } else {
-		        rv +=", thread waiting ";
-		        if (ti.getThreadState() == Thread.State.BLOCKED) {
-		            rv += "(mutex) on "+lookup(lock);
-		            //TODO could say who holds it
-		        } else if (ti.getThreadState() == Thread.State.WAITING) {
-		            rv += "(notify) on "+lookup(lock);
-		        } else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
-		            rv += "(timed) on "+lookup(lock);
-		        } else {
-		            rv = "("+ti.getThreadState()+") on "+lookup(lock);
-		        }
-		    }
-		}
-		if (verbosity>=2) {
-			StackTraceElement[] st = ti.getStackTrace();
-			st = brooklyn.util.javalang.StackTraceSimplifier.cleanStackTrace(st);
-			if (st!=null && st.length>0)
-				rv += "\n" +"At: "+st[0];
-			for (int ii=1; ii<st.length; ii++) {
-				rv += "\n" +"    "+st[ii];
-			}
-		}
-		return rv;
-	}
-	
+            if (this instanceof HasTaskChildren) {
+                // list children tasks for compound tasks
+                try {
+                    Iterable<Task<?>> childrenTasks = ((HasTaskChildren)this).getChildren();
+                    if (childrenTasks.iterator().hasNext()) {
+                        rv += "Children:\n";
+                        for (Task<?> child: childrenTasks) {
+                            rv += "  "+child+": "+child.getStatusDetail(false)+"\n";
+                        }
+                    }
+                } catch (ConcurrentModificationException exc) {
+                    rv += "  (children not available - currently being modified)\n";
+                }
+            }
+            rv += "\n";
+        }
+        
+        LockInfo lock = ti.getLockInfo();
+        rv += "In progress";
+        if (verbosity>=1) {
+            if (lock==null && ti.getThreadState()==Thread.State.RUNNABLE) {
+                //not blocked
+                if (ti.isSuspended()) {
+                    // when does this happen?
+                    rv += ", thread suspended";
+                } else {
+                    if (verbosity >= 2) rv += " ("+ti.getThreadState()+")";
+                }
+            } else {
+                rv +=", thread waiting ";
+                if (ti.getThreadState() == Thread.State.BLOCKED) {
+                    rv += "(mutex) on "+lookup(lock);
+                    //TODO could say who holds it
+                } else if (ti.getThreadState() == Thread.State.WAITING) {
+                    rv += "(notify) on "+lookup(lock);
+                } else if (ti.getThreadState() == Thread.State.TIMED_WAITING) {
+                    rv += "(timed) on "+lookup(lock);
+                } else {
+                    rv = "("+ti.getThreadState()+") on "+lookup(lock);
+                }
+            }
+        }
+        if (verbosity>=2) {
+            StackTraceElement[] st = ti.getStackTrace();
+            st = brooklyn.util.javalang.StackTraceSimplifier.cleanStackTrace(st);
+            if (st!=null && st.length>0)
+                rv += "\n" +"At: "+st[0];
+            for (int ii=1; ii<st.length; ii++) {
+                rv += "\n" +"    "+st[ii];
+            }
+        }
+        return rv;
+    }
+    
     protected String lookup(LockInfo info) {
         return info!=null ? ""+info : "unknown (sleep)";
     }
@@ -741,6 +756,8 @@ public class BasicTask<T> implements TaskInternal<T> {
             }
             if (!t.isDone()) {
                 // shouldn't happen
+                // TODO But does happen if management context was terminated (e.g. running test suite).
+                //      Should check if Execution Manager is running, and only log if it was not terminated?
                 log.warn("Task "+t+" is being finalized before completion");
                 return;
             }
@@ -773,9 +790,35 @@ public class BasicTask<T> implements TaskInternal<T> {
         finalizer.onTaskFinalization(this);
     }
     
+    public static class SubmissionErrorCatchingExecutor implements Executor {
+        final Executor target;
+        public SubmissionErrorCatchingExecutor(Executor target) {
+            this.target = target;
+        }
+        @Override
+        public void execute(Runnable command) {
+            if (isShutdown()) {
+                log.debug("Skipping execution of task callback hook "+command+" because executor is shutdown.");
+                return;
+            }
+            try {
+                target.execute(command);
+            } catch (Exception e) {
+                if (isShutdown()) {
+                    log.debug("Ignoring failed execution of task callback hook "+command+" because executor is shutdown.");
+                } else {
+                    log.warn("Execution of task callback hook "+command+" failed: "+e, e);
+                }
+            }
+        }
+        protected boolean isShutdown() {
+            return target instanceof ExecutorService && ((ExecutorService)target).isShutdown();
+        }
+    }
+    
     @Override
     public void addListener(Runnable listener, Executor executor) {
-        listeners.add(listener, executor);
+        listeners.add(listener, new SubmissionErrorCatchingExecutor(executor));
     }
     
     @Override
@@ -813,9 +856,18 @@ public class BasicTask<T> implements TaskInternal<T> {
         submitTimeUtc = val;
     }
     
+    private static <T> Task<T> newGoneTaskFor(Task<?> task) {
+        Task<T> t = Tasks.<T>builder().dynamic(false).name(task.getDisplayName())
+            .description("Details of the original task "+task+" have been forgotten.")
+            .body(Callables.returning((T)null)).build();
+        ((BasicTask<T>)t).ignoreIfNotRun();
+        return t;
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void setSubmittedByTask(Task<?> task) {
-        submittedByTask = task;
+        submittedByTask = (Maybe)Maybe.softThen((Task)task, (Maybe)Maybe.of(BasicTask.newGoneTaskFor(task)));
     }
     
     @Override
@@ -832,5 +884,9 @@ public class BasicTask<T> implements TaskInternal<T> {
     public void applyTagModifier(Function<Set<Object>,Void> modifier) {
         modifier.apply(tags);
     }
-    
+
+    @Override
+    public Task<?> getProxyTarget() {
+        return proxyTargetTask;
+    }
 }

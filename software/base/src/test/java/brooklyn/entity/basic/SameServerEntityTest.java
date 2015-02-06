@@ -49,7 +49,7 @@ public class SameServerEntityTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         loc = new LocalhostMachineProvisioningLocation();
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
+        app = TestApplication.Factory.newManagedInstanceForTests();
         mgmt = app.getManagementContext();
         entity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
     }

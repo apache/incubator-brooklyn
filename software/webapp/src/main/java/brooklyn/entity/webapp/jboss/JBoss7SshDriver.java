@@ -24,14 +24,12 @@ import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
@@ -106,11 +104,15 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("jboss-as-%s", getVersion()))));
+    }
+
+    @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("jboss-as-%s", getVersion())));
 
         List<String> commands = new LinkedList<String>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
@@ -144,7 +146,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         String managementPassword = getManagementPassword();
         if (Strings.isBlank(managementPassword)) {
             LOG.debug(this+" has no password specified for "+JBoss7Server.MANAGEMENT_PASSWORD.getName()+"; using a random string");
-            entity.setConfig(JBoss7Server.MANAGEMENT_PASSWORD, UUID.randomUUID().toString());
+            entity.setConfig(JBoss7Server.MANAGEMENT_PASSWORD, Strings.makeRandomId(8));
         }
         String hashedPassword = hashPassword(getManagementUsername(), getManagementPassword(), MANAGEMENT_REALM);
 

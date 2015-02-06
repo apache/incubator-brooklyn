@@ -20,15 +20,20 @@ package brooklyn.management.entitlement;
 
 import brooklyn.util.javalang.JavaClassNames;
 
-/** indicates an authenticated web request as the entitlements context;
- * note user may still be null if no authentication was requested */
+/**
+ * Indicates an authenticated web request as the entitlements context;
+ * note user may still be null if no authentication was requested
+ */
 public class WebEntitlementContext implements EntitlementContext {
 
     final String user;
     final String sourceIp;
     final String requestUri;
     
-    /** a mostly-unique identifier for the inbound request, to distinguish between duplicate requests and for cross-referencing with URI's */
+    /**
+     * A mostly-unique identifier for the inbound request, to distinguish
+     * between duplicate requests and for cross-referencing with URIs
+     */
     final String requestUniqueIdentifier;
     
     public WebEntitlementContext(String user, String sourceIp, String requestUri, String requestUniqueIdentifier) {

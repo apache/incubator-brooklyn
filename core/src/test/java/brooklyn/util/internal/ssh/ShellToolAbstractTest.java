@@ -293,7 +293,7 @@ public abstract class ShellToolAbstractTest {
         try {
             for (int i = 0; i < numCommands; i++) {
                 long delay = (long) (Math.random() * staggeredDelayBeforeStart);
-                if (i > 0 && delay >= 0) Time.sleep(delay);
+                if (i > 0) Time.sleep(delay);
                 
                 futures.add(executor.submit(new Runnable() {
                         public void run() {
@@ -399,10 +399,7 @@ public abstract class ShellToolAbstractTest {
     }
 
     protected String execCommands(List<String> cmds, Map<String,?> env) {
-        execCommands(null, cmds, env);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        tool.execCommands(ImmutableMap.of("out", out), cmds, env);
-        return new String(out.toByteArray());
+        return execCommands(null, cmds, env);
     }
 
     protected String execCommands(ConfigBag config, List<String> cmds, Map<String,?> env) {

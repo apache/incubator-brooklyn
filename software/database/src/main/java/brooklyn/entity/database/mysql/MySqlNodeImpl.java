@@ -108,7 +108,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                                     return Double.parseDouble(q);
                                 }})
                             .setOnFailureOrException(null) )
-                    .poll(new SshPollConfig<Boolean>(SERVICE_UP)
+                    .poll(new SshPollConfig<Boolean>(SERVICE_PROCESS_IS_RUNNING)
                             .command(cmd)
                             .setOnSuccess(true)
                             .setOnFailureOrException(false))

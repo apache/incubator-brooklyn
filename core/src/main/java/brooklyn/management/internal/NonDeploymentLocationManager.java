@@ -24,10 +24,10 @@ import java.util.Map;
 
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.LocationManager;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 
-public class NonDeploymentLocationManager implements LocationManager {
+public class NonDeploymentLocationManager implements LocationManagerInternal {
 
     private final ManagementContext initialManagementContext;
     
@@ -72,16 +72,63 @@ public class NonDeploymentLocationManager implements LocationManager {
     }
 
     @Override
+    public Iterable<String> getLocationIds() {
+        if (isInitialManagementContextReal()) {
+            return ((LocationManagerInternal)initialManagementContext.getLocationManager()).getLocationIds();
+        } else {
+            return Collections.emptyList();
+        }
+    }
+    
+    @Override
     public boolean isManaged(Location loc) {
         return false;
     }
 
     @Override
+    public void manageRebindedRoot(Location loc) {
+        if (isInitialManagementContextReal()) {
+            ((LocationManagerInternal)initialManagementContext.getLocationManager()).manageRebindedRoot(loc);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot manage "+loc);
+        }
+    }
+
+    @Override
+    @Deprecated
     public Location manage(Location loc) {
         if (isInitialManagementContextReal()) {
             return initialManagementContext.getLocationManager().manage(loc);
         } else {
             throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation: cannot manage "+loc);
+        }
+    }
+
+
+    @Override
+    public ManagementTransitionMode getLastManagementTransitionMode(String itemId) {
+        if (isInitialManagementContextReal()) {
+            return ((LocationManagerInternal)initialManagementContext.getLocationManager()).getLastManagementTransitionMode(itemId);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation");
+        }
+    }
+
+    @Override
+    public void setManagementTransitionMode(Location item, ManagementTransitionMode mode) {
+        if (isInitialManagementContextReal()) {
+            ((LocationManagerInternal)initialManagementContext.getLocationManager()).setManagementTransitionMode(item, mode);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation");
+        }
+    }
+
+    @Override
+    public void unmanage(Location item, ManagementTransitionMode info) {
+        if (isInitialManagementContextReal()) {
+            ((LocationManagerInternal)initialManagementContext.getLocationManager()).unmanage(item, info);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation");
         }
     }
 

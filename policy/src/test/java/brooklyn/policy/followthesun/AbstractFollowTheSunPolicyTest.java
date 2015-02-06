@@ -47,6 +47,7 @@ import brooklyn.policy.loadbalancing.MockItemEntity;
 import brooklyn.policy.loadbalancing.MockItemEntityImpl;
 import brooklyn.policy.loadbalancing.Movable;
 import brooklyn.test.Asserts;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Time;
@@ -85,8 +86,8 @@ public class AbstractFollowTheSunPolicyTest {
         MockItemEntityImpl.totalMoveCount.set(0);
         MockItemEntityImpl.lastMoveTime.set(0);
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        managementContext = app.getManagementContext();
+        managementContext = LocalManagementContextForTests.newInstance();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         
         loc1 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class).configure("name", "loc1"));
         loc2 = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class).configure("name", "loc2"));
@@ -219,7 +220,7 @@ public class AbstractFollowTheSunPolicyTest {
     protected static MockItemEntity newItem(TestApplication app, MockContainerEntity container, String name) {
         MockItemEntity item = app.createAndManageChild(EntitySpec.create(MockItemEntity.class)
                 .displayName(name));
-        LOG.debug("Managed new item {}", container);
+        LOG.debug("Managed new item {} at {}", item, container);
         if (container != null) {
             item.move(container);
         }

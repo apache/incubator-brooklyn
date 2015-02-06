@@ -48,8 +48,8 @@ public class BrooklynMementoPersisterFileBasedTest extends BrooklynMementoPersis
     @Override
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();
         super.tearDown();
+        mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();
     }
 
 }

@@ -24,13 +24,9 @@ define(["underscore", "backbone"], function (_, Backbone) {
         urlRoot:'/v1/locations',
         defaults:function () {
             return {
-                id:'',
                 name:'',
                 spec:'',
-                config:{},
-                links:{
-                    self:''
-                }
+                config:{}
             }
         },
         idFromSelfLink:function () {

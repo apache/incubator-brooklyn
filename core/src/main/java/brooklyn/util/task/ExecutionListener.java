@@ -22,5 +22,10 @@ import brooklyn.management.Task;
 
 public interface ExecutionListener {
 
+    /** invoked when a task completes: 
+     * {@link Task#getEndTimeUtc()} and {@link Task#isDone()} are guaranteed to be set,
+     * and {@link Task#get()} should return immediately for most Task implementations
+     * (care has been taken to avoid potential deadlocks here, waiting for a result!)  */
     public void onTaskDone(Task<?> task);
+    
 }

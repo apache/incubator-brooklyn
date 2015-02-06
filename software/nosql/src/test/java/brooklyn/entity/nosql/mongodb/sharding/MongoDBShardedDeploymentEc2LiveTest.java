@@ -27,6 +27,7 @@ import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
+import brooklyn.entity.nosql.mongodb.MongoDBServer;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
@@ -54,8 +55,15 @@ public class MongoDBShardedDeploymentEc2LiveTest extends AbstractEc2LiveTest {
     protected void doTest(Location loc) throws Exception {
         final MongoDBShardedDeployment deployment = app.createAndManageChild(EntitySpec.create(MongoDBShardedDeployment.class)
                 .configure(MongoDBShardedDeployment.INITIAL_ROUTER_CLUSTER_SIZE, ROUTER_CLUSTER_SIZE)
-                .configure(MongoDBShardedDeployment.SHARD_REPLICASET_SIZE,REPLICASET_SIZE)
-                .configure(MongoDBShardedDeployment.INITIAL_SHARD_CLUSTER_SIZE, SHARD_CLUSTER_SIZE));
+                .configure(MongoDBShardedDeployment.SHARD_REPLICASET_SIZE, REPLICASET_SIZE)
+                .configure(MongoDBShardedDeployment.INITIAL_SHARD_CLUSTER_SIZE, SHARD_CLUSTER_SIZE)
+                .configure(MongoDBShardedDeployment.MONGODB_REPLICA_SET_SPEC, EntitySpec.create(MongoDBReplicaSet.class)
+                        .configure(MongoDBServer.MONGODB_CONF_TEMPLATE_URL, "classpath:///test-mongodb.conf")
+                        .configure(MongoDBReplicaSet.MEMBER_SPEC, EntitySpec.create(MongoDBServer.class)))
+                .configure(MongoDBShardedDeployment.MONGODB_ROUTER_SPEC, EntitySpec.create(MongoDBRouter.class)
+                        .configure(MongoDBConfigServer.MONGODB_CONF_TEMPLATE_URL, "classpath:///test-mongodb-router.conf"))
+                .configure(MongoDBShardedDeployment.MONGODB_CONFIG_SERVER_SPEC, EntitySpec.create(MongoDBConfigServer.class)
+                        .configure(MongoDBConfigServer.MONGODB_CONF_TEMPLATE_URL, "classpath:///test-mongodb-configserver.conf")));
 
         app.start(ImmutableList.of(loc));
         

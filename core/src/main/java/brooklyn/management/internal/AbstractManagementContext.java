@@ -21,7 +21,6 @@ package brooklyn.management.internal;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
-import java.io.FileNotFoundException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Map;
@@ -34,14 +33,18 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
-import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
-import brooklyn.catalog.internal.CatalogDto;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverManager;
@@ -70,13 +73,13 @@ import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.text.Strings;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Function;
-import com.google.common.base.Throwables;
 
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
@@ -112,19 +115,28 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     }
 
     static {
-        // ensure that if ResourceUtils is given an entity as context,
-        // we use the catalog class loader (e.g. to resolve classpath URLs)
         ResourceUtils.addClassLoaderProvider(new Function<Object, BrooklynClassLoadingContext>() {
             @Override
             public BrooklynClassLoadingContext apply(@Nullable Object input) {
-                // TODO for entities, this should get its originating catalog item's loader
-                if (input instanceof EntityInternal)
-                    return apply(((EntityInternal)input).getManagementSupport());
+                if (input instanceof EntityInternal) {
+                    EntityInternal internal = (EntityInternal)input;
+                    if (internal.getCatalogItemId() != null) {
+                        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(internal.getManagementContext(), internal.getCatalogItemId());
+                        if (item != null) {
+                            return CatalogUtils.newClassLoadingContext(internal.getManagementContext(), item);
+                        } else {
+                            log.error("Can't find catalog item " + internal.getCatalogItemId() +
+                                    " used for instantiating entity " + internal +
+                                    ". Falling back to application classpath.");
+                        }
+                    }
+                    return apply(internal.getManagementSupport());
+                }
                 
                 if (input instanceof EntityManagementSupport)
                     return apply(((EntityManagementSupport)input).getManagementContext());
                 if (input instanceof ManagementContext)
-                    return JavaBrooklynClassLoadingContext.newDefault((ManagementContext) input);
+                    return JavaBrooklynClassLoadingContext.create((ManagementContext) input);
                 return null;
             }
         });
@@ -147,7 +159,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected DownloadResolverManager downloadsManager;
 
     protected EntitlementManager entitlementManager;
-    
+
     private final BrooklynStorage storage;
 
     private volatile boolean running = true;
@@ -171,13 +183,13 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         this.rebindManager = new RebindManagerImpl(this); // TODO leaking "this" reference; yuck
         this.highAvailabilityManager = new HighAvailabilityManagerImpl(this); // TODO leaking "this" reference; yuck
         
-        this.entitlementManager = Entitlements.newManager(ResourceUtils.create(getBaseClassLoader()), brooklynProperties);
+        this.entitlementManager = Entitlements.newManager(this, brooklynProperties);
     }
 
     @Override
     public void terminate() {
-        running = false;
         highAvailabilityManager.stop();
+        running = false;
         rebindManager.stop();
         storage.terminate();
         // Don't unmanage everything; different entities get given their events at different times 
@@ -212,10 +224,20 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     @Override
     public ExecutionContext getExecutionContext(Entity e) {
-        // BEC is a thin wrapper around EM so fine to create a new one here
-        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.tagForContextEntity(e)), getExecutionManager());
+        // BEC is a thin wrapper around EM so fine to create a new one here; but make sure it gets the real entity
+        if (e instanceof AbstractEntity) {
+            return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.tagForContextEntity(e)), getExecutionManager());
+        } else {
+            return ((EntityInternal)e).getManagementSupport().getExecutionContext();
+        }
     }
-    
+
+    @Override
+    public ExecutionContext getServerExecutionContext() {
+        // BEC is a thin wrapper around EM so fine to create a new one here
+        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.BROOKLYN_SERVER_TASK_TAG), getExecutionManager());
+    }
+
     @Override
     public SubscriptionContext getSubscriptionContext(Entity e) {
         // BSC is a thin wrapper around SM so fine to create a new one here
@@ -263,7 +285,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             if (current == null || !entity.equals(BrooklynTaskTags.getContextEntity(current)) || !isManagedLocally(entity)) {
                 manageIfNecessary(entity, eff.getName());
                 // Wrap in a task if we aren't already in a task that is tagged with this entity
-                Task<T> task = runAtEntity( EffectorUtils.getTaskFlagsForEffectorInvocation(entity, eff),
+                Task<T> task = runAtEntity( EffectorUtils.getTaskFlagsForEffectorInvocation(entity, eff, 
+                            ConfigBag.newInstance().configureStringKey("args", args)),
                         entity, 
                         new Callable<T>() {
                             public T call() {
@@ -327,47 +350,27 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     @Override
     public BrooklynCatalog getCatalog() {
-        if (catalog==null) loadCatalog();
+        if (catalog==null) {
+            loadCatalog();
+        }
         return catalog;
     }
 
     protected synchronized void loadCatalog() {
-        if (catalog!=null) return;
-        
-        BasicBrooklynCatalog catalog = null;
-        String catalogUrl = getConfig().getConfig(BROOKLYN_CATALOG_URL);
-        
-        try {
-            if (!Strings.isEmpty(catalogUrl)) {
-                catalog = new BasicBrooklynCatalog(this, CatalogDto.newDtoFromUrl(catalogUrl));
-                if (log.isDebugEnabled())
-                    log.debug("Loading catalog from "+catalogUrl+": "+catalog);
-            }
-        } catch (Exception e) {
-            if (Throwables.getRootCause(e) instanceof FileNotFoundException) {
-                Maybe<Object> nonDefaultUrl = getConfig().getConfigRaw(BROOKLYN_CATALOG_URL, true);
-                if (nonDefaultUrl.isPresentAndNonNull() && !"".equals(nonDefaultUrl.get())) {
-                    log.warn("Could not find catalog XML specified at "+nonDefaultUrl+"; using default (local classpath) catalog. Error was: "+e);
-                } else {
-                    if (log.isDebugEnabled())
-                        log.debug("No default catalog file available at "+catalogUrl+"; trying again using local classpath to populate catalog. Error was: "+e);
-                }
-            } else {
-                log.warn("Error importing catalog XML at "+catalogUrl+"; using default (local classpath) catalog. Error was: "+e, e);                
-            }
+        if (catalog != null) return;
+        BasicBrooklynCatalog catalog = new BasicBrooklynCatalog(this);
+        CatalogLoadMode loadMode = getConfig().getConfig(BrooklynServerConfig.CATALOG_LOAD_MODE);
+        if (CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL.equals(loadMode)) {
+            log.debug("Resetting catalog to configured URL. Catalog mode is: {}", loadMode.name());
+            catalog.resetCatalogToContentsAtConfiguredUrl();
+        } else if (log.isDebugEnabled()) {
+            log.debug("Deferring catalog load to rebind manager. Catalog mode is: {}", loadMode.name());
         }
-        if (catalog==null) {
-            // retry, either an error, or was blank
-            catalog = new BasicBrooklynCatalog(this, CatalogDto.newDefaultLocalScanningDto(CatalogScanningModes.ANNOTATIONS));
-            if (log.isDebugEnabled())
-                log.debug("Loaded default (local classpath) catalog: "+catalog);
-        }
-        catalog.load();
-        
         this.catalog = catalog;
     }
 
-    /** Optional class-loader that this management context should use as its base,
+    /**
+     * Optional class-loader that this management context should use as its base,
      * as the first-resort in the catalog, and for scanning (if scanning the default in the catalog).
      * In most instances the default classloader (ManagementContext.class.getClassLoader(), assuming
      * this was in the JARs used at boot time) is fine, and in those cases this method normally returns null.
@@ -391,14 +394,21 @@ public abstract class AbstractManagementContext implements ManagementContextInte
      * is scanning the default classpath.  Usually it infers the right thing, but some classloaders
      * (e.g. surefire) do funny things which the underlying org.reflections.Reflectiosn library can't see in to. 
      * <p>
-     * Only settable once, before catalog is loaded.
+     * This should normally be invoked early in the server startup.  Setting it after the catalog is loaded will not
+     * take effect without an explicit internal call to do so.  Once set, it can be changed prior to catalog loading
+     * but it cannot be <i>changed</i> once the catalog is loaded.
      * <p>
-     * ClasspathHelper.forJavaClassPath() is often a good argument to pass. */
+     * ClasspathHelper.forJavaClassPath() is often a good argument to pass, and is used internally in some places
+     * when no items are found on the catalog. */
     @Override
     public void setBaseClassPathForScanning(Iterable<URL> urls) {
-        if (baseClassPathForScanning == urls) return;
-        if (baseClassPathForScanning != null) throw new IllegalStateException("Cannot change base class path for scanning (in "+this+")");
-        if (catalog != null) throw new IllegalStateException("Cannot set base class path for scanning after catalog has been loaded (in "+this+")");
+        if (Objects.equal(baseClassPathForScanning, urls)) return;
+        if (baseClassPathForScanning != null) {
+            if (catalog==null)
+                log.warn("Changing scan classpath to "+urls+" from "+baseClassPathForScanning);
+            else
+                throw new IllegalStateException("Cannot change base class path for scanning (in "+this+")");
+        }
         this.baseClassPathForScanning = urls;
     }
     /** 
@@ -422,4 +432,19 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public Maybe<URI> getManagementNodeUri() {
         return uri;
     }
+    
+    
+    public BrooklynObject lookup(String id) {
+        return lookup(id, BrooklynObject.class);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T extends BrooklynObject> T lookup(String id, Class<T> type) {
+        Object result;
+        result = getEntityManager().getEntity(id);
+        if (result!=null && type.isInstance(result)) return (T)result;
+        // TODO policies, etc
+        return null;
+    }
+
 }

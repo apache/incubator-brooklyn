@@ -38,12 +38,12 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.DatastoreMixins;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
+import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
@@ -74,17 +74,17 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
         if (os == null) return "linux-i686";
         if (os.isWindows() || os.isMac())
             throw new UnsupportedOperationException("only support linux versions just now; OS details: " + os);
-        return "linux-" + (os.is64bit() ? "x86_64" : "i686");
+        return (os.is64bit() ? "linux-x86_64" : "linux-i686");
     }
 
     public String getDownloadParentDir() {
         // NOTE: cannot rely on OsDetails.isLinux() to return true for all linux flavours, so
         // explicitly test for unsupported OSes, otherwise assume generic linux.
         OsDetails os = getLocation().getOsDetails();
-        if (os == null) return "kvm-bintar-hardy-x86";
+        if (os == null) return "bintar-linux-x86";
         if (os.isWindows() || os.isMac())
             throw new UnsupportedOperationException("only support linux versions just now; OS details: " + os);
-        return "kvm-bintar-hardy-" + (os.is64bit() ? "amd64" : "x86");
+        return (os.is64bit() ? "bintar-linux-x86_64" : "bintar-linux-x86");
     }
 
     public String getMirrorUrl() {
@@ -111,11 +111,15 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this, ImmutableMap.of("filename", getInstallFilename()));
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("mariadb-%s-%s", getVersion(), getOsTag()))));
+    }
+
+    @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this, ImmutableMap.of("filename", getInstallFilename()));
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir() + "/" + resolver.getUnpackedDirectoryName(format("mariadb-%s-%s", getVersion(), getOsTag())));
 
         List<String> commands = new LinkedList<String>();
         commands.add(BashCommands.INSTALL_TAR);

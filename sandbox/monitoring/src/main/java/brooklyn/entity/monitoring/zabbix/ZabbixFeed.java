@@ -35,8 +35,11 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
@@ -52,6 +55,7 @@ import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Cidr;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -63,6 +67,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
+import com.google.common.reflect.TypeToken;
 import com.google.gson.JsonObject;
 
 public class ZabbixFeed extends AbstractFeed {
@@ -88,6 +93,25 @@ public class ZabbixFeed extends AbstractFeed {
 
     private static final AtomicInteger id = new AtomicInteger(0);
 
+    @SuppressWarnings("serial")
+    public static final ConfigKey<Set<ZabbixPollConfig<?>>> POLLS = ConfigKeys.newConfigKey(
+            new TypeToken<Set<ZabbixPollConfig<?>>>() {},
+            "polls");
+
+    @SuppressWarnings("serial")
+    public static final ConfigKey<Supplier<URI>> BASE_URI_PROVIDER = ConfigKeys.newConfigKey(
+            new TypeToken<Supplier<URI>>() {},
+            "baseUriProvider");
+    
+    public static final ConfigKey<Integer> GROUP_ID = ConfigKeys.newIntegerConfigKey("groupId");
+    
+    public static final ConfigKey<Integer> TEMPLATE_ID = ConfigKeys.newIntegerConfigKey("templateId");
+
+    @SuppressWarnings("serial")
+    public static final ConfigKey<Function<? super EntityLocal, String>> UNIQUE_HOSTNAME_GENERATOR = ConfigKeys.newConfigKey(
+            new TypeToken<Function<? super EntityLocal, String>>() {},
+            "uniqueHostnameGenerator");
+
     public static Builder<ZabbixFeed, ?> builder() {
         return new ConcreteBuilder();
     }
@@ -110,11 +134,10 @@ public class ZabbixFeed extends AbstractFeed {
         private Integer sessionTimeout;
         private Integer groupId;
         private Integer templateId;
-        private Function<? super EntityLocal, String> uniqueHostnameGenerator = new Function<EntityLocal, String>() {
-            @Override public String apply(EntityLocal entity) {
-                Location loc = Iterables.find(entity.getLocations(), Predicates.instanceOf(MachineLocation.class));
-                return loc.getId();
-            }};
+        private Function<? super EntityLocal, String> uniqueHostnameGenerator = Functions.compose(
+                EntityFunctions.id(), 
+                EntityFunctions.locationMatching(Predicates.instanceOf(MachineLocation.class)));
+        private String uniqueTag;
 
         @SuppressWarnings("unchecked")
         protected B self() {
@@ -206,6 +229,11 @@ public class ZabbixFeed extends AbstractFeed {
             return self();
         }
         
+        public Builder uniqueTag(String uniqueTag) {
+            this.uniqueTag = uniqueTag;
+            return this;
+        }
+        
         @SuppressWarnings("unchecked")
         public T build() {
             // If server not set and other config not available, try to obtain from entity config
@@ -217,6 +245,7 @@ public class ZabbixFeed extends AbstractFeed {
             }
             // Now create feed
             T result = (T) new ZabbixFeed(this);
+            result.setEntity(checkNotNull(entity, "entity"));
             built = true;
             if (suspended) result.suspend();
             result.start();
@@ -250,44 +279,49 @@ public class ZabbixFeed extends AbstractFeed {
         }
     }
 
-    // Treat as immutable once built
-    protected final Set<ZabbixPollConfig<?>> polls = Sets.newLinkedHashSet();
-
-    protected Supplier<URI> baseUriProvider;
-    protected Integer groupId, templateId;
-
     // Flag set when the Zabbix agent is registered for a host
     protected final AtomicBoolean registered = new AtomicBoolean(false);
 
-    private final Function<? super EntityLocal, String> uniqueHostnameGenerator;
-
+    /**
+     * For rebind; do not call directly; use builder
+     */
+    public ZabbixFeed() {
+    }
+    
     protected ZabbixFeed(final Builder<? extends ZabbixFeed, ?> builder) {
-        super(builder.entity);
-
-        baseUriProvider = builder.baseUriProvider;
-        if (builder.baseUri!=null) {
-            if (baseUriProvider!=null)
+        setConfig(BASE_URI_PROVIDER, builder.baseUriProvider);
+        if (builder.baseUri != null) {
+            if (builder.baseUriProvider != null) {
                 throw new IllegalStateException("Not permitted to supply baseUri and baseUriProvider");
-            URI uri = builder.baseUri;
-            baseUriProvider = Suppliers.ofInstance(uri);
+            }
+            setConfig(BASE_URI_PROVIDER, Suppliers.ofInstance(builder.baseUri));
+        } else {
+            setConfig(BASE_URI_PROVIDER, checkNotNull(builder.baseUriProvider, "baseUriProvider and baseUri"));
         }
-        checkNotNull(baseUriProvider);
 
-        groupId = checkNotNull(builder.groupId, "Zabbix groupId must be set");
-        templateId = checkNotNull(builder.templateId, "Zabbix templateId must be set");
+        setConfig(GROUP_ID, checkNotNull(builder.groupId, "Zabbix groupId must be set"));
+        setConfig(TEMPLATE_ID, checkNotNull(builder.templateId, "Zabbix templateId must be set"));
+        setConfig(UNIQUE_HOSTNAME_GENERATOR, checkNotNull(builder.uniqueHostnameGenerator, "uniqueHostnameGenerator"));
 
+        Set<ZabbixPollConfig<?>> polls = Sets.newLinkedHashSet();
         for (ZabbixPollConfig<?> config : builder.polls) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
             ZabbixPollConfig<?> configCopy = new ZabbixPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
             polls.add(configCopy);
         }
-        
-        uniqueHostnameGenerator = checkNotNull(builder.uniqueHostnameGenerator, "uniqueHostnameGenerator");
+        setConfig(POLLS, polls);
+        initUniqueTag(builder.uniqueTag, polls);
     }
 
     @Override
     protected void preStart() {
+        final Supplier<URI> baseUriProvider = getConfig(BASE_URI_PROVIDER);
+        final Function<? super EntityLocal, String> uniqueHostnameGenerator = getConfig(UNIQUE_HOSTNAME_GENERATOR);
+        final Integer groupId = getConfig(GROUP_ID);
+        final Integer templateId = getConfig(TEMPLATE_ID);
+        final Set<ZabbixPollConfig<?>> polls = getConfig(POLLS);
+        
         log.info("starting zabbix feed for {}", entity);
 
         // TODO if supplier returns null, we may wish to defer initialization until url available?
@@ -424,6 +458,6 @@ public class ZabbixFeed extends AbstractFeed {
 
     @SuppressWarnings("unchecked")
     protected Poller<HttpToolResponse> getPoller() {
-        return (Poller<HttpToolResponse>) poller;
+        return (Poller<HttpToolResponse>) super.getPoller();
     }
 }

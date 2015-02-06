@@ -59,6 +59,12 @@ public class AssemblyTemplateConstructor {
         builder.description(description);
     }
 
+
+    public void sourceCode(String sourceCode) {
+        checkState();
+        builder.sourceCode(sourceCode);
+    }
+
     public void addCustomAttributes(Map<String, Object> attrs) {
         for (Map.Entry<String, Object> attr : attrs.entrySet())
             builder.customAttribute(attr.getKey(), attr.getValue());

@@ -32,7 +32,11 @@ public class FilenameProducers {
 
     public static String inferFilename(String target) {
         String result = target.substring(target.lastIndexOf("/")+1);
-        return result.contains("?") ? result.substring(0, result.indexOf("?")) : result;
+        result = result.contains("?") ? result.substring(0, result.indexOf("?")) : result;
+        if (!result.contains("."))
+            // require a full stop, else assume it isn't a filename
+            return null;
+        return result;
     }
 
     public static Function<DownloadRequirement, String> fromFilenameProperty() {

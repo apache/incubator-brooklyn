@@ -31,6 +31,10 @@ import com.google.common.base.Predicate;
 
 public class NonDeploymentUsageManager implements UsageManager {
 
+    // TODO All the `isInitialManagementContextReal()` code-checks is a code-smell.
+    // Expect we can delete a lot of this once we guarantee that all entities are 
+    // instantiated via EntitySpec / EntityManager. Until then, we'll live with this.
+    
     private final ManagementContextInternal initialManagementContext;
     
     public NonDeploymentUsageManager(ManagementContextInternal initialManagementContext) {
@@ -90,6 +94,24 @@ public class NonDeploymentUsageManager implements UsageManager {
     public Set<ApplicationUsage> getApplicationUsage(Predicate<? super ApplicationUsage> filter) {
         if (isInitialManagementContextReal()) {
             return initialManagementContext.getUsageManager().getApplicationUsage(filter);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation");
+        }
+    }
+
+    @Override
+    public void addUsageListener(UsageListener listener) {
+        if (isInitialManagementContextReal()) {
+            initialManagementContext.getUsageManager().addUsageListener(listener);
+        } else {
+            throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation");
+        }
+    }
+
+    @Override
+    public void removeUsageListener(UsageListener listener) {
+        if (isInitialManagementContextReal()) {
+            initialManagementContext.getUsageManager().removeUsageListener(listener);
         } else {
             throw new IllegalStateException("Non-deployment context "+this+" is not valid for this operation");
         }

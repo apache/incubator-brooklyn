@@ -18,8 +18,24 @@
  */
 package brooklyn.management.entitlement;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
+import brooklyn.management.ManagementContext;
+import brooklyn.management.Task;
+import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.Reflections;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
@@ -27,16 +43,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.reflect.TypeToken;
-
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.Reflections;
-import brooklyn.util.text.Strings;
 
 /** @since 0.7.0 */
 @Beta
@@ -46,31 +52,47 @@ public class Entitlements {
     
     // ------------------- individual permissions
     
+    public static EntitlementClass<String> SEE_CATALOG_ITEM = new BasicEntitlementClassDefinition<String>("catalog.see", String.class); 
+    public static EntitlementClass<Object> ADD_CATALOG_ITEM = new BasicEntitlementClassDefinition<Object>("catalog.add", Object.class); 
+    public static EntitlementClass<StringAndArgument> MODIFY_CATALOG_ITEM = new BasicEntitlementClassDefinition<StringAndArgument>("catalog.modify", StringAndArgument.class); 
+    
     public static EntitlementClass<Entity> SEE_ENTITY = new BasicEntitlementClassDefinition<Entity>("entity.see", Entity.class);
-    
     public static EntitlementClass<EntityAndItem<String>> SEE_SENSOR = new BasicEntitlementClassDefinition<EntityAndItem<String>>("sensor.see", EntityAndItem. typeToken(String.class));
-    
-    public static EntitlementClass<EntityAndItem<String>> INVOKE_EFFECTOR = new BasicEntitlementClassDefinition<EntityAndItem<String>>("effector.invoke", EntityAndItem.typeToken(String.class));
+    // string is effector name; argument may be a map or a list, depending how the args were supplied
+    public static EntitlementClass<EntityAndItem<StringAndArgument>> INVOKE_EFFECTOR = new BasicEntitlementClassDefinition<EntityAndItem<StringAndArgument>>("effector.invoke", EntityAndItem.typeToken(StringAndArgument.class));
+    public static EntitlementClass<Entity> MODIFY_ENTITY = new BasicEntitlementClassDefinition<Entity>("entity.modify", Entity.class);
     
     /** the permission to deploy an application, where parameter is some representation of the app to be deployed (spec instance or yaml plan) */
     public static EntitlementClass<Object> DEPLOY_APPLICATION = new BasicEntitlementClassDefinition<Object>("app.deploy", Object.class);
 
-    /** catch-all for catalog, locations, scripting, usage, etc; 
-     * NB1: all users can see HA status;
-     * NB2: this may be refactored and deprecated in future */
+    /** catch-all for catalog, locations, scripting, usage, etc - exporting persistence, shutting down, etc;
+     * this is significantly more powerful than {@link #SERVER_STATUS}.
+     * NB: this may be refactored and deprecated in future */
     public static EntitlementClass<Void> SEE_ALL_SERVER_INFO = new BasicEntitlementClassDefinition<Void>("server.info.all.see", Void.class);
+
+    /** permission to see general server status info: basically HA status; not nearly as much as {@link #SEE_ALL_SERVER_INFO} */
+    public static EntitlementClass<Void> SERVER_STATUS = new BasicEntitlementClassDefinition<Void>("server.status", Void.class);
     
     /** permission to run untrusted code or embedded scripts at the server; 
      * secondary check required for any operation which could potentially grant root-level access */ 
     public static EntitlementClass<Void> ROOT = new BasicEntitlementClassDefinition<Void>("root", Void.class);
 
+    @SuppressWarnings("unchecked")
     public static enum EntitlementClassesEnum {
-        ENTITLEMENT_SEE_ENTITY(SEE_ENTITY),
-        ENTITLEMENT_SEE_SENSOR(SEE_SENSOR),
-        ENTITLEMENT_INVOKE_EFFECTOR(INVOKE_EFFECTOR),
-        ENTITLEMENT_DEPLOY_APPLICATION(DEPLOY_APPLICATION),
-        ENTITLEMENT_SEE_ALL_SERVER_INFO(SEE_ALL_SERVER_INFO),
-        ENTITLEMENT_ROOT(ROOT),
+        ENTITLEMENT_SEE_CATALOG_ITEM(SEE_CATALOG_ITEM) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleSeeCatalogItem((String)argument); } },
+        ENTITLEMENT_ADD_CATALOG_ITEM(ADD_CATALOG_ITEM) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleAddCatalogItem(argument); } },
+        ENTITLEMENT_MODIFY_CATALOG_ITEM(MODIFY_CATALOG_ITEM) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleModifyCatalogItem((StringAndArgument)argument); } },
+        
+        ENTITLEMENT_SEE_ENTITY(SEE_ENTITY) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleSeeEntity((Entity)argument); } },
+        ENTITLEMENT_SEE_SENSOR(SEE_SENSOR) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleSeeSensor((EntityAndItem<String>)argument); } },
+        ENTITLEMENT_INVOKE_EFFECTOR(INVOKE_EFFECTOR) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleInvokeEffector((EntityAndItem<StringAndArgument>)argument); } },
+        ENTITLEMENT_MODIFY_ENTITY(MODIFY_ENTITY) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleModifyEntity((Entity)argument); } },
+        
+        ENTITLEMENT_DEPLOY_APPLICATION(DEPLOY_APPLICATION) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleDeployApplication(argument); } },
+        
+        ENTITLEMENT_SEE_ALL_SERVER_INFO(SEE_ALL_SERVER_INFO) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleSeeAllServerInfo(); } },
+        ENTITLEMENT_SERVER_STATUS(SERVER_STATUS) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleSeeServerStatus(); } },
+        ENTITLEMENT_ROOT(ROOT) { public <T> T handle(EntitlementClassesHandler<T> handler, Object argument) { return handler.handleRoot(); } },
         ;
         
         private EntitlementClass<?> entitlementClass;
@@ -81,6 +103,8 @@ public class Entitlements {
         public EntitlementClass<?> getEntitlementClass() {
             return entitlementClass;
         }
+
+        public abstract <T> T handle(EntitlementClassesHandler<T> handler, Object argument);
         
         public static EntitlementClassesEnum of(EntitlementClass<?> entitlementClass) {
             for (EntitlementClassesEnum x: values()) {
@@ -90,26 +114,45 @@ public class Entitlements {
         }
     }
     
-    public static class EntityAndItem<T> {
-        final Entity entity;
-        final T item;
+    public interface EntitlementClassesHandler<T> {
+        public T handleSeeCatalogItem(String catalogItemId);
+        public T handleSeeServerStatus();
+        public T handleAddCatalogItem(Object catalogItemBeingAdded);
+        public T handleModifyCatalogItem(StringAndArgument catalogItemIdAndModification);
+        public T handleSeeEntity(Entity entity);
+        public T handleSeeSensor(EntityAndItem<String> sensorInfo);
+        public T handleInvokeEffector(EntityAndItem<StringAndArgument> effectorInfo);
+        public T handleModifyEntity(Entity entity);
+        public T handleDeployApplication(Object app);
+        public T handleSeeAllServerInfo();
+        public T handleRoot();
+    }
+    
+    protected static class Pair<T1,T2> {
+        protected final T1 p1;
+        protected final T2 p2;
+        protected Pair(T1 p1, T2 p2) { this.p1 = p1; this.p2 = p2; }
+    }
+    public static class EntityAndItem<T> extends Pair<Entity,T> {
         public static <TT> TypeToken<EntityAndItem<TT>> typeToken(Class<TT> type) {
             return new TypeToken<Entitlements.EntityAndItem<TT>>() {
                 private static final long serialVersionUID = -738154831809025407L;
             };
         }
-        public EntityAndItem(Entity entity, T item) {
-            this.entity = entity;
-            this.item = item;
-        }
-        public Entity getEntity() {
-            return entity;
-        }
-        public T getItem() {
-            return item;
-        }
+        public EntityAndItem(Entity entity, T item) { super (entity, item); }
+        public Entity getEntity() { return p1; }
+        public T getItem() { return p2; }
         public static <T> EntityAndItem<T> of(Entity entity, T item) {
             return new EntityAndItem<T>(entity, item);
+        }
+    }
+    
+    public static class StringAndArgument extends Pair<String,Object> {
+        public StringAndArgument(String string, Object argument) { super(string, argument); }
+        public String getString() { return p1; }
+        public Object getArgument() { return p2; }
+        public static StringAndArgument of(String string, Object argument) {
+            return new StringAndArgument(string, argument);
         }
     }
 
@@ -214,14 +257,41 @@ public class Entitlements {
         );
     }
 
+    /** allow healthcheck */
+    public static EntitlementManager serverStatusOnly() {
+        return FineGrainedEntitlements.allowing(SERVER_STATUS);
+    }
+
     // ------------- lookup conveniences -------------
 
     private static class PerThreadEntitlementContextHolder {
         public static final ThreadLocal<EntitlementContext> perThreadEntitlementsContextHolder = new ThreadLocal<EntitlementContext>();
     }
 
+    /** 
+     * Finds the currently applicable {@link EntitlementContext} by examining the current thread
+     * then by investigating the current task, its submitter, etc. */
+    // NOTE: entitlements are propagated to tasks whenever they are created, as tags
+    // (see BrooklynTaskTags.tagForEntitlement and BasicExecutionContext.submitInternal).
+    // It might be cheaper to only do this lookup, not to propagate as tags, and to ensure
+    // all entitlement operations are wrapped in a task at source; but currently we do not
+    // do that so we need at least to set entitlement on the outermost task.
+    // Setting it on tasks submitted by a task is not strictly necessary (i.e. in BasicExecutionContext)
+    // but seems cheap enough, and means checking entitlements is fast, if we choose to do that more often.
     public static EntitlementContext getEntitlementContext() {
-        return PerThreadEntitlementContextHolder.perThreadEntitlementsContextHolder.get();
+        EntitlementContext context;
+        context = PerThreadEntitlementContextHolder.perThreadEntitlementsContextHolder.get();
+        if (context!=null) return context;
+        
+        Task<?> task = Tasks.current();
+        while (task!=null) {
+            context = BrooklynTaskTags.getEntitlement(task);
+            if (context!=null) return context;
+            task = task.getSubmittedByTask();
+        }
+        
+        // no entitlements set -- assume entitlements not used, or system internal
+        return null;
     }
 
     public static void setEntitlementContext(EntitlementContext context) {
@@ -257,29 +327,36 @@ public class Entitlements {
     
     // ----------------- initialization ----------------
 
-    public static ConfigKey<String> GLOBAL_ENTITLEMENT_MANAGER = ConfigKeys.newStringConfigKey("brooklyn.entitlements.global", 
+    public final static String ENTITLEMENTS_CONFIG_PREFIX = "brooklyn.entitlements";
+    
+    public static ConfigKey<String> GLOBAL_ENTITLEMENT_MANAGER = ConfigKeys.newStringConfigKey(ENTITLEMENTS_CONFIG_PREFIX+".global", 
         "Class for entitlements in effect globally; "
         + "short names 'minimal', 'readonly', or 'root' are permitted here, with the default 'root' giving full access to all declared users; "
         + "or supply the name of an "+EntitlementManager.class+" class to instantiate, taking a 1-arg BrooklynProperties constructor or a 0-arg constructor",
         "root");
     
-    public static EntitlementManager newManager(ResourceUtils loader, BrooklynProperties brooklynProperties) {
-        EntitlementManager result = newGlobalManager(loader, brooklynProperties);
-        // TODO read per user settings from brooklyn.properties, if set there ?
-        return result;
+    public static EntitlementManager newManager(ManagementContext mgmt, BrooklynProperties brooklynProperties) {
+        return newGlobalManager(mgmt, brooklynProperties);
     }
-    private static EntitlementManager newGlobalManager(ResourceUtils loader, BrooklynProperties brooklynProperties) {
-        String type = brooklynProperties.getConfig(GLOBAL_ENTITLEMENT_MANAGER);
-        if ("root".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(root());
-        if ("readonly".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(readOnly());
-        if ("minimal".equalsIgnoreCase(type)) return new PerUserEntitlementManagerWithDefault(minimal());
+    private static EntitlementManager newGlobalManager(ManagementContext mgmt, BrooklynProperties brooklynProperties) {
+        return load(mgmt, brooklynProperties, brooklynProperties.getConfig(GLOBAL_ENTITLEMENT_MANAGER));
+    }
+    
+    public static EntitlementManager load(@Nullable ManagementContext mgmt, BrooklynProperties brooklynProperties, String type) {
+        if ("root".equalsIgnoreCase(type)) return root();
+        if ("readonly".equalsIgnoreCase(type) || "read_only".equalsIgnoreCase(type)) return readOnly();
+        if ("minimal".equalsIgnoreCase(type)) return minimal();
         if (Strings.isNonBlank(type)) {
             try {
-                Class<?> clazz = loader.getLoader().loadClass(type);
+                ClassLoader cl = mgmt==null ? null : ((ManagementContextInternal)mgmt).getBaseClassLoader();
+                if (cl==null) cl = Entitlements.class.getClassLoader();
+                Class<?> clazz = cl.loadClass(type);
                 Optional<?> result = Reflections.invokeConstructorWithArgs(clazz, brooklynProperties);
                 if (result.isPresent()) return (EntitlementManager) result.get();
                 return (EntitlementManager) clazz.newInstance();
-            } catch (Exception e) { throw Exceptions.propagate(e); }
+            } catch (Exception e) { 
+                throw Exceptions.propagate(e); 
+            }
         }
         throw new IllegalStateException("Invalid entitlement manager specified: '"+type+"'");
     }

@@ -87,7 +87,7 @@ define([
             try {
                 oldDisplayDataList = table.dataTable().fnGetData();
             } catch (e) {
-                // (used to) sometimes get error acessing column 1 of row 0, though table seems empty
+                // (used to) sometimes get error accessing column 1 of row 0, though table seems empty
                 // caused by previous attempt to refresh from a closed view
                 log("WARNING: could not fetch data; clearing")
                 log(e)
@@ -128,7 +128,7 @@ define([
                         try {
                             table.fnUpdate( v, Number(prop), idx, false, false )
                         } catch (e) {
-                            // sometimes get async errors
+                            // often occurs if we haven't properly closed view, e.g. on entity switch
                             log("WARNING: cannot update row")
                             log(e)
                             log(e.stack)
@@ -144,14 +144,12 @@ define([
             // then delete old ones
             for (var prop in oldDisplayIndexMap) {
                 var index = oldDisplayIndexMap[prop]
-//                log("deleting "+index)
                 table.fnDeleteRow( Number(index), null, false )
             }
             // and now add new ones
             for (var prop in newDisplayData) {
-//                log("adding "+newDisplayData[prop])
                 try {
-                    table.fnAddData( newDisplayData[prop] )
+                    table.fnAddData( newDisplayData[prop], false )
                 } catch (e) {
                     // errors sometimes if we load async
                     log("WARNING: cannot add to row")
@@ -299,7 +297,7 @@ define([
 //          log("getting, count "+options.count+", delay "+period+": "+url)
             
             var disabled = (options['enablement'] && !options['enablement']()) 
-                || !BrooklynConfig.refresh
+                || !BrooklynConfig.view.refresh
             if (options.count > 1 && disabled) {
                 // not enabled, just requeue
                 if (options['period']) 
@@ -426,7 +424,7 @@ define([
             var fetcher = function() {
                 if (view && view.viewIsClosed) return;
                 var disabled = (options['enablement'] && !options['enablement']()) 
-                    || !BrooklynConfig.refresh
+                    || !BrooklynConfig.view.refresh
                 if (options.count > 1 && disabled) {
                     // not enabled, just requeue
                     ViewUtils.fetchRepeatedlyWithDelay(view, model, options);
@@ -531,7 +529,7 @@ define([
             } else if (lifecycleState=="stopping") {
                 mode = "stopping";
                 imgext = "gif";  //animated
-            } else if (lifecycleState=="on-fire" || /* just in case */ lifecycleState=="onfire") {
+            } else if (lifecycleState=="on_fire" || /* just in case */ lifecycleState=="on-fire" || lifecycleState=="onfire") {
                 mode = "onfire";
                 problem = true;
             }

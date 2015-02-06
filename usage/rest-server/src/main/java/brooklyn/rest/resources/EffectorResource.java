@@ -37,6 +37,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.Entitlements;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.rest.api.EffectorApi;
 import brooklyn.rest.domain.EffectorSummary;
@@ -61,7 +62,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
                     @Override
                     public boolean apply(@Nullable Effector<?> input) {
                         return Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR,
-                                Entitlements.EntityAndItem.of(entity, input.getName()));
+                                Entitlements.EntityAndItem.of(entity, StringAndArgument.of(input.getName(), null)));
                     }
                 })
                 .transform(new Function<Effector<?>, EffectorSummary>() {
@@ -80,10 +81,10 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
 
         // TODO check effectors?
         Maybe<Effector<?>> effector = EffectorUtils.findEffectorDeclared(entity, effectorName);
-        if (effector.isAbsentOrNull())
+        if (effector.isAbsentOrNull()) {
             throw WebResourceUtils.notFound("Entity '%s' has no effector with name '%s'", entityToken, effectorName);
-        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR,
-                Entitlements.EntityAndItem.of(entity, effector.get().getName()))) {
+        } else if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR,
+                Entitlements.EntityAndItem.of(entity, StringAndArgument.of(effector.get().getName(), null)))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to invoke effector %s on entity %s",
                     Entitlements.getEntitlementContext().user(), effector.get().getName(), entity);
         }
@@ -91,7 +92,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
         Task<?> t = entity.invoke(effector.get(), parameters);
 
         try {
-            Object result = null;
+            Object result;
             if (timeout == null || timeout.isEmpty() || "never".equalsIgnoreCase(timeout)) {
                 result = t.get();
             } else {
@@ -100,7 +101,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
                     if (timeoutMillis == 0) throw new TimeoutException();
                     result = t.get(timeoutMillis, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException e) {
-                    return Response.status(Response.Status.ACCEPTED).entity(TaskTransformer.taskSummary(t)).build();
+                    result = TaskTransformer.taskSummary(t);
                 }
             }
             return Response.status(Response.Status.ACCEPTED).entity(result).build();

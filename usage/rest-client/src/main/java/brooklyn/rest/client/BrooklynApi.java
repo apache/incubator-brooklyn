@@ -18,7 +18,22 @@
  */
 package brooklyn.rest.client;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.jboss.resteasy.client.ClientExecutor;
+import org.jboss.resteasy.client.ClientRequest;
+import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
+import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.jboss.resteasy.util.GenericType;
+
+import com.google.common.base.Charsets;
 
 import brooklyn.rest.api.AccessApi;
 import brooklyn.rest.api.ActivityApi;
@@ -32,75 +47,142 @@ import brooklyn.rest.api.PolicyApi;
 import brooklyn.rest.api.PolicyConfigApi;
 import brooklyn.rest.api.ScriptApi;
 import brooklyn.rest.api.SensorApi;
+import brooklyn.rest.api.ServerApi;
 import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
-
 
 /**
  * @author Adam Lowe
  */
 @SuppressWarnings("deprecation")
 public class BrooklynApi {
+
     private final String target;
-    
-    public BrooklynApi(String endpoint) {
-        target = endpoint;
+    private final ClientExecutor clientExecutor;
+
+    public BrooklynApi(URL endpoint) {
+        this(checkNotNull(endpoint, "endpoint").toString());
     }
-    
+
+    public BrooklynApi(String endpoint) {
+        this(endpoint, null, null);
+    }
+
+    public BrooklynApi(URL endpoint, String username, String password) {
+        this(endpoint.toString(), username, password);
+    }
+
+    public BrooklynApi(final String endpoint, final String username, final String password) {
+        URL target = null;
+        try {
+            target = new URL(checkNotNull(endpoint, "endpoint"));
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
+        }
+        this.target = endpoint;
+
+        // Resteasy is a big pain.
+        DefaultHttpClient client = new DefaultHttpClient();
+        if (username != null && password != null) {
+            clientExecutor = new ApacheHttpClient4Executor(client) {
+                @Override
+                public ClientResponse execute(ClientRequest request) throws Exception {
+                    String token = username + ":" + password;
+                    String base64Token = Base64.encodeBase64String(token.getBytes(Charsets.UTF_8));
+                    request.header("Authorization", "Basic " + base64Token);
+                    return super.execute(request);
+                }
+            };
+        } else {
+            clientExecutor = new ApacheHttpClient4Executor(client);
+        }
+    }
+
+    public BrooklynApi(URL endpoint, ClientExecutor clientExecutor) {
+        this.target = checkNotNull(endpoint, "endpoint").toString();
+        this.clientExecutor = checkNotNull(clientExecutor, "clientExecutor");
+    }
+
+    private <T> T proxy(Class<T> clazz) {
+        return ProxyFactory.create(clazz, target, clientExecutor);
+    }
+
     public ActivityApi getActivityApi() {
-        return ProxyFactory.create(ActivityApi.class, target);
+        return proxy(ActivityApi.class);
     }
 
     public ApplicationApi getApplicationApi() {
-        return ProxyFactory.create(ApplicationApi.class, target);
+        return proxy(ApplicationApi.class);
     }
 
     public CatalogApi getCatalogApi() {
-        return ProxyFactory.create(CatalogApi.class, target);
+        return proxy(CatalogApi.class);
     }
 
     public EffectorApi getEffectorApi() {
-        return ProxyFactory.create(EffectorApi.class, target);
+        return proxy(EffectorApi.class);
     }
-    
+
     public EntityConfigApi getEntityConfigApi() {
-        return ProxyFactory.create(EntityConfigApi.class, target);
+        return proxy(EntityConfigApi.class);
     }
-    
+
     public EntityApi getEntityApi() {
-        return ProxyFactory.create(EntityApi.class, target);
+        return proxy(EntityApi.class);
     }
-    
+
     public LocationApi getLocationApi() {
-        return ProxyFactory.create(LocationApi.class, target);
+        return proxy(LocationApi.class);
     }
-    
+
     public PolicyConfigApi getPolicyConfigApi() {
-        return ProxyFactory.create(PolicyConfigApi.class, target);
+        return proxy(PolicyConfigApi.class);
     }
-    
+
     public PolicyApi getPolicyApi() {
-        return ProxyFactory.create(PolicyApi.class, target);
+        return proxy(PolicyApi.class);
     }
-    
+
     public ScriptApi getScriptApi() {
-        return ProxyFactory.create(ScriptApi.class, target);
+        return proxy(ScriptApi.class);
     }
-    
+
     public SensorApi getSensorApi() {
-        return ProxyFactory.create(SensorApi.class, target);
+        return proxy(SensorApi.class);
+    }
+
+    public ServerApi getServerApi() {
+        return proxy(ServerApi.class);
     }
 
     public UsageApi getUsageApi() {
-        return ProxyFactory.create(UsageApi.class, target);
+        return proxy(UsageApi.class);
     }
-    
+
     public VersionApi getVersionApi() {
-        return ProxyFactory.create(VersionApi.class, target);
+        return proxy(VersionApi.class);
     }
-    
+
     public AccessApi getAccessApi() {
-        return ProxyFactory.create(AccessApi.class, target);
+        return proxy(AccessApi.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T getEntity(Response response, Class<T> type) {
+        if (!(response instanceof ClientResponse)) {
+            throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
+        }
+        ClientResponse clientResponse = (ClientResponse) response;
+        return (T) clientResponse.getEntity(type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T getEntityGeneric(Response response, GenericType type) {
+        if (!(response instanceof ClientResponse)) {
+            throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
+        }
+        ClientResponse clientResponse = (ClientResponse) response;
+        return (T) clientResponse.getEntity(type);
     }
 
 }

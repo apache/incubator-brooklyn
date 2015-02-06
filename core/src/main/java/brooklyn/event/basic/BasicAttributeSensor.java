@@ -18,6 +18,8 @@
  */
 package brooklyn.event.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 
@@ -28,13 +30,15 @@ import com.google.common.reflect.TypeToken;
  */
 public class BasicAttributeSensor<T> extends BasicSensor<T> implements AttributeSensor<T> {
     private static final long serialVersionUID = -2493209215974820300L;
+    
+    private final SensorPersistenceMode persistence;
 
     public BasicAttributeSensor(Class<T> type, String name) {
         this(type, name, name);
     }
     
     public BasicAttributeSensor(Class<T> type, String name, String description) {
-        super(type, name, description);
+        this(TypeToken.of(type), name, description);
     }
     
     public BasicAttributeSensor(TypeToken<T> typeToken, String name) {
@@ -42,7 +46,17 @@ public class BasicAttributeSensor<T> extends BasicSensor<T> implements Attribute
     }
     
     public BasicAttributeSensor(TypeToken<T> typeToken, String name, String description) {
-        super(typeToken, name, description);
+        this(typeToken, name, description, SensorPersistenceMode.REQUIRED);
     }
     
+    public BasicAttributeSensor(TypeToken<T> typeToken, String name, String description, SensorPersistenceMode persistence) {
+        super(typeToken, name, description);
+        this.persistence = checkNotNull(persistence, "persistence");
+    }
+
+    @Override
+    public SensorPersistenceMode getPersistenceMode() {
+        // persistence could be null if deserializing state written by an old version; in which case default to 'required'
+        return (persistence != null) ? persistence : SensorPersistenceMode.REQUIRED;
+    }
 }

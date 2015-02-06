@@ -26,7 +26,6 @@ import java.util.concurrent.ExecutionException;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -93,11 +92,15 @@ public class ZooKeeperSshDriver extends JavaSoftwareProcessSshDriver implements 
     }
 
     @Override
+    public void preInstall() {
+        resolver = Entities.newDownloader(this);
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("zookeeper-%s", getVersion()))));
+    }
+
+    @Override
     public void install() {
-        DownloadResolver resolver = Entities.newDownloader(this);
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        setExpandedInstallDir(getInstallDir()+"/"+resolver.getUnpackedDirectoryName(format("zookeeper-%s", getVersion())));
 
         List<String> commands = ImmutableList.<String> builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))

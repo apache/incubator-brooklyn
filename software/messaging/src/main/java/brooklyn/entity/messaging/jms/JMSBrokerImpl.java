@@ -26,6 +26,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.Queue;
 import brooklyn.entity.messaging.Topic;
@@ -89,10 +90,10 @@ public abstract class JMSBrokerImpl<Q extends JMSDestination & Queue, T extends 
     // should be called after sensor-polling is activated etc
     @Override
     protected void postStart() {
-		super.postStart();
-		// stupid to do this here, but there appears to be a race where sometimes the
-		// broker throws a BrokerStopped exception, even though the sensor indicates it is up
-		Time.sleep(Duration.FIVE_SECONDS);
+        super.postStart();
+        // stupid to do this here, but there appears to be a race where sometimes the
+        // broker throws a BrokerStopped exception, even though the sensor indicates it is up
+        Time.sleep(Duration.FIVE_SECONDS);
         for (String name : queueNames) {
             addQueue(name);
         }
@@ -100,7 +101,7 @@ public abstract class JMSBrokerImpl<Q extends JMSDestination & Queue, T extends 
             addTopic(name);
         }
     }
-	
+    
     @Override
     public abstract void setBrokerUrl();
 
@@ -126,15 +127,23 @@ public abstract class JMSBrokerImpl<Q extends JMSDestination & Queue, T extends 
         
         super.preStop();
     }
-	
+    
     @Override
     public void addQueue(String name) {
         addQueue(name, MutableMap.of());
     }
     
+    public void checkStartingOrRunning() {
+        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
+        if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.RUNNING) return;
+        if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.STARTING) return;
+        // TODO this check may be redundant or even inappropriate
+        throw new IllegalStateException("Cannot run against "+this+" in state "+state);
+    }
+
     @Override
     public void addQueue(String name, Map properties) {
-		checkModifiable();
+        checkStartingOrRunning();
         properties.put("name", name);
         queues.put(name, createQueue(properties));
     }
@@ -149,7 +158,7 @@ public abstract class JMSBrokerImpl<Q extends JMSDestination & Queue, T extends 
     
     @Override
     public void addTopic(String name, Map properties) {
-		checkModifiable();
+        checkStartingOrRunning();
         properties.put("name", name);
         topics.put(name, createTopic(properties));
     }

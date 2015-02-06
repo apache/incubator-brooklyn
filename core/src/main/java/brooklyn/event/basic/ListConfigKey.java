@@ -76,7 +76,7 @@ public class ListConfigKey<V> extends AbstractCollectionConfigKey<List<? extends
     protected List<Object> merge(boolean unmodifiable, Iterable<?>... sets) {
         MutableList<Object> result = MutableList.of();
         for (Iterable<?> set: sets) result.addAll(set);
-        if (unmodifiable) return result.toImmutable();
+        if (unmodifiable) return result.asUnmodifiable();
         return result;
     }
 

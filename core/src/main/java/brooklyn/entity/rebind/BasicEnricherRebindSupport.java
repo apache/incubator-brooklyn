@@ -26,23 +26,22 @@ import brooklyn.util.flags.FlagUtils;
 public class BasicEnricherRebindSupport extends AbstractBrooklynObjectRebindSupport<EnricherMemento> {
 
     private final AbstractEnricher enricher;
-    
+
     public BasicEnricherRebindSupport(AbstractEnricher enricher) {
         super(enricher);
         this.enricher = enricher;
     }
-    
+
     @Override
     protected void addConfig(RebindContext rebindContext, EnricherMemento memento) {
         // TODO entity does config-lookup differently; the memento contains the config keys.
         // BasicEntityMemento.postDeserialize uses the injectTypeClass to call EntityTypes.getDefinedConfigKeys(clazz)
-        // 
         // Note that the flags may have been set in the constructor; but some enrichers have no-arg constructors
         ConfigBag configBag = ConfigBag.newInstance(memento.getConfig());
         FlagUtils.setFieldsFromFlags(enricher, configBag);
         FlagUtils.setAllConfigKeys(enricher, configBag, false);
     }
-    
+
     @Override
     protected void addCustoms(RebindContext rebindContext, EnricherMemento memento) {
         // no-op

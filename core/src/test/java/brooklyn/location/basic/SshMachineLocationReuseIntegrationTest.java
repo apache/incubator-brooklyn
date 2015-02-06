@@ -22,7 +22,9 @@ import static org.testng.Assert.assertEquals;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.annotations.AfterMethod;
@@ -48,8 +50,9 @@ import com.google.common.collect.ImmutableList;
 public class SshMachineLocationReuseIntegrationTest {
 
     public static class RecordingSshjTool extends SshjTool {
-        static int connectionCount = 0;
-        static AtomicInteger disconnectionCount = new AtomicInteger();
+        public static final AtomicBoolean forbidden = new AtomicBoolean(false); 
+        public static final AtomicInteger connectionCount = new AtomicInteger(0);
+        public static final AtomicInteger disconnectionCount = new AtomicInteger();
         
         public RecordingSshjTool(Map<String, ?> map) {
             super(map);
@@ -57,7 +60,8 @@ public class SshMachineLocationReuseIntegrationTest {
 
         @Override
         public void connect() {
-            connectionCount += 1;
+            if (forbidden.get()) throw new IllegalStateException("forbidden at this time");
+            connectionCount.incrementAndGet();
             super.connect();
         }
 
@@ -68,8 +72,27 @@ public class SshMachineLocationReuseIntegrationTest {
         }
 
         public static void reset() {
-            connectionCount = 0;
+            forbidden.set(false);
+            connectionCount.set(0);
             disconnectionCount.set(0);
+        }
+
+        @Override
+        public int execCommands(Map<String, ?> props, List<String> commands, Map<String, ?> env) {
+            if (forbidden.get()) throw new IllegalStateException("forbidden at this time");
+            return super.execCommands(props, commands, env);
+        }
+        
+        @Override
+        public int execScript(Map<String, ?> props, List<String> commands, Map<String, ?> env) {
+            if (forbidden.get()) throw new IllegalStateException("forbidden at this time");
+            return super.execScript(props, commands, env);
+        }
+        
+        @Override
+        public int execShellDirect(Map<String, ?> props, List<String> commands, Map<String, ?> env) {
+            if (forbidden.get()) throw new IllegalStateException("forbidden at this time");
+            return super.execShellDirect(props, commands, env);
         }
     }
 
@@ -95,21 +118,21 @@ public class SshMachineLocationReuseIntegrationTest {
     public void testBasicReuse() throws Exception {
         host.execScript("mysummary", ImmutableList.of("exit"));
         host.execScript("mysummary", ImmutableList.of("exit"));
-        assertEquals(RecordingSshjTool.connectionCount, 1, "Expected one SSH connection to have been recorded");
+        assertEquals(RecordingSshjTool.connectionCount.get(), 1, "Expected one SSH connection to have been recorded");
     }
 
     @Test(groups = "Integration")
     public void testReuseWithInterestingProps() throws Exception {
         host.execScript(customSshConfigKeys(), "mysummary", ImmutableList.of("exit"));
         host.execScript(customSshConfigKeys(), "mysummary", ImmutableList.of("exit"));
-        assertEquals(RecordingSshjTool.connectionCount, 1, "Expected one SSH connection to have been recorded");
+        assertEquals(RecordingSshjTool.connectionCount.get(), 1, "Expected one SSH connection to have been recorded");
     }
 
     @Test(groups = "Integration")
     public void testNewConnectionForDifferentProps() throws Exception {
         host.execScript("mysummary", ImmutableList.of("exit"));
         host.execScript(customSshConfigKeys(), "mysummary", ImmutableList.of("exit"));
-        assertEquals(RecordingSshjTool.connectionCount, 2, "Expected two SSH connections to have been recorded");
+        assertEquals(RecordingSshjTool.connectionCount.get(), 2, "Expected two SSH connections to have been recorded");
     }
 
     @Test(groups = "Integration")
@@ -120,7 +143,7 @@ public class SshMachineLocationReuseIntegrationTest {
         // Use another output stream for second request
         props.put(SshTool.PROP_SCRIPT_HEADER.getName(), "#!/bin/bash -e\n");
         host.execScript(props, "mysummary", ImmutableList.of("exit"));
-        assertEquals(RecordingSshjTool.connectionCount, 1, "Expected one SSH connection to have been recorded even though out script header differed.");
+        assertEquals(RecordingSshjTool.connectionCount.get(), 1, "Expected one SSH connection to have been recorded even though out script header differed.");
     }
 
     @Test(groups = "Integration")

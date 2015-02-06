@@ -25,9 +25,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.guava.TypeTokens;
@@ -36,6 +39,7 @@ import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -49,7 +53,6 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     
     private static final Splitter dots = Splitter.on('.');
 
-    @Beta
     public static <T> Builder<T> builder(TypeToken<T> type) {
         return new Builder<T>().type(type);
     }
@@ -57,13 +60,32 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     public static <T> Builder<T> builder(Class<T> type) {
         return new Builder<T>().type(type);
     }
-    
+
+    public static <T> Builder<T> builder(TypeToken<T> type, String name) {
+        return new Builder<T>().type(type).name(name);
+    }
+
+    public static <T> Builder<T> builder(Class<T> type, String name) {
+        return new Builder<T>().type(type).name(name);
+    }
+
+    public static <T> Builder<T> builder(ConfigKey<T> key) {
+        return new Builder<T>()
+            .name(checkNotNull(key.getName(), "name"))
+            .type(checkNotNull(key.getTypeToken(), "type"))
+            .description(key.getDescription())
+            .defaultValue(key.getDefaultValue())
+            .reconfigurable(key.isReconfigurable())
+            .inheritance(key.getInheritance());
+    }
+
     public static class Builder<T> {
         private String name;
         private TypeToken<T> type;
         private String description;
         private T defaultValue;
         private boolean reconfigurable;
+        private ConfigInheritance inheritance;
         
         public Builder<T> name(String val) {
             this.name = val; return this;
@@ -83,6 +105,9 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         public Builder<T> reconfigurable(boolean val) {
             this.reconfigurable = val; return this;
         }
+        public Builder<T> inheritance(ConfigInheritance val) {
+            this.inheritance = val; return this;
+        }
         public BasicConfigKey<T> build() {
             return new BasicConfigKey<T>(this);
         }
@@ -94,6 +119,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     private String description;
     private T defaultValue;
     private boolean reconfigurable;
+    private ConfigInheritance inheritance;
 
     // FIXME In groovy, fields were `public final` with a default constructor; do we need the gson?
     public BasicConfigKey() { /* for gson */ }
@@ -136,6 +162,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.description = builder.description;
         this.defaultValue = builder.defaultValue;
         this.reconfigurable = builder.reconfigurable;
+        this.inheritance = builder.inheritance;
     }
     
     /** @see ConfigKey#getName() */
@@ -164,6 +191,11 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     @Override
     public boolean isReconfigurable() {
         return reconfigurable;
+    }
+    
+    @Override @Nullable
+    public ConfigInheritance getInheritance() {
+        return inheritance;
     }
     
     /** @see ConfigKey#getNameParts() */
@@ -214,7 +246,11 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     }
     
     protected Object resolveValue(Object v, ExecutionContext exec) throws ExecutionException, InterruptedException {
-        return Tasks.resolveValue(v, getType(), exec, "config "+name);
+        if (v instanceof Collection || v instanceof Map) {
+            return Tasks.resolveDeepValue(v, Object.class, exec, "config "+name);
+        } else {
+            return Tasks.resolveValue(v, getType(), exec, "config "+name);
+        }
     }
 
     /** used to record a key which overwrites another; only needed at disambiguation time 
@@ -225,11 +261,21 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         private static final long serialVersionUID = -3458116971918128018L;
 
         private final ConfigKey<T> parentKey;
+
+        /** builder here should be based on the same key passed in as parent */
+        @Beta
+        public BasicConfigKeyOverwriting(Builder<T> builder, ConfigKey<T> parent) {
+            super(builder);
+            parentKey = parent;
+            Preconditions.checkArgument(Objects.equal(builder.name, parent.getName()), "Builder must use key of the same name.");
+        }
         
         public BasicConfigKeyOverwriting(ConfigKey<T> key, T defaultValue) {
-            super(checkNotNull(key.getTypeToken(), "type"), checkNotNull(key.getName(), "name"), 
-                    key.getDescription(), defaultValue);
-            parentKey = key;
+            this(builder(key).defaultValue(defaultValue), key);
+        }
+        
+        public BasicConfigKeyOverwriting(ConfigKey<T> key, String newDescription, T defaultValue) {
+            this(builder(key).description(newDescription).defaultValue(defaultValue), key);
         }
         
         public ConfigKey<T> getParentKey() {

@@ -24,6 +24,10 @@ import brooklyn.policy.PolicyType;
 
 public class PolicyDynamicType extends BrooklynDynamicType<Policy, AbstractPolicy> {
 
+    public PolicyDynamicType(Class<? extends Policy> type) {
+        super(type);
+    }
+    
     public PolicyDynamicType(AbstractPolicy policy) {
         super(policy);
     }

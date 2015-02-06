@@ -18,41 +18,41 @@
  */
 package brooklyn.rest.domain;
 
-import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.fromJson;
-import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
-import java.io.IOException;
+import static brooklyn.rest.util.RestApiTestUtils.asJson;
+import static brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
-import org.testng.annotations.Test;
 
-import brooklyn.rest.domain.LocationSpec;
+import java.io.IOException;
+
+import org.testng.annotations.Test;
 
 @Deprecated
 public class LocationSpecTest {
 
     // TODO when removing the deprecated class this tests, change the tests here to point at LocationSummary
     
-  final LocationSpec locationSpec = LocationSpec.localhost();
+    final LocationSpec locationSpec = LocationSpec.localhost();
 
-  @Test
-  public void testSerializeToJSON() throws IOException {
-    assertEquals(asJson(locationSpec), jsonFixture("fixtures/location.json"));
-  }
+    @Test
+    public void testSerializeToJSON() throws IOException {
+        assertEquals(asJson(locationSpec), jsonFixture("fixtures/location.json"));
+    }
 
-  @Test
-  public void testDeserializeFromJSON() throws IOException {
-    assertEquals(fromJson(jsonFixture("fixtures/location.json"), LocationSpec.class), locationSpec);
-  }
+    @Test
+    public void testDeserializeFromJSON() throws IOException {
+        assertEquals(fromJson(jsonFixture("fixtures/location.json"), LocationSpec.class), locationSpec);
+    }
 
-  @Test
-  public void testDeserializeFromJSONWithNoCredential() throws IOException {
-    LocationSpec loaded = fromJson(jsonFixture("fixtures/location-without-credential.json"), LocationSpec.class);
+    @Test
+    public void testDeserializeFromJSONWithNoCredential() throws IOException {
+        LocationSpec loaded = fromJson(jsonFixture("fixtures/location-without-credential.json"), LocationSpec.class);
 
-    assertEquals(loaded.getSpec(), locationSpec.getSpec());
-    
-    assertEquals(loaded.getConfig().size(), 1);
-    assertEquals(loaded.getConfig().get("identity"), "bob");
-    assertNull(loaded.getConfig().get("credential"));
-  }
+        assertEquals(loaded.getSpec(), locationSpec.getSpec());
+
+        assertEquals(loaded.getConfig().size(), 1);
+        assertEquals(loaded.getConfig().get("identity"), "bob");
+        assertNull(loaded.getConfig().get("credential"));
+    }
 }

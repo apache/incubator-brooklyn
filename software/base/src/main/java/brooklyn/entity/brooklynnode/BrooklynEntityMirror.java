@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.brooklynnode;
 
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
@@ -32,6 +33,8 @@ import brooklyn.util.time.Duration;
  * <p>
  * Note tests for this depend on a REST server so are in other projects; search for *Mirror*Test,
  * as well as *BrooklynNode*Test. */
+@Catalog(name="Brooklyn Entity Mirror", description="Provides an entity which can sit in one brooklyn "
+        + "domain and reflect the status of an entity via the REST API of another domain.")
 @ImplementedBy(BrooklynEntityMirrorImpl.class)
 public interface BrooklynEntityMirror extends Entity {
 
@@ -51,5 +54,7 @@ public interface BrooklynEntityMirror extends Entity {
         "Frequency to poll for client sensors", Duration.FIVE_SECONDS);
     
     public static final AttributeSensor<String> MIRROR_STATUS = Sensors.newStringSensor("brooklyn.mirror.monitoring_status");
+    
+    public EntityHttpClient http();
 
 }

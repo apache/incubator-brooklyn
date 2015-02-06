@@ -2,6 +2,9 @@
 // Brooklyn's current version of swagger.js (md5sum 117c05807c33c73132a93edd715086d7)
 // will not work with anything greater than 1.0.rc.2.
 
+// Released under MIT license.  See https://github.com/wycats/handlebars.js .
+
+// ---- code below this line is unchanged by Brooklyn -----
 
 // lib/handlebars/base.js
 

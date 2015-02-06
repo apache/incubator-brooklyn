@@ -65,8 +65,8 @@ public class ScriptResource extends AbstractBrooklynRestResource implements Scri
         
         GroovyShell shell = new GroovyShell(binding);
 
-        OutputCapturingContext stdout = ThreadLocalPrintStream.stdout().capture();
-        OutputCapturingContext stderr = ThreadLocalPrintStream.stderr().capture();
+        OutputCapturingContext stdout = ThreadLocalPrintStream.stdout().captureTee();
+        OutputCapturingContext stderr = ThreadLocalPrintStream.stderr().captureTee();
 
         Object value = null;
         Throwable problem = null;
@@ -92,8 +92,7 @@ public class ScriptResource extends AbstractBrooklynRestResource implements Scri
         // call toString on the result, in case it is not serializable
         return new ScriptExecutionSummary(
                 value!=null ? value.toString() : null, 
-                        problem!=null ? problem.toString() : null,
-                                stdout.toString(), stderr.toString());
+                problem!=null ? problem.toString() : null,
+                stdout.toString(), stderr.toString());
     }
-
 }

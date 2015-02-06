@@ -35,6 +35,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
+import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.config.ConfigBag;
@@ -66,7 +67,7 @@ public class EntityEntitlementTest {
         // default "root" access allows ROOT permission, and invoke effector, etc
         Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.ROOT, null));
         Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.SEE_ENTITY, app));
-        Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, "any-eff")));
+        Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, StringAndArgument.of("any-eff", null))));
         Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.SEE_SENSOR, EntityAndItem.of(app, "any-sensor")));
         // and can invoke methods, without any user/login registered
         confirmEffectorEntitlement(true);
@@ -79,7 +80,7 @@ public class EntityEntitlementTest {
         
         Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.ROOT, null));
         Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.SEE_ENTITY, app));
-        Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, "any-eff")));
+        Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, StringAndArgument.of("any-eff", null))));
         Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.SEE_SENSOR, EntityAndItem.of(app, "any-sensor")));
         
         confirmEffectorEntitlement(true);
@@ -117,7 +118,7 @@ public class EntityEntitlementTest {
         
         Assert.assertFalse(mgmt.getEntitlementManager().isEntitled(null, Entitlements.ROOT, null));
         Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.SEE_ENTITY, app));
-        Assert.assertFalse(mgmt.getEntitlementManager().isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, "any-eff")));
+        Assert.assertFalse(mgmt.getEntitlementManager().isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, StringAndArgument.of("any-eff", null))));
         Assert.assertTrue(mgmt.getEntitlementManager().isEntitled(null, Entitlements.SEE_SENSOR, EntityAndItem.of(app, "any-sensor")));
         
         confirmEffectorEntitlement(false);
@@ -130,7 +131,7 @@ public class EntityEntitlementTest {
         
         Assert.assertFalse(mgmt.getEntitlementManager().isEntitled(null, Entitlements.ROOT, null));
         Assert.assertFalse(mgmt.getEntitlementManager().isEntitled(null, Entitlements.SEE_ENTITY, app));
-        Assert.assertFalse(mgmt.getEntitlementManager().isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, "any-eff")));
+        Assert.assertFalse(mgmt.getEntitlementManager().isEntitled(null, Entitlements.INVOKE_EFFECTOR, EntityAndItem.of(app, StringAndArgument.of("any-eff", null))));
         Assert.assertFalse(mgmt.getEntitlementManager().isEntitled(null, Entitlements.SEE_SENSOR, EntityAndItem.of(app, "any-sensor")));
         
         confirmEffectorEntitlement(false);

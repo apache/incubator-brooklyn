@@ -34,6 +34,7 @@ import brooklyn.location.PortSupplier;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -84,6 +85,22 @@ public class SimulatedLocation extends AbstractLocation implements MachineProvis
     
     public InetAddress getAddress() {
         return address;
+    }
+
+    @Override
+    public String getHostname() {
+        String hostname = address.getHostName();
+        return (hostname == null || hostname.equals(address.getHostAddress())) ? null : hostname;
+    }
+    
+    @Override
+    public Set<String> getPublicAddresses() {
+        return ImmutableSet.of(address.getHostAddress());
+    }
+    
+    @Override
+    public Set<String> getPrivateAddresses() {
+        return ImmutableSet.of();
     }
 
     public synchronized boolean obtainSpecificPort(int portNumber) {

@@ -18,16 +18,19 @@
  */
 package brooklyn.entity.nosql.couchbase;
 
+import java.net.URI;
+
+import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.webapp.WebAppService;
-import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -35,6 +38,8 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.ByteSizeStrings;
 
+@Catalog(name="CouchBase Node", description="Couchbase Server is an open source, distributed (shared-nothing architecture) "
+        + "NoSQL document-oriented database that is optimized for interactive applications.")
 @ImplementedBy(CouchbaseNodeImpl.class)
 public interface CouchbaseNode extends SoftwareProcess {
 
@@ -46,11 +51,16 @@ public interface CouchbaseNode extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
-            "2.5.1");
+            "3.0.0");
+
+    @SetFromFlag("enterprise")
+    ConfigKey<Boolean> USE_ENTERPRISE = ConfigKeys.newBooleanConfigKey("couchbase.enterprise.enabled",
+        "Whether to use Couchbase Enterprise; if false uses the community version. Defaults to true.", true);
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
-            SoftwareProcess.DOWNLOAD_URL, "http://packages.couchbase.com/releases/${version}/couchbase-server-enterprise_${version}_${driver.osTag}");
+            SoftwareProcess.DOWNLOAD_URL, "http://packages.couchbase.com/releases/${version}/"
+                + "couchbase-server-${driver.communityOrEnterprise}${driver.downloadLinkPreVersionSeparator}${version}${driver.downloadLinkOsTagWithPrefix}");
 
     @SetFromFlag("clusterInitRamSize")
     BasicAttributeSensorAndConfigKey<Integer> COUCHBASE_CLUSTER_INIT_RAM_SIZE = new BasicAttributeSensorAndConfigKey<Integer>(
@@ -71,7 +81,7 @@ public interface CouchbaseNode extends SoftwareProcess {
 
     AttributeSensor<Boolean> IS_PRIMARY_NODE = Sensors.newBooleanSensor("couchbase.isPrimaryNode", "flag to determine if the current couchbase node is the primary node for the cluster");
     AttributeSensor<Boolean> IS_IN_CLUSTER = Sensors.newBooleanSensor("couchbase.isInCluster", "flag to determine if the current couchbase node has been added to a cluster");
-    public static final AttributeSensor<String> COUCHBASE_WEB_ADMIN_URL = WebAppServiceConstants.ROOT_URL; // By using this specific sensor, the value will be shown in the summary tab
+    AttributeSensor<URI> COUCHBASE_WEB_ADMIN_URL = Attributes.MAIN_URI;
     
     // Interesting stats
     AttributeSensor<Double> OPS = Sensors.newDoubleSensor("couchbase.stats.ops", 
@@ -101,12 +111,12 @@ public interface CouchbaseNode extends SoftwareProcess {
     AttributeSensor<String> REBALANCE_STATUS = Sensors.newStringSensor("couchbase.rebalance.status", 
             "Displays the current rebalance status from pools/nodes/rebalanceStatus");
     
-    class RootUrl {
-        public static final AttributeSensor<String> ROOT_URL = WebAppService.ROOT_URL;
+    class MainUri {
+        public static final AttributeSensor<URI> MAIN_URI = Attributes.MAIN_URI;
         
         static {
             // ROOT_URL does not need init because it refers to something already initialized
-            RendererHints.register(COUCHBASE_WEB_ADMIN_URL, new RendererHints.NamedActionWithUrl("Open"));
+            RendererHints.register(COUCHBASE_WEB_ADMIN_URL, RendererHints.namedActionWithUrl());
 
             RendererHints.register(COUCH_DOCS_DATA_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));
             RendererHints.register(COUCH_DOCS_ACTUAL_DISK_SIZE, RendererHints.displayValue(ByteSizeStrings.metric()));
@@ -117,11 +127,19 @@ public interface CouchbaseNode extends SoftwareProcess {
     }
     
     // this long-winded reference is done just to trigger the initialization above
-    AttributeSensor<String> ROOT_URL = RootUrl.ROOT_URL;
+    AttributeSensor<URI> MAIN_URI = MainUri.MAIN_URI;
 
     MethodEffector<Void> SERVER_ADD = new MethodEffector<Void>(CouchbaseNode.class, "serverAdd");
     MethodEffector<Void> SERVER_ADD_AND_REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "serverAddAndRebalance");
     MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
+    MethodEffector<Void> BUCKET_CREATE = new MethodEffector<Void>(CouchbaseNode.class, "bucketCreate");
+    brooklyn.entity.Effector<Void> ADD_REPLICATION_RULE = Effectors.effector(Void.class, "addReplicationRule")
+        .description("Adds a replication rule from the indicated bucket on the cluster where this node is located "
+            + "to the indicated cluster and optional destination bucket")
+        .parameter(String.class, "fromBucket", "Bucket to be replicated")
+        .parameter(Object.class, "toCluster", "Entity (or ID) of the cluster to which this should replicate")
+        .parameter(String.class, "toBucket", "Destination bucket for replication in the toCluster, defaulting to the same as the fromBucket")
+        .buildAbstract();
 
     @Effector(description = "add a server to a cluster")
     public void serverAdd(@EffectorParam(name = "serverHostname") String serverToAdd, @EffectorParam(name = "username") String username, @EffectorParam(name = "password") String password);
@@ -131,5 +149,10 @@ public interface CouchbaseNode extends SoftwareProcess {
 
     @Effector(description = "rebalance the couchbase cluster")
     public void rebalance();
+    
+    @Effector(description = "create a new bucket")
+    public void bucketCreate(@EffectorParam(name = "bucketName") String bucketName, @EffectorParam(name = "bucketType") String bucketType, 
+            @EffectorParam(name = "bucketPort") Integer bucketPort, @EffectorParam(name = "bucketRamSize") Integer bucketRamSize, 
+            @EffectorParam(name = "bucketReplica") Integer bucketReplica);
 
 }

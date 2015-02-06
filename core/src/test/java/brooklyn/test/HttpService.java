@@ -60,7 +60,8 @@ public class HttpService {
 
     private static final Logger log = LoggerFactory.getLogger(HttpService.class);
 
-    public static final String ROOT_WAR_URL = "classpath://hello-world.war";
+    public static final String ROOT_WAR_PATH = "/hello-world.war";
+    public static final String ROOT_WAR_URL = "classpath:" + ROOT_WAR_PATH;
     public static final String SERVER_KEYSTORE = "classpath://server.ks";
     
     private final boolean httpsEnabled;
@@ -109,6 +110,8 @@ public class HttpService {
     }
 
     public HttpService start() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), ROOT_WAR_PATH);
+
         try {
             if (httpsEnabled) {
                 //by default the server is configured with a http connector, this needs to be removed since we are going

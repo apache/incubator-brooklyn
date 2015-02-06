@@ -28,6 +28,7 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.util.text.StringPredicates;
 
 import com.google.common.collect.ImmutableList;
 
@@ -79,6 +80,12 @@ public class EntityPredicatesTest extends BrooklynAppUnitTestSupport {
     }
     
     @Test
+    public void testDisplayNameSatisfies() throws Exception {
+        assertTrue(EntityPredicates.displayNameSatisfies(StringPredicates.matchesRegex("myd.*me")).apply(entity));
+        assertFalse(EntityPredicates.applicationIdEqualTo("wrongname").apply(entity));
+    }
+    
+    @Test
     public void testIsChildOf() throws Exception {
         assertTrue(EntityPredicates.isChildOf(app).apply(entity));
         assertFalse(EntityPredicates.isChildOf(entity).apply(entity));
@@ -95,15 +102,15 @@ public class EntityPredicatesTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testManaged() throws Exception {
-        assertTrue(EntityPredicates.managed().apply(entity));
+        assertTrue(EntityPredicates.isManaged().apply(entity));
         Entities.unmanage(entity);
-        assertFalse(EntityPredicates.managed().apply(entity));
+        assertFalse(EntityPredicates.isManaged().apply(entity));
     }
     
     @Test
     public void testWithLocation() throws Exception {
         entity.addLocations(ImmutableList.of(loc));
-        assertTrue(EntityPredicates.withLocation(loc).apply(entity));
-        assertFalse(EntityPredicates.withLocation(loc).apply(app));
+        assertTrue(EntityPredicates.locationsIncludes(loc).apply(entity));
+        assertFalse(EntityPredicates.locationsIncludes(loc).apply(app));
     }
 }

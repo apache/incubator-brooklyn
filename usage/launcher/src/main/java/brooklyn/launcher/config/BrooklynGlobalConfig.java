@@ -27,6 +27,7 @@ import brooklyn.management.internal.BrooklynGarbageCollector;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.util.internal.BrooklynSystemProperties;
 import brooklyn.util.internal.StringSystemProperty;
+import brooklyn.util.time.Duration;
 
 /**
  * Convenience collection of popular global configuration values.
@@ -47,10 +48,12 @@ public class BrooklynGlobalConfig {
 
     public static final ConfigKey<Boolean> REQUIRE_HTTPS = BrooklynWebConfig.HTTPS_REQUIRED;
     
-    public static final ConfigKey<Long> GC_PERIOD = BrooklynGarbageCollector.GC_PERIOD;
+    public static final ConfigKey<Duration> GC_PERIOD = BrooklynGarbageCollector.GC_PERIOD;
     public static final ConfigKey<Boolean> DO_SYSTEM_GC = BrooklynGarbageCollector.DO_SYSTEM_GC;
     public static final ConfigKey<Integer> MAX_TASKS_PER_TAG = BrooklynGarbageCollector.MAX_TASKS_PER_TAG;
-    public static final ConfigKey<Long> MAX_TASK_AGE = BrooklynGarbageCollector.MAX_TASK_AGE;
+    public static final ConfigKey<Integer> MAX_TASKS_PER_ENTITY = BrooklynGarbageCollector.MAX_TASKS_PER_ENTITY;
+    public static final ConfigKey<Integer> MAX_TASKS_GLOBAL = BrooklynGarbageCollector.MAX_TASKS_GLOBAL;
+    public static final ConfigKey<Duration> MAX_TASK_AGE = BrooklynGarbageCollector.MAX_TASK_AGE;
 
     public static final StringSystemProperty LOCALHOST_IP_ADDRESS = BrooklynServiceAttributes.LOCALHOST_IP_ADDRESS;
     

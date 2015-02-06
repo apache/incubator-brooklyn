@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
@@ -44,10 +45,10 @@ import com.google.common.collect.Lists;
 public class TestEntityImpl extends AbstractEntity implements TestEntity {
     private static final Logger LOG = LoggerFactory.getLogger(TestEntityImpl.class);
 
-	protected int sequenceValue = 0;
-	protected AtomicInteger counter = new AtomicInteger(0);
-	protected Map<?,?> constructorProperties;
-	protected Map<?,?> configureProperties;
+    protected int sequenceValue = 0;
+    protected AtomicInteger counter = new AtomicInteger(0);
+    protected Map<?,?> constructorProperties;
+    protected Map<?,?> configureProperties;
     protected List<String> callHistory = Collections.synchronizedList(Lists.<String>newArrayList());
     
     public TestEntityImpl() {
@@ -69,7 +70,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         return super.configure(flags);
     }
     
-    @Override
+    @Override // made public for testing
     public boolean isLegacyConstruction() {
         return super.isLegacyConstruction();
     }
@@ -122,19 +123,21 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     public void start(Collection<? extends Location> locs) {
         LOG.trace("Starting {}", this);
         callHistory.add("start");
-        setAttribute(SERVICE_STATE, Lifecycle.STARTING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         counter.incrementAndGet();
         addLocations(locs);
-        setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+        setAttribute(SERVICE_UP, true);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
     }
 
     @Override
     public void stop() { 
         LOG.trace("Stopping {}", this);
         callHistory.add("stop");
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         counter.decrementAndGet();
-        setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
+        setAttribute(SERVICE_UP, false);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
     }
 
     @Override
@@ -174,4 +177,10 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     public List<String> getCallHistory() {
         return callHistory;
     }
+    
+    public static class TestEntityWithoutEnrichers extends TestEntityImpl {
+        @Override
+        protected void initEnrichers() {}
+    }
+    
 }

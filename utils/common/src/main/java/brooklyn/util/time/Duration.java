@@ -146,6 +146,16 @@ public class Duration implements Comparable<Duration>, Serializable {
     }
 
     /** creates new {@link Duration} instance of the given length of time */
+    public static Duration days(Number n) {
+        return new Duration((long) (n.doubleValue() * TimeUnit.DAYS.toNanos(1)), TimeUnit.NANOSECONDS);
+    }
+
+    /** creates new {@link Duration} instance of the given length of time */
+    public static Duration hours(Number n) {
+        return new Duration((long) (n.doubleValue() * TimeUnit.HOURS.toNanos(1)), TimeUnit.NANOSECONDS);
+    }
+
+    /** creates new {@link Duration} instance of the given length of time */
     public static Duration minutes(Number n) {
         return new Duration((long) (n.doubleValue() * TimeUnit.MINUTES.toNanos(1)), TimeUnit.NANOSECONDS);
     }
@@ -221,6 +231,10 @@ public class Duration implements Comparable<Duration>, Serializable {
         return millis(millisSinceEpoch - System.currentTimeMillis());
     }
 
+    public static Duration sinceUtc(long millisSinceEpoch) {
+        return millis(System.currentTimeMillis() - millisSinceEpoch);
+    }
+
     public Duration add(Duration other) {
         return nanos(nanos() + other.nanos());
     }
@@ -259,4 +273,42 @@ public class Duration implements Comparable<Duration>, Serializable {
         return nanos()>0;
     }
 
+    public boolean isLongerThan(Duration x) {
+        return compareTo(x) > 0;
+    }
+
+    public boolean isLongerThan(Stopwatch stopwatch) {
+        return isLongerThan(Duration.millis(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+    }
+
+    public boolean isShorterThan(Duration x) {
+        return compareTo(x) < 0;
+    }
+
+    public boolean isShorterThan(Stopwatch stopwatch) {
+        return isShorterThan(Duration.millis(stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+    }
+
+    /** returns the larger of this value or the argument */
+    public Duration lowerBound(Duration alternateMinimumValue) {
+        if (isShorterThan(alternateMinimumValue)) return alternateMinimumValue;
+        return this;
+    }
+
+    /** returns the smaller of this value or the argument */
+    public Duration upperBound(Duration alternateMaximumValue) {
+        if (isLongerThan(alternateMaximumValue)) return alternateMaximumValue;
+        return this;
+    }
+
+    /** @deprecated since 0.7.0 use {@link #lowerBound(Duration)} */ @Deprecated
+    public Duration minimum(Duration alternateMinimumValue) {
+        return lowerBound(alternateMinimumValue);
+    }
+
+    /** @deprecated since 0.7.0 use {@link #upperBound(Duration)} */ @Deprecated
+    /** returns the smaller of this value or the argument */
+    public Duration maximum(Duration alternateMaximumValue) {
+        return upperBound(alternateMaximumValue);
+    }
 }

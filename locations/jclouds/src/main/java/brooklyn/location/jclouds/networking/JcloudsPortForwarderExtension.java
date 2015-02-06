@@ -20,6 +20,8 @@ package brooklyn.location.jclouds.networking;
 
 import org.jclouds.compute.domain.NodeMetadata;
 
+import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.location.access.PortForwardManager;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Protocol;
 
@@ -28,5 +30,16 @@ import com.google.common.net.HostAndPort;
 
 public interface JcloudsPortForwarderExtension {
 
+    /**
+     * Opens port forwarding (e.g. DNAT or iptables port-forwarding) to reach the given given 
+     * target port on this node (from the given cidr).
+     * 
+     * This should also register the port with the {@link PortForwardManager}, via 
+     * {@code portForwardManager.associate(node.getId(), result, targetPort)} so that
+     * subsequent calls to {@link BrooklynAccessUtils#getBrooklynAccessibleAddress(brooklyn.entity.Entity, int)}
+     * will know about the mapped port.
+     */
     public HostAndPort openPortForwarding(NodeMetadata node, int targetPort, Optional<Integer> optionalPublicPort, Protocol protocol, Cidr accessingCidr);
+
+    public void closePortForwarding(NodeMetadata node, int targetPort, HostAndPort publicHostAndPort, Protocol protocol);
 }

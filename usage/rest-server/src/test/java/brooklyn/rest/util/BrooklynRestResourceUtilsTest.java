@@ -29,8 +29,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.catalog.internal.CatalogItemBuilder;
+import brooklyn.catalog.internal.CatalogTemplateItemDto;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Application;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntityProxy;
@@ -38,11 +43,13 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
+import brooklyn.rest.domain.EntitySpec;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public class BrooklynRestResourceUtilsTest {
 
@@ -74,6 +81,93 @@ public class BrooklynRestResourceUtilsTest {
         assertTrue(app instanceof EntityProxy);
         assertTrue(app instanceof MyInterface);
         assertFalse(app instanceof SampleNoOpApplication);
+    }
+
+    @Test
+    public void testCreateAppFromCatalogByType() {
+        createAppFromCatalog(SampleNoOpApplication.class.getName());
+    }
+
+    @Test
+    public void testCreateAppFromCatalogByName() {
+        createAppFromCatalog("app.noop");
+    }
+
+    @Test
+    public void testCreateAppFromCatalogById() {
+        createAppFromCatalog("app.noop:0.0.1");
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    public void testCreateAppFromCatalogByTypeMultipleItems() {
+        CatalogTemplateItemDto item = CatalogItemBuilder.newTemplate("app.noop", "0.0.2-SNAPSHOT")
+                .javaType(SampleNoOpApplication.class.getName())
+                .build();
+        managementContext.getCatalog().addItem(item);
+        createAppFromCatalog(SampleNoOpApplication.class.getName());
+    }
+
+    @SuppressWarnings("deprecation")
+    private void createAppFromCatalog(String type) {
+        CatalogTemplateItemDto item = CatalogItemBuilder.newTemplate("app.noop", "0.0.1")
+            .javaType(SampleNoOpApplication.class.getName())
+            .build();
+        managementContext.getCatalog().addItem(item);
+
+        ApplicationSpec spec = ApplicationSpec.builder()
+                .name("myname")
+                .type(type)
+                .locations(ImmutableSet.of("localhost"))
+                .build();
+        Application app = util.create(spec);
+
+        assertEquals(app.getCatalogItemId(), "app.noop:0.0.1");
+    }
+
+    @Test
+    public void testEntityAppFromCatalogByType() {
+        createEntityFromCatalog(BasicEntity.class.getName());
+    }
+
+    @Test
+    public void testEntityAppFromCatalogByName() {
+        createEntityFromCatalog("app.basic");
+    }
+
+    @Test
+    public void testEntityAppFromCatalogById() {
+        createEntityFromCatalog("app.basic:0.0.1");
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    public void testEntityAppFromCatalogByTypeMultipleItems() {
+        CatalogTemplateItemDto item = CatalogItemBuilder.newTemplate("app.basic", "0.0.2-SNAPSHOT")
+                .javaType(SampleNoOpApplication.class.getName())
+                .build();
+        managementContext.getCatalog().addItem(item);
+        createEntityFromCatalog(BasicEntity.class.getName());
+    }
+
+    @SuppressWarnings("deprecation")
+    private void createEntityFromCatalog(String type) {
+        String symbolicName = "app.basic";
+        String version = "0.0.1";
+        CatalogTemplateItemDto item = CatalogItemBuilder.newTemplate(symbolicName, version)
+            .javaType(BasicEntity.class.getName())
+            .build();
+        managementContext.getCatalog().addItem(item);
+
+        ApplicationSpec spec = ApplicationSpec.builder()
+                .name("myname")
+                .entities(ImmutableSet.of(new EntitySpec(type)))
+                .locations(ImmutableSet.of("localhost"))
+                .build();
+        Application app = util.create(spec);
+
+        Entity entity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(entity.getCatalogItemId(), CatalogUtils.getVersionedId(symbolicName, version));
     }
 
     @Test
@@ -110,10 +204,6 @@ public class BrooklynRestResourceUtilsTest {
             description="Application which does nothing, included only as part of the test cases.",
             iconUrl="")
     public static class SampleNoOpApplication extends AbstractApplication implements MyInterface {
-        @Override
-        public void init() {
-            // no-op
-        }
     }
     
     public static class MyPolicy extends AbstractPolicy {

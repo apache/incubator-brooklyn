@@ -22,14 +22,13 @@
  * @type {*}
  */
 define([
-    "brooklyn-utils", "zeroclipboard", 
-    "view/viewutils", "model/sensor-summary",
-    "text!tpl/apps/sensors.html", "text!tpl/apps/sensor-name.html",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "zeroclipboard", "view/viewutils", 
+    "model/sensor-summary", "text!tpl/apps/sensors.html", "text!tpl/apps/sensor-name.html",
     "jquery-datatables", "datatables-extensions", "underscore", "jquery", "backbone", "uri",
-], function (Util, ZeroClipboard, ViewUtils, SensorSummary, SensorsHtml, SensorNameHtml) {
+], function (_, $, Backbone, Util, ZeroClipboard, ViewUtils, SensorSummary, SensorsHtml, SensorNameHtml) {
 
-    // TODO if ZeroClipboard is used elsewhere consider extracting this to a ZeroClipboard wrapper
-    ZeroClipboard.config({ moviePath: 'assets/js/libs/ZeroClipboard.swf' });
+    // TODO consider extracting all such usages to a shared ZeroClipboard wrapper?
+    ZeroClipboard.config({ moviePath: '//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/1.3.1/ZeroClipboard.swf' });
     
     var sensorHtml = _.template(SensorsHtml),
         sensorNameHtml = _.template(SensorNameHtml);
@@ -49,6 +48,7 @@ define([
             'click .refresh': 'updateSensorsNow',
             'click .filterEmpty':'toggleFilterEmpty',
             'click .toggleAutoRefresh':'toggleAutoRefresh',
+            'click #sensors-table div.secret-info':'toggleSecrecyVisibility',
             
             'mouseup .valueOpen':'valueOpen',
             'mouseover #sensors-table tbody tr':'noteFloatMenuActive',
@@ -60,7 +60,7 @@ define([
             'mouseover .hasFloatLeft':'showFloatLeft',
             'mouseover .hasFloatDown':'enterFloatDown',
             'mouseout .hasFloatDown':'exitFloatDown',
-            'mouseup .light-popup-menu-item':'closeFloatMenuNow',
+            'mouseup .light-popup-menu-item':'closeFloatMenuNow'
 
             // these have no effect: you must register on the zeroclipboard object, below
             // (presumably the same for the .clipboard-item event listeners above, but unconfirmed)
@@ -76,10 +76,10 @@ define([
                 that = this;
             this.table = ViewUtils.myDataTable($table, {
                 "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-                    $(nRow).attr('id', aData[0])
+                    $(nRow).attr('id', aData[0]);
                     $('td',nRow).each(function(i,v){
                         if (i==1) $(v).attr('class','sensor-value');
-                    })
+                    });
                     return nRow;
                 },
                 "aoColumnDefs": [
@@ -105,17 +105,25 @@ define([
                                              sensorName = row[0],
                                              actions = that.getSensorActions(sensorName);
                                          
+                                         // NB: the row might not yet exist
+                                         var $row = $('tr[id="'+sensorName+'"]');
+                                         
                                          // datatables doesn't seem to expose any way to modify the html in place for a cell,
                                          // so we rebuild
                                          
                                          var result = "<span class='value'>"+(hasEscapedValue ? escapedValue : '')+"</span>";
+
+                                         var isSecret = Util.isSecret(sensorName);
+                                         if (isSecret) {
+                                            result += "<span class='secret-indicator'>(hidden)</span>";
+                                         }
+                                         
                                          if (actions.open)
                                              result = "<a href='"+actions.open+"'>" + result + "</a>";
                                          if (escapedValue==null || escapedValue.length < 3)
                                              // include whitespace so we can click on it, if it's really small
                                              result += "&nbsp;&nbsp;&nbsp;&nbsp;";
 
-                                         var $row = $('tr[id="'+sensorName+'"]');
                                          var existing = $row.find('.dynamic-contents');
                                          // for the json url, use the full url (relative to window.location.href)
                                          var jsonUrl = actions.json ? new URI(actions.json).resolve(new URI(window.location.href)).toString() : null;
@@ -155,12 +163,14 @@ define([
                                          downMenu = "<div class='floatDown'><div class='light-popup'><div class='light-popup-body'>"
                                              + downMenu +
                                              "</div></div></div>";
-                                         result = "<span class='hasFloatLeft handy dynamic-contents'>" + result +
+                                         result = "<span class='hasFloatLeft dynamic-contents'>" + result +
                                          		"</span>" +
                                          		"<div class='floatLeft'><span class='icon-chevron-down hasFloatDown'></span>" +
                                          		downMenu +
                                          		"</div>";
-                                         result = "<div class='floatGroup'>" + result + "</div>";
+                                         result = "<div class='floatGroup"+
+                                            (isSecret ? " secret-info" : "")+
+                                            "'>" + result + "</div>";
                                          // also see updateFloatMenus which wires up the JS for these classes
                                          
                                          return result;
@@ -217,7 +227,13 @@ define([
             this.toggleFilterEmpty();
             return this;
         },
-        
+
+        beforeClose: function () {
+            if (this.zeroClipboard) {
+                this.zeroClipboard.destroy();
+            }
+        },
+
         /* getting the float menu to pop-up and go away with all the right highlighting
          * is ridiculous. this is pretty good, but still not perfect. it seems some events
          * just don't fire, others occur out of order, and the root cause is that when
@@ -424,7 +440,7 @@ define([
         getSensorActions: function(sensorName) {
             var allMetadata = this.sensorMetadata || {};
             var metadata = allMetadata[sensorName] || {};
-            return metadata.actions || {}
+            return metadata.actions || {};
         },
 
         toggleFilterEmpty: function() {
@@ -438,8 +454,12 @@ define([
         },
 
         enableAutoRefresh: function(isEnabled) {
-            this.refreshActive = isEnabled
+            this.refreshActive = isEnabled;
             return this;
+        },
+        
+        toggleSecrecyVisibility: function(event) {
+            $(event.target).closest('.secret-info').toggleClass('secret-revealed');
         },
         
         /**
@@ -447,31 +467,32 @@ define([
          */
         isRefreshActive: function() { return this.refreshActive; },
         updateSensorsNow:function () {
-            var that = this
+            var that = this;
             ViewUtils.get(that, that.model.getSensorUpdateUrl(), that.updateWithData,
                     { enablement: that.isRefreshActive });
         },
         updateSensorsPeriodically:function () {
-            var that = this
-            ViewUtils.getRepeatedlyWithDelay(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(data) },
+            var that = this;
+            ViewUtils.getRepeatedlyWithDelay(that, that.model.getSensorUpdateUrl(), function(data) { that.updateWithData(data); },
                     { enablement: that.isRefreshActive });
         },
         updateWithData: function (data) {
-            var that = this
+            var that = this;
             $table = that.$('#sensors-table');
-            var options = {}
+            var options = {};
             if (that.fullRedraw) {
-                options.refreshAllRows = true
-                that.fullRedraw = false
+                options.refreshAllRows = true;
+                that.fullRedraw = false;
             }
             ViewUtils.updateMyDataTable($table, data, function(value, name) {
-                var metadata = that.sensorMetadata[name]
+                var metadata = that.sensorMetadata[name];
                 if (metadata==null) {                        
                     // kick off reload metadata when this happens (new sensor for which no metadata known)
                     // but only if we haven't loaded metadata for a while
+                    metadata = { 'name':name };
+                    that.sensorMetadata[name] = metadata; 
                     that.loadSensorMetadataIfStale(name, 10000);
-                    return [name, {'name':name}, value]
-                } 
+                };
                 return [name, metadata, value];
             }, options);
             
@@ -499,9 +520,9 @@ define([
                         description: sensor.description,
                         actions: actions,
                         type: sensor.type
-                    }
+                    };
                 });
-                that.fullRedraw = true
+                that.fullRedraw = true;
                 that.updateSensorsNow();
                 that.table.find('*[rel="tooltip"]').tooltip();
             });
@@ -509,7 +530,7 @@ define([
         },
         
         loadSensorMetadataIfStale: function(sensorName, recency) {
-            var that = this
+            var that = this;
             if (!that.lastSensorMetadataLoadTime || that.lastSensorMetadataLoadTime + recency < new Date().getTime()) {
 //                log("reloading metadata because new sensor "+sensorName+" identified")
                 that.loadSensorMetadata();

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,71 +18,53 @@
 # under the License.
 #
 
-# changes the BROOKLYN version everywhere
+set -e
 
+# changes the version everywhere
 # usage, e.g.:  change-version.sh 0.3.0-SNAPSHOT 0.3.0-RC1
+#          or:  change-version.sh MARKER 0.3.0-SNAPSHOT 0.3.0-RC1
 
 [ -d .git ] || {
   echo "Must run in brooklyn project root directory"
   exit 1
 }
 
-[[ -z "$3" && ! -z "$2" ]] || {
-  echo "Usage:  "$0" CURRENT_VERSION NEW_VERSION"
-  echo " e.g.:  "$0" 0.3.0-SNAPSHOT 0.3.0-RC1"
+if [ "$#" -eq 2 ]; then
+  VERSION_MARKER=BROOKLYN_VERSION
+elif [ "$#" -eq 3 ]; then
+  VERSION_MARKER=$1_VERSION
+  shift;
+else
+  echo "Usage:  "$0" [VERSION_MARKER] CURRENT_VERSION NEW_VERSION"
+  echo " e.g.:  "$0" BROOKLYN 0.3.0-SNAPSHOT 0.3.0-RC1"
   exit 1
-}
+fi
 
 # remove binaries and stuff
-if [[ -f pom.xml ]] ; then mvn clean ; fi
+if [ -f pom.xml ] && [ -d target ] ; then mvn clean ; fi
 
-LABEL1=BROOKLYN_VERSION
-LABEL2=BROOKLYN_VERSION_BELOW
-
+VERSION_MARKER_NL=${VERSION_MARKER}_BELOW
 CURRENT_VERSION=$1
 NEW_VERSION=$2
 
-# exclude dot files, and exclude log, war, and .min.js files
-# TODO not sure if the \/\..+ is needed
-GREP_ARGS="-r -l --exclude_dir=^\..+|\/\..+ --exclude=.*\.(log|war|min.js)"
+# grep --exclude-dir working only in recent versions, not on all platforms, replace with find;
+# skip folders named "ignored" or .xxx (but not the current folder ".");
+# exclude log, war, etc. files;
+# use null delimiters so files containing spaces are supported;
+# pass /dev/null as the first file to search in, so the command doesn't fail if find doesn't match any files;
+# add || true for the case where grep doesn't have matches, so the script doesn't halt
+# If there's an error "Argument list too long" add -n20 to xargs arguments and loop over $FILE around sed
+FILES=`find . -type d \( -name ignored -or -name .?\* \) -prune \
+       -o -type f -not \( -name \*.log -or -name '*.war' -or -name '*.min.js' -or -name '*.min.css' \) -print0 | \
+       xargs -0 grep -l "${VERSION_MARKER}\|${VERSION_MARKER_NL}" /dev/null || true`
 
-# look for lines (where we can put the literal $LABEL1 in an inline comment) matching
-# ... ${CURRENT_VERSION} ... BROOKLYN_VERSION
-# Repeatedly replace, until no more occurrences of current_version.*label
+FILES_COUNT=`echo $FILES | wc | awk '{print $2}'`
 
-# search for every file containing LABEL1
-FILES1=`pcregrep $GREP_ARGS "${CURRENT_VERSION}.*${LABEL1}" .`
-for x in $FILES1 ; do
-  while grep --quiet -E "${CURRENT_VERSION}.*${LABEL1}" $x; do
-    sed -i .bak "s/${CURRENT_VERSION}\(.*\)${LABEL1}/${NEW_VERSION}\1${LABEL1}/" $x
-  done
-done
+if [ ${FILES_COUNT} -ne 0 ]; then
+    # search for files containing version markers
+    sed -i.bak -e "/${VERSION_MARKER}/s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
+    sed -i.bak -e "/${VERSION_MARKER_NL}/n;s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
+fi
 
-echo "One-line pattern with label after changed these files: $FILES1"
-
-# search for every file containing LABEL1
-FILES1=`pcregrep $GREP_ARGS "${LABEL1}.*${CURRENT_VERSION}" .`
-for x in $FILES1 ; do
-  while grep --quiet -E "${LABEL1}.*${CURRENT_VERSION}" $x; do
-    sed -i .bak "s/${LABEL1}\(.*\)${CURRENT_VERSION}/${LABEL1}\1${NEW_VERSION}/" $x
-  done
-done
-
-echo "One-line pattern with label before changed these files: $FILES1"
-
-# or two-lines for situations where comments must be entire-line (e.g. scripts)
-# put the comment on the line before the version
-# using sed as per http://blog.ergatides.com/2012/01/24/using-sed-to-search-and-replace-contents-of-next-line-in-a-file/
-# to match:
-# ... BROOKLYN_VERSION_BELOW ...
-# ... ${CURRENT_VERSION} ...
-
-FILES2=`pcregrep $GREP_ARGS -M "${LABEL2}.*\n.*${CURRENT_VERSION}" .`
-for x in $FILES2 ; do
-  sed -i .bak -e '/'"${LABEL2}"'/{n;s/'"${CURRENT_VERSION}"'/'"${NEW_VERSION}"'/g;}' $x
-done
-
-echo "Two-line pattern changed these files: $FILES2"
-
-echo "Changed ${CURRENT_VERSION} to ${NEW_VERSION} for "`echo $FILES1 $FILES2 | wc | awk '{print $2}'`" files"
+echo "Changed ${CURRENT_VERSION} to ${NEW_VERSION} for "${FILES_COUNT}" files"
 echo "(Do a \`find . -name \"*.bak\" -delete\`  to delete the backup files.)"

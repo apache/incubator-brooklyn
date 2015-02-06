@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeoutException;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -117,4 +118,11 @@ public interface Task<T> extends ListenableFuture<T>, TaskAdaptable<T> {
      * (including a {@link TimeoutException} if the duration expires) */
     public T getUnchecked(Duration duration);
 
+    /** As {@link Future#cancel(boolean)}. Note that {@link #isDone()} and {@link #blockUntilEnded(Duration)} return immediately
+     * once a task is cancelled, consistent with the underlying {@link FutureTask} behaviour.  
+     * TODO Fine-grained control over underlying jobs, e.g. to ensure anything represented by this task is actually completed,
+     * is not (yet) publicly exposed. See the convenience method blockUntilInternalTasksEnded in the Tasks set of helpers
+     * for more discussion. */
+    public boolean cancel(boolean mayInterruptIfRunning);
+    
 }

@@ -23,10 +23,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.testng.annotations.Test;
-import org.testng.collections.Maps;
 
 import brooklyn.util.collections.MutableMap;
 
+import com.google.common.collect.Maps;
 import com.thoughtworks.xstream.XStream;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })

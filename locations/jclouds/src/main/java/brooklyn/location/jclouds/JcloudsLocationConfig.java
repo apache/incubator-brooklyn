@@ -19,6 +19,8 @@
 package brooklyn.location.jclouds;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 import org.jclouds.Constants;
@@ -37,6 +39,7 @@ import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.util.internal.ssh.SshTool;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;
 
@@ -70,13 +73,25 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_FILE = ConfigKeys.newStringConfigKey("loginUser.privateKeyFile",
             "Custom private key for the user who logs in initially", null); 
     public static final ConfigKey<String> EXTRA_PUBLIC_KEY_DATA_TO_AUTH = ConfigKeys.newStringConfigKey("extraSshPublicKeyData",
-            "Additional public key data to add to authorized_keys", null);
+        "Additional public key data to add to authorized_keys", null);
+    @SuppressWarnings("serial")
+    public static final ConfigKey<List<String>> EXTRA_PUBLIC_KEY_URLS_TO_AUTH = ConfigKeys.newConfigKey(new TypeToken<List<String>>() {}, 
+        "extraSshPublicKeyUrls", "Additional public keys (files or URLs, in SSH2/RFC4716/id_rsa.pub format) to add to authorized_keys", null);
     
     public static final ConfigKey<Boolean> DONT_CREATE_USER = ConfigKeys.newBooleanConfigKey("dontCreateUser", 
             "Whether to skip creation of 'user' when provisioning machines (default false)", false);
     public static final ConfigKey<Boolean> GRANT_USER_SUDO = ConfigKeys.newBooleanConfigKey("grantUserSudo",
             "Whether to grant the created user sudo privileges. Irrelevant if dontCreateUser is true. Default: true.", true);
-
+    public static final ConfigKey<Boolean> DISABLE_ROOT_AND_PASSWORD_SSH = ConfigKeys.newBooleanConfigKey("disableRootAndPasswordSsh",
+        "Whether to disable direct SSH access for root and disable password-based SSH, "
+        + "if creating a user with a key-based login; "
+        + "defaults to true (set false to leave root users alone)", true);
+    public static final ConfigKey<String> CUSTOM_TEMPLATE_OPTIONS_SCRIPT_CONTENTS = ConfigKeys.newStringConfigKey("customTemplateOptionsScriptContents",
+        "A custom script to pass to jclouds as part of template options, run after AdminAccess, "
+        + "for use primarily where a command which must run as root on first login before switching to the admin user, "
+        + "e.g. to customize sudoers; may start in an odd location (e.g. /tmp/bootstrap); "
+        + "NB: most commands should be run by entities, or if VM-specific but sudo is okay, then via setup.script, not via this");
+    
     public static final ConfigKey<LoginCredentials> CUSTOM_CREDENTIALS = new BasicConfigKey<LoginCredentials>(LoginCredentials.class,
             "customCredentials", "Custom jclouds LoginCredentials object to be used to connect to the VM", null);
     
@@ -147,8 +162,10 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<Object> USER_METADATA = USER_METADATA_MAP;
 
     public static final ConfigKey<Boolean> MAP_DEV_RANDOM_TO_DEV_URANDOM = ConfigKeys.newBooleanConfigKey(
-            "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", false);
+            "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", true);
 
+    /** @deprecated since 0.7.0; use {@link #JCLOUDS_LOCATION_CUSTOMIZERS} instead */
+    @Deprecated
     public static final ConfigKey<JcloudsLocationCustomizer> JCLOUDS_LOCATION_CUSTOMIZER = ConfigKeys.newConfigKey(JcloudsLocationCustomizer.class,
             "customizer", "Optional location customizer");
 
@@ -157,9 +174,13 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             new TypeToken<Collection<JcloudsLocationCustomizer>>() {},
             "customizers", "Optional location customizers");
 
+    /** @deprecated since 0.7.0; use {@link #JCLOUDS_LOCATION_CUSTOMIZERS} instead */
+    @Deprecated
     public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZER_TYPE = ConfigKeys.newStringConfigKey(
             "customizerType", "Optional location customizer type (to be class-loaded and constructed with no-arg constructor)");
 
+    /** @deprecated since 0.7.0; use {@link #JCLOUDS_LOCATION_CUSTOMIZERS} instead */
+    @Deprecated
     public static final ConfigKey<String> JCLOUDS_LOCATION_CUSTOMIZERS_SUPPLIER_TYPE = ConfigKeys.newStringConfigKey(
             "customizersSupplierType", "Optional type of a Supplier<Collection<JcloudsLocationCustomizer>> " +
             "(to be class-loaded and constructed with ConfigBag or no-arg constructor)");
@@ -185,9 +206,21 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "generate.hostname", "Use the nodename generated by jclouds", false);
 
     public static final ConfigKey<Boolean> USE_PORT_FORWARDING = ConfigKeys.newBooleanConfigKey(
-            "portforwarding.enabled", "Whether to setup port-forwarding to subsequently access the VM (over the ssh port)", false);
+            "portforwarding.enabled", 
+            "Whether to setup port-forwarding to subsequently access the VM (over the ssh port)",
+            false);
+    
+    @Beta
+    public static final ConfigKey<Boolean> USE_JCLOUDS_SSH_INIT = ConfigKeys.newBooleanConfigKey(
+            "useJcloudsSshInit", 
+            "Whether to use jclouds for initial ssh-based setup (i.e. as part of the 'TemplateOptions'); "
+                    + "if false will use core brooklyn ssh utilities. "
+                    + "This config is beta; its default could be changed and/or the option removed in an upcoming release.", 
+            true);
+    
     public static final ConfigKey<JcloudsPortForwarderExtension> PORT_FORWARDER = ConfigKeys.newConfigKey(
             JcloudsPortForwarderExtension.class, "portforwarding.forwarder", "The port-forwarder to use");
+    
     public static final ConfigKey<PortForwardManager> PORT_FORWARDING_MANAGER = BrooklynAccessUtils
             .PORT_FORWARDING_MANAGER;
 
@@ -210,6 +243,15 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
         "OS family, e.g. CentOS, Debian, RHEL, Ubuntu");
     public static final ConfigKey<String> OS_VERSION_REGEX = ConfigKeys.newStringConfigKey("osVersionRegex", 
         "Regular expression for the OS version to load");
+
+    public static final ConfigKey<ComputeServiceRegistry> COMPUTE_SERVICE_REGISTRY = ConfigKeys.newConfigKey(
+            ComputeServiceRegistry.class,
+            "jclouds.computeServiceRegistry",
+            "Registry/Factory for creating jclouds ComputeService; default is almost always fine, except where tests want to customize behaviour",
+            ComputeServiceRegistryImpl.INSTANCE);
+    
+    public static final ConfigKey<Map<String,String>> TEMPLATE_OPTIONS = ConfigKeys.newConfigKey(
+            new TypeToken<Map<String, String>>() {}, "templateOptions", "Additional jclouds template options");
 
     // TODO
     

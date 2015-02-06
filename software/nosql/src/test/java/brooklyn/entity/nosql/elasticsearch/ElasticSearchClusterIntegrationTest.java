@@ -19,51 +19,50 @@
 package brooklyn.entity.nosql.elasticsearch;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.http.client.methods.HttpGet;
 import org.bouncycastle.util.Strings;
-import org.testng.annotations.AfterMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class ElasticSearchClusterIntegrationTest {
+public class ElasticSearchClusterIntegrationTest extends BrooklynAppLiveTestSupport {
 
-    protected TestApplication app;
+    // FIXME Exception in thread "main" java.lang.UnsupportedClassVersionError: org/elasticsearch/bootstrap/Elasticsearch : Unsupported major.minor version 51.0
+
+    private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchClusterIntegrationTest.class);
+
     protected Location testLocation;
     protected ElasticSearchCluster elasticSearchCluster;
 
     @BeforeMethod(alwaysRun = true)
-    public void setup() throws Exception {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class);
-        testLocation = new LocalhostMachineProvisioningLocation();
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        testLocation = app.newLocalhostProvisioningLocation();
     }
 
-    @AfterMethod(alwaysRun = true)
-    public void shutdown() {
-        Entities.destroyAll(app.getManagementContext());
-    }
-    
     @Test(groups = {"Integration"})
     public void testStartupAndShutdown() {
         elasticSearchCluster = app.createAndManageChild(EntitySpec.create(ElasticSearchCluster.class)
@@ -84,8 +83,8 @@ public class ElasticSearchClusterIntegrationTest {
         app.start(ImmutableList.of(testLocation));
         
         EntityTestUtils.assertAttributeEqualsEventually(elasticSearchCluster, Startable.SERVICE_UP, true);
-        
         assertEquals(elasticSearchCluster.getMembers().size(), 3);
+        assertEquals(clusterDocumentCount(), 0);
         
         ElasticSearchNode anyNode = (ElasticSearchNode)elasticSearchCluster.getMembers().iterator().next();
         
@@ -101,9 +100,7 @@ public class ElasticSearchClusterIntegrationTest {
                 ImmutableMap.<String, String>of(), 
                 Strings.toByteArray(document)); 
         assertEquals(putResponse.getResponseCode(), 201);
-        EntityTestUtils.assertAttributeEqualsEventually(anyNode, ElasticSearchNode.DOCUMENT_COUNT, 1);
         
-        int totalDocumentCount = 0;
         for (Entity entity : elasticSearchCluster.getMembers()) {
             ElasticSearchNode node = (ElasticSearchNode)entity;
             String getBaseUri = "http://" + node.getAttribute(Attributes.HOSTNAME) + ":" + node.getAttribute(Attributes.HTTP_PORT);
@@ -112,9 +109,20 @@ public class ElasticSearchClusterIntegrationTest {
                     new HttpGet(getBaseUri + "/mydocuments/docs/1/_source"));
             assertEquals(getResponse.getResponseCode(), 200);
             assertEquals(HttpValueFunctions.jsonContents("foo", String.class).apply(getResponse), "bar");
-            
-            totalDocumentCount += node.getAttribute(ElasticSearchNode.DOCUMENT_COUNT);
         }
-        assertEquals(totalDocumentCount, 1);
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                int count = clusterDocumentCount();
+                assertTrue(count >= 1, "count="+count);
+                LOG.debug("Document count is {}", count);
+            }});
+    }
+    
+    private int clusterDocumentCount() {
+        int result = 0;
+        for (Entity entity : elasticSearchCluster.getMembers()) {
+            result += entity.getAttribute(ElasticSearchNode.DOCUMENT_COUNT);
+        }
+        return result;
     }
 }

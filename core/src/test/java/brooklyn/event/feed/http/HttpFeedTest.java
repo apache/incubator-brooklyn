@@ -37,6 +37,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
@@ -47,6 +48,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.BetterMockWebServer;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.time.Duration;
@@ -116,6 +118,20 @@ public class HttpFeedTest extends BrooklynAppUnitTestSupport {
         
         assertSensorEventually(SENSOR_INT, (Integer)200, TIMEOUT_MS);
         assertSensorEventually(SENSOR_STRING, "{\"foo\":\"myfoo\"}", TIMEOUT_MS);
+    }
+    
+    @Test
+    public void testFeedDeDupe() throws Exception {
+        testPollsAndParsesHttpGetResponse();
+        entity.addFeed(feed);
+        log.info("Feed 0 is: "+feed);
+        
+        testPollsAndParsesHttpGetResponse();
+        log.info("Feed 1 is: "+feed);
+        entity.addFeed(feed);
+                
+        FeedSupport feeds = ((EntityInternal)entity).feeds();
+        Assert.assertEquals(feeds.getFeeds().size(), 1, "Wrong feed count: "+feeds.getFeeds());
     }
     
     @Test
@@ -381,9 +397,9 @@ public class HttpFeedTest extends BrooklynAppUnitTestSupport {
                             return null;
                         }
                     })
-                    .onFailureOrException(EntityFunctions.settingSensorsConstantFunction(entity, MutableMap.<AttributeSensor<?>,Object>of(
+                    .onFailureOrException(Functionals.function(EntityFunctions.settingSensorsConstant(entity, MutableMap.<AttributeSensor<?>,Object>of(
                         SENSOR_INT, -1, 
-                        SENSOR_STRING, PollConfig.REMOVE)))
+                        SENSOR_STRING, PollConfig.REMOVE))))
                 .period(100))
                 .build();
     }

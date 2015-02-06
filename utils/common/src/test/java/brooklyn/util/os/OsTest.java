@@ -19,6 +19,8 @@
 package brooklyn.util.os;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,8 +32,11 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.os.Os.DeletionResult;
+import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Files;
 
 @Test
 public class OsTest {
@@ -133,4 +138,30 @@ public class OsTest {
         }
     }
 
+    @Test
+    public void testDeleteRecursivelyNonExistantDir() throws Exception {
+        DeletionResult result = Os.deleteRecursively(Os.mergePaths(Os.tmp(), Identifiers.makeRandomId(8)));
+        assertTrue(result.wasSuccessful());
+    }
+    
+    @Test
+    public void testDeleteRecursivelyEmptyDir() throws Exception {
+        File dir = Os.newTempDir(OsTest.class);
+        DeletionResult result = Os.deleteRecursively(dir);
+        assertTrue(result.wasSuccessful());
+        assertFalse(dir.exists());
+    }
+    
+    @Test
+    public void testDeleteRecursivelySubDirs() throws Exception {
+        File dir = Os.newTempDir(OsTest.class);
+        File subdir = new File(dir, "mysubdir");
+        File subfile = new File(subdir, "mysubfile");
+        subdir.mkdirs();
+        Files.write("abc".getBytes(), subfile);
+        
+        DeletionResult result = Os.deleteRecursively(dir);
+        assertTrue(result.wasSuccessful());
+        assertFalse(dir.exists());
+    }
 }

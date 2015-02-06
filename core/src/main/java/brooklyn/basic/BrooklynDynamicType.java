@@ -162,15 +162,14 @@ public abstract class BrooklynDynamicType<T extends BrooklynObject, AbstractT ex
                 if (optionalInstance==null) continue;
             }
             try {
-                ConfigKey<?> k = isConfigKey ? (ConfigKey<?>) f.get(optionalInstance) : 
-                    ((HasConfigKey<?>)f.get(optionalInstance)).getConfigKey();
-                
-                if (k==null) {
+                Object v = f.get(optionalInstance);
+
+                if (v == null) {
                     LOG.warn("no value defined for config key field (skipping): "+f);
                 } else {
+                    ConfigKey<?> k = isConfigKey ? (ConfigKey<?>) v : ((HasConfigKey<?>) v).getConfigKey();
                     configKeysAll.put(k.getName(), new FieldAndValue<ConfigKey<?>>(f, k));
                 }
-                
             } catch (IllegalAccessException e) {
                 LOG.warn("cannot access config key (skipping): "+f);
             }

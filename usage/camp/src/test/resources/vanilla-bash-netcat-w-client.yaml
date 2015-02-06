@@ -32,12 +32,14 @@ services:
     echo hello | nc -l 4321 >> server-input &
     echo $! > $PID_FILE
 
-  brooklyn.policies:
-  # restarter and 
-  - policyType: brooklyn.policy.ha.ServiceFailureDetector
+  # a failure detector and a service restarter work together
+  brooklyn.enrichers:
+  - type: brooklyn.policy.ha.ServiceFailureDetector
     brooklyn.config:
       # wait 15s after service fails before propagating failure
       serviceFailedStabilizationDelay: 15s
+
+  brooklyn.policies:
   - policyType: brooklyn.policy.ha.ServiceRestarter
     brooklyn.config:
       # repeated failures in a time window can cause the restarter to abort,
@@ -51,11 +53,13 @@ services:
     brooklyn.config:
       name: output.last
       command: tail -1 server-input
+      period: 100ms
       
   - type: brooklyn.entity.software.ssh.SshCommandSensor
     brooklyn.config:
       name: output.all
       command: cat server-input
+      period: 100ms
 
 # a client to hit netcat
 - type: brooklyn.entity.basic.VanillaSoftwareProcess
