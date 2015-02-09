@@ -87,31 +87,23 @@ public class Networking {
 
         Stopwatch watch = Stopwatch.createStarted();
         try {
-            try {
-                Socket s = new Socket();
-                s.setSoTimeout(250);
-                s.connect(new InetSocketAddress(localAddressNotAny, port), 250);
-                try {
-                    s.close();
-                } catch (Exception e) {}
-                return false;
-            } catch (Exception e) {
-                //expected - shouldn't be able to connect
-            }
             //despite http://stackoverflow.com/questions/434718/sockets-discover-port-availability-using-java
             //(recommending the following) it isn't 100% reliable (e.g. nginx will happily coexist with ss+ds)
             //so we also do the above check
             ServerSocket ss = null;
             DatagramSocket ds = null;
             try {
+                // Check TCP port
                 ss = new ServerSocket();
                 ss.setSoTimeout(250);
-                ss.bind(new InetSocketAddress(localAddress, port));
                 ss.setReuseAddress(true);
-                
-                ds = new DatagramSocket(port);
+                ss.bind(new InetSocketAddress(localAddress, port));
+
+                // Check UDP port
+                ds = new DatagramSocket(null);
+                ds.setSoTimeout(250);
                 ds.setReuseAddress(true);
-                
+                ds.bind(new InetSocketAddress(localAddress, port));
             } catch (IOException e) {
                 return false;
             } finally {
@@ -127,8 +119,7 @@ public class Networking {
                     }
                 }
             }
-            
-            
+
             if (localAddress==null || ANY_NIC.equals(localAddress)) {
                 // sometimes 0.0.0.0 can be bound to even if 127.0.0.1 has the port as in use;
                 // check all interfaces if 0.0.0.0 was requested
@@ -160,8 +151,8 @@ public class Networking {
     public static int nextAvailablePort(int port) {
         checkArgument(port >= MIN_PORT_NUMBER && port <= MAX_PORT_NUMBER, "requested port %s is outside the valid range of %s to %s", port, MIN_PORT_NUMBER, MAX_PORT_NUMBER);
         int originalPort = port;
-        while (!isPortAvailable(port) && port <= MAX_PORT_NUMBER) port++;
-        if (port > MAX_PORT_NUMBER)
+        while (!isPortAvailable(port) && port < MAX_PORT_NUMBER) port++;
+        if (port >= MAX_PORT_NUMBER)
             throw new RuntimeException("unable to find a free port at or above " + originalPort);
         return port;
     }
