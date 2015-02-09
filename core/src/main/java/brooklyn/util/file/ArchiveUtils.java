@@ -273,7 +273,7 @@ public class ArchiveUtils {
 
             // extract, now using task if available
             MutableList<String> commands = MutableList.copyOf(installCommands(destFile))
-                    .appendAll(extractCommands(destFile, optionalTmpDir, destDir, false, keepArchiveAfterUnpacking));
+                    .appendAll(extractCommands(destFile, tmpDir, destDir, false, keepArchiveAfterUnpacking));
             if (DynamicTasks.getTaskQueuingContext()!=null) {
                 result = DynamicTasks.queue(SshTasks.newSshExecTaskFactory(machine, commands.toArray(new String[0])).summary("extracting archive").requiringExitCodeZero()).get();
             } else {
