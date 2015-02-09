@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.osgi.Osgis;
 import brooklyn.util.osgi.Osgis.ManifestHelper;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 
 /**
@@ -126,8 +127,9 @@ public class BrooklynVersion {
   }
     
   private void readPropertiesFromMavenResource(ClassLoader resourceLoader) {
+    InputStream versionStream = null;
     try {
-      InputStream versionStream = resourceLoader.getResourceAsStream(MVN_VERSION_RESOURCE_FILE);
+      versionStream = resourceLoader.getResourceAsStream(MVN_VERSION_RESOURCE_FILE);
       if (versionStream==null) {
           if (isDevelopmentEnvironment()) {
               // allowed for dev env
@@ -140,6 +142,8 @@ public class BrooklynVersion {
       versionProperties.load(checkNotNull(versionStream));
     } catch (IOException e) {
       log.warn("Error reading maven resource file "+MVN_VERSION_RESOURCE_FILE+": "+e, e);
+    } finally {
+        Streams.closeQuietly(versionStream);
     }
   }
 
@@ -154,8 +158,10 @@ public class BrooklynVersion {
       }
       while (paths.hasMoreElements()) {
           URL u = paths.nextElement();
+          InputStream us = null;
           try {
-              ManifestHelper mh = Osgis.ManifestHelper.forManifest(u.openStream());
+              us = u.openStream();
+              ManifestHelper mh = Osgis.ManifestHelper.forManifest(us);
               if (BROOKLYN_CORE_SYMBOLIC_NAME.equals(mh.getSymbolicName())) {
                   Attributes attrs = mh.getManifest().getMainAttributes();
                   for (Object key: attrs.keySet()) {
@@ -167,6 +173,8 @@ public class BrooklynVersion {
           } catch (Exception e) {
               Exceptions.propagateIfFatal(e);
               log.warn("Error reading OSGi manifest from "+u+" when determining version properties: "+e, e);
+          } finally {
+              Streams.closeQuietly(us);
           }
       }
       if (isDevelopmentEnvironment()) {
@@ -183,6 +191,10 @@ public class BrooklynVersion {
    * <p>
    * In a packaged or library build of Brooklyn (normal usage) this should return false,
    * and all OSGi components should be available.
+   * <p>
+   * There is no longer any way to force this,
+   * such as the old BrooklynDevelopmentMode class; 
+   * but that could easily be added if required (eg as a system property).
    */
   public static boolean isDevelopmentEnvironment() {
       Boolean isDevEnv = IS_DEV_ENV.get();

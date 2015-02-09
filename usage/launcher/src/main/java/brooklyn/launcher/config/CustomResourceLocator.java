@@ -26,6 +26,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigMap;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
@@ -104,8 +105,7 @@ public class CustomResourceLocator {
         
         @Override
         public boolean isApplicable(String url, ConfigMap config) {
-            return config.getConfig(BrooklynDevelopmentModes.BROOKLYN_DEV_MODE).isEnabled()
-                    && urlToSearchFor.equals(url);
+            return BrooklynVersion.isDevelopmentEnvironment() && urlToSearchFor.equals(url);
         }
 
         @Override
