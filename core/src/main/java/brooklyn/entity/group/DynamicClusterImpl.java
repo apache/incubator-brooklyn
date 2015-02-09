@@ -130,12 +130,14 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     private static final Function<Collection<Entity>, Entity> defaultRemovalStrategy = new Function<Collection<Entity>, Entity>() {
         @Override public Entity apply(Collection<Entity> contenders) {
-            // choose newest entity that is stoppable
+            // choose newest entity that is stoppable, or if none are stoppable take the newest non-stoppable
             long newestTime = 0;
             Entity newest = null;
 
             for (Entity contender : contenders) {
-                if (contender instanceof Startable && contender.getCreationTime() > newestTime) {
+                boolean newer = contender.getCreationTime() > newestTime;
+                if ((contender instanceof Startable && newer) || 
+                    (!(newest instanceof Startable) && ((contender instanceof Startable) || newer))) {
                     newest = contender;
                     newestTime = contender.getCreationTime();
                 }
@@ -550,7 +552,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     /**
      * {@inheritDoc}
      *
-     * <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}.
+     * <strong>Note</strong> for sub-classes; this method can be called while synchronized on {@link #mutex}.
      */
     @Override
     public Collection<Entity> resizeByDelta(int delta) {
@@ -588,6 +590,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
+    @SuppressWarnings("unchecked")
     protected Collection<Entity> shrink(int delta) {
         Preconditions.checkArgument(delta < 0, "Must call shrink with negative delta.");
         int size = getCurrentSize();
@@ -601,8 +604,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         Collection<Entity> removedEntities = pickAndRemoveMembers(delta * -1);
 
         // FIXME symmetry in order of added as child, managed, started, and added to group
-        // FIXME assume stoppable; use logic of grow?
-        Task<?> invoke = Entities.invokeEffector(this, removedEntities, Startable.STOP, Collections.<String,Object>emptyMap());
+        Task<?> invoke = Entities.invokeEffector(this, (Iterable<Entity>)(Iterable<?>)Iterables.filter(removedEntities, Startable.class), Startable.STOP, Collections.<String,Object>emptyMap());
         try {
             invoke.get();
             return removedEntities;
@@ -639,9 +641,11 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             Entity entity = addNode(loc, flags);
             addedEntities.add(entity);
             addedEntityLocations.put(entity, loc);
-            Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(loc));
-            Task<Void> task = Effectors.invocation(entity, Startable.START, args).asTask();
-            tasks.put(entity, task);
+            if (entity instanceof Startable) {
+                Map<String, ?> args = ImmutableMap.of("locations", ImmutableList.of(loc));
+                Task<Void> task = Effectors.invocation(entity, Startable.START, args).asTask();
+                tasks.put(entity, task);
+            }
         }
 
         Task<List<?>> parallel = Tasks.parallel("starting "+tasks.size()+" node"+Strings.s(tasks.size())+" (parallel)", tasks.values());
@@ -823,7 +827,6 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         if (LOG.isDebugEnabled()) LOG.debug("Removing a node from {}", this);
         Entity entity = getRemovalStrategy().apply(members);
         Preconditions.checkNotNull(entity, "No entity chosen for removal from "+getId());
-        Preconditions.checkState(entity instanceof Startable, "Chosen entity for removal not stoppable: cluster="+this+"; choice="+entity);
 
         removeMember(entity);
         return Maybe.of(entity);

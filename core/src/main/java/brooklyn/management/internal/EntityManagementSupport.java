@@ -268,7 +268,9 @@ public class EntityManagementSupport {
     public void onManagementStopping(ManagementTransitionInfo info) {
         synchronized (this) {
             if (managementContext != info.getManagementContext()) {
-                throw new IllegalStateException("Has different management context: "+managementContext+"; expected "+info.getManagementContext());
+                throw new IllegalStateException("onManagementStopping encountered different management context for "+entity+
+                    (!wasDeployed() ? " (wasn't deployed)" : !isDeployed() ? " (no longer deployed)" : "")+
+                    ": "+managementContext+"; expected "+info.getManagementContext());
             }
             Stopwatch startTime = Stopwatch.createStarted();
             while (!managementFailed.get() && nonDeploymentManagementContext!=null && 
@@ -296,7 +298,7 @@ public class EntityManagementSupport {
         // TODO framework stopping events - no more sensors, executions, etc
         // (elaborate or remove ^^^ ? -AH, Sept 2014)
         
-        if (!isReadOnly()) {
+        if (!isReadOnly() && info.getMode().isDestroying()) {
             // if we support remote parent of local child, the following call will need to be properly remoted
             if (entity.getParent()!=null) entity.getParent().removeChild(entity.getProxyIfAvailable());
         }

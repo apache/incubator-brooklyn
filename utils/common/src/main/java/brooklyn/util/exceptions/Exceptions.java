@@ -57,8 +57,10 @@ public class Exceptions {
     private static List<Class<? extends Throwable>> BORING_PREFIX_THROWABLE_EXACT_TYPES = ImmutableList.<Class<? extends Throwable>>of(
         IllegalStateException.class, RuntimeException.class, CompoundRuntimeException.class);
 
-    /** Returns whether this is throwable either known to be boring or to have an unuseful prefix */
+    /** Returns whether this is throwable either known to be boring or to have an unuseful prefix;
+     * null is *not* boring. */
     public static boolean isPrefixBoring(Throwable t) {
+        if (t==null) return false;
         if (isBoring(t))
             return true;
         for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLE_EXACT_TYPES)
@@ -165,7 +167,7 @@ public class Exceptions {
         }
         // if no messages so far (ie we will be the toString) then remove boring prefixes from the message
         Throwable messagesCause = collapsed;
-        while (isPrefixBoring(messagesCause) && Strings.isBlank(message)) {
+        while (messagesCause!=null && isPrefixBoring(messagesCause) && Strings.isBlank(message)) {
             collapseCount++;
             if (Strings.isNonBlank(messagesCause.getMessage())) {
                 message = messagesCause.getMessage();
@@ -178,7 +180,7 @@ public class Exceptions {
         if (collapseCount==0 && !includeAllCausalMessages)
             return source;
         
-        if (collapseCount==0) {
+        if (collapseCount==0 && messagesCause!=null) {
             message = messagesCause.toString();
             messagesCause = messagesCause.getCause();
         }

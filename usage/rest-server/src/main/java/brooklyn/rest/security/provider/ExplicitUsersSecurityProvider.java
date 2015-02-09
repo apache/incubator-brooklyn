@@ -57,6 +57,8 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
         allowedUsers = new LinkedHashSet<String>();
         String users = properties.getConfig(BrooklynWebConfig.USERS);
         if (users == null) {
+            // TODO unfortunately this is only activated *when* someone tries to log in
+            // (NB it seems like this class is not even instantiated until first log in)
             LOG.warn("REST has no users configured; no one will be able to log in!");
         } else if ("*".equals(users)) {
             LOG.info("REST allowing any user (so long as valid password is set)");

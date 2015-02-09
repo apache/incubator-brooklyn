@@ -54,10 +54,11 @@ import brooklyn.location.Location;
 import brooklyn.management.Task;
 import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
+import brooklyn.management.internal.BrooklynObjectManagementMode;
 import brooklyn.management.internal.LocalEntityManager;
 import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.management.internal.ManagementTransitionMode;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -499,7 +500,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             // could perhaps promote standby items on some transitions; but for now we stop the old read-only and re-load them
             // TODO ideally there'd be an incremental rebind as well as an incremental persist
             managementContext.getRebindManager().stopReadOnly();
-            clearManagedItems(ManagementTransitionMode.REBINDING_DESTROYED);
+            clearManagedItems(ManagementTransitionMode.transitioning(BrooklynObjectManagementMode.LOADED_READ_ONLY, BrooklynObjectManagementMode.UNMANAGED_PERSISTED));
         }
     }
 
@@ -841,7 +842,10 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
         boolean wasMaster = (getInternalNodeState() == ManagementNodeState.MASTER);
         if (wasMaster) backupOnDemotionIfNeeded();
-        ManagementTransitionMode mode = (wasMaster ? ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY : ManagementTransitionMode.REBINDING_DESTROYED);
+        // TODO target may be RO ?
+        ManagementTransitionMode mode = ManagementTransitionMode.transitioning(
+            wasMaster ? BrooklynObjectManagementMode.MANAGED_PRIMARY : BrooklynObjectManagementMode.LOADED_READ_ONLY,
+            BrooklynObjectManagementMode.UNMANAGED_PERSISTED);
 
         nodeStateTransitionComplete = false;
         

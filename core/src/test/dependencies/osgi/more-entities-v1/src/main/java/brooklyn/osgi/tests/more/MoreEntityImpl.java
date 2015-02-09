@@ -38,7 +38,7 @@ public class MoreEntityImpl extends AbstractEntity implements MoreEntity {
     
     @Override
     public String sayHI(String name) {
-        return "Hi "+name.toUpperCase();
+        return "Hi "+name.toUpperCase()+" from V1";
     }
     
 }

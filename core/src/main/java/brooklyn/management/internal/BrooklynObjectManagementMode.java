@@ -18,11 +18,14 @@
  */
 package brooklyn.management.internal;
 
-import brooklyn.location.Location;
-import brooklyn.management.LocationManager;
-
-public interface LocationManagerInternal extends LocationManager, BrooklynObjectManagerInternal<Location> {
-
-    public Iterable<String> getLocationIds();
-
+/** Indicates how an entity/location/adjunct is treated at a given {@link ManagementContext} */
+public enum BrooklynObjectManagementMode {
+    /** item does not exist, not in memory, nor persisted (e.g. creating for first time, or finally destroying) */
+    NONEXISTENT, 
+    /** item exists or existed elsewhere, i.e. there is persisted state, but is not loaded here */
+    UNMANAGED_PERSISTED, 
+    /** item is loaded but read-only (ie not actively managed here) */
+    LOADED_READ_ONLY, 
+    /** item is actively managed here */
+    MANAGED_PRIMARY 
 }

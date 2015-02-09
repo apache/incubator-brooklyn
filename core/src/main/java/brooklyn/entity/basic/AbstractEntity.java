@@ -770,10 +770,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     public void removeLocations(Collection<? extends Location> removedLocations) {
         synchronized (locations) {
             List<Location> oldLocations = locations.get();
-            Set<Location> truelyRemovedLocations = Sets.intersection(ImmutableSet.copyOf(removedLocations), ImmutableSet.copyOf(oldLocations));
+            Set<Location> trulyRemovedLocations = Sets.intersection(ImmutableSet.copyOf(removedLocations), ImmutableSet.copyOf(oldLocations));
             locations.set(MutableList.<Location>builder().addAll(oldLocations).removeAll(removedLocations).buildImmutable());
             
-            for (Location loc : truelyRemovedLocations) {
+            for (Location loc : trulyRemovedLocations) {
                 emit(AbstractEntity.LOCATION_REMOVED, loc);
             }
         }

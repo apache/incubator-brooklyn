@@ -443,7 +443,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         Object result;
         result = getEntityManager().getEntity(id);
         if (result!=null && type.isInstance(result)) return (T)result;
-        // TODO policies, etc
+        
+        result = getLocationManager().getLocation(id);
+        if (result!=null && type.isInstance(result)) return (T)result;
+
+        // TODO policies, enrichers, feeds
         return null;
     }
 

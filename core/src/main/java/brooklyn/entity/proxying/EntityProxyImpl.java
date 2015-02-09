@@ -44,7 +44,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagerInternal;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.management.internal.ManagementTransitionMode;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskTags;

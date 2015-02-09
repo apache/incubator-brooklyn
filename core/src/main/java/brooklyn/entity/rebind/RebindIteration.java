@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,15 +63,16 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.management.internal.BrooklynObjectManagementMode;
+import brooklyn.management.internal.BrooklynObjectManagerInternal;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
+import brooklyn.management.internal.ManagementTransitionMode;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
@@ -99,7 +99,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -144,59 +143,57 @@ Multi-phase deserialization:
       context entity of the Tasks.current() task.
    4. Propagate the context catalog item ID to children, adjuncts if they don't have one already.
 */
-public class RebindIteration {
+public abstract class RebindIteration {
 
     private static final Logger LOG = LoggerFactory.getLogger(RebindIteration.class);
     
-    private final RebindManagerImpl rebindManager;
+    protected final RebindManagerImpl rebindManager;
     
-    private final ClassLoader classLoader;
-    private final RebindExceptionHandler exceptionHandler;
-    private final ManagementNodeState mode;
-    private final ManagementContextInternal managementContext;
+    protected final ClassLoader classLoader;
+    protected final RebindExceptionHandler exceptionHandler;
+    protected final ManagementNodeState mode;
+    protected final ManagementContextInternal managementContext;
 
-    private final Semaphore rebindActive; 
-    private final AtomicInteger readOnlyRebindCount;
-    private final PersistenceActivityMetrics rebindMetrics;
-    private final BrooklynMementoPersister persistenceStoreAccess;
+    protected final Semaphore rebindActive; 
+    protected final AtomicInteger readOnlyRebindCount;
+    protected final PersistenceActivityMetrics rebindMetrics;
+    protected final BrooklynMementoPersister persistenceStoreAccess;
     
-    private final AtomicBoolean iterationStarted = new AtomicBoolean();
-    private final RebindContextImpl rebindContext;
-    private final Reflections reflections;
-    private final LookupContext lookupContext;
-    private final BrooklynObjectInstantiator instantiator;
+    protected final AtomicBoolean iterationStarted = new AtomicBoolean();
+    protected final RebindContextImpl rebindContext;
+    protected final Reflections reflections;
+    protected final BrooklynObjectInstantiator instantiator;
     
     // populated in the course of a run
     
     // set on run start
     
-    private Stopwatch timer;
+    protected Stopwatch timer;
     /** phase is used to ensure our steps are run as we've expected, and documented (in javadoc at top).
      * it's worth the extra effort due to the complication and the subtleties. */
-    private int phase = 0;
+    protected int phase = 0;
 
     // set in first phase
     
-    private BrooklynMementoRawData mementoRawData;
-    private BrooklynMementoManifest mementoManifest;
-    private Boolean overwritingMaster;
-    private Boolean isEmpty;
+    protected BrooklynMementoRawData mementoRawData;
+    protected BrooklynMementoManifest mementoManifest;
+    protected Boolean overwritingMaster;
+    protected Boolean isEmpty;
 
     // set later on
     
-    private BrooklynMemento memento;
+    protected BrooklynMemento memento;
 
     // set near the end
     
-    private List<Application> applications;
+    protected List<Application> applications;
 
-    
     public RebindIteration(RebindManagerImpl rebindManager, 
             ManagementNodeState mode,
             ClassLoader classLoader, RebindExceptionHandler exceptionHandler,
             Semaphore rebindActive, AtomicInteger readOnlyRebindCount, PersistenceActivityMetrics rebindMetrics, BrooklynMementoPersister persistenceStoreAccess
             ) {
-        // NB: there is no particularly deep meaning in what is passed in vs what is lookup up from the RebindManager which calls us
+        // NB: there is no particularly deep meaning in what is passed in vs what is looked up from the RebindManager which calls us
         // (this is simply a refactoring of previous code to a new class)
         
         this.rebindManager = rebindManager;
@@ -211,10 +208,8 @@ public class RebindIteration {
         this.persistenceStoreAccess = persistenceStoreAccess;
         
         managementContext = rebindManager.getManagementContext();
-        rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
+        rebindContext = new RebindContextImpl(managementContext, exceptionHandler, classLoader);
         reflections = new Reflections(classLoader);
-        lookupContext = new RebindContextLookupContext(managementContext, rebindContext, exceptionHandler);
-        rebindContext.setLookupContext(lookupContext);
         instantiator = new BrooklynObjectInstantiator(classLoader, rebindContext, reflections);
         
         if (mode==ManagementNodeState.HOT_STANDBY || mode==ManagementNodeState.HOT_BACKUP) {
@@ -232,26 +227,21 @@ public class RebindIteration {
         return rebindContext;
     }
     
-    public void runFullRebind() {
-        runWithLock(new Callable<Void>() {
-           public Void call() throws Exception {
-               
-               loadManifestFiles();
-               rebuildCatalog();
-               instantiateLocationsAndEntities();
-               instantiateMementos();
-               instantiateAdjuncts(instantiator); 
-               reconstructEverything();
-               associateAdjunctsWithEntities();
-               manageTheObjects();
-               finishingUp();
-               
-               return null;
-           }
-        });
+    protected void doRun() throws Exception {
+        loadManifestFiles();
+        rebuildCatalog();
+        instantiateLocationsAndEntities();
+        instantiateMementos();
+        instantiateAdjuncts(instantiator); 
+        reconstructEverything();
+        associateAdjunctsWithEntities();
+        manageTheObjects();
+        finishingUp();
     }
     
-    protected void runWithLock(Callable<?> target) {
+    protected abstract void loadManifestFiles() throws Exception;
+    
+    public void run() {
         if (iterationStarted.getAndSet(true)) {
             throw new IllegalStateException("Iteration "+this+" has already run; create a new instance for another rebind pass.");
         }
@@ -266,7 +256,7 @@ public class RebindIteration {
             timer = Stopwatch.createStarted();
             exceptionHandler.onStart(rebindContext);
 
-            target.call();
+            doRun();
             
             exceptionHandler.onDone();
             
@@ -295,52 +285,21 @@ public class RebindIteration {
             throw new IllegalStateException("Phase mismatch: should be phase "+targetPhase+" but is currently "+phase);
     }
     
-    protected void loadManifestFiles() throws Exception {
-        checkEnteringPhase(1);
-
-        //The manifest contains full catalog items mementos. Reading them at this stage means that
-        //we don't support references to entities/locations withing tags.
-
-        LOG.debug("Rebinding ("+mode+
-            (readOnlyRebindCount.get()>Integer.MIN_VALUE ? ", iteration "+readOnlyRebindCount : "")+
-            ") from "+rebindManager.getPersister().getBackingStoreDescription()+"...");
-
-        if (mementoRawData!=null || mementoManifest!=null)
-            throw new IllegalStateException("Memento data is already set");
-        
-        mementoRawData = persistenceStoreAccess.loadMementoRawData(exceptionHandler);
-        mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
-
-        determineStateFromManifestFiles();
-    }
-
-    protected void determineStateFromManifestFiles() {
+    protected void preprocessManifestFiles() throws Exception {
         checkContinuingPhase(1);
 
+        Preconditions.checkState(mementoRawData!=null, "Memento raw data should be set when calling this");
+        Preconditions.checkState(mementoManifest==null, "Memento data should not yet be set when calling this");
+        
+        // TODO building the manifests should be part of this class (or parent)
+        // it does not have anything to do with the persistence store!
+        mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
+        
         overwritingMaster = false;
         isEmpty = mementoManifest.isEmpty();
-
-        if (mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.HOT_BACKUP) {
-            if (!isEmpty) { 
-                LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+" for "+Strings.toLowerCase(Strings.toString(mode))+" "+managementContext.getManagementNodeId()+"...");
-            } else {
-                LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
-            }
-
-            if (!managementContext.getEntityManager().getEntities().isEmpty() || !managementContext.getLocationManager().getLocations().isEmpty()) {
-                // this is discouraged if we were already master
-                Entity anEntity = Iterables.getFirst(managementContext.getEntityManager().getEntities(), null);
-                if (anEntity!=null && !((EntityInternal)anEntity).getManagementSupport().isReadOnly()) {
-                    overwritingMaster = true;
-                    LOG.warn("Rebind requested for "+mode+" node "+managementContext.getManagementNodeId()+" "
-                        + "when it already has active state; discouraged, "
-                        + "will likely overwrite: "+managementContext.getEntityManager().getEntities()+" and "+managementContext.getLocationManager().getLocations()+" and more");
-                }
-            }
-        }
     }
 
-    private void rebuildCatalog() {
+    protected void rebuildCatalog() {
         
         // build catalog early so we can load other things
         checkEnteringPhase(2);
@@ -415,7 +374,7 @@ public class RebindIteration {
         }
     }
 
-    private void instantiateLocationsAndEntities() {
+    protected void instantiateLocationsAndEntities() {
 
         checkEnteringPhase(3);
         
@@ -454,14 +413,14 @@ public class RebindIteration {
         }
     }
 
-    private void instantiateMementos() throws IOException {
+    protected void instantiateMementos() throws IOException {
         
         checkEnteringPhase(4);
         
-        memento = persistenceStoreAccess.loadMemento(mementoRawData, lookupContext, exceptionHandler);
+        memento = persistenceStoreAccess.loadMemento(mementoRawData, rebindContext.lookup(), exceptionHandler);
     }
 
-    private void instantiateAdjuncts(BrooklynObjectInstantiator instantiator) {
+    protected void instantiateAdjuncts(BrooklynObjectInstantiator instantiator) {
         
         checkEnteringPhase(5);
         
@@ -517,7 +476,7 @@ public class RebindIteration {
         }
     }
 
-    private void reconstructEverything() {
+    protected void reconstructEverything() {
         
         checkEnteringPhase(6);
         
@@ -622,7 +581,7 @@ public class RebindIteration {
         }
     }
 
-    private void associateAdjunctsWithEntities() {
+    protected void associateAdjunctsWithEntities() {
         
         checkEnteringPhase(7);
 
@@ -649,7 +608,7 @@ public class RebindIteration {
         }
     }
 
-    private void manageTheObjects() {
+    protected void manageTheObjects() {
 
         checkEnteringPhase(8);
         
@@ -657,8 +616,7 @@ public class RebindIteration {
         LocationManagerInternal locationManager = (LocationManagerInternal)managementContext.getLocationManager();
         Set<String> oldLocations = Sets.newLinkedHashSet(locationManager.getLocationIds());
         for (Location location: rebindContext.getLocations()) {
-            ManagementTransitionMode oldMode = locationManager.getLastManagementTransitionMode(location.getId());
-            locationManager.setManagementTransitionMode(location, RebindManagerImpl.computeMode(managementContext, location, oldMode, rebindContext.isReadOnly(location)) );
+            ManagementTransitionMode oldMode = updateTransitionMode(locationManager, location);
             if (oldMode!=null)
                 oldLocations.remove(location.getId());
         }
@@ -672,49 +630,75 @@ public class RebindIteration {
                 }
             }
         }
-        // destroy old
-        if (!oldLocations.isEmpty()) BrooklynLogging.log(LOG, overwritingMaster ? BrooklynLogging.LoggingLevel.WARN : BrooklynLogging.LoggingLevel.DEBUG, 
-            "Destroying unused locations on rebind: "+oldLocations);
-        for (String oldLocationId: oldLocations) {
-           locationManager.unmanage(locationManager.getLocation(oldLocationId), ManagementTransitionMode.REBINDING_DESTROYED); 
-        }
+        // TODO could also see about purging unreferenced locations
+        cleanupOldLocations(oldLocations);
         
         // Manage the top-level apps (causing everything under them to become managed)
         logRebindingDebug("RebindManager managing entities");
         EntityManagerInternal entityManager = (EntityManagerInternal)managementContext.getEntityManager();
         Set<String> oldEntities = Sets.newLinkedHashSet(entityManager.getEntityIds());
         for (Entity entity: rebindContext.getEntities()) {
-            ManagementTransitionMode oldMode = entityManager.getLastManagementTransitionMode(entity.getId());
-            entityManager.setManagementTransitionMode(entity, RebindManagerImpl.computeMode(managementContext,entity, oldMode, rebindContext.isReadOnly(entity)) );
+            ManagementTransitionMode oldMode = updateTransitionMode(entityManager, entity);
             if (oldMode!=null)
                 oldEntities.remove(entity.getId());
         }
         List<Application> apps = Lists.newArrayList();
-        for (String appId : memento.getApplicationIds()) {
-            Entity entity = rebindContext.getEntity(appId);
+        for (String rootId : getMementoRootEntities()) {
+            Entity entity = rebindContext.getEntity(rootId);
             if (entity == null) {
                 // usually because of creation-failure, when not using fail-fast
-                exceptionHandler.onNotFound(BrooklynObjectType.ENTITY, appId);
+                exceptionHandler.onNotFound(BrooklynObjectType.ENTITY, rootId);
             } else {
                 try {
                     entityManager.manageRebindedRoot(entity);
                 } catch (Exception e) {
                     exceptionHandler.onManageFailed(BrooklynObjectType.ENTITY, entity, e);
                 }
-                apps.add((Application)entity);
+                if (entity instanceof Application)
+                    apps.add((Application)entity);
             }
         }
-        // destroy old
-        if (!oldLocations.isEmpty()) BrooklynLogging.log(LOG, overwritingMaster ? BrooklynLogging.LoggingLevel.WARN : BrooklynLogging.LoggingLevel.DEBUG, 
-            "Destroying unused entities on rebind: "+oldEntities);
-        for (String oldEntityId: oldEntities) {
-           entityManager.unmanage(entityManager.getEntity(oldEntityId), ManagementTransitionMode.REBINDING_DESTROYED); 
-        }
+        cleanupOldEntities(oldEntities);
 
         this.applications = apps;
     }
 
-    private void finishingUp() {
+    private <T extends BrooklynObject> ManagementTransitionMode updateTransitionMode(BrooklynObjectManagerInternal<T> boManager, T bo) {
+        ManagementTransitionMode oldTransitionMode = boManager.getLastManagementTransitionMode(bo.getId());
+        
+        Boolean isNowReadOnly = rebindContext.isReadOnly(bo);
+        BrooklynObjectManagementMode modeBefore, modeAfter; 
+        if (oldTransitionMode==null) {
+            modeBefore = BrooklynObjectManagementMode.UNMANAGED_PERSISTED;
+        } else {
+            modeBefore = oldTransitionMode.getModeAfter();
+        }
+
+        if (isRebindingActiveAgain()) {
+            Preconditions.checkState(!Boolean.TRUE.equals(isNowReadOnly));
+            Preconditions.checkState(modeBefore==BrooklynObjectManagementMode.MANAGED_PRIMARY);
+            modeAfter = BrooklynObjectManagementMode.MANAGED_PRIMARY;
+        } else if (isNowReadOnly) {
+            modeAfter = BrooklynObjectManagementMode.LOADED_READ_ONLY;
+        } else {
+            modeAfter = BrooklynObjectManagementMode.MANAGED_PRIMARY;
+        }
+        
+        ManagementTransitionMode newTransitionMode = ManagementTransitionMode.transitioning(modeBefore, modeAfter);
+        boManager.setManagementTransitionMode(bo, newTransitionMode);
+        return oldTransitionMode;
+    }
+
+    protected abstract boolean isRebindingActiveAgain();
+
+    protected Collection<String> getMementoRootEntities() {
+        return memento.getApplicationIds();
+    }
+
+    protected abstract void cleanupOldLocations(Set<String> oldLocations);
+    protected abstract void cleanupOldEntities(Set<String> oldEntities);
+
+    protected void finishingUp() {
         
         checkContinuingPhase(8);
         
@@ -733,10 +717,10 @@ public class RebindIteration {
         }
 
         // Return the top-level applications
-        logRebindingDebug("RebindManager complete; apps: {}", memento.getApplicationIds());
+        logRebindingDebug("RebindManager complete; apps: {}", getMementoRootEntities());
     }
 
-    private void noteErrors(final RebindExceptionHandler exceptionHandler, Exception primaryException) {
+    protected void noteErrors(final RebindExceptionHandler exceptionHandler, Exception primaryException) {
         List<Exception> exceptions = exceptionHandler.getExceptions();
         List<String> warnings = exceptionHandler.getWarnings();
         if (primaryException!=null || !exceptions.isEmpty() || !warnings.isEmpty()) {
@@ -748,7 +732,7 @@ public class RebindIteration {
         }
     }
     
-    private String findCatalogItemId(ClassLoader cl, Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
+    protected String findCatalogItemId(ClassLoader cl, Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
         if (entityManifest.getCatalogItemId() != null) {
             return entityManifest.getCatalogItemId();
         }
@@ -813,19 +797,19 @@ public class RebindIteration {
         return null;
     }
 
-    private class BrooklynObjectInstantiator {
+    protected class BrooklynObjectInstantiator {
 
-        private final ClassLoader classLoader;
-        private final RebindContextImpl rebindContext;
-        private final Reflections reflections;
+        protected final ClassLoader classLoader;
+        protected final RebindContextImpl rebindContext;
+        protected final Reflections reflections;
         
-        private BrooklynObjectInstantiator(ClassLoader classLoader, RebindContextImpl rebindContext, Reflections reflections) {
+        protected BrooklynObjectInstantiator(ClassLoader classLoader, RebindContextImpl rebindContext, Reflections reflections) {
             this.classLoader = classLoader;
             this.rebindContext = rebindContext;
             this.reflections = reflections;
         }
 
-        private Entity newEntity(String entityId, String entityType, String catalogItemId) {
+        protected Entity newEntity(String entityId, String entityType, String catalogItemId) {
             Class<? extends Entity> entityClazz = load(Entity.class, entityType, catalogItemId, entityId);
 
             Entity entity;
@@ -868,17 +852,17 @@ public class RebindIteration {
             return entity;
         }
 
-        private void setCatalogItemId(BrooklynObject item, String catalogItemId) {
+        protected void setCatalogItemId(BrooklynObject item, String catalogItemId) {
             if (catalogItemId!=null) {
                 ((BrooklynObjectInternal)item).setCatalogItemId(catalogItemId);
             }
         }
 
-        private <T extends BrooklynObject> Class<? extends T> load(Class<T> bType, Memento memento) {
+        protected <T extends BrooklynObject> Class<? extends T> load(Class<T> bType, Memento memento) {
             return load(bType, memento.getType(), memento.getCatalogItemId(), memento.getId());
         }
         @SuppressWarnings("unchecked")
-        private <T extends BrooklynObject> Class<? extends T> load(Class<T> bType, String jType, String catalogItemId, String contextSuchAsId) {
+        protected <T extends BrooklynObject> Class<? extends T> load(Class<T> bType, String jType, String catalogItemId, String contextSuchAsId) {
             checkNotNull(jType, "Type of %s (%s) must not be null", contextSuchAsId, bType.getSimpleName());
             if (catalogItemId != null) {
                 BrooklynClassLoadingContext loader = getLoadingContextFromCatalogItemId(catalogItemId, classLoader, rebindContext);
@@ -909,7 +893,7 @@ public class RebindIteration {
             }
         }
 
-        private BrooklynClassLoadingContext getLoadingContextFromCatalogItemId(String catalogItemId, ClassLoader classLoader, RebindContext rebindContext) {
+        protected BrooklynClassLoadingContext getLoadingContextFromCatalogItemId(String catalogItemId, ClassLoader classLoader, RebindContext rebindContext) {
             Preconditions.checkNotNull(catalogItemId, "catalogItemId required (should not be null)");
             CatalogItem<?, ?> catalogItem = rebindContext.lookup().lookupCatalogItem(catalogItemId);
             if (catalogItem != null) {
@@ -922,7 +906,7 @@ public class RebindIteration {
         /**
          * Constructs a new location, passing to its constructor the location id and all of memento.getFlags().
          */
-        private Location newLocation(String locationId, String locationType) {
+        protected Location newLocation(String locationId, String locationType) {
             Class<? extends Location> locationClazz = reflections.loadClass(locationType, Location.class);
 
             if (InternalFactory.isNewStyle(locationClazz)) {
@@ -953,7 +937,7 @@ public class RebindIteration {
         /**
          * Constructs a new policy, passing to its constructor the policy id and all of memento.getConfig().
          */
-        private Policy newPolicy(PolicyMemento memento) {
+        protected Policy newPolicy(PolicyMemento memento) {
             String id = memento.getId();
             Class<? extends Policy> policyClazz = load(Policy.class, memento.getType(), memento.getCatalogItemId(), id);
             
@@ -986,7 +970,7 @@ public class RebindIteration {
         /**
          * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getConfig().
          */
-        private Enricher newEnricher(EnricherMemento memento) {
+        protected Enricher newEnricher(EnricherMemento memento) {
             Class<? extends Enricher> enricherClazz = load(Enricher.class, memento);
             String id = memento.getId();
 
@@ -1019,7 +1003,7 @@ public class RebindIteration {
         /**
          * Constructs a new enricher, passing to its constructor the enricher id and all of memento.getConfig().
          */
-        private Feed newFeed(FeedMemento memento) {
+        protected Feed newFeed(FeedMemento memento) {
             Class<? extends Feed> feedClazz = load(Feed.class, memento);
             String id = memento.getId();
 
@@ -1039,7 +1023,7 @@ public class RebindIteration {
         }
 
         @SuppressWarnings({ "rawtypes" })
-        private CatalogItem<?, ?> newCatalogItem(CatalogItemMemento memento) {
+        protected CatalogItem<?, ?> newCatalogItem(CatalogItemMemento memento) {
             String id = memento.getId();
             // catalog item subtypes are internal to brooklyn, not in osgi
             String itemType = checkNotNull(memento.getType(), "catalog item type of %s must not be null in memento", id);
@@ -1047,7 +1031,7 @@ public class RebindIteration {
             return invokeConstructor(reflections, clazz, new Object[]{});
         }
 
-        private <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
+        protected <T> T invokeConstructor(Reflections reflections, Class<T> clazz, Object[]... possibleArgs) {
             for (Object[] args : possibleArgs) {
                 try {
                     Optional<T> v = Reflections.invokeConstructorWithArgs(clazz, args, true);
@@ -1071,7 +1055,7 @@ public class RebindIteration {
     }
 
     /** logs at debug, except during subsequent read-only rebinds, in which it logs trace */
-    private void logRebindingDebug(String message, Object... args) {
+    protected void logRebindingDebug(String message, Object... args) {
         if (shouldLogRebinding()) {
             LOG.debug(message, args);
         } else {

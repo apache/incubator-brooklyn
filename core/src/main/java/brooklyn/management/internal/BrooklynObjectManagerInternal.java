@@ -18,11 +18,19 @@
  */
 package brooklyn.management.internal;
 
-import brooklyn.location.Location;
-import brooklyn.management.LocationManager;
+import brooklyn.basic.BrooklynObject;
 
-public interface LocationManagerInternal extends LocationManager, BrooklynObjectManagerInternal<Location> {
+public interface BrooklynObjectManagerInternal<T extends BrooklynObject> {
 
-    public Iterable<String> getLocationIds();
+    ManagementTransitionMode getLastManagementTransitionMode(String itemId);
+    void setManagementTransitionMode(T item, ManagementTransitionMode mode);
+
+    /** 
+     * Begins management for the given rebinded root, recursively; 
+     * if rebinding as a read-only copy, {@link #setReadOnly(T, boolean)} should be called prior to this.
+     */
+    void manageRebindedRoot(T item);
+    
+    void unmanage(final T e, final ManagementTransitionMode info);
 
 }

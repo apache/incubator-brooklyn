@@ -143,6 +143,10 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
             }}));
     }
 
+    public MementoSerializer<Object> getMementoSerializer() {
+        return getSerializerWithStandardClassLoader();
+    }
+    
     protected MementoSerializer<Object> getSerializerWithStandardClassLoader() {
         return serializerWithStandardClassLoader;
     }

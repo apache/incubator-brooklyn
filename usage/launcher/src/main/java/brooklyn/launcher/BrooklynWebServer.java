@@ -212,6 +212,9 @@ public class BrooklynWebServer {
     }
 
     public BrooklynWebServer setPort(Object port) {
+        if (port==null) {
+            this.requestedPort = null;
+        }
         if (getActualPort()>0)
             throw new IllegalStateException("Can't set port after port has been assigned to server (using "+getActualPort()+")");
         this.requestedPort = TypeCoercions.coerce(port, PortRange.class);
@@ -221,6 +224,11 @@ public class BrooklynWebServer {
     @VisibleForTesting
     File getWebappTempDir() {
         return webappTempDir;
+    }
+    
+    public BrooklynWebServer setHttpsEnabled(Boolean httpsEnabled) {
+        this.httpsEnabled = httpsEnabled;
+        return this;
     }
     
     public boolean getHttpsEnabled() {
@@ -338,7 +346,10 @@ public class BrooklynWebServer {
         if (actualPort == -1){
             PortRange portRange = requestedPort;
             if (portRange==null) {
-                portRange = getHttpsEnabled()? httpsPort : httpPort;
+                portRange = managementContext.getConfig().getConfig(BrooklynWebConfig.WEB_CONSOLE_PORT);
+            }
+            if (portRange==null) {
+                portRange = getHttpsEnabled() ? httpsPort : httpPort;
             }
             actualPort = LocalhostMachineProvisioningLocation.obtainPort(getAddress(), portRange);
             if (actualPort == -1) 

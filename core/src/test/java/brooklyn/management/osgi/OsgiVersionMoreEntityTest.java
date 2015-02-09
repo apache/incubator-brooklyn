@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 
-import brooklyn.test.TestResourceUnavailableException;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
@@ -37,6 +36,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogEntityItemDto;
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;
+import brooklyn.catalog.internal.CatalogTestUtils;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
@@ -44,10 +44,12 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.PolicySpec;
+import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.guava.Maybe;
@@ -75,6 +77,10 @@ public class OsgiVersionMoreEntityTest {
     public static final String BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_URL = "classpath:"+BROOKLYN_TEST_MORE_ENTITIES_V2_EVIL_TWIN_PATH;
     
     public static final String TEST_VERSION = "0.1.0";
+
+    public static final String EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V1 = "Hi BROOKLYN from V1";
+    public static final String EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2 = "HI BROOKLYN FROM V2";
+    public static final String EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2_EVIL_TWIN = "HO BROOKLYN FROM V2 EVIL TWIN";
     
     protected LocalManagementContext mgmt;
     protected TestApplication app;
@@ -128,8 +134,12 @@ public class OsgiVersionMoreEntityTest {
     protected CatalogItem<?, ?> addCatalogItemWithTypeAsName(String type, String version, String ...libraries) {
         return addCatalogItemWithNameAndType(type, version, type, libraries);
     }
-    @SuppressWarnings("deprecation")
     protected CatalogItem<?, ?> addCatalogItemWithNameAndType(String symName, String version, String type, String ...libraries) {
+        return addCatalogItemWithNameAndType(mgmt, symName, version, type, libraries);
+    }
+
+    @SuppressWarnings("deprecation")
+    static CatalogItem<?, ?> addCatalogItemWithNameAndType(ManagementContext mgmt, String symName, String version, String type, String ...libraries) {
         CatalogEntityItemDto c1 = newCatalogItemWithNameAndType(symName, version, type, libraries);
         mgmt.getCatalog().addItem(c1);
         CatalogItem<?, ?> c2 = mgmt.getCatalog().getCatalogItem(type, version);
@@ -148,26 +158,22 @@ public class OsgiVersionMoreEntityTest {
         return c1;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected Entity addItemFromCatalog(CatalogItem<?, ?> c2) {
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, c2);
-        EntitySpec spec = EntitySpec.create( (Class)loader.loadClass(c2.getJavaType()) );
-        // not a great test as we set the ID here; but:
-        // YAML test will do better;
-        // and we can check that downstream items are loaded correctly
-        spec.catalogItemId(c2.getId());
-        Entity me = app.createAndManageChild(spec);
-        return me;
+        return addItemFromCatalog(mgmt, app, c2);
+    }
+    
+    public static Entity addItemFromCatalog(ManagementContext mgmt, TestApplication parent, CatalogItem<?, ?> c2) {
+        return parent.createAndManageChild( CatalogTestUtils.createEssentialEntitySpec(mgmt, c2) );
     }
 
     public static void assertV1MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        Assert.assertEquals(doMethodCallBrooklyn(me), "Hi BROOKLYN");
+        Assert.assertEquals(doMethodCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V1);
     }
     public static void assertV2MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        Assert.assertEquals(doMethodCallBrooklyn(me), "HI BROOKLYN");
+        Assert.assertEquals(doMethodCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2);
     }
     public static void assertV2EvilTwinMethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        Assert.assertEquals(doMethodCallBrooklyn(me), "HO BROOKLYN");
+        Assert.assertEquals(doMethodCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2_EVIL_TWIN);
     }
 
     public static Object doMethodCallBrooklyn(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
@@ -175,27 +181,40 @@ public class OsgiVersionMoreEntityTest {
     }
 
     public static void assertV1EffectorCall(Entity me) {
-        Assert.assertEquals(doEffectorCallBrooklyn(me), "Hi BROOKLYN");
+        Assert.assertEquals(doEffectorCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V1);
     }
     public static void assertV2EffectorCall(Entity me) {
-        Assert.assertEquals(doEffectorCallBrooklyn(me), "HI BROOKLYN");
+        Assert.assertEquals(doEffectorCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2);
     }
     public static void assertV2EvilTwinEffectorCall(Entity me) {
-        Assert.assertEquals(doEffectorCallBrooklyn(me), "HO BROOKLYN");
+        Assert.assertEquals(doEffectorCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2_EVIL_TWIN);
     }
 
     public static String doEffectorCallBrooklyn(Entity me) {
         return me.invoke(Effectors.effector(String.class, "sayHI").buildAbstract(), ImmutableMap.of("name", "brooklyn")).getUnchecked();
     }
 
+    public static CatalogItem<?, ?> addMoreEntityV1(ManagementContext mgmt, String versionToRegister) {
+        return addCatalogItemWithNameAndType(mgmt, 
+            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            versionToRegister,
+            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
+    }
+    public static CatalogItem<?, ?> addMoreEntityV2(ManagementContext mgmt, String versionToRegister) {
+        return addCatalogItemWithNameAndType(mgmt,
+            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            versionToRegister,
+            OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
+            BROOKLYN_TEST_MORE_ENTITIES_V2_URL,
+            BROOKLYN_TEST_OSGI_ENTITIES_URL);
+    }
+    
     @Test
     public void testMoreEntitiesV1() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
 
-        CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(
-                OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
-                TEST_VERSION,
-                BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
+        CatalogItem<?, ?> c2 = addMoreEntityV1(mgmt, TEST_VERSION);
         
         // test load and instantiate
         Entity me = addItemFromCatalog(c2);

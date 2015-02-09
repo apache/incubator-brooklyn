@@ -93,8 +93,8 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
          * So can extract lots of sensors from that.
          */
         Maybe<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
-        String cmd = getDriver().getStatusCmd();
         if (machine.isPresent()) {
+            String cmd = getDriver().getStatusCmd();
             feed = SshFeed.builder()
                     .entity(this)
                     .period(Duration.FIVE_SECONDS)

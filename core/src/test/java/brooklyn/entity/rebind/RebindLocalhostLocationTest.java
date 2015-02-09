@@ -24,12 +24,14 @@ import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
@@ -78,6 +80,26 @@ public class RebindLocalhostLocationTest extends RebindTestFixtureWithApp {
         LocalhostMachineProvisioningLocation newLoc = (LocalhostMachineProvisioningLocation) Iterables.getOnlyElement(newApp.getLocations(), 0);
         SshMachineLocation newChildLoc = (SshMachineLocation) Iterables.get(newLoc.getChildren(), 0);
         assertEquals(newChildLoc.execScript(Collections.<String,Object>emptyMap(), "mysummary", ImmutableList.of("true")), 0);
+    }
+
+    @Test(groups="Integration")
+    public void testMachineCleansUp() throws Exception {
+        testMachineUsableAfterRebind();
+        newApp.stop();
+
+        switchOriginalToNewManagementContext();
+        
+        // TODO how should we automatically unmanage these?
+        // (in this test, locations are created manually, so probably should be destroyed manually, 
+        // but in most cases we should probably unmanage the location as part of the entity;
+        // could keep the entity ID only in the location, then safely reverse-check usages?)
+        // see related non-integration test in RebindEntityTest
+        origManagementContext.getLocationManager().unmanage(origLoc);
+        
+        RebindTestUtils.waitForPersisted(origManagementContext);
+        
+        BrooklynMementoManifest mf = loadMementoManifest();
+        Assert.assertTrue(mf.getLocationIdToType().isEmpty(), "Expected no locations; had "+mf.getLocationIdToType());
     }
     
 }

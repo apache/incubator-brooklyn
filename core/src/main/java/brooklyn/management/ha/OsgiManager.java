@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,12 +33,14 @@ import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.BrooklynVersion;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
 import brooklyn.config.ConfigKey;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
@@ -45,6 +48,7 @@ import brooklyn.util.os.Os.DeletionResult;
 import brooklyn.util.osgi.Osgis;
 import brooklyn.util.osgi.Osgis.BundleFinder;
 import brooklyn.util.repeat.Repeater;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Throwables;
@@ -186,6 +190,7 @@ public class OsgiManager {
     }
     public <T> Maybe<Class<T>> tryResolveClass(String type, Iterable<CatalogBundle> catalogBundles) {
         Map<CatalogBundle,Throwable> bundleProblems = MutableMap.of();
+        Set<String> extraMessages = MutableSet.of();
         for (CatalogBundle catalogBundle: catalogBundles) {
             try {
                 Maybe<Bundle> bundle = findBundle(catalogBundle);
@@ -215,6 +220,13 @@ public class OsgiManager {
 
                 Throwable cause = e.getCause();
                 if (cause != null && cause.getMessage().contains("Unresolved constraint in bundle")) {
+                    if (BrooklynVersion.INSTANCE.getVersionFromOsgiManifest()==null) {
+                        extraMessages.add("No brooklyn-core OSGi manifest available. OSGi will not work.");
+                    }
+                    if (BrooklynVersion.isDevelopmentEnvironment()) {
+                        extraMessages.add("Your development environment may not have created necessary files. Doing a maven build then retrying may fix the issue.");
+                    }
+                    if (!extraMessages.isEmpty()) log.warn(Strings.join(extraMessages, " "));
                     log.warn("Unresolved constraint resolving OSGi bundle "+catalogBundle+" to load "+type+": "+cause.getMessage());
                     if (log.isDebugEnabled()) log.debug("Trace for OSGi resolution failure", e);
                 }
@@ -225,9 +237,11 @@ public class OsgiManager {
             if (error instanceof ClassNotFoundException && error.getCause()!=null && error.getCause().getMessage()!=null) {
                 error = Exceptions.collapseIncludingAllCausalMessages(error);
             }
-            return Maybe.absent("Unable to resolve class "+type+" in "+Iterables.getOnlyElement(bundleProblems.keySet()), error);
+            return Maybe.absent("Unable to resolve class "+type+" in "+Iterables.getOnlyElement(bundleProblems.keySet())
+                + (extraMessages.isEmpty() ? "" : " ("+Strings.join(extraMessages, " ")+")"), error);
         } else {
-            return Maybe.absent(Exceptions.create("Unable to resolve class "+type+": "+bundleProblems, bundleProblems.values()));
+            return Maybe.absent(Exceptions.create("Unable to resolve class "+type+": "+bundleProblems
+                + (extraMessages.isEmpty() ? "" : " ("+Strings.join(extraMessages, " ")+")"), bundleProblems.values()));
         }
     }
 

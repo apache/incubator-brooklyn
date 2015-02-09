@@ -144,6 +144,7 @@ public class BrooklynLauncher {
     private boolean startWebApps = true;
     private boolean startBrooklynNode = false;
     private PortRange port = null;
+    private Boolean useHttps = null;
     private InetAddress bindAddress = null;
     private InetAddress publicAddress = null;
     private Map<String,String> webApps = new LinkedHashMap<String,String>();
@@ -335,15 +336,24 @@ public class BrooklynLauncher {
      * As {@link #webconsolePort(PortRange)} taking a string range
      */
     public BrooklynLauncher webconsolePort(String port) {
+        if (port==null) return webconsolePort((PortRange)null);
         return webconsolePort(PortRanges.fromString(port));
     }
 
     /**
      * Specifies the port where the web console (and any additional webapps specified) will listen;
-     * default "8081+" (or "8443+" for https) being the first available >= 8081.
+     * default (null) means "8081+" being the first available >= 8081 (or "8443+" for https).
      */ 
     public BrooklynLauncher webconsolePort(PortRange port) {
         this.port = port;
+        return this;
+    }
+
+    /**
+     * Specifies whether the webconsole should use https.
+     */ 
+    public BrooklynLauncher webconsoleHttps(Boolean useHttps) {
+        this.useHttps = useHttps;
         return this;
     }
 
@@ -721,7 +731,8 @@ public class BrooklynLauncher {
             webServer = new BrooklynWebServer(webconsoleFlags, managementContext);
             webServer.setBindAddress(bindAddress);
             webServer.setPublicAddress(publicAddress);
-            webServer.setPort(port);
+            if (port!=null) webServer.setPort(port);
+            if (useHttps!=null) webServer.setHttpsEnabled(useHttps);
             webServer.putAttributes(brooklynProperties);
             if (skipSecurityFilter != Boolean.TRUE) {
                 webServer.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);

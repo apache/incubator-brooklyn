@@ -165,10 +165,13 @@ public abstract class AbstractMain {
 
             System.out.println(BANNER);
             System.out.println("Version:  " + BrooklynVersion.get());
+            if (BrooklynVersion.INSTANCE.isSnapshot()) {
+                System.out.println("Git SHA1: " + BrooklynVersion.INSTANCE.getSha1FromOsgiManifest());
+            }
             System.out.println("Website:  http://brooklyn.incubator.apache.org");
             System.out.println("Source:   https://github.com/apache/incubator-brooklyn");
             System.out.println();
-            System.out.println("Copyright 2011-2014 The Apache Software Foundation.");
+            System.out.println("Copyright 2011-2015 The Apache Software Foundation.");
             System.out.println("Licensed under the Apache 2.0 License");
             System.out.println();
 
@@ -176,6 +179,15 @@ public abstract class AbstractMain {
         }
     }
 
+    public static class DefaultInfoCommand extends InfoCommand {
+        @Override
+        public Void call() throws Exception {
+            super.call();
+            System.out.println("ERROR: No command specified.");
+            System.out.println();
+            throw new ParseException("No command specified.");
+        }
+    }
 
     /** method intended for overriding when the script filename is different 
      * @return the name of the script the user has invoked */

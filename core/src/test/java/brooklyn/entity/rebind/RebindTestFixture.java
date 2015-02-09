@@ -107,7 +107,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     protected void switchOriginalToNewManagementContext() {
         origManagementContext.getRebindManager().stopPersistence();
         for (Application e: origManagementContext.getApplications()) ((Startable)e).stop();
-        waitForTaskCountToBecome(origManagementContext, 0);
+        waitForTaskCountToBecome(origManagementContext, 0, true);
         origManagementContext.terminate();
         origManagementContext = (LocalManagementContext) newManagementContext;
         origApp = newApp;
@@ -116,19 +116,32 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
     }
 
     public static void waitForTaskCountToBecome(final ManagementContext mgmt, final int allowedMax) {
+        waitForTaskCountToBecome(mgmt, allowedMax, false);
+    }
+    
+    public static void waitForTaskCountToBecome(final ManagementContext mgmt, final int allowedMax, final boolean skipKnownBackgroundTasks) {
         Repeater.create().every(Duration.millis(20)).limitTimeTo(Duration.TEN_SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 ((LocalManagementContext)mgmt).getGarbageCollector().gcIteration();
                 long taskCountAfterAtOld = ((BasicExecutionManager)mgmt.getExecutionManager()).getNumIncompleteTasks();
                 List<Task<?>> tasks = ((BasicExecutionManager)mgmt.getExecutionManager()).getAllTasks();
-                int unendedTasks = 0;
+                int unendedTasks = 0, extraAllowedMax = 0;
                 for (Task<?> t: tasks) {
-                    if (!t.isDone()) unendedTasks++;
+                    if (!t.isDone()) {
+                        if (skipKnownBackgroundTasks) {
+                            if (t.toString().indexOf("ssh-location cache cleaner")>=0) {
+                                extraAllowedMax++;
+                            }
+                        }
+                        unendedTasks++;
+                    }
                 }
-                LOG.info("Count of incomplete tasks now "+taskCountAfterAtOld+", "+unendedTasks+" unended; tasks remembered are: "+
+                LOG.info("Count of incomplete tasks now "+taskCountAfterAtOld+", "+unendedTasks+" unended"
+                    + (extraAllowedMax>0 ? " ("+extraAllowedMax+" allowed)" : "")
+                    + "; tasks remembered are: "+
                     tasks);
-                return taskCountAfterAtOld<=allowedMax;
+                return taskCountAfterAtOld<=allowedMax+extraAllowedMax;
             }
         }).runRequiringTrue();
     }

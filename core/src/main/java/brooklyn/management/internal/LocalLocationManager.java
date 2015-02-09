@@ -42,7 +42,6 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.AccessController;
 import brooklyn.management.entitlement.Entitlements;
-import brooklyn.management.internal.ManagementTransitionInfo.ManagementTransitionMode;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
@@ -194,7 +193,7 @@ public class LocalLocationManager implements LocationManagerInternal {
             log.warn("Parent location "+parent+" of "+loc+" is not managed; attempting to manage it (in future this may be disallowed)");
             return manage(parent);
         } else {
-            return manageRecursive(loc, ManagementTransitionMode.CREATING);
+            return manageRecursive(loc, ManagementTransitionMode.guessing(BrooklynObjectManagementMode.NONEXISTENT, BrooklynObjectManagementMode.MANAGED_PRIMARY));
         }
     }
     
@@ -214,7 +213,7 @@ public class LocalLocationManager implements LocationManagerInternal {
         long count = LOCATION_CNT.incrementAndGet();
         if (log.isDebugEnabled()) {
             String msg = "Managing location " + loc + " ("+initialMode+"), from " + Tasks.current()+" / "+Entitlements.getEntitlementContext();
-            LoggingLevel level = (initialMode==ManagementTransitionMode.REBINDING_READONLY ? LoggingLevel.TRACE : LoggingLevel.DEBUG);
+            LoggingLevel level = (!initialMode.wasNotLoaded() || initialMode.isReadOnly() ? LoggingLevel.TRACE : LoggingLevel.DEBUG);
             if (count % 100 == 0) {
                 // include trace periodically in case we get leaks or too much location management
                 BrooklynLogging.log(log, level,
@@ -231,7 +230,7 @@ public class LocalLocationManager implements LocationManagerInternal {
             }
             
             if (it.isManaged()) {
-                if (mode==ManagementTransitionMode.CREATING) {
+                if (mode.wasNotLoaded()) {
                     // silently bail out
                     return false;
                 } else {
@@ -242,9 +241,9 @@ public class LocalLocationManager implements LocationManagerInternal {
             boolean result = manageNonRecursive(it, mode);
             if (result) {
                 it.setManagementContext(managementContext);
-                if (!mode.isReadOnly()) {
+                if (mode.isPrimary()) {
                     it.onManagementStarted();
-                    if (!mode.wasReadOnly() && !mode.isRebinding()) {
+                    if (mode.isCreating()) {
                         // Never record event on rebind; this isn't the location (e.g. the VM) being "created"
                         // so don't tell listeners that.
                         // TODO The location-event history should be persisted; currently it is lost on
@@ -261,7 +260,7 @@ public class LocalLocationManager implements LocationManagerInternal {
     
     @Override
     public void unmanage(final Location loc) {
-        unmanage(loc, ManagementTransitionMode.DESTROYING);
+        unmanage(loc, ManagementTransitionMode.guessing(BrooklynObjectManagementMode.MANAGED_PRIMARY, BrooklynObjectManagementMode.NONEXISTENT));
     }
     
     public void unmanage(final Location loc, final ManagementTransitionMode mode) {
@@ -274,26 +273,34 @@ public class LocalLocationManager implements LocationManagerInternal {
         if (hasBeenReplaced) {
             // we are unmanaging an old instance after having replaced it; 
             // don't unmanage or even clear its fields, because there might be references to it
-            if (mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
-                // when migrating away, these all need to be called
+            
+            if (mode.wasReadOnly()) {
+                // if coming *from* read only; nothing needed
+            } else {
+                if (!mode.wasPrimary()) {
+                    log.warn("Unexpected mode "+mode+" for unmanage-replace "+loc+" (applying anyway)");
+                }
+                // migrating away or in-place active partial rebind:
                 managementContext.getRebindManager().getChangeListener().onUnmanaged(loc);
                 if (managementContext.gc != null) managementContext.gc.onUnmanaged(loc);
-            } else {
-                // should be coming *from* read only; nothing needed
-                if (!mode.wasReadOnly())
-                    log.warn("Should not be unmanaging "+loc+" in mode "+mode+"; ignoring");
             }
             // do not remove from maps below, bail out now
             return;
 
-        } else if (mode==ManagementTransitionMode.REBINDING_DESTROYED || mode==ManagementTransitionMode.REBINDING_NO_LONGER_PRIMARY) {
+        } else if ((mode.isReadOnly() && mode.wasPrimary()) || (mode.isDestroying() && mode.wasReadOnly())) {
+            if (mode.isReadOnly() && mode.wasPrimary()) {
+                // TODO shouldn't this fall into "hasBeenReplaced" above?
+                log.debug("Unmanaging on demotion: "+loc+" ("+mode+")");
+            }
             // we are unmanaging an instance whose primary management is elsewhere (either we were secondary, or we are being demoted)
             unmanageNonRecursiveRemoveFromRecords(loc, mode);
             managementContext.getRebindManager().getChangeListener().onUnmanaged(loc);
             if (managementContext.gc != null) managementContext.gc.onUnmanaged(loc);
             unmanageNonRecursiveClearItsFields(loc, mode);
+        } else if (mode.isDestroying()) {
+
+            // TODO isUnloading???
             
-        } else if (mode==ManagementTransitionMode.DESTROYING) {
             // we are unmanaging an instance either because it is being destroyed (primary), 
             // or due to an explicit call (shutting down all things, read-only and primary);
             // in either case, should be recursive
@@ -307,11 +314,11 @@ public class LocalLocationManager implements LocationManagerInternal {
                     if (mode==null) {
                         // ad hoc creation e.g. tests
                         log.debug("Missing transition mode for "+it+" when unmanaging; assuming primary/destroying");
-                        mode = ManagementTransitionMode.DESTROYING;
+                        mode = ManagementTransitionMode.guessing(BrooklynObjectManagementMode.MANAGED_PRIMARY, BrooklynObjectManagementMode.NONEXISTENT);
                     }
-                    if (!mode.isReadOnly()) it.onManagementStopped();
+                    if (mode.wasPrimary()) it.onManagementStopped();
                     managementContext.getRebindManager().getChangeListener().onUnmanaged(it);
-                    if (!mode.isReadOnly()) recordLocationEvent(it, Lifecycle.DESTROYED);
+                    if (mode.isDestroying()) recordLocationEvent(it, Lifecycle.DESTROYED);
                     if (managementContext.gc != null) managementContext.gc.onUnmanaged(it);
                 }
                 unmanageNonRecursiveClearItsFields(loc, mode);
@@ -319,6 +326,8 @@ public class LocalLocationManager implements LocationManagerInternal {
             } });
             
         } else {
+            // what about to unmanaged_persisted?
+            
             log.warn("Invalid mode for unmanage: "+mode+" on "+loc+" (ignoring)");
         }
         
@@ -367,7 +376,7 @@ public class LocalLocationManager implements LocationManagerInternal {
 
         locationTypes.put(loc.getId(), loc.getClass().getName());
         
-        if (old!=null && mode==ManagementTransitionMode.CREATING) {
+        if (old!=null && mode.wasNotLoaded()) {
             if (old.equals(loc)) {
                 log.warn("{} redundant call to start management of location {}", this, loc);
             } else {
@@ -386,7 +395,7 @@ public class LocalLocationManager implements LocationManagerInternal {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private synchronized void unmanageNonRecursiveClearItsFields(Location loc, ManagementTransitionMode mode) {
-        if (mode==ManagementTransitionMode.DESTROYING) {
+        if (mode.isDestroying()) {
             ((AbstractLocation)loc).setParent(null, true);
             
             Location parent = ((AbstractLocation)loc).getParent();
