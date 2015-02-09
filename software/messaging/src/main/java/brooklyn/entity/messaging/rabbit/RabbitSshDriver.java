@@ -24,6 +24,7 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,13 @@ import com.google.common.collect.ImmutableMap;
 public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements RabbitDriver {
 
     private static final Logger log = LoggerFactory.getLogger(RabbitSshDriver.class);
+
+    // See http://fedoraproject.org/wiki/EPEL/FAQ#howtouse
+    private static final Map<String, String> CENTOS_VERSION_TO_EPEL_VERSION = ImmutableMap.of(
+        "5", "5-4",
+        "6", "6-8",
+        "7", "7-5"
+    );
     
     public RabbitSshDriver(RabbitBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -72,8 +80,27 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
     public void install() {
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
+        // Version and architecture are only required for download of epel package on RHEL/Centos systems so pick sensible
+        // defaults if unavailable
+        String osMajorVersion = getMachine().getOsDetails().getVersion();
+        if (Strings.isNullOrEmpty(osMajorVersion)) {
+            osMajorVersion = "7";
+        } else {
+            osMajorVersion = osMajorVersion.indexOf(".") > 0 ? osMajorVersion.substring(0, osMajorVersion.indexOf('.')) : osMajorVersion;
+            if (!CENTOS_VERSION_TO_EPEL_VERSION.keySet().contains(osMajorVersion)) {
+                osMajorVersion = "7";
+            }
+        }
+        String epelVersion = CENTOS_VERSION_TO_EPEL_VERSION.get(osMajorVersion);
+        String osArchitecture = getMachine().getOsDetails().getArch();
+        if (Strings.isNullOrEmpty(osArchitecture)) {
+            osArchitecture = "x86_64";
+        }
 
         List<String> commands = ImmutableList.<String>builder()
+                // EPEL repository for erlang install required on some Centos distributions
+                .add(chainGroup("which yum", sudo("yum -y update ca-certificates"), sudo("rpm -Uvh " +
+                        format("http://download.fedoraproject.org/pub/epel/%s/%s/epel-release-%s.noarch.rpm", osMajorVersion, osArchitecture, epelVersion))))
                 .add(ifExecutableElse0("zypper", chainGroup(
                         ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/SLE_11_SP3 erlang_sles_11")),
                         ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11")),

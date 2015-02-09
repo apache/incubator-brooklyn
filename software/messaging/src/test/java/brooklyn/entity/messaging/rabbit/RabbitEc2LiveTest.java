@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
@@ -81,7 +82,17 @@ public class RabbitEc2LiveTest extends AbstractEc2LiveTest {
         Channel channel = conn.createChannel();
         return channel;
     }
-    
+
+    @Override
+    public void test_CentOS_5_6() throws SkipException {
+        // Not supported. The EPEL repository described here at [1] does not contain erlang, and the
+        // Erlang repository at [1] requires old versions of rpmlib. Additionally, [2] suggests that
+        // Centos 5 is not supported
+        // [1]:http://www.rabbitmq.com/install-rpm.html
+        // [2]: https://www.erlang-solutions.com/downloads/download-erlang-otp
+        throw new SkipException("Centos 5 is not supported");
+    }
+
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
 }
