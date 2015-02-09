@@ -62,9 +62,11 @@ import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocationConfigTest.MyLocation;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.EntityMemento;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
@@ -181,7 +183,30 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
         assertEquals(newE.getAttribute(myCustomAttribute), "myval");
     }
-    
+
+    @Test
+    public void testRestoresEntityLocationAndCleansUp() throws Exception {
+        MyLocation loc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class));
+        origApp.createAndManageChild(EntitySpec.create(MyEntity.class).location(loc));
+        
+        newApp = rebind();
+        MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
+        
+        Assert.assertEquals(newE.getLocations().size(), 1); 
+        Location loc2 = Iterables.getOnlyElement(newE.getLocations());
+        Assert.assertEquals(loc, loc2);
+        Assert.assertFalse(loc==loc2);
+        
+        newApp.stop();
+        // TODO how to trigger automatic unmanagement? see notes in RebindLocalhostLocationTest
+        newManagementContext.getLocationManager().unmanage(loc2);
+        switchOriginalToNewManagementContext();
+        RebindTestUtils.waitForPersisted(origManagementContext);
+        
+        BrooklynMementoManifest mf = loadMementoManifest();
+        Assert.assertTrue(mf.getLocationIdToType().isEmpty(), "Expected no locations; had "+mf.getLocationIdToType());
+    }
+
     @Test
     public void testRestoresEntityIdAndDisplayName() throws Exception {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class)
