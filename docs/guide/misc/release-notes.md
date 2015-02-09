@@ -44,6 +44,8 @@ For more information, please visit [brooklyn.io](http://brooklyn.io).
   but some items have had to change. For most users this should not be an issue as persistence in the previous version
   was not working well in any case. 
 
+* If `brooklyn.webconsole.security.https.required=true` is specified with no explicit port, 
+  it now defaults to 8443; previously it would default to 8081 even in the case of `https`.
 
 ### Community Activity
 

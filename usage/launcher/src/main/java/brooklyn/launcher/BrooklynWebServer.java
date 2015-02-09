@@ -212,9 +212,6 @@ public class BrooklynWebServer {
     }
 
     public BrooklynWebServer setPort(Object port) {
-        if (port==null) {
-            this.requestedPort = null;
-        }
         if (getActualPort()>0)
             throw new IllegalStateException("Can't set port after port has been assigned to server (using "+getActualPort()+")");
         this.requestedPort = TypeCoercions.coerce(port, PortRange.class);

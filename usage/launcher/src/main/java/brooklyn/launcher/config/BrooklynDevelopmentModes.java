@@ -28,6 +28,8 @@ import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.os.Os;
 
+@Deprecated /** @deprecated since 0.7.0; see BrooklynVersion;
+* and anyway this was not really used, and if it were, it would be needed in core; autodetection is pretty good */
 public class BrooklynDevelopmentModes {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynDevelopmentModes.class);

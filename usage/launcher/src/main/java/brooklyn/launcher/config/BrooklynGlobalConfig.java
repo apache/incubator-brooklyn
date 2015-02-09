@@ -21,7 +21,6 @@ package brooklyn.launcher.config;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.launcher.config.BrooklynDevelopmentModes.BrooklynDevelopmentMode;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.internal.BrooklynGarbageCollector;
 import brooklyn.rest.BrooklynWebConfig;
@@ -44,7 +43,9 @@ import brooklyn.util.time.Duration;
  */
 public class BrooklynGlobalConfig {
 
-    public static final ConfigKey<BrooklynDevelopmentMode> BROOKLYN_DEV_MODE = BrooklynDevelopmentModes.BROOKLYN_DEV_MODE;
+    @Deprecated /** @deprecated since 0.7.0; see BrooklynVersion;
+    * and anyway this was not really used, and if it were, it would be needed in core; autodetection is pretty good */
+    public static final ConfigKey<brooklyn.launcher.config.BrooklynDevelopmentModes.BrooklynDevelopmentMode> BROOKLYN_DEV_MODE = brooklyn.launcher.config.BrooklynDevelopmentModes.BROOKLYN_DEV_MODE;
 
     public static final ConfigKey<Boolean> REQUIRE_HTTPS = BrooklynWebConfig.HTTPS_REQUIRED;
     
