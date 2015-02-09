@@ -382,7 +382,7 @@ public class RebindManagerImpl implements RebindManager {
             rebindActive, readOnlyRebindCount, rebindMetrics, persistenceStoreAccess);
 
         iteration.setObjectIterator(objectsToRebind);
-        iteration.applyTransformer(transformer);
+        if (transformer!=null) iteration.applyTransformer(transformer);
         iteration.run();
     }
     

@@ -232,7 +232,19 @@ public abstract class RebindIteration {
         return rebindContext;
     }
     
-    protected abstract void doRun() throws Exception;
+    protected void doRun() throws Exception {
+        loadManifestFiles();
+        rebuildCatalog();
+        instantiateLocationsAndEntities();
+        instantiateMementos();
+        instantiateAdjuncts(instantiator); 
+        reconstructEverything();
+        associateAdjunctsWithEntities();
+        manageTheObjects();
+        finishingUp();
+    }
+    
+    protected abstract void loadManifestFiles() throws Exception;
     
     public void run() {
         if (iterationStarted.getAndSet(true)) {

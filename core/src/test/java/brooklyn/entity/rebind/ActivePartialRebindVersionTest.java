@@ -24,7 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.internal.CatalogUtils;
+import brooklyn.catalog.internal.CatalogTestUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
@@ -94,7 +94,7 @@ public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
 //            + "  entitySpec: { type: "+catV1.getId()+" }\n", true);
         DynamicCluster cluster = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
             .configure(DynamicCluster.INITIAL_SIZE, 1)
-            .configure(DynamicCluster.MEMBER_SPEC, CatalogUtils.createEntitySpec(origManagementContext, catV1))
+            .configure(DynamicCluster.MEMBER_SPEC, CatalogTestUtils.createEssentialEntitySpec(origManagementContext, catV1))
             );
         cluster.start(MutableList.of(origApp.newSimulatedLocation()));
         Entity childV1 = MutableList.copyOf(cluster.getChildren()).get(1);

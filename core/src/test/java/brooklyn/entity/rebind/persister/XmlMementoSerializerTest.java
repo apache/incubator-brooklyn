@@ -37,7 +37,7 @@ import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;
-import brooklyn.catalog.internal.CatalogUtils;
+import brooklyn.catalog.internal.CatalogTestUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.Entities;
@@ -47,7 +47,6 @@ import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.policy.Enricher;
@@ -203,7 +202,7 @@ public class XmlMementoSerializerTest {
         
         EntitySpec<DynamicCluster> spec = EntitySpec.create(DynamicCluster.class)
             .configure(DynamicCluster.INITIAL_SIZE, 1)
-            .configure(DynamicCluster.MEMBER_SPEC, CatalogUtils.createEntitySpec(mgmt, ci));
+            .configure(DynamicCluster.MEMBER_SPEC, CatalogTestUtils.createEssentialEntitySpec(mgmt, ci));
 
         serializer.setLookupContext(new LookupContextImpl(mgmt,
             ImmutableList.<Entity>of(), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),

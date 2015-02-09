@@ -67,7 +67,7 @@ public class BrooklynVersion {
       // we read the maven pom metadata and osgi metadata and make sure it's sensible
       // everything is put into a single map for now (good enough, but should be cleaned up)
       readPropertiesFromMavenResource(BrooklynVersion.class.getClassLoader());
-      readPropertiesFromOsgiResource(BrooklynVersion.class.getClassLoader(), "org.apache.brooklyn.core");
+      readPropertiesFromOsgiResource(BrooklynVersion.class.getClassLoader(), BROOKLYN_CORE_SYMBOLIC_NAME);
       // TODO there is also build-metadata.properties used in ServerResource /v1/server/version endpoint
       // see comments on that about folding it into this class instead
 
@@ -227,7 +227,7 @@ public class BrooklynVersion {
   }
 
   public static String get() {
-    return getVersionFromStatic();
+      return INSTANCE.getVersion();
   }
   
 }

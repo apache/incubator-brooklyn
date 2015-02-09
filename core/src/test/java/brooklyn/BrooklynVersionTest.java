@@ -63,7 +63,7 @@ public class BrooklynVersionTest {
       log.info("sha1: "+sha1);
       if (Strings.isNonBlank(sha1) || BrooklynVersion.isDevelopmentEnvironment())
           return;
-      // we might not have a SHA1 if it's a standalone source build; just log warn in that case
+      // we might not have a SHA1 if it's a standalone (non-git) source build; just log warn in that case
       log.warn("This build does not have git SHA1 information.");
       // (can't assert anything, except that sha1 lookup doesn't NPE)
   }

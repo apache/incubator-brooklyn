@@ -74,18 +74,23 @@ public class ActivePartialRebindIteration extends RebindIteration {
     }
     
     public void applyTransformer(CompoundTransformer transformer) {
-        if (transformer!=null)
-            transformers.add(transformer);
+        transformers.add(Preconditions.checkNotNull(transformer, "transformer"));
     }
     
     @Override
     protected void doRun() throws Exception {
-        checkEnteringPhase(1);
-        Preconditions.checkState(readOnlyRebindCount.get()==Integer.MIN_VALUE, "Partial rebind in read-only mode not supported");
+        Preconditions.checkState(rebindManager.getRebindMode()==ManagementNodeState.MASTER, "Partial rebind only supported in master mode, not "+rebindManager.getRebindMode());
+        Preconditions.checkState(readOnlyRebindCount.get()==Integer.MIN_VALUE, "Rebind count should be MIN when running in master mode");
         Preconditions.checkNotNull(objectsToRebindInitial, "Objects to rebind must be set");
 
         LOG.debug("Partial rebind Rebinding ("+mode+") from "+rebindManager.getPersister().getBackingStoreDescription()+"...");
 
+        super.doRun();
+    }
+    
+    @Override
+    protected void loadManifestFiles() throws Exception {
+        checkEnteringPhase(1);
         Builder mementoRawBuilder = BrooklynMementoRawData.builder();
 
         /*
@@ -116,21 +121,8 @@ public class ActivePartialRebindIteration extends RebindIteration {
         mementoRawData = mementoRawBuilder.build();
 
         preprocessManifestFiles();
-
-        // skip this phase, as catalog is not being changed
-        // (and we don't want to unload things)
-//        rebuildCatalog();
-        phase++;
-        
-        instantiateLocationsAndEntities();
-        instantiateMementos();
-        instantiateAdjuncts(instantiator); 
-        reconstructEverything();
-        associateAdjunctsWithEntities();
-        manageTheObjects();
-        finishingUp();
     }
-
+    
     @Override
     protected void preprocessManifestFiles() throws Exception {
         for (CompoundTransformer transformer: transformers) {
@@ -140,6 +132,13 @@ public class ActivePartialRebindIteration extends RebindIteration {
         overwritingMaster = true;
     }
 
+    @Override
+    protected void rebuildCatalog() {
+        checkEnteringPhase(2);
+        
+        // skip; old catalog items should be re-used
+    }
+    
     @Override
     protected Collection<String> getMementoRootEntities() {
         // all entities are roots here, because we are not recursing

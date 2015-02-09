@@ -60,22 +60,16 @@ public class InitialFullRebindIteration extends RebindIteration {
         return false;
     }
     
+    @Override
     protected void doRun() throws Exception {
         LOG.debug("Rebinding ("+mode+
             (readOnlyRebindCount.get()>Integer.MIN_VALUE ? ", iteration "+readOnlyRebindCount : "")+
             ") from "+rebindManager.getPersister().getBackingStoreDescription()+"...");
 
-        loadManifestFiles();
-        rebuildCatalog();
-        instantiateLocationsAndEntities();
-        instantiateMementos();
-        instantiateAdjuncts(instantiator); 
-        reconstructEverything();
-        associateAdjunctsWithEntities();
-        manageTheObjects();
-        finishingUp();
+        super.doRun();
     }
 
+    @Override
     protected void loadManifestFiles() throws Exception {
         checkEnteringPhase(1);
         Preconditions.checkState(mementoRawData==null, "Memento raw data should not yet be set when calling this");

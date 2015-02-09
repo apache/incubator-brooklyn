@@ -87,7 +87,7 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
         
         gcAndLog("before");
         long used0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-        for (int i=0; i<500; i++) {
+        for (int i=0; i<200; i++) {
             doPartialRebindOfIds(c1.getId());
             origManagementContext.getGarbageCollector().gcIteration();
             gcAndLog("iteration "+i);

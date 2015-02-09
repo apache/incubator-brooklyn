@@ -34,7 +34,6 @@ import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -226,15 +225,6 @@ public class CatalogUtils {
         } else {
             return mgmt.getCatalog().getCatalogItem(type, versionedId, BrooklynCatalog.DEFAULT_VERSION);
         }
-    }
-
-    @Beta
-    public static EntitySpec<?> createEntitySpec(ManagementContext mgmt, CatalogItem<?, ?> catalogItem) {
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, catalogItem);
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        EntitySpec<?> spec = EntitySpec.create( (Class)loader.loadClass(catalogItem.getJavaType()) );
-        spec.catalogItemId(catalogItem.getId());
-        return spec;
     }
 
 }

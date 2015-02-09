@@ -36,6 +36,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogEntityItemDto;
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;
+import brooklyn.catalog.internal.CatalogTestUtils;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
@@ -162,7 +163,7 @@ public class OsgiVersionMoreEntityTest {
     }
     
     public static Entity addItemFromCatalog(ManagementContext mgmt, TestApplication parent, CatalogItem<?, ?> c2) {
-        return parent.createAndManageChild( CatalogUtils.createEntitySpec(mgmt, c2) );
+        return parent.createAndManageChild( CatalogTestUtils.createEssentialEntitySpec(mgmt, c2) );
     }
 
     public static void assertV1MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {

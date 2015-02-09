@@ -46,6 +46,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
@@ -64,6 +65,7 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Time;
 
@@ -873,6 +875,18 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         }
         assertFalse(Entities.isManaged(member));
         assertEquals(cluster.getMembers().size(), 1);
+    }
+
+    @Test
+    public void testWithNonStartableEntity() throws Exception {
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(BasicEntity.class))
+                .configure(DynamicCluster.UP_QUORUM_CHECK, QuorumChecks.alwaysTrue())
+                .configure(DynamicCluster.INITIAL_SIZE, 2));
+        cluster.start(ImmutableList.of(loc));
+        
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertTrue(cluster.getAttribute(Attributes.SERVICE_UP));
     }
 
     private Throwable unwrapException(Throwable e) {
