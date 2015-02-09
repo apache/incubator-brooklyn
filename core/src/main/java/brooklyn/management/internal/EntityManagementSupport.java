@@ -268,7 +268,9 @@ public class EntityManagementSupport {
     public void onManagementStopping(ManagementTransitionInfo info) {
         synchronized (this) {
             if (managementContext != info.getManagementContext()) {
-                throw new IllegalStateException("Has different management context: "+managementContext+"; expected "+info.getManagementContext());
+                throw new IllegalStateException("onManagementStopping encountered different management context for "+entity+
+                    (!wasDeployed() ? " (wasn't deployed)" : !isDeployed() ? " (no longer deployed)" : "")+
+                    ": "+managementContext+"; expected "+info.getManagementContext());
             }
             Stopwatch startTime = Stopwatch.createStarted();
             while (!managementFailed.get() && nonDeploymentManagementContext!=null && 

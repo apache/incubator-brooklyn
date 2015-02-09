@@ -94,6 +94,14 @@ public class InitialFullRebindIteration extends RebindIteration {
                 // this is discouraged if we were already master
                 Entity anEntity = Iterables.getFirst(managementContext.getEntityManager().getEntities(), null);
                 if (anEntity!=null && !((EntityInternal)anEntity).getManagementSupport().isReadOnly()) {
+                    // NB: there is some complexity which can happen in this situation; "initial-full" rebind really expected everything is being
+                    // initially bound from persisted state, and completely so; "active-partial" is much more forgiving.
+                    // one big difference is in behaviour of management: it is recursive for most situations, and initial-full assumes recursive,
+                    // but primary-primary is *not* recursive;
+                    // as a result some "new" entities created during rebind might be left unmanaged; they should get GC'd,
+                    // but it's possible the new entity impl or even a new proxy could leak.
+                    // see HighAvailabilityManagerInMemoryTest.testLocationsStillManagedCorrectlyAfterDoublePromotion
+                    // (i've plugged the known such leaks, but still something to watch out for); -Alex 2015-02
                     overwritingMaster = true;
                     LOG.warn("Rebind requested for "+mode+" node "+managementContext.getManagementNodeId()+" "
                         + "when it already has active state; discouraged, "

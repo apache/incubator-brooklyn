@@ -27,6 +27,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.InMemoryObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
@@ -34,6 +35,7 @@ import brooklyn.location.Location;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
@@ -76,15 +78,22 @@ public class HighAvailabilityManagerInMemoryTest extends HighAvailabilityManager
         Collection<Location> lm = managementContext.getLocationManager().getLocations();
         log.info("Locs managed are: "+lm);
         log.info("            objs: "+identities(lm));
+        Assert.assertNotNull(entity.getManagementSupport().getManagementContext());
+        Assert.assertNotNull( ((EntityInternal)app.getChildren().iterator().next()).getManagementSupport().getManagementContext());
+        Assert.assertTrue( ((EntityInternal)app.getChildren().iterator().next()).getManagementSupport().isDeployed());
+        checkEntitiesHealthy(app, entity);
         
         managementContext.getRebindManager().forcePersistNow(true, null);
-        log.info("DODGY extra promoteToMaster");
+        log.info("Test deliberately doing unnecessary extra promoteToMaster");
         ha.promoteToMaster();
         
         log.info("Entities managed are: "+managementContext.getEntityManager().getEntities());
         Collection<Location> lle = entity.getLocations();
         log.info("Locs at entity(old) are: "+lle);
         log.info("                   objs: "+identities(lle));
+        // check entities -- the initial-full promotion previously re-created items, 
+        // and plugged them in as children, but only managed the roots
+        checkEntitiesHealthy(app, entity);
         
         // assert what's in the location manager is accurate
         Collection<Location> llmm = managementContext.getLocationManager().getLocations();
@@ -106,6 +115,16 @@ public class HighAvailabilityManagerInMemoryTest extends HighAvailabilityManager
         Assert.assertNotNull(ll2b.getParent(), "Parent not set after dodgy promoteToMaster");
         Assert.assertEquals(ll2b.getParent().getConfig(TestEntity.CONF_NAME), "sample1");
         
+    }
+
+    private void checkEntitiesHealthy(TestApplication app, TestEntity entity) {
+        Assert.assertNotNull(app.getManagementSupport().getManagementContext());
+        Assert.assertTrue( app.getManagementSupport().getManagementContext().isRunning() );
+        
+        Assert.assertNotNull(entity.getManagementSupport().getManagementContext());
+        Assert.assertNotNull( ((EntityInternal)app.getChildren().iterator().next()).getManagementSupport().getManagementContext() );
+        Assert.assertTrue( ((EntityInternal)app.getChildren().iterator().next()).getManagementSupport().isDeployed());
+        Assert.assertTrue( ((EntityInternal)app.getChildren().iterator().next()).getManagementSupport().getManagementContext() instanceof LocalManagementContext );
     }
 
     @Test(groups="Integration", invocationCount=50)

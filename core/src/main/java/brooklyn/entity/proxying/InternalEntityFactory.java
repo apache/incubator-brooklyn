@@ -358,7 +358,17 @@ public class InternalEntityFactory extends InternalFactory {
         checkState(interfaces != null && !Iterables.isEmpty(interfaces), "must have at least one interface for entity %s:%s", clazz, entityId);
         
         T entity = constructEntityImpl(clazz, ImmutableMap.<String, Object>of(), entityId);
-        if (((AbstractEntity)entity).getProxy() == null) ((AbstractEntity)entity).setProxy(createEntityProxy(interfaces, entity));
+        if (((AbstractEntity)entity).getProxy() == null) {
+            Entity proxy = managementContext.getEntityManager().getEntity(entity.getId());
+            if (proxy==null) {
+                // normal case, proxy does not exist
+                proxy = createEntityProxy(interfaces, entity);
+            } else {
+                // only if rebinding to existing; don't create a new proxy, then we have proxy explosion
+                // but callers must be careful that the entity's proxy does not yet point to it
+            }
+            ((AbstractEntity)entity).setProxy(proxy);
+        }
         return entity;
     }
     

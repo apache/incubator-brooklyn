@@ -27,6 +27,7 @@ import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.text.Strings;
@@ -41,7 +42,7 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
     }
     
     @Test
-    public void testRebindOneSimple() throws Exception {
+    public void testRebindChildSimple() throws Exception {
         TestEntity c1 = origApp.addChild(EntitySpec.create(TestEntity.class));
         Entities.manage(c1);
         AbstractEntity c1r = Entities.deproxy(c1);
@@ -53,6 +54,29 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
         
         Assert.assertTrue(c2 == c1, "Proxy instance should be the same: "+c1+" / "+c2);
         Assert.assertFalse(c2r == c1r, "Real instance should NOT be the same: "+c1r+" / "+c2r);
+    }
+
+    @Test
+    public void testRebindParentSimple() throws Exception {
+        TestEntity c1 = origApp.addChild(EntitySpec.create(TestEntity.class));
+        Entities.manage(c1);
+        
+        AbstractEntity origAppr = Entities.deproxy(origApp);
+        
+        doPartialRebindOfIds(origApp.getId());
+        
+        BrooklynObject app2 = origManagementContext.lookup(origApp.getId());
+        AbstractEntity app2r = Entities.deproxy((Entity)app2);
+        
+        Assert.assertTrue(app2 == origApp, "Proxy instance should be the same: "+app2+" / "+origApp);
+        Assert.assertFalse(app2r == origAppr, "Real instance should NOT be the same: "+app2r+" / "+origAppr);
+        
+        Assert.assertTrue(c1.getManagementSupport().isDeployed());
+        
+        // check that child of parent is not a new unmanaged entity
+        Entity c1b = origApp.getChildren().iterator().next();
+        Assert.assertTrue(c1.getManagementSupport().isDeployed());
+        Assert.assertTrue( ((EntityInternal)c1b).getManagementSupport().isDeployed(), "Not deployed: "+c1b );
     }
 
     @Test(groups="Integration")
