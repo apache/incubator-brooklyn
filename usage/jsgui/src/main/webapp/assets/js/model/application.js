@@ -63,6 +63,10 @@ define([
             }
             this.set('locations', newLocations)
         },
+        /* Drops falsy locations */
+        pruneLocations: function() {
+            this.set('locations', _.compact(this.get('locations')));
+        },
         setLocationAtIndex:function (locationNumber, val) {
             var newLocations = [],
                 currentLocations = this.get("locations")

@@ -103,8 +103,8 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         
         // We could also use SIGTERM (15)
         new ScriptHelper(this, "Send SIGINT to MongoDB server")
-        .body.append("kill -2 $(cat " + getPidFile() + ")")
-        .execute();
+                .body.append("kill -2 $(cat " + getPidFile() + ")")
+                .execute();
     }
 
     protected String getBaseName() {

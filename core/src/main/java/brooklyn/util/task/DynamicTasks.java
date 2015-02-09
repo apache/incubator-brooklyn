@@ -307,7 +307,7 @@ public class DynamicTasks {
         return q.isEmpty() ? null : Iterables.getLast(q);
     }
     
-    /** Calls {@link TaskQueueingContext#drain(Duration, boolean)} on the current task context */
+    /** Calls {@link TaskQueueingContext#drain(Duration, boolean, boolean)} on the current task context */
     public static TaskQueueingContext drain(Duration optionalTimeout, boolean throwFirstError) {
         TaskQueueingContext qc = DynamicTasks.getTaskQueuingContext();
         Preconditions.checkNotNull(qc, "Cannot drain when there is no queueing context");

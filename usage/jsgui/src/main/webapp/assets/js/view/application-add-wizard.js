@@ -41,6 +41,9 @@ define([
              DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
 ) {
 
+    /** Special ID to indicate that no locations will be provided when starting the server. */
+    var NO_LOCATION_INDICATOR = "__NONE__";
+
     function setVisibility(obj, isVisible) {
         if (isVisible) obj.show();
         else obj.hide();
@@ -196,6 +199,8 @@ define([
             if (this.model.mode == "yaml") {
                 yaml = this.model.yaml;
             } else {
+                // Drop any "None" locations.
+                this.model.spec.pruneLocations();
                 yaml = JSON.stringify(specToCAMP(this.model.spec.toJSON()));
             }
 
@@ -288,7 +293,7 @@ define([
             'paste #yaml_code':'onYamlCodeChange',
             'shown a[data-toggle="tab"]':'onTabChange',
             'click #templateTab #catalog-add':'switchToCatalogAdd',
-            'click #templateTab #catalog-yaml':'showYamlTab',
+            'click #templateTab #catalog-yaml':'showYamlTab'
         },
         template:_.template(CreateHtml),
         wizard: null,
@@ -575,33 +580,39 @@ define([
         },
         renderAddedLocations:function () {
             // renders the locations added to the model
-            var that = this;
-            var container = this.$("#selector-container")
-            container.empty()
+            var rowTemplate = this.locationRowTemplate,
+                optionTemplate = this.locationOptionTemplate,
+                container = this.$("#selector-container");
+            container.empty();
             for (var li = 0; li < this.model.spec.get("locations").length; li++) {
                 var chosenLocation = this.model.spec.get("locations")[li];
-                container.append(that.locationRowTemplate({
-                        initialValue: chosenLocation,
-                        rowId: li
-                    }))
+                container.append(rowTemplate({
+                    initialValue: chosenLocation,
+                    rowId: li
+                }));
             }
-            var $locationOptions = container.find('.select-location')
-            this.locations.each(function(aLocation) {
-                    if (!aLocation.id) {
-                        log("missing id for location:");
-                        log(aLocation);
-                    } else {
-                        var $option = that.locationOptionTemplate({
-                            id:aLocation.id,
-                            name:aLocation.getPrettyName()
-                        })
-                        $locationOptions.append($option)
-                    }
-                })
+            var $locationOptions = container.find('.select-location');
+            var templated = this.locations.map(function(aLocation) {
+                return optionTemplate({
+                    id: aLocation.id || "",
+                    name: aLocation.getPrettyName()
+                });
+            });
+
+            // insert "none" location
+            $locationOptions.append(templated.join(""));
             $locationOptions.each(function(i) {
-                var w = $($locationOptions[i]);
-                w.val( w.parent().attr('initialValue') );
-            })
+                var option = $($locationOptions[i]);
+                option.val(option.parent().attr('initialValue'));
+                // Only append dashes if there are any locations
+                if (option.find("option").length > 0) {
+                    option.append("<option disabled>------</option>");
+                }
+                option.append(optionTemplate({
+                    id: NO_LOCATION_INDICATOR,
+                    name: "None"
+                }));
+            });
         },
         render:function () {
             this.delegateEvents()
@@ -635,10 +646,11 @@ define([
         addLocation:function () {
             if (this.locations.models.length>0) {
                 this.model.spec.addLocation(this.locations.models[0].get("id"))
-                this.renderAddedLocations()
             } else {
-                this.$('div.info-nolocs-message').show('slow').delay(2000).hide('slow')
+                // i.e. No location
+                this.model.spec.addLocation(undefined);
             }
+            this.renderAddedLocations()
         },
         removeLocation:function (event) {
             var toBeRemoved = $(event.currentTarget).parent().attr('rowId')
@@ -686,16 +698,18 @@ define([
             return map;
         },
         selection:function (event) {
-            var loc_id = $(event.currentTarget).val();
-            var loc = this.locations.find(function (candidate) {
+            var loc_id = $(event.currentTarget).val(),
+                isNoneLocation = loc_id === NO_LOCATION_INDICATOR;
+            var locationValid = isNoneLocation || this.locations.find(function (candidate) {
                 return candidate.get("id")==loc_id;
-            })
-            if (!loc) {
+            });
+            if (!locationValid) {
                 log("invalid location "+loc_id);
                 this.showFailure("Invalid location "+loc_id);
                 this.model.spec.set("locations",[]);
             } else {
-                this.model.spec.setLocationAtIndex($(event.currentTarget).parent().attr('rowId'), loc_id); 
+                var index = $(event.currentTarget).parent().attr('rowId');
+                this.model.spec.setLocationAtIndex(index, isNoneLocation ? undefined : loc_id);
             }
         },
         updateName:function () {

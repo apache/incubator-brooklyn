@@ -42,7 +42,7 @@ import com.wordnik.swagger.core.ApiParam;
 public interface AccessApi {
 
     // TODO First access use-case is to disable location-provisioning (for Citrix's Cloud Portal Business Manager (CPBM)).
-    // We rely on location implementations calling m`anagementContext.getAccessController().canProvisionLocation(parent)`,
+    // We rely on location implementations calling `managementContext.getAccessController().canProvisionLocation(parent)`,
     // which isn't ideal (because some impls might forget to do this). We can't just do it in the core management-context
     // because things like JcloudsLocation will provision the VM and only then create the JcloudsSshMachineLocation.
     

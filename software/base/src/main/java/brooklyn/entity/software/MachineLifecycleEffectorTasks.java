@@ -78,7 +78,6 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -603,7 +602,7 @@ public abstract class MachineLifecycleEffectorTasks {
                     if (stoppingProcess == null) {
                         msg.append(". Process stop skipped, pre-stop not finished?");
                     } else {
-                        msg.append(" because process stop has "+
+                        msg.append(" because process stop has ").append(
                                 (stoppingProcess.isDone() ? "finished abnormally" : "not finished"));
                     }
                     log.warn(msg.toString());

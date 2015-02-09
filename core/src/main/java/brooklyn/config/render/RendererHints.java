@@ -268,7 +268,10 @@ public class RendererHints {
         return new NamedActionWithUrl<T>("Open", transform);
     }
 
-    /** use with care as this makes REST access difficult */
+    /**
+     * Forces the given sensor or config key's value to be censored. It will be
+     * presented as <code>********</code>.
+     */
     @Beta
     public static <T> DisplayValue<T> censoredValue() {
         return new DisplayValue<T>(Functions.constant("********"));
