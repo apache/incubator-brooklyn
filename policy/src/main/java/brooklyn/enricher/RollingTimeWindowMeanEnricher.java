@@ -64,11 +64,6 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
     public static ConfigKey<Double> CONFIDENCE_REQUIRED_TO_PUBLISH = ConfigKeys.newDoubleConfigKey("confidenceRequired",
         "Minimum confidence level (ie period covered) required to publish a rolling average", 0.8d);
 
-    // without this, we will refuse to publish if the server time differs from the publisher time (in a distributed setup);
-    // also we won't publish if a lot of time is spent actually doing the computation
-    public static ConfigKey<Duration> TIMESTAMP_GRACE_TIME = ConfigKeys.newConfigKey(Duration.class, "timestampGraceTime",
-        "When computing windowed average, allow this much slippage time between published metrics and local clock", Duration.millis(500));
-
     public static class ConfidenceQualifiedNumber {
         final Double value;
         final double confidence;
@@ -133,10 +128,12 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
         }
     }
     
+    @Deprecated /** @deprecatedsince 0.7.0; not used; use the 2-arg method */
     public ConfidenceQualifiedNumber getAverage() {
-        return getAverage(System.currentTimeMillis(), getConfig(TIMESTAMP_GRACE_TIME).toMilliseconds());
+        return getAverage(System.currentTimeMillis(), 0);
     }
     
+    @Deprecated /** @deprecated since 0.7.0; not used; use the 2-arg method */
     public ConfidenceQualifiedNumber getAverage(long fromTimeExact) {
         return getAverage(fromTimeExact, 0);
     }
@@ -145,11 +142,6 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
         if (timestamps.isEmpty()) {
             return lastAverage = new ConfidenceQualifiedNumber(lastAverage.value, 0.0d);
         }
-        
-        // (previously there was an old comment here, pre-Jul-2014,  
-        // saying "grkvlt - see email to development list";
-        // but i can't find that email)
-        // some of the more recent confidence and bogus-timestamp + exclusion logic might fix this though
         
         long firstTimestamp = -1;
         Iterator<Long> ti = timestamps.iterator();
