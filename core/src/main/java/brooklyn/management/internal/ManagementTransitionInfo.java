@@ -20,6 +20,8 @@ package brooklyn.management.internal;
 
 import brooklyn.management.ManagementContext;
 
+/** Stores a management transition mode, and the management context. */
+// TODO does this class really pull its weight?
 public class ManagementTransitionInfo {
 
     final ManagementContext mgmtContext;

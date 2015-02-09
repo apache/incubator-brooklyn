@@ -34,6 +34,7 @@ import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 
+/** Looks in {@link RebindContext} <i>and</i> {@link ManagementContext} to find entities, locations, etc. */
 public class RebindContextLookupContext implements LookupContext {
     
     @SuppressWarnings("unused")
@@ -44,19 +45,11 @@ public class RebindContextLookupContext implements LookupContext {
     
     protected final RebindContextImpl rebindContext;
     protected final RebindExceptionHandler exceptionHandler;
-    protected final boolean lookInManagementContext;
     
-    public RebindContextLookupContext(RebindContextImpl rebindContext, RebindExceptionHandler exceptionHandler) {
-        this(null, rebindContext, exceptionHandler);
-    }
     public RebindContextLookupContext(ManagementContext managementContext, RebindContextImpl rebindContext, RebindExceptionHandler exceptionHandler) {
-        this(managementContext, rebindContext, exceptionHandler, false);
-    }
-    public RebindContextLookupContext(ManagementContext managementContext, RebindContextImpl rebindContext, RebindExceptionHandler exceptionHandler, boolean lookInManagementContext) {
         this.managementContext = managementContext;
         this.rebindContext = rebindContext;
         this.exceptionHandler = exceptionHandler;
-        this.lookInManagementContext = lookInManagementContext;
     }
     
     @Override public ManagementContext lookupManagementContext() {

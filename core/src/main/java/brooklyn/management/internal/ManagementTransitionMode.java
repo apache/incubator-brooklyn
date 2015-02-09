@@ -23,6 +23,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+/**
+ * Records details of a management transition, specifically the {@link BrooklynObjectManagementMode} before and after,
+ * and allows easy checking of various aspects of that.
+ * <p>
+ * This helps make code readable and keep correct logic if we expand/change the management modes.
+ */
 public class ManagementTransitionMode {
 
     private static final Logger log = LoggerFactory.getLogger(ManagementTransitionMode.class);

@@ -18,6 +18,7 @@
  */
 package brooklyn.management.internal;
 
+/** Indicates how an entity/location/adjunct is treated at a given {@link ManagementContext} */
 public enum BrooklynObjectManagementMode {
     /** item does not exist, not in memory, nor persisted (e.g. creating for first time, or finally destroying) */
     NONEXISTENT, 

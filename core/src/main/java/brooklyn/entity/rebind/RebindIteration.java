@@ -73,7 +73,6 @@ import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.mementos.EnricherMemento;
@@ -163,7 +162,6 @@ public abstract class RebindIteration {
     protected final AtomicBoolean iterationStarted = new AtomicBoolean();
     protected final RebindContextImpl rebindContext;
     protected final Reflections reflections;
-    protected final LookupContext lookupContext;
     protected final BrooklynObjectInstantiator instantiator;
     
     // populated in the course of a run
@@ -210,11 +208,8 @@ public abstract class RebindIteration {
         this.persistenceStoreAccess = persistenceStoreAccess;
         
         managementContext = rebindManager.getManagementContext();
-        rebindContext = new RebindContextImpl(exceptionHandler, classLoader);
+        rebindContext = new RebindContextImpl(managementContext, exceptionHandler, classLoader);
         reflections = new Reflections(classLoader);
-        lookupContext = new RebindContextLookupContext(managementContext, rebindContext, exceptionHandler);
-        // TODO there seems to be a lot of redundancy between RebindContext and LookupContext; do we need both?
-        rebindContext.setLookupContext(lookupContext);
         instantiator = new BrooklynObjectInstantiator(classLoader, rebindContext, reflections);
         
         if (mode==ManagementNodeState.HOT_STANDBY || mode==ManagementNodeState.HOT_BACKUP) {
@@ -422,7 +417,7 @@ public abstract class RebindIteration {
         
         checkEnteringPhase(4);
         
-        memento = persistenceStoreAccess.loadMemento(mementoRawData, lookupContext, exceptionHandler);
+        memento = persistenceStoreAccess.loadMemento(mementoRawData, rebindContext.lookup(), exceptionHandler);
     }
 
     protected void instantiateAdjuncts(BrooklynObjectInstantiator instantiator) {

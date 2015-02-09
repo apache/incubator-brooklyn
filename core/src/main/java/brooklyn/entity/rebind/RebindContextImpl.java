@@ -28,6 +28,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.location.Location;
+import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
@@ -45,14 +46,18 @@ public class RebindContextImpl implements RebindContext {
     private final Map<String, CatalogItem<?, ?>> catalogItems = Maps.newLinkedHashMap();
     
     private final ClassLoader classLoader;
+    @SuppressWarnings("unused")
+    private final ManagementContext mgmt;
     private final RebindExceptionHandler exceptionHandler;
-    private LookupContext lookupContext;
+    private final LookupContext lookupContext;
     
     private boolean allAreReadOnly = false;
     
-    public RebindContextImpl(RebindExceptionHandler exceptionHandler, ClassLoader classLoader) {
+    public RebindContextImpl(ManagementContext mgmt, RebindExceptionHandler exceptionHandler, ClassLoader classLoader) {
+        this.mgmt = checkNotNull(mgmt, "mgmt");
         this.exceptionHandler = checkNotNull(exceptionHandler, "exceptionHandler");
         this.classLoader = checkNotNull(classLoader, "classLoader");
+        this.lookupContext = new RebindContextLookupContext(mgmt, this, exceptionHandler);
     }
 
     public void registerEntity(String id, Entity entity) {
@@ -171,10 +176,6 @@ public class RebindContextImpl implements RebindContext {
         return allAreReadOnly;
     }
 
-    public void setLookupContext(LookupContext lookupContext) {
-        this.lookupContext = lookupContext;
-    }
-    
     @Override
     public LookupContext lookup() {
         return lookupContext;

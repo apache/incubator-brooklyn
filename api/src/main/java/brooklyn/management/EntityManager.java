@@ -113,6 +113,8 @@ public interface EntityManager {
      * this might push it out to one or more remote management nodes.
      * Manage an entity.
      */
+    // TODO manage and unmanage without arguments should be changed to take an explicit ManagementTransitionMode
+    // (but that class is not currently in the API project)
     void manage(Entity e);
     
     /**

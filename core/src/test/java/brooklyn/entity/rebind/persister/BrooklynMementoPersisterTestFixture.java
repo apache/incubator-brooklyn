@@ -36,7 +36,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindContextImpl;
-import brooklyn.entity.rebind.RebindContextLookupContext;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.RecordingRebindExceptionHandler;
@@ -104,14 +103,13 @@ public abstract class BrooklynMementoPersisterTestFixture {
         RebindTestUtils.waitForPersisted(localManagementContext);
         
         RecordingRebindExceptionHandler failFast = new RecordingRebindExceptionHandler(RebindFailureMode.FAIL_FAST, RebindFailureMode.FAIL_FAST);
-        RebindContextImpl rebindContext = new RebindContextImpl(failFast, classLoader);
-        RebindContextLookupContext lookupContext = new RebindContextLookupContext(localManagementContext, rebindContext, failFast);
+        RebindContextImpl rebindContext = new RebindContextImpl(localManagementContext, failFast, classLoader);
         // here we force these two to be reegistered in order to resolve the enricher and policy
         // (normally rebind will do that after loading the manifests, but in this test we are just looking at persistence/manifest)
         rebindContext.registerEntity(app.getId(), app);
         rebindContext.registerEntity(entity.getId(), entity);
         
-        BrooklynMemento reloadedMemento = persister.loadMemento(null, lookupContext, failFast);
+        BrooklynMemento reloadedMemento = persister.loadMemento(null, rebindContext.lookup(), failFast);
         return reloadedMemento;
     }
     

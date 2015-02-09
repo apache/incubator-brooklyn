@@ -68,6 +68,8 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -368,6 +370,10 @@ public class RebindManagerImpl implements RebindManager {
     public void rebindPartialActive(CompoundTransformer transformer, Iterator<BrooklynObject> objectsToRebind) {
         final ClassLoader classLoader = 
             managementContext.getCatalog().getRootClassLoader();
+        // TODO we might want different exception handling for partials;
+        // failure at various points should leave proxies in a sensible state,
+        // either pointing at old or at new, though this is relatively untested,
+        // and some things e.g. policies might not be properly started
         final RebindExceptionHandler exceptionHandler = 
             RebindExceptionHandlerImpl.builder()
                 .danglingRefFailureMode(danglingRefFailureMode)
@@ -381,7 +387,15 @@ public class RebindManagerImpl implements RebindManager {
         ActivePartialRebindIteration iteration = new ActivePartialRebindIteration(this, mode, classLoader, exceptionHandler,
             rebindActive, readOnlyRebindCount, rebindMetrics, persistenceStoreAccess);
 
-        iteration.setObjectIterator(objectsToRebind);
+        iteration.setObjectIterator(Iterators.transform(objectsToRebind,
+            new Function<BrooklynObject,BrooklynObject>() {
+                @Override
+                public BrooklynObject apply(BrooklynObject obj) {
+                    // entities must be deproxied
+                    if (obj instanceof Entity) obj = Entities.deproxy((Entity)obj);
+                    return obj;
+                }
+            }));
         if (transformer!=null) iteration.applyTransformer(transformer);
         iteration.run();
     }
@@ -390,7 +404,6 @@ public class RebindManagerImpl implements RebindManager {
         List<BrooklynObject> objectsToRebind = MutableList.of();
         for (String objectId: objectsToRebindIds) {
             BrooklynObject obj = managementContext.lookup(objectId);
-            if (obj instanceof Entity) obj = Entities.deproxy((Entity)obj);
             objectsToRebind.add(obj);
         }
         rebindPartialActive(transformer, objectsToRebind.iterator());

@@ -496,6 +496,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
                     Thread oldOwner = xstreamLockOwner.getAndSet(null);
                     throw new IllegalStateException("xstream was locked by "+oldOwner+" but unlock attempt by "+Thread.currentThread());
                 }
+                xstreamLockOwner.notifyAll();
             }
         }
     }

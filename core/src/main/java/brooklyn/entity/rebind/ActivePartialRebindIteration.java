@@ -46,7 +46,8 @@ import brooklyn.util.collections.MutableSet;
 import com.google.common.base.Preconditions;
 
 /**
- * Pauses a set of existing entities, writes their state, applies a transformation, then reads them back.
+ * Replaces a set of existing entities (and their adjunts) and locations:
+ * writes their state, applies a transformation, then reads the state back.
  */
 public class ActivePartialRebindIteration extends RebindIteration {
 
@@ -88,6 +89,11 @@ public class ActivePartialRebindIteration extends RebindIteration {
         super.doRun();
     }
     
+    /** Rather than loading from the remote persistence store (as {@link InitialFullRebindIteration} does),
+     * this constructs the memento data by serializing the objects we are replacing. 
+     * TODO: Currently this does not do any pausing or unmanagement or guarding write access,
+     * so there is a short window for data loss between this write and the subsequent read.
+     */
     @Override
     protected void loadManifestFiles() throws Exception {
         checkEnteringPhase(1);
