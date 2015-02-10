@@ -1,0 +1,28 @@
+# The Crate distribution comes with comprehensive instructions on available
+# configuration. Select sections are reproduced here.
+
+
+############################## Network And HTTP ###############################
+
+# Crate, by default, binds itself to the 0.0.0.0 address, and listens
+# on port [4200-4300] for HTTP traffic and on port [4300-4400] for node-to-node
+# communication. (the range means that if the port is busy, it will automatically
+# try the next port).
+
+# Set both 'bind_host' and 'publish_host':
+network.host: ${driver.subnetHostname}
+
+# Set a custom port for the node to node communication (4300 by default):
+transport.tcp.port: ${entity.port?c}
+
+# Set a custom port to listen for HTTP traffic:
+http.port: ${entity.httpPort?c}
+
+
+#################################### Paths ####################################
+
+# Path to directory where to store table data allocated for this node.
+path.data: ${driver.dataLocation}
+
+# Path to log files:
+path.logs: ${driver.runDir}
