@@ -413,7 +413,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         @Override
         public Maybe<Object> getRaw(ConfigKey<?> key) {
             if (hasConfig(key, false)) return Maybe.of(getLocalBag().getStringKey(key.getName()));
-            if (getParent() != null) return ((AbstractLocation)getParent()).config().getRaw(key);
+            if (getParent() != null && isInherited(key)) return ((LocationInternal)getParent()).config().getRaw(key);
             return Maybe.absent();
         }
 
@@ -455,6 +455,16 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
                 return getLocalBag().containsKey(key);
             }
         }
+        
+        private boolean isInherited(ConfigKey<?> key) {
+            ConfigInheritance inheritance = key.getInheritance();
+            if (inheritance==null) inheritance = getDefaultInheritance();
+            return inheritance.isInherited(key, getParent(), AbstractLocation.this);
+        }
+
+        private ConfigInheritance getDefaultInheritance() {
+            return ConfigInheritance.ALWAYS;
+        }
     }
     
     @Override
@@ -473,19 +483,11 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         return config.hasConfig(key, includeInherited);
     }
 
-    private boolean isInherited(ConfigKey<?> key) {
-        ConfigInheritance inheritance = key.getInheritance();
-        if (inheritance==null) inheritance = getDefaultInheritance();
-        return inheritance.isInherited(key, getParent(), this);
-    }
-
-    private ConfigInheritance getDefaultInheritance() {
-        return ConfigInheritance.ALWAYS;
-    }
-
     @Override
     @Deprecated
     public Map<String,Object> getAllConfig(boolean includeInherited) {
+        // TODO Have no information about what to include/exclude inheritance wise.
+        // however few things use getAllConfigBag()
         ConfigBag bag = (includeInherited ? config().getBag() : config().getLocalBag());
         return bag.getAllConfig();
     }

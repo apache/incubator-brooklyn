@@ -44,6 +44,11 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
         /**
          * Returns a read-only view of all the config key/value pairs on this entity, backed by a string-based map, 
          * including config names that did not match anything on this entity.
+         * 
+         * TODO This method gives no information about which config is inherited versus local;
+         * this means {@link ConfigKey#getInheritance()} cannot be respected. This is an unsolvable problem
+         * for "config names that did not match anything on this entity". Therefore consider using
+         * alternative getters.
          */
         @Beta
         ConfigBag getBag();
