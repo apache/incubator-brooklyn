@@ -599,7 +599,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     
     @Override
     public void setEntity(EntityLocal entity) {
-        if (!configsInternal.getConfigRaw(RESIZE_OPERATOR, true).isPresentAndNonNull()) {
+        if (!config().getRaw(RESIZE_OPERATOR).isPresentAndNonNull()) {
             Preconditions.checkArgument(entity instanceof Resizable, "Provided entity must be an instance of Resizable, because no custom-resizer operator supplied");
         }
         super.setEntity(entity);

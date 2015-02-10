@@ -60,6 +60,8 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface EntityTransientCopyInternal {
 
+    // TODO For feeds() and config(), need to ensure mutator methods on returned object are not invoked.
+    
     // from Entity
     
     String getId();
@@ -95,11 +97,11 @@ public interface EntityTransientCopyInternal {
     
     // from EntityInternal:
     
-    EntityConfigMap getConfigMap();
-    Map<ConfigKey<?>,Object> getAllConfig();
+    @Deprecated EntityConfigMap getConfigMap();
+    @Deprecated Map<ConfigKey<?>,Object> getAllConfig();
     // for rebind mainly:
-    ConfigBag getAllConfigBag();
-    ConfigBag getLocalConfigBag();
+    @Deprecated ConfigBag getAllConfigBag();
+    @Deprecated ConfigBag getLocalConfigBag();
     @SuppressWarnings("rawtypes")
     Map<AttributeSensor, Object> getAllAttributes();
     EntityManagementSupport getManagementSupport();

@@ -401,7 +401,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         public ConfigBag getBag() {
             ConfigBag result = ConfigBag.newInstanceExtending(configBag, ImmutableMap.of());
             Location p = getParent();
-            if (p!=null) result.putIfAbsent(((LocationInternal)p).config().getBag().getAllConfig());
+            if (p!=null) result.putIfAbsent(((LocationInternal)p).config().getBag());
             return result;
         }
 

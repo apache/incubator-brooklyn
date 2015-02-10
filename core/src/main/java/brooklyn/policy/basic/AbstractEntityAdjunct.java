@@ -82,10 +82,17 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     
     /**
      * The config values of this entity. Updating this map should be done
-     * via getConfig/setConfig.
+     * via {@link #config()}.
+     * 
+     * @deprecated since 0.7.0; use {@link #config()} instead; this field may be made private or deleted in a future release.
      */
+    @Deprecated
     protected final ConfigMapImpl configsInternal = new ConfigMapImpl(this);
 
+    /**
+     * @deprecated since 0.7.0; use {@link #getAdjunctType()} instead; this field may be made private or deleted in a future release.
+     */
+    @Deprecated
     protected final AdjunctType adjunctType = new AdjunctType(this);
 
     @SetFromFlag
