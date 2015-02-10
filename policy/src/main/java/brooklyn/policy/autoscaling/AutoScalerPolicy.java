@@ -690,7 +690,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             unboundedSize = (int)Math.ceil(currentTotalActivity/metricUpperBoundD);
             desiredSize = toBoundedDesiredPoolSize(unboundedSize);
             if (desiredSize > currentSize) {
-                if (LOG.isTraceEnabled()) LOG.trace("{} resizing out pool {} from {} to {} ({} > {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricUpperBoundD});
+                if (LOG.isDebugEnabled()) LOG.debug("{} provisionally resizing out pool {} from {} to {} ({} > {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricUpperBoundD});
                 scheduleResize(desiredSize);
             } else {
                 if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} > {} > {}, but scale-out blocked eg by bounds/check)", new Object[] {this, poolEntity, currentSize, currentMetricD, metricUpperBoundD, metricLowerBoundD});
@@ -708,7 +708,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
                 desiredSize = toBoundedDesiredPoolSize(desiredSize);
             }
             if (desiredSize < currentSize) {
-                if (LOG.isTraceEnabled()) LOG.trace("{} resizing back pool {} from {} to {} ({} < {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricLowerBoundD});
+                if (LOG.isDebugEnabled()) LOG.debug("{} provisionally resizing back pool {} from {} to {} ({} < {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricLowerBoundD});
                 scheduleResize(desiredSize);
             } else {
                 if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} < {} < {}, but scale-back blocked eg by bounds/check)", new Object[] {this, poolEntity, currentSize, currentMetricD, metricLowerBoundD, metricUpperBoundD});

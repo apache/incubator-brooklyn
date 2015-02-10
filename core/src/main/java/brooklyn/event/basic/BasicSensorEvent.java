@@ -51,19 +51,14 @@ public class BasicSensorEvent<T> implements SensorEvent<T> {
 
     /** arguments should not be null (except in certain limited testing situations) */
     public BasicSensorEvent(Sensor<T> sensor, Entity source, T value) {
-        this(sensor, source, value, 0);
+        this(sensor, source, value, System.currentTimeMillis());
     }
     
     public BasicSensorEvent(Sensor<T> sensor, Entity source, T value, long timestamp) {
         this.sensor = sensor;
         this.source = source;
         this.value = value;
-
-        if (timestamp > 0) {
-            this.timestamp = timestamp;
-        } else {
-            this.timestamp = System.currentTimeMillis();
-        }
+        this.timestamp = timestamp;
     }
     
     public static <T> SensorEvent<T> of(Sensor<T> sensor, Entity source, T value, long timestamp) {

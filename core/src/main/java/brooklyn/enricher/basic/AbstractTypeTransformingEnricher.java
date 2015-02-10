@@ -61,7 +61,7 @@ public abstract class AbstractTypeTransformingEnricher<T,U> extends AbstractEnri
             Object value = producer.getAttribute((AttributeSensor)source);
             // TODO Aled didn't you write a convenience to "subscribeAndRunIfSet" ? (-Alex)
             if (value!=null)
-                onEvent(new BasicSensorEvent(source, producer, value));
+                onEvent(new BasicSensorEvent(source, producer, value, -1));
         }
     }
 }

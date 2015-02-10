@@ -35,6 +35,7 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.http.BetterMockWebServer;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 
 import com.google.mockwebserver.MockResponse;
 
@@ -107,6 +108,8 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         
         TestApplication newApp = rebind();
 
+        newApp.setAttribute(INT_METRIC, 10);
+        Time.sleep(Duration.millis(10));
         newApp.setAttribute(INT_METRIC, 10);
         EntityTestUtils.assertAttributeEqualsEventually(newApp, DOUBLE_METRIC, 10d);
     }

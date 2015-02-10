@@ -25,7 +25,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
@@ -151,7 +150,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
         emit((Sensor)destinationSensor, event.getValue());
     }
 
-    /** useful post-addition to emit current values */
+    /** useful once sensors are added to emit all values */
     public void emitAllAttributes() {
         emitAllAttributes(false);
     }
@@ -166,6 +165,8 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
             if (s instanceof AttributeSensor) {
                 AttributeSensor destinationSensor = (AttributeSensor<?>) getDestinationSensor(s);
                 Object v = producer.getAttribute((AttributeSensor<?>)s);
+                // TODO we should keep a timestamp for the source sensor and echo it 
+                // (this pretends timestamps are current, which probably isn't the case when we are propagating)
                 if (v != null || includeNullValues) entity.setAttribute(destinationSensor, v);
             }
         }

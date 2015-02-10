@@ -23,7 +23,6 @@ import groovy.lang.Closure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
@@ -102,8 +101,8 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTra
             return;
         }
         
-        if (eventTime > lastTime) {
-            if (lastValue == null) {
+        if (eventTime > 0 && eventTime > lastTime) {
+            if (lastValue == null || lastTime <= 0) {
                 // cannot calculate time-based delta with a single value
                 if (LOG.isTraceEnabled()) LOG.trace("{} received event but no last value so will not emit, null -> {} at {}", new Object[] {this, current, eventTime}); 
             } else {
@@ -116,6 +115,9 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTra
             }
             lastValue = current;
             lastTime = eventTime;
+        } else if (lastTime<0) {
+            lastValue = current;
+            lastTime = -1;
         }
     }
 }
