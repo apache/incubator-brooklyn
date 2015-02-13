@@ -30,11 +30,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
+import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -266,13 +268,25 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     public static BlobStoreContext newBlobstoreContext(String provider, @Nullable String endpoint, String identity, String credential, boolean useSoftlayerFix) {
         AlwaysRetryOnRenew.InterceptRetryOnRenewModule fix = 
             useSoftlayerFix ? new AlwaysRetryOnRenew.InterceptRetryOnRenewModule() : null;
-            
+
+        Properties overrides = new Properties();
+        // * Java 7,8 bug workaround - sockets closed by GC break the internal bookkeeping
+        //   of HttpUrlConnection, leading to invalid handling of the "HTTP/1.1 100 Continue"
+        //   response. Coupled with a bug when using SSL sockets reads will block
+        //   indefinitely even though a read timeout is explicitly set.
+        // * Java 6 ignores the header anyways as it is included in its restricted headers black list.
+        // * Also there's a bug in SL object store which still expects Content-Length bytes
+        //   even when it responds with a 408 timeout response, leading to incorrectly
+        //   interpreting the next request (triggered by above problem).
+        overrides.setProperty(Constants.PROPERTY_STRIP_EXPECT_HEADER, "true");
+
         ContextBuilder contextBuilder = ContextBuilder.newBuilder(provider).credentials(identity, credential);
         contextBuilder.modules(MutableList.copyOf(JcloudsUtil.getCommonModules())
             .appendIfNotNull(fix));
         if (!brooklyn.util.text.Strings.isBlank(endpoint)) {
             contextBuilder.endpoint(endpoint);
         }
+        contextBuilder.overrides(overrides);
         BlobStoreContext context = contextBuilder.buildView(BlobStoreContext.class);
 
         if (useSoftlayerFix)
