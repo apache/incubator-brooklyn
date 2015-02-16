@@ -26,6 +26,7 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -38,6 +39,8 @@ import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
 
 import com.google.common.annotations.Beta;
+import com.wordnik.swagger.core.ApiError;
+import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
@@ -86,6 +89,18 @@ public interface ServerApi {
             responseClass = "String",
             multiValueResponse = false)
     public String getStatus();
+
+    @GET
+    @Path("/config/{configKey}")
+    @ApiOperation(value = "Get the value of the specified config key from brooklyn properties")
+    @ApiErrors(value = {
+            // TODO: This should probably return a 404 if the key is not present, and should return a predictable
+            // value if the value is not set. Behaviour should be consistent with EntityConfigApi.get()
+            @ApiError(code = 204, reason = "Could not find config key")
+    })
+    public String getConfig(
+            @ApiParam(value = "Config key ID", required = true)
+            @PathParam("configKey") String configKey);
 
     @Deprecated /** @deprecated since 0.7.0 use /ha/states */
     @GET

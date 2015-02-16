@@ -21,10 +21,16 @@ package brooklyn.rest.resources;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import brooklyn.config.BrooklynProperties;
+import brooklyn.management.internal.ManagementContextInternal;
+import com.google.common.collect.ImmutableMap;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -97,5 +103,37 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
                 assertFalse(getManagementContext().isRunning());
             }});
     }
-    
+
+    @Test
+    void testGetConfig() throws Exception {
+        ((ManagementContextInternal)getManagementContext()).getBrooklynProperties().put("foo.bar.baz", "quux");
+        try {
+            assertEquals(client().resource("/v1/server/config/foo.bar.baz").get(String.class), "quux");
+        } finally {
+            ((ManagementContextInternal)getManagementContext()).getBrooklynProperties().remove("foo.bar.baz");
+        }
+    }
+
+    @Test
+    void testGetMissingConfigThrowsException() throws Exception {
+        final String key = "foo.bar.baz";
+        BrooklynProperties properties = ((ManagementContextInternal)getManagementContext()).getBrooklynProperties();
+        Object existingValue = null;
+        boolean keyAlreadyPresent = false;
+        String response = null;
+        if (properties.containsKey(key)) {
+            existingValue = properties.remove(key);
+            keyAlreadyPresent = true;
+        }
+        try {
+            response = client().resource("/v1/server/config/" + key).get(String.class);
+            Asserts.fail("Expected call to /v1/server/config/" + key + " to fail with status 404, instead server returned " + response);
+        } catch (UniformInterfaceException e) {
+            assertEquals(e.getResponse().getStatus(), 204);
+        } finally {
+            if (keyAlreadyPresent) {
+                properties.put(key, existingValue);
+            }
+        }
+    }
 }

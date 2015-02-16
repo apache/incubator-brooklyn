@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -236,6 +238,15 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     @Override
     public String getStatus() {
         return getHighAvailabilityNodeState().toString();
+    }
+
+    @Override
+    public String getConfig(String configKey) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ALL_SERVER_INFO, null)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
+        }
+        ConfigKey<String> config = ConfigKeys.newStringConfigKey(configKey);
+        return mgmt().getConfig().getConfig(config);
     }
 
     @Deprecated
