@@ -225,8 +225,14 @@ If you encounter issues or for more information, see [SSH Keys Localhost Setup](
 
 ### BYON
 
-"Bring-your-own-nodes" mode is useful in production, were machines have been provisioned by someone else, 
+"Bring-your-own-nodes" mode is useful in production, where machines have been provisioned by someone else,
 and during testing, to cut down provisioning time.
+
+Your nodes must meet the following prerequisites:
+
+- A suitable OS must have been installed on all nodes
+- The node must be running sshd (or similar)
+- the brooklyn user must be able to ssh to each node as root or as a user with passwordless sudo permission. (For more information on SSH keys, see [here](ssh-keys.html).) 
 
 To deploy to machines with known IP's in a blueprint, use the following syntax:
 
