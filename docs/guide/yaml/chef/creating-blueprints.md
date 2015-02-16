@@ -15,6 +15,8 @@ An illustrative example is below:
 *This works without any installation: try it now, copying-and-pasting to the Brooklyn console.
 (Don't forget to add your preferred `location: some-cloud` to the spec.)*  
 
+Notice, if you target `google-compute-engine` location, you may need to specify `bind_address: 0.0.0.0` for the `mysql` cookbook, as described [here](https://github.com/chef-cookbooks/mysql/blob/46dccac22d282a05ee6a401e10ae8f5f8114fd66/README.md#parameters).
+
 We'll now walk through the important constituent parts,
 and then proceed to describing things which can be done to simplify the deployment.
 
