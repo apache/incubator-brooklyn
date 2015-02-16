@@ -57,7 +57,7 @@ INFO  Started Brooklyn console at http://127.0.0.1:8081/, running classpath://br
 ### Next
 
 Next, open the web console on [127.0.0.1:8081](http://127.0.0.1:8081). 
-No application shave been deployed yet, so the "Create Application" dialog opens automatically:
+No applications have been deployed yet, so the "Create Application" dialog opens automatically:
 let's remedy this by **[deploying a blueprint](blueprints.html)**. 
 
 It is not necessary at this time, but depending on what you are going to do, 
