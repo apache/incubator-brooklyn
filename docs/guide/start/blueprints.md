@@ -33,9 +33,9 @@ location:
     credential: s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
 {% endhighlight %}
 
-(Alternatively, if you have `ssh localhost` [configured](../ops/locations/#localhost) you can leave it as is.
-See [Locations](../ops/locations) in the Operations section of the User Guide for detail on setting up 
-cloud providers, including putting credentials in a file on disk rather than in the blueprint.)
+Alternatively, if you have `ssh localhost` [configured](../ops/locations/#localhost) you can leave it as is.
+See __[Locations](../ops/locations)__ in the Operations section of the User Guide for detail on setting up
+cloud providers, including putting credentials in a file on disk rather than in the blueprint.
 
 With the modified YAML in the dialog, click "Finish". The dialog will close and Brooklyn will begin deploying your
 application. Your application will be shown as "Starting" on the web console's front page.
