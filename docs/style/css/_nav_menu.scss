@@ -1,0 +1,26 @@
+#nav-menu {
+  li {
+    padding-left: 1em;
+
+    > ul {
+      display: none;
+    }
+
+    &.collapsibleListOpen {
+      > div {
+        padding-left: 13px;
+        background: no-repeat url('../img/nav_menu/minus-green.png');
+      }
+      > ul {
+        display: block;
+      }
+    }
+
+    &.collapsibleListClosed {
+      > div {
+        padding-left: 13px;
+        background: no-repeat url('../img/nav_menu/plus-green.png');
+      }
+    }
+  }
+}

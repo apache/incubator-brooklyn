@@ -10,6 +10,7 @@ $style_dir: "{{ site.path.style }}";
 @import 'tooltips';
 @import 'code_blocks';
 @import 'menu';
+@import 'nav_menu';
 @import 'search';
 @import 'footer';
 @import 'main_container';
