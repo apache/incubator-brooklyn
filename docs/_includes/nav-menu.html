@@ -1,12 +1,10 @@
-<div id="nav-menu">
 {% dir_navigation %}
-</div>
 
 <script type="text/javascript">
   $(function() {
     function toggleMenu() {
       var collapsed;
-      var parent = $(this).parent();
+      var parent = $(this).parent().parent();
 
       if(parent.hasClass('collapsibleListOpen')) {
         collapsed = false;
@@ -26,7 +24,7 @@
 
       $(this).data('collapsed', !collapsed);
     }
-    $('#nav-menu .collapsibleListOpen > div').click(toggleMenu);
-    $('#nav-menu .collapsibleListClosed > div').click(toggleMenu);
+    $('#nav-menu .collapsibleListOpen > .menu-item > span').click(toggleMenu);
+    $('#nav-menu .collapsibleListClosed > .menu-item > span').click(toggleMenu);
   })();
 </script>

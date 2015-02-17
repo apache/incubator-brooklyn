@@ -14,6 +14,7 @@ module Jekyll
 
   class NavTree < Liquid::Tag
     def render(context)
+      allowed_roots = ['/guide']
       site = context.registers[:site]
       @page_url = context.environments.first["page"]["url"]
       # @folder_weights = site.data['folder_weights']
@@ -25,10 +26,11 @@ module Jekyll
       site.pages.each do |page|
         # exclude all pages that are hidden in front-matter
         # if page.data["navigation"]["show"] != false
+        if allowed_roots.any? { |root| page.url.start_with? root }
           path = page.url
           path = path.index('/')==0 ? path[1..-1] : path
           @nodes[path] = page.data
-        # end
+        end
       end
 
       #let's sort the pages by weight
@@ -65,15 +67,15 @@ module Jekyll
       sorted_tree = tree_array.sort_by {|node| [ -(node[:weight]), node[:base] ]}
 
       puts "generating nav tree for #{@page_url}"
-      files_first_traverse "", sorted_tree, 0
+      files_first_traverse sorted_tree, 0
     end
 
-    def files_first_traverse(prefix, nodes = [], depth=0)
+    def files_first_traverse(nodes = [], depth=0)
       output = ""
       if depth == 0
         id = 'id="nav-menu"'
       end
-      output += "#{prefix}<ul #{id} class=\"nav nav-list\">"
+      output += "<ul #{id} class=\"nav nav-list\">"
 
       nodes.each do |node|
         base = node[:base]
@@ -87,7 +89,7 @@ module Jekyll
 
         li_class = ""
         if base == @page_url
-          li_class = "active"
+          li_class = "active list-group-item"
           if icon_name
             icon_name = icon_name + " icon-white"
           end
@@ -95,7 +97,7 @@ module Jekyll
 
         icon_html = "<span class=\"#{icon_name}\"></span>" unless icon_name.nil?
 
-        output += "#{prefix}<li class=#{li_class}><a href=\"#{URI::encode base}\">#{icon_html}#{name}</a></li>" if subtree.empty?
+        output += "<li><a class=\"#{li_class}\" href=\"#{URI::encode base}\">#{icon_html}#{name}</a></li>" if subtree.empty?
       end
 
       nodes.each do |node|
@@ -118,7 +120,7 @@ module Jekyll
 
         name.gsub!(/_/,' ')
 
-        li_class = ""
+        li_class = ''
 
         if @page_url.index(base)
           list_class = "collapsibleListOpen"
@@ -127,7 +129,7 @@ module Jekyll
         end
 
         if href == @page_url
-          li_class = "active"
+          li_class = "active list-group-item"
         end
 
         if is_parent
@@ -136,7 +138,13 @@ module Jekyll
           icon_name = nil # @folder_icons[base]
 
           icon_html = icon_name.nil? ? "" : "<span class=\"#{icon_name}\"></span>"
-          li = "<li id=\"node-#{id}\" class=\"parent #{list_class}\"><div class=\"subtree-name\">#{icon_html}#{name}</div>"
+          if index_html = @nodes["#{base[1..-1]}/index.html"]
+            li = "<li id=\"node-#{id}\" class=\"parent #{list_class}\"><div class=\"menu-item\">"+
+                   "<span class=\"subtree-name\"></span>"+
+                   "<a href=\"#{index_html['url']}\" class=\"#{li_class}\">#{index_html['title']}</a></div>"
+          else
+            li = "<li id=\"node-#{id}\" class=\"parent #{list_class}\"><div class=\"menu-item\"><span class=\"subtree-name\">#{icon_html}</span> #{name.capitalize}</div>"
+          end
         else
           icon_name = @nodes[name]["icon"]
 
@@ -145,25 +153,27 @@ module Jekyll
           end
 
           icon_html = icon_name.nil? ? "<i class=\"#{icon_name}\"></i>" : ""
-          li = "<li class=\"#{li_class}\"><a href=\"#{URI::encode href}\">#{icon_html}#{name}</a></li>"
+          li = "<li><a class=\"#{li_class}\" href=\"#{URI::encode href}\">#{icon_html}#{name}</a></li>"
         end
 
-        output += "#{prefix}  #{li}"
+        output += li
 
         subtree_array = []
         subtree.each do |base, subtree|
-          subtree_array.push(:base => base, :subtree => subtree)
+          unless base.end_with? 'index.html'
+            subtree_array.push(:base => base, :subtree => subtree)
+          end
         end
 
         depth = depth + 1
-        output += files_first_traverse(prefix + '  ', subtree_array, depth)
+        output += files_first_traverse(subtree_array, depth)
 
         if is_parent
           output+= "</li>"
         end
       end
 
-      output += "#{prefix} </ul>"
+      output += "</ul>"
       output
     end
   end
