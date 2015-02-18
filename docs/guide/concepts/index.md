@@ -2,6 +2,7 @@
 title: Brooklyn Concepts
 title_in_menu: Brooklyn Concepts
 layout: website-normal
+weight: 9
 children:
 - entities.md
 - application-parent-membership.md

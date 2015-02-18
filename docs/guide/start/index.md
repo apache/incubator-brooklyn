@@ -1,6 +1,7 @@
 ---
 layout: website-normal
 title: Getting Started
+weight: 10
 menu_parent: ../index.md
 children:
 - running.md

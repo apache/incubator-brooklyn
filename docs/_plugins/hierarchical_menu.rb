@@ -20,8 +20,6 @@ module Jekyll
       # @folder_weights = site.data['folder_weights']
       # @folder_icons = site.data['folder_icons']["icons"]
       @nodes = {}
-      tree = {}
-      sorted_tree = {}
 
       site.pages.each do |page|
         # exclude all pages that are hidden in front-matter
@@ -33,19 +31,10 @@ module Jekyll
         end
       end
 
-      #let's sort the pages by weight
-      array = []
-      @nodes.each do |path, data|
-        array.push(:path => path, :weight => data["weight"], :title => data["title"])
-      end
-
-      sorted_nodes = array.sort_by {|h| [-(h[:weight]||0), h[:path] ]}
-
-      sorted_nodes.each do |node|
-        current  = tree
-        node[:path].split("/").inject("") do |sub_path,dir|
-
-
+      tree_nodes = {}
+      @nodes.each do |path, node|
+        current  = tree_nodes
+        path.split("/").inject("") do |sub_path,dir|
           sub_path = File.join(sub_path, dir)
           current[sub_path] ||= {}
           current    = current[sub_path]
@@ -53,32 +42,27 @@ module Jekyll
         end
       end
 
-      tree.each do |base, subtree|
-        folder_weight = 0 # @folder_weights[base]? @folder_weights[base] : 0
-        tree[base] = {"weight" => folder_weight, "subtree" => subtree}
-      end
-
-      tree_array = []
-
-      tree.each do |key, value|
-        tree_array.push(:base => key, :weight => value["weight"], :subtree => value["subtree"])
-      end
-
-      sorted_tree = tree_array.sort_by {|node| [ -(node[:weight]), node[:base] ]}
-
       puts "generating nav tree for #{@page_url}"
-      files_first_traverse sorted_tree, 0
+      @nav_location = ''
+      begin
+      files_first_traverse map_tree_nodes_to_weight(tree_nodes), 0
+      rescue Exception => e
+        puts [e.message, *e.backtrace].join("\n")
+      end
     end
 
-    def files_first_traverse(nodes = [], depth=0)
+    def files_first_traverse(tree_nodes, depth)
       output = ""
       if depth == 0
         id = 'id="nav-menu"'
       end
       output += "<ul #{id} class=\"nav nav-list\">"
 
-      nodes.each do |node|
-        base = node[:base]
+      sorted_tree_nodes = tree_nodes.to_a.sort_by do |(path, node)|
+        node[:weight] || 0
+      end
+
+      sorted_tree_nodes.each do |(base, node)|
         subtree = node[:subtree]
 
         name = base[1..-1]
@@ -100,11 +84,11 @@ module Jekyll
         output += "<li><a class=\"#{li_class}\" href=\"#{URI::encode base}\">#{icon_html}#{name}</a></li>" if subtree.empty?
       end
 
-      nodes.each do |node|
-        base = node[:base]
+      sorted_tree_nodes.each do |base, node|
         subtree = node[:subtree]
 
         next if subtree.empty?
+
         href = base
         name = base[1..-1]
         if name.index('.') != nil
@@ -122,29 +106,34 @@ module Jekyll
 
         li_class = ''
 
-        if @page_url.index(base)
-          list_class = "collapsibleListOpen"
-        else
-          list_class = "collapsibleListClosed"
-        end
-
         if href == @page_url
           li_class = "active list-group-item"
         end
 
         if is_parent
+          if @page_url.index(base)
+            open = true
+            list_class = "collapsibleListOpen"
+          else
+            open = false
+            list_class = "collapsibleListClosed"
+          end
+
           id = Digest::MD5.hexdigest(base)
 
           icon_name = nil # @folder_icons[base]
 
           icon_html = icon_name.nil? ? "" : "<span class=\"#{icon_name}\"></span>"
           if index_html = @nodes["#{base[1..-1]}/index.html"]
+            title = index_html['title']
             li = "<li id=\"node-#{id}\" class=\"parent #{list_class}\"><div class=\"menu-item\">"+
                    "<span class=\"subtree-name\"></span>"+
-                   "<a href=\"#{index_html['url']}\" class=\"#{li_class}\">#{index_html['title']}</a></div>"
+                   "<a href=\"#{index_html['url']}\" class=\"#{li_class}\">#{title}</a></div>"
           else
-            li = "<li id=\"node-#{id}\" class=\"parent #{list_class}\"><div class=\"menu-item\"><span class=\"subtree-name\">#{icon_html}</span> #{name.capitalize}</div>"
+            title = name.capitalize
+            li = "<li id=\"node-#{id}\" class=\"parent #{list_class}\"><div class=\"menu-item\"><span class=\"subtree-name\">#{icon_html}</span> #{title}</div>"
           end
+          @nav_location += " > #{title}"
         else
           icon_name = @nodes[name]["icon"]
 
@@ -158,15 +147,10 @@ module Jekyll
 
         output += li
 
-        subtree_array = []
-        subtree.each do |base, subtree|
-          unless base.end_with? 'index.html'
-            subtree_array.push(:base => base, :subtree => subtree)
-          end
-        end
+        subtree_nodes = subtree.reject { |k| k.end_with? 'index.html' }
 
         depth = depth + 1
-        output += files_first_traverse(subtree_array, depth)
+        output += files_first_traverse(map_tree_nodes_to_weight(subtree_nodes), depth)
 
         if is_parent
           output+= "</li>"
@@ -175,6 +159,19 @@ module Jekyll
 
       output += "</ul>"
       output
+    end
+
+    def map_tree_nodes_to_weight(tree_nodes)
+      tree_nodes.each do |base, subtree|
+        if base.end_with? '.html'
+          weight = -(@nodes[base[1..-1]]['weight'] || 0)
+        else
+          index_key = "#{base}/index.html"
+          weight = subtree[index_key] ? -(@nodes[index_key[1..-1]]['weight'] || 0) : 0
+        end
+        tree_nodes[base] = {weight: weight, subtree: subtree}
+      end
+      tree_nodes
     end
   end
 end
