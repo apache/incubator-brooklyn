@@ -18,15 +18,19 @@
  */
 package brooklyn.location.basic;
 
+import static org.testng.Assert.assertEquals;
+
 import java.util.Iterator;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import brooklyn.location.PortRange;
+import brooklyn.location.basic.PortRanges.LinearPortRange;
 import brooklyn.util.flags.TypeCoercions;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public class PortRangesTest {
 
@@ -65,6 +69,12 @@ public class PortRangesTest {
     }
     
     @Test
+    public void testFromStringThrowsIllegalArgumentException() {
+        assertFromStringThrowsIllegalArgumentException("80-100000");
+        assertFromStringThrowsIllegalArgumentException("0-80");
+    }
+
+    @Test
     public void testCoercion() {
         PortRanges.init();
         PortRange r = TypeCoercions.coerce("80", PortRange.class);
@@ -76,6 +86,33 @@ public class PortRangesTest {
         PortRanges.init();
         PortRange r = TypeCoercions.coerce(80, PortRange.class);
         assertContents(r, 80);
+    }
+    
+    @Test
+    public void testLinearRangeOfSizeOne() throws Exception {
+        LinearPortRange range = new LinearPortRange(80, 80);
+        assertEquals(Lists.newArrayList(range), ImmutableList.of(80));
+    }
+
+    @Test
+    public void testLinearRangeCountingUpwards() throws Exception {
+        LinearPortRange range = new LinearPortRange(80, 81);
+        assertEquals(Lists.newArrayList(range), ImmutableList.of(80, 81));
+    }
+    
+    @Test
+    public void testLinearRangeCountingDownwards() throws Exception {
+        LinearPortRange range = new LinearPortRange(80, 79);
+        assertEquals(Lists.newArrayList(range), ImmutableList.of(80, 79));
+    }
+    
+    protected void assertFromStringThrowsIllegalArgumentException(String range) {
+        try {
+            PortRanges.fromString(range);
+            Assert.fail();
+        } catch (IllegalArgumentException e) {
+            // success
+        }
     }
 
     private static <T> void assertContents(Iterable<T> actual, T ...expected) {

@@ -18,6 +18,8 @@
  */
 package brooklyn.location.basic;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -80,7 +82,10 @@ public class PortRanges {
             this.start = start;
             this.end = end;
             this.delta = delta;
-            assert delta!=0;
+            checkArgument(start > 0 && start <= MAX_PORT, "start port %s out of range", start);
+            checkArgument(end > 0 && end <= MAX_PORT, "end port %s out of range", end);
+            checkArgument(delta > 0 ? start <= end : start >= end, "start and end out of order: %s to %s, delta %s", start, end, delta);
+            checkArgument(delta != 0, "delta must be non-zero");
         }
         public LinearPortRange(int start, int end) {
             this(start, end, (start<=end?1:-1));
