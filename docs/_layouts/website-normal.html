@@ -31,7 +31,11 @@ layout: website-base
         </div>
 
         <div class="col-md-3">
+          {% if page.path contains 'guide/' %}
+            {% include nav-menu.html %}
+          {% else %}
             {% include sidemenu.html %}
+          {% endif %}
         </div>
     </div>
 </div>
