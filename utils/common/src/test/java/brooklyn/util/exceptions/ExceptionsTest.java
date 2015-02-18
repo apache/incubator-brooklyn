@@ -53,6 +53,12 @@ public class ExceptionsTest {
         assertContains(e, "ConcurrentModification");
     }
     
+    @Test
+    public void testCollapseTextWhenExceptionMessageEmpty() throws Exception {
+        String text = Exceptions.collapseText(new ExecutionException(new IllegalStateException()));
+        Assert.assertNotNull(text);
+    }
+    
     private void assert12StandardChecks(RuntimeException e, boolean isPropagated) {
         String collapseText = Exceptions.collapseText(e);
         log.info("Exception collapsing got: "+collapseText+" ("+e+")");
