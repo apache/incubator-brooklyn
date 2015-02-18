@@ -742,25 +742,31 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
 
                 if (setup.get(OPEN_IPTABLES)) {
-                    customisationForLogging.add("open iptables");
-                    
                     @SuppressWarnings("unchecked")
-                    List<String> iptablesRules = createIptablesRulesForNetworkInterface((Iterable<Integer>) setup.get(INBOUND_PORTS));
-                    iptablesRules.add(IptablesCommands.saveIptablesRules());
-                    List<String> batch = Lists.newArrayList();
-                    // Some entities, such as Riak (erlang based) have a huge range of ports, which leads to a script that
-                    // is too large to run (fails with a broken pipe). Batch the rules into batches of 50
-                    for (String rule : iptablesRules) {
-                        batch.add(rule);
-                        if (batch.size() == 50) {
-                            sshMachineLocation.execCommands("Inserting iptables rules, 50 command batch", batch);
-                            batch.clear();
+                    Iterable<Integer> inboundPorts = (Iterable<Integer>) setup.get(INBOUND_PORTS);
+                    
+                    if (inboundPorts == null || Iterables.isEmpty(inboundPorts)) {
+                        LOG.info("No ports to open in iptables (no inbound ports) for {} at {}", sshMachineLocation, this);
+                    } else {
+                        customisationForLogging.add("open iptables");
+                        
+                        List<String> iptablesRules = createIptablesRulesForNetworkInterface(inboundPorts);
+                        iptablesRules.add(IptablesCommands.saveIptablesRules());
+                        List<String> batch = Lists.newArrayList();
+                        // Some entities, such as Riak (erlang based) have a huge range of ports, which leads to a script that
+                        // is too large to run (fails with a broken pipe). Batch the rules into batches of 50
+                        for (String rule : iptablesRules) {
+                            batch.add(rule);
+                            if (batch.size() == 50) {
+                                sshMachineLocation.execCommands("Inserting iptables rules, 50 command batch", batch);
+                                batch.clear();
+                            }
                         }
+                        if (batch.size() > 0) {
+                            sshMachineLocation.execCommands("Inserting iptables rules", batch);
+                        }
+                        sshMachineLocation.execCommands("List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
                     }
-                    if (batch.size() > 0) {
-                        sshMachineLocation.execCommands("Inserting iptables rules", batch);
-                    }
-                    sshMachineLocation.execCommands("List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
                 }
                 
                 if (setup.get(STOP_IPTABLES)) {
