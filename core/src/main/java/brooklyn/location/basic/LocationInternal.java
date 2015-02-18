@@ -72,7 +72,8 @@ public interface LocationInternal extends BrooklynObjectInternal, Location {
 
     /**
      * Returns all config, including that inherited from parents.
-     * TODO this method does not respect {@link ConfigInheritance} and so usage is discouraged.
+     * 
+     * This method does not respect {@link ConfigInheritance} and so usage is discouraged.
      * 
      * @deprecated since 0.7.0; use {@link #config()}, such as {@code ((LocationInternal)location).config().getBag()}
      */

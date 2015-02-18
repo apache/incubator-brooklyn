@@ -47,7 +47,7 @@ public interface Configurable {
     public interface ConfigurationSupport {
 
         /**
-         * Gets the given configuration value for this entity, in the following order of preference:
+         * Gets the given configuration value for this entity, in the following order of precedence:
          * <ol>
          *   <li> value (including null) explicitly set on the entity
          *   <li> value (including null) explicitly set on an ancestor (inherited)
