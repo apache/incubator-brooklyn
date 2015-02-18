@@ -19,14 +19,19 @@ We do not yet have an official binary package for Apache Brooklyn. We plan to ad
 
 However, it is relatively easy to create the binary package from source code, if you have a working recent JDK and Maven 3.
 
-**1)** Unpack `apache-brooklyn-{{ site.brooklyn-stable-version }}.tar.gz` and go into this directory:
+**1)** Unpack `apache-brooklyn-{{ site.brooklyn-stable-version }}.tar.gz`
 
 {% highlight bash %}
 tar xvfz apache-brooklyn-{{ site.brooklyn-stable-version }}.tar.gz
+{% endhighlight %}
+
+**2)** Move to the newly created `apache-brooklyn-{{ site.brooklyn-stable-version }}` folder:
+
+{% highlight bash %}
 cd apache-brooklyn-{{ site.brooklyn-stable-version }}
 {% endhighlight %}
 
-**2)** Run this command in the `apache-brooklyn-{{ site.brooklyn-stable-version }}` folder:
+**3)** Run this command in the `apache-brooklyn-{{ site.brooklyn-stable-version }}` folder:
 
 {% highlight bash %}
 mvn clean install -DskipTests
