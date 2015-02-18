@@ -19,6 +19,10 @@
 package brooklyn.entity.trait;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.management.Task;
+
+import com.google.common.annotations.Beta;
 
 /**
  * Something that has mutable config, such as an entity or policy.
@@ -30,7 +34,60 @@ public interface Configurable {
     // FIXME Moved from core project to api project, as part of moving EntityLocal.
     // (though maybe it's fine here?)
 
-    /** returns the old value, or null if there was not one */
+    /**
+     * @return the old value, or null if there was not one
+     * @deprecated since 0.7.0; use {@link ConfigurationSupport#set(ConfigKey, Object)}, such as {@code config().set(key, val)} 
+     */
+    @Deprecated
     public <T> T setConfig(ConfigKey<T> key, T val);
 
+    ConfigurationSupport config();
+    
+    @Beta
+    public interface ConfigurationSupport {
+
+        /**
+         * Gets the given configuration value for this entity, in the following order of precedence:
+         * <ol>
+         *   <li> value (including null) explicitly set on the entity
+         *   <li> value (including null) explicitly set on an ancestor (inherited)
+         *   <li> a default value (including null) on the best equivalent static key of the same name declared on the entity
+         *        (where best equivalence is defined as preferring a config key which extends another, 
+         *        as computed in EntityDynamicType.getConfigKeys)
+         *   <li> a default value (including null) on the key itself
+         *   <li> null
+         * </ol>
+         */
+        <T> T get(ConfigKey<T> key);
+        
+        /**
+         * @see {@link #getConfig(ConfigKey)}
+         */
+        <T> T get(HasConfigKey<T> key);
+
+        /**
+         * Sets the config to the given value.
+         */
+        <T> T set(ConfigKey<T> key, T val);
+        
+        /**
+         * @see {@link #setConfig(HasConfigKey, Object)}
+         */
+        <T> T set(HasConfigKey<T> key, T val);
+        
+        /**
+         * Sets the config to the value returned by the task.
+         * 
+         * Returns immediately without blocking; subsequent calls to {@link #getConfig(ConfigKey)} 
+         * will execute the task, and block until the task completes.
+         * 
+         * @see {@link #setConfig(ConfigKey, Object)}
+         */
+        <T> T set(ConfigKey<T> key, Task<T> val);
+        
+        /**
+         * @see {@link #setConfig(ConfigKey, Task)}
+         */
+        <T> T set(HasConfigKey<T> key, Task<T> val);
+    }
 }

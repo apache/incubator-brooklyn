@@ -22,6 +22,7 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import brooklyn.entity.trait.Configurable;
 import brooklyn.entity.trait.Identifiable;
 
 import com.google.common.collect.ImmutableMap;
@@ -29,7 +30,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Super-type of entity, location, policy and enricher.
  */
-public interface BrooklynObject extends Identifiable {
+public interface BrooklynObject extends Identifiable, Configurable {
     
     /**
      * A display name; recommended to be a concise single-line description.
@@ -63,7 +64,7 @@ public interface BrooklynObject extends Identifiable {
     @Deprecated
     TagSupport getTagSupport();
     
-    public static interface TagSupport {
+    public interface TagSupport {
         /**
          * @return An immutable copy of the set of tags on this entity. 
          * Note {@link #containsTag(Object)} will be more efficient,
@@ -79,5 +80,4 @@ public interface BrooklynObject extends Identifiable {
         
         boolean removeTag(@Nonnull Object tag);
     }
-
 }

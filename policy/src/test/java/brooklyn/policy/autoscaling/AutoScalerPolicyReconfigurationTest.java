@@ -65,7 +65,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .build();
         tc.addPolicy(policy);
 
-        policy.setConfig(AutoScalerPolicy.MIN_POOL_SIZE, 3);
+        policy.config().set(AutoScalerPolicy.MIN_POOL_SIZE, 3);
         
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 3));
     }
@@ -85,7 +85,7 @@ public class AutoScalerPolicyReconfigurationTest {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
 
         // Decreases to new min-size
-        policy.setConfig(AutoScalerPolicy.MIN_POOL_SIZE, 1);
+        policy.config().set(AutoScalerPolicy.MIN_POOL_SIZE, 1);
         tc.setAttribute(MY_ATTRIBUTE, 0);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
     }
@@ -100,7 +100,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .build();
         tc.addPolicy(policy);
 
-        policy.setConfig(AutoScalerPolicy.MAX_POOL_SIZE, 4);
+        policy.config().set(AutoScalerPolicy.MAX_POOL_SIZE, 4);
         
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 4));
     }
@@ -119,7 +119,7 @@ public class AutoScalerPolicyReconfigurationTest {
         tc.setAttribute(MY_ATTRIBUTE, 200);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 6));
         
-        policy.setConfig(AutoScalerPolicy.MAX_POOL_SIZE, 8);
+        policy.config().set(AutoScalerPolicy.MAX_POOL_SIZE, 8);
         
         // Increases to max-size only
         tc.setAttribute(MY_ATTRIBUTE, 100000);
@@ -135,7 +135,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .build();
         tc.addPolicy(policy);
 
-        policy.setConfig(AutoScalerPolicy.METRIC_LOWER_BOUND, 51);
+        policy.config().set(AutoScalerPolicy.METRIC_LOWER_BOUND, 51);
 
         tc.setAttribute(MY_ATTRIBUTE, 50);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
@@ -150,7 +150,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .build();
         tc.addPolicy(policy);
 
-        policy.setConfig(AutoScalerPolicy.METRIC_UPPER_BOUND, 99);
+        policy.config().set(AutoScalerPolicy.METRIC_UPPER_BOUND, 99);
 
         tc.setAttribute(MY_ATTRIBUTE, 100);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
@@ -166,7 +166,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .build();
         tc.addPolicy(policy);
 
-        policy.setConfig(AutoScalerPolicy.RESIZE_UP_STABILIZATION_DELAY, Duration.ZERO);
+        policy.config().set(AutoScalerPolicy.RESIZE_UP_STABILIZATION_DELAY, Duration.ZERO);
 
         tc.setAttribute(MY_ATTRIBUTE, 101);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
@@ -182,7 +182,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .build();
         tc.addPolicy(policy);
 
-        policy.setConfig(AutoScalerPolicy.RESIZE_DOWN_STABILIZATION_DELAY, Duration.ZERO);
+        policy.config().set(AutoScalerPolicy.RESIZE_DOWN_STABILIZATION_DELAY, Duration.ZERO);
 
         tc.setAttribute(MY_ATTRIBUTE, 1);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));

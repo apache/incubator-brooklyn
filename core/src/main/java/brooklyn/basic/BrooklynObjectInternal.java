@@ -19,7 +19,15 @@
 package brooklyn.basic;
 
 import brooklyn.entity.rebind.RebindSupport;
+import java.util.Map;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.rebind.Rebindable;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
+
+import com.google.common.annotations.Beta;
 
 public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
     
@@ -28,4 +36,63 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
     @SuppressWarnings("rawtypes")  // subclasses typically apply stronger typing
     RebindSupport getRebindSupport();
     
+    ConfigurationSupportInternal config();
+
+    @Beta
+    public interface ConfigurationSupportInternal extends BrooklynObject.ConfigurationSupport {
+        
+        /**
+         * Returns a read-only view of all the config key/value pairs on this entity, backed by a string-based map, 
+         * including config names that did not match anything on this entity.
+         * 
+         * TODO This method gives no information about which config is inherited versus local;
+         * this means {@link ConfigKey#getInheritance()} cannot be respected. This is an unsolvable problem
+         * for "config names that did not match anything on this entity". Therefore consider using
+         * alternative getters.
+         */
+        @Beta
+        ConfigBag getBag();
+        
+        /**
+         * Returns a read-only view of the local (i.e. not inherited) config key/value pairs on this entity, 
+         * backed by a string-based map, including config names that did not match anything on this entity.
+         */
+        @Beta
+        ConfigBag getLocalBag();
+        
+        /**
+         * Returns the uncoerced value for this config key, if available, not taking any default.
+         * If there is no local value and there is an explicit inherited value, will return the inherited.
+         */
+        @Beta
+        Maybe<Object> getRaw(ConfigKey<?> key);
+
+        /**
+         * @see {@link #getConfigRaw(ConfigKey)}
+         */
+        @Beta
+        Maybe<Object> getRaw(HasConfigKey<?> key);
+
+        /**
+         * Returns the uncoerced value for this config key, if available,
+         * not following any inheritance chains and not taking any default.
+         */
+        @Beta
+        Maybe<Object> getLocalRaw(ConfigKey<?> key);
+
+        /**
+         * @see {@link #getLocalConfigRaw(ConfigKey)}
+         */
+        @Beta
+        Maybe<Object> getLocalRaw(HasConfigKey<?> key);
+
+        @Beta
+        void addToLocalBag(Map<String, ?> vals);
+
+        @Beta
+        void refreshInheritedConfig();
+        
+        @Beta
+        void refreshInheritedConfigOfChildren();
+    }
 }

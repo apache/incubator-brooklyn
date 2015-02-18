@@ -57,14 +57,14 @@ public class LocationTransformer {
         if (mgmt != null && (level==LocationDetailLevel.FULL_EXCLUDING_SECRET || level==LocationDetailLevel.FULL_INCLUDING_SECRET)) {
             LocationDefinition ld = new BasicLocationDefinition(id, locationSpec.getName(), locationSpec.getSpec(), locationSpec.getConfig());
             Location ll = mgmt.getLocationRegistry().resolve(ld, false, null).orNull();
-            if (ll!=null) config = ll.getAllConfig(true);
+            if (ll!=null) config = ((LocationInternal)ll).config().getBag().getAllConfig();
         } else if (level==LocationDetailLevel.LOCAL_EXCLUDING_SECRET) {
             // get displayName
             if (!config.containsKey(LocationConfigKeys.DISPLAY_NAME.getName()) && mgmt!=null) {
                 LocationDefinition ld = new BasicLocationDefinition(id, locationSpec.getName(), locationSpec.getSpec(), locationSpec.getConfig());
                 Location ll = mgmt.getLocationRegistry().resolve(ld, false, null).orNull();
                 if (ll!=null) {
-                    Map<String, Object> configExtra = ll.getAllConfig(true);
+                    Map<String, Object> configExtra = ((LocationInternal)ll).config().getBag().getAllConfig();
                     if (configExtra.containsKey(LocationConfigKeys.DISPLAY_NAME.getName())) {
                         ConfigBag configNew = ConfigBag.newInstance(config);
                         configNew.configure(LocationConfigKeys.DISPLAY_NAME, (String)configExtra.get(LocationConfigKeys.DISPLAY_NAME.getName()));
@@ -93,13 +93,13 @@ public class LocationTransformer {
         Map<String, Object> config = l.getConfig();
         if (mgmt != null && (level==LocationDetailLevel.FULL_EXCLUDING_SECRET || level==LocationDetailLevel.FULL_INCLUDING_SECRET)) {
             Location ll = mgmt.getLocationRegistry().resolve(l, false, null).orNull();
-            if (ll!=null) config = ll.getAllConfig(true);
+            if (ll!=null) config = ((LocationInternal)ll).config().getBag().getAllConfig();
         } else if (level==LocationDetailLevel.LOCAL_EXCLUDING_SECRET) {
             // get displayName
             if (mgmt != null && !config.containsKey(LocationConfigKeys.DISPLAY_NAME.getName())) {
                 Location ll = mgmt.getLocationRegistry().resolve(l, false, null).orNull();
                 if (ll!=null) {
-                    Map<String, Object> configExtra = ll.getAllConfig(true);
+                    Map<String, Object> configExtra = ((LocationInternal)ll).config().getBag().getAllConfig();
                     if (configExtra.containsKey(LocationConfigKeys.DISPLAY_NAME.getName())) {
                         ConfigBag configNew = ConfigBag.newInstance(config);
                         configNew.configure(LocationConfigKeys.DISPLAY_NAME, (String)configExtra.get(LocationConfigKeys.DISPLAY_NAME.getName()));
@@ -137,8 +137,9 @@ public class LocationTransformer {
         while (lp!=null && (spec==null || specId==null)) {
             // walk parent locations
             // TODO not sure this is the best strategy, or if it's needed, as the spec config is inherited anyway... 
-            if (spec==null)
-                spec = Strings.toString( lp.getAllConfig(true).get(LocationInternal.ORIGINAL_SPEC.getName()) );
+            if (spec==null) {
+                spec = Strings.toString( ((LocationInternal)lp).config().getRaw(LocationInternal.ORIGINAL_SPEC) );
+            }
             if (specId==null) {
                 LocationDefinition ld = null;
                 // prefer looking it up by name as this loads the canonical definition
@@ -159,11 +160,16 @@ public class LocationTransformer {
             if (ll!=null) specId = ll.getId();
         }
         
-        Map<String, Object> configOrig = l.getAllConfig(level!=LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
+        Map<String, Object> configOrig;
+        if (level == LocationDetailLevel.LOCAL_EXCLUDING_SECRET) {
+            configOrig = MutableMap.copyOf(((LocationInternal)l).config().getLocalBag().getAllConfig());
+        } else {
+            configOrig = MutableMap.copyOf(((LocationInternal)l).config().getBag().getAllConfig());
+        }
         if (level==LocationDetailLevel.LOCAL_EXCLUDING_SECRET) {
             // for LOCAL, also get the display name
             if (!configOrig.containsKey(LocationConfigKeys.DISPLAY_NAME.getName())) {
-                Map<String, Object> configExtra = l.getAllConfig(true);
+                Map<String, Object> configExtra = ((LocationInternal)l).config().getBag().getAllConfig();
                 if (configExtra.containsKey(LocationConfigKeys.DISPLAY_NAME.getName()))
                     configOrig.put(LocationConfigKeys.DISPLAY_NAME.getName(), configExtra.get(LocationConfigKeys.DISPLAY_NAME.getName()));
             }

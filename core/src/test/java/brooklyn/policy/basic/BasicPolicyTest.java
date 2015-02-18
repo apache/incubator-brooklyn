@@ -58,8 +58,8 @@ public class BasicPolicyTest extends BrooklynAppUnitTestSupport {
     public void testAddInstance() throws Exception {
         MyPolicy policy = new MyPolicy();
         policy.setDisplayName("Bob");
-        policy.setConfig(MyPolicy.STR_KEY, "aval");
-        policy.setConfig(MyPolicy.INT_KEY, 2);
+        policy.config().set(MyPolicy.STR_KEY, "aval");
+        policy.config().set(MyPolicy.INT_KEY, 2);
         app.addPolicy(policy);
         
         assertEquals(policy.getDisplayName(), "Bob");

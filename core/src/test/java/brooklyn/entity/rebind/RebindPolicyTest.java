@@ -179,7 +179,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     public void testReconfigurePolicyPersistsChange() throws Exception {
         MyPolicyReconfigurable policy = origApp.addPolicy(PolicySpec.create(MyPolicyReconfigurable.class)
                 .configure(MyPolicyReconfigurable.MY_CONFIG, "oldval"));
-        policy.setConfig(MyPolicyReconfigurable.MY_CONFIG, "newval");
+        policy.config().set(MyPolicyReconfigurable.MY_CONFIG, "newval");
         
         newApp = rebind();
         MyPolicyReconfigurable newPolicy = (MyPolicyReconfigurable) Iterables.getOnlyElement(newApp.getPolicies());

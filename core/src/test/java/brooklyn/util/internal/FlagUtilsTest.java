@@ -33,9 +33,11 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
@@ -264,8 +266,49 @@ public class FlagUtilsTest {
         int f1;
         
         ConfigBag bag = new ConfigBag();
+        BasicConfigurationSupport configSupport = new BasicConfigurationSupport();
+        
+        @Override
+        public ConfigurationSupport config() {
+            return configSupport;
+        }
+        
         public <T> T setConfig(ConfigKey<T> key, T val) {
-            return bag.put(key, val);
+            return config().set(key, val);
+        }
+        
+        private class BasicConfigurationSupport implements ConfigurationSupport {
+            @Override
+            public <T> T get(ConfigKey<T> key) {
+                return bag.get(key);
+            }
+
+            @Override
+            public <T> T get(HasConfigKey<T> key) {
+                return get(key.getConfigKey());
+            }
+
+            @Override
+            public <T> T set(ConfigKey<T> key, T val) {
+                T old = bag.get(key);
+                bag.configure(key, val);
+                return old;
+            }
+
+            @Override
+            public <T> T set(HasConfigKey<T> key, T val) {
+                return set(key.getConfigKey(), val);
+            }
+
+            @Override
+            public <T> T set(ConfigKey<T> key, Task<T> val) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public <T> T set(HasConfigKey<T> key, Task<T> val) {
+                return set(key.getConfigKey(), val);
+            }
         }
     }
 }

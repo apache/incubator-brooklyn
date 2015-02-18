@@ -45,9 +45,9 @@ import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.ApplicationSpec;
@@ -533,8 +533,8 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         log.info("starting testLocatedLocations");
         testListApplications();
 
-        Location l = getManagementContext().getApplications().iterator().next().getLocations().iterator().next();
-        if (!l.hasConfig(LocationConfigKeys.LATITUDE, false)) {
+        LocationInternal l = (LocationInternal) getManagementContext().getApplications().iterator().next().getLocations().iterator().next();
+        if (l.config().getLocalRaw(LocationConfigKeys.LATITUDE).isAbsent()) {
             log.info("Supplying fake locations for localhost because could not be autodetected");
             ((AbstractLocation) l).setHostGeoInfo(new HostGeoInfo("localhost", "localhost", 50, 0));
         }

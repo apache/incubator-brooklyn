@@ -95,7 +95,7 @@ public class HostLocationResolverTest {
         // prefer location-generic if nothing else
         brooklynProperties.put("brooklyn.location.privateKeyData", "privateKeyData-inGeneric");
 
-        Map<String, Object> conf = resolve("named:mynamed").obtain(ImmutableMap.of()).getAllConfig(true);
+        Map<String, Object> conf = resolve("named:mynamed").obtain(ImmutableMap.of()).config().getBag().getAllConfig();
         
         assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
         assertEquals(conf.get("privateKeyData"), "privateKeyData-inGeneric");

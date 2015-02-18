@@ -140,7 +140,7 @@ public class JcloudsByonLocationResolver implements LocationResolver {
                     .putIfNotNull("privateKeyFile", privateKeyFile)
                     .build();
             try {
-                JcloudsSshMachineLocation machine = jcloudsLocation.rebindMachine(jcloudsLocation.getAllConfigBag().putAll(machineFlags));
+                JcloudsSshMachineLocation machine = jcloudsLocation.rebindMachine(jcloudsLocation.config().getBag().putAll(machineFlags));
                 machines.add(machine);
             } catch (NoMachinesAvailableException e) {
                 log.warn("Error rebinding to jclouds machine "+hostIdentifier+" in "+jcloudsLocation, e);

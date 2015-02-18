@@ -292,7 +292,7 @@ public abstract class MachineLifecycleEffectorTasks {
                         if (log.isDebugEnabled())
                             log.debug("While starting {}, obtained new location instance {}", entity(),
                                     (machine instanceof SshMachineLocation ?
-                                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).getLocalConfigBag())
+                                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).config().getLocalBag())
                                             : machine));
                         return machine;
                     }

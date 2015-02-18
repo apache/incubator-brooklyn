@@ -40,6 +40,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
@@ -217,7 +218,7 @@ public class DynamicClusterWithAvailabilityZonesTest extends BrooklynAppUnitTest
         protected SimulatedLocation newSubLocation(Location parent, String displayName) {
             return managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class)
                     .parent(parent)
-                    .configure(parent.getAllConfig(true))
+                    .configure(((LocationInternal)parent).config().getBag().getAllConfig())
                     .displayName(displayName));
         }
     }

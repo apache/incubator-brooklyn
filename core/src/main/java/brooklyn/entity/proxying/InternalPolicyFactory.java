@@ -123,7 +123,7 @@ public class InternalPolicyFactory extends InternalFactory {
             // which the user may have overridden? 
             // Also see InternalLocationFactory for same issue, which this code is based on.
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
-                ((AbstractPolicy)pol).setConfig((ConfigKey)entry.getKey(), entry.getValue());
+                pol.config().set((ConfigKey)entry.getKey(), entry.getValue());
             }
             ((AbstractPolicy)pol).init();
             
@@ -164,7 +164,7 @@ public class InternalPolicyFactory extends InternalFactory {
             // which the user may have overridden? 
             // Also see InternalLocationFactory for same issue, which this code is based on.
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
-                ((AbstractEnricher)enricher).setConfig((ConfigKey)entry.getKey(), entry.getValue());
+                enricher.config().set((ConfigKey)entry.getKey(), entry.getValue());
             }
             ((AbstractEnricher)enricher).init();
             

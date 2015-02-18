@@ -241,7 +241,7 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
         newApp = rebind();
         MyLocation newLoc = (MyLocation) Iterables.get(newApp.getLocations(), 0);
 
-        assertNull(newLoc.getAllConfigBag().getStringKey("id"));
+        assertNull(newLoc.config().getBag().getStringKey("id"));
         assertEquals(newLoc.getId(), origLoc.getId());
     }
     

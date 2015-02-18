@@ -93,15 +93,34 @@ public interface Location extends Serializable, BrooklynObject {
      */
     boolean containsLocation(Location potentialDescendent);
 
-    /** Returns configuration set at this location or inherited or default */
+    /** 
+     * Returns configuration set at this location or inherited or default.
+     * 
+     * Convenience method for {@code config().get(key)}
+     */
     <T> T getConfig(ConfigKey<T> key);
-    
+
+    /**
+     * Convenience method for {@code config().get(key)}
+     * 
+     * @see {@link #getConfig(ConfigKey)}
+     */
     <T> T getConfig(HasConfigKey<T> key);
 
-    /** True iff the indication config key is set, either inherited (second argument true) or locally-only (second argument false) */
+    /** 
+     * True iff the indication config key is set, either inherited (second argument true) or locally-only (second argument false).
+     * 
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code ((LocationInternal)location).config().getRaw(key).isPresent()}
+     */
+    @Deprecated
     boolean hasConfig(ConfigKey<?> key, boolean includeInherited);
 
-    /** Returns all config set, either inherited (argument true) or locally-only (argument false) */
+    /** 
+     * Returns all config set, either inherited (argument true) or locally-only (argument false).
+     * 
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code policy.config().getBag()}
+     */
+    @Deprecated
     public Map<String,Object> getAllConfig(boolean includeInherited);
     
     /**

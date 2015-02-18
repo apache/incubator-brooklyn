@@ -120,7 +120,7 @@ public class SshTasks {
                 allConfig.putAll(mgmt.getConfig().getAllConfig());
         }
         
-        allConfig.putAll(((LocationInternal)location).getAllConfigBag());
+        allConfig.putAll(((LocationInternal)location).config().getBag());
         
         Map<String, Object> result = Maps.newLinkedHashMap();
         for (String keyS : allConfig.getAllConfig().keySet()) {

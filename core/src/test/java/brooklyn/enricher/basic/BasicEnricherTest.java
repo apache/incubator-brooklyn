@@ -76,8 +76,8 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
     public void testAddInstance() throws Exception {
         MyEnricher enricher = new MyEnricher();
         enricher.setDisplayName("Bob");
-        enricher.setConfig(MyEnricher.STR_KEY, "aval");
-        enricher.setConfig(MyEnricher.INT_KEY, 2);
+        enricher.config().set(MyEnricher.STR_KEY, "aval");
+        enricher.config().set(MyEnricher.INT_KEY, 2);
         app.addEnricher(enricher);
         
         assertEquals(enricher.getDisplayName(), "Bob");

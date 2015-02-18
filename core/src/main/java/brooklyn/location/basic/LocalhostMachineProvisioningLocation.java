@@ -179,7 +179,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             // TODO should take the plunge and try removing this altogether!
             // (or alternatively switch to copying all ancestor keys)
             for (HasConfigKey<?> k: SshMachineLocation.ALL_SSH_CONFIG_KEYS) {
-                if (hasConfig(k.getConfigKey(), true))
+                if (config().getRaw(k).isPresent())
                     flags2.put(k, getConfig(k));
             }
             

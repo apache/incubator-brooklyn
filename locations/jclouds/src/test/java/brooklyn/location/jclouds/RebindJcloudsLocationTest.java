@@ -52,7 +52,7 @@ public class RebindJcloudsLocationTest extends RebindTestFixtureWithApp {
         
         JcloudsLocation newLoc = (JcloudsLocation) newManagementContext.getLocationManager().getLocation(origLoc.getId());
         
-        ConfigBag newLocConfig = newLoc.getAllConfigBag();
+        ConfigBag newLocConfig = newLoc.config().getBag();
         ConfigBag config = ConfigBag.newInstanceCopying(newLocConfig);
         
         assertNull(newLocConfig.getStringKey(("id")));

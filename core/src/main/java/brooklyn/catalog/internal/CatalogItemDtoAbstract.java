@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.BasicCatalogItemRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.mementos.CatalogItemMemento;
@@ -62,6 +63,19 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     private @SetFromFlag Collection<CatalogBundle> libraries;
     private @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
 
+    /**
+     * Config not supported for catalog item. See {@link #getPlanYaml()}.
+     */
+    @Override
+    public ConfigurationSupportInternal config() {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public <U> U setConfig(ConfigKey<U> key, U val) {
+        return config().set(key, val);
+    }
+    
     @Override
     public String getId() {
         return getCatalogItemId();

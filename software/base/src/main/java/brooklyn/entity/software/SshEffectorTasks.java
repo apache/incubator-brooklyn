@@ -290,7 +290,7 @@ public class SshEffectorTasks {
         allConfig.putAll(globalConfig.getAllConfig());
         
         if (optionalLocation!=null)
-            allConfig.putAll(((LocationInternal)optionalLocation).getAllConfigBag());
+            allConfig.putAll(((LocationInternal)optionalLocation).config().getBag());
         
         allConfig.putAll(((EntityInternal)entity).getAllConfig());
         

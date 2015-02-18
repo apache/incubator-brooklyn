@@ -56,8 +56,8 @@ public class LocationConfigTest {
                 .configure("mylocation.myconfig", "myval1")
                 .configure("mylocation.myconfigwithflagname", "myval2"));
         
-        assertEquals(loc.getAllConfigBag().getAllConfig(), ImmutableMap.of("mylocation.myconfig", "myval1", "mylocation.myconfigwithflagname", "myval2"));
-        assertEquals(loc.getLocalConfigBag().getAllConfig(), ImmutableMap.of("mylocation.myconfig", "myval1", "mylocation.myconfigwithflagname", "myval2"));
+        assertEquals(loc.config().getBag().getAllConfig(), ImmutableMap.of("mylocation.myconfig", "myval1", "mylocation.myconfigwithflagname", "myval2"));
+        assertEquals(loc.config().getLocalBag().getAllConfig(), ImmutableMap.of("mylocation.myconfig", "myval1", "mylocation.myconfigwithflagname", "myval2"));
         assertEquals(loc.getAllConfig(true), ImmutableMap.of("mylocation.myconfig", "myval1", "mylocation.myconfigwithflagname", "myval2"));
         assertEquals(loc.getAllConfig(false), ImmutableMap.of("mylocation.myconfig", "myval1", "mylocation.myconfigwithflagname", "myval2"));
     }
@@ -69,8 +69,8 @@ public class LocationConfigTest {
         LocationInternal loc = managementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class)
                 .configure("myconfigflagname", "myval"));
         
-        assertEquals(loc.getAllConfigBag().getAllConfig(), ImmutableMap.of("mylocation.myconfigwithflagname", "myval", "myconfigflagname", "myval"));
-        assertEquals(loc.getLocalConfigBag().getAllConfig(), ImmutableMap.of("mylocation.myconfigwithflagname", "myval", "myconfigflagname", "myval"));
+        assertEquals(loc.config().getBag().getAllConfig(), ImmutableMap.of("mylocation.myconfigwithflagname", "myval", "myconfigflagname", "myval"));
+        assertEquals(loc.config().getLocalBag().getAllConfig(), ImmutableMap.of("mylocation.myconfigwithflagname", "myval", "myconfigflagname", "myval"));
         assertEquals(loc.getAllConfig(true), ImmutableMap.of("mylocation.myconfigwithflagname", "myval", "myconfigflagname", "myval"));
         assertEquals(loc.getAllConfig(false), ImmutableMap.of("mylocation.myconfigwithflagname", "myval", "myconfigflagname", "myval"));
     }
@@ -80,8 +80,8 @@ public class LocationConfigTest {
         LocationInternal loc = managementContext.getLocationManager().createLocation(LocationSpec.create(MyLocation.class)
                 .configure("notThere", "notThereVal"));
         
-        assertEquals(loc.getAllConfigBag().getAllConfig(), ImmutableMap.of("notThere", "notThereVal"));
-        assertEquals(loc.getLocalConfigBag().getAllConfig(), ImmutableMap.of("notThere", "notThereVal"));
+        assertEquals(loc.config().getBag().getAllConfig(), ImmutableMap.of("notThere", "notThereVal"));
+        assertEquals(loc.config().getLocalBag().getAllConfig(), ImmutableMap.of("notThere", "notThereVal"));
         assertEquals(loc.getAllConfig(true), ImmutableMap.of("notThere", "notThereVal"));
         assertEquals(loc.getAllConfig(false), ImmutableMap.of("notThere", "notThereVal"));
     }
@@ -96,8 +96,8 @@ public class LocationConfigTest {
         LocationInternal child = managementContext.getLocationManager().createLocation(LocationSpec.create(MyChildLocation.class)
                 .parent(loc));
 
-        assertEquals(child.getAllConfigBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfig", "myval1", "notThere", "notThereVal"));
-        assertEquals(child.getLocalConfigBag().getAllConfig(), ImmutableMap.of());
+        assertEquals(child.config().getBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfig", "myval1", "notThere", "notThereVal"));
+        assertEquals(child.config().getLocalBag().getAllConfig(), ImmutableMap.of());
         assertEquals(child.getAllConfig(true), ImmutableMap.of("mychildlocation.myconfig", "myval1", "notThere", "notThereVal"));
         assertEquals(child.getAllConfig(false), ImmutableMap.of());
     }
@@ -111,8 +111,8 @@ public class LocationConfigTest {
         LocationInternal child = managementContext.getLocationManager().createLocation(LocationSpec.create(MyChildLocation.class)
                 .parent(loc));
 
-        assertEquals(child.getAllConfigBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "myval"));
-        assertEquals(child.getLocalConfigBag().getAllConfig(), ImmutableMap.of());
+        assertEquals(child.config().getBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "myval"));
+        assertEquals(child.config().getLocalBag().getAllConfig(), ImmutableMap.of());
         assertEquals(child.getAllConfig(true), ImmutableMap.of("mychildlocation.myconfigwithflagname", "myval"));
         assertEquals(child.getAllConfig(false), ImmutableMap.of());
     }
@@ -125,8 +125,8 @@ public class LocationConfigTest {
         LocationInternal child = managementContext.getLocationManager().createLocation(LocationSpec.create(MyChildLocation.class)
                 .parent(loc));
 
-        assertEquals(child.getAllConfigBag().getAllConfig(), ImmutableMap.of("mylocation.myconfig", "myval1"));
-        assertEquals(child.getLocalConfigBag().getAllConfig(), ImmutableMap.of());
+        assertEquals(child.config().getBag().getAllConfig(), ImmutableMap.of("mylocation.myconfig", "myval1"));
+        assertEquals(child.config().getLocalBag().getAllConfig(), ImmutableMap.of());
         assertEquals(child.getAllConfig(true), ImmutableMap.of("mylocation.myconfig", "myval1"));
         assertEquals(child.getAllConfig(false), ImmutableMap.of());
     }
@@ -142,8 +142,8 @@ public class LocationConfigTest {
                 .configure("mychildlocation.myconfigwithflagname", "overrideMyval")
                 .configure("notThere", "overrideNotThereVal"));
 
-        assertEquals(child.getAllConfigBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "notThere", "overrideNotThereVal"));
-        assertEquals(child.getLocalConfigBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "notThere", "overrideNotThereVal"));
+        assertEquals(child.config().getBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "notThere", "overrideNotThereVal"));
+        assertEquals(child.config().getLocalBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "notThere", "overrideNotThereVal"));
         assertEquals(child.getAllConfig(true), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "notThere", "overrideNotThereVal"));
         assertEquals(child.getAllConfig(false), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "notThere", "overrideNotThereVal"));
     }
@@ -158,8 +158,8 @@ public class LocationConfigTest {
                 .parent(loc)
                 .configure("mychildconfigflagname", "overrideMyval"));
 
-        assertEquals(child.getAllConfigBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "mychildconfigflagname", "overrideMyval"));
-        assertEquals(child.getLocalConfigBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "mychildconfigflagname", "overrideMyval"));
+        assertEquals(child.config().getBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "mychildconfigflagname", "overrideMyval"));
+        assertEquals(child.config().getLocalBag().getAllConfig(), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "mychildconfigflagname", "overrideMyval"));
         assertEquals(child.getAllConfig(true), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "mychildconfigflagname", "overrideMyval"));
         assertEquals(child.getAllConfig(false), ImmutableMap.of("mychildlocation.myconfigwithflagname", "overrideMyval", "mychildconfigflagname", "overrideMyval"));
     }

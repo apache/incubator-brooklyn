@@ -252,7 +252,7 @@ public class MementosGenerators {
                 .putAll(FlagUtils.getFieldsWithFlagsExcludingModifiers(location, Modifier.STATIC ^ Modifier.TRANSIENT))
                 .removeAll(nonPersistableFlagNames)
                 .build();
-        ConfigBag persistableConfig = new ConfigBag().copy( ((AbstractLocation)location).getLocalConfigBag() ).removeAll(nonPersistableFlagNames);
+        ConfigBag persistableConfig = new ConfigBag().copy( ((LocationInternal)location).config().getLocalBag() ).removeAll(nonPersistableFlagNames);
 
         builder.copyConfig(persistableConfig);
         builder.locationConfig.putAll(persistableFlags);

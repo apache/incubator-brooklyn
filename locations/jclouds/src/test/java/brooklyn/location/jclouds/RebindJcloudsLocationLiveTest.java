@@ -102,7 +102,7 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsLiveTest {
         assertOsDetailEquals(actual.getOsDetails(), expected.getOsDetails());
         assertEquals(actual.getSshHostAndPort(), expected.getSshHostAndPort());
         assertEquals(actual.getPrivateAddress(), expected.getPrivateAddress());
-        assertConfigBagEquals(actual.getAllConfigBag(), expected.getAllConfigBag(), errmsg);
+        assertConfigBagEquals(actual.config().getBag(), expected.config().getBag(), errmsg);
     }
 
     private void assertOsDetailEquals(OsDetails actual, OsDetails expected) {
@@ -125,7 +125,7 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsLiveTest {
         assertEquals(actual.getIdentity(), expected.getIdentity(), errmsg);
         assertEquals(actual.getCredential(), expected.getCredential(), errmsg);
         assertEquals(actual.getHostGeoInfo(), expected.getHostGeoInfo(), errmsg);
-        assertConfigBagEquals(actual.getAllConfigBag(), expected.getAllConfigBag(), errmsg);
+        assertConfigBagEquals(actual.config().getBag(), expected.config().getBag(), errmsg);
     }
 
     private void assertConfigBagEquals(ConfigBag actual, ConfigBag expected, String errmsg) {

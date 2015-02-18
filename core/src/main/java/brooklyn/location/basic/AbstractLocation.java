@@ -48,6 +48,7 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.geo.HasHostGeoInfo;
 import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.management.Task;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.LocationMemento;
@@ -55,6 +56,7 @@ import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
@@ -100,6 +102,8 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     private Reference<HostGeoInfo> hostGeoInfo = new BasicReference<HostGeoInfo>();
 
+    private BasicConfigurationSupport config = new BasicConfigurationSupport();
+    
     private ConfigBag configBag = new ConfigBag();
 
     private volatile boolean managed;
@@ -109,7 +113,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     private final Map<Class<?>, Object> extensions = Maps.newConcurrentMap();
     
     private final LocationDynamicType locationType;
-    
+
     /**
      * Construct a new instance of an AbstractLocation.
      */
@@ -343,80 +347,179 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     }
 
     @Override
+    public ConfigurationSupportInternal config() {
+        return config ;
+    }
+
+    private class BasicConfigurationSupport implements ConfigurationSupportInternal {
+
+        @Override
+        public <T> T get(ConfigKey<T> key) {
+            if (hasConfig(key, false)) return getLocalBag().get(key);
+            if (getParent() != null && isInherited(key)) {
+                return getParent().getConfig(key);
+            }
+            
+            // In case this entity class has overridden the given key (e.g. to set default), then retrieve this entity's key
+            // TODO when locations become entities, the duplication of this compared to EntityConfigMap.getConfig will disappear.
+            @SuppressWarnings("unchecked")
+            ConfigKey<T> ownKey = (ConfigKey<T>) elvis(locationType.getConfigKey(key.getName()), key);
+
+            return ownKey.getDefaultValue();
+        }
+
+        @Override
+        public <T> T get(HasConfigKey<T> key) {
+            return get(key.getConfigKey());
+        }
+
+        @Override
+        public <T> T set(ConfigKey<T> key, T val) {
+            T result = configBag.put(key, val);
+            onChanged();
+            return result;
+        }
+
+        @Override
+        public <T> T set(HasConfigKey<T> key, T val) {
+            return set(key.getConfigKey(), val);
+        }
+
+        @Override
+        public <T> T set(ConfigKey<T> key, Task<T> val) {
+            // TODO Support for locations
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T> T set(HasConfigKey<T> key, Task<T> val) {
+            // TODO Support for locations
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ConfigBag getBag() {
+            ConfigBag result = ConfigBag.newInstanceExtending(configBag, ImmutableMap.of());
+            Location p = getParent();
+            if (p!=null) result.putIfAbsent(((LocationInternal)p).config().getBag());
+            return result;
+        }
+
+        @Override
+        public ConfigBag getLocalBag() {
+            return configBag;
+        }
+
+        @Override
+        public Maybe<Object> getRaw(ConfigKey<?> key) {
+            if (hasConfig(key, false)) return Maybe.of(getLocalBag().getStringKey(key.getName()));
+            if (getParent() != null && isInherited(key)) return ((LocationInternal)getParent()).config().getRaw(key);
+            return Maybe.absent();
+        }
+
+        @Override
+        public Maybe<Object> getRaw(HasConfigKey<?> key) {
+            return getRaw(key.getConfigKey());
+        }
+
+        @Override
+        public Maybe<Object> getLocalRaw(ConfigKey<?> key) {
+            if (hasConfig(key, false)) return Maybe.of(getLocalBag().getStringKey(key.getName()));
+            return Maybe.absent();
+        }
+
+        @Override
+        public Maybe<Object> getLocalRaw(HasConfigKey<?> key) {
+            return getLocalRaw(key.getConfigKey());
+        }
+
+        @Override
+        public void addToLocalBag(Map<String, ?> vals) {
+            configBag.putAll(vals);
+        }
+        
+        @Override
+        public void refreshInheritedConfig() {
+            // no-op for location
+        }
+        
+        @Override
+        public void refreshInheritedConfigOfChildren() {
+            // no-op for location
+        }
+        
+        private boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
+            if (includeInherited && isInherited(key)) {
+                return getBag().containsKey(key);
+            } else {
+                return getLocalBag().containsKey(key);
+            }
+        }
+        
+        private boolean isInherited(ConfigKey<?> key) {
+            ConfigInheritance inheritance = key.getInheritance();
+            if (inheritance==null) inheritance = getDefaultInheritance();
+            return inheritance.isInherited(key, getParent(), AbstractLocation.this);
+        }
+
+        private ConfigInheritance getDefaultInheritance() {
+            return ConfigInheritance.ALWAYS;
+        }
+    }
+    
+    @Override
     public <T> T getConfig(HasConfigKey<T> key) {
-        return getConfig(key.getConfigKey());
+        return config().get(key);
     }
 
     @Override
     public <T> T getConfig(ConfigKey<T> key) {
-        if (hasConfig(key, false)) return getLocalConfigBag().get(key);
-        if (getParent()!=null && isInherited(key)) {
-            return getParent().getConfig(key);
-        }
-        
-        // In case this entity class has overridden the given key (e.g. to set default), then retrieve this entity's key
-        // TODO when locations become entities, the duplication of this compared to EntityConfigMap.getConfig will disappear.
-        @SuppressWarnings("unchecked")
-        ConfigKey<T> ownKey = (ConfigKey<T>) elvis(locationType.getConfigKey(key.getName()), key);
-
-        return ownKey.getDefaultValue();
+        return config().get(key);
     }
 
     @Override
+    @Deprecated
     public boolean hasConfig(ConfigKey<?> key, boolean includeInherited) {
-        boolean locally = getLocalConfigBag().containsKey(key);
-        if (locally) return true;
-        if (!includeInherited || !isInherited(key)) return false;
-        if (getParent()!=null) return getParent().hasConfig(key, true);
-        return false;
-    }
-
-    private boolean isInherited(ConfigKey<?> key) {
-        ConfigInheritance inheritance = key.getInheritance();
-        if (inheritance==null) inheritance = getDefaultInheritance();
-        return inheritance.isInherited(key, getParent(), this);
-    }
-
-    private ConfigInheritance getDefaultInheritance() {
-        return ConfigInheritance.ALWAYS;
+        return config.hasConfig(key, includeInherited);
     }
 
     @Override
+    @Deprecated
     public Map<String,Object> getAllConfig(boolean includeInherited) {
-        ConfigBag bag = (includeInherited ? getAllConfigBag() : getLocalConfigBag());
+        // TODO Have no information about what to include/exclude inheritance wise.
+        // however few things use getAllConfigBag()
+        ConfigBag bag = (includeInherited ? config().getBag() : config().getLocalBag());
         return bag.getAllConfig();
     }
     
     @Override
+    @Deprecated
     public ConfigBag getAllConfigBag() {
         // TODO see comments in EntityConfigMap and on interface methods. 
         // here ConfigBag is used exclusively so
         // we have no information about what to include/exclude inheritance wise.
         // however few things use getAllConfigBag()
-        ConfigBag result = ConfigBag.newInstanceExtending(configBag, ImmutableMap.of());
-        Location p = getParent();
-        if (p!=null) result.putIfAbsent(((LocationInternal)p).getAllConfigBag().getAllConfig());
-        return result;
+        return config().getBag();
     }
     
     @Override
     public ConfigBag getLocalConfigBag() {
-        return configBag;
+        return config().getLocalBag();
     }
 
     /** 
      * @deprecated since 0.7; use {@link #getLocalConfigBag()}
      * @since 0.6
      */
+    @Deprecated
     public ConfigBag getRawLocalConfigBag() {
-        return getLocalConfigBag();
+        return config().getLocalBag();
     }
     
     @Override
+    @Deprecated
     public <T> T setConfig(ConfigKey<T> key, T value) {
-        T result = configBag.put(key, value);
-        onChanged();
-        return result;
+        return config().set(key, value);
     }
 
     /**

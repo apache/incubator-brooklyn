@@ -101,8 +101,8 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testConfigCanBeSetOnEnricher() throws Exception {
         MyEnricher enricher = new MyEnricher();
-        enricher.setConfig(MyEnricher.STR_KEY, "aval");
-        enricher.setConfig(MyEnricher.INT_KEY, 2);
+        enricher.config().set(MyEnricher.STR_KEY, "aval");
+        enricher.config().set(MyEnricher.INT_KEY, 2);
         app.addEnricher(enricher);
         
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY), "aval");
@@ -114,7 +114,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
         MyEnricher enricher = new MyEnricher(MutableMap.builder()
                 .put(MyEnricher.STR_KEY, "aval")
                 .build());
-        enricher.setConfig(MyEnricher.STR_KEY, "diffval");
+        enricher.config().set(MyEnricher.STR_KEY, "diffval");
         app.addEnricher(enricher);
         
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY), "diffval");
@@ -128,7 +128,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
         app.addEnricher(enricher);
         
         try {
-            enricher.setConfig(MyEnricher.STR_KEY,"newval");
+            enricher.config().set(MyEnricher.STR_KEY,"newval");
             fail();
         } catch (UnsupportedOperationException e) {
             // success

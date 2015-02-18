@@ -412,7 +412,8 @@ public class LocalLocationManager implements LocationManagerInternal {
             ((AbstractLocation)loc).setParent(null, false);
         }
         // clear config to help with GC; i know you're not supposed to, but this seems to help, else config bag is littered with refs to entities etc
-        ((AbstractLocation)loc).getLocalConfigBag().clear();
+        // FIXME relies on config().getLocalBag() returning the underlying bag!
+        ((AbstractLocation)loc).config().getLocalBag().clear();
     }
     
     /**

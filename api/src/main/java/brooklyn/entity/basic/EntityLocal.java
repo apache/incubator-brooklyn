@@ -48,7 +48,7 @@ import com.google.common.base.Function;
  * FIXME Add {@link setAttribute(AttributeSensorAndConfigKey<?,T>)} back in if/when move it back,
  * or if we extract an interface for AttributeSensorAndConfigKey.
  */
-public interface EntityLocal extends Entity, Configurable {
+public interface EntityLocal extends Entity {
     
     // FIXME Rename to something other than EntityLocal.
     // Separate out what is specific to "local jvm", and what is here for an SPI rather than API.
@@ -60,11 +60,27 @@ public interface EntityLocal extends Entity, Configurable {
     void setDisplayName(String displayName);
 
     /**
-     * Must be called before the entity is managed.
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().set(key, val)}
      */
+    @Deprecated
     <T> T setConfig(ConfigKey<T> key, T val);
+    
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().set(key, val)}
+     */
+    @Deprecated
     <T> T setConfig(ConfigKey<T> key, Task<T> val);
+    
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().set(key, val)}
+     */
+    @Deprecated
     <T> T setConfig(HasConfigKey<T> key, T val);
+    
+    /**
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().set(key, val)}
+     */
+    @Deprecated
     <T> T setConfig(HasConfigKey<T> key, Task<T> val);
 
     /**

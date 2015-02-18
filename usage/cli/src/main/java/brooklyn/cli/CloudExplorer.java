@@ -245,7 +245,7 @@ public class CloudExplorer {
             failIfArguments();
             ComputeService computeService = loc.getComputeService();
             
-            Template template = loc.buildTemplate(computeService, loc.getAllConfigBag());
+            Template template = loc.buildTemplate(computeService, loc.config().getBag());
             Image image = template.getImage();
             Hardware hardware = template.getHardware();
             org.jclouds.domain.Location location = template.getLocation();

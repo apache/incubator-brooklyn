@@ -65,7 +65,7 @@ public class LocalhostLocationResolverTest {
         brooklynProperties.put("brooklyn.location.localhost.publicKeyData", "myPublicKeyData");
         brooklynProperties.put("brooklyn.location.localhost.privateKeyPassphrase", "myprivateKeyPassphrase");
 
-        Map<String, Object> conf = resolve("localhost").getAllConfig(true);
+        Map<String, Object> conf = resolve("localhost").config().getBag().getAllConfig();
         
         assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
         assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
@@ -82,7 +82,7 @@ public class LocalhostLocationResolverTest {
         brooklynProperties.put("brooklyn.localhost.publicKeyData", "myPublicKeyData");
         brooklynProperties.put("brooklyn.localhost.privateKeyPassphrase", "myprivateKeyPassphrase");
 
-        Map<String, Object> conf = resolve("localhost").getAllConfig(true);
+        Map<String, Object> conf = resolve("localhost").config().getBag().getAllConfig();
         
         assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
         assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
@@ -98,7 +98,7 @@ public class LocalhostLocationResolverTest {
         brooklynProperties.put("brooklyn.localhost.private-key-data", "myprivateKeyData");
         brooklynProperties.put("brooklyn.localhost.public-key-data", "myPublicKeyData");
         brooklynProperties.put("brooklyn.localhost.private-key-passphrase", "myprivateKeyPassphrase");
-        Map<String, Object> conf = resolve("localhost").getAllConfig(true);
+        Map<String, Object> conf = resolve("localhost").config().getBag().getAllConfig();
         
         assertEquals(conf.get("privateKeyFile"), "myprivatekeyfile");
         assertEquals(conf.get("publicKeyFile"), "mypublickeyfile");
@@ -123,7 +123,7 @@ public class LocalhostLocationResolverTest {
         // prefer location-generic if nothing else
         brooklynProperties.put("brooklyn.location.privateKeyData", "privateKeyData-inGeneric");
 
-        Map<String, Object> conf = resolve("named:mynamed").getAllConfig(true);
+        Map<String, Object> conf = resolve("named:mynamed").config().getBag().getAllConfig();
         
         assertEquals(conf.get("privateKeyFile"), "privateKeyFile-inNamed");
         assertEquals(conf.get("publicKeyFile"), "publicKeyFile-inProviderSpecific");
@@ -212,10 +212,10 @@ public class LocalhostLocationResolverTest {
     
     @Test
     public void testResolvesPropertiesInSpec() throws Exception {
-        Location location = resolve("localhost(privateKeyFile=myprivatekeyfile,name=myname)");
+        LocationInternal location = resolve("localhost(privateKeyFile=myprivatekeyfile,name=myname)");
         assertTrue(location instanceof LocalhostMachineProvisioningLocation);
         assertEquals(location.getDisplayName(), "myname");
-        assertEquals(location.getAllConfig(true).get("privateKeyFile"), "myprivatekeyfile");
+        assertEquals(location.config().getBag().getStringKey("privateKeyFile"), "myprivatekeyfile");
     }
     
     @Test
@@ -233,10 +233,10 @@ public class LocalhostLocationResolverTest {
         return (BasicLocationRegistry) managementContext.getLocationRegistry();
     }
     
-    private Location resolve(String val) {
+    private LocationInternal resolve(String val) {
         Location l = managementContext.getLocationRegistry().resolve(val);
         Assert.assertNotNull(l);
-        return l;
+        return (LocationInternal) l;
     }
     
     private void assertThrowsNoSuchElement(String val) {

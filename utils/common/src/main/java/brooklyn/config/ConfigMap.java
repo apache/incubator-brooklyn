@@ -29,14 +29,26 @@ public interface ConfigMap {
     
     /** @see #getConfig(ConfigKey, Object), with default value as per the key, or null */
     public <T> T getConfig(ConfigKey<T> key);
-    /** @see #getConfig(ConfigKey, Object), with default value as per the key, or null  */
+    
+    /** @see #getConfig(ConfigKey, Object), with default value as per the key, or null */
     public <T> T getConfig(HasConfigKey<T> key);
-    /** @see #getConfig(ConfigKey, Object), with provided default value if not set */
+    
+    /**
+     * @see #getConfig(ConfigKey, Object), with provided default value if not set
+     * @deprecated since 0.7.0; use {@link #getConfig(HasConfigKey)}
+     */
+    @Deprecated
     public <T> T getConfig(HasConfigKey<T> key, T defaultValue);
-    /** returns value stored against the given key,
+    
+    /**
+     * Returns value stored against the given key,
      * resolved (if it is a Task, possibly blocking), and coerced to the appropriate type, 
      * or given default value if not set, 
-     * unless the default value is null in which case it returns the default*/ 
+     * unless the default value is null in which case it returns the default.
+     * 
+     * @deprecated since 0.7.0; use {@link #getConfig(ConfigKey)}
+     */
+    @Deprecated
     public <T> T getConfig(ConfigKey<T> key, T defaultValue);
 
     /** as {@link #getConfigRaw(ConfigKey)} but returning null if not present 
@@ -46,13 +58,13 @@ public interface ConfigMap {
     
     /** returns the value stored against the given key, 
      * <b>not</b> any default,
-     * <b>not</b> resolved (and guaranteed non-blocking)
-     * and <b>not</b> type-coerced
+     * <b>not</b> resolved (and guaranteed non-blocking),
+     * and <b>not</b> type-coerced.
      * @param key  key to look up
      * @param includeInherited  for {@link ConfigMap} instances which have an inheritance hierarchy, 
-     * whether to traverse it or not; has no effects where there is no inheritance 
+     *        whether to traverse it or not; has no effects where there is no inheritance 
      * @return raw, unresolved, uncoerced value of key in map,  
-     * but <b>not</b> any default on the key
+     *         but <b>not</b> any default on the key
      */
     public Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited);
 

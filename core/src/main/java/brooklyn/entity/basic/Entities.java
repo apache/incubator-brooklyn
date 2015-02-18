@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
@@ -316,7 +317,7 @@ public class Entities {
             ConfigKey<?> realKey = e.getEntityType().getConfigKey(it.getName());
             if (realKey!=null) it = realKey;
 
-            Maybe<Object> mv = ((EntityInternal)e).getConfigMap().getConfigRaw(it, false);
+            Maybe<Object> mv = ((EntityInternal)e).config().getLocalRaw(it);
             if (!isTrivial(mv)) {
                 Object v = mv.get();
                 out.append(currentIndentation+tab+tab+it.getName());
@@ -401,7 +402,7 @@ public class Entities {
     public static void dumpInfo(Location loc, Writer out, String currentIndentation, String tab) throws IOException {
         out.append(currentIndentation+loc.toString()+"\n");
 
-        for (Object entryO : ((LocationInternal)loc).getAllConfigBag().getAllConfig().entrySet()) {
+        for (Object entryO : ((LocationInternal)loc).config().getBag().getAllConfig().entrySet()) {
             Map.Entry entry = (Map.Entry)entryO;
             Object keyO = entry.getKey();
             String key =
@@ -456,7 +457,7 @@ public class Entities {
         out.append(currentIndentation+enr.toString()+"\n");
 
         for (ConfigKey<?> key : sortConfigKeys(enr.getEnricherType().getConfigKeys())) {
-            Maybe<Object> val = ((AbstractEnricher)enr).getConfigMap().getConfigRaw(key, true);
+            Maybe<Object> val = ((BrooklynObjectInternal)enr).config().getRaw(key);
             if (!isTrivial(val)) {
                 out.append(currentIndentation+tab+tab+key);
                 out.append(" = ");
@@ -487,7 +488,7 @@ public class Entities {
         out.append(currentIndentation+pol.toString()+"\n");
 
         for (ConfigKey<?> key : sortConfigKeys(pol.getPolicyType().getConfigKeys())) {
-            Maybe<Object> val = ((AbstractPolicy)pol).getConfigMap().getConfigRaw(key, true);
+            Maybe<Object> val = ((BrooklynObjectInternal)pol).config().getRaw(key);
             if (!isTrivial(val)) {
                 out.append(currentIndentation+tab+tab+key);
                 out.append(" = ");

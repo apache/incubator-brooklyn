@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
@@ -59,10 +60,10 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource implement
     public Map<String, Object> batchConfigRead(String application, String entityToken, String policyToken) {
         // TODO: add test
         Policy policy = brooklyn().getPolicy(application, entityToken, policyToken);
-        Map<ConfigKey<?>, Object> source = policy.getAllConfig();
+        Map<String, Object> source = ((BrooklynObjectInternal)policy).config().getBag().getAllConfig();
         Map<String, Object> result = Maps.newLinkedHashMap();
-        for (Map.Entry<ConfigKey<?>, Object> ek : source.entrySet()) {
-            result.put(ek.getKey().getName(), getStringValueForDisplay(brooklyn(), policy, ek.getValue()));
+        for (Map.Entry<String, Object> ek : source.entrySet()) {
+            result.put(ek.getKey(), getStringValueForDisplay(brooklyn(), policy, ek.getValue()));
         }
         return result;
     }

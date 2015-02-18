@@ -34,6 +34,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 
@@ -63,7 +64,7 @@ public class EntityLocationUtilsTest extends BrooklynAppUnitTestSupport {
         Entities.dumpInfo(app);
 
         log.info("r2loc: "+r2.getLocations());
-        log.info("props: "+r2.getLocations().iterator().next().getAllConfig(false));
+        log.info("props: "+((LocationInternal)r2.getLocations().iterator().next()).config().getBag().getAllConfig());
 
         Map<Location, Integer> counts = new EntityLocationUtils(mgmt).countLeafEntitiesByLocatedLocations();
         log.info("count: "+counts);

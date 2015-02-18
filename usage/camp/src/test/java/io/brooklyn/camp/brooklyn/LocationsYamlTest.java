@@ -113,7 +113,7 @@ public class LocationsYamlTest extends AbstractYamlTest {
         Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
         LocalhostMachineProvisioningLocation loc = (LocalhostMachineProvisioningLocation) Iterables.getOnlyElement(app.getLocations());
         assertEquals(loc.getDisplayName(), "myname");
-        assertEquals(loc.getAllConfig(false).get("myconfkey"), "myconfval");
+        assertEquals(loc.config().getLocalBag().getStringKey("myconfkey"), "myconfval");
     }
 
     @Test
@@ -135,9 +135,9 @@ public class LocationsYamlTest extends AbstractYamlTest {
         LocalhostMachineProvisioningLocation loc1 = (LocalhostMachineProvisioningLocation) locs.get(0);
         LocalhostMachineProvisioningLocation loc2 = (LocalhostMachineProvisioningLocation) locs.get(1);
         assertEquals(loc1.getDisplayName(), "myname1");
-        assertEquals(loc1.getAllConfig(false).get("myconfkey"), "myconfval1");
+        assertEquals(loc1.config().getLocalBag().getStringKey("myconfkey"), "myconfval1");
         assertEquals(loc2.getDisplayName(), "myname2");
-        assertEquals(loc2.getAllConfig(false).get("myconfkey"), "myconfval2");
+        assertEquals(loc2.config().getLocalBag().getStringKey("myconfkey"), "myconfval2");
     }
 
     // TODO Fails because PlanInterpretationContext constructor throws NPE on location's value (using ImmutableMap).
