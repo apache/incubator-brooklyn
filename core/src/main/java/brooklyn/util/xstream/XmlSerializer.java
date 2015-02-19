@@ -72,7 +72,7 @@ public class XmlSerializer<T> {
     }
     
     protected MapperWrapper wrapMapper(MapperWrapper next) {
-        return next;
+        return new CompilerIndependentOuterClassFieldMapper(next);
     }
 
     public void serialize(Object object, Writer writer) {
