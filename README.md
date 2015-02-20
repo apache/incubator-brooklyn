@@ -44,7 +44,7 @@ Alternatively, use Brooklyn as an integrated-stand-alone management node for you
 
 Three quick start options are available:
 
-* The [getting started guide](https://brooklyn.incubator.apache.org/quickstart/) will step you through downloading and installing Brooklyn and running the examples.
+* The [getting started guide](https://brooklyn.incubator.apache.org/v/latest/start/running.html) will step you through downloading and installing Brooklyn and running the examples.
 * Alternatively, [download the latest release](https://github.com/brooklyncentral/brooklyn/tarball/master) (tgz),
 * or, fork or clone the repo: `git clone git://github.com/apache/incubator-brooklyn.git` then `cd incubator-brooklyn; mvn clean install; cd usage/dist/target/brooklyn-dist; bin/brooklyn launch`
 `.
@@ -59,8 +59,7 @@ Three quick start options are available:
 
 ## Bug Tracker
 
-Have a bug or a feature request? [Please open a new issue](https://github.com/brooklyncentral/brooklyn/issues).
-
+Have a bug or a feature request? [Please open a new issue](https://issues.apache.org/jira/browse/BROOKLYN/?selectedTab=com.atlassian.jira.jira-projects-plugin:summary-panel).
 
 ## Contributing
 
