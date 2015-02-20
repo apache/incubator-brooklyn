@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -50,6 +51,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
+import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.Task;
@@ -71,6 +73,7 @@ import brooklyn.util.text.Strings;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -455,23 +458,31 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             if (isAvailabilityZoneEnabled()) {
                 // this member's location could be a machine provisioned by a sub-location, or the actual sub-location
                 List<Location> subLocations = findSubLocations(getLocation());
-                Location actualMemberLoc = checkNotNull(Iterables.getOnlyElement(member.getLocations()), "member's location (%s)", member);
-                Location contenderMemberLoc = actualMemberLoc;
+                Collection<Location> actualMemberLocs = member.getLocations();
                 boolean foundMatch = false;
-                do {
-                    if (subLocations.contains(contenderMemberLoc)) {
-                        memberLoc = contenderMemberLoc;
-                        foundMatch = true;
-                        LOG.debug("In {} replacing member {} ({}), inferred its sub-location is {}", new Object[] {this, memberId, member, memberLoc});
-                    }
-                    contenderMemberLoc = contenderMemberLoc.getParent();
-                } while (!foundMatch && contenderMemberLoc != null);
+                for (Iterator<Location> iter = actualMemberLocs.iterator(); !foundMatch && iter.hasNext();) {
+                    Location actualMemberLoc = iter.next();
+                    Location contenderMemberLoc = actualMemberLoc;
+                    do {
+                        if (subLocations.contains(contenderMemberLoc)) {
+                            memberLoc = contenderMemberLoc;
+                            foundMatch = true;
+                            LOG.debug("In {} replacing member {} ({}), inferred its sub-location is {}", new Object[] {this, memberId, member, memberLoc});
+                        }
+                        contenderMemberLoc = contenderMemberLoc.getParent();
+                    } while (!foundMatch && contenderMemberLoc != null);
+                }
                 if (!foundMatch) {
-                    memberLoc = actualMemberLoc;
-                    LOG.warn("In {} replacing member {} ({}), could not find matching sub-location; falling back to its actual location: {}", new Object[] {this, memberId, member, memberLoc});
+                    if (actualMemberLocs.isEmpty()) {
+                        memberLoc = subLocations.get(0);
+                        LOG.warn("In {} replacing member {} ({}), has no locations; falling back to first availability zone: {}", new Object[] {this, memberId, member, memberLoc});
+                    } else {
+                        memberLoc = Iterables.tryFind(actualMemberLocs, Predicates.instanceOf(MachineProvisioningLocation.class)).or(Iterables.getFirst(actualMemberLocs, null));
+                        LOG.warn("In {} replacing member {} ({}), could not find matching sub-location; falling back to its actual location: {}", new Object[] {this, memberId, member, memberLoc});
+                    }
                 } else if (memberLoc == null) {
                     // impossible to get here, based on logic above!
-                    throw new IllegalStateException("Unexpected condition! cluster="+this+"; member="+member+"; actualMemberLoc="+actualMemberLoc);
+                    throw new IllegalStateException("Unexpected condition! cluster="+this+"; member="+member+"; actualMemberLocs="+actualMemberLocs);
                 }
             } else {
                 memberLoc = getLocation();
