@@ -116,7 +116,17 @@ module SiteStructure
       # Pathname API ignores first arg below if second is absolute
 #      puts "converting #{path} wrt #{referrent ? referrent.path : ""}"
       file = Pathname.new(File.dirname(referrent ? referrent.path : "")) + path
-      file += "index.md" if file.to_s.end_with? "/"
+
+      if file.to_s.end_with? "/"
+        if File.exist? File.join(file, 'index.md')
+          file += 'index.md'
+        elsif File.exist? File.join(file, 'index.html')
+          file += 'index.html'
+        else
+          file += 'index.md'
+        end
+      end
+
       file = file.cleanpath
       # is there a better way to trim a leading / ?
       file = file.relative_path_from(Pathname.new("/")) unless file.relative?
@@ -167,11 +177,11 @@ module SiteStructure
       # process all pages
       puts "site_structure now processing all pages" if @@verbose
       site.pages.each { |p| 
-        Generator.gen_structure(site, { 'path' => p.path }, nil, [], [], structure_processed_pages) if (p.path.end_with? ".md") && (!p['menu_processed'])
+        Generator.gen_structure(site, { 'path' => p.path }, nil, [], [], structure_processed_pages) if (p.path.end_with?(".md") || p.path.end_with?(".html")) && (!p['menu_processed'])
       }
       site.data['structure_processed_pages'] = structure_processed_pages
 #      puts "ROOT menu is #{site.data['menu']}"
-#      puts "PAGE menu is #{structure_processed_pages['website/documentation/index.md'].data['menu']}"
+#      puts "PAGE menu is #{structure_processed_pages['website/documentation/index.'].data['menu']}"
 # (but note, in the context hash map 'data' on pages is promoted, so you access it like {{ page.menu }})
     end
 
