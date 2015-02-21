@@ -25,7 +25,7 @@ var brooklyn = (function ($, _) {
         },
 
         entityCard: _.template(
-            "<a class='plain' data-type='<%= type %>' href='entities/<%= type %>.html'>" +
+            "<a class='plain' data-type='<%= type %>' href='brooklyn-node.html#entities/<%= type %>'>" +
             "<div class='card'>" +
             "<span class='glyphicon glyphicon-chevron-right'/>" +
             "<div class='name'><%=name%></div>" +
@@ -35,7 +35,7 @@ var brooklyn = (function ($, _) {
             "</a>"
         ),
         policyCard: _.template(
-            "<a class='plain' data-type='<%= type %>' href='policies/<%= type %>.html'>" +
+            "<a class='plain' data-type='<%= type %>' href='brooklyn-node.html#policies/<%= type %>'>" +
             "<div class='card'>" +
             "<span class='glyphicon glyphicon-chevron-right'/>" +
             "<div class='name'><%=name%></div>" +
@@ -45,7 +45,7 @@ var brooklyn = (function ($, _) {
             "</a>"
         ),
         enricherCard: _.template(
-            "<a class='plain' data-type='<%= type %>' href='enrichers/<%= type %>.html'>" +
+            "<a class='plain' data-type='<%= type %>' href='brooklyn-node.html#enrichers/<%= type %>'>" +
             "<div class='card'>" +
             "<span class='glyphicon glyphicon-chevron-right'/>" +
             "<div class='name'><%=name%></div>" +
