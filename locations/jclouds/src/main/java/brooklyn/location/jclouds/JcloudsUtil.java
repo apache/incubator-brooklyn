@@ -282,7 +282,8 @@ public class JcloudsUtil implements JcloudsLocationConfig {
 
         ContextBuilder contextBuilder = ContextBuilder.newBuilder(provider).credentials(identity, credential);
         contextBuilder.modules(MutableList.copyOf(JcloudsUtil.getCommonModules())
-            .appendIfNotNull(fix));
+            .appendIfNotNull(fix)
+            .append(new MkDirStrategyCustomModule()));
         if (!brooklyn.util.text.Strings.isBlank(endpoint)) {
             contextBuilder.endpoint(endpoint);
         }
