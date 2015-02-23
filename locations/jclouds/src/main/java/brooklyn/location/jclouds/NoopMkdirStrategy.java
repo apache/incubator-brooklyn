@@ -18,31 +18,15 @@
  */
 package brooklyn.location.jclouds;
 
-import static org.jclouds.io.Payloads.newByteArrayPayload;
+import javax.inject.Singleton;
 
-import org.jclouds.blobstore.BlobStore;
-import org.jclouds.blobstore.domain.StorageType;
-import org.jclouds.blobstore.reference.BlobStoreConstants;
 import org.jclouds.blobstore.strategy.MkdirStrategy;
 
-import com.google.inject.Inject;
+@Singleton
+public class NoopMkdirStrategy implements MkdirStrategy {
 
-public class SuffixFileMkdirStrategy implements MkdirStrategy {
-
-    protected String directorySuffix = "";
-    private final BlobStore blobStore;
-
-    @Inject
-    SuffixFileMkdirStrategy(BlobStore blobStore) {
-       this.blobStore = blobStore;
-       directorySuffix = BlobStoreConstants.DIRECTORY_SUFFIX_FOLDER;
-    }
-
+    @Override
     public void execute(String containerName, String directory) {
-       blobStore.putBlob(
-             containerName,
-             blobStore.blobBuilder(directory + directorySuffix).type(StorageType.RELATIVE_PATH)
-                   .payload(newByteArrayPayload(new byte[] {})).build());
     }
 
 }

@@ -19,6 +19,8 @@
 package brooklyn.location.jclouds;
 
 import org.jclouds.blobstore.strategy.MkdirStrategy;
+import org.jclouds.openstack.swift.blobstore.functions.BlobStoreListContainerOptionsToListContainerOptions;
+import org.jclouds.openstack.swift.functions.ParseObjectInfoListFromJsonResponse;
 
 import com.google.inject.AbstractModule;
 
@@ -26,7 +28,22 @@ public class MkDirStrategyCustomModule extends AbstractModule  {
 
     @Override
     protected void configure() {
-        bind(MkdirStrategy.class).to(SuffixFileMkdirStrategy.class);
+        // Object Storage v1 API doesn't have the notion of a folder. Just use
+        // forward slash delimited prefix for the object being put. There is
+        // functionality to to restrict the listing to the next forward slash by
+        // using the prefix & delimiter query arguments to the list call.
+        //
+        // http://developer.openstack.org/api-ref-objectstorage-v1.html
+        // http://docs.openstack.org/user-guide/content/managing-openstack-object-storage-with-swift-cli.html#pseudo-hierarchical-folders-directories
+
+        // Don't create folders even if explicitly requested
+        bind(MkdirStrategy.class).to(NoopMkdirStrategy.class);
+
+        // Send prefix & delimiter query parameters
+        bind(BlobStoreListContainerOptionsToListContainerOptions.class).to(SoftlayerListContainerOptions.class);
+
+        // Support for {"subdir": "xxx"} list items, treat them as "application/directory" entries
+        bind(ParseObjectInfoListFromJsonResponse.class).to(ParseList.class);
     }
 
 }
