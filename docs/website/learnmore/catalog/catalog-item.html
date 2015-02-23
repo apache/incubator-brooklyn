@@ -65,11 +65,11 @@ under the License.
     function updateItems() {
       var args;
       var hash = window.location.hash;
-      if(!hash) {
-        alert('No class selected');
+      if(!hash || hash.length <= 2) {
+        alert('No such catalog item');
         return;
       }
-      args = hash.substring(1).split('/');
+      args = hash.substring(2).split('/');
       if(args.length!=2) {
         alert('bad entity format')
         return;
