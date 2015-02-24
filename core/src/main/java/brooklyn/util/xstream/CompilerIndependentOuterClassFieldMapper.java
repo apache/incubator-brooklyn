@@ -21,12 +21,16 @@ package brooklyn.util.xstream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.thoughtworks.xstream.core.Caching;
 import com.thoughtworks.xstream.mapper.Mapper;
 import com.thoughtworks.xstream.mapper.MapperWrapper;
 
@@ -57,13 +61,16 @@ import com.thoughtworks.xstream.mapper.MapperWrapper;
  * <p>Currently available at
  *    http://web.archive.org/web/20000830111107/http://java.sun.com/products/jdk/1.1/docs/guide/innerclasses/spec/innerclasses.doc10.html</p>
  */
-public class CompilerIndependentOuterClassFieldMapper extends MapperWrapper {
+public class CompilerIndependentOuterClassFieldMapper extends MapperWrapper implements Caching {
     public static final Logger LOG = LoggerFactory.getLogger(CompilerIndependentOuterClassFieldMapper.class);
 
     private static final String OUTER_CLASS_FIELD_PREFIX = "this$";
 
+    private final Map<String, Collection<String>> classOuterFields = new ConcurrentHashMap<String, Collection<String>>();
+
     public CompilerIndependentOuterClassFieldMapper(Mapper wrapped) {
         super(wrapped);
+        classOuterFields.put(Object.class.getName(), Collections.<String>emptyList());
     }
 
     @Override
@@ -131,8 +138,12 @@ public class CompilerIndependentOuterClassFieldMapper extends MapperWrapper {
     }
     
     private Collection<String> findOuterClassFieldNames(Class<?> type) {
-        Collection<String> fields = new ArrayList<String>();
-        addOuterClassFields(type, fields);
+        Collection<String> fields = classOuterFields.get(type.getName());
+        if (fields == null) {
+            fields = new ArrayList<String>();
+            addOuterClassFields(type, fields);
+            classOuterFields.put(type.getName(), fields);
+        }
         return fields;
     }
     
@@ -145,6 +156,11 @@ public class CompilerIndependentOuterClassFieldMapper extends MapperWrapper {
         if (type.getSuperclass() != null) {
             addOuterClassFields(type.getSuperclass(), fields);
         }
+    }
+
+    @Override
+    public void flushCache() {
+        classOuterFields.keySet().retainAll(Collections.singletonList(Object.class.getName()));
     }
 
 }
