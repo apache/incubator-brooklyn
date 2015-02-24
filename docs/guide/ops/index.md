@@ -7,6 +7,7 @@ children:
 - brooklyn_properties.md
 - locations/
 - persistence/
+- high-availability.md
 - catalog/
 - logging.md
 ---
