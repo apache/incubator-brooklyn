@@ -114,10 +114,17 @@ public class CompoundTransformer {
          * Replaces a tag, but while continuing to recurse.
          */
         public Builder xmlRenameTag(String xpathToMatch, String newValue) {
-            return xmlReplaceItem(xpathToMatch, 
+            return xmlReplaceItem(xpathToMatch,
                 "<"+newValue+">"
                     + "<xsl:apply-templates select=\"@*|node()\" />"
                 + "</"+newValue+">"); 
+        }
+        
+        public Builder xmlChangeAttribute(String xpathToMatch, String newValue) {
+            return xmlReplaceItem(xpathToMatch,
+                "<xsl:attribute name='{local-name()}'>" +
+                newValue +
+                "</xsl:attribute>");
         }
 
         /** 
@@ -145,7 +152,7 @@ public class CompoundTransformer {
          * that's how this works to to change the java class (or xstream alias) 
          * of a persisted instance, included nested instances. 
          */
-        public Builder renameClass(String oldVal, String newVal) {
+        public Builder renameClassTag(String oldVal, String newVal) {
             return xmlRenameTag(toXstreamClassnameFormat(oldVal), toXstreamClassnameFormat(newVal));
         }
         /** 
@@ -179,6 +186,18 @@ public class CompoundTransformer {
         public Builder changeCatalogItemId(String oldSymbolicName, String newSymbolicName, String newVersion) {
             return xmlReplaceItem("catalogItemId/text()[starts-with(.,'"+Preconditions.checkNotNull(oldSymbolicName, "old_symbolic_name")+":')]", 
                 Preconditions.checkNotNull(newSymbolicName, "new_symbolic_name")+":"+Preconditions.checkNotNull(newVersion, "new_version"));
+        }
+
+        /**
+         * Updates all references to a class to a new value
+         * @param oldName the old name of the class
+         * @param newName the new name of the class to be used instead
+         */
+        public Builder renameClass(String oldName, String newName) {
+            return renameClassTag(oldName, newName)
+                .xmlChangeAttribute("//@class[.='" + oldName + "']", newName)
+                .renameType(oldName, newName);
+                //TODO update reference attributes
         }
 
         private String toXstreamClassnameFormat(String val) {
