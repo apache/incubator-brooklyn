@@ -6,6 +6,7 @@ children:
 - { section: Inheritance and Named Locations, title: Named Locations }
 - { section: Localhost }
 - { section: BYON }
+- cloud-credentials.md
 - more-locations.md
 - ssh-keys.md
 ---
@@ -72,14 +73,22 @@ The credentials for the initial OS log on are typically discovered from the clou
 but in some environments this is not possible.
 The keys `loginUser` and either `loginUser.password` or `loginUser.privateKeyFile` can be used to force
 Brooklyn to use specific credentials for the initial login to a cloud-provisioned machine.
-(This is particularly useful when using a custom image templates where the cloud-side account management logic is not enabled.)
+
+(This custom login is particularly useful when using a custom image templates where the cloud-side account 
+management logic is not enabled. For example, a vCD template can have guest customization that will change
+the root password. This setting tells AMP to only use the given password, rather than the initial 
+randomly generated password that vCD returns. Without this property, there is a race for such templates:
+does Brooklyn manage to create the admin user before the guest customization changes the login and reboots,
+or is the password reset first (the latter means Brooklyn can never ssh to the VM). With this property, 
+Brooklyn will always wait for guest customization to complete before it is able to ssh at all. In such
+cases, it is also recommended to use `useJcloudsSshInit=false`.)
 
 Following a successful logon, Brooklyn performs the following steps to configure the machine:
 
-1. to create a new user with the same name as the user `brooklyn` is running as locally
-  (this can be overridden with `user`, below)
+1. creates a new user with the same name as the user `brooklyn` is running as locally
+  (this can be overridden with `user`, below).
 
-1. to install the local user's `~/.ssh/id_rsa.pub` as an `authorized_keys` on the new machine,
+1. install the local user's `~/.ssh/id_rsa.pub` as an `authorized_keys` on the new machine,
    to make it easy for the operator to `ssh` in
    (override with `privateKeyFile`; or if there is no `id_{r,d}sa{,.pub}` an ad hoc keypair will be generated;
    if there is a passphrase on the key, this must be supplied)  
@@ -128,6 +137,24 @@ For more keys and more detail on the keys below, see
   before making the `Location` available to entities,
   optionally also using `setup.script.vars` (set as `key1:value1,key2:value2`)
 
+- Use `openIptables=true` to automatically configure `iptables`, to open the TCP ports required by
+  the software process. One can alternatively use `stopIptables=true` to entirely stop the
+  iptables service.
+
+- Use `installDevUrandom=true` to fall back to using `/dev/urandom` rather than `/dev/random`. This setting
+  is useful for cloud VMs where there is not enough random entropy, which can cause `/dev/random` to be
+  extremely slow (causing `ssh` to be extremely slow to respond).
+
+- Use `useJcloudsSshInit=false` to disable the use of the native jclouds support for initial commands executed 
+  on the VM (e.g. for creating new users, setting root passwords, etc.). Instead, Brooklyn's ssh support will
+  be used. Timeouts and retries are more configurable within Brooklyn itself. Therefore this option is particularly 
+  recommended when the VM startup is unusual (for example, if guest customizations will cause reboots and/or will 
+  change login credentials).
+
+- Use `brooklyn.ssh.config.noDeleteAfterExec=true` can be used during dev/test. This prevents the scripts executed 
+  on the VMs from being deleted on completion. This can help with debugging some issues. However, the contents of the 
+  scripts and the stdout/stderr of their execution is also available in the AMP debug log.
+
 
 ###### VM Creation
     
@@ -150,12 +177,13 @@ For more keys and more detail on the keys below, see
 - User metadata can be attached, using the syntax ``userMetadata=key=value,key2="value 2"``
 
 - You can specify the number of attempts Brooklyn should make to create
-  machines with ``machineCreateAttempts`` (jclouds only). This is useful for
+  machines with ``machineCreateAttempts`` (jclouds only). This is extremely useful for
   working around the rare occasions in which cloud providers give machines that
   are dead on arrival.
 
-- If you want to investigate failures, set `destroyOnFailure` to `false`
+- If you want to investigate failures, set `destroyOnFailure=false`
   to keep failed VM's around. (You'll have to manually clean them up.)
+  The default is false: if a VM fails to start, or is never ssh'able, then the VM will be terminated.
 
 
 ### Inheritance and Named Locations
@@ -191,19 +219,20 @@ brooklyn.location.named.AWS\ Virginia\ Large\ Centos.user=root
 brooklyn.location.named.AWS\ Virginia\ Large\ Centos.minRam=4096
 {% endhighlight %}
 
-If you are confused about inheritance order, the following test may be useful:
+The precedence for configuration defined at different levels is that the most value
+defined in the most specific context will apply.
 
+For example, in the example below the config key is repeatedly overridden. If you deploy
+`location: named:my-aws`, Brooklyn will get `VAL5` or `KEY`:
+  
 {% highlight bash %}
-brooklyn.location.jclouds.KEY=VAL1
-brooklyn.location.jclouds.aws-ec2.KEY=VAL2
-brooklyn.location.named.my-aws=jclouds:aws-ec2
-brooklyn.location.named.my-aws.KEY=VAL3
+brooklyn.location.KEY=VAL1
+brooklyn.location.jclouds.KEY=VAL2
+brooklyn.location.jclouds.aws-ec2.KEY=VAL3
+brooklyn.location.jclouds.aws-ec2@us-west-1.KEY=VAL4
+brooklyn.location.named.my-aws=jclouds:aws-ec2:us-west-1
+brooklyn.location.named.my-aws.KEY=VAL5
 {% endhighlight %}
-
-In the above example, if you deploy to `location: named:my-aws`,
-Brooklyn will get `VAL3` for `KEY`;
-this overrides `VAL2` which applies by default to all `aws-ec2` locations,
-which in turn overrides `VAL1`, which applies to all jclouds locations. 
 
 
 ### Localhost
@@ -272,3 +301,4 @@ brooklyn.location.named.On-Prem\ Iron\ Example.privateKeyPassphrase=s3cr3tpassph
 
 * [More Locations](more-locations.html)
 * [SSH Keys](ssh-keys.html)
+* [Cloud Credentials](cloud-credentials.md)

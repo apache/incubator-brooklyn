@@ -1,6 +1,6 @@
 ---
 layout: website-normal
-title: Installing on a Server
+title: Installing Brooklyn
 ---
 
 {% include fields.md %}
@@ -10,7 +10,9 @@ Here we present two *alternatives* to install Brooklyn:
 - [Running the *installation script*](#script)
 - [Manual installation](#manual)
 
+
 ## <a id="script"></a> Running the installation script
+
 There is a simple bash script available to help with the installation process. 
 
 #### Script prerequisites
@@ -29,6 +31,7 @@ $ chmod +x ./brooklyn-install.sh
 $ ./brooklyn-install.sh -s -r <your-server-ip>
 {% endhighlight %}
 
+
 ## <a id="manual"></a> Manual installation
 
 1. [Set up the prerequisites](#prerequisites)
@@ -36,6 +39,7 @@ $ ./brooklyn-install.sh -s -r <your-server-ip>
 1. [Configuring brooklyn.properties](#configuring-properties)
 1. [Configuring catalog.xml](#configuring-catalog)
 1. [Test the installation](#confirm)
+
 
 ### <a id="prerequisites"></a>Set up the prerequisites
 
@@ -79,7 +83,9 @@ $ BROOKLYN_DIR="$(pwd)"
 $ export PATH=$PATH:$BROOKLYN_DIR/bin/
 {% endhighlight %}
 
+
 ### <a id="configuring-properties"></a>Configuring brooklyn.properties
+
 Brooklyn deploys applications to Locations. *Locations* can be clouds, machines with fixed IPs or localhost (for testing).
 
 By default Brooklyn loads configuration parameters (including credentials for any cloud accounts) from 
@@ -98,7 +104,9 @@ $ chmod 600 ~/.brooklyn/brooklyn.properties
 
 You may need to edit `~/.brooklyn/brooklyn.properties` to ensure that brooklyn can access cloud locations for application deployment.
 
+
 ### <a id="configuring-catalog"></a>Configuring catalog.xml
+
 By default Brooklyn loads the catalog of available application components and services from 
 `~/.brooklyn/catalog.xml`. 
 
@@ -110,7 +118,9 @@ The `catalog.xml` is the application blueprint catalog. The above example file c
 
 You may need to edit `~/.brooklyn/catalog.xml` to update links to any resources for download.
 
+
 ### <a id="confirm"></a>Confirm installation
+
 We can do a quick test drive by launching Brooklyn:
 
 {% highlight bash %}
