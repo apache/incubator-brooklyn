@@ -49,7 +49,7 @@ Before installing Apache Brooklyn, it is recommented to configure the host as fo
 * check that the [linux kernel entropy](increase-entropy.html) is sufficient
 
 
-## <a id="download"></a>Download Brooklyn
+### <a id="download"></a>Download Brooklyn
 
 Download Brooklyn and obtain a binary build as described on [the download page]({{site.path.website}}/download/).
 
@@ -79,7 +79,7 @@ $ BROOKLYN_DIR="$(pwd)"
 $ export PATH=$PATH:$BROOKLYN_DIR/bin/
 {% endhighlight %}
 
-## <a id="configuring-properties"></a>Configuring brooklyn.properties
+### <a id="configuring-properties"></a>Configuring brooklyn.properties
 Brooklyn deploys applications to Locations. *Locations* can be clouds, machines with fixed IPs or localhost (for testing).
 
 By default Brooklyn loads configuration parameters (including credentials for any cloud accounts) from 
@@ -98,7 +98,7 @@ $ chmod 600 ~/.brooklyn/brooklyn.properties
 
 You may need to edit `~/.brooklyn/brooklyn.properties` to ensure that brooklyn can access cloud locations for application deployment.
 
-## <a id="configuring-catalog"></a>Configuring catalog.xml
+### <a id="configuring-catalog"></a>Configuring catalog.xml
 By default Brooklyn loads the catalog of available application components and services from 
 `~/.brooklyn/catalog.xml`. 
 
@@ -110,7 +110,7 @@ The `catalog.xml` is the application blueprint catalog. The above example file c
 
 You may need to edit `~/.brooklyn/catalog.xml` to update links to any resources for download.
 
-## <a id="confirm"></a>Confirm installation
+### <a id="confirm"></a>Confirm installation
 We can do a quick test drive by launching Brooklyn:
 
 {% highlight bash %}
