@@ -95,7 +95,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         List<String> commands = Lists.newLinkedList();
         if (osDetails.isLinux()) {
-            commands.addAll(installLinux(getExpandedInstallDir()));
+//            commands.addAll(installLinux(getExpandedInstallDir()));
+            commands.addAll(installPackageCloud());
         } else if (osDetails.isMac()) {
             isPackageInstall = false;
             commands.addAll(installMac());
@@ -124,7 +125,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         String osReleaseCmd;
         if ("debian".equalsIgnoreCase(osDetails.getName())) {
             // TODO osDetails.getName() is returning "linux", instead of debian/ubuntu on AWS with jenkins image,
-            //      running as integration test targetting localhost. 
+            //      running as integration test targetting localhost.
             // TODO Debian support (default debian image fails with 'sudo: command not found')
             downloadUrl = (String)entity.getAttribute(RiakNode.DOWNLOAD_URL_DEBIAN);
             osReleaseCmd = osDetails.getVersion().substring(0, osDetails.getVersion().indexOf("."));
@@ -155,6 +156,34 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .add("ln -s `which riak` " + Urls.mergePaths(installBin, "riak"))
                 .add("ln -s `which riak-admin` " + Urls.mergePaths(installBin, "riak-admin"))
                 .build();
+    }
+    
+    private List<String> installPackageCloud() {
+        return ifExecutable0Else1("yum", installDebianBased(), installRpmBased());
+    }
+
+    private ImmutableList<String> installDebianBased() {
+        ImmutableList.Builder<String> commands = ImmutableList.<String>builder();
+        commands.add("curl https://packagecloud.io/install/repositories/basho/riak/script.deb | sudo bash");
+        commands.add("sudo apt-get install --assume-yes riak");
+        return commands.build();
+    }
+    
+    private ImmutableList<String> installRpmBased() {
+        ImmutableList.Builder<String> commands = ImmutableList.<String>builder();
+        commands.add("curl https://packagecloud.io/install/repositories/basho/riak/script.rpm | sudo bash");
+        commands.add("sudo yum install -y riak");
+        return commands.build();
+    }
+
+    private static ImmutableList<String> ifExecutable0Else1(String command, List<String> ifTrue, List<String> otherwise) {
+        ImmutableList.Builder<String> commands = ImmutableList.<String>builder();
+        commands.add(String.format("if test -z `which %s`; then", command));
+        commands.addAll(ifTrue);
+        commands.add("else");
+        commands.addAll(otherwise);
+        commands.add("fi");
+        return commands.build();
     }
 
     protected List<String> installMac() {
