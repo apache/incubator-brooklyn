@@ -19,29 +19,11 @@
 -->
 
 <catalog>
-    <name>Simple catalogue</name>
-    <template name="Basic App" type="brooklyn.entity.basic.BasicApplication" />
-    <template name="Basic App" type="brooklyn.entity.basic.BasicApplication" version="2.0" />
-    <template name="Basic App" type="brooklyn.entity.basic.BasicApplication">
-        <symbolicName>BasicApp</symbolicName>
-    </template>
-    <template name="Basic App" type="brooklyn.entity.basic.BasicApplication" version="2.0">
-        <symbolicName>BasicApp</symbolicName>
-    </template>
-    <template name="Custom App" type="brooklyn.entity.basic.BasicApplication">
-        <symbolicName>io.brooklyn.camp.brooklyn.catalog.TestBasicApp</symbolicName>
-        <!-- Tests that "java:" prefix won't load an old-style catalog item with the same id -->
-    </template>
+    <name>OSGi catalogue</name>
     <template name="Osgi App" type="brooklyn.osgi.tests.SimpleApplication">
         <symbolicName>OsgiApp</symbolicName>
         <libraries>
             <bundle>${osgi-entities-path}</bundle>
         </libraries>
     </template>
-    <catalog>
-        <template name="Simple App" type="brooklyn.osgi.tests.SimpleApplication" />
-        <classpath>
-            <entry>${osgi-entities-path}</entry>
-        </classpath>
-    </catalog>
 </catalog>

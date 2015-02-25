@@ -19,23 +19,16 @@
 package io.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertTrue;
-import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Entity;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 
-public class CatalogXmlVersionTest extends AbstractYamlTest {
-    @Override
-    protected LocalManagementContext newTestManagementContext() {
-        BrooklynProperties properties = BrooklynProperties.Factory.newEmpty();
-        properties.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, "classpath://simple-catalog.xml");
-        return LocalManagementContextForTests.newInstance(properties);
+public class CatalogXmlVersionTest extends AbstractCatalogXmlTest {
+
+    public CatalogXmlVersionTest(String catalogUrl) {
+        super("classpath://simple-catalog.xml");
     }
 
     @DataProvider(name = "types")
@@ -44,9 +37,10 @@ public class CatalogXmlVersionTest extends AbstractYamlTest {
                 {"brooklyn.entity.basic.BasicApplication"},
                 {"brooklyn.entity.basic.BasicApplication:0.0.0.SNAPSHOT"},
                 {"brooklyn.entity.basic.BasicApplication:2.0"},
-                {"BasicApp"},
+                {"BasicApp"}, // test that items with symbolicName not matching the type work
                 {"BasicApp:0.0.0.SNAPSHOT"},
-                {"BasicApp:2.0"}
+                {"BasicApp:2.0"},
+                {"brooklyn.osgi.tests.SimpleApplication"}, //test that classpath is used
         };
     }
 
@@ -59,14 +53,6 @@ public class CatalogXmlVersionTest extends AbstractYamlTest {
     public void testJavaPrefixDoesNotLoadXMLCatalogItem() throws Exception {
         Entity entity = startApp("java:io.brooklyn.camp.brooklyn.catalog.TestBasicApp");
         assertTrue(entity instanceof TestBasicApp, "Entity is not a " + TestBasicApp.class.getName() + ", instead the type is " + entity.getEntityType().getName());
-    }
-
-    private Entity startApp(String type) throws Exception {
-        String yaml = "name: simple-app-yaml\n" +
-                "location: localhost\n" +
-                "services: \n" +
-                "  - type: " + type;
-        return createAndStartApplication(yaml);
     }
 
 }
