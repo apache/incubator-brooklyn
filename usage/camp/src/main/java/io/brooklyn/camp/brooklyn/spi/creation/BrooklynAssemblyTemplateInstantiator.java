@@ -195,13 +195,24 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
         
         if (spec == null) {
+            // - Load a java class from current loader (item == null || entityResolver.isJavaTypePrefix())
+            // - Load a java class specified in an old-style catalog item (item != null && item.getJavaType() != null)
+            //   Old-style catalog items (can be defined in catalog.xml only) don't have structure, only a single type, so
+            //   they are loaded as a simple java type, only taking the class name from the catalog item instead of the
+            //   type value in the YAML. Classpath entries in the item are also used (through the catalog root classloader).
             if (item == null || item.getJavaType() != null || entityResolver.isJavaTypePrefix()) {
                 spec = entityResolver.resolveSpec();
+
+            // Same as above case, but this time force java type loading (either as plain class or through an old-style
+            // catalog item, since we have already loaded a class item with the same name as the type value.
             } else if (recursiveButTryJava) {
                 if (entityResolver.tryLoadEntityClass().isAbsent()) {
                     throw new IllegalStateException("Recursive reference to " + brooklynType + " (and cannot be resolved as a Java type)");
                 }
                 spec = entityResolver.resolveSpec();
+
+            // Only case that's left is a catalog item with YAML content - try to parse it recursively
+            // including it's OSGi bundles in the loader classpath.
             } else {
                 //TODO migrate to catalog.createSpec
                 spec = resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
