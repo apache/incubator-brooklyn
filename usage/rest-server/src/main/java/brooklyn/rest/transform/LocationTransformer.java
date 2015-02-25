@@ -36,6 +36,7 @@ import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
@@ -138,7 +139,9 @@ public class LocationTransformer {
             // walk parent locations
             // TODO not sure this is the best strategy, or if it's needed, as the spec config is inherited anyway... 
             if (spec==null) {
-                spec = Strings.toString( ((LocationInternal)lp).config().getRaw(LocationInternal.ORIGINAL_SPEC) );
+                Maybe<Object> originalSpec = ((LocationInternal)lp).config().getRaw(LocationInternal.ORIGINAL_SPEC);
+                if (originalSpec.isPresent())
+                    spec = Strings.toString(originalSpec.get());
             }
             if (specId==null) {
                 LocationDefinition ld = null;
