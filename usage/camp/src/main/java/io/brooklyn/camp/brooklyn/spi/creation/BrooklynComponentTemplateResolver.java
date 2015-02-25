@@ -233,9 +233,6 @@ public class BrooklynComponentTemplateResolver {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private <T extends Entity> EntitySpec<T> createSpec() {
-        // ensure loader is updated
-        getCatalogItem();
-        
         Class<T> type = (Class<T>) loadEntityClass();
         
         EntitySpec<T> spec;
