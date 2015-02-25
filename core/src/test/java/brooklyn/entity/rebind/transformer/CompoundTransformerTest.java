@@ -57,6 +57,7 @@ import brooklyn.util.os.Os;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 
 @SuppressWarnings("serial")
 public class CompoundTransformerTest extends RebindTestFixtureWithApp {
@@ -148,6 +149,14 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
         Assert.assertEquals(xmlOutActual, xmlOutExpected);
     }
     
+    protected void assertXmlTransformation(CompoundTransformer transformer, String xmlIn, String xmlOutExpected) throws Exception {
+        BrooklynMementoRawData rawData = BrooklynMementoRawData.builder()
+                .entity("test", xmlIn)
+                .build();
+        BrooklynMementoRawData rawDataOut = transformer.transform(rawData);
+        Assert.assertEquals(rawDataOut.getEntities().get("test"), xmlOutExpected);
+    }
+    
     @Test
     public void testNoopTransformation() throws Exception {
         CompoundTransformer transformer = CompoundTransformer.builder()
@@ -166,7 +175,7 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
         origApp.setConfig(CONF1, new OrigType("myfieldval"));
         
         CompoundTransformer transformer = CompoundTransformer.builder()
-                .renameClass(OrigType.class.getName(), RenamedType.class.getName())
+                .renameClassTag(OrigType.class.getName(), RenamedType.class.getName())
                 .build();
 
         newApp = transformAndRebind(transformer);
@@ -183,7 +192,7 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
         origApp.setConfig(CONF1, origPredicate);
         
         CompoundTransformer transformer = CompoundTransformer.builder()
-                .renameClass(origPredicate.getClass().getName(), RenamedIdEqualToPredicate.class.getName())
+                .renameClassTag(origPredicate.getClass().getName(), RenamedIdEqualToPredicate.class.getName())
                 .renameField(RenamedIdEqualToPredicate.class.getName(), "val$paramVal", "val")
                 .build();
 
@@ -266,9 +275,9 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
     }
     
     @Test
-    public void testRenameClassInXml() throws Exception {
+    public void testRenameClassTagInXml() throws Exception {
         CompoundTransformer transformer = CompoundTransformer.builder()
-            .renameClass("MyClassBefore", "MyClassAfter")
+            .renameClassTag("MyClassBefore", "MyClassAfter")
             .build();
 
         String input = 
@@ -293,6 +302,36 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
                 "</entity>";
         
         assertSingleXmlTransformation(transformer, input, expected);
+    }
+
+    @Test
+    public void testRenameClassInXml() throws Exception {
+        CompoundTransformer transformer = CompoundTransformer.builder()
+            .renameClass("MyClassBefore", "MyClassAfter")
+            .build();
+
+        String input = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">MyClassBefore</type>"+NEWLINE+
+                "  <config>"+NEWLINE+
+                "    <test.conf1 class=\"MyClassBefore\">"+NEWLINE+
+                "      <MyClassBefore>"+NEWLINE+
+                "      </MyClassBefore>"+NEWLINE+
+                "    </test.conf1>"+NEWLINE+
+                "  </config>"+NEWLINE+
+                "</entity>";
+        String expected = 
+                "<entity myattrib=\"myval\">"+NEWLINE+
+                "  <type myattrib2=\"myval2\">MyClassAfter</type>"+NEWLINE+
+                "  <config>"+NEWLINE+
+                "    <test.conf1 class=\"MyClassAfter\">"+NEWLINE+
+                "      <MyClassAfter>"+NEWLINE+
+                "      </MyClassAfter>"+NEWLINE+
+                "    </test.conf1>"+NEWLINE+
+                "  </config>"+NEWLINE+
+                "</entity>";
+        
+        assertXmlTransformation(transformer, input, expected);
     }
 
     @Test

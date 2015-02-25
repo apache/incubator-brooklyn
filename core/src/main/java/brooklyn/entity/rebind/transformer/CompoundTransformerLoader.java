@@ -18,7 +18,12 @@
  */
 package brooklyn.entity.rebind.transformer;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.transformer.CompoundTransformer.Builder;
 import brooklyn.util.ResourceUtils;
@@ -32,6 +37,7 @@ import com.google.common.collect.Iterables;
 
 @Beta
 public class CompoundTransformerLoader {
+    private static final Logger LOG = LoggerFactory.getLogger(CompoundTransformerLoader.class);
 
     // TODO Improve error handing so get nicer errors.
     // TODO Improve names (e.g. always camel case?)
@@ -40,11 +46,13 @@ public class CompoundTransformerLoader {
     public static CompoundTransformer load(String contents) {
         CompoundTransformer.Builder builder = CompoundTransformer.builder();
         Iterable<Object> toplevel = Yamls.parseAll(contents);
-        @SuppressWarnings("unchecked")
-        Map<String, Map<?,?>> rules = (Map<String, Map<?,?>>) ((Map<?,?>)Iterables.getOnlyElement(toplevel));
-        for (Map.Entry<String, Map<?,?>> entry : rules.entrySet()) {
-            addRule(builder, entry.getKey(), entry.getValue());
+        Collection<?> rules = (Collection<?>)Iterables.getOnlyElement(toplevel);
+        for (Object obj : rules) {
+            Map<?, ?> map = (Map<?, ?>)obj;
+            Entry<?, ?> entry = Iterables.getOnlyElement(map.entrySet());
+            addRule(builder, (String)entry.getKey(), (Map<?, ?>)entry.getValue());
         }
+        LOG.info("Loaded " + rules.size() + " transforms");
         return builder.build();
     }
 
@@ -53,6 +61,10 @@ public class CompoundTransformerLoader {
             String oldVal = (String) args.get("old_val");
             String newVal = (String) args.get("new_val");
             builder.renameClass(oldVal, newVal);
+        } else if (name.equals("renameClassTag")) {
+            String oldVal = (String) args.get("old_val");
+            String newVal = (String) args.get("new_val");
+            builder.renameClassTag(oldVal, newVal);
         } else if (name.equals("renameType")) {
             String oldVal = (String) args.get("old_val");
             String newVal = (String) args.get("new_val");

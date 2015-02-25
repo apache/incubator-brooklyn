@@ -34,29 +34,29 @@ public class CompoundTransformerLoaderTest {
     @Test
     public void testLoadsTransformerFromYaml() throws Exception {
         String contents =
-                "renameType:\n"+
-                "  old_val: myoldname\n"+
-                "  new_val: mynewname\n"+
-                "renameClass:\n"+
-                "  old_val: myoldname\n"+
-                "  new_val: mynewname\n"+
-                "renameField:\n"+
-                "  class_name: myclassname\n"+
-                "  old_val: myoldname\n"+
-                "  new_val: mynewname\n"+
-                // low-level mechanism to change catalogItemId; used (and tested) by higher-level methods
-                // which use symbolic_name:version notation to avoid the unpleasant need for yaml quotes
-                "catalogItemId:\n"+
-                "  old_symbolic_name: myclassname\n"+
-                "  new_symbolic_name: myclassname\n"+
-                "  new_version: '2.0'\n"+
-                "xslt:\n"+
-                "  url: classpath://brooklyn/entity/rebind/transformer/impl/renameType.xslt\n"+
-                "  substitutions:\n"+
+                "- renameType:\n"+
                 "    old_val: myoldname\n"+
                 "    new_val: mynewname\n"+
-                "rawDataTransformer:\n"+
-                "  type: "+MyRawDataTransformer.class.getName()+"\n";
+                "- renameClassTag:\n"+
+                "    old_val: myoldname\n"+
+                "    new_val: mynewname\n"+
+                "- renameField:\n"+
+                "    class_name: myclassname\n"+
+                "    old_val: myoldname\n"+
+                "    new_val: mynewname\n"+
+                // low-level mechanism to change catalogItemId; used (and tested) by higher-level methods
+                // which use symbolic_name:version notation to avoid the unpleasant need for yaml quotes
+                "- catalogItemId:\n"+
+                "    old_symbolic_name: myclassname\n"+
+                "    new_symbolic_name: myclassname\n"+
+                "    new_version: '2.0'\n"+
+                "- xslt:\n"+
+                "    url: classpath://brooklyn/entity/rebind/transformer/impl/renameType.xslt\n"+
+                "    substitutions:\n"+
+                "      old_val: myoldname\n"+
+                "      new_val: mynewname\n"+
+                "- rawDataTransformer:\n"+
+                "    type: "+MyRawDataTransformer.class.getName()+"\n";
         
         CompoundTransformer transformer = CompoundTransformerLoader.load(contents);
         Collection<RawDataTransformer> rawDataTransformers = transformer.getRawDataTransformers().get(BrooklynObjectType.ENTITY);
