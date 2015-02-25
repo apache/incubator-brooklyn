@@ -18,6 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn.catalog;
 
+import static org.testng.Assert.assertTrue;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import org.testng.annotations.DataProvider;
@@ -25,6 +26,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.entity.Entity;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 
@@ -50,10 +52,21 @@ public class CatalogXmlVersionTest extends AbstractYamlTest {
 
     @Test(dataProvider = "types")
     public void testXmlCatalogItem(String type) throws Exception {
+        startApp(type);
+    }
+
+    @Test
+    public void testJavaPrefixDoesNotLoadXMLCatalogItem() throws Exception {
+        Entity entity = startApp("java:io.brooklyn.camp.brooklyn.catalog.TestBasicApp");
+        assertTrue(entity instanceof TestBasicApp, "Entity is not a " + TestBasicApp.class.getName() + ", instead the type is " + entity.getEntityType().getName());
+    }
+
+    private Entity startApp(String type) throws Exception {
         String yaml = "name: simple-app-yaml\n" +
                 "location: localhost\n" +
                 "services: \n" +
                 "  - type: " + type;
-        createAndStartApplication(yaml);
+        return createAndStartApplication(yaml);
     }
+
 }

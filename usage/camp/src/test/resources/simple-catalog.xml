@@ -34,4 +34,8 @@
         <symbolicName>BasicApp</symbolicName>
         <description>An example application</description>
     </template>
+    <template name="Custom App" type="brooklyn.entity.basic.BasicApplication">
+        <symbolicName>io.brooklyn.camp.brooklyn.catalog.TestBasicApp</symbolicName>
+        <!-- Tests that "java:" prefix won't load an old-style catalog item with the same id -->
+    </template>
 </catalog>

@@ -222,7 +222,7 @@ public class BrooklynComponentTemplateResolver {
 
     private String getJavaType() {
         CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
-        if (item != null && item.getJavaType() != null) {
+        if (!isJavaTypePrefix() && item != null && item.getJavaType() != null) {
             return item.getJavaType();
         } else {
             return getBrooklynType();
