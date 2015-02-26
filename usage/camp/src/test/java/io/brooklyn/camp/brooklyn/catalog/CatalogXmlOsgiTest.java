@@ -16,12 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.osgi.tests;
+package io.brooklyn.camp.brooklyn.catalog;
 
+import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.StartableApplication;
+public class CatalogXmlOsgiTest extends AbstractCatalogXmlTest {
 
-public class SimpleApplicationImpl extends AbstractApplication implements StartableApplication, SimpleApplication {
+    public CatalogXmlOsgiTest(String catalogUrl) {
+        super("classpath://osgi-catalog.xml");
+    }
+
+    //OSGi libraries not supported with old-style catalog items
+    //We treat those catalog items just as an alias to the java type they hold.
+    //No loader wrapping their libraries is ever created.
+    @Test(expectedExceptions=IllegalStateException.class)
+    public void testOsgiItem() throws Exception {
+        startApp("OsgiApp");
+    }
 
 }

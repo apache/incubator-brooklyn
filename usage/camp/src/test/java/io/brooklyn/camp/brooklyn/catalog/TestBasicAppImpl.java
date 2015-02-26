@@ -16,12 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.osgi.tests;
+package io.brooklyn.camp.brooklyn.catalog;
 
+import brooklyn.entity.basic.BasicApplicationImpl;
 
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.StartableApplication;
-
-public class SimpleApplicationImpl extends AbstractApplication implements StartableApplication, SimpleApplication {
-
+public class TestBasicAppImpl extends BasicApplicationImpl implements TestBasicApp {
 }

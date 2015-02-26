@@ -200,9 +200,9 @@ public class BrooklynComponentTemplateResolver {
     }
     
     public boolean canResolve() {
-        if (getCatalogItem()!=null) 
+        if (getCatalogItem()!=null)
             return true;
-        if (loader.tryLoadClass(getBrooklynType(), Entity.class).isPresent())
+        if (loader.tryLoadClass(getJavaType(), Entity.class).isPresent())
             return true;
         return false;
     }
@@ -217,7 +217,16 @@ public class BrooklynComponentTemplateResolver {
     
     /** tries to load the Java entity class */
     public Maybe<Class<? extends Entity>> tryLoadEntityClass() {
-        return loader.tryLoadClass(getBrooklynType(), Entity.class);
+        return loader.tryLoadClass(getJavaType(), Entity.class);
+    }
+
+    private String getJavaType() {
+        CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
+        if (!isJavaTypePrefix() && item != null && item.getJavaType() != null) {
+            return item.getJavaType();
+        } else {
+            return getBrooklynType();
+        }
     }
 
     /** resolves the spec, updating the loader if a catalog item is loaded */
@@ -233,9 +242,6 @@ public class BrooklynComponentTemplateResolver {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private <T extends Entity> EntitySpec<T> createSpec() {
-        // ensure loader is updated
-        getCatalogItem();
-        
         Class<T> type = (Class<T>) loadEntityClass();
         
         EntitySpec<T> spec;

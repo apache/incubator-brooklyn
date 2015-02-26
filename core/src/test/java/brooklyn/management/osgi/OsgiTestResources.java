@@ -41,6 +41,7 @@ public class OsgiTestResources {
      * defines an entity and an application, to confirm it can be read and used by brooklyn
      */
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_PATH = "/brooklyn/osgi/brooklyn-test-osgi-entities.jar";
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_APPLICATION = "brooklyn.osgi.tests.SimpleApplication";
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY = "brooklyn.osgi.tests.SimpleEntity";
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY = "brooklyn.osgi.tests.SimplePolicy";
 
