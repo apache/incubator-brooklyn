@@ -96,7 +96,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         List<String> commands = Lists.newLinkedList();
         if (osDetails.isLinux()) {
 //            commands.addAll(installLinux(getExpandedInstallDir()));
-            commands.addAll(installPackageCloud());
+            commands.addAll(installFromPackageCloud());
         } else if (osDetails.isMac()) {
             isPackageInstall = false;
             commands.addAll(installMac());
@@ -158,32 +158,32 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .build();
     }
     
-    private List<String> installPackageCloud() {
-        return ifExecutable0Else1("yum", installDebianBased(), installRpmBased());
+    private List<String> installFromPackageCloud() {
+        return ifExecutableElse("yum", installDebianBased(), installRpmBased());
     }
 
     private ImmutableList<String> installDebianBased() {
-        ImmutableList.Builder<String> commands = ImmutableList.<String>builder();
-        commands.add("curl https://packagecloud.io/install/repositories/basho/riak/script.deb | sudo bash");
-        commands.add("sudo apt-get install --assume-yes riak");
-        return commands.build();
+        return ImmutableList.<String>builder()
+                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.deb | sudo bash")
+                .add("sudo apt-get install --assume-yes riak")
+                .build();
     }
     
     private ImmutableList<String> installRpmBased() {
-        ImmutableList.Builder<String> commands = ImmutableList.<String>builder();
-        commands.add("curl https://packagecloud.io/install/repositories/basho/riak/script.rpm | sudo bash");
-        commands.add("sudo yum install -y riak");
-        return commands.build();
+        return ImmutableList.<String>builder()
+                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.rpm | sudo bash")
+                .add("sudo yum install -y riak")
+                .build();
     }
 
-    private static ImmutableList<String> ifExecutable0Else1(String command, List<String> ifTrue, List<String> otherwise) {
-        ImmutableList.Builder<String> commands = ImmutableList.<String>builder();
-        commands.add(String.format("if test -z `which %s`; then", command));
-        commands.addAll(ifTrue);
-        commands.add("else");
-        commands.addAll(otherwise);
-        commands.add("fi");
-        return commands.build();
+    private static ImmutableList<String> ifExecutableElse(String command, List<String> ifTrue, List<String> otherwise) {
+        return ImmutableList.<String>builder()
+                .add(String.format("if test -z `which %s`; then", command))
+                .addAll(ifTrue)
+                .add("else")
+                .addAll(otherwise)
+                .add("fi")
+                .build();
     }
 
     protected List<String> installMac() {
