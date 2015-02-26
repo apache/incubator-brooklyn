@@ -45,7 +45,7 @@ public interface ActiveMQBroker extends SoftwareProcess, MessageBroker, UsesJmx,
     ConfigKey<Duration> START_TIMEOUT = SoftwareProcess.START_TIMEOUT;
     
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.10.1");
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.10.2");
 
     @SetFromFlag("downloadUrl")
     public static final AttributeSensorAndConfigKey<String,String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(
