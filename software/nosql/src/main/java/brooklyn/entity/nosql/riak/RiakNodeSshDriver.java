@@ -18,18 +18,14 @@
  */
 package brooklyn.entity.nosql.riak;
 
-import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
-import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
-import static brooklyn.util.ssh.BashCommands.alternatives;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
-import static brooklyn.util.ssh.BashCommands.ok;
-import static brooklyn.util.ssh.BashCommands.sudo;
+import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
 
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.util.ssh.BashCommands;
+import com.google.api.client.util.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +40,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.ssh.SshTasks;
-import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -95,7 +89,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         List<String> commands = Lists.newLinkedList();
         if (osDetails.isLinux()) {
-//            commands.addAll(installLinux(getExpandedInstallDir()));
             commands.addAll(installFromPackageCloud());
         } else if (osDetails.isMac()) {
             isPackageInstall = false;
@@ -113,67 +106,52 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .execute();
     }
 
-    private List<String> installLinux(String expandedInstallDir) {
-        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), SshTasks.OnFailingTask.WARN_OR_IF_DYNAMIC_FAIL_MARKING_INESSENTIAL)).orSubmitAndBlock();
-
-        String installBin = Urls.mergePaths(expandedInstallDir, "bin");
-        String saveAsYum = "riak.rpm";
-        String saveAsApt = "riak.deb";
-        OsDetails osDetails = getMachine().getOsDetails();
-        
-        String downloadUrl;
-        String osReleaseCmd;
-        if ("debian".equalsIgnoreCase(osDetails.getName())) {
-            // TODO osDetails.getName() is returning "linux", instead of debian/ubuntu on AWS with jenkins image,
-            //      running as integration test targetting localhost.
-            // TODO Debian support (default debian image fails with 'sudo: command not found')
-            downloadUrl = (String)entity.getAttribute(RiakNode.DOWNLOAD_URL_DEBIAN);
-            osReleaseCmd = osDetails.getVersion().substring(0, osDetails.getVersion().indexOf("."));
-        } else {
-            // assume Ubuntu
-            downloadUrl = (String)entity.getAttribute(RiakNode.DOWNLOAD_URL_UBUNTU);
-            osReleaseCmd = "`lsb_release -sc` && " +
-                    "export OS_RELEASE=`([[ \"lucid natty precise\" =~ (^| )\\$OS_RELEASE($| ) ]] && echo $OS_RELEASE || echo precise)`";
-        }
-        String apt = chainGroup(
-                //debian fix
-                "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-                "which apt-get",
-                ok(sudo("apt-get -y --allow-unauthenticated install logrotate libpam0g-dev libssl0.9.8")),
-                "export OS_NAME=" + Strings.toLowerCase(osDetails.getName()),
-                "export OS_RELEASE=" + osReleaseCmd,
-                String.format("wget -O %s %s", saveAsApt, downloadUrl),
-                sudo(String.format("dpkg -i %s", saveAsApt)));
-        String yum = chainGroup(
-                "which yum",
-                ok(sudo("yum -y install openssl")),
-                String.format("wget -O %s %s", saveAsYum, entity.getAttribute(RiakNode.DOWNLOAD_URL_RHEL_CENTOS)),
-                sudo(String.format("rpm -Uvh %s", saveAsYum)));
+    private List<String> installFromPackageCloud() {
+        OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         return ImmutableList.<String>builder()
-                .add("mkdir -p " + installBin)
-                .add(INSTALL_CURL)
-                .add(alternatives(apt, yum))
-                .add("ln -s `which riak` " + Urls.mergePaths(installBin, "riak"))
-                .add("ln -s `which riak-admin` " + Urls.mergePaths(installBin, "riak-admin"))
+                .add(osDetails.getName().toLowerCase().contains("debian") ? "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" : "")
+                .add(ifNotExecutable("curl", Joiner.on('\n').join(installCurl())))
+                .addAll(ifExecutableElse("yum", installDebianBased(), installRpmBased()))
                 .build();
     }
-    
-    private List<String> installFromPackageCloud() {
-        return ifExecutableElse("yum", installDebianBased(), installRpmBased());
+
+    public List<String> installCurl() {
+        return ImmutableList.<String>builder()
+                .add(ifExecutableElse("yum",
+                        BashCommands.sudo("apt-get install --assume-yes curl"),
+                        BashCommands.sudo("yum install -y curl")))
+                .build();
     }
 
     private ImmutableList<String> installDebianBased() {
         return ImmutableList.<String>builder()
-                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.deb | sudo bash")
-                .add("sudo apt-get install --assume-yes riak")
+                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.deb | " + BashCommands.sudo("bash"))
+                .add(BashCommands.sudo("apt-get install --assume-yes riak"))
                 .build();
     }
-    
+
     private ImmutableList<String> installRpmBased() {
         return ImmutableList.<String>builder()
-                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.rpm | sudo bash")
-                .add("sudo yum install -y riak")
+                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.rpm | " + BashCommands.sudo("bash"))
+                .add(BashCommands.sudo("yum install -y riak"))
                 .build();
+    }
+
+    private static String ifExecutableElse(String command, String ifTrue, String otherwise) {
+        return Joiner.on('\n').join(
+                ifExecutableElse(command, ImmutableList.<String>of(ifTrue), ImmutableList.<String>of(otherwise)));
+    }
+
+    /**
+     * Returns a command which
+     * executes <code>statement</code> only if <code>command</code> is NOT found in <code>$PATH</code>
+     *
+     * @param command
+     * @param statement
+     * @return command
+     */
+    private static String ifNotExecutable(String command, String statement) {
+        return String.format("{ { test ! -z `which %s`; } || { %s; } }", command, statement);
     }
 
     private static ImmutableList<String> ifExecutableElse(String command, List<String> ifTrue, List<String> otherwise) {
@@ -447,10 +425,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         return (newScript("riakOnPath")
                 .body.append("which riak")
                 .execute() == 0);
-    }
-
-    protected boolean isPackageInstall() {
-        return isPackageInstall;
     }
 
     private String getRiakName() {
