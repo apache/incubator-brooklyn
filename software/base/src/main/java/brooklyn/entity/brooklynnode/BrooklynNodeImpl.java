@@ -47,6 +47,7 @@ import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
+import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
@@ -155,7 +156,18 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void preStop() {
         super.preStop();
-        shutdownGracefully();
+        if (MachineLifecycleEffectorTasks.canStop(getStopProcessModeParam(), this)) {
+            shutdownGracefully();
+        }
+    }
+
+    private StopMode getStopProcessModeParam() {
+        ConfigBag parameters = BrooklynTaskTags.getCurrentEffectorParameters();
+        if (parameters != null) {
+            return parameters.get(StopSoftwareParameters.STOP_PROCESS_MODE);
+        } else {
+            return StopSoftwareParameters.STOP_PROCESS_MODE.getDefaultValue();
+        }
     }
 
     @Override

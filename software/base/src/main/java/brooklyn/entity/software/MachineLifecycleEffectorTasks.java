@@ -45,8 +45,8 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
-import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -571,8 +571,6 @@ public abstract class MachineLifecycleEffectorTasks {
             }
         }
 
-        boolean isEntityStopped = entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED;
-
         DynamicTasks.queue("pre-stop", new Callable<String>() { public String call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
                 log.debug("Skipping stop of entity "+entity()+" when already stopped");
@@ -586,7 +584,7 @@ public abstract class MachineLifecycleEffectorTasks {
 
         Maybe<SshMachineLocation> sshMachine = Machines.findUniqueSshMachineLocation(entity().getLocations());
         Task<String> stoppingProcess = null;
-        if (canStop(stopProcessMode, isEntityStopped)) {
+        if (canStop(stopProcessMode, entity())) {
             stoppingProcess = DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
                 DynamicTasks.markInessential();
                 stopProcessesAtMachine();
@@ -652,9 +650,14 @@ public abstract class MachineLifecycleEffectorTasks {
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+entity());
     }
 
-    protected static boolean canStop(StopMode stopMode, boolean isTargetStopped) {
+    public static boolean canStop(StopMode stopMode, Entity entity) {
+        boolean isEntityStopped = entity.getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED;
+        return canStop(stopMode, isEntityStopped);
+    }
+
+    protected static boolean canStop(StopMode stopMode, boolean isStopped) {
         return stopMode == StopMode.ALWAYS ||
-                stopMode == StopMode.IF_NOT_STOPPED && !isTargetStopped;
+                stopMode == StopMode.IF_NOT_STOPPED && !isStopped;
     }
 
     private void checkCompatibleMachineModes(Boolean isStopMachine, boolean hasStopMachineMode, StopMode stopMachineMode) {
