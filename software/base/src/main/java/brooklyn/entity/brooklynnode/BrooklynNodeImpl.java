@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import brooklyn.location.basic.Locations;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -217,8 +218,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void postStop() {
         super.postStop();
-        ConfigBag stopParameters = BrooklynTaskTags.getCurrentEffectorParameters();
-        if (isStopMachine(stopParameters)) {
+        if (isStopMachine()) {
             // Don't unmanage in entity's task context as it will self-cancel the task. Wait for the stop effector to complete.
             // If this is not enough (still getting Caused by: java.util.concurrent.CancellationException: null) then
             // we could search for the top most task with entity context == this and wait on it. Even stronger would be
@@ -228,9 +228,13 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         }
     }
 
-    private boolean isStopMachine(ConfigBag stopParameters) {
-        return stopParameters == null ||
-                stopParameters.get(StopSoftwareParameters.STOP_MACHINE_MODE) != StopMode.NEVER;
+    private boolean isStopMachine() {
+        // Don't rely on effector parameters, check if there is still a machine running.
+        // If the entity was previously stopped with STOP_MACHINE_MODE=StopMode.NEVER
+        // and a second time with STOP_MACHINE_MODE=StopMode.IF_NOT_STOPPED, then the
+        // machine is still running, but there is no deterministic way to infer this from
+        // the parameters alone.
+        return Locations.findUniqueSshMachineLocation(this.getLocations()).isAbsent();
     }
 
     private void queueShutdownTask() {
