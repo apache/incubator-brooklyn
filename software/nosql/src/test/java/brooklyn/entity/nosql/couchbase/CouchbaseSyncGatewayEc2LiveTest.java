@@ -96,7 +96,7 @@ public class CouchbaseSyncGatewayEc2LiveTest extends AbstractEc2LiveTest {
     
     @Test(groups = {"Live"})
     @Override
-    public void test_CentOS_5_6() throws Exception {
+    public void test_CentOS_5() throws Exception {
         // Unsupported
         // error: Failed dependencies:
         //     libc.so.6(GLIBC_2.7)(64bit) is needed by couchbase-server-2.5.1-1083.x86_64

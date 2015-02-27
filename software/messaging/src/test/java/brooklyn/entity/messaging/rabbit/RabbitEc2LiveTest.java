@@ -84,7 +84,7 @@ public class RabbitEc2LiveTest extends AbstractEc2LiveTest {
     }
 
     @Override
-    public void test_CentOS_5_6() throws SkipException {
+    public void test_CentOS_5() throws SkipException {
         // Not supported. The EPEL repository described here at [1] does not contain erlang, and the
         // Erlang repository at [1] requires old versions of rpmlib. Additionally, [2] suggests that
         // Centos 5 is not supported

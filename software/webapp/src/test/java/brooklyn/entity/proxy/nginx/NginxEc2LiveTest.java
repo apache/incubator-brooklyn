@@ -42,7 +42,7 @@ public class NginxEc2LiveTest extends AbstractEc2LiveTest {
      *   test_Ubuntu_12_0:                invocation error for disable requiretty 
      */
     
-    /* PASSED: test_CentOS_5_6
+    /* PASSED: test_CentOS_5
      * PASSED: test_CentOS_6_3
      * PASSED: test_Debian_6
      * PASSED: test_Ubuntu_10_0
