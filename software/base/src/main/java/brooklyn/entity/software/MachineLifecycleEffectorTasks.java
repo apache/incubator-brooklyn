@@ -477,6 +477,13 @@ public abstract class MachineLifecycleEffectorTasks {
         if (isRestartMachine==RestartMachineMode.AUTO) 
             isRestartMachine = getDefaultRestartStopsMachine() ? RestartMachineMode.TRUE : RestartMachineMode.FALSE; 
 
+        DynamicTasks.queue("pre-restart", new Runnable() { public void run() {
+            //Calling preStopCustom without a corresponding postStopCustom invocation
+            //doesn't look right so use a separate callback pair; Also depending on the arguments
+            //stop() could be called which will call the {pre,post}StopCustom on its own.
+            preRestartCustom();
+        }});
+
         if (isRestartMachine==RestartMachineMode.FALSE) {
             DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
                 DynamicTasks.markInessential();
@@ -501,6 +508,10 @@ public abstract class MachineLifecycleEffectorTasks {
         }});
         
         restartChildren(parameters);
+
+        DynamicTasks.queue("post-restart", new Runnable() { public void run() {
+            postRestartCustom();
+        }});
 
         DynamicTasks.waitForLast();
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
@@ -670,6 +681,14 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     protected void postStopCustom() {
+        // nothing needed here
+    }
+
+    protected void preRestartCustom() {
+        // nothing needed here
+    }
+
+    protected void postRestartCustom() {
         // nothing needed here
     }
 

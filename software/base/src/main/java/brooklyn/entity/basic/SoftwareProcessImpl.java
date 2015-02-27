@@ -271,6 +271,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected void postStop() {
     }
 
+    protected void preRestart() {
+    }
+
+    protected void postRestart() {
+    }
+
     /**
      * For disconnecting from the running app. Will be called on stop.
      */
