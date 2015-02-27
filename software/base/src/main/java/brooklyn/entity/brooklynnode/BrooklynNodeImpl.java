@@ -40,6 +40,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
@@ -154,17 +155,30 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void preStop() {
         super.preStop();
+        shutdownGracefully();
+    }
 
+    @Override
+    protected void preRestart() {
+        super.preRestart();
+        shutdownGracefully();
+        DynamicTasks.queue("post-shutdown", new Runnable() { public void run() {
+            //set by shutdown - clear it so the entity starts cleanly. Does the indicator bring any value at all?
+            ServiceNotUpLogic.clearNotUpIndicator(BrooklynNodeImpl.this, SHUTDOWN.getName());
+        }});
+    }
+
+    private void shutdownGracefully() {
         // Shutdown only if accessible: any of stop_* could have already been called.
         // Don't check serviceUp=true because stop() will already have set serviceUp=false && expectedState=stopping
         if (Boolean.TRUE.equals(getAttribute(BrooklynNode.WEB_CONSOLE_ACCESSIBLE))) {
             queueShutdownTask();
             queueWaitExitTask();
         } else {
-            log.info("Skipping children.isEmpty check and shutdown call, because web-console not up for {}", this);
+            log.info("Skipping graceful shutdown call, because web-console not up for {}", this);
         }
     }
-    
+
     private void queueWaitExitTask() {
         //give time to the process to die gracefully after closing the shutdown call
         DynamicTasks.queue(Tasks.builder().name("wait for graceful stop").body(new Runnable() {
