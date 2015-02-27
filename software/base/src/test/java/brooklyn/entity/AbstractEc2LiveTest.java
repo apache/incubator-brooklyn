@@ -75,10 +75,11 @@ public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
         super.setUp();
     }
 
+    // Image ids for Debian: https://wiki.debian.org/Cloud/AmazonEC2Image/Squeeze
     @Test(groups = {"Live"})
     public void test_Debian_6() throws Exception {
         // release codename "squeeze"
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-0740476e", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-5e12dc36", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
     }
 
     @Test(groups = {"Live"})
