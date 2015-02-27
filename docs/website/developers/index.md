@@ -28,15 +28,19 @@ and are comfortable doing so.
 </div>
 </div>
 
-
-Firstly, please see our [community resources](../community/index.html), in particular:
+We heartily welome contributions and new members.
+There's nothing official needed to get involved; 
+simply come say hello somewhere in the [community](../community/index.html):
 
 - [Mailing lists](../community/mailing-lists.html)
 - [IRC channel](../community/irc.html)
 - [JIRA for bug tracking](https://issues.apache.org/jira/browse/BROOKLYN)
 
-Next, you may want to read the [Developer Guide]({{ site.path.guide }}/dev/).
+Once you have some code or a blueprint you want to share, 
+there are a few instructions to note on [how to contribute](how-to-contribute.html).
 
-If you have changes or additions to the Brooklyn source code, we would love to
-see them! Please read our guide on [how to contribute](how-to-contribute.html).
+If you're looking to learn more about the codebase itself, 
+have a look at [Developer Guide]({{ site.path.guide }}/dev/).
+There are also a number of [development bookmarks](links.html) for the tools we use
+(git, jenkins, jira).
 
