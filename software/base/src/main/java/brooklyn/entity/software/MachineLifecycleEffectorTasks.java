@@ -487,10 +487,10 @@ public abstract class MachineLifecycleEffectorTasks {
         } else {
             DynamicTasks.queue("stopping (machine)", new Callable<String>() { public String call() {
                 DynamicTasks.markInessential();
-                stop(ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE, true));
+                stop(ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE_MODE, StopMode.IF_NOT_STOPPED));
                 DynamicTasks.waitForLast();
                 return "Stop of machine completed with no errors.";
-            }});            
+            }});
         }
 
         DynamicTasks.queue("starting", new Runnable() { public void run() {
@@ -541,7 +541,9 @@ public abstract class MachineLifecycleEffectorTasks {
 
         log.info("Stopping {} in {}", entity(), entity().getLocations());
 
+        @SuppressWarnings("deprecation")
         final boolean hasStopMachine = parameters.containsKey(StopSoftwareParameters.STOP_MACHINE);
+        @SuppressWarnings("deprecation")
         final Boolean isStopMachine = parameters.get(StopSoftwareParameters.STOP_MACHINE);
 
         final StopMode stopProcessMode = parameters.get(StopSoftwareParameters.STOP_PROCESS_MODE);

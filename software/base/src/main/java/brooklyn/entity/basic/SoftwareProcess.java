@@ -260,7 +260,10 @@ public interface SoftwareProcess extends Entity, Startable {
 
     @Beta
     public static class StopSoftwareParameters {
-        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
+        /** @since 0.7.0 semantics of parameters to restart being explored
+         *  @deprecated since 0.7.0 use  {@link #STOP_MACHINE_MODE} instead */
+        @Beta
+        @Deprecated
         public static final ConfigKey<Boolean> STOP_MACHINE = ConfigKeys.newBooleanConfigKey("stopMachine",
                 "Whether to stop the machine provisioned for this entity:  'true', or 'false' are supported, "
                         + "with the default being 'true'", true);

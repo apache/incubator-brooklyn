@@ -192,8 +192,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     protected void postStop() {
         super.postStop();
         ConfigBag stopParameters = BrooklynTaskTags.getCurrentEffectorParameters();
-        //unmanage only if stopping the machine
-        if (stopParameters == null || stopParameters.get(StopSoftwareParameters.STOP_MACHINE)) {
+        if (isStopMachine(stopParameters)) {
             // Don't unmanage in entity's task context as it will self-cancel the task. Wait for the stop effector to complete.
             // If this is not enough (still getting Caused by: java.util.concurrent.CancellationException: null) then
             // we could search for the top most task with entity context == this and wait on it. Even stronger would be
@@ -201,6 +200,11 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             Task<?> stopEffectorTask = BrooklynTaskTags.getClosestEffectorTask(Tasks.current(), Startable.STOP);
             getManagementContext().getExecutionManager().submit(new UnmanageTask(stopEffectorTask, this));
         }
+    }
+
+    private boolean isStopMachine(ConfigBag stopParameters) {
+        return stopParameters == null ||
+                stopParameters.get(StopSoftwareParameters.STOP_MACHINE_MODE) != StopMode.NEVER;
     }
 
     private void queueShutdownTask() {
