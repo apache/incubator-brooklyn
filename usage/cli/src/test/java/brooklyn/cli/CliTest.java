@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import groovy.lang.GroovyClassLoader;
 import io.airlift.command.Cli;
+import io.airlift.command.Command;
 import io.airlift.command.ParseException;
 
 import java.io.ByteArrayInputStream;
@@ -48,6 +49,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.cli.AbstractMain.BrooklynCommand;
+import brooklyn.cli.AbstractMain.BrooklynCommandCollectingArgs;
 import brooklyn.cli.AbstractMain.HelpCommand;
 import brooklyn.cli.Main.GeneratePasswordCommand;
 import brooklyn.cli.Main.LaunchCommand;
@@ -410,6 +412,71 @@ public class CliTest {
         }
     }
 
+    @Test
+    public void testInfoShowsDefaultBanner() throws Exception {
+        List<String> stdoutLines = runCommand(ImmutableList.of("info"), "");
+        
+        for (String line : Splitter.on("\n").split(Main.DEFAULT_BANNER)) {
+            assertTrue(stdoutLines.contains(line), "out="+stdoutLines);
+        }
+    }
+
+    @Test
+    public void testInfoSupportsCustomizedBanner() throws Exception {
+        String origBanner = Main.banner;
+        String origBannerFirstLine = Iterables.get(Splitter.on("\n").split(Main.DEFAULT_BANNER), 0);
+        try {
+            String customBanner = "My Custom Banner";
+            Main.banner = customBanner;
+            List<String> stdoutLines = runCommand(ImmutableList.of("info"), "");
+            
+            assertTrue(stdoutLines.contains(customBanner), "out="+stdoutLines);
+            assertFalse(stdoutLines.contains(origBannerFirstLine), "out="+stdoutLines);
+        } finally {
+            Main.banner = origBanner;
+        }
+    }
+
+    @Test
+    public void testCanCustomiseInfoCommand() throws Exception {
+        Main main = new Main() {
+            protected Class<? extends BrooklynCommand> cliInfoCommand() {
+                return CustomInfoCommand.class;
+            }
+        };
+        List<String> stdoutLines = runCommand(main.cliBuilder().build(), ImmutableList.of("info"), "");
+        assertTrue(stdoutLines.contains("My Custom Info"), "out="+stdoutLines);
+    }
+    
+    @Command(name = "info", description = "Display information about brooklyn")
+    public static class CustomInfoCommand extends BrooklynCommandCollectingArgs {
+        @Override
+        public Void call() throws Exception {
+            System.out.println("My Custom Info");
+            return null;
+        }
+    }
+
+    @Test
+    public void testCanCustomiseLaunchCommand() throws Exception {
+        Main main = new Main() {
+            protected Class<? extends BrooklynCommand> cliLaunchCommand() {
+                return CustomLaunchCommand.class;
+            }
+        };
+        List<String> stdoutLines = runCommand(main.cliBuilder().build(), ImmutableList.of("launch"), "");
+        assertTrue(stdoutLines.contains("My Custom Launch"), "out="+stdoutLines);
+    }
+    
+    @Command(name = "launch", description = "Starts a server, optionally with applications")
+    public static class CustomLaunchCommand extends BrooklynCommandCollectingArgs {
+        @Override
+        public Void call() throws Exception {
+            System.out.println("My Custom Launch");
+            return null;
+        }
+    }
+
     protected Throwable runCommandExpectingException(Iterable<String> args, String input) throws Exception {
         try {
             List<String> stdout = runCommand(args, input);
@@ -422,6 +489,10 @@ public class CliTest {
 
     protected List<String> runCommand(Iterable<String> args, String input) throws Exception {
         Cli<BrooklynCommand> cli = buildCli();
+        return runCommand(cli, args, input);
+    }
+    
+    protected List<String> runCommand(Cli<BrooklynCommand> cli, Iterable<String> args, String input) throws Exception {
         final BrooklynCommand command = cli.parse(args);
         
         final AtomicReference<Exception> exception = new AtomicReference<Exception>();

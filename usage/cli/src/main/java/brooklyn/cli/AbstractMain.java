@@ -70,7 +70,7 @@ public abstract class AbstractMain {
     private static final Logger log = LoggerFactory.getLogger(AbstractMain.class);
 
     // Launch banner
-    public static final String BANNER =
+    public static final String DEFAULT_BANNER =
         " _                     _    _             \n" +
         "| |__  _ __ ___   ___ | | _| |_   _ _ __ (R)\n" +
         "| '_ \\| '__/ _ \\ / _ \\| |/ / | | | | '_ \\ \n" +
@@ -84,6 +84,16 @@ public abstract class AbstractMain {
     public static final int EXECUTION_ERROR = 2;
     public static final int CONFIGURATION_ERROR = 3;
 
+    /**
+     * Field intended for sub-classes (with their own {@code main()}) to customize the banner.
+     * All accesses to the banner are done through this field, to ensure consistent customization.
+     * 
+     * Note that a {@code getBanner()} method is not an option for supporting this, because
+     * it is accessed from static inner-classes (such as {@link InfoCommand}, so non-static
+     * methods are not an option (and one can't override static methods).
+     */
+    protected static volatile String banner = DEFAULT_BANNER;
+    
     /** abstract superclass for commands defining global options, but not arguments,
      * as that prevents Help from being injectable in the {@link HelpCommand} subclass */
     public static abstract class BrooklynCommand implements Callable<Void> {
@@ -163,7 +173,7 @@ public abstract class AbstractMain {
             if (log.isDebugEnabled()) log.debug("Invoked info command: {}", this);
             warnIfArguments();
 
-            System.out.println(BANNER);
+            System.out.println(banner);
             System.out.println("Version:  " + BrooklynVersion.get());
             if (BrooklynVersion.INSTANCE.isSnapshot()) {
                 System.out.println("Git SHA1: " + BrooklynVersion.INSTANCE.getSha1FromOsgiManifest());
