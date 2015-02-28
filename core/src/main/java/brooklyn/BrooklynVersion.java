@@ -216,9 +216,10 @@ public class BrooklynVersion {
       }
       while (paths.hasMoreElements()) {
           URL u = paths.nextElement();
-          if (u.getPath().endsWith("core/target/classes/brooklyn/BrooklynVersion.class")) {
+          // running fram a classes directory (including coverage-classes for cobertura) triggers dev env
+          if (u.getPath().endsWith("classes/brooklyn/BrooklynVersion.class")) {
               try {
-                  log.debug("Brooklyn debug environment detected; BrooklynVersion class is at: "+u);
+                  log.debug("Brooklyn dev/src environment detected: BrooklynVersion class is at: "+u);
                   return true;
               } catch (Exception e) {
                   Exceptions.propagateIfFatal(e);

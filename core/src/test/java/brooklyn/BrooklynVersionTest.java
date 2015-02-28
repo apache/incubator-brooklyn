@@ -74,8 +74,9 @@ public class BrooklynVersionTest {
       if (sp==null) Assert.fail("Can't find test resources");
       
       log.info("Test for dev env: "+"Dev env? "+BrooklynVersion.isDevelopmentEnvironment()+"; path "+sp);
-      Assert.assertEquals(sp.getPath().endsWith("classes/brooklyn/config/sample.properties"), BrooklynVersion.isDevelopmentEnvironment(),
-          "Dev env? "+BrooklynVersion.isDevelopmentEnvironment()+"; path "+sp);
+      boolean testResourcePathInClasses = sp.getPath().endsWith("classes/brooklyn/config/sample.properties");
+      Assert.assertEquals(testResourcePathInClasses, BrooklynVersion.isDevelopmentEnvironment(),
+          "Dev env? "+BrooklynVersion.isDevelopmentEnvironment()+"; but resource path: "+sp);
   }
   
 }
