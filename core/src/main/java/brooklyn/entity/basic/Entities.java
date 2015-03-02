@@ -595,7 +595,7 @@ public class Entities {
      *
      * @see #descendants(Entity, Predicate, boolean)
      */
-    public static Iterable<Entity> descendants(Entity root, Predicate<Entity> matching) {
+    public static Iterable<Entity> descendants(Entity root, Predicate<? super Entity> matching) {
         return descendants(root, matching, true);
     }
 
