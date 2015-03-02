@@ -6,8 +6,8 @@ children:
 - { section: File-based Persistence }
 - { section: Object Store Persistence }
 - { section: Rebinding to State }
-- { section: High Availability }
 - { section: Writing Persistable Code }
+- { section: Persisted State Backup }
 ---
 
 Brooklyn can be configured to persist its state so that the Brooklyn server can be restarted, 
@@ -64,9 +64,33 @@ The state is written to the given path. The file structure under that path is:
 * `./enrichers/`
 
 In each of those directories, an XML file will be created per item - for example a file per
-entity in ./entities/. This file will capture all of the state - for example, an
+entity in `./entities/`. This file will capture all of the state - for example, an
 entity's: id; display name; type; config; attributes; tags; relationships to locations, child 
 entities, group membership, policies and enrichers; and dynamically added effectors and sensors.
+
+If using the default persistence dir (i.e. no `--persistenceDir` was specified), then Brooklyn will
+write its state to `~/.brooklyn/brooklyn-persisted-state/data`. Copies of this directory
+will be automatically created in `~/.brooklyn/brooklyn-persisted-state/backups/` each time Brooklyn 
+is restarted (or if a standby Brooklyn instances takes over as master).
+
+A custom directory for Brooklyn state can also be configured in `brooklyn.properties` using:
+    
+    # For all Brooklyn files
+    brooklyn.base.dir=/path/to/base/dir
+    
+    # Sub-directory of base.dir for writing persisted state (if relative). If directory
+    # starts with "/" (or "~/", or something like "c:\") then assumed to be absolute. 
+    brooklyn.persistence.dir=data
+
+    # Sub-directory of base.dir for creating backup directories (if relative). If directory
+    # starts with "/" (or "~/", or something like "c:\") then assumed to be absolute. 
+    brooklyn.persistence.backups.dir=backups
+
+This `base.dir` will also include temporary files such as the OSGi cache.
+
+If `persistence.dir` is not specified then it will use the sub-directory
+`brooklyn-persisted-state/data` of the `base.dir`. If the `backups.dir` is not specified
+the backup directories will be created in the sub-directory `backups` of the persistence dir.
 
 
 Object Store Persistence
@@ -74,7 +98,8 @@ Object Store Persistence
 
 Brooklyn can persist its state to any Object Store API that jclouds supports including 
 S3, Swift and Azure. This gives access to any compatible Object Store product or cloud provider
-including AWS-S3, SoftLayer, Rackspace, HP and Microsoft Azure.
+including AWS-S3, SoftLayer, Rackspace, HP and Microsoft Azure. For a complete list of supported
+providers, see [jclouds](http://jclouds.apache.org/guides/providers/#blobstore-providers).
 
 To configure the Object Store, add the credentials to `~/.brooklyn/brooklyn.properties` such as:
 
@@ -95,8 +120,26 @@ brooklyn.location.named.softlayer-swift-ams01.credential=abcdefghijklmnopqrstuvw
 Start Brooklyn pointing at this target object store, e.g.:
 
 {% highlight bash %}
-brooklyn launch --persist auto --persistenceDir myContainerName --persistenceLocation named:softlayer-swift-ams01
+nohup brooklyn launch --persist auto --persistenceDir myContainerName --persistenceLocation named:softlayer-swift-ams01 &
 {% endhighlight %}
+
+
+The following `brooklyn.properties` options can also be used:
+
+    # Location spec string for an object store (e.g. jclouds:swift:URL) where persisted state 
+    # should be kept; if blank or not supplied, the file system is used.
+    brooklyn.persistence.location.spec=<location>
+
+    # Container name for writing persisted state
+    brooklyn.persistence.dir=/path/to/dataContainer
+
+    # Location spec string for an object store (e.g. jclouds:swift:URL) where backups of persisted 
+    # state should be kept; defaults to the local file system.
+    brooklyn.persistence.backups.location.spec=<location>
+
+    # Container name for writing backups of persisted state;
+    # defaults to 'backups' inside the default persistence container.
+    brooklyn.persistence.backups.dir=/path/to/backupContainer
 
 
 Rebinding to State
@@ -202,51 +245,6 @@ instance. After fixing the entities, locations and/or policies, the Brooklyn ins
 new persisted state can be copied and used to fix the production instance.
 
 
-High Availability
------------------
-
-Brooklyn will automatically run in HA mode if multiple Brooklyn instances are started
-pointing at the same persistence store.  One Brooklyn node (e.g. the first one started)
-is elected as HA master:  all *write operations* against Brooklyn entities, such as creating
-an application or invoking an effector, should be directed to the master.
-
-Once one node is running as `MASTER`, other nodes start in either `STANDBY` or `HOT_STANDBY` mode:
-
-* In `STANDBY` mode, a Brooklyn instance will monitor the master and will be a candidate
-  to become `MASTER` should the master fail. Standby nodes do *not* attempt to rebind
-  until they are elected master, so the state of existing entities is not available at
-  the standby node.  However a standby server consumes very little resource until it is
-  promoted.
-  
-* In `HOT_STANDBY` mode, a Brooklyn instance will read and make available the live state of
-  entities.  Thus a hot-standby node is available as a read-only copy.
-  As with the standby node, if a hot-standby node detects that the master fails,
-  it will be a candidate for promotion to master.
-
-To explicitly specify what HA mode a node should be in, the following CLI options are available
-for the parameter `--highAvailability`:
-
-* `disabled`: management node works in isolation; it will not cooperate with any other standby/master nodes in management plane
-* `auto`: will look for other management nodes, and will allocate itself as standby or master based on other nodes' states
-* `master`: will startup as master; if there is already a master then fails immediately
-* `standby`: will start up as lukewarm standby; if there is not already a master then fails immediately
-* `hot_standby`: will start up as hot standby; if there is not already a master then fails immediately
-
-The REST API offers live detection and control of the HA mode,
-including setting priority to control which nodes will be promoted on master failure:
-
-* `/server/ha/state`: Returns the HA state of a management node (GET),
-  or changes the state (POST)
-* `/server/ha/states`: Returns the HA states and detail for all nodes in a management plane
-* `/server/ha/priority`: Returns the HA node priority for MASTER failover (GET),
-  or sets that priority (POST)
-
-Note that when POSTing to a non-master server it is necessary to pass a `Brooklyn-Allow-Non-Master-Access: true` header.
-For example, the following cURL command could be used to change the state of a `STANDBY` node on `localhost:8082` to `HOT_STANDBY`:
-
-    curl -v -X POST -d mode=HOT_STANDBY -H "Brooklyn-Allow-Non-Master-Access: true" http://localhost:8082/v1/server/ha/state
-
-
 Writing Persistable Code
 ------------------------
 The most common problem on rebind is that custom entity code has not been written in a way
@@ -279,3 +277,58 @@ For locations, policies and enrichers they (currently) do not have attributes. H
 config is persisted automatically. Normally the state of a policy or enricher is transient - 
 on rebind it starts afresh, for example with monitoring the performance or health metrics
 rather than relying on the persisted values.
+
+
+Persisted State Backup
+----------------------
+
+### File system backup
+
+When using the file system it is important to ensure it is backed up regularly.
+
+One could use `rsync` to regularly backup the contents to another server.
+
+It is also recommended to periodically create a complete archive of the state.
+A simple mechanism is to run a CRON job periodically (e.g. every 30 minutes) that creates an
+archive of the persistence directory, and uploads that to a backup 
+facility (e.g. to S3).
+
+Optionally, to avoid excessive load on the Brooklyn server, the archive-generation could be done 
+on another "data" server. This could get a copy of the data via an `rsync` job.
+
+An example script to be invoked by CRON is shown below:
+
+    DATE=`date "+%Y%m%d.%H%M.%S"`
+    BACKUP_FILENAME=/path/to/archives/back-${DATE}.tar.gz
+    DATA_DIR=/path/to/base/dir/data
+    
+    tar --exclude '*/backups/*' -czvf $BACKUP_FILENAME $DATA_DIR
+    # For s3cmd installation see http://s3tools.org/repositories
+    s3cmd put $BACKUP_FILENAME s3://mybackupbucket
+    rm $BACKUP_FILENAME
+
+
+### Object store backup
+
+Object Stores will normally handle replication. However, many such object stores do not handle 
+versioning (i.e. to allow access to an old version, if an object has been incorrectly changed or 
+deleted).
+
+The state can be downloaded periodically from the object store, archived and backed up. 
+
+An example script to be invoked by CRON is shown below:
+
+    DATE=`date "+%Y%m%d.%H%M.%S"`
+    BACKUP_FILENAME=/path/to/archives/back-${DATE}.tar.gz
+    TEMP_DATA_DIR=/path/to/tempdir
+    
+    amp copy-state \
+            --persistenceLocation named:my-persistence-location \
+            --persistenceDir /path/to/bucket \
+            --destinationDir $TEMP_DATA_DIR
+
+    tar --exclude '*/backups/*' -czvf $BACKUP_FILENAME $TEMP_DATA_DIR
+    # For s3cmd installation see http://s3tools.org/repositories
+    s3cmd put $BACKUP_FILENAME s3://mybackupbucket
+    rm $BACKUP_FILENAME
+    rm -r $TEMP_DATA_DIR
