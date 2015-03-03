@@ -80,7 +80,7 @@ public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
         test("Red Hat Enterprise Linux 6");
     }
 
-    @Test(groups = {"Live"})
+    @Test(enabled=false, groups = {"Live"}) // only run this in MySqlIntegrationTest
     public void test_localhost() throws Exception {
         super.test_localhost();
     }

@@ -49,7 +49,8 @@ public class MySqlIntegrationTest extends BrooklynAppLiveTestSupport {
     // can start in AWS by running this -- or use brooklyn CLI/REST for most clouds, or programmatic/config for set of fixed IP machines
     static String hostname = Networking.getLocalHost().getHostName();
 
-    //from http://www.vogella.de/articles/MySQLJava/article.html
+    // From http://www.vogella.de/articles/MySQLJava/article.html
+    // Expects COMMENTS to be injected as the test.table.name config value, for VogellaExampleAccess to work.
     public static final String CREATION_SCRIPT = Joiner.on("\n").join(ImmutableList.of(
             "CREATE DATABASE feedback;",
             "CREATE USER 'sqluser'@'localhost' IDENTIFIED BY 'sqluserpw';",
@@ -63,7 +64,7 @@ public class MySqlIntegrationTest extends BrooklynAppLiveTestSupport {
             "GRANT ALL PRIVILEGES ON feedback.* TO 'sqluser'@'$hostname';",
             "FLUSH PRIVILEGES;",
             "USE feedback;",
-            "CREATE TABLE COMMENTS (",
+            "CREATE TABLE ${config['test.table.name']} (",
             "        id INT NOT NULL AUTO_INCREMENT,", 
             "        MYUSER VARCHAR(30) NOT NULL,",
             "        EMAIL VARCHAR(30), ",
@@ -74,7 +75,7 @@ public class MySqlIntegrationTest extends BrooklynAppLiveTestSupport {
             "        PRIMARY KEY (ID)",
             "    );",
             "",
-            "INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vogella.de', '2009-09-14 10:33:11', 'Summary','My first comment' );"
+            "INSERT INTO ${config['test.table.name']} values (default, 'lars', 'myemail@gmail.com','http://www.vogella.de', '2009-09-14 10:33:11', 'Summary','My first comment' );"
             ));
 
     @Test(groups = {"Integration"})
@@ -84,7 +85,8 @@ public class MySqlIntegrationTest extends BrooklynAppLiveTestSupport {
             MySqlNode mysql = app.createAndManageChild(EntitySpec.create(MySqlNode.class)
                     .configure("mysql.server.conf", MutableMap.of("skip-name-resolve",""))
                     .configure("creationScriptContents", CREATION_SCRIPT)
-                    .configure("dataDir", dataDir.getAbsolutePath()));
+                    .configure("dataDir", dataDir.getAbsolutePath())
+                    .configure("test.table.name", "COMMENTS")); // to ensure creation script is templated
             LocalhostMachineProvisioningLocation location = new LocalhostMachineProvisioningLocation();
             
             app.start(ImmutableList.of(location));;
