@@ -234,10 +234,25 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <inherited>true</inherited>
                 <executions>
+                    <!-- 
+                      Compile only Groovy files with the eclipse-groovy compiler.
+                      Java files compiled by default-testCompile execution inherited from parent.
+                    -->
                     <execution>
-                        <id>default-testCompile</id>
+                        <id>groovy-testCompile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                          <goal>testCompile</goal>
+                        </goals>
                         <configuration>
                             <compilerId>groovy-eclipse-compiler</compilerId>
+                            <includes>
+                              <include>**/*.groovy</include>
+                            </includes>
+                            <fork>true</fork>
+                            <verbose>false</verbose>
+                            <source>${java.version}</source>
+                            <target>${java.version}</target>
                         </configuration>
                     </execution>
                 </executions>
