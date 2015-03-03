@@ -351,7 +351,7 @@ public class Main extends AbstractMain {
             try {
                 if (log.isDebugEnabled()) log.debug("Invoked launch command {}", this);
                 
-                if (!quiet) stdout.println(BANNER);
+                if (!quiet) stdout.println(banner);
     
                 if (verbose) {
                     if (app != null) {
@@ -773,7 +773,7 @@ public class Main extends AbstractMain {
             try {
                 log.info("Retrieving and copying persisted state to "+destinationDir+(Strings.isBlank(destinationLocation) ? "" : " @ "+destinationLocation));
                 
-                if (!quiet) stdout.println(BANNER);
+                if (!quiet) stdout.println(banner);
     
                 PersistMode persistMode = PersistMode.AUTO;
                 HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.DISABLED;
@@ -828,12 +828,6 @@ public class Main extends AbstractMain {
         }
     }
 
-    /** method intended for overriding when the script filename is different 
-     * @return the name of the script the user has invoked */
-    protected String cliScriptName() {
-        return "brooklyn";
-    }
-
     /** method intended for overriding when a different {@link Cli} is desired,
      * or when the subclass wishes to change any of the arguments */
     @SuppressWarnings("unchecked")
@@ -841,10 +835,10 @@ public class Main extends AbstractMain {
     protected CliBuilder<BrooklynCommand> cliBuilder() {
         CliBuilder<BrooklynCommand> builder = Cli.<BrooklynCommand>builder(cliScriptName())
                 .withDescription("Brooklyn Management Service")
-                .withDefaultCommand(DefaultInfoCommand.class)
+                .withDefaultCommand(cliDefaultInfoCommand())
                 .withCommands(
                         HelpCommand.class,
-                        InfoCommand.class,
+                        cliInfoCommand(),
                         GeneratePasswordCommand.class,
                         CopyStateCommand.class,
                         ListAllCommand.class,
@@ -876,5 +870,15 @@ public class Main extends AbstractMain {
     /** method intended for overriding when a custom {@link LaunchCommand} is being specified  */
     protected Class<? extends BrooklynCommand> cliLaunchCommand() {
         return LaunchCommand.class;
+    }
+    
+    /** method intended for overriding when a custom {@link InfoCommand} is being specified  */
+    protected Class<? extends BrooklynCommand> cliInfoCommand() {
+        return InfoCommand.class;
+    }
+    
+    /** method intended for overriding when a custom {@link InfoCommand} is being specified  */
+    protected Class<? extends BrooklynCommand> cliDefaultInfoCommand() {
+        return DefaultInfoCommand.class;
     }
 }
