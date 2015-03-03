@@ -18,6 +18,7 @@
  */
 package brooklyn.util.ssh;
 
+import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -29,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -124,7 +126,7 @@ public class BashCommandsIntegrationTest {
     public void testSudo() throws Exception {
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         ByteArrayOutputStream errStream = new ByteArrayOutputStream();
-        String cmd = BashCommands.sudo("whoami");
+        String cmd = sudo("whoami");
         int exitcode = loc.execCommands(ImmutableMap.of("out", outStream, "err", errStream), "test", ImmutableList.of(cmd));
         String outstr = new String(outStream.toByteArray());
         String errstr = new String(errStream.toByteArray());
@@ -361,6 +363,121 @@ public class BashCommandsIntegrationTest {
             serverSocket.close();
         }
     }
+
+    
+    // Disabled by default because of risk of overriding /etc/hosts in really bad way if doesn't work properly!
+    // As a manual visual inspection test, consider first manually creating /etc/hostname and /etc/sysconfig/network
+    // so that it looks like debian+ubuntu / CentOS/RHEL.
+    @Test(groups={"Integration"}, enabled=false)
+    public void testSetHostnameUnqualified() throws Exception {
+        runSetHostname("br-"+Identifiers.makeRandomId(8).toLowerCase(), null, false);
+    }
+
+    @Test(groups={"Integration"}, enabled=false)
+    public void testSetHostnameQualified() throws Exception {
+        runSetHostname("br-"+Identifiers.makeRandomId(8).toLowerCase()+".brooklyn.incubator.apache.org", null, false);
+    }
+
+    @Test(groups={"Integration"}, enabled=false)
+    public void testSetHostnameNullDomain() throws Exception {
+        runSetHostname("br-"+Identifiers.makeRandomId(8).toLowerCase(), null, true);
+    }
+
+    @Test(groups={"Integration"}, enabled=false)
+    public void testSetHostnameNonNullDomain() throws Exception {
+        runSetHostname("br-"+Identifiers.makeRandomId(8).toLowerCase(), "brooklyn.incubator.apache.org", true);
+    }
+
+    protected void runSetHostname(String newHostname, String newDomain, boolean includeDomain) throws Exception {
+        String fqdn = (includeDomain && Strings.isNonBlank(newDomain)) ? newHostname + "." + newDomain : newHostname;
+        
+        LocalManagementContextForTests mgmt = new LocalManagementContextForTests();
+        SshMachineLocation loc = mgmt.getLocationManager().createLocation(LocalhostMachineProvisioningLocation.spec()).obtain();
+
+        execRequiringZeroAndReturningStdout(loc, sudo("cp /etc/hosts /etc/hosts-orig-testSetHostname")).get();
+        execRequiringZeroAndReturningStdout(loc, BashCommands.ifFileExistsElse0("/etc/hostname", sudo("cp /etc/hostname /etc/hostname-orig-testSetHostname"))).get();
+        execRequiringZeroAndReturningStdout(loc, BashCommands.ifFileExistsElse0("/etc/sysconfig/network", sudo("cp /etc/sysconfig/network /etc/sysconfig/network-orig-testSetHostname"))).get();
+        
+        String origHostname = getHostnameNoArgs(loc);
+        assertTrue(Strings.isNonBlank(origHostname));
+        
+        try {
+            List<String> cmd = (includeDomain) ? BashCommands.setHostname(newHostname, newDomain) : BashCommands.setHostname(newHostname);
+            execRequiringZeroAndReturningStdout(loc, cmd).get();
+
+            String actualHostnameUnqualified = getHostnameUnqualified(loc);
+            String actualHostnameFullyQualified = getHostnameFullyQualified(loc);
+
+            // TODO On OS X at least, we aren't actually setting the domain name; we're just letting 
+            //      the user pass in what the domain name is. We do add this properly to /etc/hosts
+            //      (e.g. first line is "127.0.0.1 br-g4x5wgx8.brooklyn.incubator.apache.org br-g4x5wgx8 localhost")
+            //      but subsequent calls to `hostname -f` returns the unqualified. Similarly, `domainname` 
+            //      returns blank. Therefore we can't assert that it equals our expected val (because we just made  
+            //      it up - "brooklyn.incubator.apache.org").
+            //      assertEquals(actualHostnameFullyQualified, fqdn);
+            assertEquals(actualHostnameUnqualified, Strings.getFragmentBetween(newHostname, null, "."));
+            execRequiringZeroAndReturningStdout(loc, "ping -c1 -n -q "+actualHostnameUnqualified).get();
+            execRequiringZeroAndReturningStdout(loc, "ping -c1 -n -q "+actualHostnameFullyQualified).get();
+            
+            String result = execRequiringZeroAndReturningStdout(loc, "grep -n "+fqdn+" /etc/hosts").get();
+            assertTrue(result.contains("localhost"), "line="+result);
+            log.info("result="+result);
+            
+        } finally {
+            execRequiringZeroAndReturningStdout(loc, sudo("cp /etc/hosts-orig-testSetHostname /etc/hosts")).get();
+            execRequiringZeroAndReturningStdout(loc, BashCommands.ifFileExistsElse0("/etc/hostname-orig-testSetHostname", sudo("cp /etc/hostname-orig-testSetHostname /etc/hostname"))).get();
+            execRequiringZeroAndReturningStdout(loc, BashCommands.ifFileExistsElse0("/etc/sysconfig/network-orig-testSetHostname", sudo("cp /etc/sysconfig/network-orig-testSetHostname /etc/sysconfig/network"))).get();
+            execRequiringZeroAndReturningStdout(loc, sudo("hostname "+origHostname)).get();
+        }
+    }
+
+    // Marked disabled because not safe to run on your normal machine! It modifies /etc/hosts, which is dangerous if things go wrong!
+    @Test(groups={"Integration"}, enabled=false)
+    public void testModifyEtcHosts() throws Exception {
+        LocalManagementContextForTests mgmt = new LocalManagementContextForTests();
+        SshMachineLocation loc = mgmt.getLocationManager().createLocation(LocalhostMachineProvisioningLocation.spec()).obtain();
+
+        execRequiringZeroAndReturningStdout(loc, sudo("cp /etc/hosts /etc/hosts-orig-testModifyEtcHosts")).get();
+        int numLinesOrig = Integer.parseInt(execRequiringZeroAndReturningStdout(loc, "wc -l /etc/hosts").get().trim().split("\\s")[0]);
+        
+        try {
+            String cmd = BashCommands.prependToEtcHosts("1.2.3.4", "myhostnamefor1234.at.start", "myhostnamefor1234b");
+            execRequiringZeroAndReturningStdout(loc, cmd).get();
+            
+            String cmd2 = BashCommands.appendToEtcHosts("5.6.7.8", "myhostnamefor5678.at.end", "myhostnamefor5678");
+            execRequiringZeroAndReturningStdout(loc, cmd2).get();
+            
+            String grepFirst = execRequiringZeroAndReturningStdout(loc, "grep -n myhostnamefor1234 /etc/hosts").get();
+            String grepLast = execRequiringZeroAndReturningStdout(loc, "grep -n myhostnamefor5678 /etc/hosts").get();
+            int numLinesAfter = Integer.parseInt(execRequiringZeroAndReturningStdout(loc, "wc -l /etc/hosts").get().trim().split("\\s")[0]);
+            log.info("result: numLinesBefore="+numLinesOrig+"; numLinesAfter="+numLinesAfter+"; first="+grepFirst+"; last="+grepLast);
+            
+            assertTrue(grepFirst.startsWith("1:") && grepFirst.contains("1.2.3.4 myhostnamefor1234.at.start myhostnamefor1234"), "first="+grepFirst);
+            assertTrue(grepLast.startsWith((numLinesOrig+2)+":") && grepLast.contains("5.6.7.8 myhostnamefor5678.at.end myhostnamefor5678"), "last="+grepLast);
+            assertEquals(numLinesOrig + 2, numLinesAfter, "lines orig="+numLinesOrig+", after="+numLinesAfter);
+        } finally {
+            execRequiringZeroAndReturningStdout(loc, sudo("cp /etc/hosts-orig-testModifyEtcHosts /etc/hosts")).get();
+        }
+    }
+    
+    private String getHostnameNoArgs(SshMachineLocation machine) {
+        String hostnameStdout = execRequiringZeroAndReturningStdout(machine, "echo FOREMARKER; hostname; echo AFTMARKER").get();
+        return Strings.getFragmentBetween(hostnameStdout, "FOREMARKER", "AFTMARKER").trim();
+    }
+
+    private String getHostnameUnqualified(SshMachineLocation machine) {
+        String hostnameStdout = execRequiringZeroAndReturningStdout(machine, "echo FOREMARKER; hostname -s 2> /dev/null || hostname; echo AFTMARKER").get();
+        return Strings.getFragmentBetween(hostnameStdout, "FOREMARKER", "AFTMARKER").trim();
+    }
+
+    private String getHostnameFullyQualified(SshMachineLocation machine) {
+        String hostnameStdout = execRequiringZeroAndReturningStdout(machine, "echo FOREMARKER; hostname --fqdn 2> /dev/null || hostname -f; echo AFTMARKER").get();
+        return Strings.getFragmentBetween(hostnameStdout, "FOREMARKER", "AFTMARKER").trim();
+    }
+
+    private ProcessTaskWrapper<String> execRequiringZeroAndReturningStdout(SshMachineLocation loc, Collection<String> cmds) {
+        return execRequiringZeroAndReturningStdout(loc, cmds.toArray(new String[cmds.size()]));
+    }
     
     private ProcessTaskWrapper<String> execRequiringZeroAndReturningStdout(SshMachineLocation loc, String... cmds) {
         ProcessTaskWrapper<String> t = SshTasks.newSshExecTaskFactory(loc, cmds)
@@ -368,6 +485,7 @@ public class BashCommandsIntegrationTest {
         exec.submit(t);
         return t;
     }
+
     private ServerSocket openServerSocket() {
         int lowerBound = 40000;
         int upperBound = 40100;

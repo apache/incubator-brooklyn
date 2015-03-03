@@ -18,6 +18,9 @@
  */
 package brooklyn.util.ssh;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import static java.lang.String.format;
 
 import java.util.ArrayList;
@@ -38,6 +41,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 public class BashCommands {
 
@@ -590,4 +594,87 @@ public class BashCommands {
                 +"\n"+"EOF_"+id+"\n";
     }
 
+    public static String prependToEtcHosts(String ip, String... hostnames) {
+        String tempFileId = "bak"+Identifiers.makeRandomId(4);
+        return sudo(String.format("sed -i."+tempFileId+" -e '1i\\\n%s %s' /etc/hosts", ip, Joiner.on(" ").join(hostnames)));
+    }
+    
+    public static String appendToEtcHosts(String ip, String... hostnames) {
+        // Using sed rather than `echo ... >> /etc/hosts` because when embedded inside sudo, 
+        // the redirect doesn't get executed by sudo.
+        String tempFileId = "bak"+Identifiers.makeRandomId(4);
+        return sudo(String.format("sed -i."+tempFileId+" -e '$a\\\n%s %s' /etc/hosts", ip, Joiner.on(" ").join(hostnames)));
+    }
+
+    /**
+     * Sets the hostname, splitting the given hostname if it contains a dot to include the unqualified and fully qualified names.
+     *  
+     * @see {@link #setHostname(String, String)}
+     */
+    @Beta
+    public static List<String> setHostname(String newHostname) {
+        // See http://www.dns-sd.org/trailingdotsindomainnames.html.
+        // If we are given "abcd." then let's pass that as-is to setHostname("abcd.", null)
+        
+        if (newHostname.indexOf(".") > 0) {
+            String hostPart = newHostname.substring(0, newHostname.indexOf("."));
+            String domainPart = newHostname.substring(hostPart.length()+1);
+            return setHostname(hostPart, domainPart);
+        } else {
+            return setHostname(newHostname, null);
+        }
+    }
+    
+    /**
+     * Sets the hostname to {@code hostPart + "." + domainPart}, or if domainPart is null/empty then {code hostPart}.
+     * 
+     * @param hostPart
+     * @param domainPart
+     * @return
+     */
+    @Beta
+    public static List<String> setHostname(String hostPart, String domainPart) {
+        // See:
+        // - http://www.rackspace.com/knowledge_center/article/centos-hostname-change
+        // - https://wiki.debian.org/HowTo/ChangeHostname
+        // - http://askubuntu.com/questions/9540/how-do-i-change-the-computer-name
+        //
+        // We prepend in /etc/hosts, to ensure the right fqn appears first.
+        //    e.g. comment in http://askubuntu.com/questions/158957/how-to-set-the-fully-qualified-domain-name-in-12-04
+        //    says "It's important to note that the first domain in /etc/hosts should be your FQDN. "
+        //
+        // TODO Should we run `sudo service hostname restart` or `sudo /etc/init.d/hostname restart`?
+        //      I don't think we need to because we've run `sudo hostname <newname>`
+        //
+        // TODO What if /etc/sysconfig/network doesn't have a line for HOSTNAME=...?
+        //
+        // TODO What about hostPart ending in "." - see http://www.dns-sd.org/trailingdotsindomainnames.html
+        //      for what that means in DNS. However, hostname is not the same as the DNS name (hostnames 
+        //      predate the invention of DNS! - although frequently the DNS name has the same first portion 
+        //      as the hostname) so the link you gave is not relevant. However despite searching Google and 
+        //      man pages I [Ricard] am unable to find a reference which clearly states what characters are 
+        //      relevant in a hostname. I think it's safest to assume that the hostname is just [a-z,0-9,-] 
+        //      and no dots at all.
+        
+        checkNotNull(hostPart, "hostPart");
+        checkArgument(!hostPart.contains("."), "hostPart '%s' must not contain '.'", hostPart);
+
+        String tempFileId = "bak"+Identifiers.makeRandomId(4);
+        
+        List<String> allhostnames = Lists.newArrayList();
+        String fqdn = hostPart;
+        if (Strings.isNonBlank(domainPart)) {
+            fqdn = hostPart+"."+domainPart;
+            allhostnames.add(fqdn);
+        }
+        allhostnames.add(hostPart);
+        allhostnames.add("localhost");
+        
+        return ImmutableList.of(
+                sudo("sed -i."+tempFileId+" -e 's/^127.0.0.1/# Replaced by Brooklyn\\\n#127.0.0.1/' /etc/hosts"),
+                prependToEtcHosts("127.0.0.1", allhostnames.toArray(new String[allhostnames.size()])),
+                ifFileExistsElse0("/etc/sysconfig/network", sudo("sed -i."+tempFileId+" -e 's/^HOSTNAME=.*$/HOSTNAME="+hostPart+"/' /etc/sysconfig/network")),
+                ifFileExistsElse0("/etc/hostname", sudo("sed -i."+tempFileId+" -e 's/^[a-zA-Z_0-9].*$/"+hostPart+"/' /etc/hostname")),
+                sudo("hostname "+hostPart));
+    }
 }

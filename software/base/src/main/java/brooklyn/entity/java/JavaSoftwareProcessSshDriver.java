@@ -399,6 +399,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     /**
      * Checks for Java 6 or 7, installing Java 7 if neither are found. Override this method to
      * check for and install specific versions of Java.
+     * 
      * @see #checkForAndInstallJava6()
      * @see #checkForAndInstallJava7()
      * @see #checkForAndInstallJava6or7()
@@ -415,19 +416,20 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     }
     
     public void checkJavaHostnameBug() {
+        checkNoHostnameBug();
+        
         try {
-            ProcessTaskWrapper<Integer> hostnameLen = DynamicTasks.queue(SshEffectorTasks.ssh("echo FOREMARKER; hostname -f | wc | awk '{print $3}'; echo AFTMARKER")).block();
-            String stdout = Strings.getFragmentBetween(hostnameLen.getStdout(), "FOREMARKER", "AFTMARKER");
-            if (hostnameLen.getExitCode()==0 && Strings.isNonBlank(stdout)) {
-                Integer len = Integer.parseInt(stdout.trim());
+            ProcessTaskWrapper<Integer> hostnameTask = DynamicTasks.queue(SshEffectorTasks.ssh("echo FOREMARKER; hostname -f; echo AFTMARKER")).block();
+            String stdout = Strings.getFragmentBetween(hostnameTask.getStdout(), "FOREMARKER", "AFTMARKER");
+            if (hostnameTask.getExitCode() == 0 && Strings.isNonBlank(stdout)) {
+                String hostname = stdout.trim();
+                Integer len = hostname.length();
                 if (len > 63) {
                     // likely to cause a java crash due to java bug 7089443 -- set a new short hostname
                     // http://mail.openjdk.java.net/pipermail/net-dev/2012-July/004603.html
-                    String newHostname = "br-"+getEntity().getId();
+                    String newHostname = "br-"+getEntity().getId().toLowerCase();
                     log.info("Detected likelihood of Java hostname bug with hostname length "+len+" for "+getEntity()+"; renaming "+getMachine()+"  to hostname "+newHostname);
-                    DynamicTasks.queue(SshEffectorTasks.ssh(
-                            "hostname "+newHostname,
-                            "echo 127.0.0.1 "+newHostname+" > /etc/hosts").runAsRoot()).block();
+                    DynamicTasks.queue(SshEffectorTasks.ssh(BashCommands.setHostname(newHostname, null))).block();
                 }
             } else {
                 log.debug("Hostname length could not be determined for location "+EffectorTasks.findSshMachine()+"; not doing Java hostname bug check");

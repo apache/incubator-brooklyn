@@ -38,6 +38,7 @@ import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
+import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.basic.SshMachineLocation;
@@ -53,6 +54,7 @@ import brooklyn.util.stream.ReaderInputStream;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -601,6 +603,26 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             log.warn("copying stream failed; {} on {}: {}", new Object[] { destination, getMachine(), result });
         }
         return result;
+    }
+
+    public void checkNoHostnameBug() {
+        try {
+            ProcessTaskWrapper<Integer> hostnameTask = DynamicTasks.queue(SshEffectorTasks.ssh("echo FOREMARKER; hostname; echo AFTMARKER")).block();
+            String stdout = Strings.getFragmentBetween(hostnameTask.getStdout(), "FOREMARKER", "AFTMARKER");
+            if (hostnameTask.getExitCode() == 0 && Strings.isNonBlank(stdout)) {
+                String hostname = stdout.trim();
+                if (hostname.equals("(none)")) {
+                    String newHostname = "br-"+getEntity().getId().toLowerCase();
+                    log.info("Detected no-hostname bug with hostname "+hostname+" for "+getEntity()+"; renaming "+getMachine()+"  to hostname "+newHostname);
+                    DynamicTasks.queue(SshEffectorTasks.ssh(BashCommands.setHostname(newHostname, null))).block();
+                }
+            } else {
+                log.debug("Hostname could not be determined for location "+EffectorTasks.findSshMachine()+"; not doing no-hostname bug check");
+            }
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            log.warn("Error checking/fixing no-hostname bug (continuing): "+e, e);
+        }
     }
 
     public static final String INSTALLING = "installing";
