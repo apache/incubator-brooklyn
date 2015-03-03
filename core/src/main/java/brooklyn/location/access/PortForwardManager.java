@@ -18,14 +18,15 @@
  */
 package brooklyn.location.access;
 
-import java.util.Collection;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
-
 import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
 import com.google.common.net.HostAndPort;
+
+import java.util.Collection;
 
 /**
  * Acts as a registry for existing port mappings (e.g. the public endpoints for accessing specific
@@ -45,6 +46,57 @@ import com.google.common.net.HostAndPort;
  */
 @Beta
 public interface PortForwardManager extends Location {
+
+    @Beta
+    class AssociationMetadata {
+        private final String publicIpId;
+        private final HostAndPort publicEndpoint;
+        private final Location location;
+        private final int privatePort;
+
+        /**
+         * Users are discouraged from calling this constructor; the signature may change in future releases.
+         * Instead, instances will be created automatically by Brooklyn to be passed to the
+         * {@link AssociationListener#onAssociationCreated(AssociationMetadata)} method.
+         */
+        public AssociationMetadata(String publicIpId, HostAndPort publicEndpoint, Location location, int privatePort) {
+            this.publicIpId = publicIpId;
+            this.publicEndpoint = publicEndpoint;
+            this.location = location;
+            this.privatePort = privatePort;
+        }
+
+        public String getPublicIpId() {
+            return publicIpId;
+        }
+
+        public HostAndPort getPublicEndpoint() {
+            return publicEndpoint;
+        }
+
+        public Location getLocation() {
+            return location;
+        }
+
+        public int getPrivatePort() {
+            return privatePort;
+        }
+
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .add("publicIpId", publicIpId)
+                    .add("publicEndpoint", publicEndpoint)
+                    .add("location", location)
+                    .add("privatePort", privatePort)
+                    .toString();
+        }
+    }
+
+    @Beta
+    interface AssociationListener {
+        void onAssociationCreated(AssociationMetadata metadata);
+        void onAssociationDeleted(AssociationMetadata metadata);
+    }
 
     /**
      * The intention is that there is one PortForwardManager instance per "scope". If you 
@@ -92,6 +144,16 @@ public interface PortForwardManager extends Location {
      * subsequently be looked up using {@link #lookup(String, int)}.
      */
     public void associate(String publicIpId, HostAndPort publicEndpoint, int privatePort);
+
+    /**
+     * Registers a listener, which will be notified each time a new port mapping is associated. See {@link #associate(String, HostAndPort, int)}
+     * and {@link #associate(String, HostAndPort, Location, int)}.
+     */
+    @Beta
+    public void addAssociationListener(AssociationListener listener, Predicate<? super AssociationMetadata> filter);
+
+    @Beta
+    public void removeAssociationListener(AssociationListener listener);
     
     /**
      * Returns the public ip hostname and public port for use contacting the given endpoint.
@@ -261,4 +323,5 @@ public interface PortForwardManager extends Location {
      */
     @Deprecated
     public PortMapping getPortMappingWithPrivateSide(Location l, int privatePort);
+
 }

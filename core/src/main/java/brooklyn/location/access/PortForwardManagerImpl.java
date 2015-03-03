@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -38,8 +39,10 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -78,7 +81,9 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     private static final Logger log = LoggerFactory.getLogger(PortForwardManagerImpl.class);
     
     protected final Map<String,PortMapping> mappings = new LinkedHashMap<String,PortMapping>();
-    
+
+    private final Map<AssociationListener, Predicate<? super AssociationMetadata>> associationListeners = new ConcurrentHashMap<AssociationListener, Predicate<? super AssociationMetadata>>();
+
     @Deprecated
     protected final Map<String,String> publicIpIdToHostname = new LinkedHashMap<String,String>();
     
@@ -160,11 +165,13 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
     @Override
     public void associate(String publicIpId, HostAndPort publicEndpoint, Location l, int privatePort) {
         associateImpl(publicIpId, publicEndpoint, l, privatePort);
+        emitAssociationCreatedEvent(publicIpId, publicEndpoint, l, privatePort);
     }
 
     @Override
     public void associate(String publicIpId, HostAndPort publicEndpoint, int privatePort) {
         associateImpl(publicIpId, publicEndpoint, null, privatePort);
+        emitAssociationCreatedEvent(publicIpId, publicEndpoint, null, privatePort);
     }
 
     protected void associateImpl(String publicIpId, HostAndPort publicEndpoint, Location l, int privatePort) {
@@ -179,6 +186,20 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
             mappings.put(makeKey(publicIpId, publicPort), mapping);
         }
         onChanged();
+    }
+
+    private void emitAssociationCreatedEvent(String publicIpId, HostAndPort publicEndpoint, Location location, int privatePort) {
+        AssociationMetadata metadata = new AssociationMetadata(publicIpId, publicEndpoint, location, privatePort);
+        for (Map.Entry<AssociationListener, Predicate<? super AssociationMetadata>> entry : associationListeners.entrySet()) {
+            if (entry.getValue().apply(metadata)) {
+                try {
+                    entry.getKey().onAssociationCreated(metadata);
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    log.warn("Exception thrown when emitting association creation event " + metadata, e);
+                }
+            }
+        }
     }
 
     @Override
@@ -208,6 +229,9 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
         PortMapping old;
         synchronized (mutex) {
             old = mappings.remove(makeKey(publicIpId, publicPort));
+            if (old != null) {
+                emitAssociationDeletedEvent(associationMetadataFromPortMapping(old));
+            }
             log.debug("cleared port mapping for "+publicIpId+":"+publicPort+" - "+old);
         }
         if (old != null) onChanged();
@@ -223,6 +247,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
                 if (l.equals(m.target)) {
                     iter.remove();
                     result.add(m);
+                    emitAssociationDeletedEvent(associationMetadataFromPortMapping(m));
                 }
             }
         }
@@ -242,6 +267,7 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
                 if (publicIpId.equals(m.publicIpId)) {
                     iter.remove();
                     result.add(m);
+                    emitAssociationDeletedEvent(associationMetadataFromPortMapping(m));
                 }
             }
         }
@@ -250,6 +276,19 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
             onChanged();
         }
         return !result.isEmpty();
+    }
+
+    private void emitAssociationDeletedEvent(AssociationMetadata metadata) {
+        for (Map.Entry<AssociationListener, Predicate<? super AssociationMetadata>> entry : associationListeners.entrySet()) {
+            if (entry.getValue().apply(metadata)) {
+                try {
+                    entry.getKey().onAssociationDeleted(metadata);
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    log.warn("Exception thrown when emitting association creation event " + metadata, e);
+                }
+            }
+        }
     }
     
     @Override
@@ -280,10 +319,27 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
         return false;
     }
 
+    @Override
+    public void addAssociationListener(AssociationListener listener, Predicate<? super AssociationMetadata> filter) {
+        associationListeners.put(listener, filter);
+    }
+
+    @Override
+    public void removeAssociationListener(AssociationListener listener) {
+        associationListeners.remove(listener);
+    }
+
     protected String makeKey(String publicIpId, int publicPort) {
         return publicIpId+":"+publicPort;
     }
 
+    private AssociationMetadata associationMetadataFromPortMapping(PortMapping portMapping) {
+        String publicIpId = portMapping.getPublicEndpoint().getHostText();
+        HostAndPort publicEndpoint = portMapping.getPublicEndpoint();
+        Location location = portMapping.getTarget();
+        int privatePort = portMapping.getPrivatePort();
+        return new AssociationMetadata(publicIpId, publicEndpoint, location, privatePort);
+    }
     
     ///////////////////////////////////////////////////////////////////////////////////
     // Internal state, for generating memento

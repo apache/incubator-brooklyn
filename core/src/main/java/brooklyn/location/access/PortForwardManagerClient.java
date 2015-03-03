@@ -29,6 +29,7 @@ import brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.net.HostAndPort;
 
@@ -141,19 +142,28 @@ public class PortForwardManagerClient implements PortForwardManager {
     @Override
     public String getId() {
         return getDelegate().getId();
-    }    
+    }
 
     @Override
     public String getScope() {
         return getDelegate().getScope();
-    }    
+    }
+
+    @Override
+    public void addAssociationListener(AssociationListener listener, Predicate<? super AssociationMetadata> filter) {
+        getDelegate().addAssociationListener(listener, filter);
+    }
+
+    @Override
+    public void removeAssociationListener(AssociationListener listener) {
+        getDelegate().removeAssociationListener(listener);
+    }
 
     @Override
     public String toVerboseString() {
         return getClass().getName()+"[wrapping="+getDelegate().toVerboseString()+"]";
     }
-    
-    
+
     ///////////////////////////////////////////////////////////////////////////////////
     // Deprecated
     ///////////////////////////////////////////////////////////////////////////////////

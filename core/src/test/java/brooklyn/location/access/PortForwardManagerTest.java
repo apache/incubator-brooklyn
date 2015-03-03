@@ -23,6 +23,7 @@ import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNull;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,8 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.net.Networking;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.net.HostAndPort;
 
 public class PortForwardManagerTest extends BrooklynAppUnitTestSupport {
@@ -153,5 +156,39 @@ public class PortForwardManagerTest extends BrooklynAppUnitTestSupport {
         
         assertEquals(pfm.lookup(publicIpId, 80), HostAndPort.fromParts(publicAddress, 40080));
         assertEquals(pfm.lookup(machine1, 80), HostAndPort.fromParts(publicAddress, 40080));
+    }
+
+    @Test
+    public void testAssociationListeners() throws Exception {
+        final AtomicInteger associationCreatedCount = new AtomicInteger(0);
+        final AtomicInteger associationDeletedCount = new AtomicInteger(0);
+
+        final String publicIpId = "myipid";
+        final String anotherIpId = "anotherIpId";
+
+        pfm.addAssociationListener(new PortForwardManager.AssociationListener() {
+            @Override
+            public void onAssociationCreated(PortForwardManager.AssociationMetadata metadata) {
+                associationCreatedCount.incrementAndGet();
+            }
+
+            @Override
+            public void onAssociationDeleted(PortForwardManager.AssociationMetadata metadata) {
+                associationDeletedCount.incrementAndGet();
+            }
+        }, new Predicate<PortForwardManager.AssociationMetadata>() {
+            @Override
+            public boolean apply(PortForwardManager.AssociationMetadata metadata) {
+                return publicIpId.equals(metadata.getPublicIpId());
+            }
+        });
+
+        pfm.associate(publicIpId, HostAndPort.fromParts(publicIpId, 40080), machine1, 80);
+        pfm.associate(anotherIpId, HostAndPort.fromParts(anotherIpId, 40081), machine1, 80);
+        pfm.forgetPortMapping(publicIpId, 40080);
+        pfm.forgetPortMapping(anotherIpId, 40081);
+
+        assertEquals(associationCreatedCount.get(), 1);
+        assertEquals(associationDeletedCount.get(), 1);
     }
 }
