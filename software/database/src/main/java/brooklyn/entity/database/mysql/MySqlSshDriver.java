@@ -23,6 +23,11 @@ import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
 import static brooklyn.util.ssh.BashCommands.installPackage;
 import static java.lang.String.format;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
@@ -42,6 +47,7 @@ import brooklyn.location.OsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsVersions;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
@@ -186,9 +192,20 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
 
     protected boolean copyDatabaseCreationScript() {
-        InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
-        if (creationScript==null) return false;
-        getMachine().copyTo(creationScript, getRunDir() + "/creation-script.sql");
+        String creationScriptContents = DatastoreMixins.getDatabaseCreationScriptAsString(entity);
+        if (creationScriptContents==null) return false;
+
+        File templateFile;
+        try {
+            templateFile = File.createTempFile("mysql", null);
+            templateFile.deleteOnExit();
+            BufferedWriter writer = new BufferedWriter(new FileWriter(templateFile));
+            writer.write (creationScriptContents);
+        } catch (IOException e) {
+            throw Exceptions.propagate(e);
+        }
+        copyTemplate(templateFile.getAbsoluteFile(), getRunDir() + "/creation-script.sql");
+        templateFile.delete();
         return true;
     }
 

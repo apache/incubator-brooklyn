@@ -26,6 +26,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
@@ -79,6 +80,16 @@ public class DatastoreMixins {
         return null;
     }
 
+    /** returns the creation script contents, if it exists, or null if none is defined (error if it cannot be loaded) */
+    @Nullable public static String getDatabaseCreationScriptAsString(Entity entity) {
+        String url = entity.getConfig(DatastoreMixins.CREATION_SCRIPT_URL);
+        if (!Strings.isBlank(url))
+            return new ResourceUtils(entity).getResourceAsString(url);
+        String contents = entity.getConfig(DatastoreMixins.CREATION_SCRIPT_CONTENTS);
+        if (!Strings.isBlank(contents))
+            return contents;
+        return null;
+    }
     
     /** An entity with the most common datastore config, sensors, and effectors */ 
     public interface DatastoreCommon extends Entity, DatastoreMixins.HasDatastoreUrl, DatastoreMixins.CanExecuteScript, DatastoreMixins.CanGiveCreationScript {
