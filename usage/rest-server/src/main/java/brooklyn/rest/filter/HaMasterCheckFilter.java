@@ -42,7 +42,7 @@ import brooklyn.management.ha.ManagementNodeState;
  */
 public class HaMasterCheckFilter implements Filter {
 
-    private static final String SKIP_CHECK_HEADER = "Brooklyn-Allow-Non-Master-Access";
+    protected static final String SKIP_CHECK_HEADER = "Brooklyn-Allow-Non-Master-Access";
     private static final Set<String> SAFE_STANDBY_METHODS = Sets.newHashSet("GET", "HEAD");
 
     protected ManagementContext mgmt;

@@ -53,6 +53,7 @@ import brooklyn.rest.api.EntityApi;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.transform.LocationTransformer;
 import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
@@ -68,6 +69,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+@HaHotStateRequired
 public class EntityResource extends AbstractBrooklynRestResource implements EntityApi {
 
     private static final Logger log = LoggerFactory.getLogger(EntityResource.class);

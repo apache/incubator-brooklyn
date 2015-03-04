@@ -35,6 +35,7 @@ import brooklyn.rest.api.PolicyApi;
 import brooklyn.rest.domain.PolicySummary;
 import brooklyn.rest.domain.Status;
 import brooklyn.rest.domain.SummaryComparators;
+import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.ApplicationTransformer;
 import brooklyn.rest.transform.PolicyTransformer;
 import brooklyn.rest.util.WebResourceUtils;
@@ -44,6 +45,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Maps;
 
+@HaHotStateRequired
 public class PolicyResource extends AbstractBrooklynRestResource implements PolicyApi {
 
     private static final Logger log = LoggerFactory.getLogger(PolicyResource.class);

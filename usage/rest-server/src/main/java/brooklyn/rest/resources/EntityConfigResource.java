@@ -36,6 +36,7 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.api.EntityConfigApi;
 import brooklyn.rest.domain.EntityConfigSummary;
+import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.flags.TypeCoercions;
@@ -46,6 +47,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+@HaHotStateRequired
 public class EntityConfigResource extends AbstractBrooklynRestResource implements EntityConfigApi {
 
     private static final Logger LOG = LoggerFactory.getLogger(EntityConfigResource.class);

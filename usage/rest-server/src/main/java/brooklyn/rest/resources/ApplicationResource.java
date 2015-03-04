@@ -69,6 +69,7 @@ import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.TaskSummary;
+import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.ApplicationTransformer;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.transform.TaskTransformer;
@@ -82,6 +83,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 
+@HaHotStateRequired
 public class ApplicationResource extends AbstractBrooklynRestResource implements ApplicationApi {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationResource.class);

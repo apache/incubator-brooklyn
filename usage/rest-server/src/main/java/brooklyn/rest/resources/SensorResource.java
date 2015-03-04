@@ -36,6 +36,7 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.domain.SensorSummary;
+import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.SensorTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.text.Strings;
@@ -44,6 +45,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+@HaHotStateRequired
 public class SensorResource extends AbstractBrooklynRestResource implements SensorApi {
 
     private static final Logger log = LoggerFactory.getLogger(SensorResource.class);

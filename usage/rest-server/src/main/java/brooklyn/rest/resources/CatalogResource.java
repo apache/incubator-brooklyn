@@ -51,6 +51,7 @@ import brooklyn.rest.api.CatalogApi;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
+import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.CatalogTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
@@ -70,6 +71,7 @@ import com.google.common.io.Files;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.wordnik.swagger.core.ApiParam;
 
+@HaHotStateRequired
 public class CatalogResource extends AbstractBrooklynRestResource implements CatalogApi {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogResource.class);

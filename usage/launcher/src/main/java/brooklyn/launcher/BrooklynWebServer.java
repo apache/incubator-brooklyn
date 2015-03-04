@@ -321,6 +321,8 @@ public class BrooklynWebServer {
         // Accept gzipped requests and responses, disable caching for dynamic content
         config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS, GZIPContentEncodingFilter.class.getName());
         config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, ImmutableList.of(GZIPContentEncodingFilter.class, NoCacheFilter.class));
+        // Checks if appropriate request given HA status
+        config.getProperties().put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, brooklyn.rest.filter.HaStateCheckResourceFilter.class.getName());
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
