@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
 
@@ -68,11 +69,7 @@ public class HaStateCheckResourceFilter implements ResourceFilterFactory {
 
         @Override
         public ContainerRequest filter(ContainerRequest request) {
-            boolean isHot = isHaHotStatus();
-            boolean isOverriden = "true".equalsIgnoreCase(request.getHeaderValue(HaMasterCheckFilter.SKIP_CHECK_HEADER));
-            if (!isHot && !isOverriden &&
-                    (am.getAnnotation(HaHotStateRequired.class) != null ||
-                    am.getResource().getAnnotation(HaHotStateRequired.class) != null)) {
+            if (!isStateLoaded() && isUnsafe(request)) {
                 Response response = Response.status(Response.Status.FORBIDDEN)
                         .type(MediaType.APPLICATION_JSON)
                         .entity("{\"error\":403,\"message\":\"Requests should be made to the master Brooklyn server\"}")
@@ -80,6 +77,17 @@ public class HaStateCheckResourceFilter implements ResourceFilterFactory {
                 throw new WebApplicationException(response);
             }
             return request;
+        }
+
+        private boolean isStateLoaded() {
+            return isHaHotStatus() && !RebindTracker.isRebinding();
+        }
+
+        private boolean isUnsafe(ContainerRequest request) {
+            boolean isOverriden = "true".equalsIgnoreCase(request.getHeaderValue(HaMasterCheckFilter.SKIP_CHECK_HEADER));
+            return !isOverriden &&
+                    (am.getAnnotation(HaHotStateRequired.class) != null ||
+                    am.getResource().getAnnotation(HaHotStateRequired.class) != null);
         }
 
         private boolean isHaHotStatus() {
