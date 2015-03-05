@@ -22,13 +22,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
@@ -110,7 +108,6 @@ public class HaStateCheckResourceFilter implements ResourceFilterFactory {
 
     @Override
     public List<ResourceFilter> create(AbstractMethod am) {
-        ManagementContext mgmt = (ManagementContext)servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
         return Collections.<ResourceFilter>singletonList(new MethodFilter(am, mgmt));
     }
 

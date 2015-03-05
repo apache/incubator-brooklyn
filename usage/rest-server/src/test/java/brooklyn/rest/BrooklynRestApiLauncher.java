@@ -54,6 +54,7 @@ import brooklyn.rest.filter.NoCacheFilter;
 import brooklyn.rest.filter.RequestTaggingFilter;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.security.provider.SecurityProvider;
+import brooklyn.rest.util.ManagementContextProvider;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
@@ -339,6 +340,9 @@ public class BrooklynRestApiLauncher {
         // finally create this as a _filter_ which falls through to a web app or something (optionally)
         FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
+
+        ManagementContext mgmt = (ManagementContext) context.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        config.getSingletons().add(new ManagementContextProvider(mgmt));
     }
 
     private static void installBrooklynFilters(ServletContextHandler context, List<Class<? extends Filter>> filters) {
