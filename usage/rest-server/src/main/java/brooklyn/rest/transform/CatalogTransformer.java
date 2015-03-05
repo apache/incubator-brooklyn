@@ -74,13 +74,13 @@ public class CatalogTransformer {
             item.getJavaType(), item.getPlanYaml(),
             item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
             config, sensors, effectors,
-            makeLinks(item));
+            item.isDeprecated(), makeLinks(item));
     }
 
     public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem<?,?> item) {
         return new CatalogItemSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
-                item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), makeLinks(item));
+                item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), item.isDeprecated(), makeLinks(item));
     }
 
     public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
@@ -88,7 +88,7 @@ public class CatalogTransformer {
         return new CatalogPolicySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
-                makeLinks(item));
+                item.isDeprecated(), makeLinks(item));
     }
 
     protected static Map<String, URI> makeLinks(CatalogItem<?,?> item) {

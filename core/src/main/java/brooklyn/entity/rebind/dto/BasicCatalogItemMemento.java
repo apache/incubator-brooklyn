@@ -53,6 +53,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
         protected CatalogItem.CatalogItemType catalogItemType;
         protected Class<?> catalogItemJavaType;
         protected Class<?> specType;
+        protected boolean deprecated;
 
         public Builder description(String description) {
             this.description = description;
@@ -104,6 +105,11 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
             return self();
         }
 
+        public Builder deprecated(boolean deprecated) {
+            this.deprecated = deprecated;
+            return self();
+        }
+
         public Builder from(CatalogItemMemento other) {
             super.from(other);
             description = other.getDescription();
@@ -116,6 +122,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
             catalogItemType = other.getCatalogItemType();
             catalogItemJavaType = other.getCatalogItemJavaType();
             specType = other.getSpecType();
+            deprecated = other.isDeprecated();
             return self();
         }
 
@@ -134,6 +141,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     private CatalogItem.CatalogItemType catalogItemType;
     private Class<?> catalogItemJavaType;
     private Class<?> specType;
+    private boolean deprecated;
 
     @SuppressWarnings("unused") // For deserialisation
     private BasicCatalogItemMemento() {}
@@ -150,6 +158,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
         this.catalogItemType = builder.catalogItemType;
         this.specType = builder.specType;
         this.javaType = builder.javaType;
+        this.deprecated = builder.deprecated;
     }
 
     @Override
@@ -212,6 +221,11 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     }
 
     @Override
+    public boolean isDeprecated() {
+        return deprecated;
+    }
+
+    @Override
     protected void setCustomFields(Map<String, Object> fields) {
         if (!fields.isEmpty()) {
             throw new UnsupportedOperationException("Cannot set custom fields on " + this + ". " +
@@ -236,7 +250,8 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
                 .add("catalogItemJavaType", getCatalogItemJavaType())
                 .add("catalogItemType", getCatalogItemType())
                 .add("javaType", getJavaType())
-                .add("specType", getSpecType());
+                .add("specType", getSpecType())
+                .add("deprecated", isDeprecated());
     }
 
 }

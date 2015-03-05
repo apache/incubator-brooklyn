@@ -22,7 +22,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import brooklyn.basic.BrooklynType;
-import brooklyn.config.ConfigKey;
 import brooklyn.event.Sensor;
 import brooklyn.util.guava.Maybe;
 

@@ -40,6 +40,7 @@ import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.catalog.internal.CatalogItemComparator;
 import brooklyn.catalog.internal.CatalogUtils;
+import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.entitlement.Entitlements;
@@ -67,6 +68,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.sun.jersey.core.header.FormDataContentDisposition;
+import com.wordnik.swagger.core.ApiParam;
 
 public class CatalogResource extends AbstractBrooklynRestResource implements CatalogApi {
 
@@ -176,10 +178,12 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     public List<CatalogItemSummary> listApplications(String regex, String fragment) {
-        return getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_TEMPLATE, regex, fragment);
+        Predicate<CatalogItem<Application, EntitySpec<? extends Application>>> filter =
+                Predicates.and(CatalogPredicates.<Application,EntitySpec<? extends Application>>deprecated(false),
+                        CatalogPredicates.IS_TEMPLATE);
+        return getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment);
     }
 
-    
     @Override
     @Deprecated
     public CatalogEntitySummary getEntity(String entityId) {
@@ -309,6 +313,19 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         
         CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(itemId, version);
         return getCatalogItemIcon(result);
+    }
+
+    @Override
+    public void setDeprecated(String itemId, boolean deprecated) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(itemId, "deprecated"))) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
+                    Entitlements.getEntitlementContext().user());
+        }
+        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), itemId);
+        if (item==null)
+            throw WebResourceUtils.notFound("Catalog item with id '%s' not found", itemId);
+        item.setDeprecated(deprecated);
+        mgmt().getCatalog().persist(item);
     }
 
     private Response getCatalogItemIcon(CatalogItem<?, ?> result) {

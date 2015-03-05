@@ -19,6 +19,7 @@
 package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import io.brooklyn.camp.BasicCampPlatform;
@@ -32,7 +33,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.camp.lite.CampPlatformWithJustBrooklynMgmt;
 import brooklyn.camp.lite.TestAppAssemblyInstantiator;
-import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
@@ -190,6 +190,24 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         String catalogXml = catalog.toXmlString();
         catalog.reset(CatalogDto.newDtoFromXmlContents(catalogXml, "Test reset"));
         rebindAndAssertCatalogsAreEqual();
+    }
+
+    @Test
+    public void testRebindAfterItemDeprecated() {
+        String yaml =
+                "name: rebind-yaml-catalog-item-test\n" +
+                "brooklyn.catalog:\n" +
+                "  version: " + TEST_VERSION + "\n" +
+                "services:\n" +
+                "- type: io.camp.mock:AppServer";
+        BasicBrooklynCatalog catalog = (BasicBrooklynCatalog) origManagementContext.getCatalog();
+        CatalogItem<?, ?> catalogItem = catalog.addItem(yaml);
+        assertNotNull(catalogItem, "catalogItem");
+        catalogItem.setDeprecated(true);
+        catalog.persist(catalogItem);
+        rebindAndAssertCatalogsAreEqual();
+        CatalogItem<?, ?> catalogItemAfterRebind = newManagementContext.getCatalog().getCatalogItem("rebind-yaml-catalog-item-test", TEST_VERSION);
+        assertTrue(catalogItemAfterRebind.isDeprecated(), "Expected item to be deprecated");
     }
 
     private void rebindAndAssertCatalogsAreEqual() {

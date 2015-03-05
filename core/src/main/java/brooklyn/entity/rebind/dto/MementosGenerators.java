@@ -375,7 +375,8 @@ public class MementosGenerators {
             .symbolicName(catalogItem.getSymbolicName())
             .specType(catalogItem.getSpecType())
             .version(catalogItem.getVersion())
-            .planYaml(catalogItem.getPlanYaml());
+            .planYaml(catalogItem.getPlanYaml())
+            .deprecated(catalogItem.isDeprecated());
         return builder.build();
     }
     

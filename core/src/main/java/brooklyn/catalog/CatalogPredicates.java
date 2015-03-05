@@ -43,6 +43,15 @@ public class CatalogPredicates {
         };
     }
 
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> deprecated(final boolean deprecated) {
+        return new Predicate<CatalogItem<T,SpecT>>() {
+            @Override
+            public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+                return (item != null) && item.isDeprecated() == deprecated;
+            }
+        };
+    }
+
     public static final Predicate<CatalogItem<Application,EntitySpec<? extends Application>>> IS_TEMPLATE = 
             CatalogPredicates.<Application,EntitySpec<? extends Application>>isCatalogItemType(CatalogItemType.TEMPLATE);
     public static final Predicate<CatalogItem<Entity,EntitySpec<?>>> IS_ENTITY = 
