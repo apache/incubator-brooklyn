@@ -62,6 +62,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     private @SetFromFlag Collection<CatalogBundle> libraries;
     private @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
+    private @SetFromFlag boolean deprecated;
 
     /**
      * Config not supported for catalog item. See {@link #getPlanYaml()}.
@@ -133,6 +134,16 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         } else {
             return BasicBrooklynCatalog.NO_VERSION;
         }
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        return deprecated;
+    }
+
+    @Override
+    public void setDeprecated(boolean deprecated) {
+        this.deprecated = deprecated;
     }
 
     @Nonnull

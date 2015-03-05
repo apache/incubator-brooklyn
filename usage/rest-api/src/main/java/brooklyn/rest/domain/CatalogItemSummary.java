@@ -49,6 +49,7 @@ public class CatalogItemSummary implements HasId, HasName {
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String iconUrl;
     private final String planYaml;
+    private final boolean deprecated;
     
     private final Map<String, URI> links;
 
@@ -60,8 +61,9 @@ public class CatalogItemSummary implements HasId, HasName {
             @JsonProperty("planYaml") String planYaml,
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
+            @JsonProperty("deprecated") boolean deprecated,
             @JsonProperty("links") Map<String, URI> links
-        ) {
+            ) {
         this.id = symbolicName + ":" + version;
         this.symbolicName = symbolicName;
         this.type = symbolicName;
@@ -72,6 +74,7 @@ public class CatalogItemSummary implements HasId, HasName {
         this.description = description;
         this.iconUrl = iconUrl;
         this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
+        this.deprecated = deprecated;
     }
 
     @Override
@@ -116,17 +119,22 @@ public class CatalogItemSummary implements HasId, HasName {
         return links;
     }
 
+    public boolean isDeprecated() {
+        return deprecated;
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("id", symbolicName)
                 .add("version", version)
+                .add("deprecated", deprecated)
                 .toString();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(symbolicName, version, name, javaType);
+        return Objects.hashCode(symbolicName, version, name, javaType, deprecated);
     }
     
     @Override

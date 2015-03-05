@@ -94,4 +94,10 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     @Override
     public String getCatalogItemId();
 
+    public void setDeprecated(boolean deprecated);
+
+    /**
+     * @return True if the item has been deprecated and should not be shown in the catalog
+     */
+    boolean isDeprecated();
 }

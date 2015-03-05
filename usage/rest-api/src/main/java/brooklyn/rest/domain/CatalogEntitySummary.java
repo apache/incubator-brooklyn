@@ -41,9 +41,10 @@ public class CatalogEntitySummary extends CatalogItemSummary {
             @JsonProperty("config") Set<EntityConfigSummary> config, 
             @JsonProperty("sensors") Set<SensorSummary> sensors, 
             @JsonProperty("effectors") Set<EffectorSummary> effectors,
+            @JsonProperty("deprecated") boolean deprecated,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        super(symbolicName, version, name, javaType, planYaml, description, iconUrl, links);
+        super(symbolicName, version, name, javaType, planYaml, description, iconUrl, deprecated, links);
         this.config = config;
         this.sensors = sensors;
         this.effectors = effectors;
@@ -66,6 +67,7 @@ public class CatalogEntitySummary extends CatalogItemSummary {
         return super.toString()+"["+
                 "config="+getConfig()+"; " +
                 "sensors="+getSensors()+"; "+
-                "effectors="+getEffectors()+"]";
+                "effectors="+getEffectors()+"; "+
+                "deprecated="+isDeprecated()+"]";
     }
 }

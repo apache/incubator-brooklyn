@@ -224,19 +224,25 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     }
 
     private void addTestCatalogItem(String catalogItemId) {
+        addTestCatalogItem(catalogItemId, TEST_VERSION, "brooklyn.entity.nosql.redis.RedisStore");
+    }
+
+    private void addTestCatalogItem(String catalogItemId, String version, String service) {
         String yaml =
                 "brooklyn.catalog:\n"+
                 "  id: " + catalogItemId + "\n"+
                 "  name: My Catalog App\n"+
                 "  description: My description\n"+
                 "  icon_url: classpath:///redis-logo.png\n"+
-                "  version: " + TEST_VERSION + "\n"+
+                "  version: " + version + "\n"+
                 "\n"+
                 "services:\n"+
-                "- type: brooklyn.entity.nosql.redis.RedisStore\n";
+                "- type: " + service + "\n";
 
         client().resource("/v1/catalog").post(yaml);
     }
+
+
 
     @Test
     public void testListPolicies() {
@@ -278,6 +284,43 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
                 .get(ClientResponse.class);
         assertEquals(getPostDeleteResponse.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    }
+
+    @Test
+    public void testSetDeprecated() {
+        String itemId = "my.catalog.item.id.for.deprecation";
+        String serviceType = "brooklyn.entity.basic.BasicApplication";
+        addTestCatalogItem(itemId, TEST_VERSION, serviceType);
+        addTestCatalogItem(itemId, "2.0", serviceType);
+        List<CatalogItemSummary> applications = client().resource("/v1/catalog/applications")
+                .queryParam("fragment", itemId).get(new GenericType<List<CatalogItemSummary>>() {});
+        assertEquals(applications.size(), 2);
+        CatalogItemSummary summary0 = applications.get(0);
+        CatalogItemSummary summary1 = applications.get(1);
+
+        // Ensure that the ID required by the API is in the 'usual' format of name:id
+        String id = String.format("%s:%s", summary0.getSymbolicName(), summary0.getVersion());
+        assertEquals(summary0.getId(), id);
+        ClientResponse getDeprecationResponse = client().resource(String.format("/v1/catalog/entities/%s/deprecated/true", id))
+                .post(ClientResponse.class);
+
+        assertEquals(getDeprecationResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+
+        List<CatalogItemSummary> applicationsAfterDeprecation = client().resource("/v1/catalog/applications")
+                .queryParam("fragment", "basicapp").get(new GenericType<List<CatalogItemSummary>>() {});
+
+        assertEquals(applicationsAfterDeprecation.size(), 1);
+        assertTrue(applicationsAfterDeprecation.contains(summary1));
+
+        ClientResponse getUnDeprecationResponse = client().resource(String.format("/v1/catalog/entities/%s/deprecated/false", summary0.getId()))
+                .post(ClientResponse.class);
+
+        assertEquals(getUnDeprecationResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+
+        List<CatalogItemSummary> applicationsAfterUnDeprecation = client().resource("/v1/catalog/applications")
+                .queryParam("fragment", "basicapp").get(new GenericType<List<CatalogItemSummary>>() {});
+
+        assertEquals(applications, applicationsAfterUnDeprecation);
     }
 
     private static String ver(String id) {

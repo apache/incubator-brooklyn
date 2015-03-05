@@ -65,6 +65,9 @@ public interface BrooklynCatalog {
     /** convenience for filtering items in the catalog; see CatalogPredicates for useful filters */
     <T,SpecT> Iterable<CatalogItem<T,SpecT>> getCatalogItems(Predicate<? super CatalogItem<T,SpecT>> filter);
 
+    /** persists the catalog item to the object store, if persistence is enabled */
+    public void persist(CatalogItem<?, ?> catalogItem);
+
     /** @return The classloader which should be used to load classes and entities;
      * this includes all the catalog's classloaders in the right order */
     public ClassLoader getRootClassLoader();

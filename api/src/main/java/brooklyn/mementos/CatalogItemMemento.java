@@ -44,4 +44,6 @@ public interface CatalogItemMemento extends Memento {
 
     Class<?> getSpecType();
 
+    boolean isDeprecated();
+
 }

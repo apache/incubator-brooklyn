@@ -80,7 +80,17 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObj
     public String getCatalogItemId() {
         return itemDto.getCatalogItemId();
     }
-    
+
+    @Override
+    public void setDeprecated(boolean deprecated) {
+        itemDto.setDeprecated(deprecated);
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        return itemDto.isDeprecated();
+    }
+
     @Override
     public void setCatalogItemId(String id) {
         itemDto.setCatalogItemId(id);

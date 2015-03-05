@@ -228,5 +228,12 @@ public interface CatalogApi {
         @ApiParam(name = "version", value = "version identifier of catalog item (application, entity, policy)", required=true)
         @PathParam("version") String version);
 
+    @POST
+    @Path("/entities/{itemId}/deprecated/{deprecated}")
+    public void setDeprecated(
+        @ApiParam(name = "itemId", value = "The ID of the catalog item to be deprecated", required = true)
+        @PathParam("itemId") String itemId,
+        @ApiParam(name = "deprecated", value = "Whether or not the catalog item is deprecated", required = true)
+        @PathParam("deprecated") boolean deprecated);
 }
 

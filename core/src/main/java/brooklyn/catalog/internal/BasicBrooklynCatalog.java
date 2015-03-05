@@ -18,6 +18,7 @@
  */
 package brooklyn.catalog.internal;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.spi.AssemblyTemplate;
@@ -272,6 +273,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             return (CatalogItem<T,SpecT>)result;
         return null;
     }
+
+    @Override
+    public void persist(CatalogItem<?, ?> catalogItem) {
+        checkArgument(getCatalogItem(catalogItem.getSymbolicName(), catalogItem.getVersion()) != null, "Unknown catalog item %s", catalogItem);
+        mgmt.getRebindManager().getChangeListener().onChanged(catalogItem);
+    }
     
     @Override
     public ClassLoader getRootClassLoader() {
@@ -453,6 +460,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         final String description = (String) catalog.getMaybe("description").orNull();
         final String iconUrl = (String) catalog.getMaybe("iconUrl").orNull();
         final String iconUrlUnderscore = (String) catalog.getMaybe("icon_url").orNull();
+        final String deprecated = (String) catalog.getMaybe("deprecated").orNull();
 
         if ((Strings.isNonBlank(id) || Strings.isNonBlank(symbolicName)) && 
                 Strings.isNonBlank(displayName) &&
@@ -525,6 +533,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         } else {
             catalogIconUrl = null;
         }
+
+        final Boolean catalogDeprecated = Boolean.valueOf(deprecated);
 
         CatalogUtils.installLibraries(mgmt, libraries);
 
