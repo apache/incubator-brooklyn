@@ -22,6 +22,7 @@ import java.util.Arrays;
 
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.proxying.EntitySpec;
@@ -79,22 +80,23 @@ public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
         test("Red Hat Enterprise Linux 6");
     }
 
-    @Test(groups = {"Live"})
+    @Test(enabled=false, groups = {"Live"}) // only run this in MySqlIntegrationTest
     public void test_localhost() throws Exception {
         super.test_localhost();
     }
 
     public void test(String osRegex) throws Exception {
-        MySqlNode mysql = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
+        MySqlNode mysql = app.createAndManageChild(EntitySpec.create(MySqlNode.class)
                 .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, CREATION_SCRIPT));
 
+        BrooklynProperties brooklynProperties = mgmt.getBrooklynProperties();
         brooklynProperties.put("brooklyn.location.jclouds.rackspace-cloudservers-uk.imageNameRegex", osRegex);
         brooklynProperties.remove("brooklyn.location.jclouds.rackspace-cloudservers-uk.image-id");
         brooklynProperties.remove("brooklyn.location.jclouds.rackspace-cloudservers-uk.imageId");
         brooklynProperties.put("brooklyn.location.jclouds.rackspace-cloudservers-uk.inboundPorts", Arrays.asList(22, 3306));
-        JcloudsLocation jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve("jclouds:rackspace-cloudservers-uk");
+        JcloudsLocation jcloudsLocation = (JcloudsLocation) mgmt.getLocationRegistry().resolve("jclouds:rackspace-cloudservers-uk");
 
-        tapp.start(ImmutableList.of(jcloudsLocation));
+        app.start(ImmutableList.of(jcloudsLocation));
 
         SshMachineLocation l = (SshMachineLocation) mysql.getLocations().iterator().next();
         l.execCommands("add iptables rule", ImmutableList.of(IptablesCommands.insertIptablesRule(Chain.INPUT, Protocol.TCP, 3306, Policy.ACCEPT)));

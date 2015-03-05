@@ -26,7 +26,7 @@ import org.testng.annotations.BeforeMethod;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 
@@ -41,7 +41,7 @@ public class BrooklynAppLiveTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynAppLiveTestSupport.class);
 
     protected TestApplication app;
-    protected ManagementContext mgmt;
+    protected ManagementContextInternal mgmt;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {

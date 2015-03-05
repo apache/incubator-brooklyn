@@ -25,10 +25,8 @@ import static java.lang.String.format;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.LinkedList;
@@ -48,9 +46,11 @@ import brooklyn.location.basic.BasicOsDetails.OsVersions;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.io.FileUtil;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.ComparableVersion;
@@ -195,17 +195,21 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         String creationScriptContents = DatastoreMixins.getDatabaseCreationScriptAsString(entity);
         if (creationScriptContents==null) return false;
 
-        File templateFile;
+        File templateFile = null;
+        BufferedWriter writer = null;
         try {
             templateFile = File.createTempFile("mysql", null);
-            templateFile.deleteOnExit();
-            BufferedWriter writer = new BufferedWriter(new FileWriter(templateFile));
-            writer.write (creationScriptContents);
+            FileUtil.setFilePermissionsTo600(templateFile);
+            writer = new BufferedWriter(new FileWriter(templateFile));
+            writer.write(creationScriptContents);
+            writer.flush();
+            copyTemplate(templateFile.getAbsoluteFile(), getRunDir() + "/creation-script.sql");
         } catch (IOException e) {
             throw Exceptions.propagate(e);
+        } finally {
+            if (writer != null) Streams.closeQuietly(writer);
+            if (templateFile != null) templateFile.delete();
         }
-        copyTemplate(templateFile.getAbsoluteFile(), getRunDir() + "/creation-script.sql");
-        templateFile.delete();
         return true;
     }
 
