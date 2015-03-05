@@ -32,6 +32,7 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.api.model.AbstractMethod;
@@ -44,11 +45,13 @@ import com.sun.jersey.spi.container.ResourceFilterFactory;
 public class HaStateCheckResourceFilter implements ResourceFilterFactory {
     private static final Set<ManagementNodeState> HOT_STATES = ImmutableSet.of(
             ManagementNodeState.MASTER, ManagementNodeState.HOT_STANDBY, ManagementNodeState.HOT_BACKUP);
+    private static final long STATE_CHANGE_SETTLE_OFFSET = Duration.seconds(10).toMilliseconds();
 
     @Context
-    private ServletContext servletContext;
+    private ManagementContext mgmt;
 
     private static class MethodFilter implements ResourceFilter, ContainerRequestFilter {
+
         private AbstractMethod am;
         private ManagementContext mgmt;
 
@@ -80,7 +83,15 @@ public class HaStateCheckResourceFilter implements ResourceFilterFactory {
         }
 
         private boolean isStateLoaded() {
-            return isHaHotStatus() && !RebindTracker.isRebinding();
+            return isHaHotStatus() && !RebindTracker.isRebinding() && !recentlySwitchedState();
+        }
+
+        // Ideally there will be a separate state to indicate that we switched state
+        // but still haven't finished rebinding. There's a gap between changing the state
+        // and starting rebind so add a time offset just to be sure.
+        private boolean recentlySwitchedState() {
+            long lastStateChange = mgmt.getHighAvailabilityManager().getLastStateChange();
+            return System.currentTimeMillis() - lastStateChange < STATE_CHANGE_SETTLE_OFFSET;
         }
 
         private boolean isUnsafe(ContainerRequest request) {
