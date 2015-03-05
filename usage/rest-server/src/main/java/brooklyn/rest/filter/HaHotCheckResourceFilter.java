@@ -40,7 +40,7 @@ import com.sun.jersey.spi.container.ContainerResponseFilter;
 import com.sun.jersey.spi.container.ResourceFilter;
 import com.sun.jersey.spi.container.ResourceFilterFactory;
 
-public class HaStateCheckResourceFilter implements ResourceFilterFactory {
+public class HaHotCheckResourceFilter implements ResourceFilterFactory {
     private static final Set<ManagementNodeState> HOT_STATES = ImmutableSet.of(
             ManagementNodeState.MASTER, ManagementNodeState.HOT_STANDBY, ManagementNodeState.HOT_BACKUP);
     private static final long STATE_CHANGE_SETTLE_OFFSET = Duration.seconds(10).toMilliseconds();
