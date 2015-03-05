@@ -174,6 +174,26 @@ define([
         return false; 
     };
 
+    Util.logout = function logout() {
+        $.ajax({
+            type: "POST",
+            dataType: "text",
+            url: "/logout",
+            success: function() {
+                window.location.replace("/");
+            },
+            failure: function() {
+                window.location.replace("/");
+            }
+        });
+    }
+
+    $("#logout-link").on("click", function (e) {
+        e.preventDefault();
+        Util.logout()
+        return false;
+    });
+
     return Util;
 
 });

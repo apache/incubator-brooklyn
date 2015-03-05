@@ -95,6 +95,7 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
                 httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             } else {
                 RequestDispatcher dispatcher = httpRequest.getRequestDispatcher("/");
+                log.debug("Not authenticated, forwarding request for {} to {}", uri, dispatcher);
                 dispatcher.forward(httpRequest, httpResponse);
             }
             return;
