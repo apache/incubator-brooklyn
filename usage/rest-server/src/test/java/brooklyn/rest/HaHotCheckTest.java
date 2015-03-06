@@ -28,6 +28,7 @@ import org.testng.annotations.Test;
 import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.rest.filter.HaHotCheckResourceFilter;
+import brooklyn.rest.filter.HaMasterCheckFilter;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.ManagementContextMock;
 import brooklyn.rest.util.HaHotStateCheckClassResource;
@@ -35,6 +36,7 @@ import brooklyn.rest.util.HaHotStateCheckResource;
 import brooklyn.rest.util.ManagementContextProvider;
 
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.api.core.ResourceConfig;
 
 public class HaHotCheckTest extends BrooklynRestResourceTest {
@@ -80,9 +82,45 @@ public class HaHotCheckTest extends BrooklynRestResourceTest {
         testResourceFetch("/ha/class/fail", 200);
     }
 
-    private void testResourceFetch(String resource, int code) {
-        ClientResponse response = client().resource(resource)
-                .accept(MediaType.APPLICATION_JSON_TYPE)
+    @Test
+    public void testHaCheckForce() {
+        HighAvailabilityManager ha = mgmtMock.getHighAvailabilityManager();
+        assertEquals(ha.getNodeState(), ManagementNodeState.MASTER);
+        testResourceForcedFetch("/ha/method/ok", 200);
+        testResourceForcedFetch("/ha/method/fail", 200);
+        testResourceForcedFetch("/ha/class/fail", 200);
+
+        mgmtMock.setState(ManagementNodeState.STANDBY);
+        assertEquals(ha.getNodeState(), ManagementNodeState.STANDBY);
+
+        testResourceForcedFetch("/ha/method/ok", 200);
+        testResourceForcedFetch("/ha/method/fail", 200);
+        testResourceForcedFetch("/ha/class/fail", 200);
+
+        //forces isRunning = false
+        mgmtMock.setState(ManagementNodeState.TERMINATED);
+        assertEquals(ha.getNodeState(), ManagementNodeState.TERMINATED);
+
+        testResourceForcedFetch("/ha/method/ok", 200);
+        testResourceForcedFetch("/ha/method/fail", 200);
+        testResourceForcedFetch("/ha/class/fail", 200);
+    }
+
+    private void testResourceFetch(String resourcePath, int code) {
+        testResourceFetch(resourcePath, false, code);
+    }
+
+    private void testResourceForcedFetch(String resourcePath, int code) {
+        testResourceFetch(resourcePath, true, code);
+    }
+
+    private void testResourceFetch(String resourcePath, boolean force, int code) {
+        Builder resource = client().resource(resourcePath)
+                .accept(MediaType.APPLICATION_JSON_TYPE);
+        if (force) {
+            resource.header(HaMasterCheckFilter.SKIP_CHECK_HEADER, "true");
+        }
+        ClientResponse response = resource
                 .get(ClientResponse.class);
         assertEquals(response.getStatus(), code);
     }
