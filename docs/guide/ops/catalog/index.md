@@ -83,7 +83,7 @@ curl http://127.0.0.1:8081/v1/catalog --data-binary @/path/to/mysql-catalog.yaml
 
 ### Deleting from the Catalog
 
-You can delete a versioned item from the catalog using the same endpoint at the REST API. 
+You can delete a versioned item from the catalog using the same endpoint as the REST API. 
 For example, to delete the item with id `my-MySQL` and version `1.0` with `curl`:
 
 {% highlight bash %}
@@ -93,6 +93,17 @@ curl -X DELETE http://127.0.0.1:8081/v1/catalog/entities/MySQL/1.0
 **Note:** Catalog items should not be deleted if there are running apps which were created using the same item. 
 During rebinding the catalog item is used to reconstruct the entity.
 
+If you have running apps which were created using the item you wish to delete, you should instead deprecate the catalog item.
+Deprecated catalog items will not appear in the add application wizard, or in the catalog list but will still
+be available to Brooklyn for rebinding. The option to display deprecated catalog items in the catalog list will be added
+in a future release.
+
+Deprecation applies to a specific version of a catalog item, so the full
+id including the version number is passed to the REST API as follows:
+
+{% highlight bash %}
+curl -X POST http://127.0.0.1:8081/v1/catalog/entities/MySQL:1.0/deprecated/true
+{% endhighlight %}
 
 ### Versioning
 
