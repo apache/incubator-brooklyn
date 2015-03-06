@@ -529,8 +529,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             ConfigBag args = new ConfigBag()
                 .configure(SshTool.PROP_USER, user)
                 // default value of host, overridden if SSH_HOST is supplied
-                .configure(SshTool.PROP_HOST, address.getHostName())
-                .putAll(props);
+                .configure(SshTool.PROP_HOST, address.getHostName());
 
             for (Map.Entry<String,Object> entry: config().getBag().getAllConfig().entrySet()) {
                 String key = entry.getKey();
@@ -550,6 +549,10 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 }
                 args.putStringKey(key, entry.getValue());
             }
+
+            // Explicit props trump all.
+            args.putAll(props);
+
             if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
             if (!user.equals(args.get(SshTool.PROP_USER))) {
                 LOG.warn("User mismatch configuring ssh for "+this+": preferring user "+args.get(SshTool.PROP_USER)+" over "+user);
