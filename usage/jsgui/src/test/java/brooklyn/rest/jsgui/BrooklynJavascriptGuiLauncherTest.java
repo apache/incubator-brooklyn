@@ -27,6 +27,7 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncherTestFixture;
+import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 
 /** Convenience and demo for launching programmatically. */
@@ -60,8 +61,15 @@ public class BrooklynJavascriptGuiLauncherTest {
         checkUrlContains("/v1/catalog/entities", "Tomcat");
     }
 
-    protected void checkUrlContains(String path, String text) {
-        HttpTestUtils.assertContentContainsText(rootUrl()+path, text);
+    protected void checkUrlContains(final String path, final String text) {
+        //Server may return 403 until it loads completely, wait a bit
+        //until it stabilizes.
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                HttpTestUtils.assertContentContainsText(rootUrl()+path, text);
+            }
+        });
     }
 
     protected void checkEventuallyHealthy() {

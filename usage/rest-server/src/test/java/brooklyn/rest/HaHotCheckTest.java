@@ -22,6 +22,9 @@ import static org.testng.Assert.assertEquals;
 
 import javax.ws.rs.core.MediaType;
 
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -43,11 +46,22 @@ public class HaHotCheckTest extends BrooklynRestResourceTest {
 
     private ManagementContextMock mgmtMock;
 
-    @Override
+    //Treat before/after class methods as before/after method
+    //otherwise they should be static.
+    @BeforeClass(alwaysRun=true)
+    public void setUpClass() {}
+    @AfterClass(alwaysRun=true)
+    public void tearDownClass() {}
+
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
         mgmtMock = new ManagementContextMock();
         super.setUp();
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() throws Exception {
+        super.tearDown();
     }
 
     @Override
