@@ -104,6 +104,7 @@ public class BrooklynRestApiLauncher {
     private ManagementContext mgmt;
     private ContextHandler customContext;
     private boolean deployJsgui = true;
+    private boolean disableHighAvailability = true;
 
     protected BrooklynRestApiLauncher() {}
 
@@ -149,6 +150,11 @@ public class BrooklynRestApiLauncher {
 
     public BrooklynRestApiLauncher withoutJsgui() {
         this.deployJsgui = false;
+        return this;
+    }
+    
+    public BrooklynRestApiLauncher disableHighAvailability(boolean value) {
+        this.disableHighAvailability = value;
         return this;
     }
 
@@ -198,7 +204,7 @@ public class BrooklynRestApiLauncher {
             ((LocalManagementContext) mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
         }
 
-        return startServer(mgmt, context, summary);
+        return startServer(mgmt, context, summary, disableHighAvailability);
     }
 
     private ContextHandler filterContextHandler(ManagementContext mgmt) {
@@ -254,7 +260,7 @@ public class BrooklynRestApiLauncher {
 
     /** starts a server, on all NICs if security is configured,
      * otherwise (no security) only on loopback interface */
-    public static Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
+    public static Server startServer(ManagementContext mgmt, ContextHandler context, String summary, boolean disableHighAvailability) {
         // TODO this repeats code in BrooklynLauncher / WebServer. should merge the two paths.
         boolean secure = mgmt != null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig());
         if (secure) {
@@ -266,7 +272,7 @@ public class BrooklynRestApiLauncher {
                 ((BrooklynProperties)mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME, AnyoneSecurityProvider.class.getName());
             }
         }
-        if (mgmt != null)
+        if (mgmt != null && disableHighAvailability)
             mgmt.getHighAvailabilityManager().disabled();
         InetSocketAddress bindLocation = new InetSocketAddress(
                 secure ? Networking.ANY_NIC : Networking.LOOPBACK,

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.rest.resources;
+package brooklyn.rest;
 
 import static org.testng.Assert.assertEquals;
 
@@ -57,7 +57,7 @@ public class HaHotCheckTest extends BrooklynRestResourceTest {
     }
 
     @Test
-    public void testHaCheck() throws Exception {
+    public void testHaCheck() {
         HighAvailabilityManager ha = mgmtMock.getHighAvailabilityManager();
         assertEquals(ha.getNodeState(), ManagementNodeState.MASTER);
         testResourceFetch("/ha/method/ok", 200);
