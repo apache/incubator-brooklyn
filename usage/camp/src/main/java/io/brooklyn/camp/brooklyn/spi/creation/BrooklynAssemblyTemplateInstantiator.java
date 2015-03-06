@@ -18,15 +18,6 @@
  */
 package io.brooklyn.camp.brooklyn.spi.creation;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.AssemblyTemplate.Builder;
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-import io.brooklyn.camp.spi.collection.ResolvableLink;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -38,6 +29,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.catalog.CatalogItem;
@@ -47,37 +42,48 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.Task;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.internal.EntityManagementUtils;
-import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.net.Urls;
-
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import brooklyn.util.text.Strings;
+import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import io.brooklyn.camp.spi.Assembly;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.AssemblyTemplate.Builder;
+import io.brooklyn.camp.spi.PlatformComponentTemplate;
+import io.brooklyn.camp.spi.collection.ResolvableLink;
+import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpecInstantiator {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynAssemblyTemplateInstantiator.class);
     
     public static final String NEVER_UNWRAP_APPS_PROPERTY = "wrappedApp";
-    
+
     @Override
     public Assembly instantiate(AssemblyTemplate template, CampPlatform platform) {
         Application app = create(template, platform);
-        CreationResult<Application, Void> start = EntityManagementUtils.start(app);
-        log.debug("CAMP created "+app+"; starting in "+start.task());
+        Task<Void> task = EntityManagementUtils.start(app);
+        log.debug("CAMP created "+app+"; starting in "+task);
         return platform.assemblies().get(app.getApplicationId());
     }
 
     public Application create(AssemblyTemplate template, CampPlatform platform) {
-        Application instance = EntityManagementUtils.createUnstarted(getBrooklynManagementContext(platform), template);
-        log.debug("CAMP created {}", instance);
+        ManagementContext mgmt = getBrooklynManagementContext(platform);
+        BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
+        EntitySpec<? extends Application> spec = createSpec(template, platform, loader, true);
+        Application instance = mgmt.getEntityManager().createEntity(spec);
+        log.info("CAMP placing '{}' under management", instance);
+        Entities.startManagement(instance, mgmt);
         return instance;
     }
     
@@ -143,7 +149,45 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
             return false;
 
-        return EntityManagementUtils.hasNoNameOrCustomKeysOrRoot(template, app);
+        return hasNoNameOrCustomKeysOrRoot(template, app);
+    }
+
+    /** worker method to help determine whether child/children can be promoted */
+    private static boolean hasNoNameOrCustomKeysOrRoot(AssemblyTemplate template, EntitySpec<?> spec) {
+        if (!Strings.isEmpty(template.getName())) {
+            if (spec.getChildren().size()==1) {
+                String childName = Iterables.getOnlyElement(spec.getChildren()).getDisplayName();
+                if (Strings.isEmpty(childName) || childName.equals(template.getName())) {
+                    // if child has no name, or it's the same, could still promote
+                } else {
+                    return false;
+                }
+            } else {
+                // if name set at root and promoting children would be ambiguous, do not promote
+                return false;
+            }
+        } else if (spec.getChildren().size()>1) {
+            // don't allow multiple children if a name is specified as a root
+            return false;
+        }
+
+        Set<String> rootAttrs = template.getCustomAttributes().keySet();
+        for (String rootAttr: rootAttrs) {
+            if (rootAttr.equals("brooklyn.catalog") || rootAttr.equals("brooklyn.config")) {
+                // these do not block promotion
+                continue;
+            }
+            if (rootAttr.startsWith("brooklyn.")) {
+                // any others in 'brooklyn' namespace will block promotion
+                return false;
+            }
+            // location is allowed in both, and is copied on promotion
+            // (name also copied)
+            // others are root currently are ignored on promotion; they are usually metadata
+            // TODO might be nice to know what we are excluding
+        }
+
+        return true;
     }
 
     private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform) {
