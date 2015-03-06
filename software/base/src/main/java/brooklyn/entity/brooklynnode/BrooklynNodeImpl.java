@@ -22,10 +22,10 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
-import brooklyn.location.basic.Locations;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +56,7 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.location.basic.Locations;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.ha.ManagementNodeState;
@@ -80,6 +81,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
+import com.google.common.util.concurrent.Runnables;
 import com.google.gson.Gson;
 
 public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNode {
@@ -313,12 +315,31 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         @VisibleForTesting
         // Integration test for this in BrooklynNodeIntegrationTest in this project doesn't use this method,
         // but a Unit test for this does, in DeployBlueprintTest -- but in the REST server project (since it runs against local) 
-        public String submitPlan(String plan) {
-            MutableMap<String, String> headers = MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, "application/yaml");
-            HttpToolResponse result = ((BrooklynNode)entity()).http()
-                    .post("/v1/applications", headers, plan.getBytes());
-            byte[] content = result.getContent();
-            return (String)new Gson().fromJson(new String(content), Map.class).get("entityId");
+        public String submitPlan(final String plan) {
+            final MutableMap<String, String> headers = MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, "application/yaml");
+            final AtomicReference<byte[]> response = new AtomicReference<byte[]>();
+            Repeater.create()
+                .every(Duration.ONE_SECOND)
+                .backoffTo(Duration.FIVE_SECONDS)
+                .limitTimeTo(Duration.minutes(5))
+                .repeat(Runnables.doNothing())
+                .until(new Callable<Boolean>() {
+                    public Boolean call() {
+                        HttpToolResponse result = ((BrooklynNode)entity()).http()
+                                .post("/v1/applications", headers, plan.getBytes());
+                        if (result.getResponseCode() == HttpStatus.SC_FORBIDDEN) {
+                            log.debug("Remote is not ready to accept requests, response is " + result.getResponseCode());
+                            return false;
+                        } else {
+                            //will fail on non-2xx response
+                            byte[] content = result.getContent();
+                            response.set(content);
+                            return true;
+                        }
+                    }
+                })
+                .runRequiringTrue();
+            return (String)new Gson().fromJson(new String(response.get()), Map.class).get("entityId");
         }
     }
 
