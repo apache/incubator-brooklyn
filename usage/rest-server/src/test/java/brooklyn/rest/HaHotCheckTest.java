@@ -70,6 +70,14 @@ public class HaHotCheckTest extends BrooklynRestResourceTest {
         testResourceFetch("/ha/method/ok", 200);
         testResourceFetch("/ha/method/fail", 403);
         testResourceFetch("/ha/class/fail", 403);
+
+        //forces isRunning = false
+        mgmtMock.setState(ManagementNodeState.TERMINATED);
+        assertEquals(ha.getNodeState(), ManagementNodeState.TERMINATED);
+
+        testResourceFetch("/ha/method/ok", 200);
+        testResourceFetch("/ha/method/fail", 200);
+        testResourceFetch("/ha/class/fail", 200);
     }
 
     private void testResourceFetch(String resource, int code) {

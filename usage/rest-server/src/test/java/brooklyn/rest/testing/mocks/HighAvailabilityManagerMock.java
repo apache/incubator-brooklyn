@@ -39,6 +39,11 @@ public class HighAvailabilityManagerMock implements HighAvailabilityManager {
     }
 
     @Override
+    public boolean isRunning() {
+        return state != ManagementNodeState.TERMINATED;
+    }
+
+    @Override
     public ManagementNodeState getNodeState() {
         return state;
     }
@@ -55,11 +60,6 @@ public class HighAvailabilityManagerMock implements HighAvailabilityManager {
 
     @Override
     public void disabled() {
-        throw fail();
-    }
-
-    @Override
-    public boolean isRunning() {
         throw fail();
     }
 

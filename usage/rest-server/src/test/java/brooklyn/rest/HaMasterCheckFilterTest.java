@@ -19,7 +19,6 @@
 package brooklyn.rest;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 import java.io.File;
@@ -27,10 +26,9 @@ import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jetty.server.Server;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -55,7 +53,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 
 public class HaMasterCheckFilterTest extends BrooklynRestApiLauncherTestFixture {
-    private static final Logger LOG = LoggerFactory.getLogger(HaMasterCheckFilterTest.class);
     private static final Duration TIMEOUT = Duration.THIRTY_SECONDS;
 
     private File mementoDir;
@@ -71,6 +68,13 @@ public class HaMasterCheckFilterTest extends BrooklynRestApiLauncherTestFixture 
         Entities.destroyAll(writeMgmt);
         Entities.destroyAll(readMgmt);
         Os.deleteRecursively(mementoDir);
+    }
+
+    @Test(groups = "Integration")
+    public void testEntitiesExistOnDisabledHA() throws Exception {
+        initHaCluster(HighAvailabilityMode.DISABLED, HighAvailabilityMode.DISABLED);
+        assertReadIsMaster();
+        assertEntityExists(new ReturnCodeCheck());
     }
 
     @Test(groups = "Integration")
@@ -129,7 +133,11 @@ public class HaMasterCheckFilterTest extends BrooklynRestApiLauncherTestFixture 
                 .emptyCatalog(true)
                 .buildUnstarted();
 
-        mgmt.getHighAvailabilityManager().start(mode);
+        if (mode == HighAvailabilityMode.DISABLED) {
+            mgmt.getHighAvailabilityManager().disabled();
+        } else {
+            mgmt.getHighAvailabilityManager().start(mode);
+        }
 
         new BrooklynCampPlatformLauncherNoServer()
             .useManagementContext(mgmt)
@@ -145,7 +153,12 @@ public class HaMasterCheckFilterTest extends BrooklynRestApiLauncherTestFixture 
         appId = createApp(writeMgmt);
         writeMgmt.getRebindManager().getPersister().waitForWritesCompleted(TIMEOUT);
 
-        readMgmt = createManagementContext(mementoDir, readMode);
+        if (readMode == HighAvailabilityMode.DISABLED) {
+            //no HA, one node only
+            readMgmt = writeMgmt;
+        } else {
+            readMgmt = createManagementContext(mementoDir, readMode);
+        }
 
         server = useServerForTest(BrooklynRestApiLauncher.launcher()
                 .managementContext(readMgmt)
@@ -157,12 +170,11 @@ public class HaMasterCheckFilterTest extends BrooklynRestApiLauncherTestFixture 
         client = getClient(server);
     }
 
-    private void assertEntityExists(Callable<Boolean> c) {
-        assertTrue(Asserts.succeedsEventually(c), "Unexpected code returned");
+    private void assertEntityExists(Callable<Integer> c) {
+        assertEquals((int)Asserts.succeedsEventually(c), 200);
     }
 
     private void assertReadIsMaster() {
-//        Asserts.eventually(new NodeStateSupplier(readMgmt), Predicates.equalTo(ManagementNodeState.MASTER));
         assertEquals(readMgmt.getHighAvailabilityManager().getNodeState(), ManagementNodeState.MASTER);
     }
 
@@ -170,26 +182,23 @@ public class HaMasterCheckFilterTest extends BrooklynRestApiLauncherTestFixture 
         writeMgmt.getHighAvailabilityManager().stop();
     }
 
-    private class ReturnCodeCheck implements Callable<Boolean> {
+    private class ReturnCodeCheck implements Callable<Integer> {
         @Override
-        public Boolean call() {
+        public Integer call() {
             int retCode = getAppResponseCode();
-            if (retCode == 200) {
-                return true;
-            } else if (retCode == 403) {
-                throw new RuntimeException("Not ready, response " + retCode);
+            if (retCode == 403) {
+                throw new RuntimeException("Not ready, retry. Response - " + retCode);
             } else {
-                LOG.error("Unexpected return code " + retCode);
-                return false;
+                return retCode;
             }
         }
     }
 
     private class ReturnCodeAndNodeState extends ReturnCodeCheck {
         @Override
-        public Boolean call() {
-            Boolean ret = super.call();
-            if (ret) {
+        public Integer call() {
+            Integer ret = super.call();
+            if (ret == HttpStatus.SC_OK) {
                 ManagementNodeState state = readMgmt.getHighAvailabilityManager().getNodeState();
                 if (state != ManagementNodeState.MASTER) {
                     throw new RuntimeException("Not master yet " + state);
@@ -203,18 +212,6 @@ public class HaMasterCheckFilterTest extends BrooklynRestApiLauncherTestFixture 
         @Override
         public Integer get() {
             return getAppResponseCode();
-        }
-    }
-
-    private static class NodeStateSupplier implements Supplier<ManagementNodeState> {
-        private ManagementContext node;
-        public NodeStateSupplier(ManagementContext node) {
-            this.node = node;
-        }
-
-        @Override
-        public ManagementNodeState get() {
-            return node.getHighAvailabilityManager().getNodeState();
         }
     }
 

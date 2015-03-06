@@ -81,7 +81,7 @@ public class HaHotCheckResourceFilter implements ResourceFilterFactory {
         }
 
         private boolean isStateLoaded() {
-            return isHaHotStatus() && !RebindTracker.isRebinding() && !recentlySwitchedState();
+            return isHaHotStatusOrDisabled() && !RebindTracker.isRebinding() && !recentlySwitchedState();
         }
 
         // Ideally there will be a separate state to indicate that we switched state
@@ -99,7 +99,8 @@ public class HaHotCheckResourceFilter implements ResourceFilterFactory {
                     am.getResource().getAnnotation(HaHotStateRequired.class) != null);
         }
 
-        private boolean isHaHotStatus() {
+        private boolean isHaHotStatusOrDisabled() {
+            if (!mgmt.getHighAvailabilityManager().isRunning()) return true;
             ManagementNodeState state = mgmt.getHighAvailabilityManager().getNodeState();
             return HOT_STATES.contains(state);
         }
