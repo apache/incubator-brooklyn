@@ -18,7 +18,6 @@
  */
 package io.brooklyn.camp.brooklyn;
 
-import java.io.InputStream;
 import java.io.Reader;
 import java.util.Set;
 
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.Beta;
 
 import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
@@ -38,8 +36,6 @@ import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
 
 /** convenience for launching YAML files directly */
 @Beta
@@ -80,8 +76,8 @@ public abstract class YamlLauncherAbstract {
 
     public Application launchAppYaml(String url, boolean waitForTasksToComplete) {
         try {
-            Application app = createFromUrl(url);
-            EntityManagementUtils.start(app);
+            Reader input = Streams.reader(new ResourceUtils(this).getResourceFromUrl(url));
+            Application app = launchAppYaml(input, waitForTasksToComplete);
             log.info("Application started from YAML file "+url+": "+app);
             return app;
         } catch (Exception e) {
@@ -95,10 +91,9 @@ public abstract class YamlLauncherAbstract {
 
     public Application launchAppYaml(Reader input, boolean waitForTasksToComplete) {
         try {
-            AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
+            Application app = createFromUrl(input);
+            EntityManagementUtils.start(app);
 
-            Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
-            Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
             log.info("Launching "+app);
 
             if (getShutdownAppsOnExit()) BrooklynShutdownHooks.invokeStopOnShutdown(app);
@@ -113,20 +108,9 @@ public abstract class YamlLauncherAbstract {
 
             log.info("Application started from YAML: "+app);
             Entities.dumpInfo(app);
-            return (Application)app;
+            return app;
         } catch (Exception e) {
             throw Exceptions.propagate(e);
-        }
-    }
-
-    private Application createFromUrl(String url) {
-        //TODO infer encoding from response
-        InputStream in = new ResourceUtils(this).getResourceFromUrl(url);
-        Reader reader = Streams.reader(in);
-        try {
-            return EntityManagementUtils.createUnstarted(brooklynMgmt, reader);
-        } finally {
-            Streams.closeQuietly(reader);
         }
     }
 
@@ -141,5 +125,14 @@ public abstract class YamlLauncherAbstract {
             log.warn("Unable to stop servers (ignoring): "+e);
         }
     }
+
+   private Application createFromUrl(Reader reader) {
+      //TODO infer encoding from response
+      try {
+         return EntityManagementUtils.createUnstarted(brooklynMgmt, reader);
+         } finally {
+            Streams.closeQuietly(reader);
+         }
+   }
 
 }

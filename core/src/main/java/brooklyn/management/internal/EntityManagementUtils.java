@@ -124,12 +124,12 @@ public class EntityManagementUtils {
         return (EntitySpec<? extends Application>) createSpec(mgmt, yaml, loader);
     }
 
-    private static <T, SpecT> SpecT createEntitySpec(String symbolicName, CampPlatform camp,
+    private static EntitySpec<? extends Application> createEntitySpec(String symbolicName, CampPlatform camp,
                                                                       DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         AssemblyTemplate at = registerDeploymentPlan(camp, plan, loader);
         AssemblyTemplateInstantiator instantiator = newInstantiator(at);
         if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-            return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createNestedSpec(at, camp, loader, MutableSet.of(symbolicName));
+            return (EntitySpec<? extends Application>) ((AssemblyTemplateSpecInstantiator)instantiator).createNestedSpec(at, camp, loader, MutableSet.of(symbolicName));
         } else {
             throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator " + instantiator + " for " + at);
         }
