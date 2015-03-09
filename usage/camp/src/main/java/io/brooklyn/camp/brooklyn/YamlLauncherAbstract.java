@@ -91,7 +91,7 @@ public abstract class YamlLauncherAbstract {
 
     public Application launchAppYaml(Reader input, boolean waitForTasksToComplete) {
         try {
-            Application app = createFromUrl(input);
+            Application app = createFromReader(input);
             EntityManagementUtils.start(app);
 
             log.info("Launching "+app);
@@ -126,8 +126,7 @@ public abstract class YamlLauncherAbstract {
         }
     }
 
-   private Application createFromUrl(Reader reader) {
-      //TODO infer encoding from response
+   private Application createFromReader(Reader reader) {
       try {
          return EntityManagementUtils.createUnstarted(brooklynMgmt, reader);
          } finally {
