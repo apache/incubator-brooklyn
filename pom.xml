@@ -28,7 +28,7 @@
 
     <groupId>org.apache.brooklyn</groupId>
     <artifactId>brooklyn-parent</artifactId>
-    <version>0.7.0-M2-incubating-foghorn-foghorn</version>  <!-- BROOKLYN_VERSION -->
+    <version>0.7.0-M2-incubating-foghorn</version>  <!-- BROOKLYN_VERSION -->
 
     <name>Brooklyn Parent Project</name>
     <description>

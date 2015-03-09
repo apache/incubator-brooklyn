@@ -70,13 +70,13 @@
     
     
     <classpath> 
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.7.0-M2-incubating-foghorn-foghorn/brooklyn-example-simple-web-cluster-0.7.0-M2-incubating-foghorn-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.7.0-M2-incubating-foghorn-foghorn/brooklyn-example-global-web-fabric-0.7.0-M2-incubating-foghorn-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.7.0-M2-incubating-foghorn-foghorn/brooklyn-example-global-web-fabric-0.7.0-M2-incubating-foghorn-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-portable-cloudfoundry/0.7.0-M2-incubating-foghorn-foghorn/brooklyn-example-portable-cloudfoundry-0.7.0-M2-incubating-foghorn-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.7.0-M2-incubating-foghorn-foghorn/brooklyn-example-simple-web-cluster-0.7.0-M2-incubating-foghorn-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.7.0-M2-incubating-foghorn-foghorn/brooklyn-example-hello-world-sql-webapp-0.7.0-M2-incubating-foghorn-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
-      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-messaging-pubsub/0.7.0-M2-incubating-foghorn-foghorn/brooklyn-example-simple-messaging-pubsub-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.7.0-M2-incubating-foghorn/brooklyn-example-simple-web-cluster-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.7.0-M2-incubating-foghorn/brooklyn-example-global-web-fabric-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-global-web-fabric/0.7.0-M2-incubating-foghorn/brooklyn-example-global-web-fabric-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-portable-cloudfoundry/0.7.0-M2-incubating-foghorn/brooklyn-example-portable-cloudfoundry-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-web-cluster/0.7.0-M2-incubating-foghorn/brooklyn-example-simple-web-cluster-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.7.0-M2-incubating-foghorn/brooklyn-example-hello-world-sql-webapp-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
+      <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-messaging-pubsub/0.7.0-M2-incubating-foghorn/brooklyn-example-simple-messaging-pubsub-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
       <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-examples-parent/0.7.0-M2-incubating-foghorn/brooklyn-examples-parent-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
       <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-hello-world-webapp/0.7.0-M2-incubating-foghorn/brooklyn-example-hello-world-webapp-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
       <entry>file://~/.m2/repository/io/brooklyn/example/brooklyn-example-simple-nosql-cluster/0.7.0-M2-incubating-foghorn/brooklyn-example-simple-nosql-cluster-0.7.0-M2-incubating-foghorn.jar</entry> <!--  BROOKLYN_VERSION  -->
