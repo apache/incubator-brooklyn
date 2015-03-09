@@ -29,7 +29,7 @@ You can of course follow this walkthrough without installing it on your machine 
 {% if SNAPSHOT %}
 
 {% highlight bash %}
-$ export BROOKLYN_VERSION=0.7.0-M2-incubating
+$ export BROOKLYN_VERSION=0.7.0-M2-incubating-foghorn
 $ mvn archetype:generate \
     -DarchetypeGroupId=io.brooklyn \
     -DarchetypeArtifactId=brooklyn-archetype-quickstart \
@@ -49,7 +49,7 @@ This can be omitted for release versions, or if you already have a local `mvn in
 {% else %}
 
 {% highlight bash %}
-$ export BROOKLYN_VERSION=0.7.0-M2-incubating
+$ export BROOKLYN_VERSION=0.7.0-M2-incubating-foghorn
 $ mvn archetype:generate \
     -DarchetypeGroupId=io.brooklyn \
     -DarchetypeArtifactId=brooklyn-archetype-quickstart \

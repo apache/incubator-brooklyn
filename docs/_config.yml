@@ -18,7 +18,7 @@
 #
 exclude: [ LICENSE.txt, Gemfile, Gemfile.lock ]
 markdown: rdiscount
-brooklyn-version: 0.7.0-M2-incubating # BROOKLYN_VERSION
+brooklyn-version: 0.7.0-M2-incubating-foghorn-foghorn # BROOKLYN_VERSION
 brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)
 brooklyn-root-url: /
-url: /v/0.7.0-M2-incubating  # BROOKLYN_VERSION
+url: /v/0.7.0-M2-incubating-foghorn-foghorn  # BROOKLYN_VERSION

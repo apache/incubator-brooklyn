@@ -22,7 +22,7 @@ If you have a Maven-based project, integrate this XML fragment with your pom.xml
 	<dependency>
 		<groupId>io.brooklyn</groupId>
 		<artifactId>brooklyn-all</artifactId>
-		<version>0.7.0-M2-incubating</version>  <!-- BROOKLYN_VERSION -->
+		<version>0.7.0-M2-incubating-foghorn</version>  <!-- BROOKLYN_VERSION -->
 	</dependency>
 </dependencies>
  

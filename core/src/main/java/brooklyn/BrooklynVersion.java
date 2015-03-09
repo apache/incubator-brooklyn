@@ -40,7 +40,7 @@ public class BrooklynVersion {
   private final String versionFromClasspath;
   // static useful when running from the IDE
   // TODO is the classpath version ever useful? should we always use the static?
-  private final String versionFromStatic = "0.7.0-M2-incubating"; // BROOKLYN_VERSION
+  private final String versionFromStatic = "0.7.0-M2-incubating-foghorn-foghorn"; // BROOKLYN_VERSION
   private final String version;
 
   public BrooklynVersion() {
