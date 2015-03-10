@@ -229,8 +229,13 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 }
                 
                 ((CouchbaseNode)getPrimaryNode()).rebalance();
-            } else if (getQuorumSize()>1) {
-                log.warn(this+" is not quorate; will likely fail later, but proceeding for now");
+            } else {
+                if (getQuorumSize()>1) {
+                    log.warn(this+" is not quorate; will likely fail later, but proceeding for now");
+                }
+                for (Entity server: serversToAdd) {
+                    ((EntityInternal) server).setAttribute(CouchbaseNode.IS_IN_CLUSTER, true);
+                }
             }
                 
             if (getConfig(CREATE_BUCKETS)!=null) {
