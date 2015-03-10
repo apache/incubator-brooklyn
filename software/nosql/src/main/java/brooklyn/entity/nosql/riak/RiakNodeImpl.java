@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.webapp.WebAppServiceMethods;
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
@@ -64,6 +65,16 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         // fail fast if config files not avail
         Entities.getRequiredUrlConfig(this, RIAK_VM_ARGS_TEMPLATE_URL);
         Entities.getRequiredUrlConfig(this, RIAK_APP_CONFIG_TEMPLATE_URL);
+    }
+
+    public boolean isPackageDownloadUrlProvided() {
+        AttributeSensorAndConfigKey[] downloadProperties = {DOWNLOAD_URL_RHEL_CENTOS, DOWNLOAD_URL_UBUNTU, DOWNLOAD_URL_DEBIAN};
+        for(AttributeSensorAndConfigKey property : downloadProperties) {
+            if(!((ConfigurationSupportInternal)config()).getLocalRaw(property).isAbsent()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

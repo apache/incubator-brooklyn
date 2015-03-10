@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.task.ssh.SshTasks;
 import com.google.api.client.util.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +52,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeSshDriver.class);
     private static final String sbinPath = "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
+    private static final String INSTALLING_FALLBACK = INSTALLING + "_fallback";
     private boolean isPackageInstall = true;
     private boolean isRiakOnPath = true;
 
@@ -89,7 +92,11 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         List<String> commands = Lists.newLinkedList();
         if (osDetails.isLinux()) {
-            commands.addAll(installFromPackageCloud());
+            if(getEntity().isPackageDownloadUrlProvided()) {
+                commands.addAll(installLinuxFromPackageUrl(getExpandedInstallDir()));
+            } else {
+                commands.addAll(installFromPackageCloud());
+            }
         } else if (osDetails.isMac()) {
             isPackageInstall = false;
             commands.addAll(installMac());
@@ -99,11 +106,68 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             throw new IllegalStateException("Machine was not detected as linux, mac or windows! Installation does not know how to proceed with " +
                     getMachine() + ". Details: " + getMachine().getMachineDetails().getOsDetails());
         }
-        newScript(INSTALLING)
-                .body.append(commands)
-                .failIfBodyEmpty()
-                .failOnNonZeroResultCode()
-                .execute();
+
+        try {
+            newScript(INSTALLING)
+                    .body.append(commands)
+                    .failIfBodyEmpty()
+                    .failOnNonZeroResultCode()
+                    .inessential()
+                    .execute();
+        } catch(RuntimeException e) {
+            if (osDetails.isLinux()) {
+                newScript(INSTALLING_FALLBACK).body
+                        .append(installLinuxFromPackageUrl(getExpandedInstallDir()))
+                        .failIfBodyEmpty()
+                        .failOnNonZeroResultCode()
+                        .execute();
+            }
+        }
+    }
+
+    private List<String> installLinuxFromPackageUrl(String expandedInstallDir) {
+        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), SshTasks.OnFailingTask.WARN_OR_IF_DYNAMIC_FAIL_MARKING_INESSENTIAL)).orSubmitAndBlock();
+
+        String installBin = Urls.mergePaths(expandedInstallDir, "bin");
+        String saveAsYum = "riak.rpm";
+        String saveAsApt = "riak.deb";
+        OsDetails osDetails = getMachine().getOsDetails();
+
+        String downloadUrl;
+        String osReleaseCmd;
+        if ("debian".equalsIgnoreCase(osDetails.getName())) {
+            // TODO osDetails.getName() is returning "linux", instead of debian/ubuntu on AWS with jenkins image,
+            //      running as integration test targetting localhost.
+            // TODO Debian support (default debian image fails with 'sudo: command not found')
+            downloadUrl = (String)entity.getAttribute(RiakNode.DOWNLOAD_URL_DEBIAN);
+            osReleaseCmd = osDetails.getVersion().substring(0, osDetails.getVersion().indexOf("."));
+        } else {
+            // assume Ubuntu
+            downloadUrl = (String)entity.getAttribute(RiakNode.DOWNLOAD_URL_UBUNTU);
+            osReleaseCmd = "`lsb_release -sc` && " +
+                    "export OS_RELEASE=`([[ \"lucid natty precise\" =~ (^| )\\$OS_RELEASE($| ) ]] && echo $OS_RELEASE || echo precise)`";
+        }
+        String apt = chainGroup(
+                //debian fix
+                "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "which apt-get",
+                ok(sudo("apt-get -y --allow-unauthenticated install logrotate libpam0g-dev libssl0.9.8")),
+                "export OS_NAME=" + Strings.toLowerCase(osDetails.getName()),
+                "export OS_RELEASE=" + osReleaseCmd,
+                String.format("wget -O %s %s", saveAsApt, downloadUrl),
+                sudo(String.format("dpkg -i %s", saveAsApt)));
+        String yum = chainGroup(
+                "which yum",
+                ok(sudo("yum -y install openssl")),
+                String.format("wget -O %s %s", saveAsYum, entity.getAttribute(RiakNode.DOWNLOAD_URL_RHEL_CENTOS)),
+                sudo(String.format("rpm -Uvh %s", saveAsYum)));
+        return ImmutableList.<String>builder()
+                .add("mkdir -p " + installBin)
+                .add(INSTALL_CURL)
+                .add(alternatives(apt, yum))
+                .add("ln -s `which riak` " + Urls.mergePaths(installBin, "riak"))
+                .add("ln -s `which riak-admin` " + Urls.mergePaths(installBin, "riak-admin"))
+                .build();
     }
 
     private List<String> installFromPackageCloud() {

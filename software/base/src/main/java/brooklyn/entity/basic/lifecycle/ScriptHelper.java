@@ -275,6 +275,11 @@ public class ScriptHelper {
         isInessential = true;
     }
 
+    public ScriptHelper inessential() {
+        isInessential = true;
+        return this;
+    }
+
     /** creates a task which will execute this script; note this can only be run once per instance of this class */
     public synchronized Task<Integer> newTask() {
         if (task!=null) throw new IllegalStateException("task can only be generated once");
@@ -336,7 +341,7 @@ public class ScriptHelper {
             return executeInternal();
         }
     }
-    
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public int executeInternal() {
         if (!executionCheck.apply(this)) {
