@@ -18,6 +18,8 @@
 #
 name: Couchbase with Elastic Load Generator
 
+location: softlayer:wdc01
+
 services:
 
 - type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
@@ -50,5 +52,3 @@ services:
       brooklyn.example.couchbase.nodes: $brooklyn:formatString("'%s'",
         component("cb-cluster").attributeWhenReady("couchbase.cluster.node.addresses"))
   initialSize: 2
-
-location: aws-ec2:us-east-1
