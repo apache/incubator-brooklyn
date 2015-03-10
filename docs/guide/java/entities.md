@@ -16,13 +16,13 @@ What to Extend -- Implementation Classes
 
 - entity implementation class hierarchy
 
-  - ``SoftwareProcess`` as the main starting point for base entities (corresponding to software processes),
-    and subclasses such as ``VanillaJavaApp``
-  - ``DynamicCluster`` (multiple instances of the same entity in a location) and 
-    ``DynamicFabric`` (clusters in multiple location) for automatically creating many instances,
-    supplied with an ``EntityFactory`` (e.g. ``BaseEntityFactory``) in the ``factory`` flag
-  - abstract ``Group`` for collecting entities which are parented elsewhere in the hierachy
-  - ``AbstractEntity`` if nothing else fits
+  - `SoftwareProcess` as the main starting point for base entities (corresponding to software processes),
+    and subclasses such as `VanillaJavaApp`
+  - `DynamicCluster` (multiple instances of the same entity in a location) and 
+    `DynamicFabric` (clusters in multiple location) for automatically creating many instances,
+    supplied with an `EntityFactory` (e.g. `BaseEntityFactory`) in the `factory` flag
+  - `AbstractGroup` for collecting entities which are parented elsewhere in the hierachy
+  - `AbstractEntity` if nothing else fits
   
 - traits (mixins, otherwise known as interfaces with statics) to define available config keys, sensors, and effectors;
     and conveniences e.g. ``StartableMethods.{start,stop}`` is useful for entities which implement ``Startable``
@@ -123,4 +123,5 @@ TODO more drivers such as jmx, etc are planned
 Testing
 -------
 
-* Run in a mock ``SimulatedLocation``, defining new metaclass methods to be able to start there and assert the correct behaviour when that is invoked
+* Unit tests can make use of `SimulatedLocation` and `TestEntity`, and can extend `BrooklynAppUnitTestSupport`.
+* Integration tests and use a `LocalhostMachineProvisioningLocation`, and can also extend `BrooklynAppUnitTestSupport`.
