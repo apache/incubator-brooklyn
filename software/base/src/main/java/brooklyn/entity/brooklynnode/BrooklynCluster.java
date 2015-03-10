@@ -26,16 +26,21 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 
 @ImplementedBy(BrooklynClusterImpl.class)
 public interface BrooklynCluster extends DynamicCluster {
-    public static final AttributeSensor<BrooklynNode> MASTER_NODE = Sensors.newSensor(
+    
+    ConfigKey<EntitySpec<?>> MEMBER_SPEC = ConfigKeys.newConfigKeyWithDefault(DynamicCluster.MEMBER_SPEC, 
+            EntitySpec.create(BrooklynNode.class));
+    
+    AttributeSensor<BrooklynNode> MASTER_NODE = Sensors.newSensor(
             BrooklynNode.class, "brooklyncluster.master", "Pointer to the child node with MASTER state in the cluster");
 
-    public interface SelectMasterEffector {
+    interface SelectMasterEffector {
         ConfigKey<String> NEW_MASTER_ID = ConfigKeys.newStringConfigKey(
                 "brooklyncluster.new_master_id", "The ID of the node to become master", null);
         Effector<Void> SELECT_MASTER = Effectors.effector(Void.class, "selectMaster")
@@ -44,11 +49,11 @@ public interface BrooklynCluster extends DynamicCluster {
                 .buildAbstract();
     }
 
-    public static final Effector<Void> SELECT_MASTER = SelectMasterEffector.SELECT_MASTER;
+    Effector<Void> SELECT_MASTER = SelectMasterEffector.SELECT_MASTER;
 
-    public interface UpgradeClusterEffector {
-        public static final ConfigKey<String> DOWNLOAD_URL = BrooklynNode.DOWNLOAD_URL.getConfigKey();
-        public static final ConfigKey<Map<String,Object>> EXTRA_CONFIG = BrooklynNodeUpgradeEffectorBody.EXTRA_CONFIG;
+    interface UpgradeClusterEffector {
+        ConfigKey<String> DOWNLOAD_URL = BrooklynNode.DOWNLOAD_URL.getConfigKey();
+        ConfigKey<Map<String,Object>> EXTRA_CONFIG = BrooklynNodeUpgradeEffectorBody.EXTRA_CONFIG;
 
         Effector<Void> UPGRADE_CLUSTER = Effectors.effector(Void.class, "upgradeCluster")
                 .description("Upgrade the cluster with new distribution version, "
@@ -60,6 +65,6 @@ public interface BrooklynCluster extends DynamicCluster {
                 .buildAbstract();
     }
 
-    public static final Effector<Void> UPGRADE_CLUSTER = UpgradeClusterEffector.UPGRADE_CLUSTER;
+    Effector<Void> UPGRADE_CLUSTER = UpgradeClusterEffector.UPGRADE_CLUSTER;
 
 }
