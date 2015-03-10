@@ -20,9 +20,11 @@ package brooklyn.util.task;
 
 import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -154,6 +156,26 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
         t = Tasks.testing(Repeater.create().until(Callables.returning(false)).limitIterationsTo(2).every(Duration.millis(1))).build();
         app.getExecutionContext().submit(t);
         Assert.assertEquals(t.get(Duration.TEN_SECONDS), false);
+    }
+
+    @Test
+    public void testRepeaterDescription() throws Exception{
+        final String description = "task description";
+        Repeater repeater = Repeater.create(description)
+            .repeat(Callables.returning(null))
+            .every(Duration.ONE_MILLISECOND)
+            .limitIterationsTo(1)
+            .until(new Callable<Boolean>() {
+                @Override
+                public Boolean call() {
+                    TaskInternal<?> current = (TaskInternal<?>)Tasks.current();
+                    assertEquals(current.getBlockingDetails(), description);
+                    return true;
+                }
+            });
+        Task<Boolean> t = Tasks.testing(repeater).build();
+        app.getExecutionContext().submit(t);
+        assertTrue(t.get(Duration.TEN_SECONDS));
     }
 
 }

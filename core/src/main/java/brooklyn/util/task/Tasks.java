@@ -445,7 +445,14 @@ public class Tasks {
 
         @Override
         public Boolean call() {
-            ReferenceWithError<Boolean> result = repeater.runKeepingError();
+            ReferenceWithError<Boolean> result;
+            Tasks.setBlockingDetails(repeater.getDescription());
+            try {
+               result = repeater.runKeepingError();
+            } finally {
+                Tasks.resetBlockingDetails();
+            }
+
             if (Boolean.TRUE.equals(result.getWithoutError()))
                 return true;
             if (result.hasError()) 
@@ -469,7 +476,7 @@ public class Tasks {
     public static TaskBuilder<?> requiring(Repeater repeater) {
         return Tasks.<Boolean>builder().body(new WaitForRepeaterCallable(repeater, true))
             .name("waiting for condition")
-            .description("Requiring " + getTimeoutString(repeater) + ": "+repeater);
+            .description("Requiring " + getTimeoutString(repeater) + ": " + repeater.getDescription());
     }
     
     private static String getTimeoutString(Repeater repeater) {
