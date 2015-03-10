@@ -92,6 +92,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.entity.rebind.persister.LocationWithObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
@@ -1677,7 +1678,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     new Object[] {
                             getUser(setup), 
                             address, 
-                            Entities.sanitize(sshConfig),
+                            Sanitizer.sanitize(sshConfig),
                             sshHostAndPort,
                             setup.getDescription(), 
                             node

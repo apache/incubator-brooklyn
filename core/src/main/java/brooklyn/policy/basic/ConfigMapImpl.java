@@ -35,6 +35,7 @@ import brooklyn.entity.basic.ConfigMapViewWithStringKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
@@ -178,7 +179,7 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
 
     @Override
     public String toString() {
-        return super.toString()+"[own="+Entities.sanitize(ownConfig)+"]";
+        return super.toString()+"[own="+Sanitizer.sanitize(ownConfig)+"]";
     }
     
     @Override

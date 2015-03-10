@@ -26,6 +26,7 @@ import java.util.Set;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.mementos.Memento;
 
 import com.google.common.base.Objects;
@@ -198,7 +199,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
     
     protected ToStringHelper newVerboseStringHelper() {
         return Objects.toStringHelper(this).add("id", getId()).add("type", getType())
-                .add("displayName", getDisplayName()).add("customFields", Entities.sanitize(getCustomFields()));
+                .add("displayName", getDisplayName()).add("customFields", Sanitizer.sanitize(getCustomFields()));
     }
     
     protected <T> List<T> fromPersistedList(List<T> l) {

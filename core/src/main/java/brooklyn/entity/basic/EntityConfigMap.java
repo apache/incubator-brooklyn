@@ -331,7 +331,7 @@ public class EntityConfigMap implements ConfigMap {
 
     @Override
     public String toString() {
-        return super.toString()+"[own="+Entities.sanitize(ownConfig)+"; inherited="+Entities.sanitize(inheritedConfig)+"]";
+        return super.toString()+"[own="+Sanitizer.sanitize(ownConfig)+"; inherited="+Sanitizer.sanitize(inheritedConfig)+"]";
     }
     
     public Map<String,Object> asMapWithStringKeys() {

@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.TreeNode;
 import brooklyn.util.config.ConfigBag;
@@ -100,7 +101,7 @@ public class BasicLocationMemento extends AbstractTreeNodeMemento implements Loc
     @Override
     protected ToStringHelper newVerboseStringHelper() {
         return super.newVerboseStringHelper()
-                .add("config", Entities.sanitize(getLocationConfig()))
+                .add("config", Sanitizer.sanitize(getLocationConfig()))
                 .add("locationConfigDescription", getLocationConfigDescription());
     }
 }

@@ -270,17 +270,20 @@ public class Entities {
                 (v instanceof CharSequence&& ((CharSequence)v).length() == 0);
     }
 
+    /**
+     * @deprecated since 0.7
+     */
+    @Deprecated
     public static Map<String,Object> sanitize(ConfigBag input) {
-        return sanitize(input.getAllConfig());
+        return Sanitizer.sanitize(input.getAllConfig());
     }
 
+    /**
+     * @deprecated since 0.7
+     */
+    @Deprecated
     public static <K> Map<K,Object> sanitize(Map<K,?> input) {
-        Map<K,Object> result = Maps.newLinkedHashMap();
-        for (Map.Entry<K,?> e: input.entrySet()) {
-            if (isSecret(""+e.getKey())) result.put(e.getKey(), "xxxxxxxx");
-            else result.put(e.getKey(), e.getValue());
-        }
-        return result;
+        return Sanitizer.sanitize(input);
     }
 
     public static void dumpInfo(Iterable<? extends Entity> entities) {
