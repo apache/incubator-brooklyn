@@ -18,12 +18,13 @@
  */
 package brooklyn.basic;
 
-import brooklyn.entity.rebind.RebindSupport;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
+import brooklyn.entity.trait.Configurable;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 
@@ -39,7 +40,7 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
     ConfigurationSupportInternal config();
 
     @Beta
-    public interface ConfigurationSupportInternal extends BrooklynObject.ConfigurationSupport {
+    public interface ConfigurationSupportInternal extends Configurable.ConfigurationSupport {
         
         /**
          * Returns a read-only view of all the config key/value pairs on this entity, backed by a string-based map, 

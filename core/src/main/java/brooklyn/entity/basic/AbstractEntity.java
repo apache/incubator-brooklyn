@@ -961,8 +961,12 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     
     // -------- CONFIGURATION --------------
 
-    @Override
-    public ConfigurationSupportInternal config() {
+    @Override 
+    @Beta
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return ConfigurationSupportInternal
+    // TODO revert to ConfigurationSupportInternal when groovy subclasses work without this (eg new groovy version)
+    public BasicConfigurationSupport config() {
         return config;
     }
 
