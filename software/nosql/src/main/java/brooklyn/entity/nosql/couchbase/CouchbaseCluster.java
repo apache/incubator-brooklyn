@@ -130,4 +130,5 @@ public interface CouchbaseCluster extends DynamicCluster {
     ConfigKey<List<Map<String,Object>>> REPLICATION = ConfigKeys.newConfigKey(new TypeToken<List<Map<String,Object>>>() {}, 
             "couchbase.cluster.replicationConfiguration", "List of replication rules to configure, each rule including target (id of another cluster) and mode (unidirectional or bidirectional)");
 
+    int getQuorumSize();
 }
