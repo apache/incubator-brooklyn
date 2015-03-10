@@ -153,7 +153,7 @@ public class EntityManagementSupport {
     }
     
     public void onRebind(ManagementTransitionInfo info) {
-        nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_REBINDING);
+        nonDeploymentManagementContext.setMode(NonDeploymentManagementContextMode.MANAGEMENT_REBINDING);
     }
     
     public void onManagementStarting(ManagementTransitionInfo info) {
@@ -177,7 +177,7 @@ public class EntityManagementSupport {
                 }
                 
                 this.managementContext = info.getManagementContext();
-                nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTING);
+                nonDeploymentManagementContext.setMode(NonDeploymentManagementContextMode.MANAGEMENT_STARTING);
                 
                 if (!isReadOnly()) {
                     nonDeploymentManagementContext.getSubscriptionManager().setDelegate((AbstractSubscriptionManager) managementContext.getSubscriptionManager());
@@ -230,7 +230,7 @@ public class EntityManagementSupport {
                     return;
                 }
                 
-                nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STARTED);
+                nonDeploymentManagementContext.setMode(NonDeploymentManagementContextMode.MANAGEMENT_STARTED);
                 
                 /*
                  * - set derived/inherited config values
@@ -291,7 +291,7 @@ public class EntityManagementSupport {
                 nonDeploymentManagementContext = new NonDeploymentManagementContext(entity, NonDeploymentManagementContextMode.MANAGEMENT_STOPPING);
             } else {
                 // already stopped? or not started?
-                nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STOPPING);
+                nonDeploymentManagementContext.setMode(NonDeploymentManagementContextMode.MANAGEMENT_STOPPING);
             }
         }
         // TODO custom stopping activities
@@ -315,6 +315,9 @@ public class EntityManagementSupport {
     
     public void onManagementStopped(ManagementTransitionInfo info) {
         synchronized (this) {
+            if (managementContext == null && nonDeploymentManagementContext.getMode() == NonDeploymentManagementContextMode.MANAGEMENT_STOPPED) {
+                return;
+            }
             if (managementContext != info.getManagementContext()) {
                 throw new IllegalStateException("Has different management context: "+managementContext+"; expected "+info.getManagementContext());
             }
@@ -331,7 +334,7 @@ public class EntityManagementSupport {
         
         synchronized (this) {
             managementContext = null;
-            nonDeploymentManagementContext.setMode(NonDeploymentManagementContext.NonDeploymentManagementContextMode.MANAGEMENT_STOPPED);
+            nonDeploymentManagementContext.setMode(NonDeploymentManagementContextMode.MANAGEMENT_STOPPED);
         }
     }
 
