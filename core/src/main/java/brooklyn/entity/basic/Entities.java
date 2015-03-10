@@ -271,15 +271,15 @@ public class Entities {
     }
 
     /**
-     * @deprecated since 0.7
+     * @deprecated since 0.7; instead use {@link Sanitizer#sanitize(ConfigBag)}
      */
     @Deprecated
     public static Map<String,Object> sanitize(ConfigBag input) {
-        return Sanitizer.sanitize(input.getAllConfig());
+        return Sanitizer.sanitize(input );
     }
 
     /**
-     * @deprecated since 0.7
+     * @deprecated since 0.7; instead use {@link Sanitizer#sanitize(Map)}
      */
     @Deprecated
     public static <K> Map<K,Object> sanitize(Map<K,?> input) {
