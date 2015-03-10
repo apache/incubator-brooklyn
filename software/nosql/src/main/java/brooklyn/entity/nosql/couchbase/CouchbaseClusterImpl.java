@@ -502,7 +502,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             String bucketType = bucketMap.containsKey("bucket-type") ? (String) bucketMap.get("bucket-type") : "couchbase";
             // default bucket must be on this port; other buckets can (must) specify their own (unique) port
             Integer bucketPort = bucketMap.containsKey("bucket-port") ? (Integer) bucketMap.get("bucket-port") : 11211;
-            Integer bucketRamSize = bucketMap.containsKey("bucket-ramsize") ? (Integer) bucketMap.get("bucket-ramsize") : 200;
+            Integer bucketRamSize = bucketMap.containsKey("bucket-ramsize") ? (Integer) bucketMap.get("bucket-ramsize") : 100;
             Integer bucketReplica = bucketMap.containsKey("bucket-replica") ? (Integer) bucketMap.get("bucket-replica") : 1;
 
             createBucket(primaryNode, bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);
