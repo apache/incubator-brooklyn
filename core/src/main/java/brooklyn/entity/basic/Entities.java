@@ -127,7 +127,10 @@ public class Entities {
     /**
      * Names that, if they appear anywhere in an attribute/config/field indicates that it
      * may be private, so should not be logged etc.
+     * 
+     * @deprecated since 0.7; instead use {@link Sanitizer#SECRET_NAMES}
      */
+    @Deprecated
     public static final List<String> SECRET_NAMES = ImmutableList.of(
             "password",
             "passwd",
@@ -250,12 +253,12 @@ public class Entities {
         return invokeEffector(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
     }
 
+    /**
+     * @deprecated since 0.7; instead use {@link Sanitizer#IS_SECRET_PREDICATE.apply(Object)}
+     */
+    @Deprecated
     public static boolean isSecret(String name) {
-        String lowerName = name.toLowerCase();
-        for (String secretName : SECRET_NAMES) {
-            if (lowerName.contains(secretName)) return true;
-        }
-        return false;
+        return Sanitizer.IS_SECRET_PREDICATE.apply(name);
     }
 
     public static boolean isTrivial(Object v) {
