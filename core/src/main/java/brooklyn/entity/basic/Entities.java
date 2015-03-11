@@ -127,7 +127,10 @@ public class Entities {
     /**
      * Names that, if they appear anywhere in an attribute/config/field indicates that it
      * may be private, so should not be logged etc.
+     * 
+     * @deprecated since 0.7; instead use {@link Sanitizer#SECRET_NAMES}
      */
+    @Deprecated
     public static final List<String> SECRET_NAMES = ImmutableList.of(
             "password",
             "passwd",
@@ -250,12 +253,12 @@ public class Entities {
         return invokeEffector(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
     }
 
+    /**
+     * @deprecated since 0.7; instead use {@link Sanitizer#IS_SECRET_PREDICATE.apply(Object)}
+     */
+    @Deprecated
     public static boolean isSecret(String name) {
-        String lowerName = name.toLowerCase();
-        for (String secretName : SECRET_NAMES) {
-            if (lowerName.contains(secretName)) return true;
-        }
-        return false;
+        return Sanitizer.IS_SECRET_PREDICATE.apply(name);
     }
 
     public static boolean isTrivial(Object v) {
@@ -270,17 +273,20 @@ public class Entities {
                 (v instanceof CharSequence&& ((CharSequence)v).length() == 0);
     }
 
+    /**
+     * @deprecated since 0.7; instead use {@link Sanitizer#sanitize(ConfigBag)}
+     */
+    @Deprecated
     public static Map<String,Object> sanitize(ConfigBag input) {
-        return sanitize(input.getAllConfig());
+        return Sanitizer.sanitize(input );
     }
 
+    /**
+     * @deprecated since 0.7; instead use {@link Sanitizer#sanitize(Map)}
+     */
+    @Deprecated
     public static <K> Map<K,Object> sanitize(Map<K,?> input) {
-        Map<K,Object> result = Maps.newLinkedHashMap();
-        for (Map.Entry<K,?> e: input.entrySet()) {
-            if (isSecret(""+e.getKey())) result.put(e.getKey(), "xxxxxxxx");
-            else result.put(e.getKey(), e.getValue());
-        }
-        return result;
+        return Sanitizer.sanitize(input);
     }
 
     public static void dumpInfo(Iterable<? extends Entity> entities) {

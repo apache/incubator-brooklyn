@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 
@@ -101,7 +102,7 @@ public class ComputeServiceRegistryImpl implements ComputeServiceRegistry, Jclou
         // FIXME Deprecated mechanism, should have a ConfigKey for overrides
         Map<String, Object> extra = Maps.filterKeys(conf.getAllConfig(), Predicates.containsPattern("^jclouds\\."));
         if (extra.size() > 0) {
-            LOG.warn("Jclouds using deprecated property overrides: "+Entities.sanitize(extra));
+            LOG.warn("Jclouds using deprecated property overrides: "+Sanitizer.sanitize(extra));
         }
         properties.putAll(extra);
 
@@ -121,10 +122,10 @@ public class ComputeServiceRegistryImpl implements ComputeServiceRegistry, Jclou
         if (allowReuse) {
             ComputeService result = cachedComputeServices.get(cacheKey);
             if (result!=null) {
-                LOG.trace("jclouds ComputeService cache hit for compute service, for "+Entities.sanitize(properties));
+                LOG.trace("jclouds ComputeService cache hit for compute service, for "+Sanitizer.sanitize(properties));
                 return result;
             }
-            LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+Entities.sanitize(properties));
+            LOG.debug("jclouds ComputeService cache miss for compute service, creating, for "+Sanitizer.sanitize(properties));
         }
 
         Iterable<Module> modules = getCommonModules();
@@ -144,12 +145,12 @@ public class ComputeServiceRegistryImpl implements ComputeServiceRegistry, Jclou
             synchronized (cachedComputeServices) {
                 ComputeService result = cachedComputeServices.get(cacheKey);
                 if (result != null) {
-                    LOG.debug("jclouds ComputeService cache recovery for compute service, for "+Entities.sanitize(cacheKey));
+                    LOG.debug("jclouds ComputeService cache recovery for compute service, for "+Sanitizer.sanitize(cacheKey));
                     //keep the old one, discard the new one
                     computeService.getContext().close();
                     return result;
                 }
-                LOG.debug("jclouds ComputeService created "+computeService+", adding to cache, for "+Entities.sanitize(properties));
+                LOG.debug("jclouds ComputeService created "+computeService+", adding to cache, for "+Sanitizer.sanitize(properties));
                 cachedComputeServices.put(cacheKey, computeService);
             }
         }
@@ -166,7 +167,7 @@ public class ComputeServiceRegistryImpl implements ComputeServiceRegistry, Jclou
      
     protected String getDeprecatedProperty(ConfigBag conf, String key) {
         if (conf.containsKey(key)) {
-            LOG.warn("Jclouds using deprecated brooklyn-jclouds property "+key+": "+Entities.sanitize(conf.getAllConfig()));
+            LOG.warn("Jclouds using deprecated brooklyn-jclouds property "+key+": "+Sanitizer.sanitize(conf.getAllConfig()));
             return (String) conf.getStringKey(key);
         } else {
             return null;

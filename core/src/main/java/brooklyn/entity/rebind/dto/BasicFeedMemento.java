@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.mementos.FeedMemento;
 
 import com.google.common.base.Objects.ToStringHelper;
@@ -87,6 +88,6 @@ public class BasicFeedMemento extends AbstractMemento implements FeedMemento, Se
 
     @Override
     protected ToStringHelper newVerboseStringHelper() {
-        return super.newVerboseStringHelper().add("config", Entities.sanitize(getConfig()));
+        return super.newVerboseStringHelper().add("config", Sanitizer.sanitize(getConfig()));
     }
 }

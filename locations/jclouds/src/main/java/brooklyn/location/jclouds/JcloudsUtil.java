@@ -66,6 +66,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.location.jclouds.config.AlwaysRetryOnRenew;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.config.ConfigBag;
@@ -301,7 +302,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     @Deprecated
     protected static String getDeprecatedProperty(ConfigBag conf, String key) {
         if (conf.containsKey(key)) {
-            LOG.warn("Jclouds using deprecated brooklyn-jclouds property "+key+": "+Entities.sanitize(conf.getAllConfig()));
+            LOG.warn("Jclouds using deprecated brooklyn-jclouds property "+key+": "+Sanitizer.sanitize(conf.getAllConfig()));
             return (String) conf.getStringKey(key);
         } else {
             return null;

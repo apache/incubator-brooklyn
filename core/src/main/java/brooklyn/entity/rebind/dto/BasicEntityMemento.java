@@ -35,6 +35,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -315,9 +316,9 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
     protected ToStringHelper newVerboseStringHelper() {
         return super.newVerboseStringHelper()
                 .add("members", getMembers())
-                .add("config", Entities.sanitize(getConfig()))
-                .add("configUnmatched", Entities.sanitize(getConfigUnmatched()))
-                .add("attributes", Entities.sanitize(getAttributes()))
+                .add("config", Sanitizer.sanitize(getConfig()))
+                .add("configUnmatched", Sanitizer.sanitize(getConfigUnmatched()))
+                .add("attributes", Sanitizer.sanitize(getAttributes()))
                 .add("policies", getPolicies())
                 .add("enrichers", getEnrichers())
                 .add("tags", getTags())
