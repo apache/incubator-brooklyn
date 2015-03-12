@@ -70,7 +70,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     public boolean isPackageDownloadUrlProvided() {
         AttributeSensorAndConfigKey[] downloadProperties = {DOWNLOAD_URL_RHEL_CENTOS, DOWNLOAD_URL_UBUNTU, DOWNLOAD_URL_DEBIAN};
         for(AttributeSensorAndConfigKey property : downloadProperties) {
-            if(!((ConfigurationSupportInternal)config()).getLocalRaw(property).isAbsent()) {
+            if(!((ConfigurationSupportInternal)config()).getRaw(property).isAbsent()) {
                 return true;
             }
         }
@@ -98,6 +98,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         return newPorts;
     }
 
+    @Override
     public void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
