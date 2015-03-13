@@ -155,6 +155,15 @@ public class EntityConfigTest {
 
         @SetFromFlag("myconfigflagname")
         public static final ConfigKey<String> MY_CONFIG_WITH_FLAGNAME = ConfigKeys.newStringConfigKey("myentity.myconfigwithflagname");
+        
+        @Override
+        public void init() {
+            super.init();
+            
+            // Just calling this to prove we can! When config() was changed to return BasicConfigurationSupport,
+            // it broke because BasicConfigurationSupport was private.
+            config().getLocalBag();
+        }
     }
     
     public static class MyChildEntity extends AbstractEntity {

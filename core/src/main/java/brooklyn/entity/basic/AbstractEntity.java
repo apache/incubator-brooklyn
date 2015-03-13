@@ -970,7 +970,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return config;
     }
 
-    private class BasicConfigurationSupport implements ConfigurationSupportInternal {
+    /**
+     * Direct use of this class is strongly discouraged. It will become private in a future release,
+     * once {@link #config()} is reverted to return {@link ConfigurationSupportInternal} instead of
+     * {@link BasicConfigurationSupport}.
+     */
+    @Beta
+    // TODO revert to private when config() is reverted to return ConfigurationSupportInternal
+    protected class BasicConfigurationSupport implements ConfigurationSupportInternal {
 
         @Override
         public <T> T get(ConfigKey<T> key) {
