@@ -19,8 +19,13 @@ We have the following tests groups:
 To run these from the command line, use something like the following:
 
 *     normal: `mvn clean install`
-*     integration: `mvn clean verify -PEssentials,Locations,Entities,Integration -Dmaven.test.failure.ignore=true`
-*     Live: `mvn clean verify -PEntities,Locations,Entities,Live -Dmaven.test.failure.ignore=true`
-*     Live-sanity: `mvn clean verify -PEntities,Locations,Entities,Live-sanity -Dmaven.test.failure.ignore=true`
+*     integration: `mvn clean verify -PEssentials,Locations,Entities,Integration -Dmaven.test.failure.ignore=true --fail-never`
+*     Live: `mvn clean verify -PEntities,Locations,Entities,Live -Dmaven.test.failure.ignore=true --fail-never`
+*     Live-sanity: `mvn clean verify -PEntities,Locations,Entities,Live-sanity -Dmaven.test.failure.ignore=true --fail-never`
+
+To run a single test, use something like the following:
+
+*     run a single test class: `mvn -Dtest=brooklyn.enricher.EnrichersTest -DfailIfNoTests=false test`
+*     run a single test method: `mvn -Dtest=brooklyn.enricher.EnrichersTest#testAdding -DfailIfNoTests=false test`
 
 <!-- TODO describe how to run each of these, as a group, and individually; and profiles -->

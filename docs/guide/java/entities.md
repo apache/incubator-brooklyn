@@ -16,13 +16,13 @@ What to Extend -- Implementation Classes
 
 - entity implementation class hierarchy
 
-  - ``SoftwareProcess`` as the main starting point for base entities (corresponding to software processes),
-    and subclasses such as ``VanillaJavaApp``
-  - ``DynamicCluster`` (multiple instances of the same entity in a location) and 
-    ``DynamicFabric`` (clusters in multiple location) for automatically creating many instances,
-    supplied with an ``EntityFactory`` (e.g. ``BaseEntityFactory``) in the ``factory`` flag
-  - abstract ``Group`` for collecting entities which are parented elsewhere in the hierachy
-  - ``AbstractEntity`` if nothing else fits
+  - `SoftwareProcess` as the main starting point for base entities (corresponding to software processes),
+    and subclasses such as `VanillaJavaApp`
+  - `DynamicCluster` (multiple instances of the same entity in a location) and 
+    `DynamicFabric` (clusters in multiple location) for automatically creating many instances,
+    supplied with an `EntityFactory` (e.g. `BaseEntityFactory`) in the `factory` flag
+  - `AbstractGroup` for collecting entities which are parented elsewhere in the hierachy
+  - `AbstractEntity` if nothing else fits
   
 - traits (mixins, otherwise known as interfaces with statics) to define available config keys, sensors, and effectors;
     and conveniences e.g. ``StartableMethods.{start,stop}`` is useful for entities which implement ``Startable``
@@ -31,8 +31,6 @@ What to Extend -- Implementation Classes
 
 A common lifecycle pattern is that the ``start`` effector (see more on effectors below) is invoked, 
 often delegating either to a driver (for software processes) or children entities (for clusters etc).
-
-See ``JBoss7Server`` and ``MySqlNode`` for exemplars.
 
 
 Configuration
@@ -123,4 +121,90 @@ TODO more drivers such as jmx, etc are planned
 Testing
 -------
 
-* Run in a mock ``SimulatedLocation``, defining new metaclass methods to be able to start there and assert the correct behaviour when that is invoked
+* Unit tests can make use of `SimulatedLocation` and `TestEntity`, and can extend `BrooklynAppUnitTestSupport`.
+* Integration tests and use a `LocalhostMachineProvisioningLocation`, and can also extend `BrooklynAppUnitTestSupport`.
+
+
+<a name="SoftwareProcess-lifecycle"></a>
+
+SoftwareProcess Lifecycle
+-------------------------
+
+`SoftwareProcess` is the common super-type of most integration components (when implementing in Java).
+
+See ``JBoss7Server`` and ``MySqlNode`` for exemplars.
+
+The methods called in a `SoftwareProcess` entity's lifecycle are described below. The most important steps are shown in bold (when writing a new entity, these are the methods most often implemented).
+
+* Initial creation (via `EntitySpec` or YAML):
+  * **no-arg constructor**
+  * **init**
+  * add locations
+  * apply initializers
+  * add enrichers
+  * add policies
+  * add children
+  * manages entity (so is discoverable by other entities)
+
+* Start:
+  * provisions new machine, if the location is a `MachineProvisioningLocation`
+  * creates new driver
+    * **calls `getDriverInterface`**
+    * Infers the concrete driver class from the machine-type, 
+      e.g. by default it adds "Ssh" before the word "Driver" in "JBoss7Driver".
+    * instantiates the driver, **calling the constructor** to pass in the entity itself and the machine location
+  * sets attributes from config (e.g. for ports being used)
+  * calls `entity.preStart()`
+  * calls `driver.start()`, which:
+    * runs pre-install command (see config key `pre.install.command`)
+    * uploads install resources (see config keys `files.install` and `templates.install`)
+    * **calls `driver.install()`**
+    * runs post-install command (see config key `post.install.command`)
+    * **calls `driver.customize()`**
+    * uploads runtime resources (see config keys `files.runtime` and `templates.runtime`)
+    * runs pre-launch command (see config key `pre.launch.command`)
+    * **calls `driver.launch()`**
+    * runs post-launch command (see config key `post.launch.command`)
+    * calls `driver.postLaunch()`
+  * calls `entity.postDriverStart()`, which:
+    * calls `enity.waitForEntityStart()` - **waits for `driver.isRunning()` to report true**
+  * **calls `entity.connectSensors()`**
+  * calls `entity.waitForServicUp()`
+  * calls `entity.postStart()`
+
+* Restart:
+  * If restarting machine...
+    * calls `entity.stop()`, with `stopMachine` set to true.
+    * calls start
+    * restarts children (if configured to do so)
+  * Else (i.e. not restarting machine)...
+    * calls `entity.preRestart()`
+    * calls `driver.restart()`
+      * **calls `driver.stop()`**
+      * **calls `driver.launch()`**
+      * calls `driver.postLaunch()`
+    * restarts children (if configured to do so)
+    * calls `entity.postDriverStart()`, which:
+      * calls `enity.waitForEntityStart()` - **polls `driver.isRunning()`**, waiting for true
+    * calls `entity.waitForServicUp()`
+    * calls `entity.postStart()`
+
+* Stop:
+  * calls `entity.preStopConfirmCustom()` - aborts if exception.
+  * calls `entity.preStop()`
+  * stops the process:
+    * stops children (if configured to do so)
+    * **calls `driver.stop()`**
+  * stops the machine (if configured to do so)
+  * calls `entity.postStop()`
+
+* Rebind (i.e. when Brooklyn is restarted):
+  * **no-arg constructor**
+  * reconstitutes entity (e.g. setting config and attributes)
+  * If entity was running...
+    * calls `entity.rebind()`; if previously started then:
+      * creates the driver (same steps as for start)
+      * calls `driver.rebind()`
+      * **calls `entity.connectSensors()`**
+  * attaches policies, enrichers and persisted feeds
+  * manages the entity (so is discoverable by other entities)

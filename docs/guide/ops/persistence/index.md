@@ -250,33 +250,76 @@ Writing Persistable Code
 The most common problem on rebind is that custom entity code has not been written in a way
 that can be persisted and/or rebound.
 
-The rule of thumb when implementing new entities, locations and policies is that all state
-must be persistable. All state must be stored as config or as attributes, and must be
-serializable (e.g. avoid the use of anonymous inner classes).
+The rule of thumb when implementing new entities, locations, policies and enrichers is that 
+all state must be persistable. All state must be stored as config or as attributes, and must be
+serializable. For making backwards compatibility simpler, the persisted state should be clean.
 
-Below is a guide for when implementing an entity in Java (or any other JVM language):
+Below are tips and best practices for when implementing an entity in Java (or any other 
+JVM language).
 
-* Don't store state in artibrary fields - the field will not be persisted (this is a design
+How to store entity state:
+
+* Config keys and values are persisted.
+* Store an entity's runtime state as attributes.
+* Don't store state in arbitrary fields - the field will not be persisted (this is a design
   decision, because Brooklyn cannot intercept the field being written to, so cannot know
   when to persist).
-* Store runtime state as attributes.
+* Don't just modify the retrieved attribute value (e.g. `getAttribute(MY_LIST).add("a")` is bad).
+  The value may not be persisted unless setAttribute() is called.
+* For special cases, it is possible to call `entity.requestPerist()` which will trigger
+  asynchronous persistence of the entity.
+* Overriding (and customizing) of `getRebindSupport()` is discouraged - this will change
+  in a future version.
+
+
+How to store policy/enricher/location state:
+
+* Store values as config keys where applicable.
+* Unfortunately these (currently) do not have attributes. Normally the state of a policy 
+  or enricher is transient - on rebind it starts afresh, for example with monitoring the 
+  performance or health metrics rather than relying on the persisted values.
+* For special cases, you can annotate a field with `@SetFromFlag` for it be persisted. 
+  When you call `requestPersist()` then values of these fields will be scheduled to be 
+  persisted. *Warning: the `@SetFromFlag` functionality may change in future versions.*
+
+Persistable state:
+
 * Ensure values can be serialized. This (currently) uses xstream, which means it does not
-  need to implement `Serializable`. However, if declaring your own classes that are to be
-  persisted as state of the entity then declare them as static (or top-level) classes 
-  rather than anonymous inner classes or non-static inner classes.
+  need to implement `Serializable`.
+* Always use static (or top-level) classes. Otherwise it will try to also persist the outer 
+  instance!
+* Any reference to an entity or location will be automatically swapped out for marker, and 
+  re-injected with the new entity/location instance on rebind. The same applies for policies,
+  enrichers, feeds, catalog items and `ManagementContext`.
+
+Behaviour on rebind:
+
 * By extending `SoftwareProcess`, entities get a lot of the rebind logic for free. For 
   example, the default `rebind()` method will call `connectSensors()`.
+  See [`SoftwareProcess` Lifecycle]({{site.path.guide}}/java/entities.html#SoftwareProcess-lifecycle)
+  for more details.
 * If necessary, implement rebind. The `entity.rebind()` is called automatically by the
   Brooklyn framework on rebind, after configuring the entity's config/attributes but before 
   the entity is managed.
   Note that `init()` will not be called on rebind.
-* For special cases, it is possible to call `entity.requestPerist()` which will trigger
-  asynchronous persistence of the entity.
+* Feeds will be persisted if and only if `entity.addFeed(...)` was called. Otherwise the
+  feed needs to be re-registered on rebind. *Warning: this behaviour may change in future version.*
+* All functions/predicates used with persisted feeds must themselves be persistable - 
+  use of anonymous inner classes is strongly discouraged.
+* Subscriptions (e.g. from calls to `subscribe(...)` for sensor events) are not persisted.
+  They must be re-registered on rebind.  *Warning: this behaviour may change in future version.*
 
-For locations, policies and enrichers they (currently) do not have attributes. However,
-config is persisted automatically. Normally the state of a policy or enricher is transient - 
-on rebind it starts afresh, for example with monitoring the performance or health metrics
-rather than relying on the persisted values.
+Below are tips to make backwards-compatibility easier for persisted state: 
+
+* Never use anonymous inner classes - even in static contexts. The auto-generated class names 
+  are brittle, making backwards compatibility harder.
+* Always use sensible field names (and use `transient` whenever you don't want it persisted).
+  The field names are part of the persisted state.
+* Consider using Value Objects for persisted values. This can give clearer separation of 
+  responsibilities in your code, and clearer control of what fields are being persisted.
+* Consider writing transformers to handle backwards-incompatible code changes.
+  Brooklyn supports applying transformations to the persisted state, which can be done as 
+  part of an upgrade process.
 
 
 Persisted State Backup

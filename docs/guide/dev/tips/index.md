@@ -23,6 +23,7 @@ title: Miscellaneous Tips and Tricks
 
 
 <a name="EntityDesign"></a>
+
 ## Entity Design Tips
 
 * Look at related entities and understand what they've done, in particular which
