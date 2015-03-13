@@ -75,10 +75,11 @@ public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
         super.setUp();
     }
 
+    // Image ids for Debian: https://wiki.debian.org/Cloud/AmazonEC2Image/Squeeze
     @Test(groups = {"Live"})
     public void test_Debian_6() throws Exception {
         // release codename "squeeze"
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-0740476e", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-5e12dc36", "loginUser", "admin", "hardwareId", SMALL_HARDWARE_ID));
     }
 
     @Test(groups = {"Live"})
@@ -107,9 +108,9 @@ public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
     }
 
     @Test(groups = {"Live"})
-    public void test_CentOS_5_6() throws Exception {
-        // Image: {id=us-east-1/ami-49e32320, providerId=ami-49e32320, name=RightImage_CentOS_5.6_x64_v5.7.14, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=5.6, description=rightscale-us-east/RightImage_CentOS_5.6_x64_v5.7.14.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_CentOS_5.6_x64_v5.7.14.manifest.xml, version=5.7.14, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-        runTest(ImmutableMap.of("imageId", "us-east-1/ami-49e32320", "hardwareId", SMALL_HARDWARE_ID));
+    public void test_CentOS_5() throws Exception {
+        // Image: {id=us-east-1/ami-e4bffe8d, providerId=ami-e4bffe8d, name=RightImage_CentOS_5.9_x64_v12.11.4_EBS, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=5.0, description=411009282317/RightImage_CentOS_5.9_x64_v12.11.4_EBS, is64Bit=true}, description=RightImage_CentOS_5.9_x64_v12.11.4_EBS, version=12.11.4_EBS, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}}
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-e4bffe8d", "hardwareId", SMALL_HARDWARE_ID));
     }
 
     @Test(groups = {"Live"})

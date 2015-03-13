@@ -62,7 +62,7 @@ public class RubyRepEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     @Test(enabled=false, groups = "Live")
-    public void test_CentOS_5_6() throws Exception { } // Diabling all except Ubuntu 12.0 temporarily
+    public void test_CentOS_5() throws Exception { } // Diabling all except Ubuntu 12.0 temporarily
 
     @Override
     @Test(enabled=false, groups = "Live")

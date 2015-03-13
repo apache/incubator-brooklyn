@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.webapp.WebAppServiceMethods;
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
@@ -66,6 +67,16 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         Entities.getRequiredUrlConfig(this, RIAK_APP_CONFIG_TEMPLATE_URL);
     }
 
+    public boolean isPackageDownloadUrlProvided() {
+        AttributeSensorAndConfigKey[] downloadProperties = {DOWNLOAD_URL_RHEL_CENTOS, DOWNLOAD_URL_UBUNTU, DOWNLOAD_URL_DEBIAN};
+        for(AttributeSensorAndConfigKey property : downloadProperties) {
+            if(!((ConfigurationSupportInternal)config()).getRaw(property).isAbsent()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
         ConfigBag result = ConfigBag.newInstance(super.obtainProvisioningFlags(location));
@@ -87,6 +98,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         return newPorts;
     }
 
+    @Override
     public void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();

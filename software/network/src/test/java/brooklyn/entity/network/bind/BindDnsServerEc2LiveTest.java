@@ -57,7 +57,7 @@ public class BindDnsServerEc2LiveTest extends AbstractEc2LiveTest {
     }
 
     @Override
-    public void test_CentOS_5_6() throws Exception {
+    public void test_CentOS_5() throws Exception {
         LOG.debug("{} skipped CentOS 5.6 test", this);
     }
 }
