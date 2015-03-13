@@ -34,7 +34,7 @@ To open this project in an IDE, you will need maven support enabled
 (e.g. with the relevant plugin).  You should then be able to develop
 it and run it as usual.  For more information on IDE support, visit:
 
-    http://brooklyncentral.github.io/dev/build/ide.html
+    https://brooklyn.incubator.apache.org/v/latest/dev/env/ide/
 
 
 ### Customizing the Assembly
@@ -53,9 +53,9 @@ To easily find the bits you should customize, do a:
     grep -ri sample src/ *.*
 
 
-### More About Brooklyn
+### More About Apache Brooklyn
 
-Brooklyn is a code library and framework for managing applications in a 
+Apache Brooklyn is a code library and framework for managing applications in a 
 cloud-first dev-ops-y way.  It has been used to create this sample project 
 which shows how to define an application and entities for Brooklyn.
 
@@ -65,9 +65,9 @@ deployment depending on what the application needs.
 
 For more information consider:
 
-* Visiting the open-source Brooklyn home page at  http://brooklyncentral.github.com
-* Forking the Brooklyn project at  http://github.com/brooklyncentral/brooklyn
-* Emailing  brooklyn-users@googlegroups.com 
+* Visiting the Apache Brooklyn home page at  http://brooklyn.io/
+* Finding us on IRC #brooklyncentral or email (click "Community" at the site above) 
+* Forking the project at  http://github.com/apache/incubator-brooklyn/
 
 A sample Brooklyn project should specify its license.
 
