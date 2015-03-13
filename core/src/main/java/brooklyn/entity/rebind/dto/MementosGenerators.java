@@ -28,6 +28,7 @@ import java.util.Set;
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynTypes;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogItemDo;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
@@ -41,7 +42,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.location.Location;
-import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
@@ -364,6 +364,9 @@ public class MementosGenerators {
     }
     
     public static CatalogItemMemento newCatalogItemMemento(CatalogItem<?, ?> catalogItem) {
+        if (catalogItem instanceof CatalogItemDo<?,?>) {
+            catalogItem = ((CatalogItemDo<?,?>)catalogItem).getDto();
+        }
         BasicCatalogItemMemento.Builder builder = BasicCatalogItemMemento.builder();
         populateBrooklynObjectMementoBuilder(catalogItem, builder);
         builder.catalogItemJavaType(catalogItem.getCatalogItemJavaType())
