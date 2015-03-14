@@ -201,37 +201,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .build();
     }
 
-    private static String addSbinPathCommand() {
-        return "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
-    }
-
-    /**
-     * Returns a command which
-     * executes <code>statement</code> only if <code>command</code> is NOT found in <code>$PATH</code>
-     *
-     * @param command
-     * @param statement
-     * @return command
-     */
-    private static String ifNotExecutable(String command, String statement) {
-        return String.format("{ { test ! -z `which %s`; } || { %s; } }", command, statement);
-    }
-
-    private static String ifExecutableElse(String command, String ifTrue, String otherwise) {
-        return com.google.common.base.Joiner.on('\n').join(
-                ifExecutableElse(command, ImmutableList.<String>of(ifTrue), ImmutableList.<String>of(otherwise)));
-    }
-
-    private static ImmutableList<String> ifExecutableElse(String command, List<String> ifTrue, List<String> otherwise) {
-        return ImmutableList.<String>builder()
-                .add(String.format("if test -z `which %s`; then", command))
-                .addAll(ifTrue)
-                .add("else")
-                .addAll(otherwise)
-                .add("fi")
-                .build();
-    }
-
     protected List<String> installMac() {
         String saveAs = resolver.getFilename();
         String url = entity.getAttribute(RiakNode.DOWNLOAD_URL_MAC).toString();

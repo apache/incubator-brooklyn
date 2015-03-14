@@ -138,6 +138,10 @@ public class BashCommands {
 //        return "{ sudo -n -S -i -u "+user+" -- "+BashStringEscapes.wrapBash(command)+" ; }";
 //    }
 
+    public static String addSbinPathCommand() {
+        return "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
+    }
+
     /** executes a command, then as user tees the output to the given file. 
      * useful e.g. for appending to a file which is only writable by root or a priveleged user. */
     public static String executeCommandThenAsUserTeeOutputToFile(String commandWhoseOutputToWrite, String user, String file) {
@@ -200,14 +204,41 @@ public class BashCommands {
     }
 
     /**
+     * Returns a command which
+     * executes <code>statement</code> only if <code>command</code> is NOT found in <code>$PATH</code>
+     *
+     * @param command
+     * @param statement
+     * @return command
+     */
+    public static String ifNotExecutable(String command, String statement) {
+        return String.format("{ { test ! -z `which %s`; } || { %s; } }", command, statement);
+    }
+
+    /**
      * Returns a command that runs only if the specified executable exists on the path (using `which`).
      * if the command runs and fails that exit is preserved (but if the executable is not on the path exit code is zero).
-     * @see #ifFileExistsElse0(String, String) for implementation discussion, using <code>{ { test -z `which executable` && true ; } || command ; } 
+     * @see #ifFileExistsElse0(String, String) for implementation discussion, using <code>{ { test -z `which executable` && true ; } || command ; }
      */
     public static String onlyIfExecutableMissing(String executable, String command) {
         return alternativesGroup(format("which %s", executable), command);
     }
-    
+
+    public static String ifExecutableElse(String command, String ifTrue, String otherwise) {
+        return com.google.common.base.Joiner.on('\n').join(
+                ifExecutableElse(command, ImmutableList.<String>of(ifTrue), ImmutableList.<String>of(otherwise)));
+    }
+
+    public static ImmutableList<String> ifExecutableElse(String command, List<String> ifTrue, List<String> otherwise) {
+        return ImmutableList.<String>builder()
+                .add(String.format("if test -z `which %s`; then", command))
+                .addAll(ifTrue)
+                .add("else")
+                .addAll(otherwise)
+                .add("fi")
+                .build();
+    }
+
     /**
      * Returns a sequence of chained commands that runs until one of them fails (i.e. joined by '&&')
      * This currently runs as a subshell (so exits are swallowed) but behaviour may be changed imminently. 
