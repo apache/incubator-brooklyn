@@ -45,7 +45,8 @@ public interface RiakNode extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
-            "2.0.2");
+            "Version to install. Example 2.0.2, 2.0.5",
+            "2.0.5");
 
     // vm.args and app.config are used for pre-version 2.0.0. Later versions use the (simplified) riak.conf
     // see https://github.com/joedevivo/ricon/blob/master/cuttlefish.md
