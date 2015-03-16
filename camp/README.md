@@ -13,7 +13,7 @@ The projects in this directory are designed so they could be used to build
 other CAMP servers not based on Brooklyn, if desired.
 
 These projects are part of the Apache Software Foundation Brooklyn project
-(brooklyn.io) and released under the Apache License 2.0.
+(https://brooklyn.incubator.apache.org) and released under the Apache License 2.0.
 
 ----
 Licensed to the Apache Software Foundation (ASF) under one 

@@ -18,7 +18,7 @@
 #
 name: test-app-with-policy
 description: TestEntity with Policy at application-level using Brooklyn
-origin: http://brooklyn.io
+origin: https://github.com/apache/incubator-brooklyn
 services:
 - serviceType: brooklyn.entity.basic.BasicEntity
   name: testentity

@@ -18,7 +18,7 @@
 #
 name: test-app-with-enricher
 description: TestEntity with Enricher at application-level using Brooklyn
-origin: http://brooklyn.io
+origin: https://github.com/apache/incubator-brooklyn
 services:
 - serviceType: brooklyn.entity.basic.BasicEntity
   id: be1

@@ -18,7 +18,7 @@
 #
 name: sample-single-jboss
 description: Single JBoss using Brooklyn
-origin: http://brooklyn.io
+origin: https://github.com/apache/incubator-brooklyn
 location: localhost
 services:
 - serviceType: brooklyn.entity.webapp.jboss.JBoss7Server

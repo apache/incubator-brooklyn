@@ -65,7 +65,7 @@ deployment depending on what the application needs.
 
 For more information consider:
 
-* Visiting the Apache Brooklyn home page at  http://brooklyn.io/
+* Visiting the Apache Brooklyn home page at https://brooklyn.incubator.apache.org
 * Finding us on IRC #brooklyncentral or email (click "Community" at the site above) 
 * Forking the project at  http://github.com/apache/incubator-brooklyn/
 
