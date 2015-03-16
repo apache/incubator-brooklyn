@@ -378,6 +378,34 @@
   </build>
 
   <profiles>
+  
+    <profile>
+      <id>Tests</id>
+      <activation>
+        <file> <exists>${basedir}/src/test</exists> </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-jar-plugin</artifactId>
+            <inherited>true</inherited>
+            <executions>
+              <execution>
+                <id>test-jar-creation</id>
+                <goals>
+                  <goal>test-jar</goal>
+                </goals>
+                <configuration>
+                  <forceCreation>true</forceCreation>
+                  <archive combine.self="override" />
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  
     <!-- run Integration tests with -PIntegration -->
     <profile>
       <id>Integration</id>
