@@ -583,7 +583,7 @@ public abstract class MachineLifecycleEffectorTasks {
         }
 
         Task<StopMachineDetails<Integer>> stoppingMachine = null;
-        if (canStop(stopMachineMode, isEntityStopped)) {
+        if (canStop(stopMachineMode, sshMachine.isAbsent())) {
             // Release this machine (even if error trying to stop process - we rethrow that after)
             stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<StopMachineDetails<Integer>>() {
                 public StopMachineDetails<Integer> call() {
@@ -639,9 +639,9 @@ public abstract class MachineLifecycleEffectorTasks {
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+entity());
     }
 
-    protected static boolean canStop(StopMode stopMode, boolean isEntityStopped) {
+    protected static boolean canStop(StopMode stopMode, boolean isTargetStopped) {
         return stopMode == StopMode.ALWAYS ||
-                stopMode == StopMode.IF_NOT_STOPPED && !isEntityStopped;
+                stopMode == StopMode.IF_NOT_STOPPED && !isTargetStopped;
     }
 
     private void checkCompatibleMachineModes(Boolean isStopMachine, boolean hasStopMachineMode, StopMode stopMachineMode) {

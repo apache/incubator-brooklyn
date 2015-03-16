@@ -28,7 +28,6 @@ import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.MachineLifecycleEffectorTasksTest;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
@@ -328,7 +327,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         } else {
             assertTrue(d.events.isEmpty());
         }
-        if (MachineLifecycleEffectorTasksTest.canStop(stopMachineMode, isEntityStopped)) {
+        if (MachineLifecycleEffectorTasksTest.canStop(stopMachineMode, machine == null)) {
             assertTrue(entity.getLocations().isEmpty());
             assertTrue(l.getAvailable().contains(machine));
         } else {
