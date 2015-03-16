@@ -16,35 +16,36 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Humongous app
+name: Sharded MongoDB With Web App
 description: Auto-scaling web app backed by MongoDB
-origin: http://brooklyn.io
-location: localhost
+location: my-docker-cloud
 services:
-- serviceType: brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
-  id: shardeddeployment
-  name: Mongo Deploy
+- type: brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
+  id: mongo
+  name: Mongo DB Backend
   brooklyn.config:
     initialRouterClusterSize: 1
+    initialShardClusterSize: 5
+    shardReplicaSetSize: 3
     coLocatedRouterGroup: $brooklyn:component("webappcluster").attributeWhenReady("controlleddynamicwebappcluster.cluster")
 
-- serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   id: webappcluster
   brooklyn.config:
     memberSpec:
       $brooklyn:entitySpec:
         type: brooklyn.entity.nosql.mongodb.sharding.CoLocatedMongoDBRouter
         brooklyn.enrichers:
-          - enricherType: brooklyn.enricher.basic.Propagator
+          - type: brooklyn.enricher.basic.Propagator
             brooklyn.config:
               enricher.propagating.sensorMapping:
                 $brooklyn:sensor("brooklyn.entity.webapp.jboss.JBoss7Server", "http.port"): $brooklyn:sensor("brooklyn.entity.webapp.jboss.JBoss7Server", "http.port") 
-              enricher.producer: $brooklyn:component("child", "thewebserver")
+              enricher.producer: $brooklyn:component("child", "appserver")
         brooklyn.config:
-          shardedDeployment: $brooklyn:component("shardeddeployment")
+          shardedDeployment: $brooklyn:component("mongo")
           siblingSpecs:
           - $brooklyn:entitySpec:
-              id: thewebserver
+              id: appserver
               type: brooklyn.entity.webapp.jboss.JBoss7Server
               brooklyn.config:
                 war: "classpath://brooklyn-example-hello-world-sql-webapp.war"

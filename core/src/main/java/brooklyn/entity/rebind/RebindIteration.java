@@ -21,6 +21,7 @@ package brooklyn.entity.rebind;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -1042,7 +1043,17 @@ public abstract class RebindIteration {
                     throw Exceptions.propagate(e);
                 }
             }
-            throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found");
+            StringBuilder args = new StringBuilder();
+            if (possibleArgs.length<1) args.append("no possible argument sets supplied; error");
+            else if (possibleArgs.length<2) args.append("args are "+Arrays.asList(possibleArgs[0]));
+            else {
+                args.append("args are "+Arrays.asList(possibleArgs[0]));
+                for (int i=1; i<possibleArgs.length; i++) {
+                    args.append(" or ");
+                    args.append(Arrays.asList(possibleArgs[i]));
+                }
+            }
+            throw new IllegalStateException("Cannot instantiate instance of type "+clazz+"; expected constructor signature not found ("+args+")");
         }
     }
 

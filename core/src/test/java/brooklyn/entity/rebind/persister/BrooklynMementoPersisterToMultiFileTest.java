@@ -21,6 +21,7 @@ package brooklyn.entity.rebind.persister;
 import java.io.File;
 
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
 
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindManagerImpl;
@@ -58,7 +59,10 @@ public class BrooklynMementoPersisterToMultiFileTest extends BrooklynMementoPers
         mementoDir = Os.deleteRecursively(mementoDir).asNullOrThrowing();
     }
 
-    // to have this picked up in the IDE
-//    @Test public void noop() {}
-
+    @Test(groups="Integration")
+    public void testLoadAndCheckpointRawMemento() throws Exception {
+        // test here is deliberately no-op; 
+        // checkpoint routines not supported for this (deprecated) persister
+    }
+    
 }
