@@ -19,15 +19,9 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.StringReader;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +34,13 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.config.BrooklynProperties;
@@ -82,6 +83,7 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
+import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoRawData;
@@ -100,13 +102,8 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
-
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 /**
  * Example usage is:
@@ -530,7 +527,7 @@ public class BrooklynLauncher {
     /**
      * @param memento The state to copy
      * @param destinationDir Directory for state to be copied to
-     * @param destinationLocation Optional location if target for copied state is a blob store.
+     * @param destinationLocationSpec Optional location if target for copied state is a blob store.
      * @deprecated since 0.7.0 use {@link #copyPersistedState} instead
      */
     // Make private after deprecation
@@ -865,7 +862,7 @@ public class BrooklynLauncher {
             apps.add(app);
         }
         for (String blueprint : yamlAppsToManage) {
-            Application app = getAppFromYaml(blueprint);
+            Application app = EntityManagementUtils.createUnstarted(managementContext, blueprint);
             // Note: BrooklynAssemblyTemplateInstantiator automatically puts applications under management.
             apps.add(app);
         }
@@ -906,23 +903,6 @@ public class BrooklynLauncher {
                 .start(ImmutableList.of(localhost));
     }
 
-    protected Application getAppFromYaml(String input) {
-        AssemblyTemplate at = campPlatform.pdp().registerDeploymentPlan(new StringReader(input));
-        BrooklynAssemblyTemplateInstantiator instantiator;
-        try {
-            AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
-            if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
-                instantiator = BrooklynAssemblyTemplateInstantiator.class.cast(ati);
-            } else {
-                throw new IllegalStateException("Cannot create application with instantiator: " + ati);
-            }
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-        Application app = instantiator.create(at, campPlatform);
-        return app;
-    }
-    
     protected void startApps() {
         if ((stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.ALL) || 
             (stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.ALL_IF_NOT_PERSISTED && persistMode==PersistMode.DISABLED)) {

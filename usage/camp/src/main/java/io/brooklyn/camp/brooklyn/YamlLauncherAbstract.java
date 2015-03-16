@@ -18,27 +18,24 @@
  */
 package io.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-
 import java.io.Reader;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
+
 import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
+import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
-
-import com.google.common.annotations.Beta;
 
 /** convenience for launching YAML files directly */
 @Beta
@@ -94,10 +91,9 @@ public abstract class YamlLauncherAbstract {
 
     public Application launchAppYaml(Reader input, boolean waitForTasksToComplete) {
         try {
-            AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
+            Application app = createFromReader(input);
+            EntityManagementUtils.start(app);
 
-            Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
-            Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
             log.info("Launching "+app);
 
             if (getShutdownAppsOnExit()) BrooklynShutdownHooks.invokeStopOnShutdown(app);
@@ -112,7 +108,7 @@ public abstract class YamlLauncherAbstract {
 
             log.info("Application started from YAML: "+app);
             Entities.dumpInfo(app);
-            return (Application)app;
+            return app;
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
@@ -129,5 +125,13 @@ public abstract class YamlLauncherAbstract {
             log.warn("Unable to stop servers (ignoring): "+e);
         }
     }
+
+   private Application createFromReader(Reader reader) {
+      try {
+         return EntityManagementUtils.createUnstarted(brooklynMgmt, reader);
+         } finally {
+            Streams.closeQuietly(reader);
+         }
+   }
 
 }

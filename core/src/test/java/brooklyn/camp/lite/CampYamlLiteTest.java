@@ -21,12 +21,6 @@ package brooklyn.camp.lite;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import brooklyn.test.TestResourceUnavailableException;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.pdp.PdpYamlTest;
-import io.brooklyn.camp.test.mock.web.MockWebPlatform;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -40,6 +34,10 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
@@ -55,8 +53,10 @@ import brooklyn.entity.effector.AddChildrenEffector;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.Task;
+import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.osgi.OsgiStandaloneTest;
+import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -64,10 +64,8 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.stream.Streams;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
+import io.brooklyn.camp.spi.pdp.PdpYamlTest;
+import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
 /** Tests of lightweight CAMP integration. Since the "real" integration is in brooklyn-camp project,
  * but some aspects of CAMP we want to be able to test here. */
@@ -96,15 +94,7 @@ public class CampYamlLiteTest {
     @Test
     public void testYamlServiceMatchAndBrooklynInstantiate() throws Exception {
         Reader input = new InputStreamReader(getClass().getResourceAsStream("test-app-service-blueprint.yaml"));
-        AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
-        log.info("AT is:\n"+at.toString());
-        Assert.assertEquals(at.getName(), "sample");
-        Assert.assertEquals(at.getPlatformComponentTemplates().links().size(), 1);
-        
-        // now use brooklyn to instantiate - note it won't be faithful, but it will set some config keys
-        Assembly assembly = at.getInstantiator().newInstance().instantiate(at, platform);
-        
-        TestApplication app = ((TestAppAssembly)assembly).getBrooklynApp();
+        TestApplication app = (TestApplication) EntityManagementUtils.createUnstarted(mgmt, input);
         Assert.assertEquals( app.getConfig(TestEntity.CONF_NAME), "sample" );
         Map<String, String> map = app.getConfig(TestEntity.CONF_MAP_THING);
         Assert.assertEquals( map.get("desc"), "Tomcat sample JSP and servlet application." );
