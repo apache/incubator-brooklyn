@@ -50,6 +50,9 @@ import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.api.ServerApi;
 import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 
 /**
  * @author Adam Lowe
@@ -69,32 +72,32 @@ public class BrooklynApi {
     }
 
     public BrooklynApi(URL endpoint, String username, String password) {
-        this(endpoint.toString(), username, password);
+        this(endpoint.toString(), new UsernamePasswordCredentials(username, password));
     }
 
-    public BrooklynApi(final String endpoint, final String username, final String password) {
+    public BrooklynApi(String endpoint, String username, String password) {
+        this(endpoint, new UsernamePasswordCredentials(username, password));
+    }
+
+    public BrooklynApi(URL endpoint, Credentials credentials) {
+        this(endpoint.toString(), credentials);
+    }
+
+    public BrooklynApi(String endpoint, Credentials credentials) {
         URL target = null;
         try {
             target = new URL(checkNotNull(endpoint, "endpoint"));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
-        this.target = endpoint;
 
-        // Resteasy is a big pain.
-        DefaultHttpClient client = new DefaultHttpClient();
-        if (username != null && password != null) {
-            clientExecutor = new ApacheHttpClient4Executor(client) {
-                @Override
-                public ClientResponse execute(ClientRequest request) throws Exception {
-                    String token = username + ":" + password;
-                    String base64Token = Base64.encodeBase64String(token.getBytes(Charsets.UTF_8));
-                    request.header("Authorization", "Basic " + base64Token);
-                    return super.execute(request);
-                }
-            };
+        this.target = endpoint;
+        if (credentials != null) {
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY, credentials);
+            this.clientExecutor = new ApacheHttpClient4Executor(httpClient);
         } else {
-            clientExecutor = new ApacheHttpClient4Executor(client);
+            this.clientExecutor = ClientRequest.getDefaultExecutor();
         }
     }
 

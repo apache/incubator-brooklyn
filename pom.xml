@@ -1013,6 +1013,8 @@
                                 Excluding sandbox because not part of distribution: not in tgz, and not uploaded to maven-central.
                             -->
                             <exclude>sandbox/**</exclude>
+                            <exclude>**/nbactions.xml</exclude>
+                            <exclude>**/nb-configuration.xml</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
