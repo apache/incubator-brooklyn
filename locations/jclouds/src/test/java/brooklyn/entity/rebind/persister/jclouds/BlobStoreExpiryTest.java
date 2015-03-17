@@ -91,7 +91,7 @@ public class BlobStoreExpiryTest {
     private String provider;
     private String endpoint;
 
-    public synchronized BlobStoreContext getBlobStoreContext() {
+    public synchronized BlobStoreContext getSwiftBlobStoreContext() {
         if (context==null) {
             if (location==null) {
                 Preconditions.checkNotNull(locationSpec, "locationSpec required for remote object store when location is null");
@@ -122,12 +122,12 @@ public class BlobStoreExpiryTest {
         context = null;
     }
 
-    public void testRenewAuthSucceeds() throws Exception {
+    public void testRenewAuthSucceedsInSwiftObjectStore() throws Exception {
         doTestRenewAuth();
     }
     
     protected void doTestRenewAuth() throws Exception {
-        getBlobStoreContext();
+        getSwiftBlobStoreContext();
         
         injectShortLivedTokenForSwiftAuth();
         
