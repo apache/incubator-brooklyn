@@ -26,7 +26,7 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 
-public class HighAvailabilityManagerMock implements HighAvailabilityManager {
+public class HighAvailabilityManagerStub implements HighAvailabilityManager {
 
     private ManagementNodeState state = ManagementNodeState.MASTER;
 

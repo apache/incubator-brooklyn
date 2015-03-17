@@ -44,7 +44,7 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.guava.Maybe;
 
 public class ManagementContextMock implements ManagementContext {
-    private HighAvailabilityManagerMock haMock = new HighAvailabilityManagerMock();
+    private HighAvailabilityManagerStub haMock = new HighAvailabilityManagerStub();
 
     public void setState(ManagementNodeState state) {
         haMock.setState(state);

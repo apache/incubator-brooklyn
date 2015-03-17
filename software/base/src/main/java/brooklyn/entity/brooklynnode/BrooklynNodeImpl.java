@@ -176,8 +176,9 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void preRestart() {
         super.preRestart();
+        //restart will kill the process, try to shut down before that
         shutdownGracefully();
-        DynamicTasks.queue("post-shutdown", new Runnable() { public void run() {
+        DynamicTasks.queue("pre-restart", new Runnable() { public void run() {
             //set by shutdown - clear it so the entity starts cleanly. Does the indicator bring any value at all?
             ServiceNotUpLogic.clearNotUpIndicator(BrooklynNodeImpl.this, SHUTDOWN.getName());
         }});
@@ -220,7 +221,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void postStop() {
         super.postStop();
-        if (isStopMachine()) {
+        if (isMachineStopped()) {
             // Don't unmanage in entity's task context as it will self-cancel the task. Wait for the stop effector to complete.
             // If this is not enough (still getting Caused by: java.util.concurrent.CancellationException: null) then
             // we could search for the top most task with entity context == this and wait on it. Even stronger would be
@@ -230,7 +231,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         }
     }
 
-    private boolean isStopMachine() {
+    private boolean isMachineStopped() {
         // Don't rely on effector parameters, check if there is still a machine running.
         // If the entity was previously stopped with STOP_MACHINE_MODE=StopMode.NEVER
         // and a second time with STOP_MACHINE_MODE=StopMode.IF_NOT_STOPPED, then the

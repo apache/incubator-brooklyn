@@ -64,12 +64,7 @@ public class BrooklynJavascriptGuiLauncherTest {
     protected void checkUrlContains(final String path, final String text) {
         //Server may return 403 until it loads completely, wait a bit
         //until it stabilizes.
-        Asserts.succeedsEventually(new Runnable() {
-            @Override
-            public void run() {
-                HttpTestUtils.assertContentContainsText(rootUrl()+path, text);
-            }
-        });
+        HttpTestUtils.assertContentEventuallyContainsText(rootUrl()+path, text);
     }
 
     protected void checkEventuallyHealthy() {

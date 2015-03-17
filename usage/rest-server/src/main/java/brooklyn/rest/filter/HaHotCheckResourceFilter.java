@@ -89,6 +89,7 @@ public class HaHotCheckResourceFilter implements ResourceFilterFactory {
         // and starting rebind so add a time offset just to be sure.
         private boolean recentlySwitchedState() {
             long lastStateChange = mgmt.getHighAvailabilityManager().getLastStateChange();
+            if (lastStateChange == -1) return false;
             return System.currentTimeMillis() - lastStateChange < STATE_CHANGE_SETTLE_OFFSET;
         }
 

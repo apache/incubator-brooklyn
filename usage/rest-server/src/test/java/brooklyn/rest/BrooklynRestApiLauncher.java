@@ -152,7 +152,7 @@ public class BrooklynRestApiLauncher {
         this.deployJsgui = false;
         return this;
     }
-    
+
     public BrooklynRestApiLauncher disableHighAvailability(boolean value) {
         this.disableHighAvailability = value;
         return this;
