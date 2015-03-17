@@ -26,7 +26,6 @@ import java.util.Map;
 
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.ssh.SshTasks;
-import com.google.api.client.util.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +42,7 @@ import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -251,6 +251,25 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             commands.add("ulimit -n 4096");
         } else if (osDetails.isLinux() && isVersion1()) {
             commands.add(sudo("chown -R riak:riak " + getRiakEtcDir()));
+        }
+
+        if(osDetails.isLinux()) {
+            ImmutableMap<String, String> sysctl = ImmutableMap.<String, String>builder()
+                    .put("vm.swappiness", "0")
+                    .put("net.core.somaxconn", "40000")
+                    .put("net.ipv4.tcp_max_syn_backlog", "40000")
+                    .put("net.ipv4.tcp_sack",  "1")
+                    .put("net.ipv4.tcp_window_scaling",  "15")
+                    .put("net.ipv4.tcp_fin_timeout",     "1")
+                    .put("net.ipv4.tcp_keepalive_intvl", "30")
+                    .put("net.ipv4.tcp_tw_reuse",        "1")
+                    .put("net.ipv4.tcp_moderate_rcvbuf", "1")
+                    .build();
+
+            // TODO platform_*_dir
+            // TODO riak config log
+
+            commands.add( sudo("sysctl " + Joiner.on(' ').withKeyValueSeparator("=").join(sysctl)));
         }
 
         ScriptHelper customizeScript = newScript(CUSTOMIZING)
