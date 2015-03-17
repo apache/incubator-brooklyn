@@ -29,6 +29,9 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.collections.Jsonya;
+
+import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
 
 public class Yamls {
@@ -71,6 +74,7 @@ public class Yamls {
      * 
      * @see #getAt(Object, List)
      */
+    @Beta
     public static Object getAt(String yaml, List<String> path) {
         Iterable<Object> result = new org.yaml.snakeyaml.Yaml().loadAll(yaml);
         Object current = result.iterator().next();
@@ -85,8 +89,11 @@ public class Yamls {
      *   <li>A string in the form like "[0]" is assumed to be an index into a list
      * </ul>
      * 
-     * Returns {@code null} if that path does not exist. 
+     * Also see {@link Jsonya}, such as {@code Jsonya.of(current).at(path).get()}.
+     * 
+     * @return The object at the given path, or {@code null} if that path does not exist.
      */
+    @Beta
     @SuppressWarnings("unchecked")
     public static Object getAtPreParsed(Object current, List<String> path) {
         for (String pathPart : path) {

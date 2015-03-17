@@ -39,8 +39,12 @@ import brooklyn.management.Task;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 public abstract class AbstractYamlTest {
 
@@ -119,6 +123,14 @@ public abstract class AbstractYamlTest {
         getLogger().info("Test - created " + assembly);
         final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
         getLogger().info("App - " + app);
+        
+        // wait for app to have started
+        Set<Task<?>> tasks = brooklynMgmt.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
+                BrooklynTaskTags.EFFECTOR_TAG, 
+                BrooklynTaskTags.tagForContextEntity(app), 
+                BrooklynTaskTags.tagForEffectorCall(app, "start", ConfigBag.newInstance(ImmutableMap.of("locations", ImmutableMap.of())))));
+        Iterables.getOnlyElement(tasks).get();
+        
         return app;
     }
 
@@ -130,6 +142,10 @@ public abstract class AbstractYamlTest {
         Entities.dumpInfo(app);
         
         return app;
+    }
+
+    protected void addCatalogItem(Iterable<String> catalogYaml) {
+        addCatalogItem(join(catalogYaml));
     }
 
     protected void addCatalogItem(String... catalogYaml) {
@@ -146,6 +162,10 @@ public abstract class AbstractYamlTest {
 
     protected Logger getLogger() {
         return LOG;
+    }
+
+    private String join(Iterable<String> catalogYaml) {
+        return Joiner.on("\n").join(catalogYaml);
     }
 
     private String join(String[] catalogYaml) {

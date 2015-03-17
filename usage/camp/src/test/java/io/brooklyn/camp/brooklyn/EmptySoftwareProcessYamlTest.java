@@ -32,17 +32,19 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.Jsonya;
-import brooklyn.util.stream.Streams;
 
 @Test
 public class EmptySoftwareProcessYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(EnrichersYamlTest.class);
 
-    @Test
+    @Test(groups="Integration")
     public void testProvisioningProperties() throws Exception {
-        Entity app = createAndStartApplication(Streams.newReaderWithContents(
-            "services: [ { serviceType: "+EmptySoftwareProcess.class.getName()+","
-                + " provisioning.properties: { minRam: 16384 } } ]"));
+        Entity app = createAndStartApplication(
+            "location: localhost",
+            "services:",
+            "- type: "+EmptySoftwareProcess.class.getName(),
+            "  provisioning.properties:",
+            "    minRam: 16384");
         waitForApplicationTasks(app);
 
         log.info("App started:");
@@ -53,14 +55,15 @@ public class EmptySoftwareProcessYamlTest extends AbstractYamlTest {
         Assert.assertEquals(pp.get("minRam"), 16384);
     }
 
-    @Test
+    @Test(groups="Integration")
     public void testProvisioningPropertiesViaJsonya() throws Exception {
-        Entity app = createAndStartApplication(Streams.newReaderWithContents(
-            Jsonya.newInstance().at("services").list()
-                .put("serviceType", EmptySoftwareProcess.class.getName())
+        Entity app = createAndStartApplication(
+            Jsonya.newInstance()
+                .put("location", "localhost")
+                .at("services").list()
+                .put("type", EmptySoftwareProcess.class.getName())
                 .at("provisioning.properties").put("minRam", 16384)
-                .root().toString()
-        ));
+                .root().toString());
         waitForApplicationTasks(app);
 
         log.info("App started:");
@@ -71,13 +74,14 @@ public class EmptySoftwareProcessYamlTest extends AbstractYamlTest {
         Assert.assertEquals(pp.get("minRam"), 16384);
     }
 
-    @Test
-    // for issue #1377
+    // for https://github.com/brooklyncentral/brooklyn/issues/1377
+    @Test(groups="Integration")
     public void testWithAppAndEntityLocations() throws Exception {
-        Entity app = createAndStartApplication(Streams.newReaderWithContents("services:\n"+
-            "- serviceType: "+EmptySoftwareProcess.class.getName()+"\n"+
-            "  location: localhost:(name=localhost on entity)"+"\n"+
-            "location: byon:(hosts=\"127.0.0.1\", name=loopback on app)"));
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: "+EmptySoftwareProcess.class.getName(),
+                "  location: localhost:(name=localhost on entity)",
+                "location: byon:(hosts=\"127.0.0.1\", name=loopback on app)");
         waitForApplicationTasks(app);
         Entities.dumpInfo(app);
         
@@ -96,5 +100,4 @@ public class EmptySoftwareProcessYamlTest extends AbstractYamlTest {
         // TODO this, below, probably should be 'localhost on entity', see #1377
         Assert.assertEquals(actualMachine.getParent().getDisplayName(), "loopback on app");
     }
-
 }

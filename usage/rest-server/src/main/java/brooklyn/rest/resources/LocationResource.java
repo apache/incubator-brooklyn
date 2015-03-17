@@ -29,9 +29,9 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogItem;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
-import brooklyn.location.basic.BasicLocationDefinition;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.rest.api.LocationApi;
 import brooklyn.rest.domain.LocationSpec;
@@ -43,10 +43,11 @@ import brooklyn.rest.util.EntityLocationUtils;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 public class LocationResource extends AbstractBrooklynRestResource implements LocationApi {
@@ -101,40 +102,52 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
       return result;
     }
 
-  /** @deprecated since 0.7.0; REST call now handled by below (optional query parameter added) */
-  public LocationSummary get(String locationId) {
-      return get(locationId, false);
-  }
-
-  @Override
-  public LocationSummary get(String locationId, String fullConfig) {
-      return get(locationId, Boolean.valueOf(fullConfig));
-  }
-
-  public LocationSummary get(String locationId, boolean fullConfig) {
-      LocationDetailLevel configLevel = fullConfig ? LocationDetailLevel.FULL_EXCLUDING_SECRET : LocationDetailLevel.LOCAL_EXCLUDING_SECRET;
-      Location l1 = mgmt().getLocationManager().getLocation(locationId);
-      if (l1!=null) {
-        return LocationTransformer.newInstance(mgmt(), l1, configLevel);
+    /** @deprecated since 0.7.0; REST call now handled by below (optional query parameter added) */
+    public LocationSummary get(String locationId) {
+        return get(locationId, false);
     }
 
-      LocationDefinition l2 = brooklyn().getLocationRegistry().getDefinedLocationById(locationId);
-      if (l2==null) throw WebResourceUtils.notFound("No location matching %s", locationId);
-      return LocationTransformer.newInstance(mgmt(), l2, configLevel);
-  }
+    @Override
+    public LocationSummary get(String locationId, String fullConfig) {
+        return get(locationId, Boolean.valueOf(fullConfig));
+    }
 
-  @Override
-  public Response create(LocationSpec locationSpec) {
-      String id = Identifiers.makeRandomId(8);
-      LocationDefinition l = new BasicLocationDefinition(id, locationSpec.getName(), locationSpec.getSpec(), locationSpec.getConfig());
-      brooklyn().getLocationRegistry().updateDefinedLocation(l);
-      return Response.created(URI.create(id))
-              .entity(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET))
-              .build();
-  }
+    public LocationSummary get(String locationId, boolean fullConfig) {
+        LocationDetailLevel configLevel = fullConfig ? LocationDetailLevel.FULL_EXCLUDING_SECRET : LocationDetailLevel.LOCAL_EXCLUDING_SECRET;
+        Location l1 = mgmt().getLocationManager().getLocation(locationId);
+        if (l1!=null) {
+            return LocationTransformer.newInstance(mgmt(), l1, configLevel);
+        }
 
-  public void delete(String locationId) {
-      brooklyn().getLocationRegistry().removeDefinedLocation(locationId);
-  }
+        LocationDefinition l2 = brooklyn().getLocationRegistry().getDefinedLocationById(locationId);
+        if (l2==null) throw WebResourceUtils.notFound("No location matching %s", locationId);
+        return LocationTransformer.newInstance(mgmt(), l2, configLevel);
+    }
 
+    @Override
+    public Response create(LocationSpec locationSpec) {
+        String name = locationSpec.getName();
+        ImmutableList.Builder<String> yaml = ImmutableList.<String>builder().add(
+                "brooklyn.catalog:",
+                "  symbolicName: "+name,
+                "",
+                "brooklyn.locations:",
+                "- type: "+locationSpec.getSpec());
+          if (locationSpec.getConfig().size() > 0) {
+              yaml.add("  brooklyn.config:");
+              for (Map.Entry<String, ?> entry : locationSpec.getConfig().entrySet()) {
+                  yaml.add("    "+entry.getKey()+": "+entry.getValue());
+              }
+          }
+
+          CatalogItem<?, ?> item = brooklyn().getCatalog().addItem(Joiner.on("\n").join(yaml.build()));
+          LocationDefinition l = brooklyn().getLocationRegistry().getDefinedLocationByName(name);
+          return Response.created(URI.create(name))
+                  .entity(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET))
+                  .build();
+    }
+
+    public void delete(String locationId) {
+        brooklyn().getLocationRegistry().removeDefinedLocation(locationId);
+    }
 }

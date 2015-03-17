@@ -24,6 +24,8 @@ import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.policy.Policy;
@@ -58,6 +60,8 @@ public class CatalogPredicates {
             CatalogPredicates.<Entity,EntitySpec<?>>isCatalogItemType(CatalogItemType.ENTITY);
     public static final Predicate<CatalogItem<Policy,PolicySpec<?>>> IS_POLICY = 
             CatalogPredicates.<Policy,PolicySpec<?>>isCatalogItemType(CatalogItemType.POLICY);
+    public static final Predicate<CatalogItem<Location,LocationSpec<?>>> IS_LOCATION = 
+            CatalogPredicates.<Location,LocationSpec<?>>isCatalogItemType(CatalogItemType.LOCATION);
     
     public static final Function<CatalogItem<?,?>,String> ID_OF_ITEM_TRANSFORMER = new Function<CatalogItem<?,?>, String>() {
         @Override @Nullable

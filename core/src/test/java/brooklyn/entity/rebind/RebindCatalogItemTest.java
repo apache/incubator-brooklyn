@@ -34,6 +34,7 @@ import org.testng.annotations.Test;
 import brooklyn.camp.lite.CampPlatformWithJustBrooklynMgmt;
 import brooklyn.camp.lite.TestAppAssemblyInstantiator;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
@@ -41,11 +42,15 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.internal.BrooklynFeatureEnablement;
+import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.entity.TestEntity;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
@@ -112,8 +117,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
                 "  version: " + TEST_VERSION + "\n" +
                 "services:\n" +
                 "- type: io.camp.mock:AppServer";
-        CatalogItem<?, ?> added = origManagementContext.getCatalog().addItem(yaml);
-        LOG.info("Added item to catalog: {}, id={}", added, added.getId());
+        addItem(origManagementContext, yaml);
         rebindAndAssertCatalogsAreEqual();
     }
 
@@ -135,8 +139,24 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
                 "  brooklyn.config:\n" +
                 "    cfg1: 111\n" +
                 "    cfg2: 222";
-        CatalogItem<?, ?> added = origManagementContext.getCatalog().addItem(yaml);
-        LOG.info("Added item to catalog: {}, id={}", added, added.getId());
+        addItem(origManagementContext, yaml);
+        rebindAndAssertCatalogsAreEqual();
+    }
+
+    @Test
+    public void testAddAndRebindLocation() {
+        String yaml = Joiner.on("\n").join(ImmutableList.of(
+                "name: Test Location",
+                "brooklyn.catalog:",
+                "  id: sample_location",
+                "  version: " + TEST_VERSION,
+                "brooklyn.locations:",
+                "- type: "+LocalhostMachineProvisioningLocation.class.getName(),
+                "  brooklyn.config:",
+                "    cfg1: 111",
+                "    cfg2: 222"));
+        CatalogItem<?, ?> added = addItem(origManagementContext, yaml);
+        assertEquals(added.getCatalogItemType(), CatalogItemType.LOCATION);
         rebindAndAssertCatalogsAreEqual();
     }
 
@@ -210,6 +230,13 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         assertTrue(catalogItemAfterRebind.isDeprecated(), "Expected item to be deprecated");
     }
 
+    protected CatalogItem<?, ?> addItem(ManagementContext mgmt, String yaml) {
+        CatalogItem<?, ?> added = mgmt.getCatalog().addItem(yaml);
+        LOG.info("Added item to catalog: {}, id={}", added, added.getId());
+        assertCatalogContains(mgmt.getCatalog(), added);
+        return added;
+    }
+    
     private void rebindAndAssertCatalogsAreEqual() {
         try {
             rebind();
@@ -218,5 +245,4 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         }
         assertCatalogsEqual(newManagementContext.getCatalog(), origManagementContext.getCatalog());
     }
-
 }
