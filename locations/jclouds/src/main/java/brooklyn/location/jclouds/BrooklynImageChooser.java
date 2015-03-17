@@ -138,6 +138,11 @@ public class BrooklynImageChooser {
 
                 // prefer to take our chances with unknown / unlabelled linux than something explicitly windows
                 else if (os.getFamily().equals(OsFamily.WINDOWS)) score -= 1;
+                
+                // if family is part of the image name, give it a slight pref
+                // (useful on softlayer where id is a uuid for user-supplied)
+                if (img.getId().toLowerCase().indexOf(os.getFamily().toString().toLowerCase()) >= 0)
+                    score += 0.5;
             }
             // prefer 64-bit
             if (os.is64Bit()) score += 0.5;
