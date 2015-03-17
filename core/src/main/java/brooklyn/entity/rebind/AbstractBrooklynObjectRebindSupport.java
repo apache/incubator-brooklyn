@@ -41,7 +41,7 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
     @Override
     @SuppressWarnings("unchecked")
     public T getMemento() {
-        T memento = (T) MementosGenerators.newMemento(instance);
+        T memento = (T) MementosGenerators.newBasicMemento(instance);
         if (LOG.isTraceEnabled()) LOG.trace("Created memento: {}", memento.toVerboseString());
         return memento;
     }
