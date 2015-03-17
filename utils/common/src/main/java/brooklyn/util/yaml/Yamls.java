@@ -66,6 +66,47 @@ public class Yamls {
         return (T)x;
     }
 
+    /**
+     * Parses the given yaml, and walks the given path to return the referenced object.
+     * 
+     * @see #getAt(Object, List)
+     */
+    public static Object getAt(String yaml, List<String> path) {
+        Iterable<Object> result = new org.yaml.snakeyaml.Yaml().loadAll(yaml);
+        Object current = result.iterator().next();
+        return getAtPreParsed(current, path);
+    }
+    
+    /** 
+     * For pre-parsed yaml, walks the maps/lists to return the given sub-item.
+     * In the given path:
+     * <ul>
+     *   <li>A vanilla string is assumed to be a key into a map.
+     *   <li>A string in the form like "[0]" is assumed to be an index into a list
+     * </ul>
+     * 
+     * Returns {@code null} if that path does not exist. 
+     */
+    @SuppressWarnings("unchecked")
+    public static Object getAtPreParsed(Object current, List<String> path) {
+        for (String pathPart : path) {
+            if (pathPart.startsWith("[") && pathPart.endsWith("]")) {
+                String index = pathPart.substring(1, pathPart.length()-1);
+                try {
+                    current = Iterables.get((Iterable<?>)current, Integer.parseInt(index));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid index '"+index+"', in path "+path);
+                } catch (IndexOutOfBoundsException e) {
+                    throw new IllegalArgumentException("Invalid index '"+index+"', in path "+path);
+                }
+            } else {
+                current = ((Map<String, ?>)current).get(pathPart);
+            }
+            if (current == null) return null;
+        }
+        return current;
+    }
+
     @SuppressWarnings("rawtypes")
     public static void dump(int depth, Object r) {
         if (r instanceof Iterable) {
