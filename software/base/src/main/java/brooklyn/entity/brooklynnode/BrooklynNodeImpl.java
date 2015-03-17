@@ -18,7 +18,6 @@
  */
 package brooklyn.entity.brooklynnode;
 
-import java.net.InetAddress;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +52,7 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
+import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.ha.ManagementNodeState;
@@ -76,6 +76,7 @@ import brooklyn.util.time.Time;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.net.HostAndPort;
 import com.google.gson.Gson;
 
 public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNode {
@@ -385,32 +386,20 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         // TODO what sensors should we poll?
         ConfigToAttributes.apply(this);
 
-        InetAddress address = getAttribute(WEB_CONSOLE_PUBLIC_ADDRESS);
-        String host;
-        if (address == null) {
-            if (getAttribute(NO_WEB_CONSOLE_AUTHENTICATION)) {
-                host = "localhost"; // Because of --noConsoleSecurity option
-            } else {
-                host = getAttribute(HOSTNAME);
-            }
-        } else {
-            host = address.getHostName();
-        }
-
         URI webConsoleUri;
         if (isHttpProtocolEnabled("http")) {
             int port = getConfig(PORT_MAPPER).apply(getAttribute(HTTP_PORT));
-            webConsoleUri = URI.create(String.format("http://%s:%s", host, port));
-            setAttribute(WEB_CONSOLE_URI, webConsoleUri);
+            HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, port);
+            webConsoleUri = URI.create(String.format("http://%s:%s", accessible.getHostText(), accessible.getPort()));
         } else if (isHttpProtocolEnabled("https")) {
             int port = getConfig(PORT_MAPPER).apply(getAttribute(HTTPS_PORT));
-            webConsoleUri = URI.create(String.format("https://%s:%s", host, port));
-            setAttribute(WEB_CONSOLE_URI, webConsoleUri);
+            HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, port);
+            webConsoleUri = URI.create(String.format("https://%s:%s", accessible.getHostText(), accessible.getPort()));
         } else {
             // web-console is not enabled
-            setAttribute(WEB_CONSOLE_URI, null);
             webConsoleUri = null;
         }
+        setAttribute(WEB_CONSOLE_URI, webConsoleUri);
 
         connectServiceUpIsRunning();
 
