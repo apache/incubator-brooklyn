@@ -26,7 +26,6 @@ import java.util.Map;
 
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.ssh.SshTasks;
-import com.google.api.client.util.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +42,7 @@ import brooklyn.util.os.Os;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -190,45 +190,14 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     private ImmutableList<String> installDebianBased() {
         return ImmutableList.<String>builder()
                 .add("curl https://packagecloud.io/install/repositories/basho/riak/script.deb | " + BashCommands.sudo("bash"))
-                .add(BashCommands.sudo("apt-get install --assume-yes riak"))
+                .add(BashCommands.sudo("apt-get install --assume-yes riak=" + getEntity().getFullVersion() + "-1"))
                 .build();
     }
 
     private ImmutableList<String> installRpmBased() {
         return ImmutableList.<String>builder()
                 .add("curl https://packagecloud.io/install/repositories/basho/riak/script.rpm | " + BashCommands.sudo("bash"))
-                .add(BashCommands.sudo("yum install -y riak"))
-                .build();
-    }
-
-    private static String addSbinPathCommand() {
-        return "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
-    }
-
-    /**
-     * Returns a command which
-     * executes <code>statement</code> only if <code>command</code> is NOT found in <code>$PATH</code>
-     *
-     * @param command
-     * @param statement
-     * @return command
-     */
-    private static String ifNotExecutable(String command, String statement) {
-        return String.format("{ { test ! -z `which %s`; } || { %s; } }", command, statement);
-    }
-
-    private static String ifExecutableElse(String command, String ifTrue, String otherwise) {
-        return com.google.common.base.Joiner.on('\n').join(
-                ifExecutableElse(command, ImmutableList.<String>of(ifTrue), ImmutableList.<String>of(otherwise)));
-    }
-
-    private static ImmutableList<String> ifExecutableElse(String command, List<String> ifTrue, List<String> otherwise) {
-        return ImmutableList.<String>builder()
-                .add(String.format("if test -z `which %s`; then", command))
-                .addAll(ifTrue)
-                .add("else")
-                .addAll(otherwise)
-                .add("fi")
+                .add(BashCommands.sudo("yum install -y riak-" + getEntity().getFullVersion() + "-1"))
                 .build();
     }
 
@@ -282,6 +251,25 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             commands.add("ulimit -n 4096");
         } else if (osDetails.isLinux() && isVersion1()) {
             commands.add(sudo("chown -R riak:riak " + getRiakEtcDir()));
+        }
+
+        if(osDetails.isLinux()) {
+            ImmutableMap<String, String> sysctl = ImmutableMap.<String, String>builder()
+                    .put("vm.swappiness", "0")
+                    .put("net.core.somaxconn", "40000")
+                    .put("net.ipv4.tcp_max_syn_backlog", "40000")
+                    .put("net.ipv4.tcp_sack",  "1")
+                    .put("net.ipv4.tcp_window_scaling",  "15")
+                    .put("net.ipv4.tcp_fin_timeout",     "1")
+                    .put("net.ipv4.tcp_keepalive_intvl", "30")
+                    .put("net.ipv4.tcp_tw_reuse",        "1")
+                    .put("net.ipv4.tcp_moderate_rcvbuf", "1")
+                    .build();
+
+            // TODO platform_*_dir
+            // TODO riak config log
+
+            commands.add( sudo("sysctl " + Joiner.on(' ').withKeyValueSeparator("=").join(sysctl)));
         }
 
         ScriptHelper customizeScript = newScript(CUSTOMIZING)
