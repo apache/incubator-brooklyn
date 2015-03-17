@@ -71,7 +71,7 @@ public class ProcessTaskStub {
 
     public String getSummary() {
         if (summary!=null) return summary;
-        return Strings.join(commands, " ; ");
+        return Strings.maxlen(Strings.join(commands, " ; "), 160);
     }
     
     /** null for localhost */
