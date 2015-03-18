@@ -297,7 +297,7 @@ public class CloudExplorer {
             String provider = checkNotNull(loc.getConfig(LocationConfigKeys.CLOUD_PROVIDER), "provider must not be null");
             String endpoint = loc.getConfig(CloudLocationConfig.CLOUD_ENDPOINT);
             
-            BlobStoreContext context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential, true);
+            BlobStoreContext context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential);
             try {
                 BlobStore blobStore = context.getBlobStore();
                 doCall(blobStore, indent);

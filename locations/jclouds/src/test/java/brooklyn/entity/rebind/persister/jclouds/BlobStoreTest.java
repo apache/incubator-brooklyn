@@ -82,7 +82,7 @@ public class BlobStoreTest {
             String provider = checkNotNull(location.getConfig(LocationConfigKeys.CLOUD_PROVIDER), "provider must not be null");
             String endpoint = location.getConfig(CloudLocationConfig.CLOUD_ENDPOINT);
 
-            context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential, true);
+            context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential);
         }
         return context;
     }

@@ -21,8 +21,9 @@ package brooklyn.entity.rebind.persister.jclouds;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.openstack.reference.AuthHeaders.URL_SUFFIX;
 
-import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -59,7 +60,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.inject.Inject;
-import com.google.inject.Module;
 
 @Test(groups={"Live", "Live-sanity"})
 public class BlobStoreExpiryTest {
@@ -91,7 +91,7 @@ public class BlobStoreExpiryTest {
     private String provider;
     private String endpoint;
 
-    public synchronized BlobStoreContext getBlobStoreContext(boolean applyFix) {
+    public synchronized BlobStoreContext getSwiftBlobStoreContext() {
         if (context==null) {
             if (location==null) {
                 Preconditions.checkNotNull(locationSpec, "locationSpec required for remote object store when location is null");
@@ -104,7 +104,7 @@ public class BlobStoreExpiryTest {
             provider = checkNotNull(location.getConfig(LocationConfigKeys.CLOUD_PROVIDER), "provider must not be null");
             endpoint = location.getConfig(CloudLocationConfig.CLOUD_ENDPOINT);
 
-            context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential, applyFix);
+            context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential);
         }
         return context;
     }
@@ -122,21 +122,14 @@ public class BlobStoreExpiryTest {
         context = null;
     }
 
-    // test disabled as https://issues.apache.org/jira/browse/JCLOUDS-589 fixed the issue for Keystone greater than 1.1
-    // the test would be applicable if pointed at a Swift endpoint that was using Keystone v1.1.
-    @Test(enabled = false)
-    public void testRenewAuthFailsInKeystoneV1_1() throws IOException {
-        doTestRenewAuth(false);
-    }
-
-    public void testRenewAuthSucceedsWithOurOverride() throws IOException {
-        doTestRenewAuth(true);
+    public void testRenewAuthSucceedsInSwiftObjectStore() throws Exception {
+        doTestRenewAuth();
     }
     
-    protected void doTestRenewAuth(boolean applyFix) throws IOException {
-        getBlobStoreContext(applyFix);
+    protected void doTestRenewAuth() throws Exception {
+        getSwiftBlobStoreContext();
         
-        injectShortLivedTokenForKeystoneV1_1();
+        injectShortLivedTokenForSwiftAuth();
         
         context.getBlobStore().createContainerInLocation(null, testContainerName);
         
@@ -146,17 +139,6 @@ public class BlobStoreExpiryTest {
         
         Time.sleep(Duration.TEN_SECONDS);
         
-        if (!applyFix) {
-            // with the fix not applied, we have to invalidate the cache manually
-            try {
-                assertContainerFound();
-            } catch (Exception e) {
-                log.info("failed, as expected: "+e);
-            }
-            getAuthCache().invalidateAll();
-            log.info("invalidated, should now succeed");
-        }
-
         assertContainerFound();
 
         context.getBlobStore().deleteContainer(testContainerName);
@@ -167,8 +149,10 @@ public class BlobStoreExpiryTest {
         BlobStoreTest.assertHasItemNamed(ps, testContainerName);
     }
 
-    private void injectShortLivedTokenForKeystoneV1_1() {
-        HttpToolResponse tokenHttpResponse1 = requestTokenWithExplicitLifetime("https://keystone-endpoint/v1.1", "CHANGE_ME",
+    private void injectShortLivedTokenForSwiftAuth() throws Exception {
+        URL endpointUrl = new URL(endpoint);
+
+        HttpToolResponse tokenHttpResponse1 = requestTokenWithExplicitLifetime(endpointUrl,
             identity, credential, Duration.FIVE_SECONDS);
         
         Builder<String, URI> servicesMapBuilder = ImmutableMap.builder();
@@ -196,12 +180,12 @@ public class BlobStoreExpiryTest {
         }
     }
     
-    public static HttpToolResponse requestTokenWithExplicitLifetime(String url, String host, String user, String key, Duration expiration) {
+    public static HttpToolResponse requestTokenWithExplicitLifetime(URL url, String user, String key, Duration expiration) throws URISyntaxException {
         HttpClient client = HttpTool.httpClientBuilder().build();
-        HttpToolResponse response = HttpTool.httpGet(client, URI.create(url), MutableMap.<String,String>of()
+        HttpToolResponse response = HttpTool.httpGet(client, url.toURI(), MutableMap.<String,String>of()
             .add(AuthHeaders.AUTH_USER, user)
             .add(AuthHeaders.AUTH_KEY, key)
-            .add("Host", host)
+            .add("Host", url.getHost())
             .add("X-Auth-New-Token", "" + true)
             .add("X-Auth-Token-Lifetime", "" + expiration.toSeconds())
             );

@@ -102,7 +102,7 @@ public class JcloudsBlobStoreBasedObjectStore implements PersistenceObjectStore 
             String provider = checkNotNull(location.getConfig(LocationConfigKeys.CLOUD_PROVIDER), "provider must not be null");
             String endpoint = location.getConfig(CloudLocationConfig.CLOUD_ENDPOINT);
 
-            context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential, true);
+            context = JcloudsUtil.newBlobstoreContext(provider, endpoint, identity, credential);
      
             // TODO do we need to get location from region? can't see the jclouds API.
             // doesn't matter in some places because it's already in the endpoint
