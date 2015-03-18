@@ -91,7 +91,12 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Date preStart = new Date();
         String appId = createApp(simpleSpec);
         Date postStart = new Date();
-
+        
+        // We will retrieve usage from one millisecond after start; this guarantees to not be  
+        // told about both STARTING+RUNNING, which could otherwise happen if they are in the 
+        // same milliscond.
+        Date afterPostStart = new Date(postStart.getTime()+1);
+        
         // Check that app's usage is returned
         ClientResponse response = client().resource("/v1/usage/applications").get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
@@ -105,17 +110,23 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
         
-        long afterPostStart = postStart.getTime()+1;
-        waitForFuture(afterPostStart);
+        // Wait, so that definitely asking about things that have happened (not things in the future, 
+        // or events that are happening this exact same millisecond)
+        waitForFuture(afterPostStart.getTime());
 
-        // check app start and end date truncated, even if running for longer
-        // note that start==end means we get a snapshot of the apps in use at that exact time.
-        response = client().resource("/v1/usage/applications?start="+afterPostStart+"&end="+afterPostStart).get(ClientResponse.class);
+        // Check app start + end date truncated, even if running for longer (i.e. only tell us about this time window).
+        // Note that start==end means we get a snapshot of the apps in use at that exact time.
+        //
+        // The start/end times in UsageStatistic are in String format, and are rounded down to the nearest second.
+        // The comparison does use the milliseconds passed in the REST call though.
+        // The rounding down result should be the same as roundDown(afterPostStart), because that is the time-window
+        // we asked for.
+        response = client().resource("/v1/usage/applications?start="+afterPostStart.getTime()+"&end="+afterPostStart.getTime()).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         usage = Iterables.getOnlyElement(usages);
         assertAppUsage(usage, appId, ImmutableList.of(Status.RUNNING), roundDown(preStart), postStart);
-        assertAppUsageTimesTruncated(usage, roundDown(postStart), roundDown(postStart));
+        assertAppUsageTimesTruncated(usage, roundDown(afterPostStart), roundDown(afterPostStart));
 
         // Delete the app
         Date preDelete = new Date();
