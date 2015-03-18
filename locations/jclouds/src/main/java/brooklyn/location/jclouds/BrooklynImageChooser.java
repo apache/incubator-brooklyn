@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.OsFamily;
@@ -31,14 +32,20 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.collections.MutableList;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.math.DoubleMath;
 
-public class BrooklynImageChooser {
+@Beta
+/** NB: subclasses must implement {@link #clone()} */
+public class BrooklynImageChooser implements Cloneable {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynImageChooser.class);
+    
+    protected ComputeService computeService;
+    protected String cloudProviderName;
     
     protected static int compare(double left, double right) {
         return DoubleMath.fuzzyCompare(left, right, 0.00000001);
@@ -79,7 +86,10 @@ public class BrooklynImageChooser {
     public List<String> blackListedImageIds() {
         return Arrays.asList(
                 // bad natty image - causes 403 on attempts to apt-get; https://bugs.launchpad.net/ubuntu/+bug/987182
-                "us-east-1/ami-1cb30875"
+                "us-east-1/ami-1cb30875",
+                // wrong login user advertised, causes "Error Invalid packet: indicated length 1349281121 too large"
+                // from sshj due to message coming back "Plea"(se log in as another user), according to https://github.com/jclouds/legacy-jclouds/issues/748
+                "us-east-1/ami-08faa660"
             );
     }
 
@@ -139,10 +149,13 @@ public class BrooklynImageChooser {
                 // prefer to take our chances with unknown / unlabelled linux than something explicitly windows
                 else if (os.getFamily().equals(OsFamily.WINDOWS)) score -= 1;
                 
-                // if family is part of the image name, give it a slight pref
-                // (useful on softlayer where id is a uuid for user-supplied)
-                if (img.getId().toLowerCase().indexOf(os.getFamily().toString().toLowerCase()) >= 0)
-                    score += 0.5;
+                if ("softlayer".equals(cloudProviderName)) {
+                    // on softlayer, prefer images where family is part of the image id
+                    // (this is the only way to identiy official images; but in other clouds
+                    // it can cause not-so-good images to get selected!)
+                    if (img.getId().toLowerCase().indexOf(os.getFamily().toString().toLowerCase()) >= 0)
+                        score += 0.5;
+                }
             }
             // prefer 64-bit
             if (os.is64Bit()) score += 0.5;
@@ -177,7 +190,46 @@ public class BrooklynImageChooser {
         return 0;
     }
 
+    public BrooklynImageChooser clone() {
+        return new BrooklynImageChooser();
+    }
+    
+    protected void use(ComputeService service) {
+        if (this.computeService!=null && !this.computeService.equals(service))
+            throw new IllegalStateException("ImageChooser must be cloned to set a compute service");
+        this.computeService = service;
+        if (computeService!=null) {
+            cloudProviderName = computeService.getContext().unwrap().getId();
+        }
+    }
+    
+    public BrooklynImageChooser cloneFor(ComputeService service) {
+        BrooklynImageChooser result = clone();
+        result.use(service);
+        return result;
+    }
+    
+    public static class OrderingScoredWithoutDefaults extends Ordering<Image> implements ComputeServiceAwareChooser<OrderingScoredWithoutDefaults> {
+        private BrooklynImageChooser chooser;
+        public OrderingScoredWithoutDefaults(BrooklynImageChooser chooser) {
+            this.chooser = chooser;
+        }
+        public int compare(Image left, Image right) {
+            return BrooklynImageChooser.compare(chooser.score(left), chooser.score(right));
+        }
+        @Override
+        public OrderingScoredWithoutDefaults cloneFor(ComputeService service) {
+            return new OrderingScoredWithoutDefaults(chooser.cloneFor(service));
+        }        
+    }
+    
     public Ordering<Image> orderingScoredWithoutDefaults() {
+        return new OrderingScoredWithoutDefaults(this);
+    }
+    
+    /** @deprecated since 0.7.0 kept in case persisted */
+    @Deprecated
+    public Ordering<Image> orderingScoredWithoutDefaultsDeprecated() {
         return new Ordering<Image>() {
             @Override
             public int compare(Image left, Image right) {
@@ -186,7 +238,41 @@ public class BrooklynImageChooser {
         };
     }
     
+    public static class OrderingWithDefaults extends Ordering<Image> implements ComputeServiceAwareChooser<OrderingWithDefaults> {
+        Ordering<Image> primaryOrdering;
+        public OrderingWithDefaults(final Ordering<Image> primaryOrdering) {
+            this.primaryOrdering = primaryOrdering;
+        }
+        @Override
+        public int compare(Image left, Image right) {
+            return ComparisonChain.start()
+                .compare(left, right, primaryOrdering)
+                // fall back to default strategy otherwise, except preferring *non*-null values
+                // TODO use AlphaNum string comparator
+                .compare(left.getName(), right.getName(), Ordering.<String> natural().nullsFirst())
+                .compare(left.getVersion(), right.getVersion(), Ordering.<String> natural().nullsFirst())
+                .compare(left.getDescription(), right.getDescription(), Ordering.<String> natural().nullsFirst())
+                .compare(left.getOperatingSystem().getName(), right.getOperatingSystem().getName(), Ordering.<String> natural().nullsFirst())
+                .compare(left.getOperatingSystem().getVersion(), right.getOperatingSystem().getVersion(), Ordering.<String> natural().nullsFirst())
+                .compare(left.getOperatingSystem().getDescription(), right.getOperatingSystem().getDescription(), Ordering.<String> natural().nullsFirst())
+                .compare(left.getOperatingSystem().getArch(), right.getOperatingSystem().getArch(), Ordering.<String> natural().nullsFirst()).result();
+        }    
+        @Override
+        public OrderingWithDefaults cloneFor(ComputeService service) {
+            if (primaryOrdering instanceof ComputeServiceAwareChooser) {
+                return new OrderingWithDefaults( BrooklynImageChooser.cloneFor(primaryOrdering, service) );
+            }
+            return this;
+        }        
+    }
+    
     public static Ordering<Image> orderingWithDefaults(final Ordering<Image> primaryOrdering) {
+        return new OrderingWithDefaults(primaryOrdering);
+    }
+    
+    /** @deprecated since 0.7.0 kept in case persisted */
+    @Deprecated
+    public static Ordering<Image> orderingWithDefaultsDeprecated(final Ordering<Image> primaryOrdering) {
         return new Ordering<Image>() {
             @Override
             public int compare(Image left, Image right) {
@@ -205,7 +291,30 @@ public class BrooklynImageChooser {
         };
     }
     
+    public static class ImageChooserFromOrdering implements Function<Iterable<? extends Image>, Image>, ComputeServiceAwareChooser<ImageChooserFromOrdering> {
+        final Ordering<Image> ordering;
+        public ImageChooserFromOrdering(final Ordering<Image> ordering) { this.ordering = ordering; }
+        @Override
+        public Image apply(Iterable<? extends Image> input) {
+            List<? extends Image> maxImages = multiMax(ordering, input);
+            return maxImages.get(maxImages.size() - 1);
+        }
+        @Override
+        public ImageChooserFromOrdering cloneFor(ComputeService service) {
+            if (ordering instanceof ComputeServiceAwareChooser) {
+                return new ImageChooserFromOrdering( BrooklynImageChooser.cloneFor(ordering, service) );
+            }
+            return this;
+        }        
+    }
+
     public static Function<Iterable<? extends Image>, Image> imageChooserFromOrdering(final Ordering<Image> ordering) {
+        return new ImageChooserFromOrdering(ordering);
+    }
+    
+    /** @deprecated since 0.7.0 kept in case persisted */
+    @Deprecated
+    public static Function<Iterable<? extends Image>, Image> imageChooserFromOrderingDeprecated(final Ordering<Image> ordering) {
         return new Function<Iterable<? extends Image>, Image>() {
             @Override
             public Image apply(Iterable<? extends Image> input) {
@@ -214,7 +323,21 @@ public class BrooklynImageChooser {
             }
         };
     }
+    
+    protected interface ComputeServiceAwareChooser<T> {
+        public T cloneFor(ComputeService service);
+    }
 
+    /** Attempts to clone the given item for use with the given {@link ComputeService}, if
+     * the item is {@link ComputeServiceAwareChooser}; otherwise it returns the item unchanged */
+    @SuppressWarnings("unchecked")
+    public static <T> T cloneFor(T item, ComputeService service) {
+        if (item instanceof ComputeServiceAwareChooser) {
+            return ((ComputeServiceAwareChooser<T>)item).cloneFor(service);
+        }
+        return item;
+    }
+    
     // from jclouds
     static <T, E extends T> List<E> multiMax(Comparator<T> ordering, Iterable<E> iterable) {
         Iterator<E> iterator = iterable.iterator();
