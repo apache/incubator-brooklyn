@@ -36,6 +36,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
@@ -193,6 +194,12 @@ public class CatalogClasspathDo {
                     addCatalogEntry(new CatalogPolicyItemDto(), c);
                     count++;
                 }
+                
+                Iterable<Class<? extends Location>> locations = this.excludeInvalidClasses(scanner.getSubTypesOf(Location.class));
+                for (Class<?> c: locations) {
+                    addCatalogEntry(new CatalogLocationItemDto(), c);
+                    count++;
+                }
             } else {
                 throw new IllegalStateException("Unsupported catalog scan mode "+scanMode+" for "+this);
             }
@@ -233,6 +240,7 @@ public class CatalogClasspathDo {
         if (ApplicationBuilder.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogTemplateItemDto(), c);
         if (Entity.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogEntityItemDto(), c);
         if (Policy.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogPolicyItemDto(), c);
+        if (Location.class.isAssignableFrom(c)) return addCatalogEntry(new CatalogLocationItemDto(), c);
         throw new IllegalStateException("Cannot add "+c+" to catalog: unsupported type "+c.getName());
     }
     

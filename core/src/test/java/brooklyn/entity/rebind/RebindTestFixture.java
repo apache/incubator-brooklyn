@@ -19,6 +19,7 @@
 package brooklyn.entity.rebind;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 import java.io.File;
 import java.util.List;
@@ -53,9 +54,9 @@ import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 
-import com.google.common.collect.Sets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 public abstract class RebindTestFixture<T extends StartableApplication> {
 
@@ -302,5 +303,11 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         assertEquals(actual.getSpecType(), expected.getSpecType());
         assertEquals(actual.getSymbolicName(), expected.getSymbolicName());
         assertEquals(actual.getLibraries(), expected.getLibraries());
+    }
+    
+    protected void assertCatalogContains(BrooklynCatalog catalog, CatalogItem<?, ?> item) {
+        CatalogItem<?, ?> found = catalog.getCatalogItem(item.getSymbolicName(), item.getVersion());
+        assertNotNull(found);
+        assertCatalogItemsEqual(found, item);
     }
 }

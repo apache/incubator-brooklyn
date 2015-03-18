@@ -45,10 +45,12 @@ public class CatalogXmlSerializer extends XmlSerializer<Object> {
         xstream.addImplicitCollection(CatalogDto.class, "entries", CatalogTemplateItemDto.class);
         xstream.addImplicitCollection(CatalogDto.class, "entries", CatalogEntityItemDto.class);
         xstream.addImplicitCollection(CatalogDto.class, "entries", CatalogPolicyItemDto.class);
+        xstream.addImplicitCollection(CatalogDto.class, "entries", CatalogLocationItemDto.class);
 
         xstream.aliasType("template", CatalogTemplateItemDto.class);
         xstream.aliasType("entity", CatalogEntityItemDto.class);
         xstream.aliasType("policy", CatalogPolicyItemDto.class);
+        xstream.aliasType("location", CatalogPolicyItemDto.class);
 
         xstream.aliasField("registeredType", CatalogItemDtoAbstract.class, "symbolicName");
         xstream.aliasAttribute(CatalogItemDtoAbstract.class, "displayName", "name");

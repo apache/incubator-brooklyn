@@ -20,7 +20,6 @@ package brooklyn.rest.resources;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.testng.Assert.assertFalse;
 
 import java.net.URI;
 import java.util.Map;
@@ -57,24 +56,23 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
     public void testAddNewLocation() {
         Map<String, String> expectedConfig = ImmutableMap.of(
                 "identity", "bob",
-                "credential", "CR3dential",
-                "location", "us-east-1");
+                "credential", "CR3dential");
         ClientResponse response = client().resource("/v1/locations")
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, new LocationSpec("my-jungle", "aws-ec2", expectedConfig));
+                .post(ClientResponse.class, new LocationSpec("my-jungle", "aws-ec2:us-east-1", expectedConfig));
 
         addedLocationUri = response.getLocation();
         log.info("added, at: " + addedLocationUri);
         LocationSummary location = client().resource(response.getLocation()).get(LocationSummary.class);
         log.info(" contents: " + location);
-        assertThat(location.getSpec(), is("aws-ec2"));
-
-        assertThat(location.getConfig().get("identity"), is((Object) "bob"));
-        assertFalse(location.getConfig().containsKey("CR3dential"));
+        Assert.assertEquals(location.getSpec(), "brooklyn.catalog:my-jungle:0.0.0.SNAPSHOT");
         Assert.assertTrue(addedLocationUri.toString().startsWith("/v1/locations/"));
 
-        JcloudsLocation l = (JcloudsLocation) getManagementContext().getLocationRegistry().resolve(location.getId());
+        JcloudsLocation l = (JcloudsLocation) getManagementContext().getLocationRegistry().resolve("my-jungle");
         Assert.assertEquals(l.getProvider(), "aws-ec2");
+        Assert.assertEquals(l.getRegion(), "us-east-1");
+        Assert.assertEquals(l.getIdentity(), "bob");
+        Assert.assertEquals(l.getCredential(), "CR3dential");
     }
 
     @Test(dependsOnMethods = { "testAddNewLocation" })
@@ -88,14 +86,14 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
             }
         });
         LocationSummary location = Iterables.getOnlyElement(matching);
-        assertThat(location.getSpec(), is("aws-ec2"));
+        assertThat(location.getSpec(), is("brooklyn.catalog:my-jungle:0.0.0.SNAPSHOT"));
         Assert.assertEquals(location.getLinks().get("self"), addedLocationUri);
     }
 
     @Test(dependsOnMethods = { "testListAllLocations" })
     public void testGetASpecificLocation() {
         LocationSummary location = client().resource(addedLocationUri.toString()).get(LocationSummary.class);
-        assertThat(location.getSpec(), is("aws-ec2"));
+        assertThat(location.getSpec(), is("brooklyn.catalog:my-jungle:0.0.0.SNAPSHOT"));
     }
 
     @Test(dependsOnMethods = { "testGetASpecificLocation" })

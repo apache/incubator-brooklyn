@@ -46,6 +46,12 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
                 .version(version);
     }
 
+    public static CatalogItemBuilder<CatalogLocationItemDto> newLocation(String symbolicName, String version) {
+        return new CatalogItemBuilder<CatalogLocationItemDto>(new CatalogLocationItemDto())
+                .symbolicName(symbolicName)
+                .version(version);
+    }
+
     public CatalogItemBuilder(CatalogItemType dto) {
         this.dto = dto;
         this.dto.setLibraries(Collections.<CatalogBundle>emptyList());

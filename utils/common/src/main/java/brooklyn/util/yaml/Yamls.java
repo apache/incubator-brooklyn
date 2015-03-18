@@ -29,6 +29,9 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.collections.Jsonya;
+
+import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
 
 public class Yamls {
@@ -64,6 +67,51 @@ public class Yamls {
             x = Iterables.getOnlyElement(result);
         }
         return (T)x;
+    }
+
+    /**
+     * Parses the given yaml, and walks the given path to return the referenced object.
+     * 
+     * @see #getAt(Object, List)
+     */
+    @Beta
+    public static Object getAt(String yaml, List<String> path) {
+        Iterable<Object> result = new org.yaml.snakeyaml.Yaml().loadAll(yaml);
+        Object current = result.iterator().next();
+        return getAtPreParsed(current, path);
+    }
+    
+    /** 
+     * For pre-parsed yaml, walks the maps/lists to return the given sub-item.
+     * In the given path:
+     * <ul>
+     *   <li>A vanilla string is assumed to be a key into a map.
+     *   <li>A string in the form like "[0]" is assumed to be an index into a list
+     * </ul>
+     * 
+     * Also see {@link Jsonya}, such as {@code Jsonya.of(current).at(path).get()}.
+     * 
+     * @return The object at the given path, or {@code null} if that path does not exist.
+     */
+    @Beta
+    @SuppressWarnings("unchecked")
+    public static Object getAtPreParsed(Object current, List<String> path) {
+        for (String pathPart : path) {
+            if (pathPart.startsWith("[") && pathPart.endsWith("]")) {
+                String index = pathPart.substring(1, pathPart.length()-1);
+                try {
+                    current = Iterables.get((Iterable<?>)current, Integer.parseInt(index));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid index '"+index+"', in path "+path);
+                } catch (IndexOutOfBoundsException e) {
+                    throw new IllegalArgumentException("Invalid index '"+index+"', in path "+path);
+                }
+            } else {
+                current = ((Map<String, ?>)current).get(pathPart);
+            }
+            if (current == null) return null;
+        }
+        return current;
     }
 
     @SuppressWarnings("rawtypes")

@@ -73,6 +73,25 @@ public class LocationSpec<T extends Location> extends AbstractBrooklynObjectSpec
         return LocationSpec.create(type).configure(config);
     }
     
+    /**
+     * Copies entity spec so its configuration can be overridden without modifying the 
+     * original entity spec.
+     */
+    public static <T extends Location> LocationSpec<T> create(LocationSpec<T> spec) {
+        // FIXME Why can I not use LocationSpec<T>?
+        LocationSpec<?> result = create(spec.getType())
+                .displayName(spec.getDisplayName())
+                .tags(spec.getTags())
+                .configure(spec.getConfig())
+                .configure(spec.getFlags())
+                .catalogItemId(spec.getCatalogItemId())
+                .extensions(spec.getExtensions());
+        
+        if (spec.getParent() != null) result.parent(spec.getParent());
+        
+        return (LocationSpec<T>) result;
+    }
+
     private String id;
     private Location parent;
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
@@ -154,6 +173,14 @@ public class LocationSpec<T extends Location> extends AbstractBrooklynObjectSpec
 
     public <E> LocationSpec<T> extension(Class<E> extensionType, E extension) {
         extensions.put(checkNotNull(extensionType, "extensionType"), checkNotNull(extension, "extension"));
+        return this;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <E> LocationSpec<T> extensions(Map<Class<?>, ?> extensions) {
+        for (Map.Entry<Class<?>, ?> entry : extensions.entrySet()) {
+            extension((Class)entry.getKey(), entry.getValue());
+        }
         return this;
     }
     

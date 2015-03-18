@@ -33,7 +33,10 @@ import com.google.common.annotations.Beta;
 public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     
     public static enum CatalogItemType {
-        TEMPLATE, ENTITY, POLICY
+        TEMPLATE, 
+        ENTITY, 
+        POLICY,
+        LOCATION;
     }
     
     public static interface CatalogBundle {
