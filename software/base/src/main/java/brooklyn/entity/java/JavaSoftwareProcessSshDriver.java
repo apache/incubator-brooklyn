@@ -342,6 +342,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         try {
             log.debug("Installing Java {} at {}@{}", new Object[]{version, getEntity(), getLocation()});
             ProcessTaskFactory<Integer> taskFactory = SshTasks.newSshExecTaskFactory(getLocation(), command)
+                    .summary("install java ("+version+")")
                     .configure(ShellTool.PROP_EXEC_ASYNC, true);
             ProcessTaskWrapper<Integer> installCommand = Entities.submit(getEntity(), taskFactory);
             int result = installCommand.get();

@@ -117,16 +117,19 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         Thread.sleep(100);
         
         child.setAttribute(ClusteredEntity.HOSTNAME, "mymachine");
+        child.setAttribute(Attributes.SUBNET_HOSTNAME, "mymachine");
         child.setAttribute(ClusteredEntity.HTTP_PORT, 1234);
         assertEventuallyExplicitAddressesMatch(ImmutableList.of("mymachine:1234"));
         
         child.setAttribute(ClusteredEntity.HOSTNAME, "mymachine2");
+        child.setAttribute(Attributes.SUBNET_HOSTNAME, "mymachine2");
         assertEventuallyExplicitAddressesMatch(ImmutableList.of("mymachine2:1234"));
         
         child.setAttribute(ClusteredEntity.HTTP_PORT, 1235);
         assertEventuallyExplicitAddressesMatch(ImmutableList.of("mymachine2:1235"));
         
         child.setAttribute(ClusteredEntity.HOSTNAME, null);
+        child.setAttribute(Attributes.SUBNET_HOSTNAME, null);
         assertEventuallyExplicitAddressesMatch(ImmutableList.<String>of());
     }
 
@@ -351,6 +354,7 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
             }
             addLocations(Arrays.asList(machine));
             setAttribute(HOSTNAME, machine.getAddress().getHostName());
+            setAttribute(Attributes.SUBNET_HOSTNAME, machine.getAddress().getHostName());
         }
         public void stop() {
             if (provisioner!=null) provisioner.release((MachineLocation) firstLocation());

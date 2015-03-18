@@ -18,7 +18,7 @@
 #
 name: java-cluster-db-policy-example
 services:
-- serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   name: My Web with Policy
   location: localhost
   brooklyn.config:
@@ -37,7 +37,7 @@ services:
       minPoolSize: 1
       maxPoolSize: 5
       
-- serviceType: brooklyn.entity.database.mysql.MySqlNode
+- type: brooklyn.entity.database.mysql.MySqlNode
   id: db
   name: My DB
   location: localhost

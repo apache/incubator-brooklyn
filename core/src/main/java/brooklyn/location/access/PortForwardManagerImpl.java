@@ -42,6 +42,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -133,9 +134,9 @@ public class PortForwardManagerImpl extends AbstractLocation implements PortForw
             @Override
             protected void doReconstruct(RebindContext rebindContext, LocationMemento memento) {
                 super.doReconstruct(rebindContext, memento);
-                mappings.putAll((Map<String, PortMapping>) memento.getCustomField("mappings"));
-                portReserved.set((Integer)memento.getCustomField("portReserved"));
-                publicIpIdToHostname.putAll((Map<String, String>)memento.getCustomField("publicIpIdToHostname"));
+                mappings.putAll( Preconditions.checkNotNull((Map<String, PortMapping>) memento.getCustomField("mappings"), "mappings was not serialized correctly"));
+                portReserved.set( (Integer)memento.getCustomField("portReserved"));
+                publicIpIdToHostname.putAll( Preconditions.checkNotNull((Map<String, String>)memento.getCustomField("publicIpIdToHostname"), "publicIpIdToHostname was not serialized correctly") );
             }
         };
     }

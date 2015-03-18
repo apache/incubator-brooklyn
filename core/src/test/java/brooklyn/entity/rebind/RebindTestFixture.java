@@ -95,8 +95,14 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
                 .buildStarted();
     }
 
-    /** @return An unstarted management context */
+    /** As {@link #createNewManagementContext(File)} using the default memento dir */
     protected LocalManagementContext createNewManagementContext() {
+        return createNewManagementContext(mementoDir);
+    }
+    
+    /** @return An unstarted management context using the specified mementoDir (or default if null) */
+    protected LocalManagementContext createNewManagementContext(File mementoDir) {
+        if (mementoDir==null) mementoDir = this.mementoDir;
         return RebindTestUtils.managementContextBuilder(mementoDir, classLoader)
                 .forLive(useLiveManagementContext())
                 .emptyCatalog(useEmptyCatalog())
@@ -238,7 +244,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         if (options.classLoader == null) options.classLoader(classLoader);
         if (options.mementoDir == null) options.mementoDir(mementoDir);
         if (options.origManagementContext == null) options.origManagementContext(origManagementContext);
-        if (options.newManagementContext == null) options.newManagementContext(createNewManagementContext());
+        if (options.newManagementContext == null) options.newManagementContext(createNewManagementContext(options.mementoDir));
         
         RebindTestUtils.waitForPersisted(origApp);
         

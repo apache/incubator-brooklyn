@@ -21,6 +21,8 @@ package brooklyn.location.access;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
+import java.io.File;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -29,16 +31,24 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
+import brooklyn.entity.rebind.persister.FileBasedObjectStore;
+import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.ha.MementoCopyMode;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.net.Networking;
+import brooklyn.util.os.Os;
+import brooklyn.util.text.Identifiers;
+import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -83,6 +93,41 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
         
         assertEquals(newPortForwardManager.lookup(newSimulatedMachine, 80), HostAndPort.fromParts(publicAddress, 40080));
         assertEquals(newPortForwardManager.lookup(publicIpId, 80), HostAndPort.fromParts(publicAddress, 40080));
+    }
+    
+    @Test
+    public void testAssociationPreservedOnStateExport() throws Exception {
+        String publicIpId = "5.6.7.8";
+        String publicAddress = "5.6.7.8";
+
+        TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class).impl(MyEntity.class));
+        PortForwardManager origPortForwardManager = origEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
+
+        origPortForwardManager.associate(publicIpId, HostAndPort.fromParts(publicAddress, 40080), origSimulatedMachine, 80);
+
+        String label = origManagementContext.getManagementNodeId()+"-"+Time.makeDateSimpleStampString();
+        PersistenceObjectStore targetStore = BrooklynPersistenceUtils.newPersistenceObjectStore(origManagementContext, null, 
+            "tmp/web-persistence-"+label+"-"+Identifiers.makeRandomId(4));
+        File dir = ((FileBasedObjectStore)targetStore).getBaseDir();
+        // only register the parent dir because that will prevent leaks for the random ID
+        Os.deleteOnExitEmptyParentsUpTo(dir.getParentFile(), dir.getParentFile());
+        BrooklynPersistenceUtils.writeMemento(origManagementContext, targetStore, MementoCopyMode.LOCAL);            
+
+        RebindTestUtils.waitForPersisted(origApp);
+        log.info("Using manual export dir "+dir+" for rebind instead of "+mementoDir);
+        newApp = rebind(RebindOptions.create().mementoDir(dir));
+        
+        // After rebind, confirm that lookups still work
+        TestEntity newEntity = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
+        Location newSimulatedMachine = newApp.getManagementContext().getLocationManager().getLocation(origSimulatedMachine.getId());
+        PortForwardManager newPortForwardManager = newEntity.getConfig(MyEntity.PORT_FORWARD_MANAGER);
+        
+        assertEquals(newPortForwardManager.lookup(newSimulatedMachine, 80), HostAndPort.fromParts(publicAddress, 40080));
+        assertEquals(newPortForwardManager.lookup(publicIpId, 80), HostAndPort.fromParts(publicAddress, 40080));
+        
+        // delete the dir here, to be more likely not to leak it on failure
+        newManagementContext.getRebindManager().stop();
+        Os.deleteRecursively(dir);
     }
     
     @Test

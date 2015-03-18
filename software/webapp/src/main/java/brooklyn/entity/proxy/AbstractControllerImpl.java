@@ -43,6 +43,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.location.basic.Machines;
 import brooklyn.management.Task;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
@@ -276,7 +277,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
                 port = accessible.getPort();
             }
         }
-        if (domain==null) domain = getAttribute(LoadBalancer.HOSTNAME);
+        if (domain==null) domain = Machines.findSubnetHostname(this).orNull();
         if (domain==null) return null;
         return protocol+"://"+domain+":"+port+"/"+getConfig(SERVICE_UP_URL_PATH);
     }
@@ -301,8 +302,8 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     
     protected void computePortsAndUrls() {
         AttributeSensor<String> hostAndPortSensor = getConfig(HOST_AND_PORT_SENSOR);
-        Maybe<Object> hostnameSensor = getConfigRaw(HOSTNAME_SENSOR, true);
-        Maybe<Object> portSensor = getConfigRaw(PORT_NUMBER_SENSOR, true);
+        Maybe<Object> hostnameSensor = config().getRaw(HOSTNAME_SENSOR);
+        Maybe<Object> portSensor = config().getRaw(PORT_NUMBER_SENSOR);
         if (hostAndPortSensor != null) {
             checkState(!hostnameSensor.isPresent() && !portSensor.isPresent(), 
                     "Must not set %s and either of %s or %s", HOST_AND_PORT_SENSOR, HOSTNAME_SENSOR, PORT_NUMBER_SENSOR);

@@ -37,7 +37,9 @@ import brooklyn.entity.Feed;
 import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.rebind.AbstractBrooklynObjectRebindSupport;
 import brooklyn.entity.rebind.TreeUtils;
+import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.event.feed.AbstractFeed;
@@ -61,6 +63,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 
@@ -68,10 +71,23 @@ public class MementosGenerators {
 
     private MementosGenerators() {}
     
-    /**
-     * Inspects a brooklyn object to create a corresponding memento.
-     */
+    /** @deprecated since 0.7.0 use {@link #newBasicMemento(BrooklynObject)} */
     public static Memento newMemento(BrooklynObject instance) {
+        return newBasicMemento(instance);
+    }
+    
+    /**
+     * Inspects a brooklyn object to create a basic corresponding memento.
+     * <p>
+     * The memento is "basic" in the sense that it does not tie in to any entity-specific customization;
+     * the corresponding memento may subsequently be customized by the caller.
+     * <p>
+     * This method is intended for use by {@link AbstractBrooklynObjectRebindSupport#getMemento()}
+     * and callers wanting a memento for an object should use that, or the
+     * {@link BrooklynPersistenceUtils#newObjectMemento(BrooklynObject)} convenience.
+     */
+    @Beta
+    public static Memento newBasicMemento(BrooklynObject instance) {
         if (instance instanceof Entity) {
             return newEntityMemento((Entity)instance);
         } else if (instance instanceof Location) {
@@ -127,13 +143,16 @@ public class MementosGenerators {
     
     /**
      * Inspects an entity to create a corresponding memento.
+     * <p>
+     * @deprecated since 0.7.0, see {@link #newBasicMemento(BrooklynObject)}
      */
+    @Deprecated
     public static EntityMemento newEntityMemento(Entity entity) {
         return newEntityMementoBuilder(entity).build();
     }
 
     /**
-     * @deprecated since 0.7.0; use {@link #newMemento(BrooklynObject)} instead
+     * @deprecated since 0.7.0; use {@link #newBasicMemento(BrooklynObject)} instead
      */
     @Deprecated
     public static BasicEntityMemento.Builder newEntityMementoBuilder(Entity entityRaw) {
@@ -210,7 +229,11 @@ public class MementosGenerators {
 
         return builder;
     }
-    
+ 
+    /**
+     * @deprecated since 0.7.0, see {@link #newBasicMemento(BrooklynObject)}
+     */
+    @Deprecated
     public static Function<Entity, EntityMemento> entityMementoFunction() {
         return new Function<Entity,EntityMemento>() {
             @Override
@@ -228,13 +251,16 @@ public class MementosGenerators {
      * the location reference is replaced by the location id.
      * TODO When we have a cleaner separation of constructor/config for entities and locations, then
      * we will remove this code!
+     * 
+     * @deprecated since 0.7.0, see {@link #newBasicMemento(BrooklynObject)}
      */
+    @Deprecated
     public static LocationMemento newLocationMemento(Location location) {
         return newLocationMementoBuilder(location).build();
     }
     
     /**
-     * @deprecated since 0.7.0; use {@link #newMemento(BrooklynObject)} instead
+     * @deprecated since 0.7.0; use {@link #newBasicMemento(BrooklynObject)} instead
      */
     @Deprecated
     public static BasicLocationMemento.Builder newLocationMementoBuilder(Location location) {
@@ -267,6 +293,10 @@ public class MementosGenerators {
         return builder;
     }
     
+    /**
+     * @deprecated since 0.7.0, see {@link #newBasicMemento(BrooklynObject)}
+     */
+    @Deprecated
     public static Function<Location, LocationMemento> locationMementoFunction() {
         return new Function<Location,LocationMemento>() {
             @Override
@@ -279,7 +309,10 @@ public class MementosGenerators {
     
     /**
      * Given a policy, extracts its state for serialization.
+     * 
+     * @deprecated since 0.7.0, see {@link #newBasicMemento(BrooklynObject)}
      */
+    @Deprecated
     public static PolicyMemento newPolicyMemento(Policy policy) {
         BasicPolicyMemento.Builder builder = BasicPolicyMemento.builder();
         populateBrooklynObjectMementoBuilder(policy, builder);
@@ -305,6 +338,10 @@ public class MementosGenerators {
         return builder.build();
     }
     
+    /**
+     * @deprecated since 0.7.0, see {@link #newBasicMemento(BrooklynObject)}
+     */
+    @Deprecated
     public static Function<Policy, PolicyMemento> policyMementoFunction() {
         return new Function<Policy,PolicyMemento>() {
             @Override
@@ -316,7 +353,9 @@ public class MementosGenerators {
 
     /**
      * Given an enricher, extracts its state for serialization.
+     * @deprecated since 0.7.0, see {@link #newBasicMemento(BrooklynObject)}
      */
+    @Deprecated
     public static EnricherMemento newEnricherMemento(Enricher enricher) {
         BasicEnricherMemento.Builder builder = BasicEnricherMemento.builder();
         populateBrooklynObjectMementoBuilder(enricher, builder);
@@ -344,7 +383,9 @@ public class MementosGenerators {
 
     /**
      * Given a feed, extracts its state for serialization.
+     * @deprecated since 0.7.0, see {@link #newBasicMemento(BrooklynObject)}
      */
+    @Deprecated
     public static FeedMemento newFeedMemento(Feed feed) {
         BasicFeedMemento.Builder builder = BasicFeedMemento.builder();
         populateBrooklynObjectMementoBuilder(feed, builder);
@@ -363,6 +404,10 @@ public class MementosGenerators {
         return builder.build();
     }
     
+    /**
+     * @deprecated since 0.7.0, see {@link #newBasicMemento(BrooklynObject)}
+     */
+    @Deprecated
     public static CatalogItemMemento newCatalogItemMemento(CatalogItem<?, ?> catalogItem) {
         if (catalogItem instanceof CatalogItemDo<?,?>) {
             catalogItem = ((CatalogItemDo<?,?>)catalogItem).getDto();

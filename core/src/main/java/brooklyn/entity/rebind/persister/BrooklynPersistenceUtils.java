@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
@@ -34,7 +35,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
-import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.entity.rebind.transformer.CompoundTransformerLoader;
 import brooklyn.location.Location;
@@ -132,7 +132,7 @@ public class BrooklynPersistenceUtils {
     }
 
     public static Memento newObjectMemento(BrooklynObject instance) {
-        return MementosGenerators.newMemento(instance);
+        return ((BrooklynObjectInternal)instance).getRebindSupport().getMemento();
     }
     
     public static BrooklynMementoRawData newStateMemento(ManagementContext mgmt, MementoCopyMode source) {

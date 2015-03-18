@@ -25,6 +25,8 @@ import static org.testng.Assert.fail;
 import io.brooklyn.camp.BasicCampPlatform;
 import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
+import java.io.File;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -92,7 +94,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
     }
 
     @Override
-    protected LocalManagementContext createNewManagementContext() {
+    protected LocalManagementContext createNewManagementContext(File mementoDir) {
         BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
         properties.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, "classpath://brooklyn/entity/rebind/rebind-catalog-item-test-catalog.xml");
         properties.put(BrooklynServerConfig.CATALOG_LOAD_MODE, CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL_IF_NO_PERSISTED_STATE);

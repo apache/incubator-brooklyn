@@ -89,11 +89,11 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         if (isProtocolEnabled("https")) {
             Integer port = getHttpsPort();
             checkNotNull(port, "HTTPS_PORT sensors not set; is an acceptable port available?");
-            return String.format("https://%s:%s/", getHostname(), port);
+            return String.format("https://%s:%s/", getSubnetHostname(), port);
         } else if (isProtocolEnabled("http")) {
             Integer port = getHttpPort();
             checkNotNull(port, "HTTP_PORT sensors not set; is an acceptable port available?");
-            return String.format("http://%s:%s/", getHostname(), port);
+            return String.format("http://%s:%s/", getSubnetHostname(), port);
         } else {
             throw new IllegalStateException("HTTP and HTTPS protocols not enabled for "+entity+"; enabled protocols are "+getEnabledProtocols());
         }

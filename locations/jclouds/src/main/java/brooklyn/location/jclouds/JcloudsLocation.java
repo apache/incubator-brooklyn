@@ -111,6 +111,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.location.cloud.CloudMachineNamer;
+import brooklyn.location.jclouds.BrooklynImageChooser.ComputeServiceAwareChooser;
 import brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
@@ -1112,7 +1113,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         if (templateBuilder instanceof PortableTemplateBuilder<?>) {
             if (((PortableTemplateBuilder<?>)templateBuilder).imageChooser()==null) {
-                templateBuilder.imageChooser(config.get(JcloudsLocationConfig.IMAGE_CHOOSER));
+                Function<Iterable<? extends Image>, Image> chooser = config.get(JcloudsLocationConfig.IMAGE_CHOOSER);
+                chooser = BrooklynImageChooser.cloneFor(chooser, computeService);
+                templateBuilder.imageChooser(chooser);
             } else {
                 // an image chooser is already set, so do nothing
             }
