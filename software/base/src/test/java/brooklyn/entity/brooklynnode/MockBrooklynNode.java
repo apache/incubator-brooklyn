@@ -23,8 +23,6 @@ import java.util.Collection;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.EntityHttpClient;
 import brooklyn.entity.brooklynnode.CallbackEntityHttpClient.Request;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;

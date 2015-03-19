@@ -18,12 +18,19 @@
  */
 package brooklyn.rest;
 
-import static brooklyn.rest.BrooklynRestApiLauncher.StartMode.*;
+import static brooklyn.rest.BrooklynRestApiLauncher.StartMode.FILTER;
+import static brooklyn.rest.BrooklynRestApiLauncher.StartMode.SERVLET;
+import static brooklyn.rest.BrooklynRestApiLauncher.StartMode.WEB_XML;
+
+import java.util.concurrent.Callable;
+
+import org.apache.http.HttpStatus;
 import org.eclipse.jetty.server.Server;
 import org.testng.annotations.Test;
 
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.util.BrooklynRestResourceUtilsTest.SampleNoOpApplication;
+import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 
 public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixture {
@@ -50,9 +57,19 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
     }
     
     private static void checkRestCatalogApplications(Server server) throws Exception {
-        String rootUrl = "http://localhost:"+server.getConnectors()[0].getLocalPort();
-        HttpTestUtils.assertHealthyStatusCode(
-                HttpTestUtils.getHttpStatusCode(rootUrl+"/v1/catalog/applications"));
+        final String rootUrl = "http://localhost:"+server.getConnectors()[0].getLocalPort();
+        int code = Asserts.succeedsEventually(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                int code = HttpTestUtils.getHttpStatusCode(rootUrl+"/v1/catalog/applications");
+                if (code == HttpStatus.SC_FORBIDDEN) {
+                    throw new RuntimeException("Retry request");
+                } else {
+                    return code;
+                }
+            }
+        });
+        HttpTestUtils.assertHealthyStatusCode(code);
         HttpTestUtils.assertContentContainsText(rootUrl+"/v1/catalog/applications", SampleNoOpApplication.class.getSimpleName());
     }
     

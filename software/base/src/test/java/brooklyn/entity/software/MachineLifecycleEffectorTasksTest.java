@@ -23,11 +23,17 @@ import static org.testng.Assert.assertEquals;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.basic.BasicEntityImpl;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 
 public class MachineLifecycleEffectorTasksTest {
     public static boolean canStop(StopMode stopMode, boolean isEntityStopped) {
-        return MachineLifecycleEffectorTasks.canStop(stopMode, isEntityStopped);
+        BasicEntityImpl entity = new BasicEntityImpl();
+        Lifecycle state = isEntityStopped ? Lifecycle.STOPPED : Lifecycle.RUNNING;
+        entity.setAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL, state);
+        return MachineLifecycleEffectorTasks.canStop(stopMode, entity);
     }
     
     @DataProvider(name = "canStopStates")

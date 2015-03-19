@@ -1077,4 +1077,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return result;
     }
     
+    @Override
+    public long getLastStateChange() {
+        if (nodeStateHistory.size() > 0) {
+            return (Long)nodeStateHistory.get(0).get("timestamp");
+        } else {
+            return 0;
+        }
+    }
+    
 }

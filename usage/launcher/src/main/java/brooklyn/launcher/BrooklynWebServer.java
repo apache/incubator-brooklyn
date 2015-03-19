@@ -60,9 +60,11 @@ import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import brooklyn.rest.filter.HaMasterCheckFilter;
+import brooklyn.rest.filter.HaHotCheckResourceFilter;
 import brooklyn.rest.filter.LoggingFilter;
 import brooklyn.rest.filter.NoCacheFilter;
 import brooklyn.rest.filter.RequestTaggingFilter;
+import brooklyn.rest.util.ManagementContextProvider;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -321,6 +323,8 @@ public class BrooklynWebServer {
         // Accept gzipped requests and responses, disable caching for dynamic content
         config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS, GZIPContentEncodingFilter.class.getName());
         config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, ImmutableList.of(GZIPContentEncodingFilter.class, NoCacheFilter.class));
+        // Checks if appropriate request given HA status
+        config.getProperties().put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, HaHotCheckResourceFilter.class.getName());
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
@@ -330,6 +334,9 @@ public class BrooklynWebServer {
         FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
 
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
+
+        ManagementContext mgmt = (ManagementContext) context.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        config.getSingletons().add(new ManagementContextProvider(mgmt));
     }
 
     ContextHandlerCollectionHotSwappable handlers = new ContextHandlerCollectionHotSwappable();

@@ -42,6 +42,7 @@ import brooklyn.management.internal.EffectorUtils;
 import brooklyn.rest.api.EffectorApi;
 import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.SummaryComparators;
+import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.EffectorTransformer;
 import brooklyn.rest.transform.TaskTransformer;
 import brooklyn.rest.util.WebResourceUtils;
@@ -49,6 +50,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Time;
 
+@HaHotStateRequired
 public class EffectorResource extends AbstractBrooklynRestResource implements EffectorApi {
 
     private static final Logger log = LoggerFactory.getLogger(EffectorResource.class);

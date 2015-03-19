@@ -45,8 +45,8 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
-import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
@@ -477,6 +477,13 @@ public abstract class MachineLifecycleEffectorTasks {
         if (isRestartMachine==RestartMachineMode.AUTO) 
             isRestartMachine = getDefaultRestartStopsMachine() ? RestartMachineMode.TRUE : RestartMachineMode.FALSE; 
 
+        DynamicTasks.queue("pre-restart", new Runnable() { public void run() {
+            //Calling preStopCustom without a corresponding postStopCustom invocation
+            //doesn't look right so use a separate callback pair; Also depending on the arguments
+            //stop() could be called which will call the {pre,post}StopCustom on its own.
+            preRestartCustom();
+        }});
+
         if (isRestartMachine==RestartMachineMode.FALSE) {
             DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
                 DynamicTasks.markInessential();
@@ -487,10 +494,10 @@ public abstract class MachineLifecycleEffectorTasks {
         } else {
             DynamicTasks.queue("stopping (machine)", new Callable<String>() { public String call() {
                 DynamicTasks.markInessential();
-                stop(ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE, true));
+                stop(ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE_MODE, StopMode.IF_NOT_STOPPED));
                 DynamicTasks.waitForLast();
                 return "Stop of machine completed with no errors.";
-            }});            
+            }});
         }
 
         DynamicTasks.queue("starting", new Runnable() { public void run() {
@@ -501,6 +508,10 @@ public abstract class MachineLifecycleEffectorTasks {
         }});
         
         restartChildren(parameters);
+
+        DynamicTasks.queue("post-restart", new Runnable() { public void run() {
+            postRestartCustom();
+        }});
 
         DynamicTasks.waitForLast();
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
@@ -541,24 +552,8 @@ public abstract class MachineLifecycleEffectorTasks {
 
         log.info("Stopping {} in {}", entity(), entity().getLocations());
 
-        final boolean hasStopMachine = parameters.containsKey(StopSoftwareParameters.STOP_MACHINE);
-        final Boolean isStopMachine = parameters.get(StopSoftwareParameters.STOP_MACHINE);
-
-        final StopMode stopProcessMode = parameters.get(StopSoftwareParameters.STOP_PROCESS_MODE);
-
-        final boolean hasStopMachineMode = parameters.containsKey(StopSoftwareParameters.STOP_MACHINE_MODE);
-        StopMode stopMachineMode = parameters.get(StopSoftwareParameters.STOP_MACHINE_MODE);
-
-        if (hasStopMachine && isStopMachine != null) {
-            checkCompatibleMachineModes(isStopMachine, hasStopMachineMode, stopMachineMode);
-            if (isStopMachine) {
-                stopMachineMode = StopMode.IF_NOT_STOPPED;
-            } else {
-                stopMachineMode = StopMode.NEVER;
-            }
-        }
-
-        boolean isEntityStopped = entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED;
+        StopMode stopMachineMode = getStopMachineMode(parameters);
+        StopMode stopProcessMode = parameters.get(StopSoftwareParameters.STOP_PROCESS_MODE);
 
         DynamicTasks.queue("pre-stop", new Callable<String>() { public String call() {
             if (entity().getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED) {
@@ -573,7 +568,7 @@ public abstract class MachineLifecycleEffectorTasks {
 
         Maybe<SshMachineLocation> sshMachine = Machines.findUniqueSshMachineLocation(entity().getLocations());
         Task<String> stoppingProcess = null;
-        if (canStop(stopProcessMode, isEntityStopped)) {
+        if (canStop(stopProcessMode, entity())) {
             stoppingProcess = DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
                 DynamicTasks.markInessential();
                 stopProcessesAtMachine();
@@ -639,12 +634,37 @@ public abstract class MachineLifecycleEffectorTasks {
         if (log.isDebugEnabled()) log.debug("Stopped software process entity "+entity());
     }
 
-    protected static boolean canStop(StopMode stopMode, boolean isTargetStopped) {
-        return stopMode == StopMode.ALWAYS ||
-                stopMode == StopMode.IF_NOT_STOPPED && !isTargetStopped;
+    public static StopMode getStopMachineMode(ConfigBag parameters) {
+        @SuppressWarnings("deprecation")
+        final boolean hasStopMachine = parameters.containsKey(StopSoftwareParameters.STOP_MACHINE);
+        @SuppressWarnings("deprecation")
+        final Boolean isStopMachine = parameters.get(StopSoftwareParameters.STOP_MACHINE);
+
+        final boolean hasStopMachineMode = parameters.containsKey(StopSoftwareParameters.STOP_MACHINE_MODE);
+        final StopMode stopMachineMode = parameters.get(StopSoftwareParameters.STOP_MACHINE_MODE);
+
+        if (hasStopMachine && isStopMachine != null) {
+            checkCompatibleMachineModes(isStopMachine, hasStopMachineMode, stopMachineMode);
+            if (isStopMachine) {
+                return StopMode.IF_NOT_STOPPED;
+            } else {
+                return StopMode.NEVER;
+            }
+        }
+        return stopMachineMode;
     }
 
-    private void checkCompatibleMachineModes(Boolean isStopMachine, boolean hasStopMachineMode, StopMode stopMachineMode) {
+    public static boolean canStop(StopMode stopMode, Entity entity) {
+        boolean isEntityStopped = entity.getAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL)==Lifecycle.STOPPED;
+        return canStop(stopMode, isEntityStopped);
+    }
+
+    protected static boolean canStop(StopMode stopMode, boolean isStopped) {
+        return stopMode == StopMode.ALWAYS ||
+                stopMode == StopMode.IF_NOT_STOPPED && !isStopped;
+    }
+
+    private static void checkCompatibleMachineModes(Boolean isStopMachine, boolean hasStopMachineMode, StopMode stopMachineMode) {
         if (hasStopMachineMode &&
                 (isStopMachine && stopMachineMode != StopMode.IF_NOT_STOPPED ||
                  !isStopMachine && stopMachineMode != StopMode.NEVER)) {
@@ -668,6 +688,14 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     protected void postStopCustom() {
+        // nothing needed here
+    }
+
+    protected void preRestartCustom() {
+        // nothing needed here
+    }
+
+    protected void postRestartCustom() {
         // nothing needed here
     }
 

@@ -37,6 +37,7 @@ import brooklyn.rest.api.LocationApi;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.domain.SummaryComparators;
+import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.LocationTransformer;
 import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import brooklyn.rest.util.EntityLocationUtils;
@@ -50,6 +51,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
+@HaHotStateRequired
 public class LocationResource extends AbstractBrooklynRestResource implements LocationApi {
 
     private static final Logger log = LoggerFactory.getLogger(LocationResource.class);

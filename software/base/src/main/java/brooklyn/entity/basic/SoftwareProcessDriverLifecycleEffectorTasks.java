@@ -60,6 +60,10 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
             return;
         }
         
+        DynamicTasks.queue("pre-restart", new Runnable() { public void run() {
+            preRestartCustom();
+        }});
+
         log.debug("restart of "+entity()+" appears to have driver and hostname - doing driver-level restart");
         entity().getDriver().restart();
         
@@ -67,6 +71,7 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         
         DynamicTasks.queue("post-restart", new Runnable() { public void run() {
             postStartCustom();
+            postRestartCustom();
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
         }});
     }
@@ -173,6 +178,20 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         super.preStopCustom();
         
         entity().preStop();
+    }
+
+    @Override
+    protected void preRestartCustom() {
+        super.preRestartCustom();
+        
+        entity().preRestart();
+    }
+
+    @Override
+    protected void postRestartCustom() {
+        super.postRestartCustom();
+        
+        entity().postRestart();
     }
 
     @Override

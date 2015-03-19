@@ -44,6 +44,9 @@ public interface HighAvailabilityManager {
 
     ManagementNodeState getNodeState();
     
+    /** The time in milliseconds when the state was last changed. -1 if no state transition has occurred yet.*/
+    long getLastStateChange();
+    
     /**
      * @param persister
      * @return self
@@ -128,5 +131,5 @@ public interface HighAvailabilityManager {
 
     /** Returns a collection of metrics */
     Map<String,Object> getMetrics();
-    
+
 }

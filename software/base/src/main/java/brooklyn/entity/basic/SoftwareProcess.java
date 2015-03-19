@@ -260,24 +260,33 @@ public interface SoftwareProcess extends Entity, Startable {
 
     @Beta
     public static class StopSoftwareParameters {
-        @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
-        public static final ConfigKey<Boolean> STOP_MACHINE = ConfigKeys.newBooleanConfigKey("stopMachine",
-                "Whether to stop the machine provisioned for this entity:  'true', or 'false' are supported, "
-                        + "with the default being 'true'", true);
-
         //IF_NOT_STOPPED includes STARTING, STOPPING, RUNNING
         public enum StopMode { ALWAYS, IF_NOT_STOPPED, NEVER };
 
         @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
         public static final ConfigKey<StopMode> STOP_PROCESS_MODE = ConfigKeys.newConfigKey(StopMode.class, "stopProcessMode",
-                "When to stop the process with regard to the entity state", StopMode.IF_NOT_STOPPED);
+                "When to stop the process with regard to the entity state" +
+                "ALWAYS will try to stop the process even if the entity is marked as stopped, " +
+                "IF_NOT_STOPPED stops the process only if the entity is not marked as stopped, " +
+                "NEVER doesn't stop the process.", StopMode.IF_NOT_STOPPED);
 
         @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
         public static final ConfigKey<StopMode> STOP_MACHINE_MODE = ConfigKeys.newConfigKey(StopMode.class, "stopMachineMode",
                 "When to stop the machine with regard to the entity state. " +
-                "ALWAYS will try to stop the machine even if the entity is already stopped, " +
-                "IF_NOT_STOPPED stops the machine only if the entity is not already stopped, " +
+                "ALWAYS will try to stop the machine even if the entity is marked as stopped, " +
+                "IF_NOT_STOPPED stops the machine only if the entity is not marked as stopped, " +
                 "NEVER doesn't stop the machine.", StopMode.IF_NOT_STOPPED);
+
+        /** @since 0.7.0 semantics of parameters to restart being explored
+         *  @deprecated since 0.7.0 use  {@link #STOP_MACHINE_MODE} instead */
+        @Beta
+        @Deprecated
+        public static final ConfigKey<Boolean> STOP_MACHINE = ConfigKeys.newBooleanConfigKey("stopMachine",
+                "Whether to stop the machine provisioned for this entity:  'true', or 'false' are supported, " +
+                "with the default being 'true'." +
+                " 'true' is equivalent to " + STOP_MACHINE_MODE.getName() + " = " + StopMode.IF_NOT_STOPPED.name() + "." +
+                " 'false' is equivalent to " + STOP_MACHINE_MODE.getName() + " = " + StopMode.NEVER.name() + ".", true);
+
     }
     
     // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks

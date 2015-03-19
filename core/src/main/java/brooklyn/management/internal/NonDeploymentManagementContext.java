@@ -603,5 +603,9 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         public void publishClearNonMaster() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
+        @Override
+        public long getLastStateChange() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
     }
 }

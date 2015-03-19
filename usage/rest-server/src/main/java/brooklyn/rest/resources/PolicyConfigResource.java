@@ -31,6 +31,7 @@ import brooklyn.management.entitlement.Entitlements;
 import brooklyn.policy.Policy;
 import brooklyn.rest.api.PolicyConfigApi;
 import brooklyn.rest.domain.PolicyConfigSummary;
+import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.PolicyTransformer;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
@@ -39,6 +40,7 @@ import brooklyn.util.flags.TypeCoercions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+@HaHotStateRequired
 public class PolicyConfigResource extends AbstractBrooklynRestResource implements PolicyConfigApi {
 
     @Override

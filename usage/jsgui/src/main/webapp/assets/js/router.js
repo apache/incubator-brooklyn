@@ -89,7 +89,7 @@ define([
         homePage:function (trail) {
             var that = this;
             // render the page after we fetch the collection -- no rendering on error
-            this.applications.fetch({success:function () {
+            function render() {
                 var homeView = new HomeView({
                     collection:that.applications,
                     locations:that.locations,
@@ -97,6 +97,9 @@ define([
                 });
                 var veryFirstViewLoad = !that.currentView;
                 that.showView("#application-content", homeView);
+            }
+            this.applications.fetch({success:function () {
+                render();
                 // show add application wizard if none already exist and this is the first page load
                 if ((veryFirstViewLoad && trail=='auto' && that.applications.isEmpty()) ||
                      (trail=='add_application') ) {
@@ -106,7 +109,7 @@ define([
                         }
                     });
                 }
-            }})
+            }, error: render});
         },
         applicationsPage:function (app, trail, tab) {
             if (trail === undefined) trail = app

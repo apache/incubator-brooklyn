@@ -41,26 +41,25 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import brooklyn.entity.brooklynnode.BrooklynNode.StopNodeAndKillAppsEffector;
 import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.JsonFunctions;
-import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -102,36 +101,40 @@ import com.google.common.io.Files;
  * rm -rf /tmp/brooklyn-`whoami`/installs/BrooklynNode*
  * </code>
  */
-public class BrooklynNodeIntegrationTest {
+public class BrooklynNodeIntegrationTest extends BrooklynAppUnitTestSupport {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynNodeIntegrationTest.class);
     
     private File pseudoBrooklynPropertiesFile;
     private File pseudoBrooklynCatalogFile;
+    private File persistenceDir;
     private LocalhostMachineProvisioningLocation loc;
     private List<LocalhostMachineProvisioningLocation> locs;
-    private TestApplication app;
-    private ManagementContext mgmt;
 
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
+        super.setUp();
         pseudoBrooklynPropertiesFile = Os.newTempFile("brooklynnode-test", ".properties");
         pseudoBrooklynPropertiesFile.delete();
 
         pseudoBrooklynCatalogFile = Os.newTempFile("brooklynnode-test", ".catalog");
         pseudoBrooklynCatalogFile.delete();
 
-        app = TestApplication.Factory.newManagedInstanceForTests();
-        mgmt = app.getManagementContext();
-        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
+        loc = app.newLocalhostProvisioningLocation();
         locs = ImmutableList.of(loc);
     }
 
     @AfterMethod(alwaysRun=true)
+    @Override
     public void tearDown() throws Exception {
-        if (mgmt != null) Entities.destroyAll(mgmt);
-        if (pseudoBrooklynPropertiesFile != null) pseudoBrooklynPropertiesFile.delete();
-        if (pseudoBrooklynCatalogFile != null) pseudoBrooklynCatalogFile.delete();
+        try {
+            super.tearDown();
+        } finally {
+            if (pseudoBrooklynPropertiesFile != null) pseudoBrooklynPropertiesFile.delete();
+            if (pseudoBrooklynCatalogFile != null) pseudoBrooklynCatalogFile.delete();
+            if (persistenceDir != null) Os.deleteRecursively(persistenceDir);
+        }
     }
 
     protected EntitySpec<BrooklynNode> newBrooklynNodeSpecForTest() {
@@ -470,6 +473,34 @@ services:
     @Test(groups="Integration")
     public void testStopButLeaveAppsEffector() throws Exception {
         createNodeAndExecStopEffector(BrooklynNode.STOP_NODE_BUT_LEAVE_APPS);
+    }
+    
+    @Test(groups="Integration")
+    public void testStopAndRestartProcess() throws Exception {
+        persistenceDir = Files.createTempDir();
+        BrooklynNode brooklynNode = app.createAndManageChild(newBrooklynNodeSpecForTest()
+                .configure(BrooklynNode.EXTRA_LAUNCH_PARAMETERS, "--persist auto --persistenceDir "+persistenceDir.getAbsolutePath())
+                .configure(BrooklynNode.APP, BasicApplicationImpl.class.getName()));
+        app.start(locs);
+        log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
+        File pidFile = new File(getDriver(brooklynNode).getPidFile());
+        URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
+
+        // Stop just the process; will not have unmanaged entity unless machine was being terminated 
+        brooklynNode.invoke(BrooklynNode.STOP, ImmutableMap.<String, Object>of(
+                BrooklynNode.StopSoftwareParameters.STOP_MACHINE_MODE.getName(), StopMode.NEVER,
+                BrooklynNode.StopSoftwareParameters.STOP_PROCESS_MODE.getName(), StopMode.ALWAYS)).getUnchecked();
+
+        assertTrue(Entities.isManaged(brooklynNode));
+        assertFalse(isPidRunning(pidFile), "pid in "+pidFile+" still running");
+        
+        // Restart the process; expect persisted state to have been restored, so apps still known about
+        brooklynNode.invoke(BrooklynNode.RESTART, ImmutableMap.<String, Object>of(
+                BrooklynNode.RestartSoftwareParameters.RESTART_MACHINE.getName(), "false")).getUnchecked();
+
+        String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
+        List<String> appType = parseJsonList(apps, ImmutableList.of("spec", "type"), String.class);
+        assertEquals(appType, ImmutableList.of(BasicApplication.class.getName()));
     }
 
     private void createNodeAndExecStopEffector(Effector<?> eff) throws Exception {

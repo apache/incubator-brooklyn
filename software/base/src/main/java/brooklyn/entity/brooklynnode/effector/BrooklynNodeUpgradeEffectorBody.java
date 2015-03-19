@@ -32,6 +32,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityTasks;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.brooklynnode.BrooklynCluster;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNodeDriver;
@@ -118,7 +119,7 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
         
         // Stop running instance
         DynamicTasks.queue(Tasks.builder().name("shutdown node")
-                .add(Effectors.invocation(entity(), BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, ImmutableMap.of(StopSoftwareParameters.STOP_MACHINE, Boolean.FALSE)))
+                .add(Effectors.invocation(entity(), BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, ImmutableMap.of(StopSoftwareParameters.STOP_MACHINE_MODE, StopMode.NEVER)))
                 .build());
 
         // backup old files
@@ -192,7 +193,7 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
 
         // 3 stop new version
         DynamicTasks.queue(Tasks.builder().name("shutdown transient node")
-            .add(Effectors.invocation(dryRunChild, BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, ImmutableMap.of(StopSoftwareParameters.STOP_MACHINE, Boolean.FALSE)))
+            .add(Effectors.invocation(dryRunChild, BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, ImmutableMap.of(StopSoftwareParameters.STOP_MACHINE_MODE, StopMode.NEVER)))
             .build());
 
         DynamicTasks.queue(Tasks.<Void>builder().name("remove transient node").body(

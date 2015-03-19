@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -40,12 +41,14 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
+import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
+import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
@@ -53,6 +56,7 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.location.basic.Locations;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.ha.ManagementNodeState;
@@ -77,6 +81,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
+import com.google.common.util.concurrent.Runnables;
 import com.google.gson.Gson;
 
 public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNode {
@@ -154,17 +159,42 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void preStop() {
         super.preStop();
+        if (MachineLifecycleEffectorTasks.canStop(getStopProcessModeParam(), this)) {
+            shutdownGracefully();
+        }
+    }
 
+    private StopMode getStopProcessModeParam() {
+        ConfigBag parameters = BrooklynTaskTags.getCurrentEffectorParameters();
+        if (parameters != null) {
+            return parameters.get(StopSoftwareParameters.STOP_PROCESS_MODE);
+        } else {
+            return StopSoftwareParameters.STOP_PROCESS_MODE.getDefaultValue();
+        }
+    }
+
+    @Override
+    protected void preRestart() {
+        super.preRestart();
+        //restart will kill the process, try to shut down before that
+        shutdownGracefully();
+        DynamicTasks.queue("pre-restart", new Runnable() { public void run() {
+            //set by shutdown - clear it so the entity starts cleanly. Does the indicator bring any value at all?
+            ServiceNotUpLogic.clearNotUpIndicator(BrooklynNodeImpl.this, SHUTDOWN.getName());
+        }});
+    }
+
+    private void shutdownGracefully() {
         // Shutdown only if accessible: any of stop_* could have already been called.
         // Don't check serviceUp=true because stop() will already have set serviceUp=false && expectedState=stopping
         if (Boolean.TRUE.equals(getAttribute(BrooklynNode.WEB_CONSOLE_ACCESSIBLE))) {
             queueShutdownTask();
             queueWaitExitTask();
         } else {
-            log.info("Skipping children.isEmpty check and shutdown call, because web-console not up for {}", this);
+            log.info("Skipping graceful shutdown call, because web-console not up for {}", this);
         }
     }
-    
+
     private void queueWaitExitTask() {
         //give time to the process to die gracefully after closing the shutdown call
         DynamicTasks.queue(Tasks.builder().name("wait for graceful stop").body(new Runnable() {
@@ -191,9 +221,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void postStop() {
         super.postStop();
-        ConfigBag stopParameters = BrooklynTaskTags.getCurrentEffectorParameters();
-        //unmanage only if stopping the machine
-        if (stopParameters == null || stopParameters.get(StopSoftwareParameters.STOP_MACHINE)) {
+        if (isMachineStopped()) {
             // Don't unmanage in entity's task context as it will self-cancel the task. Wait for the stop effector to complete.
             // If this is not enough (still getting Caused by: java.util.concurrent.CancellationException: null) then
             // we could search for the top most task with entity context == this and wait on it. Even stronger would be
@@ -201,6 +229,15 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             Task<?> stopEffectorTask = BrooklynTaskTags.getClosestEffectorTask(Tasks.current(), Startable.STOP);
             getManagementContext().getExecutionManager().submit(new UnmanageTask(stopEffectorTask, this));
         }
+    }
+
+    private boolean isMachineStopped() {
+        // Don't rely on effector parameters, check if there is still a machine running.
+        // If the entity was previously stopped with STOP_MACHINE_MODE=StopMode.NEVER
+        // and a second time with STOP_MACHINE_MODE=StopMode.IF_NOT_STOPPED, then the
+        // machine is still running, but there is no deterministic way to infer this from
+        // the parameters alone.
+        return Locations.findUniqueSshMachineLocation(this.getLocations()).isAbsent();
     }
 
     private void queueShutdownTask() {
@@ -279,12 +316,31 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         @VisibleForTesting
         // Integration test for this in BrooklynNodeIntegrationTest in this project doesn't use this method,
         // but a Unit test for this does, in DeployBlueprintTest -- but in the REST server project (since it runs against local) 
-        public String submitPlan(String plan) {
-            MutableMap<String, String> headers = MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, "application/yaml");
-            HttpToolResponse result = ((BrooklynNode)entity()).http()
-                    .post("/v1/applications", headers, plan.getBytes());
-            byte[] content = result.getContent();
-            return (String)new Gson().fromJson(new String(content), Map.class).get("entityId");
+        public String submitPlan(final String plan) {
+            final MutableMap<String, String> headers = MutableMap.of(com.google.common.net.HttpHeaders.CONTENT_TYPE, "application/yaml");
+            final AtomicReference<byte[]> response = new AtomicReference<byte[]>();
+            Repeater.create()
+                .every(Duration.ONE_SECOND)
+                .backoffTo(Duration.FIVE_SECONDS)
+                .limitTimeTo(Duration.minutes(5))
+                .repeat(Runnables.doNothing())
+                .until(new Callable<Boolean>() {
+                    public Boolean call() {
+                        HttpToolResponse result = ((BrooklynNode)entity()).http()
+                                .post("/v1/applications", headers, plan.getBytes());
+                        if (result.getResponseCode() == HttpStatus.SC_FORBIDDEN) {
+                            log.debug("Remote is not ready to accept requests, response is " + result.getResponseCode());
+                            return false;
+                        } else {
+                            //will fail on non-2xx response
+                            byte[] content = result.getContent();
+                            response.set(content);
+                            return true;
+                        }
+                    }
+                })
+                .runRequiringTrue();
+            return (String)new Gson().fromJson(new String(response.get()), Map.class).get("entityId");
         }
     }
 

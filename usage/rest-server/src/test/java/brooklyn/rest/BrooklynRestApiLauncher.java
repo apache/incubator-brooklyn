@@ -54,6 +54,7 @@ import brooklyn.rest.filter.NoCacheFilter;
 import brooklyn.rest.filter.RequestTaggingFilter;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.security.provider.SecurityProvider;
+import brooklyn.rest.util.ManagementContextProvider;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.WildcardGlobs;
@@ -103,6 +104,7 @@ public class BrooklynRestApiLauncher {
     private ManagementContext mgmt;
     private ContextHandler customContext;
     private boolean deployJsgui = true;
+    private boolean disableHighAvailability = true;
 
     protected BrooklynRestApiLauncher() {}
 
@@ -148,6 +150,11 @@ public class BrooklynRestApiLauncher {
 
     public BrooklynRestApiLauncher withoutJsgui() {
         this.deployJsgui = false;
+        return this;
+    }
+
+    public BrooklynRestApiLauncher disableHighAvailability(boolean value) {
+        this.disableHighAvailability = value;
         return this;
     }
 
@@ -197,7 +204,7 @@ public class BrooklynRestApiLauncher {
             ((LocalManagementContext) mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
         }
 
-        return startServer(mgmt, context, summary);
+        return startServer(mgmt, context, summary, disableHighAvailability);
     }
 
     private ContextHandler filterContextHandler(ManagementContext mgmt) {
@@ -253,7 +260,7 @@ public class BrooklynRestApiLauncher {
 
     /** starts a server, on all NICs if security is configured,
      * otherwise (no security) only on loopback interface */
-    public static Server startServer(ManagementContext mgmt, ContextHandler context, String summary) {
+    public static Server startServer(ManagementContext mgmt, ContextHandler context, String summary, boolean disableHighAvailability) {
         // TODO this repeats code in BrooklynLauncher / WebServer. should merge the two paths.
         boolean secure = mgmt != null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig());
         if (secure) {
@@ -265,7 +272,7 @@ public class BrooklynRestApiLauncher {
                 ((BrooklynProperties)mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME, AnyoneSecurityProvider.class.getName());
             }
         }
-        if (mgmt != null)
+        if (mgmt != null && disableHighAvailability)
             mgmt.getHighAvailabilityManager().disabled();
         InetSocketAddress bindLocation = new InetSocketAddress(
                 secure ? Networking.ANY_NIC : Networking.LOOPBACK,
@@ -329,6 +336,8 @@ public class BrooklynRestApiLauncher {
 
         // disable caching for dynamic content
         config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, NoCacheFilter.class.getName());
+        // Checks if appropriate request given HA status
+        config.getProperties().put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, brooklyn.rest.filter.HaHotCheckResourceFilter.class.getName());
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
@@ -337,6 +346,9 @@ public class BrooklynRestApiLauncher {
         // finally create this as a _filter_ which falls through to a web app or something (optionally)
         FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
+
+        ManagementContext mgmt = (ManagementContext) context.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        config.getSingletons().add(new ManagementContextProvider(mgmt));
     }
 
     private static void installBrooklynFilters(ServletContextHandler context, List<Class<? extends Filter>> filters) {
