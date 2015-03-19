@@ -87,6 +87,10 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         brooklyn().reloadBrooklynProperties();
     }
 
+    private boolean isMaster() {
+        return ManagementNodeState.MASTER.equals(mgmt().getHighAvailabilityManager().getNodeState());
+    }
+
     @Override
     public void shutdown(final boolean stopAppsFirst, final boolean forceShutdownOnError,
             String shutdownTimeoutRaw, String requestTimeoutRaw, String delayForHttpReturnRaw,
@@ -97,6 +101,9 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         
         log.info("REST call to shutdown server, stopAppsFirst="+stopAppsFirst+", delayForHttpReturn="+shutdownTimeoutRaw);
 
+        if (stopAppsFirst && !isMaster()) {
+            throw WebResourceUtils.serverError("Not allowed to stop all apps when server is not master");
+        }
         final Duration shutdownTimeout = parseDuration(shutdownTimeoutRaw, Duration.of(20, TimeUnit.SECONDS));
         Duration requestTimeout = parseDuration(requestTimeoutRaw, Duration.of(20, TimeUnit.SECONDS));
         final Duration delayForHttpReturn;
