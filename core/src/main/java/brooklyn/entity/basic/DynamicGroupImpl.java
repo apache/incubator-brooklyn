@@ -172,7 +172,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
                     try {
                         rescanEntities();
                     } catch (Exception e) {
-                        log.warn("Error rescanning entities when rebinding; may be a group set against an unknown entity: "+e);
+                        log.warn("Error rescanning entities on management of "+DynamicGroupImpl.this+"; may be a group set against an unknown entity: "+e);
                         log.debug("Trace for rescan entities error", e);
                         Exceptions.propagateIfFatal(e);
                     }
