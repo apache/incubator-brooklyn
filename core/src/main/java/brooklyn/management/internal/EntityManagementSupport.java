@@ -468,4 +468,8 @@ public class EntityManagementSupport {
         }
     }
 
+    @Override
+    public String toString() {
+        return super.toString()+"["+(entity==null ? "null" : entity.getId())+"]";
+    }
 }

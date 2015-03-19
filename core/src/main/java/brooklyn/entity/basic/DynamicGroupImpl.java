@@ -32,10 +32,12 @@ import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.management.Task;
 import brooklyn.management.internal.CollectionChangeListener;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -163,13 +165,20 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
         }
         setChangeListener = new MyEntitySetChangeListener();
         ((ManagementContextInternal) getManagementContext()).addEntitySetListener(setChangeListener);
-        try {
-            rescanEntities();
-        } catch (Exception e) {
-            log.warn("Error rescanning entities when rebinding; may be a group set against an unknown entity: "+e);
-            log.debug("Trace for rescan entities error", e);
-            Exceptions.propagateIfFatal(e);
-        }
+        Task<Object> rescan = Tasks.builder().name("rescan entities").body(
+            new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        rescanEntities();
+                    } catch (Exception e) {
+                        log.warn("Error rescanning entities on management of "+DynamicGroupImpl.this+"; may be a group set against an unknown entity: "+e);
+                        log.debug("Trace for rescan entities error", e);
+                        Exceptions.propagateIfFatal(e);
+                    }
+                }
+            }).build();
+        getExecutionContext().submit(rescan);
     }
 
     @Override
