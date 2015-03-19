@@ -189,14 +189,16 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                     Optional<Entity> result = Iterables.tryFind(getChildren(), new Predicate<Entity>() {
                         @Override
                         public boolean apply(Entity input) {
-                            return input.getConfig(DelegateEntity.DELEGATE_ENTITY).equals(member);
+                            Entity delegate = input.getConfig(DelegateEntity.DELEGATE_ENTITY);
+                            if (delegate == null) return false;
+                            return delegate.equals(member);
                         }
                     });
                     if (result.isPresent()) {
                         Entity child = result.get();
                         removeChild(child);
                         Entities.unmanage(child);
-                       }
+                    }
                 }
 
                 getManagementSupport().getEntityChangeListener().onMembersChanged();
