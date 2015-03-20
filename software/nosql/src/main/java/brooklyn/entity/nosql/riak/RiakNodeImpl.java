@@ -181,18 +181,13 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     @Override
-    public void leaveCluster() {
-        getDriver().leaveCluster();
+    public void leaveCluster(String nodeName) {
+        getDriver().leaveCluster(nodeName);
     }
 
     @Override
     public void commitCluster() {
         getDriver().commitCluster();
-    }
-
-    @Override
-    public boolean hasJoinedCluster() {
-        return Boolean.TRUE.equals(getAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER));
     }
 
     @Override

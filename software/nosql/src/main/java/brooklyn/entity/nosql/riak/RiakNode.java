@@ -20,11 +20,6 @@ package brooklyn.entity.nosql.riak;
 
 import java.util.List;
 
-import brooklyn.entity.basic.Attributes;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
-import com.google.common.reflect.TypeToken;
-
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
@@ -34,9 +29,13 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
+import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
+
+import com.google.common.reflect.TypeToken;
 
 @Catalog(name="Riak Node", description="Riak is a distributed NoSQL key-value data store that offers "
         + "extremely high availability, fault tolerance, operational simplicity and scalability.")
@@ -45,8 +44,10 @@ public interface RiakNode extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
-            "Version to install. Example 2.0.2, 2.0.5",
-            "2.0.5");
+            "Version to install (Default 2.0.5)", "2.0.5");
+
+    @SetFromFlag("optimizeNetworking")
+    ConfigKey<Boolean> OPTIMIZE_HOST_NETWORKING  = ConfigKeys.newBooleanConfigKey("riak.networking.optimize", "Optimize host networking when running in a VM", Boolean.TRUE);
 
     // vm.args and app.config are used for pre-version 2.0.0. Later versions use the (simplified) riak.conf
     // see https://github.com/joedevivo/ricon/blob/master/cuttlefish.md
@@ -94,14 +95,19 @@ public interface RiakNode extends SoftwareProcess {
     @SetFromFlag("riakWebPort")
     PortAttributeSensorAndConfigKey RIAK_WEB_PORT = new PortAttributeSensorAndConfigKey("riak.webPort", "Riak Web Port", "8098+");
 
-    @SetFromFlag("riakNodeHasJoinedCluster")
-    AttributeSensor<Boolean> RIAK_NODE_HAS_JOINED_CLUSTER = Sensors.newBooleanSensor(
-            "riak.node.riakNodeHasJoinedCluster", "Flag to indicate wether the Riak node has joined a cluster member");
-
-    @SetFromFlag("riakNodeName")
-    AttributeSensor<String> RIAK_NODE_NAME = Sensors.newStringSensor("riak.node", "Returns the riak node name as defined in vm.args");
     @SetFromFlag("riakPbPort")
     PortAttributeSensorAndConfigKey RIAK_PB_PORT = new PortAttributeSensorAndConfigKey("riak.pbPort", "Riak Protocol Buffers Port", "8087+");
+
+    AttributeSensor<Boolean> RIAK_PACKAGE_INSTALL = Sensors.newBooleanSensor(
+            "riak.install.package", "Flag to indicate whether Riak was installed using an OS package");
+    AttributeSensor<Boolean> RIAK_ON_PATH = Sensors.newBooleanSensor(
+            "riak.install.onPath", "Flag to indicate whether Riak is available on the PATH");
+
+    AttributeSensor<Boolean> RIAK_NODE_HAS_JOINED_CLUSTER = Sensors.newBooleanSensor(
+            "riak.node.riakNodeHasJoinedCluster", "Flag to indicate whether the Riak node has joined a cluster member");
+
+    AttributeSensor<String> RIAK_NODE_NAME = Sensors.newStringSensor("riak.node", "Returns the riak node name as defined in vm.args");
+
     // these needed for nodes to talk to each other, but not clients (so ideally set up in the security group for internal access)
     PortAttributeSensorAndConfigKey HANDOFF_LISTENER_PORT = new PortAttributeSensorAndConfigKey("riak.handoffListenerPort", "Handoff Listener Port", "8099+");
     PortAttributeSensorAndConfigKey EPMD_LISTENER_PORT = new PortAttributeSensorAndConfigKey("riak.epmdListenerPort", "Erlang Port Mapper Daemon Listener Port", "4369");
@@ -109,6 +115,7 @@ public interface RiakNode extends SoftwareProcess {
     PortAttributeSensorAndConfigKey ERLANG_PORT_RANGE_END = new PortAttributeSensorAndConfigKey("riak.erlangPortRangeEnd", "Erlang Port Range End", "7999+");
     PortAttributeSensorAndConfigKey SEARCH_SOLR_PORT = new PortAttributeSensorAndConfigKey("riak.search.solr.port", "Solr port", "8093+");
     PortAttributeSensorAndConfigKey SEARCH_SOLR_JMX_PORT = new PortAttributeSensorAndConfigKey("riak.search.solr.jmx_port", "Solr port", "8985+");
+
     AttributeSensor<Integer> NODE_GETS = Sensors.newIntegerSensor("node.gets");
     AttributeSensor<Integer> NODE_GETS_TOTAL = Sensors.newIntegerSensor("node.gets.total");
     AttributeSensor<Integer> NODE_PUTS = Sensors.newIntegerSensor("node.puts");
@@ -130,9 +137,10 @@ public interface RiakNode extends SoftwareProcess {
     @SuppressWarnings("serial")
     AttributeSensor<List<String>> RING_MEMBERS = Sensors.newSensor(new TypeToken<List<String>>() {},
             "ring.members", "all the riak nodes in the ring");
-    public static final MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
-    public static final MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
-    public static final MethodEffector<Void> COMMIT_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "commitCluster");
+
+    MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
+    MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
+    MethodEffector<Void> COMMIT_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "commitCluster");
 
     // accessors, for use from template file
     Integer getRiakWebPort();
@@ -157,17 +165,16 @@ public interface RiakNode extends SoftwareProcess {
 
     String getOsMajorVersion();
 
-    @Effector(description = "add this riak node to the riak cluster")
+    @Effector(description = "Add this riak node to the Riak cluster")
     public void joinCluster(@EffectorParam(name = "nodeName") String nodeName);
 
-    @Effector(description = "remove this riak node from the cluster")
-    public void leaveCluster();
+    @Effector(description = "Remove this Riak node from the cluster")
+    public void leaveCluster(@EffectorParam(name = "nodeName") String nodeName);
 
-    @Effector(description = "recover a failed riak node and join it back to the cluster (by passing it a working node on the cluster 'node')")
+    @Effector(description = "Recover a failed Riak node and join it back to the cluster (by passing it a working node on the cluster 'node')")
     public void recoverFailedNode(@EffectorParam(name = "nodeName") String nodeName);
 
-    @Effector(description = "commit changes made to a Riak cluster")
+    @Effector(description = "Commit changes made to a Riak cluster")
     public void commitCluster();
 
-    public boolean hasJoinedCluster();
 }
