@@ -155,7 +155,7 @@ public class ApiError {
         return details;
     }
 
-    public Integer getErrorCode() {
+    public Integer getError() {
         return error;
     }
     
