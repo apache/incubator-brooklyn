@@ -304,6 +304,7 @@ public class LocalEntityManager implements EntityManagerInternal {
      * (and the non-recursive RO path here could maybe be dropped)
      */
     
+    /** Applies management lifecycle callbacks (onManagementStarting, for all beforehand, then onManagementStopped, for all after) */
     protected void manageRecursive(Entity e, final ManagementTransitionMode initialMode) {
         checkManagementAllowed(e);
 
@@ -355,11 +356,22 @@ public class LocalEntityManager implements EntityManagerInternal {
             it.getManagementSupport().onManagementStarting( new ManagementTransitionInfo(managementContext, mode) ); 
             return manageNonRecursive(it, mode);
         } };
+        boolean isRecursive = true;
         if (initialMode.wasPrimary() && initialMode.isPrimary()) {
             // already managed, so this shouldn't be recursive 
-            // (in ActivePartialRebind we cheat calling in to this method; 
-            // the TODO above removing manageRebindRoot would allow us to avoid this cheat!)
-            log.debug("Managing "+e+" but skipping recursion, as mode is "+initialMode);
+            // (in ActivePartialRebind we cheat, calling in to this method then skipping recursion).
+            // it also falls through to here when doing a redundant promotion,
+            // in that case we *should* be recursive; determine by checking whether a child exists and is preregistered.
+            // the TODO above removing manageRebindRoot in favour of explicit mgmt list would clean this up a lot!
+            Entity aChild = Iterables.getFirst(e.getChildren(), null);
+            if (aChild!=null && isPreRegistered(aChild)) {
+                log.debug("Managing "+e+" in mode "+initialMode+", doing this recursively because a child is preregistered");
+            } else {
+                log.debug("Managing "+e+" but skipping recursion, as mode is "+initialMode);
+                isRecursive = false;
+            }
+        }
+        if (!isRecursive) {
             manageEntity.apply( (EntityInternal)e );
         } else {
             recursively(e, manageEntity);

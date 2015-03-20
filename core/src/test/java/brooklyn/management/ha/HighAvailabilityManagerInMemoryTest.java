@@ -114,7 +114,6 @@ public class HighAvailabilityManagerInMemoryTest extends HighAvailabilityManager
         Assert.assertEquals(ll2b.getConfig(TestEntity.CONF_NAME), "sample1");
         Assert.assertNotNull(ll2b.getParent(), "Parent not set after dodgy promoteToMaster");
         Assert.assertEquals(ll2b.getParent().getConfig(TestEntity.CONF_NAME), "sample1");
-        
     }
 
     private void checkEntitiesHealthy(TestApplication app, TestEntity entity) {
