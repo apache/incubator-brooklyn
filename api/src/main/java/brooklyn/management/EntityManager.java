@@ -122,5 +122,5 @@ public interface EntityManager {
      * (for instance because the entity is no longer relevant)
      */
     void unmanage(Entity e);
-
+    
 }

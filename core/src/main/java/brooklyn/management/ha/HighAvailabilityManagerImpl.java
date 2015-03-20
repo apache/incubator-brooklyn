@@ -885,12 +885,14 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     /** clears all managed items from the management context; same items destroyed as in the course of a rebind cycle */
     protected void clearManagedItems(ManagementTransitionMode mode) {
+        // start with the root applications
         for (Application app: managementContext.getApplications()) {
             if (((EntityInternal)app).getManagementSupport().isDeployed()) {
-                ((EntityInternal)app).getManagementContext().getEntityManager().unmanage(app);
+                ((LocalEntityManager)((EntityInternal)app).getManagementContext().getEntityManager()).unmanage(app, mode);
             }
         }
-        // for normal management, call above will remove; for read-only, etc, let's do what's below:
+        // for active management, call above will remove recursively at present,
+        // but for read-only, and if we stop recursively, go through them all
         for (Entity entity: managementContext.getEntityManager().getEntities()) {
             ((LocalEntityManager)managementContext.getEntityManager()).unmanage(entity, mode);
         }

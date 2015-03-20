@@ -77,13 +77,16 @@ public class InitialFullRebindIteration extends RebindIteration {
         
         preprocessManifestFiles();
         
-        if (mode!=ManagementNodeState.HOT_STANDBY && mode!=ManagementNodeState.HOT_BACKUP) {
-            if (!isEmpty) { 
+        if (!isEmpty) {
+            if (!ManagementNodeState.isHotProxy(mode) || readOnlyRebindCount.get()==1) {
                 LOG.info("Rebinding from "+getPersister().getBackingStoreDescription()+" for "+Strings.toLowerCase(Strings.toString(mode))+" "+managementContext.getManagementNodeId()+"...");
-            } else {
+            }
+        } else {
+            if (!ManagementNodeState.isHotProxy(mode)) {
                 LOG.info("Rebind check: no existing state; will persist new items to "+getPersister().getBackingStoreDescription());
             }
-
+        }
+        if (!ManagementNodeState.isHotProxy(mode)) {
             if (!managementContext.getEntityManager().getEntities().isEmpty() || !managementContext.getLocationManager().getLocations().isEmpty()) {
                 // this is discouraged if we were already master
                 Entity anEntity = Iterables.getFirst(managementContext.getEntityManager().getEntities(), null);

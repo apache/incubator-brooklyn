@@ -162,7 +162,7 @@ public class EntityManagementSupport {
                 boolean alreadyManaging = isDeployed();
                 
                 if (alreadyManaging) {
-                    log.warn("Already managed: "+entity+" ("+nonDeploymentManagementContext+"); onManagementStarted is no-op");
+                    log.warn("Already managed: "+entity+" ("+nonDeploymentManagementContext+"); onManagementStarting is no-op");
                 } else if (nonDeploymentManagementContext == null || !nonDeploymentManagementContext.getMode().isPreManaged()) {
                     throw new IllegalStateException("Not in expected pre-managed state: "+entity+" ("+nonDeploymentManagementContext+")");
                 }
@@ -270,7 +270,7 @@ public class EntityManagementSupport {
             if (managementContext != info.getManagementContext()) {
                 throw new IllegalStateException("onManagementStopping encountered different management context for "+entity+
                     (!wasDeployed() ? " (wasn't deployed)" : !isDeployed() ? " (no longer deployed)" : "")+
-                    ": "+managementContext+"; expected "+info.getManagementContext());
+                    ": "+managementContext+"; expected "+info.getManagementContext()+" (may be a pre-registered entity which was never properly managed)");
             }
             Stopwatch startTime = Stopwatch.createStarted();
             while (!managementFailed.get() && nonDeploymentManagementContext!=null && 

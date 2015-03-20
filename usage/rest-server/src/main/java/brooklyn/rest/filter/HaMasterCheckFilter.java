@@ -20,20 +20,28 @@ package brooklyn.rest.filter;
 
 import java.io.IOException;
 import java.util.Set;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
 
-import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.rest.domain.ApiError;
+import brooklyn.rest.util.WebResourceUtils;
+
+import com.google.common.collect.Sets;
 
 /**
  * Checks that the request is appropriate given the high availability status of the server.
@@ -42,24 +50,27 @@ import brooklyn.management.ha.ManagementNodeState;
  */
 public class HaMasterCheckFilter implements Filter {
 
+    private static final Logger log = LoggerFactory.getLogger(HaMasterCheckFilter.class);
+    
     public static final String SKIP_CHECK_HEADER = "Brooklyn-Allow-Non-Master-Access";
     private static final Set<String> SAFE_STANDBY_METHODS = Sets.newHashSet("GET", "HEAD");
 
+    protected ServletContext servletContext;
     protected ManagementContext mgmt;
 
     @Override
     public void init(FilterConfig config) throws ServletException {
-        mgmt = (ManagementContext) config.getServletContext().getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        servletContext = config.getServletContext();
+        mgmt = (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if (!isMaster() && isUnsafeRequest(request)) {
-            HttpServletResponse httpResponse = (HttpServletResponse) response;
-            httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            httpResponse.setContentType("application/json");
-            httpResponse.setCharacterEncoding("UTF-8");
-            httpResponse.getWriter().write("{\"error\":403,\"message\":\"Requests should be made to the master Brooklyn server\"}");
+        if (!isMaster() && !isRequestAllowedForNonMaster(request)) {
+            log.warn("Disallowed request to non-HA-master brooklyn: "+request+"/"+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
+            WebResourceUtils.applyJsonResponse(servletContext, ApiError.builder()
+                .message("This request is only permitted against a master Brooklyn server")
+                .errorCode(Response.Status.FORBIDDEN).build().asJsonResponse(), (HttpServletResponse)response);
         } else {
             chain.doFilter(request, response);
         }
@@ -73,13 +84,23 @@ public class HaMasterCheckFilter implements Filter {
         return ManagementNodeState.MASTER.equals(mgmt.getHighAvailabilityManager().getNodeState());
     }
 
-    private boolean isUnsafeRequest(ServletRequest request) {
+    private boolean isRequestAllowedForNonMaster(ServletRequest request) {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             String checkOverridden = httpRequest.getHeader(SKIP_CHECK_HEADER);
+            if ("true".equalsIgnoreCase(checkOverridden)) return true;
+            
             String method = httpRequest.getMethod().toUpperCase();
-            return !"true".equalsIgnoreCase(checkOverridden) && !SAFE_STANDBY_METHODS.contains(method);
+            if (SAFE_STANDBY_METHODS.contains(method)) return true;
+            
+            // explicitly allow calls to shutdown
+            // (if stopAllApps is specified, the method itself will fail; but we do not want to consume parameters here, that breaks things!)
+            // TODO combine with HaHotCheckResourceFilter and use an annotation HaAnyStateAllowed or similar
+            if ("/v1/server/shutdown".equals(httpRequest.getRequestURI())) return true;
+            
+            return false;
         }
+        // previously non-HttpServletRequests were allowed but I don't think they should be
         return false;
     }
 }

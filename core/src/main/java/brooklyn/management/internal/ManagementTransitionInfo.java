@@ -40,4 +40,9 @@ public class ManagementTransitionInfo {
     public ManagementTransitionMode getMode() {
         return mode;
     }
+    
+    @Override
+    public String toString() {
+        return super.toString()+"["+mgmtContext+";"+mode+"]";
+    }
 }
