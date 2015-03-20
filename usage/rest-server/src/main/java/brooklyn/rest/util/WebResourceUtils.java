@@ -18,8 +18,11 @@
  */
 package brooklyn.rest.util;
 
+import java.io.IOException;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -30,11 +33,13 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.rest.domain.ApiError;
+import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableMap;
+import com.sun.jersey.spi.container.ContainerResponse;
 
 public class WebResourceUtils {
 
@@ -47,9 +52,9 @@ public class WebResourceUtils {
             log.debug("responding {} {} ({})",
                     new Object[]{status.getStatusCode(), status.getReasonPhrase(), msg});
         }
-        throw new WebApplicationException(Response.status(status)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .entity(ApiError.builder().message(msg).build()).build());
+        ApiError apiError = ApiError.builder().message(msg).errorCode(status).build();
+        // including a Throwable is the only way to include a message with the WebApplicationException - ugly!
+        throw new WebApplicationException(new Throwable(apiError.toString()), apiError.asJsonResponse());
     }
 
     /** @throws WebApplicationException With code 500 internal server error */
@@ -65,6 +70,11 @@ public class WebResourceUtils {
     /** @throws WebApplicationException With code 401 unauthorized */
     public static WebApplicationException unauthorized(String format, Object... args) {
         return throwWebApplicationException(Response.Status.UNAUTHORIZED, format, args);
+    }
+
+    /** @throws WebApplicationException With code 403 forbidden */
+    public static WebApplicationException forbidden(String format, Object... args) {
+        return throwWebApplicationException(Response.Status.FORBIDDEN, format, args);
     }
 
     /** @throws WebApplicationException With code 404 not found */
@@ -138,5 +148,15 @@ public class WebResourceUtils {
         } else {
             return Urls.encode(versionedId);
         }
+    }
+
+    /** Sets the {@link HttpServletResponse} target (last argument) from the given source {@link Response};
+     * useful in filters where we might have a {@link Response} and need to set up an {@link HttpServletResponse}. 
+     * Similar to {@link ContainerResponse#setResponse(Response)}; nothing like that seems to be available for {@link HttpServletResponse}. */
+    public static void applyJsonResponse(ServletContext servletContext, Response source, HttpServletResponse target) throws IOException {
+        target.setStatus(source.getStatus());
+        target.setContentType(MediaType.APPLICATION_JSON);
+        target.setCharacterEncoding("UTF-8");
+        target.getWriter().write(BrooklynJacksonJsonProvider.findAnyObjectMapper(servletContext, null).writeValueAsString(source.getEntity()));
     }
 }

@@ -102,7 +102,8 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         log.info("REST call to shutdown server, stopAppsFirst="+stopAppsFirst+", delayForHttpReturn="+shutdownTimeoutRaw);
 
         if (stopAppsFirst && !isMaster()) {
-            throw WebResourceUtils.serverError("Not allowed to stop all apps when server is not master");
+            log.warn("REST call to shutdown non-master server while stopping apps is disallowed");
+            throw WebResourceUtils.forbidden("Not allowed to stop all apps when server is not master");
         }
         final Duration shutdownTimeout = parseDuration(shutdownTimeoutRaw, Duration.of(20, TimeUnit.SECONDS));
         Duration requestTimeout = parseDuration(requestTimeoutRaw, Duration.of(20, TimeUnit.SECONDS));

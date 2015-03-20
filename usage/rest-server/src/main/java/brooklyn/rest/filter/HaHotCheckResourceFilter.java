@@ -24,12 +24,15 @@ import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.rest.domain.ApiError;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +44,9 @@ import com.sun.jersey.spi.container.ResourceFilter;
 import com.sun.jersey.spi.container.ResourceFilterFactory;
 
 public class HaHotCheckResourceFilter implements ResourceFilterFactory {
+    
+    private static final Logger log = LoggerFactory.getLogger(HaHotCheckResourceFilter.class);
+    
     private static final Set<ManagementNodeState> HOT_STATES = ImmutableSet.of(
             ManagementNodeState.MASTER, ManagementNodeState.HOT_STANDBY, ManagementNodeState.HOT_BACKUP);
     private static final long STATE_CHANGE_SETTLE_OFFSET = Duration.seconds(10).toMilliseconds();
@@ -71,11 +77,10 @@ public class HaHotCheckResourceFilter implements ResourceFilterFactory {
         @Override
         public ContainerRequest filter(ContainerRequest request) {
             if (!isStateLoaded() && isUnsafe(request)) {
-                Response response = Response.status(Response.Status.FORBIDDEN)
-                        .type(MediaType.APPLICATION_JSON)
-                        .entity("{\"error\":403,\"message\":\"Requests should be made to the master Brooklyn server\"}")
-                        .build();
-                throw new WebApplicationException(response);
+                log.warn("Disallowed request to standby brooklyn: "+request+"/"+am+" (caller should set '"+HaMasterCheckFilter.SKIP_CHECK_HEADER+"' to force)");
+                throw new WebApplicationException(ApiError.builder()
+                    .message("This request is not permitted against a standby Brooklyn server")
+                    .errorCode(Response.Status.FORBIDDEN).build().asJsonResponse());
             }
             return request;
         }

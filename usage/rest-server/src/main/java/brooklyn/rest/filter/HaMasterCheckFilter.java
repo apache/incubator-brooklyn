@@ -24,11 +24,13 @@ import java.util.Set;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +38,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.rest.domain.ApiError;
+import brooklyn.rest.util.WebResourceUtils;
 
 import com.google.common.collect.Sets;
 
@@ -51,22 +55,22 @@ public class HaMasterCheckFilter implements Filter {
     public static final String SKIP_CHECK_HEADER = "Brooklyn-Allow-Non-Master-Access";
     private static final Set<String> SAFE_STANDBY_METHODS = Sets.newHashSet("GET", "HEAD");
 
+    protected ServletContext servletContext;
     protected ManagementContext mgmt;
 
     @Override
     public void init(FilterConfig config) throws ServletException {
-        mgmt = (ManagementContext) config.getServletContext().getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        servletContext = config.getServletContext();
+        mgmt = (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         if (!isMaster() && !isRequestAllowedForNonMaster(request)) {
-            log.warn("Disallowed request to non-HA master: "+request+"/"+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
-            HttpServletResponse httpResponse = (HttpServletResponse) response;
-            httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            httpResponse.setContentType("application/json");
-            httpResponse.setCharacterEncoding("UTF-8");
-            httpResponse.getWriter().write("{\"error\":403,\"message\":\"Requests should be made to the master Brooklyn server\"}");
+            log.warn("Disallowed request to non-HA-master brooklyn: "+request+"/"+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
+            WebResourceUtils.applyJsonResponse(servletContext, ApiError.builder()
+                .message("This request is only permitted against a master Brooklyn server")
+                .errorCode(Response.Status.FORBIDDEN).build().asJsonResponse(), (HttpServletResponse)response);
         } else {
             chain.doFilter(request, response);
         }

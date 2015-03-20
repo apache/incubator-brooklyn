@@ -71,6 +71,7 @@ public class ApiError {
     public static class Builder {
         private String message;
         private String details;
+        private Integer errorCode;
 
         public Builder message(String message) {
             this.message = checkNotNull(message, "message");
@@ -82,6 +83,15 @@ public class ApiError {
             return this;
         }
 
+        public Builder errorCode(Status errorCode) {
+            return errorCode(errorCode.getStatusCode());
+        }
+        
+        public Builder errorCode(Integer errorCode) {
+            this.errorCode = errorCode;
+            return this;
+        }
+        
         /** as {@link #prefixMessage(String, String)} with default separator of `: ` */
         public Builder prefixMessage(String prefix) {
             return prefixMessage(prefix, ": ");
@@ -97,7 +107,7 @@ public class ApiError {
         }
         
         public ApiError build() {
-            return new ApiError(message, details);
+            return new ApiError(message, details, errorCode);
         }
 
         /** @deprecated since 0.7.0; use {@link #copy(ApiError)} */
@@ -109,7 +119,8 @@ public class ApiError {
         public Builder copy(ApiError error) {
             return this
                     .message(error.message)
-                    .details(error.details);
+                    .details(error.details)
+                    .errorCode(error.error);
         }
         
         public String getMessage() {
@@ -122,15 +133,18 @@ public class ApiError {
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String details;
 
-    public ApiError(String message) {
-        this(message, null);
-    }
+    @JsonSerialize(include=Inclusion.NON_NULL)
+    private final Integer error;
 
+    public ApiError(String message) { this(message, null); }
+    public ApiError(String message, String details) { this(message, details, null); }
     public ApiError(
             @JsonProperty("message") String message,
-            @JsonProperty("details") String details) {
+            @JsonProperty("details") String details,
+            @JsonProperty("error") Integer error) {
         this.message = checkNotNull(message, "message");
         this.details = details != null ? details : "";
+        this.error = error;
     }
 
     public String getMessage() {
@@ -141,18 +155,23 @@ public class ApiError {
         return details;
     }
 
+    public Integer getErrorCode() {
+        return error;
+    }
+    
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
         if (other == null || getClass() != other.getClass()) return false;
         ApiError that = ApiError.class.cast(other);
         return Objects.equal(this.message, that.message) &&
-                Objects.equal(this.details, that.details);
+                Objects.equal(this.details, that.details) &&
+                Objects.equal(this.error, that.error);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(message, details);
+        return Objects.hashCode(message, details, error);
     }
 
     @Override
@@ -160,6 +179,7 @@ public class ApiError {
         return Objects.toStringHelper(this)
                 .add("message", message)
                 .add("details", details)
+                .add("error", error)
                 .toString();
     }
 
@@ -167,10 +187,18 @@ public class ApiError {
         return asResponse(Status.BAD_REQUEST, MediaType.APPLICATION_JSON_TYPE);
     }
 
-    public Response asResponse(Status status, MediaType type) {
-        return Response.status(status)
+    public Response asResponse(Status defaultStatus, MediaType type) {
+        return Response.status(error!=null ? error : defaultStatus!=null ? defaultStatus.getStatusCode() : Status.INTERNAL_SERVER_ERROR.getStatusCode())
             .type(type)
             .entity(this)
             .build();
+    }
+    
+    public Response asResponse(MediaType type) {
+        return asResponse(null, type);
+    }
+    
+    public Response asJsonResponse() {
+        return asResponse(MediaType.APPLICATION_JSON_TYPE);
     }
 }
