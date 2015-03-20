@@ -203,8 +203,17 @@ public class LocalLocationManager implements LocationManagerInternal {
         Preconditions.checkNotNull(mode, "Mode not set for rebinding %s", item);
         manageRecursive(item, mode);
     }
-    
+
+    protected void checkManagementAllowed(Location item) {
+        AccessController.Response access = managementContext.getAccessController().canManageLocation(item);
+        if (!access.isAllowed()) {
+            throw new IllegalStateException("Access controller forbids management of "+item+": "+access.getMsg());
+        }        
+    }
+
     protected Location manageRecursive(Location loc, final ManagementTransitionMode initialMode) {
+        // TODO see comments in LocalEntityManager about recursive management / manageRebindRoot v manageAll
+        
         AccessController.Response access = managementContext.getAccessController().canManageLocation(loc);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids management of "+loc+": "+access.getMsg());
@@ -287,7 +296,7 @@ public class LocalLocationManager implements LocationManagerInternal {
             // do not remove from maps below, bail out now
             return;
 
-        } else if ((mode.isReadOnly() && mode.wasPrimary()) || (mode.isDestroying() && mode.wasReadOnly())) {
+        } else if ((mode.wasPrimary() && mode.isReadOnly()) || (mode.wasReadOnly() && mode.isNoLongerLoaded())) {
             if (mode.isReadOnly() && mode.wasPrimary()) {
                 // TODO shouldn't this fall into "hasBeenReplaced" above?
                 log.debug("Unmanaging on demotion: "+loc+" ("+mode+")");
@@ -297,15 +306,11 @@ public class LocalLocationManager implements LocationManagerInternal {
             managementContext.getRebindManager().getChangeListener().onUnmanaged(loc);
             if (managementContext.gc != null) managementContext.gc.onUnmanaged(loc);
             unmanageNonRecursiveClearItsFields(loc, mode);
-        } else if (mode.isDestroying()) {
-
-            // TODO isUnloading???
             
-            // we are unmanaging an instance either because it is being destroyed (primary), 
-            // or due to an explicit call (shutting down all things, read-only and primary);
-            // in either case, should be recursive
-            
+        } else if (mode.isNoLongerLoaded()) {
             // Need to store all child entities as onManagementStopping removes a child from the parent entity
+            
+            // As above, see TODO in LocalEntityManager about recursive management / unmanagement v manageAll/unmanageAll
             recursively(loc, new Predicate<AbstractLocation>() { public boolean apply(AbstractLocation it) {
                 if (shouldSkipUnmanagement(it)) return false;
                 boolean result = unmanageNonRecursiveRemoveFromRecords(it, mode);
@@ -326,8 +331,6 @@ public class LocalLocationManager implements LocationManagerInternal {
             } });
             
         } else {
-            // what about to unmanaged_persisted?
-            
             log.warn("Invalid mode for unmanage: "+mode+" on "+loc+" (ignoring)");
         }
         

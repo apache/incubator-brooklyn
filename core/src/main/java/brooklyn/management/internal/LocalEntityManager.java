@@ -278,11 +278,34 @@ public class LocalEntityManager implements EntityManagerInternal {
         manageRecursive(item, mode);
     }
     
-    protected void manageRecursive(Entity e, final ManagementTransitionMode initialMode) {
-        AccessController.Response access = managementContext.getAccessController().canManageEntity(e);
+    protected void checkManagementAllowed(Entity item) {
+        AccessController.Response access = managementContext.getAccessController().canManageEntity(item);
         if (!access.isAllowed()) {
-            throw new IllegalStateException("Access controller forbids management of "+e+": "+access.getMsg());
-        }
+            throw new IllegalStateException("Access controller forbids management of "+item+": "+access.getMsg());
+        }        
+    }
+    
+    /* TODO we sloppily use "recursive" to ensure ordering of parent-first in many places
+     * (which may not be necessary but seems like a good idea),
+     * and also to collect many entities when doing a big rebind,
+     * ensuring all have #manageNonRecursive called before calling #onManagementStarted.
+     * 
+     * it would be better to have a manageAll(Map<Entity,ManagementTransitionMode> items)
+     * method which did that in two phases, allowing us to selectively rebind, 
+     * esp when we come to want supporting different modes and different brooklyn nodes.
+     * 
+     * the impl of manageAll could sort them with parents before children,
+     * (and manageRecursive could simply populate a map and delegate to manageAll).
+     * 
+     * manageRebindRoot would then go, and the (few) callers would construct the map.
+     * 
+     * similarly we might want an unmanageAll(), 
+     * although possibly all unmanagement should be recursive, if we assume an entity's ancestors are always at least proxied
+     * (and the non-recursive RO path here could maybe be dropped)
+     */
+    
+    protected void manageRecursive(Entity e, final ManagementTransitionMode initialMode) {
+        checkManagementAllowed(e);
 
         final List<EntityInternal> allEntities =  Lists.newArrayList();
         Predicate<EntityInternal> manageEntity = new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
@@ -311,8 +334,10 @@ public class LocalEntityManager implements EntityManagerInternal {
                 } else {
                     if (mode.wasPrimary() && mode.isPrimary()) {
                         // active partial rebind; continue
+                    } else if (mode.wasReadOnly() && mode.isReadOnly()) {
+                        // reload in RO mode
                     } else {
-                        // on rebind, should not have any deployed instances
+                        // on initial non-RO rebind, should not have any deployed instances
                         log.warn("Already deployed "+it+" when managing "+mode+"/"+initialMode+"; ignoring this and all descendants");
                         return false;
                     }
@@ -331,6 +356,10 @@ public class LocalEntityManager implements EntityManagerInternal {
             return manageNonRecursive(it, mode);
         } };
         if (initialMode.wasPrimary() && initialMode.isPrimary()) {
+            // already managed, so this shouldn't be recursive 
+            // (in ActivePartialRebind we cheat calling in to this method; 
+            // the TODO above removing manageRebindRoot would allow us to avoid this cheat!)
+            log.debug("Managing "+e+" but skipping recursion, as mode is "+initialMode);
             manageEntity.apply( (EntityInternal)e );
         } else {
             recursively(e, manageEntity);
@@ -378,8 +407,8 @@ public class LocalEntityManager implements EntityManagerInternal {
             // do not remove from maps below, bail out now
             return;
             
-        } else if (mode.wasReadOnly() && mode.isDestroying()) {
-            // we are unmanaging an instance (secondary) for which the primary has been destroyed elsewhere
+        } else if (mode.wasReadOnly() && mode.isNoLongerLoaded()) {
+            // we are unmanaging an instance (secondary); either stopping here or primary destroyed elsewhere
             ((EntityInternal)e).getManagementSupport().onManagementStopping(info);
             unmanageNonRecursive(e);
             stopTasks(e);
@@ -387,10 +416,16 @@ public class LocalEntityManager implements EntityManagerInternal {
             managementContext.getRebindManager().getChangeListener().onUnmanaged(e);
             if (managementContext.getGarbageCollector() != null) managementContext.getGarbageCollector().onUnmanaged(e);
             
-        } else if (mode.wasPrimary() && mode.isDestroying()) {
-            // we are unmanaging an instance either because it is being destroyed (primary), 
-            // or due to an explicit call (shutting down all things, read-only and primary);
-            // in either case, should be recursive
+        } else if (mode.wasPrimary() && mode.isNoLongerLoaded()) {
+            // unmanaging a primary; currently this is done recursively
+            
+            /* TODO tidy up when it is recursive and when it isn't; if something is being unloaded or destroyed,
+             * that probably *is* recursive, but the old mode might be different if in some cases things are read-only.
+             * or maybe nothing needs to be recursive, we just make sure the callers (e.g. HighAvailabilityModeImpl.clearManagedItems)
+             * call in a good order
+             * 
+             * see notes above about recursive/manage/All/unmanageAll
+             */
             
             // Need to store all child entities as onManagementStopping removes a child from the parent entity
             final List<EntityInternal> allEntities =  Lists.newArrayList();        
@@ -523,6 +558,14 @@ public class LocalEntityManager implements EntityManagerInternal {
     }
 
     private void recursively(Entity e, Predicate<EntityInternal> action) {
+        Entity otherPreregistered = preRegisteredEntitiesById.get(e.getId());
+        if (otherPreregistered!=null) {
+            // if something has been pre-registered, prefer it
+            // (e.g. if we recursing through children, we might have a proxy from previous iteration;
+            // the most recent will have been pre-registered)
+            e = otherPreregistered;
+        }
+            
         boolean success = action.apply( (EntityInternal)e );
         if (!success) {
             return; // Don't manage children if action false/unnecessary for parent

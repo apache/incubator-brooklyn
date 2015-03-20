@@ -162,7 +162,7 @@ public class EntityManagementSupport {
                 boolean alreadyManaging = isDeployed();
                 
                 if (alreadyManaging) {
-                    log.warn("Already managed: "+entity+" ("+nonDeploymentManagementContext+"); onManagementStarted is no-op");
+                    log.warn("Already managed: "+entity+" ("+nonDeploymentManagementContext+"); onManagementStarting is no-op");
                 } else if (nonDeploymentManagementContext == null || !nonDeploymentManagementContext.getMode().isPreManaged()) {
                     throw new IllegalStateException("Not in expected pre-managed state: "+entity+" ("+nonDeploymentManagementContext+")");
                 }
