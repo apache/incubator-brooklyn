@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +31,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
@@ -47,7 +46,7 @@ import brooklyn.util.time.Time;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -73,14 +72,10 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
         Time.sleep(getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER));
 
         //FIXME: add a quorum to tolerate failed nodes before setting on fire.
-        Optional<Entity> anyNode = Iterables.tryFind(getMembers(), new Predicate<Entity>() {
-
-            @Override
-            public boolean apply(@Nullable Entity entity) {
-                return (entity instanceof RiakNode && hasMemberJoinedCluster(entity) && entity.getAttribute(RiakNode.SERVICE_UP));
-            }
-        });
-
+        Optional<Entity> anyNode = Iterables.tryFind(getMembers(), Predicates.and(
+                Predicates.instanceOf(RiakNode.class),
+                EntityPredicates.attributeEqualTo(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true),
+                EntityPredicates.attributeEqualTo(RiakNode.SERVICE_UP, true)));
         if (anyNode.isPresent()) {
             log.info("Planning and Committing cluster changes on node: {}, cluster: {}", anyNode.get().getId(), getId());
             Entities.invokeEffector(this, anyNode.get(), RiakNode.COMMIT_RIAK_CLUSTER).blockUntilEnded();
@@ -103,7 +98,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 .configure("group", this));
     }
 
-    protected void onServerPoolMemberChanged(Entity member) {
+    protected void onServerPoolMemberChanged(final Entity member) {
         synchronized (mutex) {
             log.trace("For {}, considering membership of {} which is in locations {}", new Object[]{ this, member, member.getLocations() });
 
@@ -132,50 +127,40 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 } else {
                     // TODO: be wary of erroneous nodes but are still flagged 'in cluster'
                     // add the new node to be part of the riak cluster.
-                    Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
-                        @Override
-                        public boolean apply(@Nullable Entity node) {
-                            return (node instanceof RiakNode && hasMemberJoinedCluster(node));
-                        }
-                    });
-
+                    Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), Predicates.and(
+                            Predicates.instanceOf(RiakNode.class),
+                            EntityPredicates.attributeEqualTo(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true)));
                     if (anyNodeInCluster.isPresent()) {
-                        if (!nodes.containsKey(member) && !hasMemberJoinedCluster(member)) {
+                        if (!nodes.containsKey(member) && member.getAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER) == null) {
                             String anyNodeName = anyNodeInCluster.get().getAttribute(RiakNode.RIAK_NODE_NAME);
                             Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName);
                             if (getAttribute(IS_CLUSTER_INIT)) {
-                                Entities.invokeEffector(RiakClusterImpl.this, anyNodeInCluster.get(), RiakNode.COMMIT_RIAK_CLUSTER);
+                                Entities.invokeEffector(RiakClusterImpl.this, member, RiakNode.COMMIT_RIAK_CLUSTER);
                             }
                             nodes.put(member, riakName);
                             setAttribute(RIAK_CLUSTER_NODES, nodes);
-                            log.info("Adding riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
+                            log.info("Added Riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
                         }
                     } else {
-                        log.error("isFirstNodeSet , but no cluster members found to add {}", member.getId());
+                        log.error("isFirstNodeSet, but no cluster members found to add {}", member.getId());
                     }
                 }
             } else {
                 if (nodes != null && nodes.containsKey(member)) {
-                    final Entity memberToBeRemoved = member;
-
-                    Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), new Predicate<Entity>() {
-                        @Override
-                        public boolean apply(@Nullable Entity node) {
-                            return (node instanceof RiakNode && hasMemberJoinedCluster(node) && !node.equals(memberToBeRemoved));
-                        }
-                    });
+                    Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), Predicates.and(
+                            Predicates.instanceOf(RiakNode.class),
+                            EntityPredicates.attributeEqualTo(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true),
+                            Predicates.not(Predicates.equalTo(member))));
                     if (anyNodeInCluster.isPresent()) {
-                        Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.LEAVE_RIAK_CLUSTER, getRiakName(memberToBeRemoved));
+                        Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.LEAVE_RIAK_CLUSTER, getRiakName(member));
                     }
-
                     nodes.remove(member);
                     setAttribute(RIAK_CLUSTER_NODES, nodes);
-                    log.info("Removing riak node {}: {}; {} from cluster", new Object[]{this, member, getRiakName(member)});
+                    log.info("Removed Riak node {}: {}; {} from cluster", new Object[]{ this, member, getRiakName(member) });
                 }
             }
 
             ServiceNotUpLogic.updateNotUpIndicatorRequiringNonEmptyMap(this, RIAK_CLUSTER_NODES);
-            if (log.isTraceEnabled()) log.trace("Done {} checkEntity {}", this, member);
 
             calculateClusterAddresses();
         }
@@ -194,26 +179,20 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
 
     protected boolean belongsInServerPool(Entity member) {
         if (!groovyTruth(member.getAttribute(Startable.SERVICE_UP))) {
-            if (log.isTraceEnabled()) log.trace("Members of {}, checking {}, eliminating because not up", this, member);
+            log.trace("Members of {}, checking {}, eliminating because not up", this, member);
             return false;
         }
         if (!getMembers().contains(member)) {
-            if (log.isTraceEnabled())
-                log.trace("Members of {}, checking {}, eliminating because not member", this, member);
-
+            log.trace("Members of {}, checking {}, eliminating because not member", this, member);
             return false;
         }
-        if (log.isTraceEnabled()) log.trace("Members of {}, checking {}, approving", this, member);
+        log.trace("Members of {}, checking {}, approving", this, member);
 
         return true;
     }
 
     private String getRiakName(Entity node) {
         return node.getAttribute(RiakNode.RIAK_NODE_NAME);
-    }
-
-    private boolean hasMemberJoinedCluster(Entity member) {
-        return ((RiakNode) member).hasJoinedCluster();
     }
 
     public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {

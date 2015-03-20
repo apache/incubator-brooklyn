@@ -26,11 +26,8 @@ import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
-import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 
-import com.google.common.base.Predicates;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -60,11 +57,6 @@ public class RiakClusterEc2LiveTest extends AbstractEc2LiveTest {
         for (final RiakNode node : nodes) {
             EntityTestUtils.assertAttributeEqualsEventually(node, RiakNode.SERVICE_UP, true);
             EntityTestUtils.assertAttributeEqualsEventually(node, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true);
-            Asserts.eventually(new Supplier<Boolean>() {
-                @Override public Boolean get() {
-                    return node.hasJoinedCluster();
-                }
-            }, Predicates.alwaysTrue());
         }
     }
 

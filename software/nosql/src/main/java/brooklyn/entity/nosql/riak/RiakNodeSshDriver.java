@@ -26,6 +26,7 @@ import java.util.Map;
 
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.ssh.SshTasks;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,7 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -53,8 +55,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeSshDriver.class);
     private static final String sbinPath = "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
     private static final String INSTALLING_FALLBACK = INSTALLING + "_fallback";
-    private boolean isPackageInstall = true;
-    private boolean isRiakOnPath = true;
 
     public RiakNodeSshDriver(final RiakNodeImpl entity, final SshMachineLocation machine) {
         super(entity, machine);
@@ -97,8 +97,9 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             } else {
                 commands.addAll(installFromPackageCloud());
             }
+            entity.setAttribute(RiakNode.RIAK_PACKAGE_INSTALL, true);
         } else if (osDetails.isMac()) {
-            isPackageInstall = false;
+            entity.setAttribute(RiakNode.RIAK_PACKAGE_INSTALL, false);
             commands.addAll(installMac());
         } else if (osDetails.isWindows()) {
             throw new UnsupportedOperationException("RiakNode not supported on Windows instances");
@@ -123,6 +124,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                         .execute();
             }
         }
+
+        checkRiakOnPath();
     }
 
     private List<String> installLinuxFromPackageUrl(String expandedInstallDir) {
@@ -217,8 +220,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         //create entity's runDir
         newScript(CUSTOMIZING).execute();
 
-        isRiakOnPath = isPackageInstall ? isRiakOnPath() : true;
-
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
 
         List<String> commands = Lists.newLinkedList();
@@ -253,7 +254,21 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             commands.add(sudo("chown -R riak:riak " + getRiakEtcDir()));
         }
 
-        if(osDetails.isLinux()) {
+        // TODO platform_*_dir
+        // TODO riak config log
+
+        ScriptHelper customizeScript = newScript(CUSTOMIZING)
+                .failOnNonZeroResultCode()
+                .body.append(commands);
+
+        if (!isRiakOnPath()) {
+            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+            customizeScript.environmentVariablesReset(newPathVariable);
+        }
+        customizeScript.failOnNonZeroResultCode().execute();
+
+        if (osDetails.isLinux()) {
             ImmutableMap<String, String> sysctl = ImmutableMap.<String, String>builder()
                     .put("vm.swappiness", "0")
                     .put("net.core.somaxconn", "40000")
@@ -266,22 +281,13 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                     .put("net.ipv4.tcp_moderate_rcvbuf", "1")
                     .build();
 
-            // TODO platform_*_dir
-            // TODO riak config log
+            ScriptHelper optimize = newScript(CUSTOMIZING + "network")
+                .body.append(sudo("sysctl " + Joiner.on(' ').withKeyValueSeparator("=").join(sysctl)));
 
-            commands.add( sudo("sysctl " + Joiner.on(' ').withKeyValueSeparator("=").join(sysctl)));
+            Optional<Boolean> enable = Optional.fromNullable(entity.getConfig(RiakNode.OPTIMIZE_HOST_NETWORKING));
+            if (!enable.isPresent()) optimize.inessential();
+            if (enable.or(true)) optimize.execute();
         }
-
-        ScriptHelper customizeScript = newScript(CUSTOMIZING)
-                .failOnNonZeroResultCode()
-                .body.append(commands);
-
-        if (!isRiakOnPath) {
-            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-            customizeScript.environmentVariablesReset(newPathVariable);
-        }
-        customizeScript.failOnNonZeroResultCode().execute();
 
         //set the riak node name
         entity.setAttribute(RiakNode.RIAK_NODE_NAME, format("riak@%s", getSubnetHostname()));
@@ -290,7 +296,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     @Override
     public void launch() {
         List<String> commands = Lists.newLinkedList();
-        if (isPackageInstall) {
+
+        if (isPackageInstall()) {
             commands.add(addSbinPathCommand());
             commands.add(sudo("service riak start"));
         } else {
@@ -303,7 +310,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         ScriptHelper launchScript = newScript(LAUNCHING)
                 .body.append(commands);
 
-        if (!isRiakOnPath) {
+        if (!isRiakOnPath()) {
             Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
             log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
             launchScript.environmentVariablesReset(newPathVariable);
@@ -313,15 +320,15 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void stop() {
-        leaveCluster();
+        leaveCluster("");
 
         String command = format("%s stop", getRiakCmd());
-        command = isPackageInstall ? sudo(command) : command;
+        command = isPackageInstall() ? sudo(command) : command;
 
         ScriptHelper stopScript = newScript(ImmutableMap.of(USE_PID_FILE, false), STOPPING)
                 .body.append(command);
 
-        if (!isRiakOnPath) {
+        if (!isRiakOnPath()) {
             Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
             log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
             stopScript.environmentVariablesReset(newPathVariable);
@@ -339,7 +346,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         ScriptHelper checkRunningScript = newScript(CHECK_RUNNING)
                 .body.append(sudo(format("%s ping", getRiakCmd())));
 
-        if (!isRiakOnPath) {
+        if (!isRiakOnPath()) {
             Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
             log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
             checkRunningScript.environmentVariablesReset(newPathVariable);
@@ -347,16 +354,24 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         return (checkRunningScript.execute() == 0);
     }
 
+    public boolean isPackageInstall() {
+        return entity.getAttribute(RiakNode.RIAK_PACKAGE_INSTALL);
+    }
+
+    public boolean isRiakOnPath() {
+        return entity.getAttribute(RiakNode.RIAK_ON_PATH);
+    }
+
     public String getRiakEtcDir() {
-        return isPackageInstall ? "/etc/riak" : Urls.mergePaths(getExpandedInstallDir(), "etc");
+        return isPackageInstall() ? "/etc/riak" : Urls.mergePaths(getExpandedInstallDir(), "etc");
     }
 
     protected String getRiakCmd() {
-        return isPackageInstall ? "riak" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak");
+        return isPackageInstall() ? "riak" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak");
     }
 
     protected String getRiakAdminCmd() {
-        return isPackageInstall ? "riak-admin" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak-admin");
+        return isPackageInstall() ? "riak-admin" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak-admin");
     }
 
     @Override
@@ -372,7 +387,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                         .body.append(sudo(format("%s cluster join %s", getRiakAdminCmd(), nodeName)))
                         .failOnNonZeroResultCode();
 
-                if (!isRiakOnPath) {
+                if (!isRiakOnPath()) {
                     Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
                     log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
                     joinClusterScript.environmentVariablesReset(newPathVariable);
@@ -388,19 +403,19 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     @Override
-    public void leaveCluster() {
+    public void leaveCluster(String nodeName) {
         //TODO: add 'riak-admin cluster force-remove' for erroneous and unrecoverable nodes.
         //FIXME: find a way to batch commit the changes, instead of committing for every operation.
         //FIXME: find a way to check if the node is the last in the cluster to avoid removing the only member and getting "last node error"
 
         if (hasJoinedCluster()) {
             ScriptHelper leaveClusterScript = newScript("leaveCluster")
-                    .body.append(sudo(format("%s cluster leave", getRiakAdminCmd())))
+                    .body.append(sudo(format("%s cluster leave %s", getRiakAdminCmd(), nodeName)))
                     .body.append(sudo(format("%s cluster plan", getRiakAdminCmd())))
                     .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())))
                     .failOnNonZeroResultCode();
 
-            if (!isRiakOnPath) {
+            if (!isRiakOnPath()) {
                 Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
                 log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
                 leaveClusterScript.environmentVariablesReset(newPathVariable);
@@ -422,7 +437,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                     .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())))
                     .failOnNonZeroResultCode();
 
-            if (!isRiakOnPath) {
+            if (!isRiakOnPath()) {
                 Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
                 log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
                 commitClusterScript.environmentVariablesReset(newPathVariable);
@@ -436,7 +451,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void recoverFailedNode(String nodeName) {
-
         //TODO find ways to detect a faulty/failed node
         //argument passed 'node' is any working node in the riak cluster
         //following the instruction from: http://docs.basho.com/riak/latest/ops/running/recovery/failed-node/
@@ -446,10 +460,10 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
 
             String stopCommand = format("%s stop", getRiakCmd());
-            stopCommand = isPackageInstall ? sudo(stopCommand) : stopCommand;
+            stopCommand = isPackageInstall() ? sudo(stopCommand) : stopCommand;
 
-            String startCommand = format("%s start >/dev/null 2>&1 < /dev/null &", getRiakCmd());
-            startCommand = isPackageInstall ? sudo(startCommand) : startCommand;
+            String startCommand = format("%s start > /dev/null 2>&1 < /dev/null &", getRiakCmd());
+            startCommand = isPackageInstall() ? sudo(startCommand) : startCommand;
 
             ScriptHelper recoverNodeScript = newScript("recoverNode")
                     .body.append(stopCommand)
@@ -461,7 +475,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                     .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())))
                     .failOnNonZeroResultCode();
 
-            if (!isRiakOnPath) {
+            if (!isRiakOnPath()) {
                 Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
                 log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
                 recoverNodeScript.environmentVariablesReset(newPathVariable);
@@ -475,13 +489,14 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     private Boolean hasJoinedCluster() {
-        return ((RiakNode) entity).hasJoinedCluster();
+        return Boolean.TRUE.equals(entity.getAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER));
     }
 
-    protected boolean isRiakOnPath() {
-        return (newScript("riakOnPath")
+    protected void checkRiakOnPath() {
+        boolean riakOnPath = newScript("riakOnPath")
                 .body.append("which riak")
-                .execute() == 0);
+                .execute() == 0;
+        entity.setAttribute(RiakNode.RIAK_ON_PATH, riakOnPath);
     }
 
     private String getRiakName() {
@@ -490,7 +505,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private String getRingStateDir() {
         //TODO: check for non-package install.
-        return isPackageInstall ? "/var/lib/riak/ring" : Urls.mergePaths(getExpandedInstallDir(), "lib/ring");
+        return isPackageInstall() ? "/var/lib/riak/ring" : Urls.mergePaths(getExpandedInstallDir(), "lib/ring");
     }
 
     protected boolean isVersion1() {
