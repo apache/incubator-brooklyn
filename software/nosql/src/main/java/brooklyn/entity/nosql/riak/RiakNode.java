@@ -21,8 +21,7 @@ package brooklyn.entity.nosql.riak;
 import java.util.List;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
+import brooklyn.event.basic.*;
 import com.google.common.reflect.TypeToken;
 
 import brooklyn.catalog.Catalog;
@@ -34,8 +33,6 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="Riak Node", description="Riak is a distributed NoSQL key-value data store that offers "
@@ -133,6 +130,12 @@ public interface RiakNode extends SoftwareProcess {
     public static final MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
     public static final MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
     public static final MethodEffector<Void> COMMIT_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "commitCluster");
+
+    public static final ConfigKey<Boolean> DO_OS_TUNING = new BasicConfigKey<Boolean>(
+            Boolean.class,
+            "do.os.tunning",
+            "Does sysctl OS optimizations. By default it is true",
+            true);
 
     // accessors, for use from template file
     Integer getRiakWebPort();

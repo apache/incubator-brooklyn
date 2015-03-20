@@ -253,7 +253,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             commands.add(sudo("chown -R riak:riak " + getRiakEtcDir()));
         }
 
-        if(osDetails.isLinux()) {
+        if(osDetails.isLinux() && getEntity().getConfig(RiakNode.DO_OS_TUNING)) {
             ImmutableMap<String, String> sysctl = ImmutableMap.<String, String>builder()
                     .put("vm.swappiness", "0")
                     .put("net.core.somaxconn", "40000")
