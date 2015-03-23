@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
@@ -87,13 +88,13 @@ public class LocalEntityManager implements EntityManagerInternal {
     private final InternalPolicyFactory policyFactory;
     
     /** Entities that have been created, but have not yet begun to be managed */
-    protected final Map<String,Entity> preRegisteredEntitiesById = new WeakHashMap<String, Entity>();
+    protected final Map<String,Entity> preRegisteredEntitiesById = Collections.synchronizedMap(new WeakHashMap<String, Entity>());
 
     /** Entities that are in the process of being managed, but where management is not yet complete */
-    protected final Map<String,Entity> preManagedEntitiesById = new WeakHashMap<String, Entity>();
+    protected final Map<String,Entity> preManagedEntitiesById = Collections.synchronizedMap(new WeakHashMap<String, Entity>());
     
     /** Proxies of the managed entities */
-    protected final Map<String,Entity> entityProxiesById = Maps.newLinkedHashMap();
+    protected final ConcurrentMap<String,Entity> entityProxiesById = Maps.newConcurrentMap();
     
     /** Real managed entities */
     protected final Map<String,Entity> entitiesById = Maps.newLinkedHashMap();
@@ -105,7 +106,7 @@ public class LocalEntityManager implements EntityManagerInternal {
     protected final ObservableList entities = new ObservableList();
     
     /** Proxies of the managed entities that are applications */
-    protected final Set<Application> applications = Sets.newLinkedHashSet();
+    protected final Set<Application> applications = Sets.newConcurrentHashSet();
 
     private final BrooklynStorage storage;
     private final Map<String,String> entityTypes;
@@ -177,34 +178,34 @@ public class LocalEntityManager implements EntityManagerInternal {
     }
 
     @Override
-    public synchronized Collection<Entity> getEntities() {
+    public Collection<Entity> getEntities() {
         return ImmutableList.copyOf(entityProxiesById.values());
     }
     
     @Override
-    public synchronized Collection<String> getEntityIds() {
+    public Collection<String> getEntityIds() {
         return ImmutableList.copyOf(entityProxiesById.keySet());
     }
     
     @Override
-    public synchronized Collection<Entity> getEntitiesInApplication(Application application) {
+    public Collection<Entity> getEntitiesInApplication(Application application) {
         Predicate<Entity> predicate = EntityPredicates.applicationIdEqualTo(application.getId());
         return ImmutableList.copyOf(Iterables.filter(entityProxiesById.values(), predicate));
     }
 
     @Override
-    public synchronized Collection<Entity> findEntities(Predicate<? super Entity> filter) {
+    public Collection<Entity> findEntities(Predicate<? super Entity> filter) {
         return ImmutableList.copyOf(Iterables.filter(entityProxiesById.values(), filter));
     }
     
     @Override
-    public synchronized Collection<Entity> findEntitiesInApplication(Application application, Predicate<? super Entity> filter) {
+    public Collection<Entity> findEntitiesInApplication(Application application, Predicate<? super Entity> filter) {
         Predicate<Entity> predicate = Predicates.and(EntityPredicates.applicationIdEqualTo(application.getId()), filter);
         return ImmutableList.copyOf(Iterables.filter(entityProxiesById.values(), predicate));
     }
 
     @Override
-    public synchronized Iterable<Entity> getAllEntitiesInApplication(Application application) {
+    public Iterable<Entity> getAllEntitiesInApplication(Application application) {
         Predicate<Entity> predicate = EntityPredicates.applicationIdEqualTo(application.getId());
         Iterable<Entity> allentities = Iterables.concat(preRegisteredEntitiesById.values(), preManagedEntitiesById.values(), entityProxiesById.values());
         Iterable<Entity> result = Iterables.filter(allentities, predicate);
@@ -215,11 +216,11 @@ public class LocalEntityManager implements EntityManagerInternal {
     }
 
     @Override
-    public synchronized Entity getEntity(String id) {
+    public Entity getEntity(String id) {
         return entityProxiesById.get(id);
     }
     
-    synchronized Collection<Application> getApplications() {
+    Collection<Application> getApplications() {
         return ImmutableList.copyOf(applications);
     }
     
@@ -228,11 +229,11 @@ public class LocalEntityManager implements EntityManagerInternal {
         return (isRunning() && getEntity(e.getId()) != null);
     }
     
-    synchronized boolean isPreRegistered(Entity e) {
+    boolean isPreRegistered(Entity e) {
         return preRegisteredEntitiesById.containsKey(e.getId());
     }
     
-    synchronized void prePreManage(Entity entity) {
+    void prePreManage(Entity entity) {
         if (isPreRegistered(entity)) {
             log.warn(""+this+" redundant call to pre-pre-manage entity "+entity+"; skipping", 
                     new Exception("source of duplicate pre-pre-manage of "+entity));
@@ -282,7 +283,7 @@ public class LocalEntityManager implements EntityManagerInternal {
         AccessController.Response access = managementContext.getAccessController().canManageEntity(item);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids management of "+item+": "+access.getMsg());
-        }        
+        }
     }
     
     /* TODO we sloppily use "recursive" to ensure ordering of parent-first in many places
