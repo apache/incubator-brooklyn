@@ -29,6 +29,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.config.ConfigBag;
@@ -93,6 +94,14 @@ public class ConfigKeys {
 
     public static AttributeSensorAndConfigKey<String,String> newStringSensorAndConfigKey(String name, String description, String defaultValue) {
         return new BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey(name, description, defaultValue);
+    }
+
+    public static AttributeSensorAndConfigKey<String,String> newTemplateSensorAndConfigKey(String name, String description) {
+        return new TemplatedStringAttributeSensorAndConfigKey(name, description);
+    }
+
+    public static AttributeSensorAndConfigKey<String,String> newTemplateSensorAndConfigKey(String name, String description, String defaultValue) {
+        return new TemplatedStringAttributeSensorAndConfigKey(name, description, defaultValue);
     }
 
     public static AttributeSensorAndConfigKey<Integer,Integer> newIntegerSensorAndConfigKey(String name, String description) {

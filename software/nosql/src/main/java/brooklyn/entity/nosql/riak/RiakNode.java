@@ -69,25 +69,25 @@ public interface RiakNode extends SoftwareProcess {
             "classpath://brooklyn/entity/nosql/riak/riak-mac.conf");
 
     @SetFromFlag("downloadUrlRhelCentos")
-    AttributeSensorAndConfigKey DOWNLOAD_URL_RHEL_CENTOS = new TemplatedStringAttributeSensorAndConfigKey("download.url.rhelcentos",
+    AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL_RHEL_CENTOS = ConfigKeys.newTemplateSensorAndConfigKey("download.url.rhelcentos",
             "URL pattern for downloading the linux RPM installer (will substitute things like ${version} automatically)",
             "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/rhel/" +
                     "${entity.osMajorVersion}/riak-${entity.fullVersion}-1.el${entity.osMajorVersion}.x86_64.rpm");
 
     @SetFromFlag("downloadUrlUbuntu")
-    AttributeSensorAndConfigKey DOWNLOAD_URL_UBUNTU = new TemplatedStringAttributeSensorAndConfigKey("download.url.ubuntu",
+    AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL_UBUNTU = ConfigKeys.newTemplateSensorAndConfigKey("download.url.ubuntu",
             "URL pattern for downloading the linux Ubuntu installer (will substitute things like ${version} automatically)",
             "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/ubuntu/" +
                     "$OS_RELEASE/riak_${entity.fullVersion}-1_amd64.deb");
 
     @SetFromFlag("downloadUrlDebian")
-    AttributeSensorAndConfigKey DOWNLOAD_URL_DEBIAN = new TemplatedStringAttributeSensorAndConfigKey("download.url.debian",
+    AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL_DEBIAN = ConfigKeys.newTemplateSensorAndConfigKey("download.url.debian",
             "URL pattern for downloading the linux Debian installer (will substitute things like ${version} automatically)",
             "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/debian/" +
                     "$OS_RELEASE/riak_${entity.fullVersion}-1_amd64.deb");
 
     @SetFromFlag("downloadUrlMac")
-    AttributeSensorAndConfigKey DOWNLOAD_URL_MAC = new TemplatedStringAttributeSensorAndConfigKey("download.url.mac",
+    AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL_MAC = ConfigKeys.newTemplateSensorAndConfigKey("download.url.mac",
             "URL pattern for downloading the MAC binaries tarball (will substitute things like ${version} automatically)",
             "http://s3.amazonaws.com/downloads.basho.com/riak/${entity.majorVersion}/${entity.fullVersion}/osx/10.8/riak-${entity.fullVersion}-OSX-x86_64.tar.gz");
 
