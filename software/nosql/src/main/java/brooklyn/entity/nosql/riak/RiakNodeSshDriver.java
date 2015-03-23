@@ -81,6 +81,14 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     public void preInstall() {
         resolver = Entities.newDownloader(this);
         setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("riak-%s", getVersion()))));
+
+        // Set package install attribute
+        OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
+        if (osDetails.isLinux()) {
+            entity.setAttribute(RiakNode.RIAK_PACKAGE_INSTALL, true);
+        } else if (osDetails.isMac()) {
+            entity.setAttribute(RiakNode.RIAK_PACKAGE_INSTALL, false);
+        }
     }
 
     @Override
@@ -92,14 +100,12 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         List<String> commands = Lists.newLinkedList();
         if (osDetails.isLinux()) {
-            if(getEntity().isPackageDownloadUrlProvided()) {
-                commands.addAll(installLinuxFromPackageUrl(getExpandedInstallDir()));
+            if (getEntity().isPackageDownloadUrlProvided()) {
+                commands.addAll(installLinuxFromPackageUrl());
             } else {
                 commands.addAll(installFromPackageCloud());
             }
-            entity.setAttribute(RiakNode.RIAK_PACKAGE_INSTALL, true);
         } else if (osDetails.isMac()) {
-            entity.setAttribute(RiakNode.RIAK_PACKAGE_INSTALL, false);
             commands.addAll(installMac());
         } else if (osDetails.isWindows()) {
             throw new UnsupportedOperationException("RiakNode not supported on Windows instances");
@@ -108,29 +114,26 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                     getMachine() + ". Details: " + getMachine().getMachineDetails().getOsDetails());
         }
 
-        try {
-            newScript(INSTALLING)
-                    .body.append(commands)
-                    .failIfBodyEmpty()
-                    .failOnNonZeroResultCode()
-                    .inessential()
+        int result = newScript(INSTALLING)
+                .body.append(commands)
+                .failIfBodyEmpty()
+                .execute();
+
+        if (result != 0 && osDetails.isLinux()) {
+            result = newScript(INSTALLING_FALLBACK)
+                    .body.append(installLinuxFromPackageUrl())
                     .execute();
-        } catch(RuntimeException e) {
-            if (osDetails.isLinux()) {
-                newScript(INSTALLING_FALLBACK).body
-                        .append(installLinuxFromPackageUrl(getExpandedInstallDir()))
-                        .failIfBodyEmpty()
-                        .failOnNonZeroResultCode()
-                        .execute();
-            }
         }
 
-        checkRiakOnPath();
+        if (result != 0) {
+            throw new IllegalStateException(String.format("Install failed with result %d", result));
+        }
     }
 
-    private List<String> installLinuxFromPackageUrl(String expandedInstallDir) {
+    private List<String> installLinuxFromPackageUrl() {
         DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(getMachine(), SshTasks.OnFailingTask.WARN_OR_IF_DYNAMIC_FAIL_MARKING_INESSENTIAL)).orSubmitAndBlock();
 
+        String expandedInstallDir = getExpandedInstallDir();
         String installBin = Urls.mergePaths(expandedInstallDir, "bin");
         String saveAsYum = "riak.rpm";
         String saveAsApt = "riak.deb";
@@ -152,7 +155,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         }
         String apt = chainGroup(
                 //debian fix
-                "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "export PATH=" + sbinPath,
                 "which apt-get",
                 ok(sudo("apt-get -y --allow-unauthenticated install logrotate libpam0g-dev libssl0.9.8")),
                 "export OS_NAME=" + Strings.toLowerCase(osDetails.getName()),
@@ -177,16 +180,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         return ImmutableList.<String>builder()
                 .add(osDetails.getName().toLowerCase().contains("debian") ? addSbinPathCommand() : "")
-                .add(ifNotExecutable("curl", Joiner.on('\n').join(installCurl())))
+                .add(ifNotExecutable("curl", INSTALL_CURL))
                 .addAll(ifExecutableElse("yum", installDebianBased(), installRpmBased()))
-                .build();
-    }
-
-    public List<String> installCurl() {
-        return ImmutableList.<String>builder()
-                .add(ifExecutableElse("yum",
-                        BashCommands.sudo("apt-get install --assume-yes curl"),
-                        BashCommands.sudo("yum install -y curl")))
                 .build();
     }
 
@@ -206,7 +201,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     protected List<String> installMac() {
         String saveAs = resolver.getFilename();
-        String url = entity.getAttribute(RiakNode.DOWNLOAD_URL_MAC).toString();
+        String url = entity.getAttribute(RiakNode.DOWNLOAD_URL_MAC);
         return ImmutableList.<String>builder()
                 .add(INSTALL_TAR)
                 .add(INSTALL_CURL)
@@ -217,6 +212,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void customize() {
+        checkRiakOnPath();
+
         //create entity's runDir
         newScript(CUSTOMIZING).execute();
 
@@ -250,7 +247,9 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         //    commands.add(sudo("launchctl limit maxfiles 4096 32768"));
         if (osDetails.isMac()) {
             commands.add("ulimit -n 4096");
-        } else if (osDetails.isLinux() && isVersion1()) {
+        }
+
+        if (osDetails.isLinux() && isVersion1()) {
             commands.add(sudo("chown -R riak:riak " + getRiakEtcDir()));
         }
 
@@ -320,7 +319,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void stop() {
-        leaveCluster("");
+        leaveCluster(""); // No node name means this node will leave
 
         String command = format("%s stop", getRiakCmd());
         command = isPackageInstall() ? sudo(command) : command;

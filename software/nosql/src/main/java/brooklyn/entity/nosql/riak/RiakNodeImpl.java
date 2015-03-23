@@ -43,6 +43,9 @@ import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
+import com.google.common.collect.Range;
 import com.google.common.net.HostAndPort;
 
 public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
@@ -68,9 +71,9 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     public boolean isPackageDownloadUrlProvided() {
-        AttributeSensorAndConfigKey[] downloadProperties = {DOWNLOAD_URL_RHEL_CENTOS, DOWNLOAD_URL_UBUNTU, DOWNLOAD_URL_DEBIAN};
-        for(AttributeSensorAndConfigKey property : downloadProperties) {
-            if(!((ConfigurationSupportInternal)config()).getRaw(property).isAbsent()) {
+        AttributeSensorAndConfigKey[] downloadProperties = { DOWNLOAD_URL_RHEL_CENTOS, DOWNLOAD_URL_UBUNTU, DOWNLOAD_URL_DEBIAN };
+        for (AttributeSensorAndConfigKey property : downloadProperties) {
+            if (!((ConfigurationSupportInternal) config()).getRaw(property).isAbsent()) {
                 return true;
             }
         }
@@ -90,12 +93,11 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         int erlangRangeStart = getConfig(ERLANG_PORT_RANGE_START).iterator().next();
         int erlangRangeEnd = getConfig(ERLANG_PORT_RANGE_END).iterator().next();
 
-        Set<Integer> newPorts = MutableSet.<Integer>copyOf(super.getRequiredOpenPorts());
-        newPorts.remove(erlangRangeStart);
-        newPorts.remove(erlangRangeEnd);
-        for (int i = erlangRangeStart; i <= erlangRangeEnd; i++)
-            newPorts.add(i);
-        return newPorts;
+        Set<Integer> ports = MutableSet.copyOf(super.getRequiredOpenPorts());
+        Set<Integer> erlangPorts = ContiguousSet.create(Range.open(erlangRangeStart, erlangRangeEnd), DiscreteDomain.integers());
+        ports.addAll(erlangPorts);
+
+        return ports;
     }
 
     @Override
