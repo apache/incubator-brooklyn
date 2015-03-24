@@ -322,9 +322,9 @@ public class BrooklynComponentTemplateResolver {
         InternalEntityFactory entityFactory = ((ManagementContextInternal)mgmt).getEntityFactory();
         T entity = entityFactory.constructEntity(entityImpl, spec);
 
-        String planId = (String)spec.getConfig().get(BrooklynCampConstants.PLAN_ID.getConfigKey());
+        String planId = (String)spec.getConfig().get(BrooklynCampConstants.PLAN_ID);
         if (planId != null) {
-            ((EntityInternal)entity).setConfig(BrooklynCampConstants.PLAN_ID, planId);
+            entity.config().set(BrooklynCampConstants.PLAN_ID, planId);
         }
         
         if (spec.getLocations().size() > 0) {
