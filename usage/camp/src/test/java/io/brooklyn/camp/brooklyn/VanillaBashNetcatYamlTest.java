@@ -63,7 +63,7 @@ public class VanillaBashNetcatYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getDisplayName(), "Simple Netcat with Client");
         
         // comparing by plan ID is one common way
-        Iterable<Entity> netcatI = Iterables.filter(app.getChildren(), EntityPredicates.configEqualTo(BrooklynCampConstants.PLAN_ID, "netcat-server"));
+        Iterable<Entity> netcatI = Iterables.filter(app.getChildren(), EntityPredicates.attributeEqualTo(BrooklynCampConstants.PLAN_ID, "netcat-server"));
         Assert.assertTrue(netcatI.iterator().hasNext(), "no 'netcat-server' child of app: "+app.getChildren());
         Entity netcat = Iterables.getOnlyElement(netcatI);
         

@@ -324,7 +324,7 @@ public class BrooklynComponentTemplateResolver {
 
         String planId = (String)spec.getConfig().get(BrooklynCampConstants.PLAN_ID.getConfigKey());
         if (planId != null) {
-            ((EntityInternal)entity).setConfig(BrooklynCampConstants.PLAN_ID, planId);
+            ((EntityInternal)entity).setAttribute(BrooklynCampConstants.PLAN_ID, planId);
         }
         
         if (spec.getLocations().size() > 0) {
