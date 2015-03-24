@@ -123,7 +123,7 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
                     throw new IllegalStateException("Unexpected scope "+scope);
             }
             
-            Optional<Entity> result = Iterables.tryFind(entitiesToSearch, EntityPredicates.attributeEqualTo(BrooklynCampConstants.PLAN_ID, componentId));
+            Optional<Entity> result = Iterables.tryFind(entitiesToSearch, EntityPredicates.configEqualTo(BrooklynCampConstants.PLAN_ID, componentId));
             
             if (result.isPresent())
                 return result.get();

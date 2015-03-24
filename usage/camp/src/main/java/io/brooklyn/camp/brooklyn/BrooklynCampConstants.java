@@ -23,24 +23,26 @@ import io.brooklyn.camp.CampPlatform;
 import java.util.Set;
 
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 
 import com.google.common.collect.ImmutableSet;
 
 public class BrooklynCampConstants {
 
-    /* These are only advertised as ConfigKeys currently, as they are not automatically set as sensors. 
-     * To fix if EntitySpec allows us to specify sensor values, or there is an automatic way they get converted from config. */
-    
     public static final String PLAN_ID_FLAG = "planId";
-    public static final AttributeSensorAndConfigKey<String,String> PLAN_ID = new BasicAttributeSensorAndConfigKey<String>(String.class, "camp.plan.id", 
-        "Identifier supplied in the deployment plan for component to which this entity corresponds "
-        + "(human-readable, for correlating across plan, template, and instance)");
 
-    public static final AttributeSensorAndConfigKey<String,String> TEMPLATE_ID = new BasicAttributeSensorAndConfigKey<String>(String.class, "camp.template.id", 
-        "UID of the component in the CAMP template from which this entity was created");
+    public static final ConfigKey<String> PLAN_ID = ConfigKeys.builder(String.class, "camp.plan.id")
+            .description("Identifier supplied in the deployment plan for component to which this entity corresponds "
+                        + "(human-readable, for correlating across plan, template, and instance)")
+            .inheritance(ConfigInheritance.NONE)
+            .build();
+
+    public static final ConfigKey<String> TEMPLATE_ID = ConfigKeys.builder(String.class, "camp.template.id")
+            .description("UID of the component in the CAMP template from which this entity was created")
+            .inheritance(ConfigInheritance.NONE)
+            .build();
 
     public static final ConfigKey<CampPlatform> CAMP_PLATFORM = BrooklynServerConfig.CAMP_PLATFORM;
 
