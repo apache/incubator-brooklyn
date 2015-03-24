@@ -22,6 +22,7 @@ import java.io.Serializable;
 
 import com.google.common.annotations.Beta;
 
+@SuppressWarnings("serial")
 public abstract class ConfigInheritance implements Serializable {
 
     public static final ConfigInheritance ALWAYS = new Always();
