@@ -40,6 +40,7 @@ import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
+import brooklyn.management.Task;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.time.Time;
 
@@ -123,7 +124,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
 
                     ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
 
-                    log.info("Adding riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
+                    log.info("Added initial Riak node {}: {}; {} to new cluster", new Object[] { this, member, getRiakName(member) });
                 } else {
                     // TODO: be wary of erroneous nodes but are still flagged 'in cluster'
                     // add the new node to be part of the riak cluster.
@@ -133,8 +134,9 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                     if (anyNodeInCluster.isPresent()) {
                         if (!nodes.containsKey(member) && member.getAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER) == null) {
                             String anyNodeName = anyNodeInCluster.get().getAttribute(RiakNode.RIAK_NODE_NAME);
-                            Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName);
+                            Task<Void> joinCluster = Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName);
                             if (getAttribute(IS_CLUSTER_INIT)) {
+                                joinCluster.blockUntilEnded();
                                 Entities.invokeEffector(RiakClusterImpl.this, member, RiakNode.COMMIT_RIAK_CLUSTER);
                             }
                             nodes.put(member, riakName);
