@@ -18,9 +18,11 @@
  */
 package brooklyn.config;
 
+import java.io.Serializable;
+
 import com.google.common.annotations.Beta;
 
-public abstract class ConfigInheritance {
+public abstract class ConfigInheritance implements Serializable {
 
     public static final ConfigInheritance ALWAYS = new Always();
     public static final ConfigInheritance NONE = new None();
