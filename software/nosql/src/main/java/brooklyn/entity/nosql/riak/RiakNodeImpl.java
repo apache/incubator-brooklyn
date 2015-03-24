@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.webapp.WebAppServiceMethods;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
@@ -106,7 +107,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         connectServiceUpIsRunning();
         HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getRiakWebPort());
 
-        httpFeed = HttpFeed.builder()
+        HttpFeed.Builder httpFeedBuilder = HttpFeed.builder()
                 .entity(this)
                 .period(500, TimeUnit.MILLISECONDS)
                 .baseUri(String.format("http://%s/stats", accessible.toString()))
@@ -163,8 +164,15 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
                                     }
                                 }
                         ))
-                        .onFailureOrException(Functions.constant(Arrays.asList(new String[0]))))
-                .build();
+                        .onFailureOrException(Functions.constant(Arrays.asList(new String[0]))));
+
+        for (AttributeSensor<Integer> sensor : ONE_MINUTE_STRING_SENSORS) {
+            httpFeedBuilder.poll(new HttpPollConfig<Integer>(sensor)
+                    .onSuccess(HttpValueFunctions.jsonContents(sensor.getName().substring(5), Integer.class))
+                    .onFailureOrException(Functions.constant(-1)));
+        }
+
+        httpFeed = httpFeedBuilder.build();
 
         WebAppServiceMethods.connectWebAppServerPolicies(this);
     }

@@ -30,11 +30,13 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
+import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
 @Catalog(name="Riak Node", description="Riak is a distributed NoSQL key-value data store that offers "
@@ -109,31 +111,31 @@ public interface RiakNode extends SoftwareProcess {
     AttributeSensor<String> RIAK_NODE_NAME = Sensors.newStringSensor("riak.node", "Returns the riak node name as defined in vm.args");
 
     // these needed for nodes to talk to each other, but not clients (so ideally set up in the security group for internal access)
-    PortAttributeSensorAndConfigKey HANDOFF_LISTENER_PORT = new PortAttributeSensorAndConfigKey("riak.handoffListenerPort", "Handoff Listener Port", "8099+");
-    PortAttributeSensorAndConfigKey EPMD_LISTENER_PORT = new PortAttributeSensorAndConfigKey("riak.epmdListenerPort", "Erlang Port Mapper Daemon Listener Port", "4369");
-    PortAttributeSensorAndConfigKey ERLANG_PORT_RANGE_START = new PortAttributeSensorAndConfigKey("riak.erlangPortRangeStart", "Erlang Port Range Start", "6000+");
-    PortAttributeSensorAndConfigKey ERLANG_PORT_RANGE_END = new PortAttributeSensorAndConfigKey("riak.erlangPortRangeEnd", "Erlang Port Range End", "7999+");
-    PortAttributeSensorAndConfigKey SEARCH_SOLR_PORT = new PortAttributeSensorAndConfigKey("riak.search.solr.port", "Solr port", "8093+");
-    PortAttributeSensorAndConfigKey SEARCH_SOLR_JMX_PORT = new PortAttributeSensorAndConfigKey("riak.search.solr.jmx_port", "Solr port", "8985+");
+    PortAttributeSensorAndConfigKey HANDOFF_LISTENER_PORT = new PortAttributeSensorAndConfigKey("handoffListenerPort", "Handoff Listener Port", "8099+");
+    PortAttributeSensorAndConfigKey EPMD_LISTENER_PORT = new PortAttributeSensorAndConfigKey("epmdListenerPort", "Erlang Port Mapper Daemon Listener Port", "4369");
+    PortAttributeSensorAndConfigKey ERLANG_PORT_RANGE_START = new PortAttributeSensorAndConfigKey("erlangPortRangeStart", "Erlang Port Range Start", "6000+");
+    PortAttributeSensorAndConfigKey ERLANG_PORT_RANGE_END = new PortAttributeSensorAndConfigKey("erlangPortRangeEnd", "Erlang Port Range End", "7999+");
+    PortAttributeSensorAndConfigKey SEARCH_SOLR_PORT = new PortAttributeSensorAndConfigKey("search.solr.port", "Solr port", "8093+");
+    PortAttributeSensorAndConfigKey SEARCH_SOLR_JMX_PORT = new PortAttributeSensorAndConfigKey("search.solr.jmx_port", "Solr port", "8985+");
 
-    AttributeSensor<Integer> NODE_GETS = Sensors.newIntegerSensor("node.gets");
-    AttributeSensor<Integer> NODE_GETS_TOTAL = Sensors.newIntegerSensor("node.gets.total");
-    AttributeSensor<Integer> NODE_PUTS = Sensors.newIntegerSensor("node.puts");
-    AttributeSensor<Integer> NODE_PUTS_TOTAL = Sensors.newIntegerSensor("node.puts.total");
-    AttributeSensor<Integer> VNODE_GETS = Sensors.newIntegerSensor("vnode.gets");
-    AttributeSensor<Integer> VNODE_GETS_TOTAL = Sensors.newIntegerSensor("vnode.gets.total");
+    AttributeSensor<Integer> NODE_GETS = Sensors.newIntegerSensor("riak.node.gets");
+    AttributeSensor<Integer> NODE_GETS_TOTAL = Sensors.newIntegerSensor("riak.node.gets.total");
+    AttributeSensor<Integer> NODE_PUTS = Sensors.newIntegerSensor("riak.node.puts");
+    AttributeSensor<Integer> NODE_PUTS_TOTAL = Sensors.newIntegerSensor("riak.node.puts.total");
+    AttributeSensor<Integer> VNODE_GETS = Sensors.newIntegerSensor("riak.vnode.gets");
+    AttributeSensor<Integer> VNODE_GETS_TOTAL = Sensors.newIntegerSensor("riak.vnode.gets.total");
 
     //Sensors for Riak Node Counters (within 1 minute window or lifetime of node.
     //http://docs.basho.com/riak/latest/ops/running/stats-and-monitoring/#Statistics-from-Riak
-    AttributeSensor<Integer> VNODE_PUTS = Sensors.newIntegerSensor("vnode.puts");
-    AttributeSensor<Integer> VNODE_PUTS_TOTAL = Sensors.newIntegerSensor("vnode.puts.total");
-    AttributeSensor<Integer> READ_REPAIRS_TOTAL = Sensors.newIntegerSensor("read.repairs.total");
-    AttributeSensor<Integer> COORD_REDIRS_TOTAL = Sensors.newIntegerSensor("coord.redirs.total");
+    AttributeSensor<Integer> VNODE_PUTS = Sensors.newIntegerSensor("riak.vnode.puts");
+    AttributeSensor<Integer> VNODE_PUTS_TOTAL = Sensors.newIntegerSensor("riak.vnode.puts.total");
+    AttributeSensor<Integer> READ_REPAIRS_TOTAL = Sensors.newIntegerSensor("riak.read.repairs.total");
+    AttributeSensor<Integer> COORD_REDIRS_TOTAL = Sensors.newIntegerSensor("riak.coord.redirs.total");
     //Additional Riak node counters
-    AttributeSensor<Integer> MEMORY_PROCESSES_USED = Sensors.newIntegerSensor("memory.processes.used");
-    AttributeSensor<Integer> SYS_PROCESS_COUNT = Sensors.newIntegerSensor("sys.process.count");
-    AttributeSensor<Integer> PBC_CONNECTS = Sensors.newIntegerSensor("pbc.connects");
-    AttributeSensor<Integer> PBC_ACTIVE = Sensors.newIntegerSensor("pbc.active");
+    AttributeSensor<Integer> MEMORY_PROCESSES_USED = Sensors.newIntegerSensor("riak.memory.processes.used");
+    AttributeSensor<Integer> SYS_PROCESS_COUNT = Sensors.newIntegerSensor("riak.sys.process.count");
+    AttributeSensor<Integer> PBC_CONNECTS = Sensors.newIntegerSensor("riak.pbc.connects");
+    AttributeSensor<Integer> PBC_ACTIVE = Sensors.newIntegerSensor("riak.pbc.active");
     @SuppressWarnings("serial")
     AttributeSensor<List<String>> RING_MEMBERS = Sensors.newSensor(new TypeToken<List<String>>() {},
             "ring.members", "all the riak nodes in the ring");
@@ -141,6 +143,27 @@ public interface RiakNode extends SoftwareProcess {
     MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
     MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
     MethodEffector<Void> COMMIT_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "commitCluster");
+
+    AttributeSensor<Integer> RIAK_NODE_GET_FSM_TIME_MEAN = Sensors.newIntegerSensor("riak.node_get_fsm_time_mean", "Time between reception of client read request and subsequent response to client");
+    AttributeSensor<Integer> RIAK_NODE_PUT_FSM_TIME_MEAN = Sensors.newIntegerSensor("riak.node_put_fsm_time_mean", "Time between reception of client write request and subsequent response to client");
+    AttributeSensor<Integer> RIAK_OBJECT_COUNTER_MERGE_TIME_MEAN = Sensors.newIntegerSensor("riak.object_counter_merge_time_mean", "Time it takes to perform an Update Counter operation");
+    AttributeSensor<Integer> RIAK_OBJECT_SET_MERGE_TIME_MEAN = Sensors.newIntegerSensor("riak.object_set_merge_time_mean", "Time it takes to perform an Update Set operation");
+    AttributeSensor<Integer> RIAK_OBJECT_MAP_MERGE_TIME_MEAN = Sensors.newIntegerSensor("riak.object_map_merge_time_mean", "Time it takes to perform an Update Map operation");
+    AttributeSensor<Integer> RIAK_SEARCH_QUERY_LATENCY_MEDIAN = Sensors.newIntegerSensor("riak.search_query_latency_median", "Search query latency");
+    AttributeSensor<Integer> RIAK_SEARCH_INDEX_LATENCY_MEDIAN = Sensors.newIntegerSensor("riak.search_index_latency_median", "Time it takes Search to index a new document");
+    AttributeSensor<Integer> RIAK_CONSISTENT_GET_TIME_MEAN = Sensors.newIntegerSensor("riak.consistent_get_time_mean", "Strongly consistent read latency");
+    AttributeSensor<Integer> RIAK_CONSISTENT_PUT_TIME_MEAN = Sensors.newIntegerSensor("riak.consistent_put_time_mean", "Strongly consistent write latency");
+
+    List<AttributeSensor<Integer>> ONE_MINUTE_STRING_SENSORS = ImmutableList.of(RIAK_NODE_GET_FSM_TIME_MEAN, RIAK_NODE_PUT_FSM_TIME_MEAN,
+            RIAK_OBJECT_COUNTER_MERGE_TIME_MEAN, RIAK_OBJECT_SET_MERGE_TIME_MEAN, RIAK_OBJECT_MAP_MERGE_TIME_MEAN,
+            RIAK_SEARCH_QUERY_LATENCY_MEDIAN, RIAK_SEARCH_INDEX_LATENCY_MEDIAN,
+            RIAK_CONSISTENT_GET_TIME_MEAN, RIAK_CONSISTENT_PUT_TIME_MEAN);
+
+    ConfigKey<Boolean> DO_OS_TUNING = new BasicConfigKey<Boolean>(
+            Boolean.class,
+            "do.os.tunning",
+            "Does sysctl OS optimizations. By default it is true",
+            true);
 
     // accessors, for use from template file
     Integer getRiakWebPort();
