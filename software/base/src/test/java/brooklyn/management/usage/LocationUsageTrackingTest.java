@@ -39,6 +39,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.management.internal.UsageListener.LocationMetadata;
 import brooklyn.management.usage.LocationUsage.LocationEvent;
 import brooklyn.test.Asserts;
 import brooklyn.util.time.Time;
@@ -66,8 +67,9 @@ public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
-    public void testAddAndRemoveUsageListener() throws Exception {
-        final RecordingUsageListener listener = new RecordingUsageListener();
+    @SuppressWarnings("deprecation")
+    public void testAddAndRemoveLegacyUsageListener() throws Exception {
+        final RecordingLegacyUsageListener listener = new RecordingLegacyUsageListener();
         mgmt.getUsageManager().addUsageListener(listener);
         
         app.createAndManageChild(EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
@@ -84,6 +86,41 @@ public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
                 assertEquals(events.size(), 1, "events="+events);
                 assertEquals(locId, machine.getId(), "events="+events);
                 assertNotNull(metadata, "events="+events);
+                assertEquals(locEvent.getApplicationId(), app.getId(), "events="+events);
+                assertEquals(locEvent.getState(), Lifecycle.CREATED, "events="+events);
+            }});
+
+        // Remove the listener; will get no more notifications
+        listener.clearEvents();
+        mgmt.getUsageManager().removeUsageListener(listener);
+        
+        app.stop();
+        Asserts.succeedsContinually(new Runnable() {
+            @Override public void run() {
+                List<List<?>> events = listener.getLocationEvents();
+                assertEquals(events.size(), 0, "events="+events);
+            }});
+    }
+
+    @Test
+    public void testAddAndRemoveUsageListener() throws Exception {
+        final RecordingUsageListener listener = new RecordingUsageListener();
+        mgmt.getUsageManager().addUsageListener(listener);
+        
+        app.createAndManageChild(EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
+        app.start(ImmutableList.of(loc));
+        final SshMachineLocation machine = Iterables.getOnlyElement(loc.getAllMachines());
+        
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                List<List<?>> events = listener.getLocationEvents();
+                LocationMetadata locMetadata = (LocationMetadata) events.get(0).get(1);
+                LocationEvent locEvent = (LocationEvent) events.get(0).get(2);
+                
+                assertEquals(events.size(), 1, "events="+events);
+                assertEquals(locMetadata.getLocation(), machine, "events="+events);
+                assertEquals(locMetadata.getLocationId(), machine.getId(), "events="+events);
+                assertNotNull(locMetadata.getMetadata(), "events="+events);
                 assertEquals(locEvent.getApplicationId(), app.getId(), "events="+events);
                 assertEquals(locEvent.getState(), Lifecycle.CREATED, "events="+events);
             }});

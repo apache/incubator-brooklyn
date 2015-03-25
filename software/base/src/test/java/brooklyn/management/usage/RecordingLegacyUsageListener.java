@@ -19,6 +19,7 @@
 package brooklyn.management.usage;
 
 import java.util.List;
+import java.util.Map;
 
 import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
 import brooklyn.management.usage.LocationUsage.LocationEvent;
@@ -27,18 +28,20 @@ import brooklyn.util.collections.MutableList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class RecordingUsageListener implements brooklyn.management.internal.UsageListener {
+@Deprecated
+public class RecordingLegacyUsageListener implements brooklyn.management.internal.UsageManager.UsageListener {
 
     private final List<List<?>> events = Lists.newCopyOnWriteArrayList();
     
     @Override
-    public void onApplicationEvent(ApplicationMetadata app, ApplicationEvent event) {
-        events.add(MutableList.of("application", app, event));
+    public void onApplicationEvent(String applicationId, String applicationName, String entityType, 
+            String catalogItemId, Map<String, String> metadata, ApplicationEvent event) {
+        events.add(MutableList.of("application", applicationId, applicationName, entityType, catalogItemId, metadata, event));
     }
 
     @Override
-    public void onLocationEvent(LocationMetadata loc, LocationEvent event) {
-        events.add(MutableList.of("location", loc, event));
+    public void onLocationEvent(String locationId, Map<String, String> metadata, LocationEvent event) {
+        events.add(MutableList.of("location", locationId, metadata, event));
     }
     
     public void clearEvents() {
