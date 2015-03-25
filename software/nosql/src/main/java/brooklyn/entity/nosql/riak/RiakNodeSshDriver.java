@@ -18,17 +18,30 @@
  */
 package brooklyn.entity.nosql.riak;
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
+import static brooklyn.util.ssh.BashCommands.addSbinPathCommand;
+import static brooklyn.util.ssh.BashCommands.alternatives;
+import static brooklyn.util.ssh.BashCommands.chainGroup;
+import static brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
+import static brooklyn.util.ssh.BashCommands.ifExecutableElse;
+import static brooklyn.util.ssh.BashCommands.ifNotExecutable;
+import static brooklyn.util.ssh.BashCommands.ok;
+import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.ssh.SshTasks;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
@@ -40,14 +53,10 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
+import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.Strings;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
@@ -68,10 +77,10 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     @Override
     public Map<String, String> getShellEnvironment() {
         MutableMap<String, String> result = MutableMap.copyOf(super.getShellEnvironment());
-        // how to change epmd port, according to 
+        // how to change epmd port, according to
         // http://serverfault.com/questions/582787/how-to-change-listening-interface-of-rabbitmqs-epmd-port-4369
         if (getEntity().getEpmdListenerPort() != null) {
-            result.put("ERL_EPMD_PORT", "" + Integer.toString(getEntity().getEpmdListenerPort()));
+            result.put("ERL_EPMD_PORT", Integer.toString(getEntity().getEpmdListenerPort()));
         }
         result.put("WAIT_FOR_ERLANG", "60");
         return result;
@@ -315,6 +324,9 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             launchScript.environmentVariablesReset(newPathVariable);
         }
         launchScript.failOnNonZeroResultCode().execute();
+
+        String mainUri = String.format("http://%s:%s/admin", entity.getAttribute(Attributes.HOSTNAME), entity.getAttribute(RiakNode.RIAK_WEB_PORT));
+        entity.setAttribute(Attributes.MAIN_URI, URI.create(mainUri));
     }
 
     @Override
