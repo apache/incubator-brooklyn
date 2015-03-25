@@ -62,6 +62,16 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
     }
 
     @Override
+    public byte[] getBytes() {
+        try {
+            if (!exists()) return null;
+            return Files.asByteSource(file).read();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    @Override
     public boolean exists() {
         return file.exists();
     }

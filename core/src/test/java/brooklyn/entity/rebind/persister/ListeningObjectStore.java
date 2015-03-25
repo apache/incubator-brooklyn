@@ -238,6 +238,10 @@ public class ListeningObjectStore implements PersistenceObjectStore {
             return result;
         }
         @Override
+        public byte[] getBytes() {
+            return get().getBytes();
+        }
+        @Override
         public Date getLastModifiedDate() {
             return delegate.getLastModifiedDate();
         }

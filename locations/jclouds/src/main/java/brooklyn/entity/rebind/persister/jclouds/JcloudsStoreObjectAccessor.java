@@ -18,7 +18,9 @@
  */
 package brooklyn.entity.rebind.persister.jclouds;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 
 import org.apache.commons.io.Charsets;
@@ -31,6 +33,7 @@ import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteSource;
+import com.google.common.io.ByteStreams;
 
 /**
  * @author Andrea Turli
@@ -90,6 +93,25 @@ public class JcloudsStoreObjectAccessor implements PersistenceObjectStore.StoreO
             Blob blob = blobStore.getBlob(containerName, blobName);
             if (blob==null) return null;
             return Strings2.toStringAndClose(blob.getPayload().openStream());
+        } catch (IOException e) {
+            Exceptions.propagateIfFatal(e);
+            throw new IllegalStateException("Error reading blobstore "+containerName+" "+blobName+": "+e, e);
+        }
+    }
+
+    @Override
+    public byte[] getBytes() {
+        try {
+            Blob blob = blobStore.getBlob(containerName, blobName);
+            if (blob==null) return null;
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            InputStream in = blob.getPayload().openStream();
+            try {
+                ByteStreams.copy(in, out);
+                return out.toByteArray();
+            } finally {
+                out.close();
+            }
         } catch (IOException e) {
             Exceptions.propagateIfFatal(e);
             throw new IllegalStateException("Error reading blobstore "+containerName+" "+blobName+": "+e, e);

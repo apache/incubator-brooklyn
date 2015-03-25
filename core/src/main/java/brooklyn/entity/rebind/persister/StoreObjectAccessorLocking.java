@@ -83,6 +83,24 @@ public class StoreObjectAccessorLocking implements PersistenceObjectStore.StoreO
     }
 
     @Override
+    public byte[] getBytes() {
+        try {
+            queuedReaders.add(Thread.currentThread());
+            lock.readLock().lockInterruptibly();
+            try {
+                return delegate.getBytes();
+                
+            } finally {
+                lock.readLock().unlock();
+            }
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            queuedReaders.remove(Thread.currentThread());
+        }
+    }
+
+    @Override
     public boolean exists() {
         try {
             queuedReaders.add(Thread.currentThread());

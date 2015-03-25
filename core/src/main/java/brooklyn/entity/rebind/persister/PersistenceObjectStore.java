@@ -39,6 +39,7 @@ public interface PersistenceObjectStore {
     public interface StoreObjectAccessor {
         /** gets the object, or null if not found */
         String get();
+        byte[] getBytes();
         boolean exists();
         void put(String contentsToReplaceOrCreate);
         void append(String contentsToAppendOrCreate);
