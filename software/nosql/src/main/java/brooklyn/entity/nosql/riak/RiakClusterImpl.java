@@ -20,6 +20,7 @@ package brooklyn.entity.nosql.riak;
 
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
@@ -39,12 +41,14 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
-import brooklyn.management.Task;
+import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -98,6 +102,18 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 .displayName("Controller targets tracker")
                 .configure("sensorsToTrack", ImmutableSet.of(RiakNode.SERVICE_UP))
                 .configure("group", this));
+
+        EnricherSpec<?> first = Enrichers.builder()
+                 .aggregating(Attributes.MAIN_URI)
+                 .publishing(Attributes.MAIN_URI)
+                 .computing(new Function<Collection<URI>,URI>() {
+                    @Override
+                    public URI apply(Collection<URI> input) {
+                        return input.iterator().next();
+                    } })
+                 .fromMembers()
+                 .build();
+        addEnricher(first);
     }
 
     protected void onServerPoolMemberChanged(final Entity member) {
@@ -149,12 +165,13 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 }
             } else {
                 if (nodes != null && nodes.containsKey(member)) {
+                    DependentConfiguration.attributeWhenReady(member, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Predicates.equalTo(false)).blockUntilEnded(Duration.TWO_MINUTES);
                     Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), Predicates.and(
                             Predicates.instanceOf(RiakNode.class),
                             EntityPredicates.attributeEqualTo(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true),
                             Predicates.not(Predicates.equalTo(member))));
                     if (anyNodeInCluster.isPresent()) {
-                        Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.LEAVE_RIAK_CLUSTER, getRiakName(member)).blockUntilEnded();
+                        Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.REMOVE_FROM_CLUSTER, getRiakName(member)).blockUntilEnded();
                     }
                     nodes.remove(member);
                     setAttribute(RIAK_CLUSTER_NODES, nodes);

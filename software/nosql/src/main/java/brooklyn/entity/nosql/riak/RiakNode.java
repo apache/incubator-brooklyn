@@ -18,22 +18,22 @@
  */
 package brooklyn.entity.nosql.riak;
 
+import java.net.URI;
 import java.util.List;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
-import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
@@ -142,6 +142,7 @@ public interface RiakNode extends SoftwareProcess {
 
     MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
     MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
+    MethodEffector<Void> REMOVE_FROM_CLUSTER = new MethodEffector<Void>(RiakNode.class, "removeNode");
     MethodEffector<Void> COMMIT_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "commitCluster");
 
     AttributeSensor<Integer> RIAK_NODE_GET_FSM_TIME_MEAN = Sensors.newIntegerSensor("riak.node_get_fsm_time_mean", "Time between reception of client read request and subsequent response to client");
@@ -149,21 +150,14 @@ public interface RiakNode extends SoftwareProcess {
     AttributeSensor<Integer> RIAK_OBJECT_COUNTER_MERGE_TIME_MEAN = Sensors.newIntegerSensor("riak.object_counter_merge_time_mean", "Time it takes to perform an Update Counter operation");
     AttributeSensor<Integer> RIAK_OBJECT_SET_MERGE_TIME_MEAN = Sensors.newIntegerSensor("riak.object_set_merge_time_mean", "Time it takes to perform an Update Set operation");
     AttributeSensor<Integer> RIAK_OBJECT_MAP_MERGE_TIME_MEAN = Sensors.newIntegerSensor("riak.object_map_merge_time_mean", "Time it takes to perform an Update Map operation");
-    AttributeSensor<Integer> RIAK_SEARCH_QUERY_LATENCY_MEDIAN = Sensors.newIntegerSensor("riak.search_query_latency_median", "Search query latency");
-    AttributeSensor<Integer> RIAK_SEARCH_INDEX_LATENCY_MEDIAN = Sensors.newIntegerSensor("riak.search_index_latency_median", "Time it takes Search to index a new document");
     AttributeSensor<Integer> RIAK_CONSISTENT_GET_TIME_MEAN = Sensors.newIntegerSensor("riak.consistent_get_time_mean", "Strongly consistent read latency");
     AttributeSensor<Integer> RIAK_CONSISTENT_PUT_TIME_MEAN = Sensors.newIntegerSensor("riak.consistent_put_time_mean", "Strongly consistent write latency");
 
-    List<AttributeSensor<Integer>> ONE_MINUTE_STRING_SENSORS = ImmutableList.of(RIAK_NODE_GET_FSM_TIME_MEAN, RIAK_NODE_PUT_FSM_TIME_MEAN,
+    List<AttributeSensor<Integer>> ONE_MINUTE_SENSORS = ImmutableList.of(RIAK_NODE_GET_FSM_TIME_MEAN, RIAK_NODE_PUT_FSM_TIME_MEAN,
             RIAK_OBJECT_COUNTER_MERGE_TIME_MEAN, RIAK_OBJECT_SET_MERGE_TIME_MEAN, RIAK_OBJECT_MAP_MERGE_TIME_MEAN,
-            RIAK_SEARCH_QUERY_LATENCY_MEDIAN, RIAK_SEARCH_INDEX_LATENCY_MEDIAN,
             RIAK_CONSISTENT_GET_TIME_MEAN, RIAK_CONSISTENT_PUT_TIME_MEAN);
 
-    ConfigKey<Boolean> DO_OS_TUNING = new BasicConfigKey<Boolean>(
-            Boolean.class,
-            "do.os.tunning",
-            "Does sysctl OS optimizations. By default it is true",
-            true);
+    AttributeSensor<URI> RIAK_CONSOLE_URI = Attributes.MAIN_URI;
 
     // accessors, for use from template file
     Integer getRiakWebPort();
@@ -188,16 +182,19 @@ public interface RiakNode extends SoftwareProcess {
 
     String getOsMajorVersion();
 
-    @Effector(description = "Add this riak node to the Riak cluster")
+    @Effector(description = "Join the Riak cluster on the given node")
     public void joinCluster(@EffectorParam(name = "nodeName") String nodeName);
 
-    @Effector(description = "Remove this Riak node from the cluster")
-    public void leaveCluster(@EffectorParam(name = "nodeName") String nodeName);
+    @Effector(description = "Leave the Riak cluster")
+    public void leaveCluster();
 
-    @Effector(description = "Recover a failed Riak node and join it back to the cluster (by passing it a working node on the cluster 'node')")
+    @Effector(description = "Remove the given node from the Riak cluster")
+    public void removeNode(@EffectorParam(name = "nodeName") String nodeName);
+
+    @Effector(description = "Recover and join the Riak cluster on the given node")
     public void recoverFailedNode(@EffectorParam(name = "nodeName") String nodeName);
 
-    @Effector(description = "Commit changes made to a Riak cluster")
+    @Effector(description = "Commit changes made to the Riak cluster")
     public void commitCluster();
 
 }
