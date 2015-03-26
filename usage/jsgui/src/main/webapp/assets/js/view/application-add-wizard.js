@@ -78,7 +78,6 @@ define([
             "brooklyn.config": entity.config
         };
     }
-
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
         className:'modal hide fade',
@@ -249,13 +248,18 @@ define([
             this.renderCurrentStep()
         },
         nextStep:function () {
+        	  
             if (this.currentStep < 2) {
-                if (this.currentView.validate()) {
-                    this.currentStep += 1
-                    this.renderCurrentStep()
-                } else {
-                    // call to validate should showFailure
-                }
+//                if (this.currentView.validate()) {
+//                    this.currentStep += 1
+//                    this.renderCurrentStep()
+//                } else {
+//                    // call to validate should showFailure
+//                }
+           	 $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show')
+                $("#yaml_code").focus()
+              
+
             } else {
                 this.finishStep()
             }
@@ -400,8 +404,10 @@ define([
                 id: item.id,
                 name: item.name,
                 description: item.description,
-                iconUrl: item.iconUrl
+                planYaml:  item.planYaml,
+                iconUrl: item.iconUrTeml
             })
+            //alert("yaml:"+item.planYaml)
             $("#create-step-template-entries", that.$el).append($tempel)
         },
         templateClick: function(event) {
@@ -414,6 +420,7 @@ define([
                     type: $tl.attr('id'),
                     name: $tl.data("name")
                 };
+                $("textarea#yaml_code").val($tl.data("yaml"));
             } else {
                 this.selectedTemplate = null;
             }

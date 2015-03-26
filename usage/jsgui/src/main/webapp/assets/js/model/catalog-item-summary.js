@@ -29,7 +29,8 @@ define(["underscore", "backbone"], function (_, Backbone) {
                 name:"",
                 type:"",
                 description:"",
-                iconUrl:""
+                iconUrl:"", 
+                planYaml:""
             }
         }
     })
