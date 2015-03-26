@@ -18,11 +18,13 @@
  */
 package brooklyn.entity.nosql.riak;
 
+import java.net.URI;
 import java.util.Map;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -51,4 +53,7 @@ public interface RiakCluster extends DynamicCluster {
     AttributeSensor<Boolean> IS_FIRST_NODE_SET = Sensors.newBooleanSensor("riak.cluster.isFirstNodeSet", "Flag to determine if the first node has been set");
 
     AttributeSensor<String> NODE_LIST = Sensors.newStringSensor("riak.cluster.nodeList", "List of nodes (including ports), comma separated");
+
+    AttributeSensor<URI> RIAK_CONSOLE_URI = Attributes.MAIN_URI;
+
 }

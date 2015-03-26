@@ -18,12 +18,14 @@
  */
 package brooklyn.entity.nosql.riak;
 
+import java.net.URI;
 import java.util.List;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -154,6 +156,8 @@ public interface RiakNode extends SoftwareProcess {
     List<AttributeSensor<Integer>> ONE_MINUTE_SENSORS = ImmutableList.of(RIAK_NODE_GET_FSM_TIME_MEAN, RIAK_NODE_PUT_FSM_TIME_MEAN,
             RIAK_OBJECT_COUNTER_MERGE_TIME_MEAN, RIAK_OBJECT_SET_MERGE_TIME_MEAN, RIAK_OBJECT_MAP_MERGE_TIME_MEAN,
             RIAK_CONSISTENT_GET_TIME_MEAN, RIAK_CONSISTENT_PUT_TIME_MEAN);
+
+    AttributeSensor<URI> RIAK_CONSOLE_URI = Attributes.MAIN_URI;
 
     // accessors, for use from template file
     Integer getRiakWebPort();
