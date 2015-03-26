@@ -140,6 +140,7 @@ public interface RiakNode extends SoftwareProcess {
 
     MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
     MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
+    MethodEffector<Void> REMOVE_FROM_CLUSTER = new MethodEffector<Void>(RiakNode.class, "removeNode");
     MethodEffector<Void> COMMIT_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "commitCluster");
 
     AttributeSensor<Integer> RIAK_NODE_GET_FSM_TIME_MEAN = Sensors.newIntegerSensor("riak.node_get_fsm_time_mean", "Time between reception of client read request and subsequent response to client");
@@ -180,16 +181,19 @@ public interface RiakNode extends SoftwareProcess {
 
     String getOsMajorVersion();
 
-    @Effector(description = "Add this riak node to the Riak cluster")
+    @Effector(description = "Join the Riak cluster on the given node")
     public void joinCluster(@EffectorParam(name = "nodeName") String nodeName);
 
-    @Effector(description = "Remove this Riak node from the cluster")
-    public void leaveCluster(@EffectorParam(name = "nodeName") String nodeName);
+    @Effector(description = "Leave the Riak cluster")
+    public void leaveCluster();
 
-    @Effector(description = "Recover a failed Riak node and join it back to the cluster (by passing it a working node on the cluster 'node')")
+    @Effector(description = "Remove the given node from the Riak cluster")
+    public void removeNode(@EffectorParam(name = "nodeName") String nodeName);
+
+    @Effector(description = "Recover and join the Riak cluster on the given node")
     public void recoverFailedNode(@EffectorParam(name = "nodeName") String nodeName);
 
-    @Effector(description = "Commit changes made to a Riak cluster")
+    @Effector(description = "Commit changes made to the Riak cluster")
     public void commitCluster();
 
 }

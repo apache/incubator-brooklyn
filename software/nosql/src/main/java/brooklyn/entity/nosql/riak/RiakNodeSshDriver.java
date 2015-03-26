@@ -37,12 +37,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
@@ -57,6 +51,12 @@ import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.Strings;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
@@ -331,7 +331,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     @Override
     public void stop() {
-        leaveCluster(""); // No node name means this node will leave
+        leaveCluster();
 
         String command = format("%s stop", getRiakCmd());
         command = isPackageInstall() ? sudo(command) : command;
@@ -385,15 +385,14 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         return isPackageInstall() ? "riak-admin" : Urls.mergePaths(getExpandedInstallDir(), "bin/riak-admin");
     }
 
+    // TODO find a way to batch commit the changes, instead of committing for every operation.
+
     @Override
     public void joinCluster(String nodeName) {
-        //FIXME: find a way to batch commit the changes, instead of committing for every operation.
-
         if (getRiakName().equals(nodeName)) {
-            log.warn("cannot join riak node: {} to itself", nodeName);
+            log.warn("Cannot join Riak node: {} to itself", nodeName);
         } else {
             if (!hasJoinedCluster()) {
-
                 ScriptHelper joinClusterScript = newScript("joinCluster")
                         .body.append(sudo(format("%s cluster join %s", getRiakAdminCmd(), nodeName)))
                         .failOnNonZeroResultCode();
@@ -414,14 +413,10 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     @Override
-    public void leaveCluster(String nodeName) {
-        //TODO: add 'riak-admin cluster force-remove' for erroneous and unrecoverable nodes.
-        //FIXME: find a way to batch commit the changes, instead of committing for every operation.
-        //FIXME: find a way to check if the node is the last in the cluster to avoid removing the only member and getting "last node error"
-
+    public void leaveCluster() {
         if (hasJoinedCluster()) {
             ScriptHelper leaveClusterScript = newScript("leaveCluster")
-                    .body.append(sudo(format("%s cluster leave %s", getRiakAdminCmd(), nodeName)))
+                    .body.append(sudo(format("%s cluster leave", getRiakAdminCmd())))
                     .body.append(sudo(format("%s cluster plan", getRiakAdminCmd())))
                     .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())))
                     .failOnNonZeroResultCode();
@@ -436,8 +431,25 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
             entity.setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.FALSE);
         } else {
-            log.warn("entity {}: is not in the riak cluster", entity.getId());
+            log.warn("entity {}: has already left the riak cluster", entity.getId());
         }
+    }
+
+    @Override
+    public void removeNode(String nodeName) {
+        ScriptHelper removeNodeScript = newScript("removeNode")
+                .body.append(sudo(format("%s cluster force-remove %s", getRiakAdminCmd(), nodeName)))
+                .body.append(sudo(format("%s cluster plan", getRiakAdminCmd())))
+                .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())))
+                .failOnNonZeroResultCode();
+
+        if (!isRiakOnPath()) {
+            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+            removeNodeScript.environmentVariablesReset(newPathVariable);
+        }
+
+        removeNodeScript.execute();
     }
 
     @Override

@@ -191,8 +191,13 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     @Override
-    public void leaveCluster(String nodeName) {
-        getDriver().leaveCluster(nodeName);
+    public void leaveCluster() {
+        getDriver().leaveCluster();
+    }
+
+    @Override
+    public void removeNode(String nodeName) {
+        getDriver().removeNode(nodeName);
     }
 
     @Override

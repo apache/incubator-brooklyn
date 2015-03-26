@@ -26,7 +26,9 @@ public interface RiakNodeDriver extends SoftwareProcessDriver {
 
     public void joinCluster(String nodeName);
 
-    public void leaveCluster(String nodeName);
+    public void leaveCluster();
+
+    public void removeNode(String nodeName);
 
     public void recoverFailedNode(String nodeName);
 

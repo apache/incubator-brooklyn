@@ -41,9 +41,11 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.Location;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.PolicySpec;
+import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
@@ -163,12 +165,13 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 }
             } else {
                 if (nodes != null && nodes.containsKey(member)) {
+                    boolean timeout = DependentConfiguration.attributeWhenReady(member, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Predicates.equalTo(false)).blockUntilEnded(Duration.TWO_MINUTES);
                     Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), Predicates.and(
                             Predicates.instanceOf(RiakNode.class),
                             EntityPredicates.attributeEqualTo(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true),
                             Predicates.not(Predicates.equalTo(member))));
-                    if (anyNodeInCluster.isPresent()) {
-                        Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.LEAVE_RIAK_CLUSTER, getRiakName(member)).blockUntilEnded();
+                    if (timeout && anyNodeInCluster.isPresent()) {
+                        Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.REMOVE_FROM_CLUSTER, getRiakName(member)).blockUntilEnded();
                     }
                     nodes.remove(member);
                     setAttribute(RIAK_CLUSTER_NODES, nodes);
