@@ -30,10 +30,8 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
-import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
@@ -158,12 +156,6 @@ public interface RiakNode extends SoftwareProcess {
             RIAK_OBJECT_COUNTER_MERGE_TIME_MEAN, RIAK_OBJECT_SET_MERGE_TIME_MEAN, RIAK_OBJECT_MAP_MERGE_TIME_MEAN,
             RIAK_SEARCH_QUERY_LATENCY_MEDIAN, RIAK_SEARCH_INDEX_LATENCY_MEDIAN,
             RIAK_CONSISTENT_GET_TIME_MEAN, RIAK_CONSISTENT_PUT_TIME_MEAN);
-
-    ConfigKey<Boolean> DO_OS_TUNING = new BasicConfigKey<Boolean>(
-            Boolean.class,
-            "do.os.tunning",
-            "Does sysctl OS optimizations. By default it is true",
-            true);
 
     // accessors, for use from template file
     Integer getRiakWebPort();
