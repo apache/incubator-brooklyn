@@ -439,6 +439,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     public void removeNode(String nodeName) {
         ScriptHelper removeNodeScript = newScript("removeNode")
                 .body.append(sudo(format("%s cluster force-remove %s", getRiakAdminCmd(), nodeName)))
+                .body.append(sudo(format("%s down %s", getRiakAdminCmd(), nodeName)))
                 .body.append(sudo(format("%s cluster plan", getRiakAdminCmd())))
                 .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())))
                 .failOnNonZeroResultCode();
