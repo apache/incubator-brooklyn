@@ -165,12 +165,12 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 }
             } else {
                 if (nodes != null && nodes.containsKey(member)) {
-                    boolean timeout = DependentConfiguration.attributeWhenReady(member, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Predicates.equalTo(false)).blockUntilEnded(Duration.TWO_MINUTES);
+                    DependentConfiguration.attributeWhenReady(member, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Predicates.equalTo(false)).blockUntilEnded(Duration.TWO_MINUTES);
                     Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), Predicates.and(
                             Predicates.instanceOf(RiakNode.class),
                             EntityPredicates.attributeEqualTo(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true),
                             Predicates.not(Predicates.equalTo(member))));
-                    if (timeout && anyNodeInCluster.isPresent()) {
+                    if (anyNodeInCluster.isPresent()) {
                         Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.REMOVE_FROM_CLUSTER, getRiakName(member)).blockUntilEnded();
                     }
                     nodes.remove(member);

@@ -41,6 +41,7 @@ import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Functionals;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -166,8 +167,9 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
                         ))
                         .onFailureOrException(Functions.constant(Arrays.asList(new String[0]))));
 
-        for (AttributeSensor<Integer> sensor : ONE_MINUTE_STRING_SENSORS) {
+        for (AttributeSensor<Integer> sensor : ONE_MINUTE_SENSORS) {
             httpFeedBuilder.poll(new HttpPollConfig<Integer>(sensor)
+                    .period(Duration.ONE_MINUTE)
                     .onSuccess(HttpValueFunctions.jsonContents(sensor.getName().substring(5), Integer.class))
                     .onFailureOrException(Functions.constant(-1)));
         }
