@@ -46,7 +46,6 @@ import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -55,6 +54,7 @@ import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntityProxyImpl;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.AttributeSensor;
@@ -77,7 +77,6 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.NonDeploymentManagementContext;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -814,6 +813,20 @@ public class Entities {
             return (AbstractEntity) e;
         }
         return (AbstractEntity) ((EntityProxyImpl)Proxy.getInvocationHandler(e)).getDelegate();
+    }
+    
+    /** 
+     * Returns the proxy form (if available) of the entity. If already a proxy, returns unmodified.
+     * 
+     * If null is passed in, then null is returned.
+     * 
+     * For legacy entities (that did not use {@link EntitySpec} or YAML for creation), the
+     * proxy may not be avilable; in which case the concrete class passed in will be returned.
+     */
+    @Beta
+    @SuppressWarnings("unchecked")
+    public static <T extends Entity> T proxy(T e) {
+        return (e == null) ? null : e instanceof Proxy ? e : (T) ((AbstractEntity)e).getProxyIfAvailable();
     }
     
     /**

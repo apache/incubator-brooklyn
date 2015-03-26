@@ -20,6 +20,7 @@ package brooklyn.management.usage;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.util.List;
@@ -35,8 +36,10 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.management.internal.UsageListener.ApplicationMetadata;
 import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -82,8 +85,9 @@ public class ApplicationUsageTrackingTest {
     }
 
     @Test
-    public void testAddAndRemoveUsageListener() throws Exception {
-        final RecordingUsageListener listener = new RecordingUsageListener();
+    @SuppressWarnings("deprecation")
+    public void testAddAndRemoveLegacyUsageListener() throws Exception {
+        final RecordingLegacyUsageListener listener = new RecordingLegacyUsageListener();
         mgmt.getUsageManager().addUsageListener(listener);
         
         app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
@@ -123,6 +127,45 @@ public class ApplicationUsageTrackingTest {
             }});
     }
 
+    @Test
+    public void testAddAndRemoveUsageListener() throws Exception {
+        final RecordingUsageListener listener = new RecordingUsageListener();
+        mgmt.getUsageManager().addUsageListener(listener);
+        
+        app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
+        app.setCatalogItemId("testCatalogItem");
+        app.start(ImmutableList.<Location>of());
+
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                List<List<?>> events = listener.getApplicationEvents();
+                assertEquals(events.size(), 2, "events="+events); // expect STARTING and RUNNING
+                ApplicationMetadata appMetadata = (ApplicationMetadata) events.get(0).get(1);
+                ApplicationEvent appEvent = (ApplicationEvent) events.get(0).get(2);
+                
+                assertEquals(appMetadata.getApplication(), app, "events="+events);
+                assertTrue(appMetadata.getApplication() instanceof EntityProxy, "events="+events);
+                assertEquals(appMetadata.getApplicationId(), app.getId(), "events="+events);
+                assertNotNull(appMetadata.getApplicationName(), "events="+events);
+                assertEquals(appMetadata.getCatalogItemId(), app.getCatalogItemId(), "events="+events);
+                assertNotNull(appMetadata.getEntityType(), "events="+events);
+                assertNotNull(appMetadata.getMetadata(), "events="+events);
+                assertEquals(appEvent.getState(), Lifecycle.STARTING, "events="+events);
+            }});
+
+
+        // Remove the listener; will get no more notifications
+        listener.clearEvents();
+        mgmt.getUsageManager().removeUsageListener(listener);
+        
+        app.start(ImmutableList.<Location>of());
+        Asserts.succeedsContinually(new Runnable() {
+            @Override public void run() {
+                List<List<?>> events = listener.getLocationEvents();
+                assertEquals(events.size(), 0, "events="+events);
+            }});
+    }
+    
     @Test
     public void testUsageIncludesStartAndStopEvents() {
         // Start event

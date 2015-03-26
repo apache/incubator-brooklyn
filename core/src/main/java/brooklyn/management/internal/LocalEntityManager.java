@@ -211,7 +211,7 @@ public class LocalEntityManager implements EntityManagerInternal {
         Iterable<Entity> result = Iterables.filter(allentities, predicate);
         return ImmutableSet.copyOf(Iterables.transform(result, new Function<Entity, Entity>() {
             @Override public Entity apply(Entity input) {
-                return (input == null) ? null : input instanceof Proxy ? input : ((AbstractEntity)input).getProxyIfAvailable();
+                return Entities.proxy(input);
             }}));
     }
 

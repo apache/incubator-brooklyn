@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.internal.storage.BrooklynStorage;
@@ -73,16 +74,77 @@ public class LocalUsageManager implements UsageManager {
     
     private static final Logger log = LoggerFactory.getLogger(LocalUsageManager.class);
 
+    private static class ApplicationMetadataImpl implements brooklyn.management.internal.UsageListener.ApplicationMetadata {
+        private final Application app;
+        private String applicationId;
+        private String applicationName;
+        private String entityType;
+        private String catalogItemId;
+        private Map<String, String> metadata;
+
+        ApplicationMetadataImpl(Application app) {
+            this.app = checkNotNull(app, "app");
+            applicationId = app.getId();
+            applicationName = app.getDisplayName();
+            entityType = app.getEntityType().getName();
+            catalogItemId = app.getCatalogItemId();
+            metadata = ((EntityInternal)app).toMetadataRecord();
+        }
+        @Override public Application getApplication() {
+            return app;
+        }
+        @Override public String getApplicationId() {
+            return applicationId;
+        }
+        @Override public String getApplicationName() {
+            return applicationName;
+        }
+        @Override public String getEntityType() {
+            return entityType;
+        }
+        @Override public String getCatalogItemId() {
+            return catalogItemId;
+        }
+        @Override public Map<String, String> getMetadata() {
+            return metadata;
+        }
+    }
+    
+    private static class LocationMetadataImpl implements brooklyn.management.internal.UsageListener.LocationMetadata {
+        private final Location loc;
+        private String locationId;
+        private Map<String, String> metadata;
+
+        LocationMetadataImpl(Location loc) {
+            this.loc = checkNotNull(loc, "loc");
+            locationId = loc.getId();
+            metadata = ((LocationInternal)loc).toMetadataRecord();
+        }
+        @Override public Location getLocation() {
+            return loc;
+        }
+        @Override public String getLocationId() {
+            return locationId;
+        }
+        @Override public Map<String, String> getMetadata() {
+            return metadata;
+        }
+    }
+    
     // Register a coercion from String->UsageListener, so that USAGE_LISTENERS defined in brooklyn.properties
     // will be instantiated, given their class names.
     static {
-        TypeCoercions.registerAdapter(String.class, UsageListener.class, new Function<String, UsageListener>() {
-            @Override public UsageListener apply(String input) {
+        TypeCoercions.registerAdapter(String.class, brooklyn.management.internal.UsageListener.class, new Function<String, brooklyn.management.internal.UsageListener>() {
+            @Override public brooklyn.management.internal.UsageListener apply(String input) {
                 // TODO Want to use classLoader = mgmt.getCatalog().getRootClassLoader();
                 ClassLoader classLoader = LocalUsageManager.class.getClassLoader();
                 Optional<Object> result = Reflections.invokeConstructorWithArgs(classLoader, input);
                 if (result.isPresent()) {
-                    return (UsageListener) result.get();
+                    if (result.get() instanceof brooklyn.management.internal.UsageManager.UsageListener) {
+                        return new brooklyn.management.internal.UsageManager.UsageListener.UsageListenerAdapter((brooklyn.management.internal.UsageManager.UsageListener) result.get());
+                    } else {
+                        return (brooklyn.management.internal.UsageListener) result.get();
+                    }
                 } else {
                     throw new IllegalStateException("Failed to create UsageListener from class name '"+input+"' using no-arg constructor");
                 }
@@ -100,7 +162,7 @@ public class LocalUsageManager implements UsageManager {
     
     private final Object mutex = new Object();
 
-    private final List<UsageListener> listeners = Lists.newCopyOnWriteArrayList();
+    private final List<brooklyn.management.internal.UsageListener> listeners = Lists.newCopyOnWriteArrayList();
     
     private final AtomicInteger listenerQueueSize = new AtomicInteger();
     
@@ -111,13 +173,23 @@ public class LocalUsageManager implements UsageManager {
     public LocalUsageManager(LocalManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
         
-        Collection<UsageListener> listeners = managementContext.getBrooklynProperties().getConfig(UsageManager.USAGE_LISTENERS);
+        // TODO Once brooklyn.management.internal.UsageManager.UsageListener is deleted, restore this
+        // to normal generics!
+        Collection<?> listeners = managementContext.getBrooklynProperties().getConfig(UsageManager.USAGE_LISTENERS);
         if (listeners != null) {
-            for (UsageListener listener : listeners) {
+            for (Object listener : listeners) {
                 if (listener instanceof ManagementContextInjectable) {
                     ((ManagementContextInjectable)listener).injectManagementContext(managementContext);
                 }
-                addUsageListener(listener);
+                if (listener instanceof brooklyn.management.internal.UsageManager.UsageListener) {
+                    addUsageListener((brooklyn.management.internal.UsageManager.UsageListener)listener);
+                } else if (listener instanceof brooklyn.management.internal.UsageListener) {
+                    addUsageListener((brooklyn.management.internal.UsageListener)listener);
+                } else if (listener == null) {
+                    throw new NullPointerException("null listener in config "+UsageManager.USAGE_LISTENERS);
+                } else {
+                    throw new ClassCastException("listener "+listener+" of type "+listener.getClass()+" is not of type "+brooklyn.management.internal.UsageListener.class.getName());
+                }
             }
         }
     }
@@ -129,7 +201,7 @@ public class LocalUsageManager implements UsageManager {
             log.info("Usage manager waiting for "+listenerQueueSize+" listener events for up to "+timeout);
         }
         List<ListenableFuture<?>> futures = Lists.newArrayList();
-        for (final UsageListener listener : listeners) {
+        for (final brooklyn.management.internal.UsageListener listener : listeners) {
             ListenableFuture<?> future = listenerExecutor.submit(new Runnable() {
                 public void run() {
                     if (listener instanceof Closeable) {
@@ -152,8 +224,8 @@ public class LocalUsageManager implements UsageManager {
         }
     }
 
-    private void execOnListeners(final Function<UsageListener, Void> job) {
-        for (final UsageListener listener : listeners) {
+    private void execOnListeners(final Function<brooklyn.management.internal.UsageListener, Void> job) {
+        for (final brooklyn.management.internal.UsageListener listener : listeners) {
             listenerQueueSize.incrementAndGet();
             listenerExecutor.execute(new Runnable() {
                 public void run() {
@@ -182,10 +254,9 @@ public class LocalUsageManager implements UsageManager {
             usage.addEvent(event);        
             eventMap.put(app.getId(), usage);
 
-            execOnListeners(new Function<UsageListener, Void>() {
-                    public Void apply(UsageListener listener) {
-                        listener.onApplicationEvent(app.getId(), app.getDisplayName(), app.getEntityType().getName(),
-                                app.getCatalogItemId(), ((EntityInternal)app).toMetadataRecord(), event);
+            execOnListeners(new Function<brooklyn.management.internal.UsageListener, Void>() {
+                    public Void apply(brooklyn.management.internal.UsageListener listener) {
+                        listener.onApplicationEvent(new ApplicationMetadataImpl(Entities.proxy(app)), event);
                         return null;
                     }
                     public String toString() {
@@ -240,9 +311,9 @@ public class LocalUsageManager implements UsageManager {
                 usage.addEvent(event);
                 usageMap.put(loc.getId(), usage);
                 
-                execOnListeners(new Function<UsageListener, Void>() {
-                        public Void apply(UsageListener listener) {
-                            listener.onLocationEvent(loc.getId(), ((LocationInternal)loc).toMetadataRecord(), event);
+                execOnListeners(new Function<brooklyn.management.internal.UsageListener, Void>() {
+                        public Void apply(brooklyn.management.internal.UsageListener listener) {
+                            listener.onLocationEvent(new LocationMetadataImpl(loc), event);
                             return null;
                         }
                         public String toString() {
@@ -318,12 +389,24 @@ public class LocalUsageManager implements UsageManager {
     }
 
     @Override
-    public void addUsageListener(UsageListener listener) {
+    @Deprecated
+    public void addUsageListener(brooklyn.management.internal.UsageManager.UsageListener listener) {
+        addUsageListener(new brooklyn.management.internal.UsageManager.UsageListener.UsageListenerAdapter(listener));
+    }
+
+    @Override
+    @Deprecated
+    public void removeUsageListener(brooklyn.management.internal.UsageManager.UsageListener listener) {
+        removeUsageListener(new brooklyn.management.internal.UsageManager.UsageListener.UsageListenerAdapter(listener));
+    }
+    
+    @Override
+    public void addUsageListener(brooklyn.management.internal.UsageListener listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void removeUsageListener(UsageListener listener) {
+    public void removeUsageListener(brooklyn.management.internal.UsageListener listener) {
         listeners.remove(listener);
     }
 }

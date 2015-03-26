@@ -100,7 +100,19 @@ public class NonDeploymentUsageManager implements UsageManager {
     }
 
     @Override
-    public void addUsageListener(UsageListener listener) {
+    @Deprecated
+    public void addUsageListener(brooklyn.management.internal.UsageManager.UsageListener listener) {
+        addUsageListener(new brooklyn.management.internal.UsageManager.UsageListener.UsageListenerAdapter(listener));
+    }
+
+    @Override
+    @Deprecated
+    public void removeUsageListener(brooklyn.management.internal.UsageManager.UsageListener listener) {
+        removeUsageListener(new brooklyn.management.internal.UsageManager.UsageListener.UsageListenerAdapter(listener));
+    }
+    
+    @Override
+    public void addUsageListener(brooklyn.management.internal.UsageListener listener) {
         if (isInitialManagementContextReal()) {
             initialManagementContext.getUsageManager().addUsageListener(listener);
         } else {
@@ -109,7 +121,7 @@ public class NonDeploymentUsageManager implements UsageManager {
     }
 
     @Override
-    public void removeUsageListener(UsageListener listener) {
+    public void removeUsageListener(brooklyn.management.internal.UsageListener listener) {
         if (isInitialManagementContextReal()) {
             initialManagementContext.getUsageManager().removeUsageListener(listener);
         } else {
