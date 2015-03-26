@@ -86,6 +86,10 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
             }
         }
         @Override
+        public byte[] getBytes() {
+            return get().getBytes();
+        }
+        @Override
         public boolean exists() {
             synchronized (map) {
                 return map.containsKey(key);
