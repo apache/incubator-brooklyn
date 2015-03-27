@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.util.net.Networking;
 
+/** @deprecated Mar 2015 - the API has changed; GetLocation now discouraged for free access, and valuepairs.txt not supported */
+@Deprecated
 public class GeoBytesHostGeoLookup implements HostGeoLookup {
 
     public static final Logger log = LoggerFactory.getLogger(GeoBytesHostGeoLookup.class);
@@ -84,7 +86,12 @@ public class GeoBytesHostGeoLookup implements HostGeoLookup {
         Properties props = new Properties();
         try {
             props.load( new URL(url).openStream() );
+            HostGeoInfo geo = new HostGeoInfo(address.getHostName(), props.getProperty("city")+" ("+props.getProperty("iso2")+")", 
+                Double.parseDouble(props.getProperty("latitude")), Double.parseDouble(props.getProperty("longitude")));
+            log.info("Geo info lookup for "+address+" returned: "+geo);
+            return geo;
         } catch (Exception e) {
+            // may be web not available, or gateway giving us funny crap
             if (log.isDebugEnabled())
                 log.debug("Geo info lookup for "+address+" failed: "+e);
             if (!LOGGED_GEO_LOOKUP_UNAVAILABLE) {
@@ -93,10 +100,6 @@ public class GeoBytesHostGeoLookup implements HostGeoLookup {
             }
             return null;
         }
-        HostGeoInfo geo = new HostGeoInfo(address.getHostName(), props.getProperty("city")+" ("+props.getProperty("iso2")+")", 
-                Double.parseDouble(props.getProperty("latitude")), Double.parseDouble(props.getProperty("longitude")));
-        log.info("Geo info lookup for "+address+" returned: "+geo);
-        return geo;
     }
     
 }
