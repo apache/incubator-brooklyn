@@ -102,6 +102,12 @@ public class ServiceFailureDetector extends ServiceStateLogic.ComputeServiceStat
             .defaultValue(Duration.ZERO)
             .build();
 
+    @SetFromFlag("entityFailedRepublishTime")
+    public static final ConfigKey<Duration> ENTITY_FAILED_REPUBLISH_TIME = BasicConfigKey.builder(Duration.class)
+            .name("entityFailed.republishTime")
+            .description("Publish failed state periodically at the specified intervals, null to disable.")
+            .build();
+
     protected Long firstUpTime;
     
     protected Long currentFailureStartTime = null;
@@ -215,7 +221,13 @@ public class ServiceFailureDetector extends ServiceStateLogic.ComputeServiceStat
                 if (delayBeforeCheck<=0) {
                     if (LOG.isDebugEnabled()) LOG.debug("{} publishing failed (state={}; currentFailureStartTime={}; now={}", 
                             new Object[] {this, state, Time.makeDateString(currentFailureStartTime), Time.makeDateString(now)});
-                    publishEntityFailedTime = null;
+                    Duration republishDelay = getConfig(ENTITY_FAILED_REPUBLISH_TIME);
+                    if (republishDelay == null) {
+                        publishEntityFailedTime = null;
+                    } else {
+                        publishEntityFailedTime = now + republishDelay.toMilliseconds();
+                        recomputeIn = Math.min(recomputeIn, republishDelay.toMilliseconds());
+                    }
                     lastPublished = LastPublished.FAILED;
                     entity.emit(HASensors.ENTITY_FAILED, new HASensors.FailureDescriptor(entity, getFailureDescription(now)));
                 } else {
