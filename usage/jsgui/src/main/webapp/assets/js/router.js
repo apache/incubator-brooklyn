@@ -88,14 +88,15 @@ define([
 
         homePage:function (trail) {
             var that = this;
+            var veryFirstViewLoad, homeView;
             // render the page after we fetch the collection -- no rendering on error
             function render() {
-                var homeView = new HomeView({
+                homeView = new HomeView({
                     collection:that.applications,
                     locations:that.locations,
                     appRouter:that
                 });
-                var veryFirstViewLoad = !that.currentView;
+                veryFirstViewLoad = !that.currentView;
                 that.showView("#application-content", homeView);
             }
             this.applications.fetch({success:function () {
