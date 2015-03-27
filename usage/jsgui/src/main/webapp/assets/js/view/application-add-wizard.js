@@ -248,18 +248,21 @@ define([
             this.renderCurrentStep()
         },
         nextStep:function () {
-        	  
             if (this.currentStep < 2) {
-//                if (this.currentView.validate()) {
-//                    this.currentStep += 1
-//                    this.renderCurrentStep()
-//                } else {
-//                    // call to validate should showFailure
-//                }
-           	 $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show')
-                $("#yaml_code").focus()
-              
-
+                if (this.currentView.validate()) {
+                    var isYaml = (this.currentView && this.currentView.selectedTemplate && this.currentView.selectedTemplate.yaml);
+                    if (isYaml) {
+                        // it's a yaml catalog template, show the yaml tab
+           	            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
+                        $("#yaml_code").focus()
+                    } else {
+                        // it's a java catalog template, go to wizard for location + config
+                        this.currentStep += 1
+                        this.renderCurrentStep()
+                    }
+                } else {
+                    // the call to validate will have done the showFailure
+                }
             } else {
                 this.finishStep()
             }
@@ -318,6 +321,7 @@ define([
                 self.catalogEntityIds = _.map(result, function(item) { return item.id })
                 self.$(".entity-type-input").typeahead().data('typeahead').source = self.catalogEntityIds
             })
+            // TODO use catalog-item-summary.js instead of raw json; see comments in that file
             $.get('/v1/catalog/applications', {}, function (result) {
                 self.catalogApplicationItems = result
                 self.catalogApplicationIds = _.map(result, function(item) { return item.id })
@@ -402,12 +406,11 @@ define([
         addTemplateLozenge: function(that, item) {
             var $tempel = _.template(CreateStepTemplateEntryHtml, {
                 id: item.id,
-                name: item.name,
+                name: item.name || item.id,
                 description: item.description,
                 planYaml:  item.planYaml,
-                iconUrl: item.iconUrTeml
+                iconUrl: item.iconUr
             })
-            //alert("yaml:"+item.planYaml)
             $("#create-step-template-entries", that.$el).append($tempel)
         },
         templateClick: function(event) {
@@ -418,9 +421,14 @@ define([
                 $tl.addClass("selected")
                 this.selectedTemplate = {
                     type: $tl.attr('id'),
-                    name: $tl.data("name")
+                    name: $tl.data("name"),
+                    yaml: $tl.data("yaml")
                 };
-                $("textarea#yaml_code").val($tl.data("yaml"));
+                if (this.selectedTemplate.yaml) {
+                    $("textarea#yaml_code").val(this.selectedTemplate.yaml);
+                } else {
+                    $("textarea#yaml_code").val("services:\n- type: "+this.selectedTemplate.type);
+                }
             } else {
                 this.selectedTemplate = null;
             }
