@@ -21,7 +21,7 @@
  * Also creates an empty Application model.
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "js-yaml",
     "model/entity", "model/application", "model/location",
     "text!tpl/app-add-wizard/modal-wizard.html",
     "text!tpl/app-add-wizard/create.html",
@@ -35,7 +35,7 @@ define([
     "text!tpl/app-add-wizard/preview.html",
     "bootstrap"
     
-], function (_, $, Backbone, Util, Entity, Application, Location,
+], function (_, $, Backbone, Util, JsYaml, Entity, Application, Location,
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
              DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
@@ -250,13 +250,21 @@ define([
         nextStep:function () {
             if (this.currentStep < 2) {
                 if (this.currentView.validate()) {
-                    var isYaml = (this.currentView && this.currentView.selectedTemplate && this.currentView.selectedTemplate.yaml);
-                    if (isYaml) {
-                        // it's a yaml catalog template, show the yaml tab
+                    var yaml = (this.currentView && this.currentView.selectedTemplate && this.currentView.selectedTemplate.yaml);
+                    if (yaml) {
+                        try {
+                            yaml = JsYaml.safeLoad(yaml);
+                            yaml = (yaml.location || yaml.locations ? true : false);
+                        } catch (e) {
+                            yaml = false;
+                        }
+                    }
+                    if (yaml) {
+                        // it's a yaml catalog template which includes a location, show the yaml tab
            	            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
                         $("#yaml_code").focus()
                     } else {
-                        // it's a java catalog template, go to wizard for location + config
+                        // it's a java catalog template or yaml template without a location, go to wizard
                         this.currentStep += 1
                         this.renderCurrentStep()
                     }
