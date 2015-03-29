@@ -46,6 +46,7 @@ require.config({
         "text":"libs/text",
         "uri":"libs/URI",
         "zeroclipboard":"libs/ZeroClipboard",
+        "js-yaml":"libs/js-yaml",
         
         "tpl":"../tpl"
     },
