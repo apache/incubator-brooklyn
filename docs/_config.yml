@@ -26,8 +26,7 @@ url_root: http://0.0.0.0:4000
 path:
   style: /style
   guide: /guide
-  #guide: "/v/latest"
-  website: ""
+  website: /website
   v: /v
 
 # Use local copies of dependencies in dev build (switched to remote using URLs for prod build)
