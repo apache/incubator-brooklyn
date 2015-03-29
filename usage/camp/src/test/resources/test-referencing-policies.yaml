@@ -38,7 +38,7 @@
 #     (g1 policy)   (g2 policy) 
 name: test-referencing-policies
 description: Test multi-layer application with each entity having a policy referencing all other entities
-origin: http://brooklyn.io
+origin: https://github.com/apache/incubator-brooklyn
 id: app1
 brooklyn.policies:
   - policyType: io.brooklyn.camp.brooklyn.TestReferencingPolicy

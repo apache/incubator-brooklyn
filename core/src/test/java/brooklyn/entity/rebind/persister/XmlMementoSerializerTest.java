@@ -198,16 +198,20 @@ public class XmlMementoSerializerTest {
     @Test
     public void testEntitySpecFromOsgi() throws Exception {
         ManagementContext mgmt = LocalManagementContextForTests.builder(true).disableOsgi(false).build();
-        CatalogItem<?, ?> ci = OsgiVersionMoreEntityTest.addMoreEntityV1(mgmt, "1.0");
-        
-        EntitySpec<DynamicCluster> spec = EntitySpec.create(DynamicCluster.class)
-            .configure(DynamicCluster.INITIAL_SIZE, 1)
-            .configure(DynamicCluster.MEMBER_SPEC, CatalogTestUtils.createEssentialEntitySpec(mgmt, ci));
-
-        serializer.setLookupContext(new LookupContextImpl(mgmt,
-            ImmutableList.<Entity>of(), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),
-            ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.<CatalogItem<?,?>>of(), true));
-        assertSerializeAndDeserialize(spec);
+        try {
+            CatalogItem<?, ?> ci = OsgiVersionMoreEntityTest.addMoreEntityV1(mgmt, "1.0");
+            
+            EntitySpec<DynamicCluster> spec = EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.INITIAL_SIZE, 1)
+                .configure(DynamicCluster.MEMBER_SPEC, CatalogTestUtils.createEssentialEntitySpec(mgmt, ci));
+    
+            serializer.setLookupContext(new LookupContextImpl(mgmt,
+                ImmutableList.<Entity>of(), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),
+                ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.<CatalogItem<?,?>>of(), true));
+            assertSerializeAndDeserialize(spec);
+        } finally {
+            Entities.destroyAllCatching(mgmt);
+        }
     }
 
     @Test

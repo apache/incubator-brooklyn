@@ -57,6 +57,8 @@
     <httpclient.version>4.2.5</httpclient.version>
     <commons-lang3.version>3.1</commons-lang3.version>
     <groovy.version>2.3.4</groovy.version>
+    <jsr305.version>2.0.1</jsr305.version>
+    <snakeyaml.version>1.11</snakeyaml.version>
   </properties>
 
   <dependencyManagement>
@@ -376,6 +378,34 @@
   </build>
 
   <profiles>
+  
+    <profile>
+      <id>Tests</id>
+      <activation>
+        <file> <exists>${basedir}/src/test</exists> </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-jar-plugin</artifactId>
+            <inherited>true</inherited>
+            <executions>
+              <execution>
+                <id>test-jar-creation</id>
+                <goals>
+                  <goal>test-jar</goal>
+                </goals>
+                <configuration>
+                  <forceCreation>true</forceCreation>
+                  <archive combine.self="override" />
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  
     <!-- run Integration tests with -PIntegration -->
     <profile>
       <id>Integration</id>

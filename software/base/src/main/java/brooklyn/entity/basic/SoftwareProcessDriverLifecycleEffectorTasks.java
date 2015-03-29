@@ -48,12 +48,11 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
     
     public void restart(ConfigBag parameters) {
         RestartMachineMode isRestartMachine = parameters.get(RestartSoftwareParameters.RESTART_MACHINE_TYPED);
-        if (isRestartMachine==null) isRestartMachine=RestartMachineMode.AUTO;
+        if (isRestartMachine==null) 
+            isRestartMachine=RestartMachineMode.AUTO;
+        if (isRestartMachine==RestartMachineMode.AUTO) 
+            isRestartMachine = getDefaultRestartStopsMachine() ? RestartMachineMode.TRUE : RestartMachineMode.FALSE; 
 
-        if (isRestartMachine==RestartMachineMode.AUTO) {
-            isRestartMachine = getDefaultRestartStopsMachine() ? RestartMachineMode.TRUE : RestartMachineMode.FALSE;
-        }
-        
         if (isRestartMachine==RestartMachineMode.TRUE) {
             log.debug("restart of "+entity()+" requested be applied at machine level");
             super.restart(parameters);

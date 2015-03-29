@@ -16,24 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-name: Mongo Demo app
-description: MongoDB sharded deployment with MongoDB (javascript) client
-origin: https://github.com/apache/incubator-brooklyn
-location: localhost
+name: Couchbase One Bucket
+
+location: softlayer:wdc01
+
 services:
-- serviceType: brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
-  id: shardeddeployment
-  name: MongoDB Sharded Deployment
-  brooklyn.config:
-    initialRouterClusterSize: 1
-- serviceType: brooklyn.entity.nosql.mongodb.MongoDBClient
-  name: MongoDB Javascript Client
-  brooklyn.config:
-    shardedDeployment: $brooklyn:component("shardeddeployment")
-    scripts:
-      insert: classpath://mongo-product-insert.js 
-      update: classpath://mongo-product-update.js
-      delete: classpath://mongo-product-delete.js
-    startupJsScripts: # These will be run in order on startup
-      - insert
-      - update
+- type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
+  initialSize: 3
+  intialQuorumSize: 2
+  adminUsername: Administrator
+  adminPassword: Password
+  createBuckets:
+  - bucket: default
+    bucket-port: 11211
+  - bucket: my_bucket_2
+    bucket-port: 11222

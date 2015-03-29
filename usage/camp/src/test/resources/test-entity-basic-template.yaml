@@ -17,7 +17,7 @@
 #
 name: test-entity-basic-template
 description: TestEntity with templated brooklyn.config and additional config (such as services)
-origin: http://brooklyn.io
+origin: https://github.com/apache/incubator-brooklyn
 services:
 - serviceType: brooklyn.test.entity.TestEntity
   name: testentity

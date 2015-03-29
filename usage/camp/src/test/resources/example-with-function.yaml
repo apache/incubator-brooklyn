@@ -19,7 +19,7 @@
 name: example-with-function
 description: |
   Tests a variety of simple functional expressions
-origin: http://brooklyn.io
+origin: https://github.com/apache/incubator-brooklyn
 location: localhost
 services:
 - serviceType: brooklyn.entity.webapp.jboss.JBoss7Server

@@ -376,8 +376,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         return EntitySpec.create(CouchbaseNode.class);
     }
 
-
-    protected int getQuorumSize() {
+    @Override
+    public int getQuorumSize() {
         Integer quorumSize = getConfig(CouchbaseCluster.INITIAL_QUORUM_SIZE);
         if (quorumSize != null && quorumSize > 0)
             return quorumSize;
@@ -411,7 +411,10 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 }
             }).build());
         
-        if (getConfigRaw(UP_QUORUM_CHECK, false).isAbsent()) {
+        if (config().getLocalRaw(UP_QUORUM_CHECK).isAbsent()) {
+            // TODO Only leaving CouchbaseQuorumCheck here in case it is contained in persisted state.
+            // If so, need a transformer and then to delete it
+            @Deprecated
             class CouchbaseQuorumCheck implements QuorumCheck {
                 @Override
                 public boolean isQuorate(int sizeHealthy, int totalSize) {
@@ -420,11 +423,23 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                     return true;
                 }
             }
-            setConfig(UP_QUORUM_CHECK, new CouchbaseQuorumCheck());
+            config().set(UP_QUORUM_CHECK, new CouchbaseClusterImpl.CouchbaseQuorumCheck(this));
         }
         super.initEnrichers();
     }
     
+    static class CouchbaseQuorumCheck implements QuorumCheck {
+        private final CouchbaseCluster cluster;
+        CouchbaseQuorumCheck(CouchbaseCluster cluster) {
+            this.cluster = cluster;
+        }
+        @Override
+        public boolean isQuorate(int sizeHealthy, int totalSize) {
+            // check members count passed in AND the sensor  
+            if (sizeHealthy < cluster.getQuorumSize()) return false;
+            return true;
+        }
+    }
     protected void addServers(Set<Entity> serversToAdd) {
         Preconditions.checkNotNull(serversToAdd);
         for (Entity s : serversToAdd) {
@@ -502,7 +517,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             String bucketType = bucketMap.containsKey("bucket-type") ? (String) bucketMap.get("bucket-type") : "couchbase";
             // default bucket must be on this port; other buckets can (must) specify their own (unique) port
             Integer bucketPort = bucketMap.containsKey("bucket-port") ? (Integer) bucketMap.get("bucket-port") : 11211;
-            Integer bucketRamSize = bucketMap.containsKey("bucket-ramsize") ? (Integer) bucketMap.get("bucket-ramsize") : 200;
+            Integer bucketRamSize = bucketMap.containsKey("bucket-ramsize") ? (Integer) bucketMap.get("bucket-ramsize") : 100;
             Integer bucketReplica = bucketMap.containsKey("bucket-replica") ? (Integer) bucketMap.get("bucket-replica") : 1;
 
             createBucket(primaryNode, bucketName, bucketType, bucketPort, bucketRamSize, bucketReplica);

@@ -18,7 +18,7 @@
 #
 name: Couchbase w Pillow Fight
 
-location: aws-ec2
+location: softlayer:wdc01
 
 services:
 - type: brooklyn.entity.nosql.couchbase.CouchbaseCluster

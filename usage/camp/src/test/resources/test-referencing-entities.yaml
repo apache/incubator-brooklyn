@@ -34,7 +34,7 @@
 #       gchild1   gchild2       
 name: test-referencing-entities
 description: Test multi-layer application with each entity referencing all other entities
-origin: http://brooklyn.io
+origin: https://github.com/apache/incubator-brooklyn
 id: app1
 brooklyn.config:
   test.reference.app: $brooklyn:component("app1")

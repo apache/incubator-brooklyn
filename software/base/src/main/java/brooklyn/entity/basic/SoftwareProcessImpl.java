@@ -176,9 +176,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         }
     }
     
-      /**
-       * Called before driver.start; guarantees the driver will exist, and locations will have been set.
-       */
+    /**
+     * Called before driver.start; guarantees the driver will exist, and locations will have been set.
+     */
     protected void preStart() {
     }
     
@@ -271,6 +271,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected void postStop() {
     }
 
+    /**
+     * Called before driver.restart; guarantees the driver will exist, and locations will have been set.
+     */
     protected void preRestart() {
     }
 
