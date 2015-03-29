@@ -1,0 +1,250 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<div content-for="title">
+	<span ng-click="goBack()">{{entity.name}}</span>
+</div>
+<!-- Left icon -->
+<div content-for="left-control-nav-icon-left">
+	<div ng-click="toggle('mainSidebar')"
+		class="btn btn-navbar sidebar-toggle">
+		<i class="fa fa-cogs"></i>
+	</div>
+</div>
+
+<!-- Right icon -->
+<div content-for="right-control-nav-icon-right">
+	<div ng-click="toggle('rightSidebar')"
+		class="btn btn-navbar sidebar-toggle">
+		<i class="fa fa-list"></i>
+	</div>
+</div>
+
+<!-- Left navigation (effectors) -->
+<div content-for="left-control-nav">
+	<h2 class="app-name">&nbsp;</h2>
+	<div class="scrollable sidebar-scrollable">
+		<div class="scrollable-content">
+			<div class="list-group" toggle="off" bubble target="mainSidebar">
+				<a class="list-group-item" ng-repeat="effector in entity.effectors"
+					ng-click="executeEffector(effector.links.self); toggle('leftSidebar');" > <span ng-switch on="effector.name"> <i
+						ng-switch-when="restart" class="fa fa-refresh fa-2x"></i> <i
+						ng-switch-when="start" class="fa fa-play fa-2x"></i> <i
+						ng-switch-when="stop" class="fa fa-power-off fa-2x"></i> <i
+						ng-switch-when="resize" class="fa fa-arrows fa-2x"></i> <i
+						ng-switch-when="deploy" class="fa fa-cloud-upload fa-2x"></i> <i
+						ng-switch-when="undeploy" class="fa fa-cloud-download fa-2x"></i>
+						<i ng-switch-default class="fa fa-cloud fa-2x"></i>
+				</span> <span style="padding-left: 10px; font-size: 1.5em;">{{effector.name | Capitalize}}</span>
+				</a>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<div content-for="right-control-nav">
+	<h2 class="app-name">&nbsp;</h2>
+	<div class="scrollable sidebar-scrollable">
+		<div class="scrollable-content">
+			<div class="list-group" toggle="off" bubble target="rightSidebar">
+				<a class="list-group-item" href="" ng-click="selected = 'Summary'; toggle('rightSidebar')"> <span ng-switch
+					on="effector.name"> <i ng-switch-default
+						class="fa fa-bullseye fa-2x"></i>
+				</span> <span style="padding-left: 10px; font-size: 1.5em;">{{'E_DETIALS_SUMMARY' | translate}}</span>
+				</a> <a class="list-group-item" href="" ng-click="selected = 'Lifecycle'; toggle('rightSidebar')"> <span ng-switch
+					on="effector.name"> <i ng-switch-default
+						class="fa fa-sun-o fa-2x"></i>
+				</span> <span style="padding-left: 10px; font-size: 1.5em;">{{'E_DETIALS_LIFECYCLE' | translate}}</span>
+				</a> <a class="list-group-item" href="" ng-click="selected = 'Config'; toggle('rightSidebar')"> <span ng-switch
+					on="effector.name"> <i ng-switch-default
+						class="fa fa-cogs fa-2x"></i>
+				</span> <span style="padding-left: 10px; font-size: 1.5em;">{{'E_DETIALS_CONFIG' | translate}}</span>
+				</a> <a class="list-group-item" href="" ng-click="selected = 'Policies'; toggle('rightSidebar')"> <span ng-switch
+					on="effector.name"> <i ng-switch-default
+						class="fa fa-legal fa-2x"></i>
+				</span> <span style="padding-left: 10px; font-size: 1.5em;">{{'E_DETIALS_POLICIES' | translate}}</span>
+				</a> <a class="list-group-item" href="" ng-click="selected = 'Activities'; toggle('rightSidebar')"> <span ng-switch
+					on="effector.name"> <i ng-switch-default
+						class="fa fa-tasks fa-2x"></i>
+				</span> <span style="padding-left: 10px; font-size: 1.5em;">{{'E_DETIALS_ACTIVITIES' | translate}}</span>
+				</a>
+			</div>
+	
+		</div>
+	</div>
+</div>
+
+<!-- Entity Details/Summary -->
+
+<div class="scrollable" ng-init="selected = 'Summary'" >
+	<div class="scrollable-content section" ng-show="selected == 'Summary'">
+
+		<form action="" id="">
+
+			<div class="panel">
+				<div class="panel-heading">
+					<div class="panel-title">
+						<span>{{'E_DETIALS_SUMMARY' | translate}}</span>
+					</div>
+				</div>
+				<div class="panel-body">
+
+					<div class="block">
+						<label class="control-label">{{'E_SUMMARY_NAME' | translate}}</label> <input type="text"
+							ng-model="entity.name" placeholder="Name" class="form-control"
+							readonly>
+					</div>
+					<div class="block">
+						<label class="control-label">{{'E_SUMMARY_STATUS' | translate}}</label> <input type="text"
+							ng-model="entity.status" placeholder="Status"
+							class="form-control" readonly>
+					</div>
+					<div class="block">
+						<label class="control-label">{{'E_SUMMARY_SERVICE_UP' | translate}}</label> <input type="text"
+							ng-model="entity.isUp" placeholder="Service isUp"
+							class="form-control" readonly>
+					</div>
+
+					<div class="block">
+						<label class="control-label">{{'E_SUMMARY_TYPE' | translate}}</label> <input type="text"
+							ng-model="entity.type" placeholder="Type" class="form-control"
+							readonly>
+					</div>
+
+					<div class="block">
+						<label class="control-label">{{'E_SUMMARY_ID' | translate}}</label> <input type="text"
+							ng-model="entity.id" placeholder="Id" class="form-control"
+							readonly>
+					</div>
+
+				</div>
+				<br />
+				<br />
+
+				<div bs-panel class="form-actions">
+					<button class="btn btn-success btn-block" ng-click="goBack()">{{'E_DISMISS_BUTTON' | translate}}</button>
+				</div>
+			</div>
+		</form>
+	</div>
+	
+	<div class="scrollable-content section" ng-show="selected == 'Lifecycle'">
+
+			<div class="panel">
+				<div class="panel-heading">
+					<div class="panel-title">
+						<span>{{'E_DETIALS_LIFECYCLE' | translate}}</span>
+					</div>
+				</div>
+				<div class="panel-body">
+					<p> Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. </p>
+					<br/>
+					
+				</div>
+				<div bs-panel class="form-actions">
+					<button class="btn btn-danger btn-block" ng-click="expunge(); goBack();">Expunge</button>
+				</div>
+				<div bs-panel class="form-actions">
+					<button class="btn btn-success btn-block" ng-click="goBack()">{{'E_DISMISS_BUTTON' | translate}}</button>
+				</div>
+			</div>
+	</div>
+	<div class="scrollable-content section" ng-show="selected == 'Config'">
+
+			<div class="panel">
+				<div class="panel-heading">
+					<div class="panel-title">
+						<span>{{'E_DETIALS_CONFIG' | translate}}</span>
+					</div>
+				</div>
+				<div class="panel-body">
+					<br/>
+					<div ng-if="entity.config.length == 0">
+						<h5 class="list-group-item-text text-center">{{'E_DETIALS_NO_CONFIG_FOUND' | translate}}</h5>
+						<br/>
+					</div>
+					<div class="panel panel-default" ng-repeat="conf in entity.config | orderBy:'key'">
+					   <div class="panel-heading">
+					      <h4>{{conf.key | Capitalize}}</h4>
+					   </div>
+					   <div class="panel-body wrapword">
+					      {{conf.value}}
+					   </div>
+					</div>
+				</div>
+				<div bs-panel class="form-actions">
+					<button class="btn btn-success btn-block" ng-click="goBack()">{{'E_DISMISS_BUTTON' | translate}}</button>
+				</div>
+			</div>
+	</div>
+	<div class="scrollable-content section" ng-show="selected == 'Policies'">
+
+			<div class="panel">
+				<div class="panel-heading">
+					<div class="panel-title">
+						<span>{{'E_DETIALS_POLICIES' | translate}}</span>
+					</div>
+				</div>
+				<div class="panel-body">
+					<p> Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. </p>
+					<br/>
+
+				</div>
+				<div bs-panel class="form-actions">
+					<button class="btn btn-success btn-block" ng-click="goBack()">{{'E_DISMISS_BUTTON' | translate}}</button>
+				</div>
+				
+			</div>
+	</div>
+	<div class="scrollable-content section" ng-show="selected == 'Activities'">
+
+			<div class="panel">
+				<div class="panel-heading">
+					<div class="panel-title">
+						<span>{{'E_DETIALS_ACTIVITIES' | translate}}</span>
+					</div>
+				</div>
+				<div class="panel-body">
+					<!--<p> Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. </p>
+					--><br/>
+
+					<div ng-if="entity.activities.length == 0">
+						<h5 class="list-group-item-text text-center">{{'E_DETIALS_NO_ACTIVITIES_FOUND' | translate}}</h5>
+					</div>
+					<!-- <div class="panel panel-default" ng-repeat="activity in entity.activities" ng-if="activity.submittedByTask == null || (ctivity.submittedByTask != null && $filter('filter')($scope.entity.links.activities,{'id':activity.submittedByTask.metadata.id}).length) == 0"> -->
+					<div class="panel panel-default" ng-repeat="activity in entity.activities" ng-if ="isTopLevelActivity(activity)"> 
+					   <div class="panel-heading">
+					      <h4>{{activity.displayName | Capitalize}}</h4>
+					   </div>
+					   <!-- <div class="panel-body">
+					      Panel content
+					   </div> -->
+					   <table class="table">
+					      <tr><td>Submitted</td><td>{{activity.submitTimeUtc | date:'MM/dd/yyyy @ h:mma'}}</td></tr>
+					      <tr><td>Status</td><td>{{activity.currentStatus}}</td></tr>
+					   </table>
+					</div>
+
+				</div>
+				<div bs-panel class="form-actions">
+					<button class="btn btn-success btn-block" ng-click="goBack()">{{'E_DISMISS_BUTTON' | translate}}</button>
+				</div>
+			</div>
+	</div>
+</div>

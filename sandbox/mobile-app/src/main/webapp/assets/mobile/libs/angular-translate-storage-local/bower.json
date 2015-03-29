@@ -1,0 +1,9 @@
+{
+  "name": "angular-translate-storage-local",
+  "version": "2.2.0",
+  "main": "./angular-translate-storage-local.js",
+  "dependencies": {
+    "angular-translate": "~2.2.0",
+    "angular-translate-storage-cookie": "~2.2.0"
+  }
+}

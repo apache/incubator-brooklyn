@@ -1330,6 +1330,8 @@
                 <module>sandbox/nosql</module>
                 <module>sandbox/monitoring</module>
                 <module>sandbox/examples/simple-open-loop-policy</module>
+                <module>sandbox/cassandra-multicloud-snitch</module>
+                <module>sandbox/mobile-app</module>
             </modules>
         </profile>
 
