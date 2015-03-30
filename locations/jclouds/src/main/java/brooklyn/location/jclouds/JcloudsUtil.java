@@ -65,16 +65,6 @@ import org.jclouds.util.Predicates2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Sanitizer;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Protocol;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.ssh.IptablesCommands;
-import brooklyn.util.ssh.IptablesCommands.Chain;
-import brooklyn.util.ssh.IptablesCommands.Policy;
-
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -88,12 +78,22 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.inject.Module;
 
+import brooklyn.entity.basic.Sanitizer;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.net.Protocol;
+import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.ssh.IptablesCommands;
+import brooklyn.util.ssh.IptablesCommands.Chain;
+import brooklyn.util.ssh.IptablesCommands.Policy;
+
 public class JcloudsUtil implements JcloudsLocationConfig {
-    
+
     // TODO Review what utility methods are needed, and what is now supported in jclouds 1.1
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsUtil.class);
-    
+
     /**
      * @deprecated since 0.7; see {@link BashCommands}
      */
@@ -150,15 +150,15 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     /**
      * @throws RunScriptOnNodesException
      * @throws IllegalStateException     If do not find exactly one matching node
-     * 
+     *
      * @deprecated since 0.7
      */
     @Deprecated
     public static ExecResponse runScriptOnNode(ComputeService computeService, NodeMetadata node, Statement statement, String scriptName) throws RunScriptOnNodesException {
         // TODO Includes workaround for NodeMetadata's equals/hashcode method being wrong.
-        
+
         Map<? extends NodeMetadata, ExecResponse> scriptResults = computeService.runScriptOnNodesMatching(
-                JcloudsUtil.predicateMatchingById(node), 
+                JcloudsUtil.predicateMatchingById(node),
                 statement,
                 new RunScriptOptions().nameTask(scriptName));
         if (scriptResults.isEmpty()) {
@@ -169,7 +169,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
             return Iterables.getOnlyElement(scriptResults.values());
         }
     }
-    
+
     /**
      * @deprecated since 0.7; {@see #installJavaAndCurl(OperatingSystem)}
      */
@@ -231,7 +231,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     public static ComputeService findComputeService(ConfigBag conf) {
         return ComputeServiceRegistryImpl.INSTANCE.findComputeService(conf, true);
     }
-    
+
     /**
      * @deprecated since 0.7; see {@link ComputeServiceRegistry#findComputeService(ConfigBag, boolean)}
      */
@@ -240,28 +240,28 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         return ComputeServiceRegistryImpl.INSTANCE.findComputeService(conf, allowReuse);
     }
 
-    /** 
+    /**
      * Returns the jclouds modules we typically install
-     * 
+     *
      * @deprecated since 0.7; see {@link ComputeServiceRegistry}
      */
     @Deprecated
     public static ImmutableSet<Module> getCommonModules() {
         return ImmutableSet.<Module> of(
-                new SshjSshClientModule(), 
+                new SshjSshClientModule(),
                 new SLF4JLoggingModule(),
                 new BouncyCastleCryptoModule());
     }
-     
-    /** 
+
+    /**
      *  Temporary constructor to address https://issues.apache.org/jira/browse/JCLOUDS-615.
      *  <p>
      *  See https://issues.apache.org/jira/browse/BROOKLYN-6 .
      *  When https://issues.apache.org/jira/browse/JCLOUDS-615 is fixed in the jclouds we use,
-     *  we can remove the useSoftlayerFix argument. 
+     *  we can remove the useSoftlayerFix argument.
      *  <p>
      *  (Marked Beta as that argument will likely be removed.)
-     *  
+     *
      *  @since 0.7.0 */
     @Beta
     public static BlobStoreContext newBlobstoreContext(String provider, @Nullable String endpoint, String identity, String credential) {
@@ -309,7 +309,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         String publicKey = Files.toString(publicKeyFile, Charsets.UTF_8);
         return addAuthorizedKeysToRoot(publicKey);
     }
-     
+
     /**
      * @deprecated since 0.7
      */
@@ -321,7 +321,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     }
 
     public static String getFirstReachableAddress(ComputeServiceContext context, NodeMetadata node) {
-        // To pick the address, it relies on jclouds `sshForNode().apply(Node)` to check all IPs of node (private+public), 
+        // To pick the address, it relies on jclouds `sshForNode().apply(Node)` to check all IPs of node (private+public),
         // to find one that is reachable. It does `openSocketFinder.findOpenSocketOnNode(node, node.getLoginPort(), ...)`.
         // This keeps trying for time org.jclouds.compute.reference.ComputeServiceConstants.Timeouts.portOpen.
         // TODO Want to configure this timeout here.
@@ -342,7 +342,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
             Exceptions.propagateIfFatal(e);
             /* i've seen: java.lang.IllegalStateException: Optional.get() cannot be called on an absent value
              * from org.jclouds.crypto.ASN1Codec.createASN1Sequence(ASN1Codec.java:86), if the ssh key has a passphrase, against AWS.
-             * 
+             *
              * others have reported: java.lang.IllegalArgumentException: DER length more than 4 bytes
              * when using a key with a passphrase (perhaps from other clouds?); not sure if that's this callpath or a different one.
              */
@@ -350,14 +350,14 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         }
         return client.getHostAddress();
     }
-    
+
     // Suggest at least 15 minutes for timeout
     public static String waitForPasswordOnAws(ComputeService computeService, final NodeMetadata node, long timeout, TimeUnit timeUnit) throws TimeoutException {
         ComputeServiceContext computeServiceContext = computeService.getContext();
         AWSEC2Api ec2Client = computeServiceContext.unwrapApi(AWSEC2Api.class);
         final WindowsApi client = ec2Client.getWindowsApi().get();
         final String region = node.getLocation().getParent().getId();
-      
+
         // The Administrator password will take some time before it is ready - Amazon says sometimes 15 minutes.
         // So we create a predicate that tests if the password is ready, and wrap it in a retryable predicate.
         Predicate<String> passwordReady = new Predicate<String>() {
@@ -368,7 +368,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 return !Strings.isNullOrEmpty(data.getPasswordData());
             }
         };
-        
+
         LOG.info("Waiting for password, for "+node.getProviderId()+":"+node.getId());
         Predicate<String> passwordReadyRetryable = Predicates2.retry(passwordReady, timeUnit.toMillis(timeout), 10*1000, TimeUnit.MILLISECONDS);
         boolean ready = passwordReadyRetryable.apply(node.getProviderId());
@@ -389,17 +389,21 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     public static Map<Integer, Integer> dockerPortMappingsFor(JcloudsLocation docker, String containerId) {
         ComputeServiceContext context = null;
         try {
+            Properties properties = new Properties();
+            properties.setProperty(Constants.PROPERTY_TRUST_ALL_CERTS, Boolean.toString(true));
+            properties.setProperty(Constants.PROPERTY_RELAX_HOSTNAME, Boolean.toString(true));
             context = ContextBuilder.newBuilder("docker")
                     .endpoint(docker.getEndpoint())
-                    .credentials("docker", "docker")
+                    .credentials(docker.getIdentity(), docker.getCredential())
+                    .overrides(properties)
                     .modules(ImmutableSet.<Module>of(new SLF4JLoggingModule(), new SshjSshClientModule()))
                     .build(ComputeServiceContext.class);
             DockerApi api = context.unwrapApi(DockerApi.class);
-            Container container = api.getRemoteApi().inspectContainer(containerId);
+            Container container = api.getContainerApi().inspectContainer(containerId);
             Map<Integer, Integer> portMappings = Maps.newLinkedHashMap();
-            Map<String, List<Map<String, String>>> ports = container.getNetworkSettings().getPorts();
+            Map<String, List<Map<String, String>>> ports = container.networkSettings().ports();
             if (ports == null) ports = ImmutableMap.<String, List<Map<String,String>>>of();
-            
+
             LOG.debug("Docker will forward these ports {}", ports);
             for (Map.Entry<String, List<Map<String, String>>> entrySet : ports.entrySet()) {
                 String containerPort = Iterables.get(Splitter.on("/").split(entrySet.getKey()), 0);
@@ -427,7 +431,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     public static void mapSecurityGroupRuleToIpTables(ComputeService computeService, NodeMetadata node,
             LoginCredentials credentials, String networkInterface, Iterable<Integer> ports) {
         for (Integer port : ports) {
-            String insertIptableRule = IptablesCommands.insertIptablesRule(Chain.INPUT, networkInterface, 
+            String insertIptableRule = IptablesCommands.insertIptablesRule(Chain.INPUT, networkInterface,
                     Protocol.TCP, port, Policy.ACCEPT);
             Statement statement = Statements.newStatementList(exec(insertIptableRule));
             ExecResponse response = computeService.runScriptOnNode(node.getId(), statement,

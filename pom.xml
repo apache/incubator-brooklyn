@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
      http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -123,7 +123,7 @@
         <!-- Dependencies -->
         <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
         <jclouds.groupId>org.apache.jclouds</jclouds.groupId>
-        <jclouds.version>1.8.1</jclouds.version>
+        <jclouds.version>1.9.0</jclouds.version>
         <guava.version>17.0</guava.version>
         <groovy.version>2.3.4</groovy.version> <!-- Version supported by https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-2.9.0-Release-Notes -->
         <logback.version>1.0.7</logback.version>
@@ -1178,7 +1178,7 @@
                   <goals>
                     <goal>check</goal>
                   </goals>
-                </execution> 
+                </execution>
               </executions>
               <configuration>
                 <!--
@@ -1223,9 +1223,9 @@
                   <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>
                   <exclude>**/sandbox/examples/src/main/scripts/amis.txt</exclude>
                   <!-- see notes in https://issues.apache.org/jira/browse/BROOKLYN-18 -->
-                  
+
                   <!--
-                      docs are not part of the distribution: they are just used to populate 
+                      docs are not part of the distribution: they are just used to populate
                       https://brooklyn.incubator.apache.org
                   -->
                   <exclude>docs/**</exclude>
