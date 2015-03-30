@@ -2,93 +2,237 @@
 title: Catalog
 layout: website-normal
 children:
-- { section: Catalog Items }
+- { section: General YAML Schema }
+- { section: Catalog Metadata }
+- { section: Catalog YAML Examples }
 - { section: Adding to the Catalog, title: Adding and Deleting } 
+- { section: Templates and the Add-Application Wizard, title: Templates }
 - { section: Versioning } 
-- { section: special-reqs, title: Wizard } 
 ---
 
-Brooklyn provides a **catalog**, which is a persisted collection of versioned blueprints. 
-These can be deployed directly or referenced by other blueprints. 
-Blueprints in the catalog can be deployed via the Brooklyn REST API, or from 
-the web-console's "Catalog" tab of the "Create Application" wizard dialog box.
+Brooklyn provides a **catalog**, which is a persisted collection of versioned blueprints and other resources. 
+Blueprints in the catalog can be deployed directly, via the Brooklyn REST API or the web console,
+or referenced in other blueprints.
+
+ 
+### Catalog Items YAML Syntax
+
+An item or items to be added to the catalog is defined by a YAML file,
+specifying the catalog metadata for the items and the actual blueprint or resource definition.
 
 
-<!--
-TODO: Clean up confusion in terminology between Catalog item and Blueprint (and Java blueprint?)?
--->
+#### General YAML Schema
+ 
+A single catalog item can be defined following this general structure:
 
-### Catalog Items
-
-An item to be added to the catalog is defined in YAML. This follows the syntax of a 
-YAML blueprint with an addition `brooklyn.catalog` section giving 
-the metadata needed to register the blueprint in the catalog:
-
-{% highlight yaml %}
+```yaml
 brooklyn.catalog:
-  id: my-MySQL
-  version: 1.0
-  iconUrl: classpath://mysql.png
-  description: MySql is an open source relational database management system (RDBMS)
-  libraries:
-    - url: http://example.com/path/to/my-dependency-1.2.3.jar
-    - url: http://example.com/path/to/my-other-dependency-4.5.6.jar
-
-services:
-- type: brooklyn.entity.database.mysql.MySqlNode
-{% endhighlight %}
-
-To explain the `brooklyn.catalog` fields:
-
-- The `id: MySQL` line specifies a unique ID used by Brooklyn to identify the catalog item. 
-  Other blueprints can reference the catalog item using this id.
-- The `version: 1.0` line provides a unique version for the *blueprint*. 
-  Note that this is typically *not* the version of the software being installed (in this case MySQL).
-- The `iconUrl: classpath://...` is an optional line where an icon can be specified 
-  for use with the item (in the "Add Application" dialog and elsewhere).
-  Note that `classpath` URLs *cannot* refer to items in the OSGi bundle 
-  (to prevent requiring all OSGi bundles to be loaded at launch);
-  use the server supplying the OSGi bundles or the `conf` folder of the Brooklyn distro instead.
-- The `description: ...` line, also optional, allows supplying a free-format description of the blueprint.
+  <catalog-metadata>
+  item:
+    <blueprint-or-resource-definition>
+```
 
 
-The `libraries` section references OSGi bundles required for the blueprint. It can be omitted if everything
-required by the blueprint is already on the Brooklyn classpath.
-These URL's should be to stable OSGi bundles;
-if the contents at any of these URLs changes, the behaviour of the blueprint may change 
-whenever a bundle is reloaded in a Brooklyn server,
-and if entities have been deployed against that version, their behavior may change in subtle or potentially incompatible ways.
-To avoid this situation, it is highly recommended to use OSGi version stamps as part of the URL.
+To define multiple catalog items in a single YAML,
+where they may share some metadata,
+use the following structure:
+
+```yaml
+brooklyn.catalog:
+  <catalog-metadata>
+  items:
+  - <additional-catalog-metadata>
+    item:
+      <blueprint-or-resource-definition>
+  - <additional-catalog-metadata>
+    item:
+      <blueprint-or-resource-definition>
+```
+
+In some cases it is desired to define a default blueprint in a catalog file,
+so that the catalog file can be used unchanged to launch an application.
+To support this use case, the following format is also supported:
+
+```yaml
+<blueprint-definition>
+brooklyn.catalog:
+  <catalog-metadata>
+```
+
+
+
+#### Catalog Metadata
+
+Catalog metadata fields supply the additional information required In order to register an item in the catalog. 
+These fields can be supplied as `key: value` entries 
+where either the `<catalog-metadata>` or `<additional-catalog-metadata>` placeholders are,
+with the latter overriding the former unless otherwise specfied below.
+
+The following metadata is *required* for all items:
+
+- `id`: a human-friendly unique identifier for how this catalog item will be referenced from blueprints
+- `version`: multiple versions of a blueprint can be installed and used simultaneously;
+  this field disambiguates between blueprints of the same `id`.
+  Note that this is typically *not* the version of the software being installed,
+  but rather the version of the blueprint. For more information on versioning, see below.
 
 To reference a catalog item in another blueprint, simply reference its ID and optionally its version number.
 For example: 
 
-{% highlight yaml %}
+```yaml
 services:
-- type: my-MySQL:1.0
-{% endhighlight %}
+- type: datastore:1.0
+```
+
+In addition, exactly **one** of the following is also required:
+
+- `item`: the blueprint (in the usual YAML format) for an entity or application template,
+  or a map containing `type` and optional `brooklyn.config` for policies and locations; **or**
+- `items`: a list of catalog items, where each entry in the map follows the same schema as
+  the `brooklyn.catalog` value, and the keys in these map override any metadata specified as
+  a sibling of this `items` key (or, in the case of `libraries` they add to the list)
+
+The following optional catalog metadata is supported:
+  
+- `item.type`: the type of the item being defined.
+  If omitted, all `item` definitions are taken to be entities;
+  for any type other than an entity, this field must be supplied.
+  The supported types are:
+  - `entity`
+  - `template`
+  - `policy`
+  - `location`
+- `name`: a nicely formatted display name for the item, used when presenting it in a GUI
+- `description`: supplies an extended textual description for the item
+- `icon.url`: points to an icon for the item, used when presenting it in a GUI.
+  The URL prefix `classpath` is supported but these URLs may *not* refer items in any OSGi bundle in the `libraries` section 
+  (to prevent requiring all OSGi bundles to be loaded at launch).
+  Icons are instead typically installed either at the server from which the OSGi bundles or catalog items are supplied 
+  or in the `conf` folder of the Brooklyn distro.
+- `libraries`: a list of pointers to OSGi bundles required for the catalog item.
+  This can be omitted if blueprints are pure YAML and everything required is included in the catalog file, at URLs, 
+  or in the Brooklyn classpath. If custom Java code or bundled resources is used, the OSGi JARs supply
+  a convenient packaging format and a very powerful versioning format.
+  Note that these URL's should point at immutable OSGi bundles;
+  if the contents at any of these URLs changes, the behaviour of the blueprint may change 
+  whenever a bundle is reloaded in a Brooklyn server,
+  and if entities have been deployed against that version, their behavior may change in subtle or potentially incompatible ways.
+  To avoid this situation, it is highly recommended to use OSGi version stamps as part of the URL.
 
 
-### Adding to the Catalog
+#### Catalog YAML Examples
 
-To add a catalog item to the catalog, `POST` the YAML file to `/v1/catalog` endpoint in
-Brooklyn's REST API.
+##### A Simple Example
+
+The following example installs the `RiakNode` entity, making it also available as an application template,
+with a nice display name, description, and icon.
+It can be referred in other blueprints to as `datastore:1.0`, 
+and its implementation will be the Java `brooklyn.entity.nosql.riak.RiakNode`
+loaded from a classpath including an OSGi bundle and Brooklyn.
+
+```yaml
+brooklyn.catalog:
+  id: datastore
+  version: 1.0
+  item.type: template
+  icon.url: classpath://brooklyn/entity/nosql/riak/riak.png
+  name: Datastore (Riak)
+  description: Riak is an open-source NoSQL key-value data store.
+  libraries:
+    - url: http://example.com/path/to/my-dependency-1.2.3.jar
+  item:
+    - type: brooklyn.entity.nosql.riak.RiakNode
+      name: Riak Node
+```
+
+
+##### Multiple Items
+
+This YAML will install three items:
+
+```yaml
+brooklyn.catalog:
+  version: 1.1
+  icon.url: classpath://brooklyn/entity/nosql/riak/riak.png
+  description: Riak is an open-source NoSQL key-value data store.
+  libraries:
+    - url: http://example.com/path/to/my-dependency-1.2.3.jar
+  items:
+    - id: datastore
+      name: Datastore (Riak Cluster)
+      item.type: template
+      item:
+        - type: riak-cluster
+          location: 
+            jclouds:softlayer:
+              region: sjc01
+              # identity and credential must be set unless they are specified in your brooklyn.properties
+              # identity: XXX
+              # credential: XXX
+          brooklyn.config:
+            # the default size is 3 but this can be changed to suit your requirements
+            initial.size: 3
+            provisioning.properties:
+              # you can also define machine specs
+              minRam: 8gb
+    - id: riak-cluster
+      item:
+        - type: brooklyn.entity.nosql.riak.RiakCluster
+          name: Riak Cluster
+    - id: riak-node
+      item:
+        - type: brooklyn.entity.nosql.riak.RiakNode
+          name: Riak Node
+```
+
+The items this will install are:
+
+- `riak-cluster` is available as a convenience short name for the full class, as an entity,
+  with an additional OSGi bundle installed
+- `datastore` provides the `riak-cluster` blueprint, in SoftLayer and with the given size and machine spec, 
+  as the default implementation for anyone
+  requesting a `datastore` (and if installed atop the previous example, new references to `datastore` 
+  will access this version because it is a higher number);
+  because it is a template, users will have the opportunity to edit the YAML (see below)
+- `riak-node` is also installed, as before (but with a different name)
+
+
+
+### Templates and the Add-Application Wizard
+
+When a `template` is added to the catalog, the blueprint will appear in the 'Create Application' dialog
+as shown here:
+
+[![MySQL in Brooklyn Catalog](mysql-in-catalog-w700.png "MySQL in Brooklyn Catalog")](mysql-in-catalog.png) 
+
+
+
+### Catalog Management
+
+The Catalog tab in the web console will show all versions of catalog items,
+and allow you to add new items.
+
+
+##### Adding to the Catalog
+
+In addition to the GUI, items can be added to the catalog via the REST API
+with a `POST` of the YAML file to `/v1/catalog` endpoint.
 To do this using `curl`:
 
-{% highlight bash %}
-curl http://127.0.0.1:8081/v1/catalog --data-binary @/path/to/mysql-catalog.yaml
-{% endhighlight %}
+```bash
+curl http://127.0.0.1:8081/v1/catalog --data-binary @/path/to/riak.catalog.bom
+```
 
 
 
-### Deleting from the Catalog
+##### Deleting from the Catalog
 
 You can delete a versioned item from the catalog using the same endpoint as the REST API. 
-For example, to delete the item with id `my-MySQL` and version `1.0` with `curl`:
+For example, to delete the item with id `datastore` and version `1.0` with `curl`:
 
-{% highlight bash %}
-curl -X DELETE http://127.0.0.1:8081/v1/catalog/entities/MySQL/1.0
-{% endhighlight %}
+```bash
+curl -X DELETE http://127.0.0.1:8081/v1/catalog/entities/datastore/1.0
+```
 
 **Note:** Catalog items should not be deleted if there are running apps which were created using the same item. 
 During rebinding the catalog item is used to reconstruct the entity.
@@ -101,9 +245,10 @@ in a future release.
 Deprecation applies to a specific version of a catalog item, so the full
 id including the version number is passed to the REST API as follows:
 
-{% highlight bash %}
+```bash
 curl -X POST http://127.0.0.1:8081/v1/catalog/entities/MySQL:1.0/deprecated/true
-{% endhighlight %}
+```
+
 
 ### Versioning
 
@@ -122,41 +267,7 @@ When referencing a blueprint, if a version number is not specified
 the latest non-snapshot version will be loaded when an entity is instantiated.
 
 
-<a id="special-reqs"/>
 
-### Special Requirements for the "Create Application" Wizard Dialog
-
-For a blueprint in the catalog to be accessible via the 'Create Application' dialog, it must be an Application 
-(i.e. the entity at the root of the blueprint must implement `brooklyn.entity.Application`).
-In contrast, if a YAML blueprint is deployed direct via the REST API, then this is not necessary.
-
-For example, the MySql catalog item defined previously could be re-written to use a
-`brooklyn.entity.basic.BasicApplication`, because no application-specific logic is 
-required other than to pass-through the start and stop commands.
-the `MySqlNode` is added as a child of the `BasicApplication`.
-
-{% highlight yaml %}
-brooklyn.catalog:
-  id: my-MySQL
-  version: 1.0
-  iconUrl: classpath://mysql.png
-  description: MySql is an open source relational database management system (RDBMS)
-
-name: MySQL Database
-services:
-- type: brooklyn.entity.basic.BasicApplication
-  brooklyn.children:
-  - type: brooklyn.entity.database.mysql.MySqlNode
-{% endhighlight %}
-
-When added to the catalog via the HTTP `POST` command, the blueprint will appear in the 'Create Application' dialog
-as shown here:
-
-[![MySQL in Brooklyn Catalog](mysql-in-catalog-w700.png "MySQL in Brooklyn Catalog")](mysql-in-catalog.png) 
-
-When deploying a new version of a blueprint, the catalog will show both the previous and the new versions 
-of the blueprint. You may wish to delete the older version, assuming no applications currently running
-are using that old version.
 
 <!--
 TODO: Should improve the 'Create Application' dialog, so that the two versions don't appear on the front page.
@@ -169,17 +280,3 @@ TODO: Add section that explains how to add plain entities to the catalog and use
 (and entity UI) or embed the catalog id + version in another YAML
 -->
 
-<!--
-TODO: Add documentation to explain that the brooklyn.catalog section can contain a libraries array, each item pointing to 
-an OSGi bundle where the code for the blueprint is hosted. Every type from the blueprint will be searched for in the 
-libraries first and then on the standard Brooklyn classpath.*
--->
-
-<!--
-TODO: Add documentation about adding policies to the catalog, and explaining how to add items to 
-the UI using the plus icon on the catalog tab*
-
-TODO: describe entity addition (this just covers app addition)
-
-TODO: describe how to use the web-console GUI
--->
