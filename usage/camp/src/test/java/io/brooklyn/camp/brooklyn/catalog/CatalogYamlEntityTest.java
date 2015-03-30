@@ -21,12 +21,9 @@ package io.brooklyn.camp.brooklyn.catalog;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
-import brooklyn.test.TestResourceUnavailableException;
-import brooklyn.util.ResourceUtils;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Collection;
 
 import org.testng.Assert;
@@ -39,6 +36,8 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.management.osgi.OsgiTestResources;
+import brooklyn.test.TestResourceUnavailableException;
+import brooklyn.util.ResourceUtils;
 
 import com.google.common.collect.Iterables;
 

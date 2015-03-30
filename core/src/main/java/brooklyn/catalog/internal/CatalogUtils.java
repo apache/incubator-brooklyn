@@ -200,6 +200,7 @@ public class CatalogUtils {
     }
 
     public static String getVersionedId(String id, String version) {
+        // TODO null checks
         return id + VERSION_DELIMITER + version;
     }
 

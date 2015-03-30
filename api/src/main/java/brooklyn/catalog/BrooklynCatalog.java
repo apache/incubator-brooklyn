@@ -104,6 +104,24 @@ public interface BrooklynCatalog {
     CatalogItem<?,?> addItem(String yaml, boolean forceUpdate);
     
     /**
+     * Adds items (represented in yaml) to the catalog.
+     * Fails if the same version exists in catalog.
+     *
+     * @throws IllegalArgumentException if the yaml was invalid
+     */
+    Iterable<? extends CatalogItem<?,?>> addItems(String yaml);
+    
+    /**
+     * Adds items (represented in yaml) to the catalog.
+     * 
+     * @param forceUpdate If true allows catalog update even when an
+     * item exists with the same symbolicName and version
+     *
+     * @throws IllegalArgumentException if the yaml was invalid
+     */
+    Iterable<? extends CatalogItem<?,?>> addItems(String yaml, boolean forceUpdate);
+    
+    /**
      * adds an item to the 'manual' catalog;
      * this does not update the classpath or have a record to the java Class
      *

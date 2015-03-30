@@ -28,7 +28,7 @@ import io.brooklyn.camp.spi.pdp.Service;
 
 import java.io.FileNotFoundException;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
@@ -57,9 +58,11 @@ import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
@@ -491,44 +494,112 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (item instanceof CatalogItemDtoAbstract) return (CatalogItemDtoAbstract<T,SpecT>) item;
         throw new IllegalStateException("Cannot unwrap catalog item '"+item+"' (type "+item.getClass()+") to restore DTO");
     }
-
-    private CatalogItemDtoAbstract<?,?> getAbstractCatalogItem(String yaml) {
-        DeploymentPlan plan = makePlanFromYaml(yaml);
-
-        @SuppressWarnings("rawtypes")
-        Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class, true);
-        MutableMap<String, Object> catalog = MutableMap.of();
-        if (possibleCatalog.isPresent()) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> catalog2 = (Map<String, Object>) possibleCatalog.get();
-            catalog.putAll(catalog2);
+    
+    @SuppressWarnings("unchecked")
+    private <T> Maybe<T> getFirstAs(Map<?,?> map, Class<T> type, String firstKey, String ...otherKeys) {
+        if (map==null) return Maybe.absent("No map available");
+        String foundKey = null;
+        Object value = null;
+        if (map.containsKey(firstKey)) foundKey = firstKey;
+        else for (String key: otherKeys) {
+            if (map.containsKey(key)) {
+                foundKey = key;
+                break;
+            }
         }
+        if (foundKey==null) return Maybe.absent("Missing entry '"+firstKey+"'");
+        value = map.get(foundKey);
+        if (!type.isInstance(value)) return Maybe.absent("Entry for '"+firstKey+"' should be of type "+type+", not "+value.getClass());
+        return Maybe.of((T)value);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private Maybe<Map<?,?>> getFirstAsMap(Map<?,?> map, String firstKey, String ...otherKeys) {
+        return (Maybe<Map<?,?>>)(Maybe) getFirstAs(map, Map.class, firstKey, otherKeys);
+    }
 
-        Collection<CatalogBundle> libraries = Collections.emptyList();
-        Maybe<Object> possibleLibraries = catalog.getMaybe("libraries");
-        if (possibleLibraries.isAbsent()) possibleLibraries = catalog.getMaybe("brooklyn.libraries");
-        if (possibleLibraries.isPresentAndNonNull()) {
-            if (!(possibleLibraries.get() instanceof Collection))
-                throw new IllegalArgumentException("Libraries should be a list, not "+possibleLibraries.get());
-            libraries = CatalogItemDtoAbstract.parseLibraries((Collection<?>) possibleLibraries.get());
+    private List<CatalogItemDtoAbstract<?,?>> getAbstractCatalogItems(String yaml) {
+        Map<?,?> itemDef = Yamls.getAs(Yamls.parseAll(yaml), Map.class);
+        Map<?,?> catalogMetadata = getFirstAsMap(itemDef, "brooklyn.catalog", "catalog").orNull();
+        if (catalogMetadata==null)
+            log.warn("No `brooklyn.catalog` supplied in catalog request; using legacy mode for "+itemDef);
+        catalogMetadata = MutableMap.copyOf(catalogMetadata);
+
+        List<CatalogItemDtoAbstract<?, ?>> result = MutableList.of();
+        
+        addAbstractCatalogItems(catalogMetadata, result, null);
+        
+        itemDef.remove("brooklyn.catalog");
+        catalogMetadata.remove("item");
+        catalogMetadata.remove("items");
+        if (!itemDef.isEmpty()) {
+            log.debug("Reading brooklyn.catalog peer keys as item");
+            Map<String,?> rootItem = MutableMap.of("item", itemDef);
+            addAbstractCatalogItems(rootItem, result, catalogMetadata);
         }
+        
+        return result;
+    }
 
-        final String id = (String) catalog.getMaybe("id").orNull();
-        final String version = Strings.toString(catalog.getMaybe("version").orNull());
-        final String symbolicName = (String) catalog.getMaybe("symbolicName").orNull();
-        final String name = (String) catalog.getMaybe("name").orNull();
-        final String displayName = (String) catalog.getMaybe("displayName").orNull();
-        final String description = (String) catalog.getMaybe("description").orNull();
-        final String iconUrl = (String) catalog.getMaybe("iconUrl").orNull();
-        final String iconUrlUnderscore = (String) catalog.getMaybe("icon_url").orNull();
-        final String deprecated = (String) catalog.getMaybe("deprecated").orNull();
+    enum CatalogItemTypes { ENTITY, TEMPLATE, POLICY, LOCATION }
+    
+    @SuppressWarnings("unchecked")
+    private void addAbstractCatalogItems(Map<?,?> itemMetadata, List<CatalogItemDtoAbstract<?, ?>> result, Map<?,?> parentMetadata) {
+
+        // TODO:
+//        get yaml
+//        (tests)
+//        docs used as test casts -- (doc assertions that these match -- or import -- known test casesyamls)
+//        multiple versions in catalog page
+
+        Map<Object,Object> catalogMetadata = MutableMap.builder().putAll(parentMetadata).putAll(itemMetadata).build();
+        
+        // libraries we treat specially, to append the list, with the child's list preferred in classloading order
+        List<?> librariesL = MutableList.copyOf(getFirstAs(itemMetadata, List.class, "brooklyn.libraries", "libraries").orNull())
+            .appendAll(getFirstAs(parentMetadata, List.class, "brooklyn.libraries", "libraries").orNull());
+        if (!librariesL.isEmpty())
+            catalogMetadata.put("brooklyn.libraries", librariesL);
+        Collection<CatalogBundle> libraries = CatalogItemDtoAbstract.parseLibraries(librariesL);
+
+        Object items = catalogMetadata.remove("items");
+        Object item = catalogMetadata.remove("item");
+
+        if (items!=null) {
+            for (Map<?,?> i: ((List<Map<?,?>>)items)) {
+                addAbstractCatalogItems(i, result, catalogMetadata);
+            }
+        }
+        
+        if (item==null) return;
+        
+        //now parse the metadata and apply to item
+        
+        CatalogItemTypes itemType = TypeCoercions.coerce(getFirstAs(catalogMetadata, String.class, "item.type", "itemType", "item_type").or(CatalogItemTypes.ENTITY.toString()), CatalogItemTypes.class);
+        
+        String id = getFirstAs(catalogMetadata, String.class, "id").orNull();
+        String version = getFirstAs(catalogMetadata, String.class, "version").orNull();
+        String symbolicName = getFirstAs(catalogMetadata, String.class, "symbolicName").orNull();
+        String displayName = getFirstAs(catalogMetadata, String.class, "displayName").orNull();
+        String name = getFirstAs(catalogMetadata, String.class, "name").orNull();
 
         if ((Strings.isNonBlank(id) || Strings.isNonBlank(symbolicName)) && 
                 Strings.isNonBlank(displayName) &&
                 Strings.isNonBlank(name) && !name.equals(displayName)) {
             log.warn("Name property will be ignored due to the existence of displayName and at least one of id, symbolicName");
         }
-
+        
+        // TODO use src yaml if avail
+        String yaml = new Yaml().dump(item);
+        
+        DeploymentPlan plan = null;
+        try {
+            plan = makePlanFromYaml(yaml);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            if (itemType==CatalogItemTypes.ENTITY || itemType==CatalogItemTypes.TEMPLATE)
+                log.warn("Could not parse item YAML for "+itemType+" (registering anyway): "+e+"\n"+yaml);
+        }
+        
         final String catalogSymbolicName;
         if (Strings.isNonBlank(symbolicName)) {
             catalogSymbolicName = symbolicName;
@@ -540,9 +611,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             }
         } else if (Strings.isNonBlank(name)) {
             catalogSymbolicName = name;
-        } else if (Strings.isNonBlank(plan.getName())) {
+        } else if (plan!=null && Strings.isNonBlank(plan.getName())) {
             catalogSymbolicName = plan.getName();
-        } else if (plan.getServices().size()==1) {
+        } else if (plan!=null && plan.getServices().size()==1) {
             Service svc = Iterables.getOnlyElement(plan.getServices());
             if (Strings.isBlank(svc.getServiceType())) {
                 throw new IllegalStateException("CAMP service type not expected to be missing for " + svc);
@@ -577,6 +648,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             catalogDisplayName = null;
         }
 
+        final String description = getFirstAs(catalogMetadata, String.class, "description").orNull();
         final String catalogDescription;
         if (Strings.isNonBlank(description)) {
             catalogDescription = description;
@@ -586,33 +658,30 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             catalogDescription = null;
         }
 
-        final String catalogIconUrl;
-        if (Strings.isNonBlank(iconUrl)) {
-            catalogIconUrl = iconUrl;
-        } else if (Strings.isNonBlank(iconUrlUnderscore)) {
-            catalogIconUrl = iconUrlUnderscore;
-        } else {
-            catalogIconUrl = null;
-        }
+        final String catalogIconUrl = getFirstAs(catalogMetadata, String.class, "icon.url", "iconUrl", "icon_url").orNull();
 
+        final String deprecated = getFirstAs(catalogMetadata, String.class, "deprecated").orNull();
         final Boolean catalogDeprecated = Boolean.valueOf(deprecated);
 
         CatalogUtils.installLibraries(mgmt, libraries);
 
-        String versionedId = CatalogUtils.getVersionedId(catalogSymbolicName, catalogVersion);
+        String versionedId = CatalogUtils.getVersionedId(catalogSymbolicName, catalogVersion!=null ? catalogVersion : NO_VERSION);
         BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, versionedId, libraries);
+        
+        // TODO for entities, we parse. for templates we don't. (?)
         AbstractBrooklynObjectSpec<?, ?> spec = createSpec(catalogSymbolicName, plan, loader);
 
         CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(spec, catalogSymbolicName, catalogVersion)
             .libraries(libraries)
             .displayName(catalogDisplayName)
             .description(catalogDescription)
+            .deprecated(catalogDeprecated)
             .iconUrl(catalogIconUrl)
             .plan(yaml)
             .build();
 
         dto.setManagementContext((ManagementContextInternal) mgmt);
-        return dto;
+        result.add(dto);
     }
 
     private AbstractBrooklynObjectSpec<?,?> createSpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
@@ -664,10 +733,27 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @Override
+    public List<? extends CatalogItem<?,?>> addItems(String yaml) {
+        return addItems(yaml, false);
+    }
+
+    @Override
     public CatalogItem<?,?> addItem(String yaml, boolean forceUpdate) {
+        return Iterables.getOnlyElement(addItems(yaml, forceUpdate));
+    }
+    
+    @Override
+    public List<? extends CatalogItem<?,?>> addItems(String yaml, boolean forceUpdate) {
         log.debug("Adding manual catalog item to "+mgmt+": "+yaml);
         checkNotNull(yaml, "yaml");
-        CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
+        List<CatalogItemDtoAbstract<?, ?>> result = getAbstractCatalogItems(yaml);
+        for (CatalogItemDtoAbstract<?, ?> item: result) {
+            addItemDto(item, forceUpdate);
+        }
+        return result;
+    }
+    
+    private CatalogItem<?,?> addItemDto(CatalogItemDtoAbstract<?, ?> itemDto, boolean forceUpdate) {
         checkItemNotExists(itemDto, forceUpdate);
 
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
