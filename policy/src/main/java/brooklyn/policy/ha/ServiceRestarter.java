@@ -43,6 +43,7 @@ import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -91,6 +92,7 @@ public class ServiceRestarter extends AbstractPolicy {
     public ServiceRestarter(ConfigBag configBag) {
         // TODO hierarchy should use ConfigBag, and not change flags
         super(configBag.getAllConfigMutable());
+        uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+getConfig(FAILURE_SENSOR_TO_MONITOR).getName();
     }
     
     public ServiceRestarter(Sensor<?> failureSensorToMonitor) {

@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableMap;
         + "emitting an event if the connection is lost/restored")
 public class SshMachineFailureDetector extends AbstractFailureDetector {
     private static final Logger LOG = LoggerFactory.getLogger(SshMachineFailureDetector.class);
+    public static final String DEFAULT_UNIQUE_TAG = "failureDetector.sshMachine.tag";
 
     public static final BasicNotificationSensor<FailureDescriptor> CONNECTION_FAILED = HASensors.CONNECTION_FAILED;
 
@@ -63,6 +64,7 @@ public class SshMachineFailureDetector extends AbstractFailureDetector {
         if (config().getRaw(POLL_PERIOD).isAbsent()) {
             config().set(POLL_PERIOD, Duration.ONE_MINUTE);
         }
+        uniqueTag = DEFAULT_UNIQUE_TAG;
     }
 
     @Override

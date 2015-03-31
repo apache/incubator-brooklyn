@@ -30,6 +30,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Preconditions;
 
@@ -57,6 +58,7 @@ public class ConditionalSuspendPolicy extends AbstractPolicy {
         Preconditions.checkNotNull(target, "Suspend target required");
         Preconditions.checkNotNull(getTargetPolicy(), "Can't find target policy set in " + SUSPEND_TARGET.getName() + ": " + target);
         subscribe();
+        uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+getConfig(SUSPEND_SENSOR).getName()+":"+getConfig(RESUME_SENSOR).getName();
     }
 
     private void subscribe() {
