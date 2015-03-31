@@ -38,14 +38,20 @@ public class ApplicationUsage {
     public static class ApplicationEvent {
         private final Date date;
         private final Lifecycle state;
+        private final String user;
 
-        public ApplicationEvent(Lifecycle state) {
-            this(new Date(), state);
+        public ApplicationEvent(Lifecycle state, String user) {
+            this(new Date(), state, user);
         }
 
         public ApplicationEvent(Date date, Lifecycle state) {
+            this(date,state, null);
+        }
+
+        public ApplicationEvent(Date date, Lifecycle state, String user) {
             this.date = checkNotNull(date, "date");
             this.state = checkNotNull(state, "state");
+            this.user = user;
         }
 
         public Date getDate() {
@@ -55,22 +61,26 @@ public class ApplicationUsage {
         public Lifecycle getState() {
             return state;
         }
-        
+
+        public String getUser() {
+            return user;
+        }
+
         @Override
         public boolean equals(Object other) {
             if (!(other instanceof ApplicationEvent)) return false;
             ApplicationEvent o = (ApplicationEvent) other;
-            return Objects.equal(date, o.date) && Objects.equal(state, o.state);
+            return Objects.equal(date, o.date) && Objects.equal(state, o.state) && Objects.equal(user, o.user);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(date, state);
+            return Objects.hashCode(date, state, user);
         }
         
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("date", date).add("state", state).toString();
+            return Objects.toStringHelper(this).add("date", date).add("state", state).add("entitlementContext", user).toString();
         }
     }
     

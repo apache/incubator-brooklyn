@@ -41,17 +41,19 @@ public class LocationUsage {
         private final String entityId;
         private final String entityType;
         private final String applicationId;
+        private final String user;
 
-        public LocationEvent(Lifecycle state, String entityId, String entityType, String applicationId) {
-            this(new Date(), state, entityId, entityType, applicationId);
+        public LocationEvent(Lifecycle state, String entityId, String entityType, String applicationId, String user) {
+            this(new Date(), state, entityId, entityType, applicationId, user);
         }
         
-        public LocationEvent(Date date, Lifecycle state, String entityId, String entityType, String applicationId) {
+        public LocationEvent(Date date, Lifecycle state, String entityId, String entityType, String applicationId, String user) {
             this.date = checkNotNull(date, "date");
             this.state = checkNotNull(state, "state");
             this.entityId = checkNotNull(entityId, "entityId");
             this.entityType = checkNotNull(entityType, "entityType");
             this.applicationId = checkNotNull(applicationId, "applicationId (entity "+entityId+")");
+            this.user = user;
         }
 
         public Date getDate() {
@@ -73,25 +75,34 @@ public class LocationUsage {
         public String getApplicationId() {
             return applicationId;
         }
-        
+
+        public String getUser() {
+            return user;
+        }
+
         @Override
         public boolean equals(Object other) {
             if (!(other instanceof LocationEvent)) return false;
             LocationEvent o = (LocationEvent) other;
             return Objects.equal(date, o.date) && Objects.equal(state, o.state) 
                     && Objects.equal(entityId, o.entityId) && Objects.equal(entityType, o.entityType)
-                    && Objects.equal(applicationId, o.applicationId);
+                    && Objects.equal(applicationId, o.applicationId) && Objects.equal(user, o.user);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(date, state, entityId, entityType, applicationId);
+            return Objects.hashCode(date, state, entityId, entityType, applicationId, user);
         }
         
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("date", date).add("state", state).add("entityId", entityId)
-                    .add("appId", applicationId).toString();
+            return Objects.toStringHelper(this)
+                    .add("date", date)
+                    .add("state", state)
+                    .add("entityId", entityId)
+                    .add("appId", applicationId)
+                    .add("user", user)
+                    .toString();
         }
     }
     
