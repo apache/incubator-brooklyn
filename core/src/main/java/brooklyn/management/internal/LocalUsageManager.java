@@ -44,6 +44,8 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContextInjectable;
+import brooklyn.management.entitlement.EntitlementContext;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.usage.ApplicationUsage;
 import brooklyn.management.usage.LocationUsage;
 import brooklyn.util.exceptions.Exceptions;
@@ -250,7 +252,7 @@ public class LocalUsageManager implements UsageManager {
             if (usage == null) {
                 usage = new ApplicationUsage(app.getId(), app.getDisplayName(), app.getEntityType().getName(), ((EntityInternal)app).toMetadataRecord());
             }
-            final ApplicationUsage.ApplicationEvent event = new ApplicationUsage.ApplicationEvent(state);
+            final ApplicationUsage.ApplicationEvent event = new ApplicationUsage.ApplicationEvent(state, getUser());
             usage.addEvent(event);        
             eventMap.put(app.getId(), usage);
 
@@ -300,7 +302,7 @@ public class LocalUsageManager implements UsageManager {
             Entity caller = (Entity) callerContext;
             String entityTypeName = caller.getEntityType().getName();
             String appId = caller.getApplicationId();
-            final LocationUsage.LocationEvent event = new LocationUsage.LocationEvent(state, caller.getId(), entityTypeName, appId);
+            final LocationUsage.LocationEvent event = new LocationUsage.LocationEvent(state, caller.getId(), entityTypeName, appId, getUser());
             
             ConcurrentMap<String, LocationUsage> usageMap = managementContext.getStorage().<String, LocationUsage>getMap(LOCATION_USAGE_KEY);
             synchronized (mutex) {
@@ -408,5 +410,13 @@ public class LocalUsageManager implements UsageManager {
     @Override
     public void removeUsageListener(brooklyn.management.internal.UsageListener listener) {
         listeners.remove(listener);
+    }
+
+    private String getUser() {
+        EntitlementContext entitlementContext = Entitlements.getEntitlementContext();
+        if (entitlementContext != null) {
+            return entitlementContext.user();
+        }
+        return null;
     }
 }
