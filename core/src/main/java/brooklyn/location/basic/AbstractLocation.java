@@ -110,8 +110,8 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     private boolean inConstruction;
 
-    private final Map<Class<?>, Object> extensions = Maps.newConcurrentMap();
-    
+    private Reference<Map<Class<?>, Object>> extensions = new BasicReference<Map<Class<?>, Object>>(Maps.<Class<?>, Object>newConcurrentMap());
+
     private final LocationDynamicType locationType;
 
     /**
@@ -665,13 +665,13 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     
     @Override
     public boolean hasExtension(Class<?> extensionType) {
-        return extensions.containsKey(checkNotNull(extensionType, "extensionType"));
+        return extensions.get().containsKey(checkNotNull(extensionType, "extensionType"));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getExtension(Class<T> extensionType) {
-        Object extension = extensions.get(checkNotNull(extensionType, "extensionType"));
+        Object extension = extensions.get().get(checkNotNull(extensionType, "extensionType"));
         if (extension == null) {
             throw new IllegalArgumentException("No extension of type "+extensionType+" registered for location "+this);
         }
@@ -683,8 +683,9 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         checkNotNull(extensionType, "extensionType");
         checkNotNull(extension, "extension");
         checkArgument(extensionType.isInstance(extension), "extension %s does not implement %s", extension, extensionType);
-        extensions.put(extensionType, extension);
+        extensions.get().put(extensionType, extension);
     }
+
     @Override
     public Map<String, String> toMetadataRecord() {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
