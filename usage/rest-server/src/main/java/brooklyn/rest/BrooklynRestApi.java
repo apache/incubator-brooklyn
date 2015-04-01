@@ -44,9 +44,20 @@ import brooklyn.rest.util.FormMapProvider;
 import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 
 import com.google.common.collect.Iterables;
+import foghorn.rest.resources.DeploymentResource;
+import foghorn.rest.resources.DeviceResource;
+import foghorn.rest.resources.ServiceResource;
 
 @SuppressWarnings("deprecation")
 public class BrooklynRestApi {
+
+    public static Iterable<AbstractBrooklynRestResource> getFoghornRestResources() {
+        List<AbstractBrooklynRestResource> resources = new ArrayList<AbstractBrooklynRestResource>();
+        resources.add(new DeploymentResource());
+        resources.add(new DeviceResource());
+        resources.add(new ServiceResource());
+        return resources;
+    }
 
     public static Iterable<AbstractBrooklynRestResource> getBrooklynRestResources() {
         List<AbstractBrooklynRestResource> resources = new ArrayList<AbstractBrooklynRestResource>();
@@ -84,6 +95,6 @@ public class BrooklynRestApi {
     }
 
     public static Iterable<Object> getAllResources() {
-        return Iterables.concat(getBrooklynRestResources(), getApidocResources(), getMiscResources());
+        return Iterables.concat(getBrooklynRestResources(), getFoghornRestResources(), getApidocResources(), getMiscResources());
     }
 }

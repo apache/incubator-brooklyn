@@ -102,6 +102,11 @@ public interface Entity extends BrooklynObject {
      * Return the entities that are children of (i.e. "owned by") this entity
      */
     Collection<Entity> getChildren();
+
+    /**
+     * Return all entities that are descendants of this entity
+     */
+    Collection<Entity> getDescendants();
     
     /**
      * Sets the parent (i.e. "owner") of this entity. Returns this entity, for convenience.

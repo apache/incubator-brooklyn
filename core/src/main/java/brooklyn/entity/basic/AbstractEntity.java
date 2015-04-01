@@ -20,12 +20,7 @@ package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.slf4j.Logger;
@@ -486,7 +481,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @Override
     public String getDisplayName() {
-        return displayName.get();
+        return displayName.get().split(":")[0];
     }
     
     @Override
@@ -660,7 +655,17 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     public Collection<Entity> getChildren() {
         return ImmutableList.copyOf(children);
     }
-    
+
+    @Override
+    public Collection<Entity> getDescendants() {
+        List<Entity> descendants = new ArrayList<Entity>();
+        for (Entity entity : children) {
+            descendants.add(entity);
+            descendants.addAll(entity.getDescendants());
+        }
+        return descendants;
+    }
+
     @Override
     public Collection<Group> getGroups() { 
         return ImmutableList.copyOf(groups);
