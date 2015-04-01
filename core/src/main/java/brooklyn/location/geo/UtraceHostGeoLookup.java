@@ -27,6 +27,9 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,9 +192,17 @@ Beyond this you get blacklisted and requests may time out, or return none.
         }
     }
     
+    @Nullable
+    private static Node getFirstChild(Node xml, String field) {
+        if (xml==null) return null;
+        NodeList nl = (NodeList)xml.get(field);
+        if (nl==null || nl.isEmpty()) return null;
+        return (Node)nl.get(0);
+    }
+    @Nonnull
     private static String getXmlResultsField(Node xml, String field) {
-        Node r1 = ((Node)((NodeList)xml.get("result")).get(0));
-        Node f1 = ((Node)((NodeList)r1.get(field)).get(0));
+        Node f1 = getFirstChild(getFirstChild(xml, "result"), field);
+        if (f1==null) return "";
         return f1.text();
     }
 }

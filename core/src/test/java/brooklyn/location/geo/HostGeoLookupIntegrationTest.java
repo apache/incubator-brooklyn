@@ -36,16 +36,21 @@ public class HostGeoLookupIntegrationTest {
     
     @Test(groups = "Integration")
     public void testLocalhostGetsLocation() throws Exception {
-        SshMachineLocation l = new LocalhostMachineProvisioningLocation().obtain();
+        LocalhostMachineProvisioningLocation ll = new LocalhostMachineProvisioningLocation();
+        SshMachineLocation l = ll.obtain();
         HostGeoInfo geo = HostGeoInfo.fromLocation(l);
+        Assert.assertNotNull(geo, "host lookup unavailable - is the maxmind database installed? or else network unavailable or too slow?");
         log.info("localhost is in "+geo);
         Assert.assertNotNull(geo, "couldn't load data; must have a valid HostGeoLookup impl (e.g. MaxMind installed, or online and with Utrace credit)");
         Assert.assertTrue(-90 <= geo.latitude && geo.latitude <= 90); 
+        ll.close();
     }
 
-    @Test(groups = "Integration")
+    @Deprecated // see GeoBytesHostGeoLookup - their API changed
+    @Test(groups = "Integration", enabled=false)
     public void testGeobytesLookup() throws Exception {
         HostGeoInfo geo = new GeoBytesHostGeoLookup().getHostGeoInfo(InetAddress.getByName("geobytes.com"));
+        Assert.assertNotNull(geo, "host lookup unavailable");
         Assert.assertEquals(geo.displayName, "Baltimore (US)");
         Assert.assertEquals(geo.latitude, 39.2894, 0.1);
         Assert.assertEquals(geo.longitude, -76.6384, 0.1);
@@ -54,14 +59,16 @@ public class HostGeoLookupIntegrationTest {
     @Test(groups = "Integration")
     public void testUtraceLookup() throws Exception {
         HostGeoInfo geo = new UtraceHostGeoLookup().getHostGeoInfo(InetAddress.getByName("utrace.de"));
+        Assert.assertNotNull(geo, "host lookup unavailable - maybe network not available ");
         Assert.assertTrue(geo.displayName.contains("(DE)"));
         Assert.assertEquals(geo.latitude, 51, 2);
         Assert.assertEquals(geo.longitude, 9, 5);
     }
 
-    @Test(groups = "Integration")
+    @Test(groups = "Integration")  // only works if maxmind database is installed to ~/.brooklyn/
     public void testMaxmindLookup() throws Exception {
         HostGeoInfo geo = new MaxMind2HostGeoLookup().getHostGeoInfo(InetAddress.getByName("maxmind.com"));
+        Assert.assertNotNull(geo, "host lookup unavailable - is the maxmind database installed?");
         log.info("maxmind.com at "+geo);
         
         // used to be Washington; now Dallas - in case this changes again, we will accept either!
