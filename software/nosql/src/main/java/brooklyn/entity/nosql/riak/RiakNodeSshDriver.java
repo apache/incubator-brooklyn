@@ -28,6 +28,7 @@ import static brooklyn.util.ssh.BashCommands.ifExecutableElse;
 import static brooklyn.util.ssh.BashCommands.ifNotExecutable;
 import static brooklyn.util.ssh.BashCommands.ok;
 import static brooklyn.util.ssh.BashCommands.sudo;
+import static brooklyn.util.text.StringEscapes.BashStringEscapes.escapeLiteralForDoubleQuotedBash;
 import static java.lang.String.format;
 
 import java.net.URI;
@@ -54,10 +55,10 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
 
@@ -471,6 +472,18 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         } else {
             log.warn("entity {}: is not in the riak cluster", entity.getId());
         }
+    }
+
+    @Override
+    public void applyBucketType(String bucketTypeName, String bucketTypeProperties) {
+        newScript("bucket-type create " + bucketTypeName)
+                .body.append(sudo(format(
+                    "%s bucket-type create %s %s",
+                    getRiakAdminCmd(),
+                    bucketTypeName,
+                    escapeLiteralForDoubleQuotedBash(bucketTypeProperties))))
+                .failOnNonZeroResultCode()
+                .execute();
     }
 
     @Override

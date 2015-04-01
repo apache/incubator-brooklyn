@@ -183,18 +183,21 @@ public interface RiakNode extends SoftwareProcess {
     String getOsMajorVersion();
 
     @Effector(description = "Join the Riak cluster on the given node")
-    public void joinCluster(@EffectorParam(name = "nodeName") String nodeName);
+    void joinCluster(@EffectorParam(name = "nodeName") String nodeName);
 
     @Effector(description = "Leave the Riak cluster")
-    public void leaveCluster();
+    void leaveCluster();
 
     @Effector(description = "Remove the given node from the Riak cluster")
-    public void removeNode(@EffectorParam(name = "nodeName") String nodeName);
+    void removeNode(@EffectorParam(name = "nodeName") String nodeName);
 
     @Effector(description = "Recover and join the Riak cluster on the given node")
-    public void recoverFailedNode(@EffectorParam(name = "nodeName") String nodeName);
+    void recoverFailedNode(@EffectorParam(name = "nodeName") String nodeName);
 
     @Effector(description = "Commit changes made to the Riak cluster")
-    public void commitCluster();
+    void commitCluster();
 
+    @Effector(description = "Apply bucket type")
+    void applyBucketType(@EffectorParam(name = "bucketTypeName") String bucketTypeName,
+                         @EffectorParam(name = "bucketTypeProperties") String bucketTypeProperties);
 }

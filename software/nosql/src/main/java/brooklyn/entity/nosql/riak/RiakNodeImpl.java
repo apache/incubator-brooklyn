@@ -208,6 +208,11 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     @Override
+    public void applyBucketType(String bucketTypeName, String bucketTypeProperties) {
+        getDriver().applyBucketType(bucketTypeName, bucketTypeProperties);
+    }
+
+    @Override
     public void recoverFailedNode(String nodeName) {
         getDriver().recoverFailedNode(nodeName);
     }

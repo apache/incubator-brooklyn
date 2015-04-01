@@ -22,17 +22,19 @@ import brooklyn.entity.basic.SoftwareProcessDriver;
 
 public interface RiakNodeDriver extends SoftwareProcessDriver {
 
-    public String getRiakEtcDir();
+    String getRiakEtcDir();
 
-    public void joinCluster(String nodeName);
+    void joinCluster(String nodeName);
 
-    public void leaveCluster();
+    void leaveCluster();
 
-    public void removeNode(String nodeName);
+    void removeNode(String nodeName);
 
-    public void recoverFailedNode(String nodeName);
+    void recoverFailedNode(String nodeName);
 
-    public void commitCluster();
+    void commitCluster();
 
-    public String getOsMajorVersion();
+    String getOsMajorVersion();
+
+    void applyBucketType(String bucketTypeName, String bucketTypeProperties);
 }
