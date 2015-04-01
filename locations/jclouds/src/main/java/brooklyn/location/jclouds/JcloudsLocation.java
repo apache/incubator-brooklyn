@@ -51,7 +51,6 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import org.jclouds.abiquo.compute.options.AbiquoTemplateOptions;
 import org.jclouds.cloudstack.compute.options.CloudStackTemplateOptions;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
@@ -88,10 +87,35 @@ import org.jclouds.softlayer.compute.options.SoftLayerTemplateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.common.io.Files;
+import com.google.common.net.HostAndPort;
+import com.google.common.primitives.Ints;
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.entity.rebind.persister.LocationWithObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
@@ -111,7 +135,6 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.location.cloud.CloudMachineNamer;
-import brooklyn.location.jclouds.BrooklynImageChooser.ComputeServiceAwareChooser;
 import brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
@@ -150,32 +173,6 @@ import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
-import com.google.common.base.Stopwatch;
-import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.common.io.Files;
-import com.google.common.net.HostAndPort;
-import com.google.common.primitives.Ints;
-import com.google.common.reflect.TypeToken;
-
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
  * Configuration flags are defined in {@link JcloudsLocationConfig}.
@@ -183,40 +180,40 @@ import com.google.common.reflect.TypeToken;
 @SuppressWarnings("serial")
 public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig, RichMachineProvisioningLocation<SshMachineLocation>, LocationWithObjectStore {
 
-    // TODO After converting from Groovy to Java, this is now very bad code! It relies entirely on putting 
+    // TODO After converting from Groovy to Java, this is now very bad code! It relies entirely on putting
     // things into and taking them out of maps; it's not type-safe, and it's thus very error-prone.
-    // In Groovy, that's considered ok but not in Java. 
+    // In Groovy, that's considered ok but not in Java.
 
     // TODO test (and fix) ability to set config keys from flags
 
     // TODO we say config is inherited, but it isn't the case for many "deep" / jclouds properties
     // e.g. when we pass getRawLocalConfigBag() in and decorate it with additional flags
     // (inheritance only works when we call getConfig in this class)
-    
+
     public static final Logger LOG = LoggerFactory.getLogger(JcloudsLocation.class);
-        
+
     public static final String ROOT_USERNAME = "root";
-    /** these userNames are known to be the preferred/required logins in some common/default images 
+    /** these userNames are known to be the preferred/required logins in some common/default images
      *  where root@ is not allowed to log in */
     public static final List<String> ROOT_ALIASES = ImmutableList.of("ubuntu", "ec2-user");
     public static final List<String> COMMON_USER_NAMES_TO_TRY = ImmutableList.<String>builder().add(ROOT_USERNAME).addAll(ROOT_ALIASES).add("admin").build();
-    
+
     private static final Pattern LIST_PATTERN = Pattern.compile("^\\[(.*)\\]$");
     private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d*$");
-    
+
     private static boolean loggedSshKeysHint = false;
-    
+
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
 
     @SetFromFlag // so it's persisted
     private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
-    
+
     static { Networking.init(); }
-    
+
     public JcloudsLocation() {
         super();
     }
-    
+
     /** typically wants at least ACCESS_IDENTITY and ACCESS_CREDENTIAL */
     public JcloudsLocation(Map<?,?> conf) {
        super(conf);
@@ -225,21 +222,21 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     @Override
     public JcloudsLocation configure(Map<?,?> properties) {
         super.configure(properties);
-        
+
         if (config().getLocalBag().containsKey("providerLocationId")) {
             LOG.warn("Using deprecated 'providerLocationId' key in "+this);
             if (!config().getLocalBag().containsKey(CLOUD_REGION_ID))
                 config().addToLocalBag(MutableMap.of(CLOUD_REGION_ID.getName(), (String)config().getLocalBag().getStringKey("providerLocationId")));
         }
-        
+
         if (isDisplayNameAutoGenerated() || !groovyTruth(getDisplayName())) {
             setDisplayName(elvis(getProvider(), "unknown") +
                    (groovyTruth(getRegion()) ? ":"+getRegion() : "") +
                    (groovyTruth(getEndpoint()) ? ":"+getEndpoint() : ""));
         }
-        
+
         setCreationString(config().getLocalBag());
-        
+
         if (getConfig(MACHINE_CREATION_SEMAPHORE) == null) {
             Integer maxConcurrent = getConfig(MAX_CONCURRENT_MACHINE_CREATIONS);
             if (maxConcurrent == null || maxConcurrent < 1) {
@@ -249,7 +246,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         return this;
     }
-    
+
     @Override
     public void init() {
         super.init();
@@ -257,7 +254,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             addExtension(AvailabilityZoneExtension.class, new AwsAvailabilityZoneExtension(getManagementContext(), this));
         }
     }
-    
+
     @Override
     public JcloudsLocation newSubLocation(Map<?,?> newFlags) {
         return newSubLocation(getClass(), newFlags);
@@ -299,11 +296,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public String getIdentity() {
         return getConfig(ACCESS_IDENTITY);
     }
-    
+
     public String getCredential() {
         return getConfig(ACCESS_CREDENTIAL);
     }
-    
+
     /** returns the location ID used by the provider, if set, e.g. us-west-1 */
     public String getRegion() {
         return getConfig(CLOUD_REGION_ID);
@@ -316,7 +313,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public String getUser(ConfigBag config) {
         return (String) config.getWithDeprecation(USER, JCLOUDS_KEY_USERNAME);
     }
-    
+
     protected Semaphore getMachineCreationSemaphore() {
         return checkNotNull(getConfig(MACHINE_CREATION_SEMAPHORE), MACHINE_CREATION_SEMAPHORE.getName());
     }
@@ -334,7 +331,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             return new JcloudsMachineNamer(config);
         }
     }
-    
+
     protected Collection<JcloudsLocationCustomizer> getCustomizers(ConfigBag setup) {
         @SuppressWarnings("deprecation")
         JcloudsLocationCustomizer customizer = setup.get(JCLOUDS_LOCATION_CUSTOMIZER);
@@ -383,12 +380,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     // TODO remove tagMapping, or promote it
     // (i think i favour removing it, letting the config come in from the entity)
-    
+
     public void setTagMapping(Map<String,Map<String, ? extends Object>> val) {
         tagMapping.clear();
         tagMapping.putAll(val);
     }
-    
+
     // TODO Decide on semantics. If I give "TomcatServer" and "Ubuntu", then must I get back an image that matches both?
     // Currently, just takes first match that it finds...
     public Map<String,Object> getProvisioningFlags(Collection<String> tags) {
@@ -406,7 +403,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         return result;
     }
-    
+
     public static final Set<ConfigKey<?>> getAllSupportedProperties() {
         Set<String> configsOnClass = Sets.newLinkedHashSet(
             Iterables.transform(ConfigUtils.getStaticKeysOnClass(JcloudsLocation.class),
@@ -428,7 +425,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     return input.getName();
                 }
             }));
-        
+
         SetView<String> extrasInList = Sets.difference(configsInList, configsOnClass);
         // notInList is normal
         if (!extrasInList.isEmpty())
@@ -440,12 +437,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return getComputeService(MutableMap.of());
     }
     public ComputeService getComputeService(Map<?,?> flags) {
-        ConfigBag conf = (flags==null || flags.isEmpty()) 
+        ConfigBag conf = (flags==null || flags.isEmpty())
                 ? config().getBag()
                 : ConfigBag.newInstanceExtending(config().getBag(), flags);
         return getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(conf, true);
     }
-    
+
     /** @deprecated since 0.7.0 use {@link #listMachines()} */ @Deprecated
     public Set<? extends ComputeMetadata> listNodes() {
         return listNodes(MutableMap.of());
@@ -456,41 +453,41 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public Set<? extends ComputeMetadata> listNodes(Map<?,?> flags) {
         return getComputeService(flags).listNodes();
     }
-    
+
     @Override
     public Map<String, MachineMetadata> listMachines() {
-        Set<? extends ComputeMetadata> nodes = 
+        Set<? extends ComputeMetadata> nodes =
             getRegion()!=null ? getComputeService().listNodesDetailsMatching(new NodeInLocation(getRegion(), true))
                 : getComputeService().listNodes();
         Map<String,MachineMetadata> result = new LinkedHashMap<String, MachineMetadata>();
-        
+
         for (ComputeMetadata node: nodes)
             result.put(node.getId(), getMachineMetadata(node));
-        
+
         return result;
     }
 
     protected MachineMetadata getMachineMetadata(ComputeMetadata node) {
         if (node==null)
             return null;
-        return new BasicMachineMetadata(node.getId(), node.getName(), 
+        return new BasicMachineMetadata(node.getId(), node.getName(),
             ((node instanceof NodeMetadata) ? Iterators.tryFind( ((NodeMetadata)node).getPublicAddresses().iterator(), Predicates.alwaysTrue() ).orNull() : null),
             ((node instanceof NodeMetadata) ? ((NodeMetadata)node).getStatus()==Status.RUNNING : null),
             node);
     }
-    
+
     public MachineMetadata getMachineMetadata(MachineLocation l) {
         if (l instanceof JcloudsSshMachineLocation) {
             return getMachineMetadata( ((JcloudsSshMachineLocation)l).node );
         }
         return null;
     }
-    
+
     @Override
     public void killMachine(String cloudServiceId) {
         getComputeService().destroyNode(cloudServiceId);
     }
-    
+
     @Override
     public void killMachine(MachineLocation l) {
         MachineMetadata m = getMachineMetadata(l);
@@ -498,7 +495,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         killMachine(m.getId());
     }
 
-    /** attaches a string describing where something is being created 
+    /** attaches a string describing where something is being created
      * (provider, region/location and/or endpoint, callerContext) */
     protected void setCreationString(ConfigBag config) {
         config.setDescription(elvis(config.get(CLOUD_PROVIDER), "unknown")+
@@ -508,7 +505,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     // ----------------- obtaining a new machine ------------------------
-    
+
     public JcloudsSshMachineLocation obtain() throws NoMachinesAvailableException {
         return obtain(MutableMap.of());
     }
@@ -539,11 +536,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         String msg = String.format("Failed to get VM after %d attempt%s.", attempts, attempts == 1 ? "" : "s");
 
-        Exception cause = (exceptions.size() == 1) 
+        Exception cause = (exceptions.size() == 1)
                 ? exceptions.get(0)
                 : new CompoundRuntimeException(msg + " - "
                     + "First cause is "+exceptions.get(0)+" (listed in primary trace); "
-                    + "plus " + (exceptions.size()-1) + " more (e.g. the last is "+exceptions.get(exceptions.size()-1)+")", 
+                    + "plus " + (exceptions.size()-1) + " more (e.g. the last is "+exceptions.get(exceptions.size()-1)+")",
                     exceptions.get(0), exceptions);
 
         if (exceptions.get(exceptions.size()-1) instanceof NoMachinesAvailableException) {
@@ -571,7 +568,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String groupId = elvis(setup.get(GROUP_ID), cloudMachineNamer.generateNewGroupId());
         NodeMetadata node = null;
         JcloudsSshMachineLocation sshMachineLocation = null;
-        
+
         try {
             LOG.info("Creating VM "+setup.getDescription()+" in "+this);
 
@@ -585,7 +582,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             } else {
                 LOG.debug("Acquired in {} machine-creation permit immediately", this);
             }
-            
+
             Stopwatch provisioningStopwatch = Stopwatch.createStarted();
             Duration templateTimestamp, provisionTimestamp, usableTimestamp, customizedTimestamp;
 
@@ -606,20 +603,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
                 LOG.debug("jclouds using template {} / options {} to provision machine in {}",
                         new Object[] {template, template.getOptions(), setup.getDescription()});
-    
+
                 if (!setup.getUnusedConfig().isEmpty())
                     LOG.debug("NOTE: unused flags passed to obtain VM in "+setup.getDescription()+": "+
                             setup.getUnusedConfig());
-                
+
                 templateTimestamp = Duration.of(provisioningStopwatch);
                 template.getOptions().getUserMetadata().put("Name", cloudMachineNamer.generateNewMachineUniqueNameFromGroupId(groupId));
-                
+
                 nodes = computeService.createNodesInGroup(groupId, 1, template);
                 provisionTimestamp = Duration.of(provisioningStopwatch);
             } finally {
                 machineCreationSemaphore.release();
             }
-            
+
             node = Iterables.getOnlyElement(nodes, null);
             LOG.debug("jclouds created {} for {}", node, setup.getDescription());
             if (node == null)
@@ -631,19 +628,19 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 sshHostAndPortOverride = Optional.of(portForwarder.openPortForwarding(
                         node,
                         node.getLoginPort(),
-                        Optional.<Integer>absent(), 
-                        Protocol.TCP, 
+                        Optional.<Integer>absent(),
+                        Protocol.TCP,
                         Cidr.UNIVERSAL));
             } else {
                 sshHostAndPortOverride = Optional.absent();
             }
-                
+
             if (waitForSshable && skipJcloudsSshing) {
                 // once that host:port is definitely reachable, we can create the user
                 waitForReachable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
                 userCredentials = createUser(computeService, node, sshHostAndPortOverride, setup);
             }
-            
+
             // Figure out which login-credentials to use
             LoginCredentials customCredentials = setup.get(CUSTOM_CREDENTIALS);
             if (customCredentials != null) {
@@ -666,7 +663,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // store the credentials, in case they have changed
             setup.putIfNotNull(JcloudsLocationConfig.PASSWORD, userCredentials.getOptionalPassword().orNull());
             setup.putIfNotNull(JcloudsLocationConfig.PRIVATE_KEY_DATA, userCredentials.getOptionalPrivateKey().orNull());
-            
+
             // Wait for the VM to be reachable over SSH
             if (waitForSshable) {
                 waitForReachable(computeService, node, sshHostAndPortOverride, userCredentials, setup);
@@ -674,7 +671,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 LOG.debug("Skipping ssh check for {} ({}) due to config waitForSshable=false", node, setup.getDescription());
             }
             usableTimestamp = Duration.of(provisioningStopwatch);
-            
+
             // Create a JcloudsSshMachineLocation, and register it
             sshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, userCredentials, sshHostAndPortOverride, setup);
             if (template!=null && sshMachineLocation.getTemplate()==null) {
@@ -710,11 +707,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             List<String> customisationForLogging = new ArrayList<String>();
             // Apply same securityGroups rules to iptables, if iptables is running on the node
             if (waitForSshable) {
-                
+
                 String setupScript = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL);
                 if (Strings.isNonBlank(setupScript)) {
                     customisationForLogging.add("custom setup script "+setupScript);
-                    
+
                     String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
                     Map<String, String> substitutions = (setupVarsString != null)
                             ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
@@ -723,19 +720,19 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     String script = TemplateProcessor.processTemplateContents(scriptContent, getManagementContext(), substitutions);
                     sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
                 }
-                
+
                 if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM)) {
                     customisationForLogging.add("point /dev/random to urandom");
-                    
-                    sshMachineLocation.execCommands("using urandom instead of random", 
+
+                    sshMachineLocation.execCommands("using urandom instead of random",
                             Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
                 }
 
-                
+
                 if (setup.get(GENERATE_HOSTNAME)) {
                     customisationForLogging.add("configure hostname");
-                    
-                    sshMachineLocation.execCommands("Generate hostname " + node.getName(), 
+
+                    sshMachineLocation.execCommands("Generate hostname " + node.getName(),
                             Arrays.asList("sudo hostname " + node.getName(),
                                     "sudo sed -i \"s/HOSTNAME=.*/HOSTNAME=" + node.getName() + "/g\" /etc/sysconfig/network",
                                     "sudo bash -c \"echo 127.0.0.1   `hostname` >> /etc/hosts\"")
@@ -745,12 +742,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 if (setup.get(OPEN_IPTABLES)) {
                     @SuppressWarnings("unchecked")
                     Iterable<Integer> inboundPorts = (Iterable<Integer>) setup.get(INBOUND_PORTS);
-                    
+
                     if (inboundPorts == null || Iterables.isEmpty(inboundPorts)) {
                         LOG.info("No ports to open in iptables (no inbound ports) for {} at {}", sshMachineLocation, this);
                     } else {
                         customisationForLogging.add("open iptables");
-                        
+
                         List<String> iptablesRules = createIptablesRulesForNetworkInterface(inboundPorts);
                         iptablesRules.add(IptablesCommands.saveIptablesRules());
                         List<String> batch = Lists.newArrayList();
@@ -769,36 +766,36 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         sshMachineLocation.execCommands("List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
                     }
                 }
-                
+
                 if (setup.get(STOP_IPTABLES)) {
                     customisationForLogging.add("stop iptables");
-                    
+
                     List<String> cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
                     sshMachineLocation.execCommands("Stopping iptables", cmds);
                 }
-                
+
                 List<String> extraKeyUrlsToAuth = setup.get(EXTRA_PUBLIC_KEY_URLS_TO_AUTH);
                 if (extraKeyUrlsToAuth!=null && !extraKeyUrlsToAuth.isEmpty()) {
                     List<String> extraKeyDataToAuth = MutableList.of();
                     for (String keyUrl: extraKeyUrlsToAuth) {
                         extraKeyDataToAuth.add(ResourceUtils.create().getResourceAsString(keyUrl));
                     }
-                    sshMachineLocation.execCommands("Authorizing ssh keys", 
+                    sshMachineLocation.execCommands("Authorizing ssh keys",
                         ImmutableList.of(new AuthorizeRSAPublicKeys(extraKeyDataToAuth).render(org.jclouds.scriptbuilder.domain.OsFamily.UNIX)));
                 }
 
             } else {
-                // Otherwise we have deliberately not waited to be ssh'able, so don't try now to 
+                // Otherwise we have deliberately not waited to be ssh'able, so don't try now to
                 // ssh to exec these commands!
             }
-            
+
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
                 customizer.customize(this, computeService, sshMachineLocation);
             }
-            
+
             customizedTimestamp = Duration.of(provisioningStopwatch);
-            
+
             LOG.info("Finished VM "+setup.getDescription()+" creation:"
                     + " "+sshMachineLocation.getUser()+"@"+sshMachineLocation.getAddress()+":"+sshMachineLocation.getPort()
                     + (Boolean.TRUE.equals(setup.get(LOG_CREDENTIALS))
@@ -818,11 +815,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
             // sometimes AWS nodes come up busted (eg ssh not allowed); just throw it back (and maybe try for another one)
             boolean destroyNode = (node != null) && Boolean.TRUE.equals(setup.get(DESTROY_ON_FAILURE));
-            
-            LOG.error("Failed to start VM for {}{}: {}", 
+
+            LOG.error("Failed to start VM for {}{}: {}",
                     new Object[] {setup.getDescription(), (destroyNode ? " (destroying "+node+")" : ""), e.getMessage()});
             LOG.debug(Throwables.getStackTraceAsString(e));
-            
+
             if (destroyNode) {
                 if (sshMachineLocation != null) {
                     releaseSafely(sshMachineLocation);
@@ -830,22 +827,22 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     releaseNodeSafely(node);
                 }
             }
-            
+
             throw Exceptions.propagate(e);
         }
     }
 
-    
+
     // ------------- constructing the template, etc ------------------------
-    
+
     private static interface CustomizeTemplateBuilder {
         void apply(TemplateBuilder tb, ConfigBag props, Object v);
     }
-    
+
     public static interface CustomizeTemplateOptions {
         void apply(TemplateOptions tb, ConfigBag props, Object v);
     }
-    
+
     /** properties which cause customization of the TemplateBuilder */
     public static final Map<ConfigKey<?>,CustomizeTemplateBuilder> SUPPORTED_TEMPLATE_BUILDER_PROPERTIES = ImmutableMap.<ConfigKey<?>,CustomizeTemplateBuilder>builder()
             .put(OS_64_BIT, new CustomizeTemplateBuilder() {
@@ -906,7 +903,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         /* done in the code, but included here so that it is in the map */
                     }})
             .build();
-    
+
     /** properties which cause customization of the TemplateOptions */
     public static final Map<ConfigKey<?>,CustomizeTemplateOptions> SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES = ImmutableMap.<ConfigKey<?>,CustomizeTemplateOptions>builder()
             .put(SECURITY_GROUPS, new CustomizeTemplateOptions() {
@@ -1008,7 +1005,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         if (v != null) {
                             t.overrideLoginPrivateKey(((CharSequence)v).toString());
                         }
-                    }})                    
+                    }})
             .put(KEY_PAIR, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof EC2TemplateOptions) {
@@ -1038,7 +1035,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         } else {
                             LOG.info("ignoring auto-generate-floating-ips({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
-                    }}) 
+                    }})
              .put(AUTO_ASSIGN_FLOATING_IP, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof NovaTemplateOptions) {
@@ -1048,14 +1045,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         } else {
                             LOG.info("ignoring auto-assign-floating-ip({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
-                    }}) 
-              .put(OVERRIDE_RAM, new CustomizeTemplateOptions() {
-                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        if (t instanceof AbiquoTemplateOptions) {
-                            ((AbiquoTemplateOptions)t).overrideRam((Integer)v);
-                        } else {
-                            LOG.info("ignoring overrideRam({}) in VM creation because not supported for cloud/type ({})", v, t);
-                        }     
                     }})
               .put(NETWORK_NAME, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
@@ -1128,7 +1117,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (!Strings.isEmpty(config.get(CLOUD_REGION_ID))) {
             templateBuilder.locationId(config.get(CLOUD_REGION_ID));
         }
-        
+
         // Apply the template builder and options properties
         for (Map.Entry<ConfigKey<?>, CustomizeTemplateBuilder> entry : SUPPORTED_TEMPLATE_BUILDER_PROPERTIES.entrySet()) {
             ConfigKey<?> name = entry.getKey();
@@ -1151,10 +1140,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         for (JcloudsLocationCustomizer customizer : getCustomizers(config)) {
             customizer.customize(this, computeService, templateBuilder);
         }
-        
+
         LOG.debug("jclouds using templateBuilder {} for provisioning in {} for {}", new Object[] {
             templateBuilder, this, config.getDescription()});
-        
+
         // Finally try to build the template
         Template template;
         try {
@@ -1183,7 +1172,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 + "see list of images in log. Root cause: "+e, e);
         }
         TemplateOptions options = template.getOptions();
-               
+
         for (Map.Entry<ConfigKey<?>, CustomizeTemplateOptions> entry : SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES.entrySet()) {
             ConfigKey<?> key = entry.getKey();
             CustomizeTemplateOptions code = entry.getValue();
@@ -1193,7 +1182,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         return template;
     }
-    
+
     protected void logAvailableTemplates(ConfigBag config) {
         LOG.info("Loading available images at "+this+" for reference...");
         ConfigBag m1 = ConfigBag.newInstanceCopying(config);
@@ -1209,7 +1198,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         for (Image img: imgs) {
             LOG.info(" Image: "+img);
         }
-        
+
         Set<? extends Hardware> profiles = computeServiceLessRestrictive.listHardwareProfiles();
         LOG.info(""+profiles.size()+" available profiles at "+this);
         for (Hardware profile: profiles) {
@@ -1222,12 +1211,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.info(" Location: "+assignableLocation);
         }
     }
-    
+
     protected SshMachineLocation createTemporarySshMachineLocation(HostAndPort hostAndPort, LoginCredentials creds, ConfigBag config) {
         Optional<String> initialPassword = creds.getOptionalPassword();
         Optional<String> initialPrivateKey = creds.getOptionalPrivateKey();
         String initialUser = creds.getUser();
-        
+
         Map<String,Object> sshProps = Maps.newLinkedHashMap(config.getAllConfig());
         sshProps.put("user", initialUser);
         sshProps.put("address", hostAndPort.getHostText());
@@ -1235,7 +1224,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (initialPassword.isPresent()) sshProps.put("password", initialPassword.get());
         if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
         if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
-        
+
         if (isManaged()) {
             return getManagementContext().getLocationManager().createLocation(sshProps, SshMachineLocation.class);
         } else {
@@ -1249,39 +1238,39 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected LoginCredentials createUser(ComputeService computeService, NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, ConfigBag config) {
         Image image = (node.getImageId() != null) ? computeService.getImage(node.getImageId()) : null;
         UserCreation userCreation = createUserStatements(image, config);
-        
+
         if (!userCreation.statements.isEmpty()) {
             // If unsure of OS family, default to unix for rendering statements.
             org.jclouds.scriptbuilder.domain.OsFamily scriptOsFamily;
             if (node.getOperatingSystem() == null) {
                 scriptOsFamily = org.jclouds.scriptbuilder.domain.OsFamily.UNIX;
             } else {
-                scriptOsFamily = (node.getOperatingSystem().getFamily() == org.jclouds.compute.domain.OsFamily.WINDOWS) 
+                scriptOsFamily = (node.getOperatingSystem().getFamily() == org.jclouds.compute.domain.OsFamily.WINDOWS)
                         ? org.jclouds.scriptbuilder.domain.OsFamily.WINDOWS
                         : org.jclouds.scriptbuilder.domain.OsFamily.UNIX;
             }
-            
+
             List<String> commands = Lists.newArrayList();
             for (Statement statement : userCreation.statements) {
                 InitAdminAccess initAdminAccess = new InitAdminAccess(new AdminAccessConfiguration.Default());
                 initAdminAccess.visit(statement);
                 commands.add(statement.render(scriptOsFamily));
             }
-    
+
             LoginCredentials initialCredentials = node.getCredentials();
             Optional<String> initialPassword = initialCredentials.getOptionalPassword();
             Optional<String> initialPrivateKey = initialCredentials.getOptionalPrivateKey();
             String initialUser = initialCredentials.getUser();
             String address = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
             int port = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getPort() : node.getLoginPort();
-            
+
             Map<String,Object> sshProps = Maps.newLinkedHashMap(config.getAllConfig());
             sshProps.put("user", initialUser);
             sshProps.put("address", address);
             sshProps.put("port", port);
             if (initialPassword.isPresent()) sshProps.put("password", initialPassword.get());
             if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
-            
+
             // TODO Retrying lots of times as workaround for vcloud-director. There the guest customizations
             // can cause the VM to reboot shortly after it was ssh'able.
             Map<String,Object> execProps = Maps.newLinkedHashMap();
@@ -1301,7 +1290,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 } else {
                     sshLoc = new SshMachineLocation(sshProps);
                 }
-                
+
                 int exitcode = sshLoc.execScript(execProps, "create-user", commands);
                 if (exitcode != 0) {
                     LOG.warn("exit code {} when creating user for {}; usage may subsequently fail", exitcode, node);
@@ -1314,13 +1303,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         return userCreation.createdUserCredentials;
     }
-    
+
     /**
      * Setup the TemplateOptions to create the user.
      */
     protected LoginCredentials initTemplateForCreateUser(Template template, ConfigBag config) {
         UserCreation userCreation = createUserStatements(template.getImage(), config);
-        
+
         if (userCreation.statements.size() > 0) {
             TemplateOptions options = template.getOptions();
             options.runScript(new StatementList(userCreation.statements));
@@ -1328,38 +1317,38 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         return userCreation.createdUserCredentials;
     }
-    
+
     protected static class UserCreation {
         public final LoginCredentials createdUserCredentials;
         public final List<Statement> statements;
-        
+
         public UserCreation(LoginCredentials creds, List<Statement> statements) {
             this.createdUserCredentials = creds;
             this.statements = statements;
         }
     }
-    
+
     /**
      * Returns the commands required to create the user, to be used for connecting (e.g. over ssh)
      * to the machine; also returns the expected login credentials.
      * <p>
-     * The returned login credentials may be null if we haven't done any user-setup and no specific 
+     * The returned login credentials may be null if we haven't done any user-setup and no specific
      * user was supplied (i.e. if {@code dontCreateUser} was true and {@code user} was null or blank).
      * In which case, the caller should use the jclouds node's login credentials.
      * <p>
-     * There are quite a few configuration options. Depending on their values, the user-creation 
+     * There are quite a few configuration options. Depending on their values, the user-creation
      * behaves differently:
      * <ul>
      *   <li>{@code dontCreateUser} says not to run any user-setup commands at all. If {@code user} is
      *       non-empty (including with the default value), then that user will subsequently be used,
      *       otherwise the (inferred) {@code loginUser} will be used.
      *   <li>{@code loginUser} refers to the existing user that jclouds should use when setting up the VM.
-     *       Normally this will be inferred from the image (i.e. doesn't need to be explicitly set), but sometimes 
+     *       Normally this will be inferred from the image (i.e. doesn't need to be explicitly set), but sometimes
      *       the image gets it wrong so this can be a handy override.
      *   <li>{@code user} is the username for brooklyn to subsequently use when ssh'ing to the machine.
      *       If not explicitly set, its value will default to the username of the user running brooklyn.
      *       <ul>
-     *         <li>If the {@code user} value is null or empty, then the (inferred) {@code loginUser} will 
+     *         <li>If the {@code user} value is null or empty, then the (inferred) {@code loginUser} will
      *             subsequently be used, setting up the password/authorizedKeys for that loginUser.
      *         <li>If the {@code user} is "root", then setup the password/authorizedKeys for root.
      *         <li>If the {@code user} equals the (inferred) {@code loginUser}, then don't try to create this
@@ -1373,16 +1362,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      *       Related is {@code publicKeyFile}, which is used to populate publicKeyData.
      *   <li>{@code password} is the password to set for the user. If null or blank, then a random password
      *       will be auto-generated and set.
-     *   <li>{@code privateKeyData} is the key to use when subsequent ssh'ing, if not null or blank. 
+     *   <li>{@code privateKeyData} is the key to use when subsequent ssh'ing, if not null or blank.
      *       Note the default is to use {@code ~/.ssh/id_rsa} or {@code ~/.ssh/id_dsa}.
      *       The subsequent preferences for ssh'ing are:
      *       <ul>
      *         <li>Use the {@code privateKeyData} if not null or blank (including if using default)
-     *         <li>Use the {@code password} (or the auto-generated password if that is blank). 
+     *         <li>Use the {@code password} (or the auto-generated password if that is blank).
      *       </ul>
      *   <li>{@code grantUserSudo} determines whether or not the created user may run the sudo command.</li>
      * </ul>
-     *   
+     *
      * @param image  The image being used to create the VM
      * @param config Configuration for creating the VM
      * @return       The commands required to create the user, along with the expected login credentials for that user,
@@ -1390,7 +1379,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      */
     protected UserCreation createUserStatements(@Nullable Image image, ConfigBag config) {
         //NB: private key is not installed remotely, just used to get/validate the public key
-        
+
         LoginCredentials createdUserCreds = null;
         String user = getUser(config);
         String explicitLoginUser = config.get(LOGIN_USER);
@@ -1401,18 +1390,18 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         credential.checkNoErrors().logAnyWarnings();
         String passwordToSet = Strings.isNonBlank(credential.getPassword()) ? credential.getPassword() : Identifiers.makeRandomId(12);
         List<Statement> statements = Lists.newArrayList();
-        
+
         if (dontCreateUser) {
             // dontCreateUser:
             // if caller has not specified a user, we'll just continue to use the loginUser;
             // if caller *has*, we set up our credentials assuming that user and credentials already exist
-            
+
             if (Strings.isBlank(user)) {
-                // createdUserCreds returned from this method will be null; 
+                // createdUserCreds returned from this method will be null;
                 // we will use the creds returned by jclouds on the node
                 LOG.info("Not setting up any user (subsequently using loginUser {})", user, loginUser);
                 config.put(USER, loginUser);
-                
+
             } else {
                 LOG.info("Not creating user {}, and not installing its password or authorizing keys (assuming it exists)", user);
 
@@ -1422,7 +1411,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     createdUserCreds = LoginCredentials.builder().user(user).privateKey(credential.getPrivateKeyData()).build();
                 }
             }
-            
+
         } else if (Strings.isBlank(user) || user.equals(loginUser) || user.equals(ROOT_USERNAME)) {
             // For subsequent ssh'ing, we'll be using the loginUser
             if (Strings.isBlank(user)) {
@@ -1431,28 +1420,28 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
 
             // Using the pre-existing loginUser; setup the publicKey/password so can login as expected
-            
-            // *Always* change the password (unless dontCreateUser was specified) 
+
+            // *Always* change the password (unless dontCreateUser was specified)
             statements.add(new ReplaceShadowPasswordEntry(Sha512Crypt.function(), user, passwordToSet));
             createdUserCreds = LoginCredentials.builder().user(user).password(passwordToSet).build();
-            
+
             if (Strings.isNonBlank(credential.getPublicKeyData())) {
                 statements.add(new AuthorizeRSAPublicKeys("~"+user+"/.ssh", ImmutableList.of(credential.getPublicKeyData())));
                 if (!credential.isUsingPassword() && Strings.isNonBlank(credential.getPrivateKeyData())) {
                     createdUserCreds = LoginCredentials.builder().user(user).privateKey(credential.getPrivateKeyData()).build();
                 }
             }
-            
+
         } else {
             String pubKey = credential.getPublicKeyData();
             String privKey = credential.getPrivateKeyData();
-            
+
             if (credential.isEmpty()) {
                 /*
                  * TODO have an explicit `create_new_key_per_machine` config key.
                  * error if privateKeyData is set in this case.
                  * publicKeyData automatically added to EXTRA_SSH_KEY_URLS_TO_AUTH.
-                 * 
+                 *
                  * if this config key is not set, use a key `brooklyn_id_rsa` and `.pub` in `MGMT_BASE_DIR`,
                  * with permission 0600, creating it if necessary, and logging the fact that this was created.
                  */
@@ -1470,21 +1459,21 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
             // ensure credential is not used any more, as we have extracted all useful info
             credential = null;
-            
+
             // Create the user
             // note AdminAccess requires _all_ fields set, due to http://code.google.com/p/jclouds/issues/detail?id=1095
             AdminAccess.Builder adminBuilder = AdminAccess.builder()
                     .adminUsername(user)
                     .grantSudoToAdminUser(grantUserSudo);
-            
+
             boolean useKey = Strings.isNonBlank(pubKey);
-            
+
             // always set this password; if not supplied, it will be a random string
             adminBuilder.adminPassword(passwordToSet);
             // log the password also, in case we need it
             LOG.debug("Password '"+passwordToSet+"' being created for user '"+user+"' at the machine we are about to provision in "+this+"; "+
                 (useKey ? "however a key will be used to access it" : "this will be the only way to log in"));
-            
+
             if (grantUserSudo && config.get(JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH)) {
                 // the default - set root password which we forget, because we have sudo acct
                 // (and lock out root and passwords from ssh)
@@ -1492,26 +1481,26 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 adminBuilder.loginPassword(Identifiers.makeRandomId(12));
             } else {
                 adminBuilder.resetLoginPassword(false);
-                adminBuilder.loginPassword(Identifiers.makeRandomId(12)+"-ignored");                
+                adminBuilder.loginPassword(Identifiers.makeRandomId(12)+"-ignored");
             }
-            
+
             if (useKey) {
                 adminBuilder.authorizeAdminPublicKey(true).adminPublicKey(pubKey);
             } else {
                 adminBuilder.authorizeAdminPublicKey(false).adminPublicKey(Identifiers.makeRandomId(12)+"-ignored");
             }
-            
+
             // jclouds wants us to give it the private key, otherwise it might refuse to authorize the public key
             // (in AdminAccess.build, if adminUsername != null && adminPassword != null);
             // we don't want to give it the private key, but we *do* want the public key authorized;
             // this code seems to trigger that.
             // (we build the creds below)
             adminBuilder.installAdminPrivateKey(false).adminPrivateKey(Identifiers.makeRandomId(12)+"-ignored");
-            
+
             // lock SSH means no root login and no passwordless login
             // if we're using a password or we don't have sudo, then don't do this!
             adminBuilder.lockSsh(useKey && grantUserSudo && !config.get(JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH));
-            
+
             statements.add(adminBuilder.build());
 
             if (useKey) {
@@ -1520,7 +1509,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 createdUserCreds = LoginCredentials.builder().user(user).password(passwordToSet).build();
             }
         }
-        
+
         String customTemplateOptionsScript = config.get(CUSTOM_TEMPLATE_OPTIONS_SCRIPT_CONTENTS);
         if (Strings.isNonBlank(customTemplateOptionsScript)) {
             statements.add(new LiteralStatement(customTemplateOptionsScript));
@@ -1544,7 +1533,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         setHostnameUpdatingCredentials(setup, metadata);
         return rebindMachine(setup);
     }
-    
+
     /**
      * Brings an existing machine with the given details under management.
      * <p>
@@ -1558,20 +1547,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public JcloudsSshMachineLocation rebindMachine(ConfigBag setup) throws NoMachinesAvailableException {
         try {
             if (setup.getDescription()==null) setCreationString(setup);
-            
+
             final String rawId = (String) setup.getStringKey("id");
             final String rawHostname = (String) setup.getStringKey("hostname");
             String user = checkNotNull(getUser(setup), "user");
             final String rawRegion = (String) setup.getStringKey("region");
-            
-            LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}", 
-                    new Object[] {rawId!=null ? rawId : "<lookup>", 
-                        user, 
-                        (rawHostname != null ? rawHostname : "<unspecified>"), 
+
+            LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}",
+                    new Object[] {rawId!=null ? rawId : "<lookup>",
+                        user,
+                        (rawHostname != null ? rawHostname : "<unspecified>"),
                         getProvider()});
-            
+
             ComputeService computeService = getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(setup, true);
-            
+
             Set<? extends NodeMetadata> candidateNodes = computeService.listNodesDetailsMatching(new Predicate<ComputeMetadata>() {
                 @Override
                 public boolean apply(ComputeMetadata input) {
@@ -1585,18 +1574,18 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     if (!(input instanceof NodeMetadata)) return false;
                     if (rawHostname!=null && rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
                     if (rawHostname!=null && ((NodeMetadata)input).getPublicAddresses().contains(rawHostname)) return true;
-                    
+
                     if (rawId!=null && rawId.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
                     if (rawId!=null && ((NodeMetadata)input).getPublicAddresses().contains(rawId)) return true;
                     // don't do private IP's because those might be repeated
-                    
+
                     if (rawId!=null && rawId.equalsIgnoreCase( ((NodeMetadata)input).getProviderId() )) return true;
                     if (rawHostname!=null && rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getProviderId() )) return true;
-                    
+
                     return false;
                 }
             });
-            
+
             if (candidateNodes.isEmpty())
                 throw new IllegalArgumentException("Jclouds node not found for rebind, looking for id="+rawId+" and hostname="+rawHostname);
             if (candidateNodes.size()>1)
@@ -1609,12 +1598,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 //override credentials
                 node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
             }
-            
+
             // TODO confirm we can SSH ?
             // NB if rawHostname not set, get the hostname using getPublicHostname(node, Optional.<HostAndPort>absent(), setup);
 
             return registerJcloudsSshMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
-            
+
         } catch (IOException e) {
             throw Exceptions.propagate(e);
         }
@@ -1626,20 +1615,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     // -------------- create the SshMachineLocation instance, and connect to it etc ------------------------
-    
+
     /** @deprecated since 0.7.0 use {@link #registerJcloudsSshMachineLocation(ComputeService, NodeMetadata, LoginCredentials, Optional, ConfigBag)} */
     @Deprecated
     protected final JcloudsSshMachineLocation registerJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
         LOG.warn("Using deprecated registerJcloudsSshMachineLocation: now wants computeService passed", new Throwable("source of deprecated registerJcloudsSshMachineLocation invocation"));
         return registerJcloudsSshMachineLocation(null, node, null, sshHostAndPort, setup);
     }
-    
+
     protected JcloudsSshMachineLocation registerJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, LoginCredentials initialCredentials, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
         if (initialCredentials==null)
             initialCredentials = node.getCredentials();
-        
+
         String vmHostname = getPublicHostname(node, sshHostAndPort, setup);
-        
+
         JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(computeService, node, vmHostname, sshHostAndPort, setup);
         machine.setParent(this);
         vmInstanceIds.put(machine, node.getId());
@@ -1667,7 +1656,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // fine, it resolves
         } catch (Exception e) {
             // occurs if an unresolvable hostname is given as vmHostname, and the machine only has private IP addresses but they are reachable
-            // TODO cleanup use of getPublicHostname so its semantics are clearer, returning reachable hostname or ip, and 
+            // TODO cleanup use of getPublicHostname so its semantics are clearer, returning reachable hostname or ip, and
             // do this check/fix there instead of here!
             Exceptions.propagateIfFatal(e);
             LOG.debug("Could not resolve reported address '"+address+"' for "+vmHostname+" ("+setup.getDescription()+"/"+node+"), requesting reachable address");
@@ -1675,18 +1664,18 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // this has sometimes already been done in waitForReachable (unless skipped) but easy enough to do again
             address = JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
         }
-        
+
         if (LOG.isDebugEnabled())
-            LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} ({}/{}) for {}/{}", 
+            LOG.debug("creating JcloudsSshMachineLocation representation for {}@{} ({}/{}) for {}/{}",
                     new Object[] {
-                            getUser(setup), 
-                            address, 
+                            getUser(setup),
+                            address,
                             Sanitizer.sanitize(sshConfig),
                             sshHostAndPort,
-                            setup.getDescription(), 
+                            setup.getDescription(),
                             node
                     });
-        
+
         if (isManaged()) {
             return getManagementContext().getLocationManager().createLocation(LocationSpec.create(JcloudsSshMachineLocation.class)
                     .configure("displayName", vmHostname)
@@ -1711,8 +1700,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.warn("Using deprecated JcloudsSshMachineLocation constructor because "+this+" is not managed");
             return new JcloudsSshMachineLocation(MutableMap.builder()
                     .put("displayName", vmHostname)
-                    .put("address", address) 
-                    .put("port", sshHostAndPort.isPresent() ? sshHostAndPort.get().getPort() : node.getLoginPort()) 
+                    .put("address", address)
+                    .put("port", sshHostAndPort.isPresent() ? sshHostAndPort.get().getPort() : node.getLoginPort())
                     .put("user", getUser(setup))
                     // don't think "config" does anything
                     .putAll(sshConfig)
@@ -1731,7 +1720,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     // -------------- give back the machines------------------
-    
+
     protected Map<String,Object> extractSshConfig(ConfigBag setup, NodeMetadata node) {
         ConfigBag nodeConfig = new ConfigBag();
         if (node!=null && node.getCredentials() != null) {
@@ -1755,7 +1744,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     protected String extractNodeLocationId(ConfigBag setup, NodeMetadata node, LocationScope scope) {
         org.jclouds.domain.Location nodeLoc = node.getLocation();
-        if(nodeLoc == null) return null; 
+        if(nodeLoc == null) return null;
         do {
             if (nodeLoc.getScope() == scope) return nodeLoc.getId();
             nodeLoc = nodeLoc.getParent();
@@ -1771,9 +1760,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.info("Attempted release of unknown machine "+machine+" in "+toString());
             throw new IllegalArgumentException("Unknown machine "+machine);
         }
-        
+
         LOG.info("Releasing machine {} in {}, instance id {}", new Object[] {machine, this, instanceId});
-        
+
         Exception tothrow = null;
         try {
             releasePortForwarding(machine);
@@ -1809,7 +1798,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected void releaseNodeSafely(NodeMetadata node) {
         String instanceId = node.getId();
         LOG.info("Releasing node {} in {}, instance id {}", new Object[] {node, this, instanceId});
-        
+
         try {
             releaseNode(instanceId);
         } catch (Exception e) {
@@ -1840,7 +1829,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     protected void releasePortForwarding(SshMachineLocation machine) {
         // TODO Implementation needs revisisted. It relies on deprecated PortForwardManager methods.
-        
+
         boolean usePortForwarding = Boolean.TRUE.equals(machine.getConfig(USE_PORT_FORWARDING));
         JcloudsPortForwarderExtension portForwarder = machine.getConfig(PORT_FORWARDER);
         PortForwardManager portForwardManager = machine.getConfig(PORT_FORWARDING_MANAGER);
@@ -1849,7 +1838,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (portForwarder == null) {
             LOG.debug("No port-forwarding to close (because portForwarder null) on release of " + machine);
         } else {
-            // Release the port-forwarding for the login-port, which was explicilty created by JcloudsLocation 
+            // Release the port-forwarding for the login-port, which was explicilty created by JcloudsLocation
             if (usePortForwarding && node != null) {
                 HostAndPort sshHostAndPortOverride = machine.getSshHostAndPort();
                 LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, sshHostAndPortOverride, node.getLoginPort()});
@@ -1867,7 +1856,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             } else {
                 mappings = ImmutableSet.of();
             }
-            
+
             for (PortMapping mapping : mappings) {
                 HostAndPort publicEndpoint = mapping.getPublicEndpoint();
                 int targetPort = mapping.getPrivatePort();
@@ -1878,7 +1867,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
             }
         }
-        
+
         // Forget all port mappings associated with this VM
         if (portForwardManager != null) {
             portForwardManager.forgetPortMappings(machine);
@@ -1898,9 +1887,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         OsCredential localCredentials = LocationConfigUtils.getOsCredential(setup).checkNoErrors();
         LoginCredentials nodeCredentials = LoginCredentials.fromCredentials(node.getCredentials());
 
-        LOG.debug("Credentials extracted for {}: {}/{} with {}/{}", new Object[] { node, 
+        LOG.debug("Credentials extracted for {}: {}/{} with {}/{}", new Object[] { node,
             user, nodeCredentials.getUser(), localCredentials, nodeCredentials });
-        
+
         if (Strings.isNonBlank(nodeCredentials.getUser())) {
             if (Strings.isBlank(user)) {
                 setup.put(USER, user = nodeCredentials.getUser());
@@ -1909,7 +1898,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 LOG.warn("overriding username 'root' in favour of '"+nodeCredentials.getUser()+"' at {}; this behaviour may be removed in future", node);
                 setup.put(USER, user = nodeCredentials.getUser());
             }
-            
+
             String pkd = Strings.maybeNonBlank(localCredentials.getPrivateKeyData()).or(nodeCredentials.getOptionalPrivateKey().orNull());
             String pwd = Strings.maybeNonBlank(localCredentials.getPassword()).or(nodeCredentials.getOptionalPassword().orNull());
             if (Strings.isBlank(user) || (Strings.isBlank(pkd) && pwd==null)) {
@@ -1918,14 +1907,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 return null;
             } else {
                 LoginCredentials.Builder resultBuilder = LoginCredentials.builder().user(user);
-                if (pwd!=null && (Strings.isBlank(pkd) || localCredentials.isUsingPassword())) 
+                if (pwd!=null && (Strings.isBlank(pkd) || localCredentials.isUsingPassword()))
                     resultBuilder.password(pwd);
-                else // pkd guaranteed non-blank due to above  
+                else // pkd guaranteed non-blank due to above
                     resultBuilder.privateKey(pkd);
-                return resultBuilder.build();        
+                return resultBuilder.build();
             }
         }
-        
+
         LOG.warn("No node-credentials or admin-access available for node "+node+" in "+this+"; will likely fail subsequently");
         return null;
     }
@@ -1933,21 +1922,21 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected void waitForReachable(final ComputeService computeService, final NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, final LoginCredentials expectedCredentials, ConfigBag setup) {
         String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
         checkArgument(!"false".equalsIgnoreCase(waitForSshable), "waitForReachable called despite waitForSshable=%s", waitForSshable);
-        
+
         String vmIp = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
         if (vmIp==null) LOG.warn("Unable to extract IP for "+node+" ("+setup.getDescription()+"): subsequent connection attempt will likely fail");
-        
+
         int vmPort = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getPortOrDefault(22) : 22;
-        
+
         long delayMs = -1;
         try {
             delayMs = Time.parseTimeString(""+waitForSshable);
         } catch (Exception e) {
             // normal if 'true'; just fall back to default
         }
-        if (delayMs<0) 
+        if (delayMs<0)
             delayMs = Time.parseTimeString(WAIT_FOR_SSHABLE.getDefaultValue());
-        
+
         String user = expectedCredentials.getUser();
         if (LOG.isDebugEnabled()) {
             Optional<String> password;
@@ -1959,7 +1948,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 password = expectedCredentials.getOptionalPassword().isPresent() ? Optional.of("******") : Optional.<String>absent();
                 key = expectedCredentials.getOptionalPrivateKey().isPresent() ? Optional.of("******") : Optional.<String>absent();
             }
-            LOG.debug("VM {}: reported online, now waiting {} for it to be sshable on {}@{}:{}{}; using credentials password={}; key={}", 
+            LOG.debug("VM {}: reported online, now waiting {} for it to be sshable on {}@{}:{}{}; using credentials password={}; key={}",
                     new Object[] {
                             setup.getDescription(), Time.makeTimeStringRounded(delayMs),
                             user, vmIp, vmPort,
@@ -1968,7 +1957,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             key.or("<absent>")
                     });
         }
-        
+
         Callable<Boolean> checker;
         if (hostAndPortOverride.isPresent()) {
             final SshMachineLocation machine = createTemporarySshMachineLocation(hostAndPortOverride.get(), expectedCredentials, setup);
@@ -1981,14 +1970,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             checker = new Callable<Boolean>() {
                 public Boolean call() {
                     Statement statement = Statements.newStatementList(exec("hostname"));
-                    ExecResponse response = computeService.runScriptOnNode(node.getId(), statement, 
+                    ExecResponse response = computeService.runScriptOnNode(node.getId(), statement,
                             overrideLoginCredentials(expectedCredentials).runAsRoot(false));
                     return response.getExitStatus() == 0;
                 }};
         }
-        
+
         Stopwatch stopwatch = Stopwatch.createStarted();
-        
+
         ReferenceWithError<Boolean> reachable = new Repeater()
             .every(1,SECONDS)
             .until(checker)
@@ -2000,7 +1989,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     user+"@"+vmIp+" ("+setup.getDescription()+") after waiting "+
                     Time.makeTimeStringRounded(delayMs), reachable.getError());
         }
-        
+
         LOG.debug("VM {}: is sshable after {} on {}@{}",new Object[] {
                 setup.getDescription(), Time.makeTimeStringRounded(stopwatch),
                 user, vmIp});
@@ -2011,13 +2000,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     protected void setHostnameUpdatingCredentials(ConfigBag setup, NodeMetadata metadata) {
         List<String> usersTried = new ArrayList<String>();
-        
+
         String originalUser = getUser(setup);
         if (groovyTruth(originalUser)) {
             if (setHostname(setup, metadata, false)) return;
             usersTried.add(originalUser);
         }
-        
+
         LoginCredentials credentials = metadata.getCredentials();
         if (credentials!=null) {
             if (Strings.isNonBlank(credentials.getUser())) setup.put(USER, credentials.getUser());
@@ -2030,7 +2019,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
             usersTried.add(getUser(setup));
         }
-        
+
         for (String u: COMMON_USER_NAMES_TO_TRY) {
             setup.put(USER, u);
             if (setHostname(setup, metadata, false)) {
@@ -2044,7 +2033,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         setup.put(USER, originalUser);
         setHostname(setup, metadata, true);
     }
-    
+
     protected boolean setHostname(ConfigBag setup, NodeMetadata metadata, boolean rethrow) {
         try {
             setup.put(SshTool.PROP_HOST, getPublicHostname(metadata, Optional.<HostAndPort>absent(), setup));
@@ -2052,7 +2041,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         } catch (Exception e) {
             if (rethrow) {
                 LOG.warn("couldn't connect to "+metadata+" when trying to discover hostname (rethrowing): "+e);
-                throw Exceptions.propagate(e);                
+                throw Exceptions.propagate(e);
             }
             return false;
         }
@@ -2060,13 +2049,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     /**
      * Attempts to obtain the hostname or IP of the node, as advertised by the cloud provider.
-     * Prefers public, reachable IPs. 
+     * Prefers public, reachable IPs.
      * For some clouds (e.g. aws-ec2), it will attempt to find the public hostname.
      */
     protected String getPublicHostname(NodeMetadata node, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) {
         String provider = (setup != null) ? setup.get(CLOUD_PROVIDER) : null;
         if (provider == null) provider= getProvider();
-        
+
         if ("aws-ec2".equals(provider)) {
             HostAndPort inferredHostAndPort = null;
             if (!sshHostAndPort.isPresent()) {
@@ -2089,10 +2078,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
             }
         }
-        
+
         return getPublicHostnameGeneric(node, setup);
     }
-    
+
     private String getPublicHostnameGeneric(NodeMetadata node, @Nullable ConfigBag setup) {
         //prefer the public address to the hostname because hostname is sometimes wrong/abbreviated
         //(see that javadoc; also e.g. on rackspace, the hostname lacks the domain)
@@ -2106,17 +2095,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             return null;
         }
     }
-    
+
     private String getPublicHostnameAws(HostAndPort sshHostAndPort, ConfigBag setup) {
         SshMachineLocation sshLocByIp = null;
         try {
             ConfigBag sshConfig = extractSshConfig(setup, new ConfigBag());
-            
+
             // TODO messy way to get an SSH session
             if (isManaged()) {
                 sshLocByIp = getManagementContext().getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
-                        .configure("address", sshHostAndPort.getHostText()) 
-                        .configure("port", sshHostAndPort.getPort()) 
+                        .configure("address", sshHostAndPort.getHostText())
+                        .configure("port", sshHostAndPort.getPort())
                         .configure("user", getUser(setup))
                         .configure(sshConfig.getAllConfig()));
             } else {
@@ -2128,7 +2117,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         .build();
                 sshLocByIp = new SshMachineLocation(locationProps);
             }
-            
+
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             ByteArrayOutputStream errStream = new ByteArrayOutputStream();
             int exitcode = sshLocByIp.execCommands(
@@ -2147,9 +2136,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             Streams.closeQuietly(sshLocByIp);
         }
     }
-    
+
     // ------------ static converters (could go to a new file) ------------------
-    
+
     public static File asFile(Object o) {
         if (o instanceof File) return (File)o;
         if (o == null) return null;
@@ -2221,7 +2210,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected static String[] toStringArray(Object v) {
         return toListOfStrings(v).toArray(new String[0]);
     }
-    
+
     protected static List<String> toListOfStrings(Object v) {
         List<String> result = Lists.newArrayList();
         if (v instanceof Iterable) {
@@ -2239,7 +2228,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         return result;
     }
-    
+
     protected static byte[] toByteArray(Object v) {
         if (v instanceof byte[]) {
             return (byte[]) v;
@@ -2249,7 +2238,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             throw new IllegalArgumentException("Invalid type for byte[]: "+v+" of type "+v.getClass());
         }
     }
-    
+
     // Handles GString
     protected static Map<String,String> toMapStringString(Object v) {
         if (v instanceof Map<?,?>) {
@@ -2267,7 +2256,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     (v != null ? " of type "+v.getClass() : ""));
         }
     }
-    
+
     private List<String> createIptablesRulesForNetworkInterface(Iterable<Integer> ports) {
        List<String> iptablesRules = Lists.newArrayList();
        for (Integer port : ports) {
@@ -2275,10 +2264,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
        }
        return iptablesRules;
     }
-    
+
     @Override
     public PersistenceObjectStore newPersistenceObjectStore(String container) {
         return new JcloudsBlobStoreBasedObjectStore(this, container);
     }
-    
+
 }
