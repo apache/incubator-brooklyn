@@ -75,9 +75,9 @@ define([
             this.$("#summary").html(this.summaryView.render().el);
             this.$("#sensors").html(this.sensorsView.render().el);
             this.$("#effectors").html(this.effectorsView.render().el);
-            this.$("#policies").html(this.policiesView.render().el);
+            //this.$("#policies").html(this.policiesView.render().el);
             this.$("#activities").html(this.activitiesView.render().el);
-            this.$("#advanced").html(this.advancedView.render().el);
+            //this.$("#advanced").html(this.advancedView.render().el);
         },
         beforeClose:function () {
             this.summaryView.close();

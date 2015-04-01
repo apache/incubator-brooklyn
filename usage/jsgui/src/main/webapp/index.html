@@ -22,9 +22,9 @@ under the License.
 <head>
     <meta charset='utf-8'/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Brooklyn Web Console (Javascript GUI)">
+    <meta name="description" content="Foghorn Deployment Manager UI">
 
-    <title>Brooklyn JS REST client</title>
+    <title>Foghorn Manager</title>
 
     <link rel="stylesheet" href="/assets/css/styles.css">
     <link rel="stylesheet" href="/assets/css/brooklyn.css">
@@ -51,16 +51,18 @@ under the License.
             <div class="menubar-top">
                 <ul class="nav">
                     <li><a href="#v1/home" class="nav1 nav1_home">Home</a></li>
-                    <li><a href="#v1/applications" class="nav1 nav1_apps">Applications</a></li>
-                    <li><a href="#v1/catalog" class="nav1 nav1_catalog">Catalog</a></li>
-                    <li class="dropdown">
-                        <a href="#" class="nav1 nav1_script dropdown-toggle" data-toggle="dropdown">Script</a>
-                        <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                            <li><a href="#v1/apidoc" class="nav1 nav1_apidoc">REST API</a></li>
-                            <li><a href="#v1/script/groovy" class="nav1 nav1_groovy">Groovy</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="#v1/help" class="nav1 nav1_help"><b>?</b></a></li>
+                    <li><a href="#v1/applications" class="nav1 nav1_apps">Deployments</a></li>
+                    <div style="display:none">
+                        <li><a href="#v1/catalog" class="nav1 nav1_catalog">Catalog</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="nav1 nav1_script dropdown-toggle" data-toggle="dropdown">Script</a>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                                <li><a href="#v1/apidoc" class="nav1 nav1_apidoc">REST API</a></li>
+                                <li><a href="#v1/script/groovy" class="nav1 nav1_groovy">Groovy</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#v1/help" class="nav1 nav1_help"><b>?</b></a></li>
+                    </div>
                 </ul>
             </div>
         </div>
