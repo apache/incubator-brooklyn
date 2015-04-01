@@ -27,6 +27,9 @@ import java.util.Set;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.task.ssh.SshTasks;
 
 import com.google.common.collect.ImmutableList;
 
@@ -146,15 +149,39 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
      * @see JavaWebAppSoftwareProcess#deploy(String, String) for details of how input filenames are handled
      */
     @Override
-    public String deploy(String url, String targetName) {
-        String canonicalTargetName = getFilenameContextMapper().convertDeploymentTargetNameToFilename(targetName);
-        String dest = getDeployDir() + "/" + canonicalTargetName;
-        log.info("{} deploying {} to {}:{}", new Object[]{entity, url, getHostname(), dest});
-        // create a backup
-        getMachine().execCommands("backing up old war", ImmutableList.of(String.format("mv -f %s %s.bak > /dev/null 2>&1", dest, dest))); //back up old file/directory
-        int result = copyResource(url, dest);
-        log.debug("{} deployed {} to {}:{}: result {}", new Object[]{entity, url, getHostname(), dest, result});
-        if (result!=0) log.warn("Problem deploying {} to {}:{} for {}: result {}", new Object[]{url, getHostname(), dest, entity, result}); 
+    public String deploy(final String url, final String targetName) {
+        final String canonicalTargetName = getFilenameContextMapper().convertDeploymentTargetNameToFilename(targetName);
+        final String dest = getDeployDir() + "/" + canonicalTargetName;
+        //write to a .tmp so autodeploy is not triggered during upload
+        final String tmpDest = dest + ".tmp";
+        final String msg = String.format("deploying %s to %s:%s", new Object[]{url, getHostname(), dest});
+        log.info(entity + " " + msg);
+        Tasks.setBlockingDetails(msg);
+        try {
+            final String copyTaskMsg = String.format("copying %s to %s:%s", new Object[]{url, getHostname(), tmpDest});
+            DynamicTasks.queue(copyTaskMsg, new Runnable() {
+                @Override
+                public void run() {
+                    int result = copyResource(url, tmpDest);
+                    if (result != 0) {
+                        throw new IllegalStateException("Invalud result " + result + " while " + copyTaskMsg);
+                    }
+                }
+            });
+
+            // create a backup
+            DynamicTasks.queue(SshTasks.newSshExecTaskFactory(getMachine(), String.format("mv -f %s %s.bak", dest, dest))
+                    .allowingNonZeroExitCode());
+
+            //rename temporary upload file to .war to be picked up for deployment
+            DynamicTasks.queue(SshTasks.newSshExecTaskFactory(getMachine(), String.format("mv -f %s %s", tmpDest, dest))
+                    .requiringExitCodeZero());
+            log.debug("{} deployed {} to {}:{}", new Object[]{entity, url, getHostname(), dest});
+
+            DynamicTasks.waitForLast();
+        } finally {
+            Tasks.resetBlockingDetails();
+        }
         return getFilenameContextMapper().convertDeploymentTargetNameToContext(canonicalTargetName);
     }
     
