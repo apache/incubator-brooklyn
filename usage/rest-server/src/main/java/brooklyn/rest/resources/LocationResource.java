@@ -149,7 +149,9 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
                   .build();
     }
 
+    @Override
+    @Deprecated
     public void delete(String locationId) {
-        brooklyn().getLocationRegistry().removeDefinedLocation(locationId);
+        brooklyn().getCatalog().deleteCatalogItem(locationId);
     }
 }
