@@ -197,7 +197,20 @@ public interface RiakNode extends SoftwareProcess {
     @Effector(description = "Commit changes made to the Riak cluster")
     void commitCluster();
 
-    @Effector(description = "Apply bucket type")
-    void applyBucketType(@EffectorParam(name = "bucketTypeName") String bucketTypeName,
-                         @EffectorParam(name = "bucketTypeProperties") String bucketTypeProperties);
+    @Effector(description = "Create bucket type")
+    void bucketTypeCreate(@EffectorParam(name = "bucketTypeName") String bucketTypeName,
+                          @EffectorParam(name = "bucketTypeProperties") String bucketTypeProperties);
+
+    @Effector(description = "List bucket types")
+    List<String> bucketTypeList();
+
+    @Effector(description = "Status bucket type")
+    List<String> bucketTypeStatus(@EffectorParam(name = "bucketTypeName") String bucketTypeName);
+
+    @Effector(description = "Update bucket type")
+    void bucketTypeUpdate(@EffectorParam(name = "bucketTypeName") String bucketTypeName,
+                          @EffectorParam(name = "bucketTypeProperties") String bucketTypeProperties);
+
+    @Effector(description = "Activate bucket type")
+    void bucketTypeActivate(@EffectorParam(name = "bucketTypeName") String bucketTypeName);
 }

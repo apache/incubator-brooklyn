@@ -20,6 +20,8 @@ package brooklyn.entity.nosql.riak;
 
 import brooklyn.entity.basic.SoftwareProcessDriver;
 
+import java.util.List;
+
 public interface RiakNodeDriver extends SoftwareProcessDriver {
 
     String getRiakEtcDir();
@@ -36,5 +38,13 @@ public interface RiakNodeDriver extends SoftwareProcessDriver {
 
     String getOsMajorVersion();
 
-    void applyBucketType(String bucketTypeName, String bucketTypeProperties);
+    void bucketTypeCreate(String bucketTypeName, String bucketTypeProperties);
+
+    List<String> bucketTypeList();
+
+    List<String> bucketTypeStatus(String bucketTypeName);
+
+    void bucketTypeUpdate(String bucketTypeName, String bucketTypeProperties);
+
+    void bucketTypeActivate(String bucketTypeName);
 }

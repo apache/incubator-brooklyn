@@ -32,6 +32,7 @@ import static brooklyn.util.text.StringEscapes.BashStringEscapes.escapeLiteralFo
 import static java.lang.String.format;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +60,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
 public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
 
@@ -271,9 +273,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .body.append(commands);
 
         if (!isRiakOnPath()) {
-            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-            customizeScript.environmentVariablesReset(newPathVariable);
+            addRiakOnPath(customizeScript);
         }
         customizeScript.failOnNonZeroResultCode().execute();
 
@@ -320,9 +320,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .body.append(commands);
 
         if (!isRiakOnPath()) {
-            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-            launchScript.environmentVariablesReset(newPathVariable);
+            addRiakOnPath(launchScript);
         }
         launchScript.failOnNonZeroResultCode().execute();
 
@@ -341,9 +339,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .body.append(command);
 
         if (!isRiakOnPath()) {
-            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-            stopScript.environmentVariablesReset(newPathVariable);
+            addRiakOnPath(stopScript);
         }
 
         int result = stopScript.failOnNonZeroResultCode().execute();
@@ -359,9 +355,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .body.append(sudo(format("%s ping", getRiakCmd())));
 
         if (!isRiakOnPath()) {
-            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-            checkRunningScript.environmentVariablesReset(newPathVariable);
+            addRiakOnPath(checkRunningScript);
         }
         return (checkRunningScript.execute() == 0);
     }
@@ -399,9 +393,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                         .failOnNonZeroResultCode();
 
                 if (!isRiakOnPath()) {
-                    Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-                    log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-                    joinClusterScript.environmentVariablesReset(newPathVariable);
+                    addRiakOnPath(joinClusterScript);
                 }
 
                 joinClusterScript.execute();
@@ -423,9 +415,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                     .failOnNonZeroResultCode();
 
             if (!isRiakOnPath()) {
-                Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-                log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-                leaveClusterScript.environmentVariablesReset(newPathVariable);
+                addRiakOnPath(leaveClusterScript);
             }
 
             leaveClusterScript.execute();
@@ -446,9 +436,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 .failOnNonZeroResultCode();
 
         if (!isRiakOnPath()) {
-            Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-            log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-            removeNodeScript.environmentVariablesReset(newPathVariable);
+            addRiakOnPath(removeNodeScript);
         }
 
         removeNodeScript.execute();
@@ -463,9 +451,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                     .failOnNonZeroResultCode();
 
             if (!isRiakOnPath()) {
-                Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-                log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-                commitClusterScript.environmentVariablesReset(newPathVariable);
+                addRiakOnPath(commitClusterScript);
             }
             commitClusterScript.execute();
 
@@ -475,15 +461,76 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     @Override
-    public void applyBucketType(String bucketTypeName, String bucketTypeProperties) {
-        newScript("bucket-type create " + bucketTypeName)
-                .body.append(sudo(format(
-                    "%s bucket-type create %s %s",
-                    getRiakAdminCmd(),
-                    bucketTypeName,
-                    escapeLiteralForDoubleQuotedBash(bucketTypeProperties))))
-                .failOnNonZeroResultCode()
-                .execute();
+    public void bucketTypeCreate(String bucketTypeName, String bucketTypeProperties) {
+        ScriptHelper bucketTypeCreateScript = newScript("bucket-type_create " + bucketTypeName)
+                .body.append(sudo(format("%s bucket-type create %s %s",
+                        getRiakAdminCmd(),
+                        bucketTypeName,
+                        escapeLiteralForDoubleQuotedBash(bucketTypeProperties))));
+        if(!isRiakOnPath()) {
+            addRiakOnPath(bucketTypeCreateScript);
+        }
+        bucketTypeCreateScript.body.append(sudo(format("%s bucket-type activate %s", getRiakAdminCmd(), bucketTypeName)))
+                .failOnNonZeroResultCode();
+
+        bucketTypeCreateScript.execute();
+    }
+
+    @Override
+    public List<String> bucketTypeList() {
+        ScriptHelper bucketTypeListScript = newScript("bucket-types_list")
+                .body.append(sudo(format("%s bucket-type list", getRiakAdminCmd())))
+                .gatherOutput()
+                .noExtraOutput()
+                .failOnNonZeroResultCode();
+        if (!isRiakOnPath()) {
+            addRiakOnPath(bucketTypeListScript);
+        }
+        bucketTypeListScript.execute();
+        String stdout = bucketTypeListScript.getResultStdout();
+        return Arrays.asList(stdout.split("[\\r\\n]+"));
+    }
+
+    @Override
+    public List<String> bucketTypeStatus(String bucketTypeName) {
+        ScriptHelper bucketTypeStatusScript = newScript("bucket-type_status")
+                .body.append(sudo(format("%s bucket-type status %s", getRiakAdminCmd(), bucketTypeName)))
+                .gatherOutput()
+                .noExtraOutput()
+                .failOnNonZeroResultCode();
+        if (!isRiakOnPath()) {
+            addRiakOnPath(bucketTypeStatusScript);
+        }
+        bucketTypeStatusScript.execute();
+        String stdout = bucketTypeStatusScript.getResultStdout();
+        return Arrays.asList(stdout.split("[\\r\\n]+"));
+    }
+
+    @Override
+    public void bucketTypeUpdate(String bucketTypeName, String bucketTypeProperties) {
+        ScriptHelper bucketTypeStatusScript = newScript("bucket-type_update")
+                .body.append(sudo(format("%s bucket-type update %s %s",
+                        getRiakAdminCmd(),
+                        bucketTypeName,
+                        escapeLiteralForDoubleQuotedBash(bucketTypeProperties))))
+                .noExtraOutput()
+                .failOnNonZeroResultCode();
+        if (!isRiakOnPath()) {
+            addRiakOnPath(bucketTypeStatusScript);
+        }
+        bucketTypeStatusScript.execute();
+    }
+
+    @Override
+    public void bucketTypeActivate(String bucketTypeName) {
+        ScriptHelper bucketTypeStatusScript = newScript("bucket-type_activate")
+                .body.append(sudo(format("%s bucket-type activate %s", getRiakAdminCmd(), bucketTypeName)))
+                .noExtraOutput()
+                .failOnNonZeroResultCode();
+        if (!isRiakOnPath()) {
+            addRiakOnPath(bucketTypeStatusScript);
+        }
+        bucketTypeStatusScript.execute();
     }
 
     @Override
@@ -513,9 +560,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                     .failOnNonZeroResultCode();
 
             if (!isRiakOnPath()) {
-                Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-                log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
-                recoverNodeScript.environmentVariablesReset(newPathVariable);
+                addRiakOnPath(recoverNodeScript);
             }
 
             recoverNodeScript.execute();
@@ -554,5 +599,11 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         String osVersion = osDetails.getVersion();
         return osVersion.contains(".") ? osVersion.substring(0, osVersion.indexOf(".")) : osVersion;
+    }
+
+    private void addRiakOnPath(ScriptHelper scriptHelper) {
+        Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+        log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+        scriptHelper.environmentVariablesReset(newPathVariable);
     }
 }

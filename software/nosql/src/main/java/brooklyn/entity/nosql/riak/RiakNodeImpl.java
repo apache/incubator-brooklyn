@@ -208,8 +208,28 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     @Override
-    public void applyBucketType(String bucketTypeName, String bucketTypeProperties) {
-        getDriver().applyBucketType(bucketTypeName, bucketTypeProperties);
+    public void bucketTypeCreate(String bucketTypeName, String bucketTypeProperties) {
+        getDriver().bucketTypeCreate(bucketTypeName, bucketTypeProperties);
+    }
+
+    @Override
+    public List<String> bucketTypeList() {
+        return getDriver().bucketTypeList();
+    }
+
+    @Override
+    public List<String> bucketTypeStatus(String bucketTypeName) {
+        return getDriver().bucketTypeStatus(bucketTypeName);
+    }
+
+    @Override
+    public void bucketTypeUpdate(String bucketTypeName, String bucketTypeProperties) {
+        getDriver().bucketTypeUpdate(bucketTypeName, bucketTypeProperties);
+    }
+
+    @Override
+    public void bucketTypeActivate(String bucketTypeName) {
+        getDriver().bucketTypeActivate(bucketTypeName);
     }
 
     @Override
