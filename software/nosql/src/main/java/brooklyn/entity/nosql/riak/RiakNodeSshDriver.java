@@ -390,6 +390,8 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
             if (!hasJoinedCluster()) {
                 ScriptHelper joinClusterScript = newScript("joinCluster")
                         .body.append(sudo(format("%s cluster join %s", getRiakAdminCmd(), nodeName)))
+                        .body.append(sudo(format("%s cluster plan", getRiakAdminCmd())))
+                        .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())))
                         .failOnNonZeroResultCode();
 
                 if (!isRiakOnPath()) {
@@ -603,7 +605,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private void addRiakOnPath(ScriptHelper scriptHelper) {
         Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
-        log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
+//        log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
         scriptHelper.environmentVariablesReset(newPathVariable);
     }
 }
