@@ -23,13 +23,19 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 public class CatalogEntitySummary extends CatalogItemSummary {
 
     private static final long serialVersionUID = 1063908984191424539L;
     
+    @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<EntityConfigSummary> config;
+    
+    @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<SensorSummary> sensors;
+    @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<EffectorSummary> effectors;
 
     public CatalogEntitySummary(

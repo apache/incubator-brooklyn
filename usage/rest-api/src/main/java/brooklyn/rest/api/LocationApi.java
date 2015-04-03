@@ -41,6 +41,7 @@ import brooklyn.rest.domain.LocationSummary;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
 
+@SuppressWarnings("deprecation")
 @Path("/v1/locations")
 @Apidoc("Locations")
 @Produces(MediaType.APPLICATION_JSON)
@@ -79,9 +80,7 @@ public interface LocationApi {
             @DefaultValue("false")
             @QueryParam("full") String fullConfig);
 
-    /**
-     * @deprecated since 0.7.0; use {@link CatalogApi#create(String)}
-     */
+    /** @deprecated since 0.7.0 use {@link CatalogApi#create(String)} with a location definition */
     @POST
     @ApiOperation(value = "Create a new location definition", responseClass = "String")
     @Deprecated

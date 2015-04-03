@@ -212,8 +212,9 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
                 "  version: " + TEST_VERSION + "\n" +
                 "services:\n" +
                 "- type: io.camp.mock:AppServer";
+        addItem(origManagementContext, yaml);
+        
         BasicBrooklynCatalog catalog = (BasicBrooklynCatalog) origManagementContext.getCatalog();
-        catalog.addItem(yaml);
         String catalogXml = catalog.toXmlString();
         catalog.reset(CatalogDto.newDtoFromXmlContents(catalogXml, "Test reset"));
         rebindAndAssertCatalogsAreEqual();
@@ -227,9 +228,10 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
                 "  version: " + TEST_VERSION + "\n" +
                 "services:\n" +
                 "- type: io.camp.mock:AppServer";
-        BasicBrooklynCatalog catalog = (BasicBrooklynCatalog) origManagementContext.getCatalog();
-        CatalogItem<?, ?> catalogItem = catalog.addItem(yaml);
+        CatalogItem<?, ?> catalogItem = addItem(origManagementContext, yaml);
         assertNotNull(catalogItem, "catalogItem");
+        BasicBrooklynCatalog catalog = (BasicBrooklynCatalog) origManagementContext.getCatalog();
+        
         catalogItem.setDeprecated(true);
         catalog.persist(catalogItem);
         rebindAndAssertCatalogsAreEqual();
@@ -238,7 +240,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
     }
 
     protected CatalogItem<?, ?> addItem(ManagementContext mgmt, String yaml) {
-        CatalogItem<?, ?> added = mgmt.getCatalog().addItem(yaml);
+        CatalogItem<?, ?> added = Iterables.getOnlyElement(mgmt.getCatalog().addItems(yaml));
         LOG.info("Added item to catalog: {}, id={}", added, added.getId());
         assertCatalogContains(mgmt.getCatalog(), added);
         return added;

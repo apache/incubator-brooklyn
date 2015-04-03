@@ -25,6 +25,7 @@ import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -38,6 +39,7 @@ import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.management.osgi.OsgiTestResources;
 import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
 
 import com.google.common.collect.Iterables;
 
@@ -52,6 +54,30 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
         String symbolicName = "my.catalog.app.id.load";
         addCatalogOSGiEntity(symbolicName);
+        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        assertEquals(item.getSymbolicName(), symbolicName);
+
+        deleteCatalogEntity(symbolicName);
+    }
+
+    @Test
+    public void testAddCatalogItemAsSiblingOfCatalogMetadata() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
+        String symbolicName = "my.catalog.app.id.load";
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  id: " + symbolicName,
+            "  name: My Catalog App",
+            "  description: My description",
+            "  icon_url: classpath://path/to/myicon.jpg",
+            "  version: " + TEST_VERSION,
+            "  libraries:",
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "",
+            "services:",
+            "- type: " + SIMPLE_ENTITY_TYPE);
+
         CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
 
@@ -76,6 +102,23 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testAddCatalogItemWithInlinedVersion() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
+        String id = "inline_version.app";
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  name: " + id+":"+TEST_VERSION,
+            "  libraries:",
+            "  - " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "services:",
+            "- type: " + SIMPLE_ENTITY_TYPE);
+        CatalogItem<?, ?> catalogItem = mgmt().getCatalog().getCatalogItem(id, TEST_VERSION);
+        assertEquals(catalogItem.getVersion(), TEST_VERSION);
+        mgmt().getCatalog().deleteCatalogItem(id, TEST_VERSION);
+    }
+
+    @Test
     public void testLaunchApplicationReferencingCatalog() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
@@ -84,7 +127,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     @Test
-    public void testLaunchApplicationUnverionedCatalogReference() throws Exception {
+    public void testLaunchApplicationUnversionedCatalogReference() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String symbolicName = "my.catalog.app.id.fail";
@@ -102,6 +145,27 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testLaunchApplicationWithCatalogReferencingOtherCatalog() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
+        String referencedSymbolicName = "my.catalog.app.id.referenced";
+        String referrerSymbolicName = "my.catalog.app.id.referring";
+        addCatalogOSGiEntities(referencedSymbolicName, SIMPLE_ENTITY_TYPE, referrerSymbolicName, ver(referencedSymbolicName));
+
+        String yaml = "name: simple-app-yaml\n" +
+                      "location: localhost\n" +
+                      "services: \n" +
+                      "  - serviceType: " + ver(referrerSymbolicName);
+        Entity app = createAndStartApplication(yaml);
+
+        Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(simpleEntity.getEntityType().getName(), SIMPLE_ENTITY_TYPE);
+
+        deleteCatalogEntity(referencedSymbolicName);
+        deleteCatalogEntity(referrerSymbolicName);
+    }
+
+    @Test
+    public void testLaunchApplicationWithCatalogReferencingOtherCatalogInTwoSteps() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String referencedSymbolicName = "my.catalog.app.id.referenced";
@@ -465,11 +529,32 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
-            "",
-            "services:",
-            "- type: " + serviceType);
+            "  item:",
+            "    services:",
+            "    - type: " + serviceType);
     }
 
+    private void addCatalogOSGiEntities(String ...namesAndTypes) {
+        List<String> lines = MutableList.of(
+            "brooklyn.catalog:",
+            "  name: My Catalog App",
+            "  description: My description",
+            "  icon_url: classpath://path/to/myicon.jpg",
+            "  version: " + TEST_VERSION,
+            "  libraries:",
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "  items:");
+        
+        for (int i=0; i<namesAndTypes.length; i+=2) {
+            lines.addAll(MutableList.of(
+            "  - id: " + namesAndTypes[i],
+            "    item:",
+            "      services:",
+            "      - type: " + namesAndTypes[i+1]));
+        }
+            
+        addCatalogItem(lines);
+    }
     private void addCatalogChildOSGiEntity(String symbolicName, String serviceType) {
         addCatalogItem(
             "brooklyn.catalog:",
@@ -480,11 +565,11 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
-            "",
-            "services:",
-            "- type: " + BasicEntity.class.getName(),
-            "  brooklyn.children:",
-            "  - type: " + serviceType);
+            "  item:",
+            "    services:",
+            "    - type: " + BasicEntity.class.getName(),
+            "      brooklyn.children:",
+            "      - type: " + serviceType);
     }
 
 }

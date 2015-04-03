@@ -317,6 +317,17 @@ public class Yamls {
         }
 
         @Beta
+        public String getMatchedYamlTextOrWarn() {
+            try {
+                return getMatchedYamlText();
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                log.warn("Unable to match yaml text in "+this+": "+e, e);
+                return null;
+            }
+        }
+        
+        @Beta
         public String getMatchedYamlText() {
             if (!found()) return null;
             
@@ -484,6 +495,7 @@ b: 1
      * where {@link YamlExtract#isMatch()} is false and {@link YamlExtract#getError()} is set. */
     public static YamlExtract getTextOfYamlAtPath(String yaml, Object ...path) {
         YamlExtract result = new YamlExtract();
+        if (yaml==null) return result;
         try {
             int pathIndex = 0;
             result.yaml = yaml;

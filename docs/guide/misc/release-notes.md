@@ -47,6 +47,10 @@ For more information, please visit [brooklyn.io](http://brooklyn.io).
 * If `brooklyn.webconsole.security.https.required=true` is specified with no explicit port, 
   it now defaults to 8443; previously it would default to 8081 even in the case of `https`.
 
+* The /v1/catalog/create method now returns a map of ID to item map, instead of an item map, 
+  as the call supports multiple items defined in the YAML.
+  
+
 ### Community Activity
 
 Brooklyn has moved into the Apache Software Foundation.

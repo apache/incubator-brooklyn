@@ -218,6 +218,12 @@ public class CatalogUtils {
         }
     }
 
+    public static boolean isBestVersion(ManagementContext mgmt, CatalogItem<?,?> item) {
+        CatalogItem<?, ?> bestVersion = getCatalogItemOptionalVersion(mgmt, item.getSymbolicName());
+        if (bestVersion==null) return false;
+        return (bestVersion.getVersion().equals(item.getVersion()));
+    }
+
     public static <T,SpecT> CatalogItem<T, SpecT> getCatalogItemOptionalVersion(ManagementContext mgmt, Class<T> type, String versionedId) {
         if (looksLikeVersionedId(versionedId)) {
             String id = getIdFromVersionedId(versionedId);

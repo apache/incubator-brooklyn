@@ -19,8 +19,6 @@
 package io.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertEquals;
-
-import brooklyn.test.TestResourceUnavailableException;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import org.testng.annotations.Test;
@@ -31,6 +29,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.Policy;
+import brooklyn.test.TestResourceUnavailableException;
 
 import com.google.common.collect.Iterables;
 
@@ -43,7 +42,21 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         assertEquals(countCatalogPolicies(), 0);
 
         String symbolicName = "my.catalog.policy.id.load";
-        addCatalogOSGiPolicy(symbolicName, SIMPLE_POLICY_TYPE);
+        addCatalogOsgiPolicy(symbolicName, SIMPLE_POLICY_TYPE);
+
+        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        assertEquals(item.getSymbolicName(), symbolicName);
+        assertEquals(countCatalogPolicies(), 1);
+
+        deleteCatalogEntity(symbolicName);
+    }
+
+    @Test
+    public void testAddCatalogItemTopLevelSyntax() throws Exception {
+        assertEquals(countCatalogPolicies(), 0);
+
+        String symbolicName = "my.catalog.policy.id.load";
+        addCatalogOsgiPolicyTopLevelSyntax(symbolicName, SIMPLE_POLICY_TYPE);
 
         CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
@@ -55,7 +68,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
     @Test
     public void testLaunchApplicationReferencingPolicy() throws Exception {
         String symbolicName = "my.catalog.policy.id.launch";
-        addCatalogOSGiPolicy(symbolicName, SIMPLE_POLICY_TYPE);
+        addCatalogOsgiPolicy(symbolicName, SIMPLE_POLICY_TYPE);
         Entity app = createAndStartApplication(
             "name: simple-app-yaml",
             "location: localhost",
@@ -78,10 +91,35 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testLaunchApplicationReferencingPolicyTopLevelSyntax() throws Exception {
+        String symbolicName = "my.catalog.policy.id.launch";
+        addCatalogOsgiPolicyTopLevelSyntax(symbolicName, SIMPLE_POLICY_TYPE);
+        Entity app = createAndStartApplication(
+            "name: simple-app-yaml",
+            "location: localhost",
+            "services: ",
+            "  - type: brooklyn.entity.basic.BasicEntity\n" +
+            "    brooklyn.policies:\n" +
+            "    - type: " + ver(symbolicName),
+            "      brooklyn.config:",
+            "        config2: config2 override",
+            "        config3: config3");
+
+        Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
+        Policy policy = Iterables.getOnlyElement(simpleEntity.getPolicies());
+        assertEquals(policy.getPolicyType().getName(), SIMPLE_POLICY_TYPE);
+        assertEquals(policy.getConfig(new BasicConfigKey<String>(String.class, "config1")), "config1");
+        assertEquals(policy.getConfig(new BasicConfigKey<String>(String.class, "config2")), "config2 override");
+        assertEquals(policy.getConfig(new BasicConfigKey<String>(String.class, "config3")), "config3");
+
+        deleteCatalogEntity(symbolicName);
+    }
+    
+    @Test
     public void testLaunchApplicationWithCatalogReferencingOtherCatalog() throws Exception {
         String referencedSymbolicName = "my.catalog.policy.id.referenced";
         String referrerSymbolicName = "my.catalog.policy.id.referring";
-        addCatalogOSGiPolicy(referencedSymbolicName, SIMPLE_POLICY_TYPE);
+        addCatalogOsgiPolicy(referencedSymbolicName, SIMPLE_POLICY_TYPE);
 
         addCatalogItem(
             "brooklyn.catalog:",
@@ -112,7 +150,27 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         deleteCatalogEntity(referencedSymbolicName);
     }
 
-    private void addCatalogOSGiPolicy(String symbolicName, String serviceType) {
+    private void addCatalogOsgiPolicy(String symbolicName, String serviceType) {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
+        addCatalogItem(
+            "brooklyn.catalog:",
+            "  id: " + symbolicName,
+            "  name: My Catalog Policy",
+            "  description: My description",
+            "  icon_url: classpath://path/to/myicon.jpg",
+            "  version: " + TEST_VERSION,
+            "  libraries:",
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "  item_type: policy",
+            "  item:",
+            "    type: " + serviceType,
+            "    brooklyn.config:",
+            "      config1: config1",
+            "      config2: config2");
+    }
+
+    private void addCatalogOsgiPolicyTopLevelSyntax(String symbolicName, String serviceType) {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         addCatalogItem(

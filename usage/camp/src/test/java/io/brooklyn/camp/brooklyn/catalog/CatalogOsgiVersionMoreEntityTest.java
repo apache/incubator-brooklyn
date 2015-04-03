@@ -18,16 +18,19 @@
  */
 package io.brooklyn.camp.brooklyn.catalog;
 
-import brooklyn.test.TestResourceUnavailableException;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogItemType;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
 import brooklyn.policy.Policy;
+import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.util.ResourceUtils;
 
 import com.google.common.collect.Iterables;
@@ -45,6 +48,12 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-more-entities_0.1.0.jar");
 
         addCatalogItem(getLocalResource("more-entity-v1-osgi-catalog.yaml"));
+        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "more-entity");
+        Assert.assertNotNull(item);
+        Assert.assertEquals(item.getVersion(), "1.0");
+        Assert.assertEquals(item.getCatalogItemType(), CatalogItemType.ENTITY);
+        Assert.assertEquals(item.getLibraries().size(), 1);
+        
         Entity app = createAndStartApplication("services: [ { type: 'more-entity:1.0' } ]");
         Entity moreEntity = Iterables.getOnlyElement(app.getChildren());
         

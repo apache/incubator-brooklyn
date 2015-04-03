@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -30,6 +32,7 @@ public class CatalogPolicySummary extends CatalogItemSummary {
 
     private static final long serialVersionUID = -588856488327394445L;
     
+    @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<PolicyConfigSummary> config;
 
     public CatalogPolicySummary(

@@ -21,6 +21,7 @@ package brooklyn.catalog;
 import javax.annotation.Nullable;
 
 import brooklyn.catalog.CatalogItem.CatalogItemType;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
@@ -126,5 +127,14 @@ public class CatalogPredicates {
             }
         };
     }
-    
+ 
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> isBestVersion(final ManagementContext mgmt) {
+        return new Predicate<CatalogItem<T,SpecT>>() {
+            @Override
+            public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+                return CatalogUtils.isBestVersion(mgmt, item);
+            }
+        };
+    }
+
 }

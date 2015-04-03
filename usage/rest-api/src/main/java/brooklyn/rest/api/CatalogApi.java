@@ -64,7 +64,8 @@ public interface CatalogApi {
 
     @Consumes
     @POST
-    @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor", responseClass = "String")
+    @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor "
+        + "Return value is map of ID to CatalogItemSummary, with code 201 CREATED.", responseClass = "Response")
     public Response create(
             @ApiParam(name = "yaml", value = "YAML descriptor of catalog item", required = true)
             @Valid String yaml);
@@ -135,7 +136,9 @@ public interface CatalogApi {
         @ApiParam(name = "regex", value = "Regular expression to search for")
         @QueryParam("regex") @DefaultValue("") String regex,
         @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-        @QueryParam("fragment") @DefaultValue("") String fragment);
+        @QueryParam("fragment") @DefaultValue("") String fragment,
+        @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
+        @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
 
     @GET
     @Path("/applications")
@@ -144,7 +147,9 @@ public interface CatalogApi {
             @ApiParam(name = "regex", value = "Regular expression to search for")
             @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-            @QueryParam("fragment") @DefaultValue("") String fragment);
+            @QueryParam("fragment") @DefaultValue("") String fragment,
+            @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
+            @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
 
     /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
     @Deprecated
@@ -203,7 +208,9 @@ public interface CatalogApi {
             @ApiParam(name = "regex", value = "Regular expression to search for")
             @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-            @QueryParam("fragment") @DefaultValue("") String fragment);
+            @QueryParam("fragment") @DefaultValue("") String fragment,
+            @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
+            @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
     
     /** @deprecated since 0.7.0 use {@link #getPolicy(String, String)} */
     @Deprecated
@@ -236,7 +243,9 @@ public interface CatalogApi {
             @ApiParam(name = "regex", value = "Regular expression to search for")
             @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
-            @QueryParam("fragment") @DefaultValue("") String fragment);
+            @QueryParam("fragment") @DefaultValue("") String fragment,
+            @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
+            @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
     
     /** @deprecated since 0.7.0 use {@link #getLocation(String, String)} */
     @Deprecated
