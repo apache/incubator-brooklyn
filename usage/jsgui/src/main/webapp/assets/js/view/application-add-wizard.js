@@ -283,6 +283,8 @@ define([
                 this.currentStep = 0;
                 var that = this;
                 this.renderCurrentStep(function callback(view) {
+                    // Drop any "None" locations.
+                    that.model.spec.pruneLocations();
                     $("textarea#yaml_code").val(JsYaml.safeDump(oldSpecToCamp(that.model.spec.toJSON())));
                     $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
                     $("#yaml_code").focus();
@@ -429,7 +431,7 @@ define([
                 name: item.name || item.id,
                 description: item.description,
                 planYaml:  item.planYaml,
-                iconUrl: item.iconUr
+                iconUrl: item.iconUrl
             })
             $("#create-step-template-entries", that.$el).append($tempel)
         },
