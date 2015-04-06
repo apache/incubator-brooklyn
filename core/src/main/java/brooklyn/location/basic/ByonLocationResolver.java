@@ -25,8 +25,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineLocation;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.config.ConfigBag;
@@ -34,6 +37,7 @@ import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 /**
@@ -54,6 +58,12 @@ public class ByonLocationResolver extends AbstractLocationResolver {
     public static final Logger log = LoggerFactory.getLogger(ByonLocationResolver.class);
     
     public static final String BYON = "byon";
+
+    public static final ConfigKey<String> OS_FAMILY = ConfigKeys.newStringConfigKey("osfamily", "OS Family of the machine, either windows or linux", "linux");
+
+    public static final Map<String, Class<? extends MachineLocation>> OS_TO_MACHINE_LOCATION_TYPE = ImmutableMap.<String, Class<? extends MachineLocation>>of(
+            "windows", WinRmMachineLocation.class,
+            "linux", SshMachineLocation.class);
 
     @Override
     public String getPrefix() {
@@ -77,6 +87,7 @@ public class ByonLocationResolver extends AbstractLocationResolver {
         Object hosts = config.getStringKey("hosts");
         config.remove("hosts");
         String user = (String)config.getStringKey("user");
+        Class<? extends MachineLocation> locationClass = OS_TO_MACHINE_LOCATION_TYPE.get(config.get(OS_FAMILY));
         
         List<String> hostAddresses;
         
@@ -96,7 +107,7 @@ public class ByonLocationResolver extends AbstractLocationResolver {
             throw new IllegalArgumentException("Invalid location '"+spec+"'; at least one host must be defined");
         }
         
-        List<SshMachineLocation> machines = Lists.newArrayList();
+        List<MachineLocation> machines = Lists.newArrayList();
         for (String host : hostAddresses) {
             String userHere = user;
             String hostHere = host;
@@ -109,13 +120,13 @@ public class ByonLocationResolver extends AbstractLocationResolver {
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid host '"+hostHere+"' specified in '"+spec+"': "+e);
             }
-            LocationSpec<SshMachineLocation> locationSpec = LocationSpec.create(SshMachineLocation.class)
+            LocationSpec<? extends MachineLocation> locationSpec = LocationSpec.create(locationClass)
                     .configure("address", hostHere.trim())
                     .configureIfNotNull(LocalLocationManager.CREATE_UNMANAGED, config.get(LocalLocationManager.CREATE_UNMANAGED));
             if (JavaGroovyEquivalents.groovyTruth(userHere)) {
                 locationSpec.configure("user", userHere.trim());
             }
-            SshMachineLocation machine = managementContext.getLocationManager().createLocation(locationSpec);
+            MachineLocation machine = managementContext.getLocationManager().createLocation(locationSpec);
             machines.add(machine);
         }
         
