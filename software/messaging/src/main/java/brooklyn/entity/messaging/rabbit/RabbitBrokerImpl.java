@@ -18,16 +18,18 @@
  */
 package brooklyn.entity.messaging.rabbit;
 
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.proxying.EntitySpec;
-import com.google.common.base.Objects.ToStringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.lang.String.format;
 
 import java.util.Map;
 
-import static java.lang.String.format;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Objects.ToStringHelper;
+
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.proxying.EntitySpec;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
@@ -93,7 +95,9 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
 
         setBrokerUrl();
 
-        setAttribute(MANAGEMENT_URL, format("http://%s:%s/", getAttribute(HOSTNAME), getAttribute(MANAGEMENT_PORT)));
+        if (getEnableManagementPlugin()) {
+            setAttribute(MANAGEMENT_URL, format("http://%s:%s/", getAttribute(HOSTNAME), getAttribute(MANAGEMENT_PORT)));
+        }
     }
 
     @Override

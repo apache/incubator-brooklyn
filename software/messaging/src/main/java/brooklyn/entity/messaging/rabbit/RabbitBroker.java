@@ -18,6 +18,10 @@
  */
 package brooklyn.entity.messaging.rabbit;
 
+import java.util.Map;
+
+import com.google.common.annotations.Beta;
+
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -26,11 +30,11 @@ import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.*;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
-import com.google.common.annotations.Beta;
-
-import java.util.Map;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
@@ -66,7 +70,7 @@ public interface RabbitBroker extends SoftwareProcess, MessageBroker, AmqpServer
 
     @SetFromFlag("managmentPort")
     public static final PortAttributeSensorAndConfigKey MANAGEMENT_PORT = new PortAttributeSensorAndConfigKey(
-                    "rabbitmq.management.port", "Port on which management interface will be available", "15672+");
+            "rabbitmq.management.port", "Port on which management interface will be available", "15672+");
 
     public static AttributeSensor<String> MANAGEMENT_URL = Sensors.newStringSensor(
             "rabbitmq.management.url", "Management URL is only available if management plugin flag is true");
