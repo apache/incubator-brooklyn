@@ -57,6 +57,7 @@
                             <exclude>src/main/resources/brooklyn/entity/messaging/kafka/server.properties</exclude>
                             <exclude>src/main/resources/brooklyn/entity/messaging/kafka/zookeeper.properties</exclude>
                             <exclude>src/main/resources/brooklyn/entity/messaging/storm/storm.yaml</exclude>
+                            <exclude>src/main/resources/brooklyn/entity/messaging/rabbit/rabbitmq.config</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
