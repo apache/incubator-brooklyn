@@ -570,10 +570,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         if (sourceYaml==null) sourceYaml = new Yaml().dump(itemMetadata);
 
-        // TODO:
-//        docs used as test cases -- (doc assertions that these match -- or import -- known test cases yamls)
-//        multiple versions in web app root
-
         Map<Object,Object> catalogMetadata = MutableMap.builder().putAll(parentMetadata).putAll(itemMetadata).build();
         
         // libraries we treat specially, to append the list, with the child's list preferred in classloading order

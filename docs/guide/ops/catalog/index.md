@@ -12,7 +12,7 @@ children:
 
 Brooklyn provides a **catalog**, which is a persisted collection of versioned blueprints and other resources. 
 Blueprints in the catalog can be deployed directly, via the Brooklyn REST API or the web console,
-or referenced in other blueprints.
+or referenced in other blueprints using their `id`.
 
  
 ### Catalog Items YAML Syntax
@@ -75,22 +75,25 @@ The following metadata is *required* for all items:
   this field disambiguates between blueprints of the same `id`.
   Note that this is typically *not* the version of the software being installed,
   but rather the version of the blueprint. For more information on versioning, see below.
+  (Also note YAML treats numbers differently to Strings. Explicit quotes may sometimes be required.)
 
 To reference a catalog item in another blueprint, simply reference its ID and optionally its version number.
-For example: 
+For instance, if we've added an item with metadata `{ id: datastore, version: "1.0" }` (such as the example below),
+we could refer to it in another blueprint with: 
 
 ```yaml
 services:
 - type: datastore:1.0
 ```
 
-In addition, exactly **one** of the following is also required:
+In addition to the above fields, exactly **one** of the following is also required:
 
 - `item`: the blueprint (in the usual YAML format) for an entity or application template,
   or a map containing `type` and optional `brooklyn.config` for policies and locations; **or**
 - `items`: a list of catalog items, where each entry in the map follows the same schema as
   the `brooklyn.catalog` value, and the keys in these map override any metadata specified as
-  a sibling of this `items` key (or, in the case of `libraries` they add to the list)
+  a sibling of this `items` key (or, in the case of `libraries` they add to the list);
+  if there are references between items, then order is important, with forward references not supported.
 
 The following optional catalog metadata is supported:
   
@@ -109,11 +112,16 @@ The following optional catalog metadata is supported:
   (to prevent requiring all OSGi bundles to be loaded at launch).
   Icons are instead typically installed either at the server from which the OSGi bundles or catalog items are supplied 
   or in the `conf` folder of the Brooklyn distro.
-- `libraries`: a list of pointers to OSGi bundles required for the catalog item.
-  This can be omitted if blueprints are pure YAML and everything required is included in the catalog file, at URLs, 
-  or in the Brooklyn classpath. If custom Java code or bundled resources is used, the OSGi JARs supply
+- `libraries`: a list of pointers to OSGi bundles required for the catalog item,.
+  This can be omitted if blueprints are pure YAML and everything required is included in the classpath and catalog.
+  Where custom Java code or bundled resources is needed, however, OSGi JARs supply
   a convenient packaging format and a very powerful versioning format.
-  Note that these URL's should point at immutable OSGi bundles;
+  Libraries should be supplied in the form 
+  `libraries: [ "http://...", "http://..." ]`, 
+  or as
+  `libraries: [ { name: symbolic-name, version: 1.0, url: http://... }, ... ]` if `symbolic-name:1.0` 
+  might already be installed from a different URL and you want to skip the download.
+  Note that these URLs should point at immutable OSGi bundles;
   if the contents at any of these URLs changes, the behaviour of the blueprint may change 
   whenever a bundle is reloaded in a Brooklyn server,
   and if entities have been deployed against that version, their behavior may change in subtle or potentially incompatible ways.
@@ -126,9 +134,8 @@ The following optional catalog metadata is supported:
 
 The following example installs the `RiakNode` entity, making it also available as an application template,
 with a nice display name, description, and icon.
-It can be referred in other blueprints to as `datastore:1.0`, 
-and its implementation will be the Java `brooklyn.entity.nosql.riak.RiakNode`
-loaded from a classpath including an OSGi bundle and Brooklyn.
+It can be referred in other blueprints to as `datastore:1.0`,
+and its implementation will be the Java class `brooklyn.entity.nosql.riak.RiakNode` included with Brooklyn.
 
 ```yaml
 brooklyn.catalog:
@@ -138,9 +145,8 @@ brooklyn.catalog:
   icon.url: classpath://brooklyn/entity/nosql/riak/riak.png
   name: Datastore (Riak)
   description: Riak is an open-source NoSQL key-value data store.
-  libraries:
-    - url: http://example.com/path/to/my-dependency-1.2.3.jar
   item:
+    services:
     - type: brooklyn.entity.nosql.riak.RiakNode
       name: Riak Node
 ```
@@ -155,13 +161,22 @@ brooklyn.catalog:
   version: 1.1
   icon.url: classpath://brooklyn/entity/nosql/riak/riak.png
   description: Riak is an open-source NoSQL key-value data store.
-  libraries:
-    - url: http://example.com/path/to/my-dependency-1.2.3.jar
   items:
+    - id: riak-node
+      item:
+        services:
+        - type: brooklyn.entity.nosql.riak.RiakNode
+          name: Riak Node
+    - id: riak-cluster
+      item:
+        services:
+        - type: brooklyn.entity.nosql.riak.RiakCluster
+          name: Riak Cluster
     - id: datastore
       name: Datastore (Riak Cluster)
       item.type: template
       item:
+        services:
         - type: riak-cluster
           location: 
             jclouds:softlayer:
@@ -175,27 +190,18 @@ brooklyn.catalog:
             provisioning.properties:
               # you can also define machine specs
               minRam: 8gb
-    - id: riak-cluster
-      item:
-        - type: brooklyn.entity.nosql.riak.RiakCluster
-          name: Riak Cluster
-    - id: riak-node
-      item:
-        - type: brooklyn.entity.nosql.riak.RiakNode
-          name: Riak Node
 ```
 
 The items this will install are:
 
-- `riak-cluster` is available as a convenience short name for the full class, as an entity,
-  with an additional OSGi bundle installed
-- `datastore` provides the `riak-cluster` blueprint, in SoftLayer and with the given size and machine spec, 
+- `riak-node`, as before, but with a different name
+- `riak-cluster` as a convenience short name for the `brooklyn.entity.nosql.riak.RiakCluster` class
+- `datastore`, now pointing at the `riak-cluster` blueprint, in SoftLayer and with the given size and machine spec, 
   as the default implementation for anyone
   requesting a `datastore` (and if installed atop the previous example, new references to `datastore` 
   will access this version because it is a higher number);
-  because it is a template, users will have the opportunity to edit the YAML (see below)
-- `riak-node` is also installed, as before (but with a different name)
-
+  because it is a template, users will have the opportunity to edit the YAML (see below).
+  (This must be supplied after `riak-cluster`, because it refers to `riak-cluster`.)
 
 
 ### Templates and the Add-Application Wizard
@@ -268,15 +274,6 @@ the latest non-snapshot version will be loaded when an entity is instantiated.
 
 
 
-
 <!--
-TODO: Should improve the 'Create Application' dialog, so that the two versions don't appear on the front page.
-Currently they are indistinguisable, if they have the same description/icon.
+TODO: make test cases from the code snippets here, and when building the docs assert that they match test cases
 -->
-
-
-<!--
-TODO: Add section that explains how to add plain entities to the catalog and use them either from the App Wizard,
-(and entity UI) or embed the catalog id + version in another YAML
--->
-
