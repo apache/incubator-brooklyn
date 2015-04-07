@@ -143,7 +143,6 @@ public interface RiakNode extends SoftwareProcess {
     MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
     MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");
     MethodEffector<Void> REMOVE_FROM_CLUSTER = new MethodEffector<Void>(RiakNode.class, "removeNode");
-    MethodEffector<Void> COMMIT_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "commitCluster");
 
     AttributeSensor<Integer> RIAK_NODE_GET_FSM_TIME_MEAN = Sensors.newIntegerSensor("riak.node_get_fsm_time_mean", "Time between reception of client read request and subsequent response to client");
     AttributeSensor<Integer> RIAK_NODE_PUT_FSM_TIME_MEAN = Sensors.newIntegerSensor("riak.node_put_fsm_time_mean", "Time between reception of client write request and subsequent response to client");
@@ -182,6 +181,9 @@ public interface RiakNode extends SoftwareProcess {
 
     String getOsMajorVersion();
 
+    // TODO add commitCluster() effector and add effectors joinCluster, leaveCluster, removeNode, recoverFailedNode which do not execute commitCluster()
+    // the commit where the commitCluster effector was available is adbf2dc1cb5df98b1e52d3ab35fa6bb4983b722f
+
     @Effector(description = "Join the Riak cluster on the given node")
     void joinCluster(@EffectorParam(name = "nodeName") String nodeName);
 
@@ -193,9 +195,6 @@ public interface RiakNode extends SoftwareProcess {
 
     @Effector(description = "Recover and join the Riak cluster on the given node")
     void recoverFailedNode(@EffectorParam(name = "nodeName") String nodeName);
-
-    @Effector(description = "Commit changes made to the Riak cluster")
-    void commitCluster();
 
     @Effector(description = "Create or modify a bucket type before activation")
     void bucketTypeCreate(@EffectorParam(name = "bucketTypeName") String bucketTypeName,

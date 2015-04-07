@@ -34,8 +34,6 @@ public interface RiakNodeDriver extends SoftwareProcessDriver {
 
     void recoverFailedNode(String nodeName);
 
-    void commitCluster();
-
     String getOsMajorVersion();
 
     void bucketTypeCreate(String bucketTypeName, String bucketTypeProperties);

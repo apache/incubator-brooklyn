@@ -203,11 +203,6 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     @Override
-    public void commitCluster() {
-        getDriver().commitCluster();
-    }
-
-    @Override
     public void bucketTypeCreate(String bucketTypeName, String bucketTypeProperties) {
         getDriver().bucketTypeCreate(bucketTypeName, bucketTypeProperties);
     }

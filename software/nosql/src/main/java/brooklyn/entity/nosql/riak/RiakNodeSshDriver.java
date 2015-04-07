@@ -445,24 +445,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     }
 
     @Override
-    public void commitCluster() {
-        if (hasJoinedCluster()) {
-            ScriptHelper commitClusterScript = newScript("commitCluster")
-                    .body.append(sudo(format("%s cluster plan", getRiakAdminCmd())))
-                    .body.append(sudo(format("%s cluster commit", getRiakAdminCmd())))
-                    .failOnNonZeroResultCode();
-
-            if (!isRiakOnPath()) {
-                addRiakOnPath(commitClusterScript);
-            }
-            commitClusterScript.execute();
-
-        } else {
-            log.warn("entity {}: is not in the riak cluster", entity.getId());
-        }
-    }
-
-    @Override
     public void bucketTypeCreate(String bucketTypeName, String bucketTypeProperties) {
         ScriptHelper bucketTypeCreateScript = newScript("bucket-type_create " + bucketTypeName)
                 .body.append(sudo(format("%s bucket-type create %s %s",
@@ -515,7 +497,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                         getRiakAdminCmd(),
                         bucketTypeName,
                         escapeLiteralForDoubleQuotedBash(bucketTypeProperties))))
-                .noExtraOutput()
                 .failOnNonZeroResultCode();
         if (!isRiakOnPath()) {
             addRiakOnPath(bucketTypeStatusScript);
@@ -527,7 +508,6 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     public void bucketTypeActivate(String bucketTypeName) {
         ScriptHelper bucketTypeStatusScript = newScript("bucket-type_activate")
                 .body.append(sudo(format("%s bucket-type activate %s", getRiakAdminCmd(), bucketTypeName)))
-                .noExtraOutput()
                 .failOnNonZeroResultCode();
         if (!isRiakOnPath()) {
             addRiakOnPath(bucketTypeStatusScript);
