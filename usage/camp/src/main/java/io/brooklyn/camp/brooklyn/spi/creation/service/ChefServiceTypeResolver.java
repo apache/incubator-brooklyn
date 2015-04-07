@@ -16,42 +16,47 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.brooklyn.camp.brooklyn.spi.creation;
+package io.brooklyn.camp.brooklyn.spi.creation.service;
 
-import io.brooklyn.camp.spi.AbstractResource;
+import io.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
+import io.brooklyn.camp.spi.PlatformComponentTemplate;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefEntity;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
 
-public class ChefComponentTemplateResolver extends BrooklynComponentTemplateResolver {
+/**
+ * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code chef:}
+ * to Brooklyn {@link EntitySpec} instances.
+ */
+public class ChefServiceTypeResolver extends BrooklynServiceTypeResolver {
 
-    public ChefComponentTemplateResolver(BrooklynClassLoadingContext loader, ConfigBag attrs, AbstractResource optionalTemplate) {
-        super(loader, attrs, optionalTemplate);
-    }
+    private static final Logger log = LoggerFactory.getLogger(ServiceTypeResolver.class);
 
     @Override
-    protected String getBrooklynType() {
+    public String getTypePrefix() { return "chef"; }
+
+    @Override
+    public String getBrooklynType(String serviceType) {
         return ChefEntity.class.getName();
     }
 
     // chef: items are not in catalog
     @Override
-    public CatalogItem<Entity, EntitySpec<?>> getCatalogItem() {
+    public CatalogItem<Entity, EntitySpec<?>> getCatalogItem(BrooklynComponentTemplateResolver resolver, String serviceType) {
         return null;
     }
-    
+
     @Override
-    protected <T extends Entity> void decorateSpec(EntitySpec<T> spec) {
-        if (getDeclaredType().startsWith("chef:")) {
-            spec.configure(ChefConfig.CHEF_COOKBOOK_PRIMARY_NAME, Strings.removeFromStart(getDeclaredType(), "chef:"));
-        }
-        
-        super.decorateSpec(spec);
+    public <T extends Entity> void decorateSpec(BrooklynComponentTemplateResolver resolver, EntitySpec<T> spec) {
+        spec.configure(ChefConfig.CHEF_COOKBOOK_PRIMARY_NAME, Strings.removeFromStart(resolver.getDeclaredType(), "chef:"));
+        super.decorateSpec(resolver, spec);
     }
     
 }

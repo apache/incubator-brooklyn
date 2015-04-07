@@ -19,7 +19,8 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
-import io.brooklyn.camp.brooklyn.spi.dsl.methods.BrooklynDslCommon;
+import io.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
+import io.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
 import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.ApplicationComponentTemplate;
 import io.brooklyn.camp.spi.AssemblyTemplate;
@@ -28,6 +29,7 @@ import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -45,23 +47,17 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.VanillaSoftwareProcess;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.group.DynamicRegionsFabric;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.guava.Maybe;
@@ -70,6 +66,7 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -77,59 +74,80 @@ import com.google.common.collect.Maps;
  * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code brooklyn:}
  * to Brooklyn {@link EntitySpec} instances.
  * <p>
- * but TODO this should probably be done by {@link BrooklynEntityMatcher} 
+ * but TODO this should probably be done by {@link BrooklynEntityMatcher}
  * so we have a spec by the time we come to instantiate.
- * (currently privileges "brooklyn.*" key names are checked in both places!)  
+ * (currently privileges "brooklyn.*" key names are checked in both places!)
  */
 public class BrooklynComponentTemplateResolver {
 
-    private static final Logger log = LoggerFactory.getLogger(BrooklynDslCommon.class);
+    private static final Logger log = LoggerFactory.getLogger(BrooklynComponentTemplateResolver.class);
 
-    BrooklynClassLoadingContext loader;
-    final ManagementContext mgmt;
-    final ConfigBag attrs;
-    final Maybe<AbstractResource> template;
-    final BrooklynYamlTypeInstantiator.Factory yamlLoader;
-    AtomicBoolean alreadyBuilt = new AtomicBoolean(false);
+    private final BrooklynClassLoadingContext loader;
+    private final ManagementContext mgmt;
+    private final ConfigBag attrs;
+    private final Maybe<AbstractResource> template;
+    private final BrooklynYamlTypeInstantiator.Factory yamlLoader;
+    private final String type;
+    private final ServiceTypeResolver typeResolver;
+    private final AtomicBoolean alreadyBuilt = new AtomicBoolean(false);
+
+    public BrooklynComponentTemplateResolver(BrooklynClassLoadingContext loader, ConfigBag attrs, AbstractResource optionalTemplate, String type, ServiceTypeResolver typeResolver) {
+        this.loader = loader;
+        this.mgmt = loader.getManagementContext();
+        this.attrs = ConfigBag.newInstanceCopying(attrs);
+        this.template = Maybe.fromNullable(optionalTemplate);
+        this.yamlLoader = new BrooklynYamlTypeInstantiator.Factory(loader, this);
+        this.type = type;
+        this.typeResolver = typeResolver;
+    }
+
+    public BrooklynClassLoadingContext getLoader() { return loader; }
+    public ManagementContext getManagementContext() { return mgmt; }
+    public ConfigBag getAttrs() { return attrs; }
+    public Maybe<AbstractResource> getTemplate() { return template; }
+    public BrooklynYamlTypeInstantiator.Factory getYamlLoader() { return yamlLoader; }
+    public ServiceTypeResolver getServiceTypeResolver() { return typeResolver; }
+    public String getDeclaredType() { return type; }
+    public Boolean isAlreadyBuilt() { return alreadyBuilt.get(); }
 
     public static class Factory {
 
         /** returns resolver type based on the service type, inspecting the arguments in order to determine the service type */
-        private static Class<? extends BrooklynComponentTemplateResolver> computeResolverType(String knownServiceType, AbstractResource optionalTemplate, ConfigBag attrs) {
+        private static ServiceTypeResolver computeResolverType(BrooklynClassLoadingContext context, String knownServiceType, AbstractResource optionalTemplate, ConfigBag attrs) {
             String type = getDeclaredType(knownServiceType, optionalTemplate, attrs);
-            if (type!=null) {
-                if (type.startsWith("brooklyn:") || type.startsWith("java:")) return BrooklynComponentTemplateResolver.class;
-                if (type.equalsIgnoreCase("chef") || type.startsWith("chef:")) return ChefComponentTemplateResolver.class;
-                // TODO other BrooklynComponentTemplateResolver subclasses detected here 
-                // (perhaps use regexes mapping to subclass name, defined in mgmt?)
+            return findService(context, type);
+        }
+
+        protected static ServiceTypeResolver findService(BrooklynClassLoadingContext context, String type) {
+            String prefix = Splitter.on(":").splitToList(type).get(0);
+            ServiceLoader<ServiceTypeResolver> loader = ServiceLoader.load(ServiceTypeResolver.class, context.getManagementContext().getCatalog().getRootClassLoader());
+            for (ServiceTypeResolver resolver : loader) {
+               if (prefix.equalsIgnoreCase(resolver.getTypePrefix())) return resolver;
             }
-            
             return null;
         }
 
-        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext loader, Map<String, ?> childAttrs) {
-            return newInstance(loader, ConfigBag.newInstance(childAttrs), null);
+        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext context, Map<String, ?> childAttrs) {
+            return newInstance(context, ConfigBag.newInstance(childAttrs), null);
         }
 
-        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext loader, AbstractResource template) {
-            return newInstance(loader, ConfigBag.newInstance(template.getCustomAttributes()), template);
-        }
-        
-        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext loader, String serviceType) {
-            return newInstance(loader, ConfigBag.newInstance().configureStringKey("serviceType", serviceType), null);
-        }
-        
-        private static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext loader, ConfigBag attrs, AbstractResource optionalTemplate) {
-            Class<? extends BrooklynComponentTemplateResolver> rt = computeResolverType(null, optionalTemplate, attrs);
-            if (rt==null) // use default 
-                rt = BrooklynComponentTemplateResolver.class;
-            
-            try {
-                return (BrooklynComponentTemplateResolver) rt.getConstructors()[0].newInstance(loader, attrs, optionalTemplate);
-            } catch (Exception e) { throw Exceptions.propagate(e); }
+        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext context, AbstractResource template) {
+            return newInstance(context, ConfigBag.newInstance(template.getCustomAttributes()), template);
         }
 
-        private static String getDeclaredType(String knownServiceType, AbstractResource optionalTemplate, @Nullable ConfigBag attrs) {
+        public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext context, String serviceType) {
+            return newInstance(context, ConfigBag.newInstance().configureStringKey("serviceType", serviceType), null);
+        }
+
+        private static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext context, ConfigBag attrs, AbstractResource optionalTemplate) {
+            ServiceTypeResolver typeResolver = computeResolverType(context, null, optionalTemplate, attrs);
+            String type = getDeclaredType(null, optionalTemplate, attrs);
+            if (typeResolver == null) // use default
+                typeResolver = new BrooklynServiceTypeResolver();
+            return new BrooklynComponentTemplateResolver(context, attrs, optionalTemplate, type, typeResolver);
+        }
+
+        public static String getDeclaredType(String knownServiceType, AbstractResource optionalTemplate, @Nullable ConfigBag attrs) {
             String type = knownServiceType;
             if (type==null && optionalTemplate!=null) {
                 type = optionalTemplate.getType();
@@ -140,67 +158,20 @@ public class BrooklynComponentTemplateResolver {
             if (type==null) type = extractServiceTypeAttribute(attrs);
             return type;
         }
-        
+
         private static String extractServiceTypeAttribute(@Nullable ConfigBag attrs) {
             return BrooklynYamlTypeInstantiator.InstantiatorFromKey.extractTypeName("service", attrs).orNull();
         }
 
-        public static boolean supportsType(BrooklynClassLoadingContext loader, String serviceType) {
-            Class<? extends BrooklynComponentTemplateResolver> type = computeResolverType(serviceType, null, null);
-            if (type!=null) return true;
-            return newInstance(loader, serviceType).canResolve();
+        public static boolean supportsType(BrooklynClassLoadingContext context, String serviceType) {
+            ServiceTypeResolver typeResolver = computeResolverType(context, serviceType, null, null);
+            if (typeResolver != null) return true;
+            return newInstance(context, serviceType).canResolve();
         }
     }
 
-    public BrooklynComponentTemplateResolver(BrooklynClassLoadingContext loader, ConfigBag attrs, AbstractResource optionalTemplate) {
-        this.loader = loader;
-        this.mgmt = loader.getManagementContext();
-        this.attrs = ConfigBag.newInstanceCopying(attrs);
-        this.template = Maybe.fromNullable(optionalTemplate);
-        this.yamlLoader = new BrooklynYamlTypeInstantiator.Factory(loader, this);
-    }
-    
-    protected String getDeclaredType() {
-        return Factory.getDeclaredType(null, template.orNull(), attrs);
-    }
-    
-    // TODO Generalise to have other prefixes (e.g. explicit "catalog:" etc)?
-    protected boolean isJavaTypePrefix() {
-        String type = getDeclaredType();
-        return type != null && (type.toLowerCase().startsWith("java:") || type.toLowerCase().startsWith("brooklyn:java:"));
-    }
-
-    protected String getBrooklynType() {
-        String type = getDeclaredType();
-        type = Strings.removeFromStart(type, "brooklyn:", "java:");
-        if (type == null) return null;
-        
-        // TODO currently a hardcoded list of aliases; would like that to come from mgmt somehow
-        if (type.equals("cluster") || type.equals("Cluster")) return DynamicCluster.class.getName();
-        if (type.equals("fabric") || type.equals("Fabric")) return DynamicRegionsFabric.class.getName();
-        if (type.equals("vanilla") || type.equals("Vanilla")) return VanillaSoftwareProcess.class.getName();
-        if (type.equals("web-app-cluster") || type.equals("WebAppCluster"))
-            // TODO use service discovery; currently included as string to avoid needing a reference to it
-            return "brooklyn.entity.webapp.ControlledDynamicWebAppCluster";
-        
-        return type;
-    }
-
-    /** Returns the CatalogItem if there is one for the given type;
-     * (if no type, callers should fall back to default classloading)
-     */
-    @Nullable
-    public CatalogItem<Entity,EntitySpec<?>> getCatalogItem() {
-        String type = getBrooklynType();
-        if (type != null) {
-            return CatalogUtils.getCatalogItemOptionalVersion(mgmt, Entity.class,  type);
-        } else {
-            return null;
-        }
-    }
-    
-    public boolean canResolve() {
-        if (getCatalogItem()!=null)
+    protected boolean canResolve() {
+        if (typeResolver.getCatalogItem(this, type)!=null)
             return true;
         if (loader.tryLoadClass(getJavaType(), Entity.class).isPresent())
             return true;
@@ -208,42 +179,47 @@ public class BrooklynComponentTemplateResolver {
     }
 
     /** returns the entity class, if needed in contexts which scan its statics for example */
-    public Class<? extends Entity> loadEntityClass() {
+    protected Class<? extends Entity> loadEntityClass() {
         Maybe<Class<? extends Entity>> result = tryLoadEntityClass();
         if (result.isAbsent())
-            throw new IllegalStateException("Could not find "+getBrooklynType(), ((Maybe.Absent<?>)result).getException());
+            throw new IllegalStateException("Could not find "+typeResolver.getBrooklynType(type), ((Maybe.Absent<?>)result).getException());
         return result.get();
     }
-    
+
     /** tries to load the Java entity class */
-    public Maybe<Class<? extends Entity>> tryLoadEntityClass() {
+    protected Maybe<Class<? extends Entity>> tryLoadEntityClass() {
         return loader.tryLoadClass(getJavaType(), Entity.class);
     }
 
-    private String getJavaType() {
-        CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem();
+    // TODO Generalise to have other prefixes (e.g. explicit "catalog:" etc)?
+    protected boolean isJavaTypePrefix() {
+        return type != null && (type.toLowerCase().startsWith("java:") || type.toLowerCase().startsWith("brooklyn:java:"));
+    }
+
+    protected String getJavaType() {
+        CatalogItem<Entity, EntitySpec<?>> item = typeResolver.getCatalogItem(this, type);
         if (!isJavaTypePrefix() && item != null && item.getJavaType() != null) {
             return item.getJavaType();
         } else {
-            return getBrooklynType();
+            return typeResolver.getBrooklynType(type);
         }
     }
 
     /** resolves the spec, updating the loader if a catalog item is loaded */
-    public <T extends Entity> EntitySpec<T> resolveSpec() {
+    protected <T extends Entity> EntitySpec<T> resolveSpec() {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
-        
+
         EntitySpec<T> spec = createSpec();
         populateSpec(spec);
-        
+
         return spec;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private <T extends Entity> EntitySpec<T> createSpec() {
+    protected <T extends Entity> EntitySpec<T> createSpec() {
         Class<T> type = (Class<T>) loadEntityClass();
-        
+
         EntitySpec<T> spec;
         if (type.isInterface()) {
             spec = EntitySpec.create(type);
@@ -297,19 +273,12 @@ public class BrooklynComponentTemplateResolver {
             spec.configure(BrooklynCampConstants.TEMPLATE_ID, templateId);
         if (planId != null)
             spec.configure(BrooklynCampConstants.PLAN_ID, planId);
-        
+
         List<Location> childLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(attrs.getAllConfig(), true);
         if (childLocations != null)
             spec.locations(childLocations);
-        
-        decorateSpec(spec);
-    }
 
-    protected <T extends Entity> void decorateSpec(EntitySpec<T> spec) {
-        new BrooklynEntityDecorationResolver.PolicySpecResolver(yamlLoader).decorate(spec, attrs);
-        new BrooklynEntityDecorationResolver.EnricherSpecResolver(yamlLoader).decorate(spec, attrs);
-        new BrooklynEntityDecorationResolver.InitializerResolver(yamlLoader).decorate(spec, attrs);
-        
+        typeResolver.decorateSpec(this, spec);
         configureEntityConfig(spec);
     }
 
@@ -326,20 +295,20 @@ public class BrooklynComponentTemplateResolver {
         if (planId != null) {
             entity.config().set(BrooklynCampConstants.PLAN_ID, planId);
         }
-        
+
         if (spec.getLocations().size() > 0) {
             ((AbstractEntity)entity).addLocations(spec.getLocations());
         }
-        
+
         if (spec.getParent() != null) entity.setParent(spec.getParent());
-        
+
         return entity;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void configureEntityConfig(EntitySpec<?> spec) {
+    protected void configureEntityConfig(EntitySpec<?> spec) {
         ConfigBag bag = ConfigBag.newInstance((Map<Object, Object>) attrs.getStringKey("brooklyn.config"));
-        
+
         // first take *recognised* flags and config keys from the top-level, and put them in the bag (of brooklyn.config)
         // (for component templates this will have been done already by BrooklynEntityMatcher, but for specs it is needed here)
         ConfigBag bagFlags = ConfigBag.newInstanceCopying(attrs);
@@ -384,14 +353,14 @@ public class BrooklynComponentTemplateResolver {
         protected final ManagementContext mgmt;
         /* TODO find a way to make do without loader here?
          * it is not very nice having to serialize it; but serialization of BLCL is now relatively clean.
-         * 
+         *
          * it is only used to instantiate classes, and now most things should be registered with catalog;
          * the notable exception is when one entity in a bundle is creating another in the same bundle,
-         * it wants to use his bundle CLC to do that.  but we can set up some unique reference to the entity 
+         * it wants to use his bundle CLC to do that.  but we can set up some unique reference to the entity
          * which can be used to find it from mgmt, rather than pass the loader.
          */
         private BrooklynClassLoadingContext loader = null;
-        
+
         public SpecialFlagsTransformer(BrooklynClassLoadingContext loader) {
             this.loader = loader;
             mgmt = loader.getManagementContext();
@@ -405,18 +374,18 @@ public class BrooklynComponentTemplateResolver {
                 return MutableList.copyOf(transformSpecialFlags((Iterable<?>)input));
             else if (input instanceof Iterable<?>)
                 return transformSpecialFlags((Iterable<?>)input);
-            else 
+            else
                 return transformSpecialFlags((Object)input);
         }
-        
+
         protected Map<?, ?> transformSpecialFlags(Map<?, ?> flag) {
             return Maps.transformValues(flag, this);
         }
-        
+
         protected Iterable<?> transformSpecialFlags(Iterable<?> flag) {
             return Iterables.transform(flag, this);
         }
-        
+
         protected BrooklynClassLoadingContext getLoader() {
             if (loader!=null) return loader;
             // TODO currently loader will non-null unless someone has messed with the rebind files,
@@ -426,7 +395,7 @@ public class BrooklynComponentTemplateResolver {
             if (entity!=null) return CatalogUtils.getClassLoadingContext(entity);
             return JavaBrooklynClassLoadingContext.create(mgmt);
         }
-        
+
         /**
          * Makes additional transformations to the given flag with the extra knowledge of the flag's management context.
          * @return The modified flag, or the flag unchanged.
@@ -442,7 +411,7 @@ public class BrooklynComponentTemplateResolver {
                 return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec();
             }
             if (flag instanceof ManagementContextInjectable) {
-                if (log.isDebugEnabled()) { log.debug("Injecting Brooklyn management context info object: {}", flag); }
+                log.debug("Injecting Brooklyn management context info object: {}", flag);
                 ((ManagementContextInjectable) flag).injectManagementContext(loader.getManagementContext());
             }
 

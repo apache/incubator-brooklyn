@@ -88,7 +88,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
     public static class PolicySpecResolver extends BrooklynEntityDecorationResolver<PolicySpec<?>> {
         
-        protected PolicySpecResolver(BrooklynYamlTypeInstantiator.Factory loader) { super(loader); }
+        public PolicySpecResolver(BrooklynYamlTypeInstantiator.Factory loader) { super(loader); }
         @Override protected String getDecorationKind() { return "Policy"; }
 
         @Override
@@ -134,7 +134,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
     public static class EnricherSpecResolver extends BrooklynEntityDecorationResolver<EnricherSpec<?>> {
         
-        protected EnricherSpecResolver(BrooklynYamlTypeInstantiator.Factory loader) { super(loader); }
+        public EnricherSpecResolver(BrooklynYamlTypeInstantiator.Factory loader) { super(loader); }
         @Override protected String getDecorationKind() { return "Enricher"; }
 
         @Override
@@ -157,7 +157,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
     
     public static class InitializerResolver extends BrooklynEntityDecorationResolver<EntityInitializer> {
         
-        protected InitializerResolver(BrooklynYamlTypeInstantiator.Factory loader) { super(loader); }
+        public InitializerResolver(BrooklynYamlTypeInstantiator.Factory loader) { super(loader); }
         @Override protected String getDecorationKind() { return "Entity initializer"; }
 
         @Override
