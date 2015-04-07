@@ -103,7 +103,7 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
     }
 
     public boolean getEnableManagementPlugin() {
-        return getConfig(ENABLE_MANAGEMENT_PLUGIN);
+        return Boolean.TRUE.equals(getConfig(ENABLE_MANAGEMENT_PLUGIN));
     }
 
     public Integer getManagementPort() {

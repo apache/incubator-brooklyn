@@ -18,6 +18,19 @@
  */
 package brooklyn.entity.messaging.rabbit;
 
+import static brooklyn.util.ssh.BashCommands.*;
+import static java.lang.String.format;
+
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
@@ -26,17 +39,6 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Map;
-
-import static brooklyn.util.ssh.BashCommands.*;
-import static java.lang.String.format;
 
 /**
  * TODO javadoc
@@ -123,20 +125,21 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
     @Override
     public void customize() {
         Networking.checkPortsValid(MutableMap.of("amqpPort", getAmqpPort()));
-        copyTemplate(entity.getConfig(RabbitBroker.CONFIG_TEMPLATE_URL), getConfigPath() + ".config");
         ScriptHelper scriptHelper = newScript(CUSTOMIZING);
 
         scriptHelper.body.append(
                 format("cp -R %s/* .", getExpandedInstallDir())
         );
 
-        if (entity.getConfig(RabbitBroker.ENABLE_MANAGEMENT_PLUGIN)) {
+        if (Boolean.TRUE.equals(entity.getConfig(RabbitBroker.ENABLE_MANAGEMENT_PLUGIN))) {
             scriptHelper.body.append(
                     "./sbin/rabbitmq-plugins enable rabbitmq_management"
             );
         }
-
+        scriptHelper.failOnNonZeroResultCode();
         scriptHelper.execute();
+
+        copyTemplate(entity.getConfig(RabbitBroker.CONFIG_TEMPLATE_URL), getConfigPath() + ".config");
     }
 
     @Override
@@ -200,6 +203,6 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
     }
 
     private String getConfigPath() {
-        return getInstallDir() + "/rabbitmq";
+        return getRunDir() + "/rabbitmq";
     }
 }
