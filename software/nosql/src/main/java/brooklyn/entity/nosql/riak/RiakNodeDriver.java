@@ -20,19 +20,29 @@ package brooklyn.entity.nosql.riak;
 
 import brooklyn.entity.basic.SoftwareProcessDriver;
 
+import java.util.List;
+
 public interface RiakNodeDriver extends SoftwareProcessDriver {
 
-    public String getRiakEtcDir();
+    String getRiakEtcDir();
 
-    public void joinCluster(String nodeName);
+    void joinCluster(String nodeName);
 
-    public void leaveCluster();
+    void leaveCluster();
 
-    public void removeNode(String nodeName);
+    void removeNode(String nodeName);
 
-    public void recoverFailedNode(String nodeName);
+    void recoverFailedNode(String nodeName);
 
-    public void commitCluster();
+    String getOsMajorVersion();
 
-    public String getOsMajorVersion();
+    void bucketTypeCreate(String bucketTypeName, String bucketTypeProperties);
+
+    List<String> bucketTypeList();
+
+    List<String> bucketTypeStatus(String bucketTypeName);
+
+    void bucketTypeUpdate(String bucketTypeName, String bucketTypeProperties);
+
+    void bucketTypeActivate(String bucketTypeName);
 }
