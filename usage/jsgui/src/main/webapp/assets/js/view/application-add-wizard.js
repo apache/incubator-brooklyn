@@ -257,8 +257,23 @@ define([
                     if (yaml) {
                         try {
                             yaml = JsYaml.safeLoad(yaml);
-                            yaml = (yaml.location || yaml.locations ? true : false);
+                            hasLocation = yaml.location || yaml.locations;
+                            if (!hasLocation) {
+                              // look for locations defined in locations
+                              svcs = yaml.services;
+                              if (svcs) {
+                                for (svcI in svcs) {
+                                  if (svcs[svcI].location || svcs[svcI].locations) {
+                                    hasLocation = true;
+                                    break;
+                                  }
+                                }
+                              }
+                            }
+                            yaml = (hasLocation ? true : false);
                         } catch (e) {
+                            log("Warning: could not parse yaml template")
+                            log(yaml);
                             yaml = false;
                         }
                     }
