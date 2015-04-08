@@ -1,0 +1,30 @@
+{% dir_navigation %}
+
+<script type="text/javascript">
+  $(function() {
+    function toggleMenu() {
+      var collapsed;
+      var parent = $(this).parent().parent();
+
+      if(parent.hasClass('collapsibleListOpen')) {
+        collapsed = false;
+      } else {
+        collapsed = true;
+      }
+
+      if(collapsed) {
+        parent.find('> ul').show();
+        parent.removeClass('collapsibleListClosed');
+        parent.addClass('collapsibleListOpen');
+      } else {
+        parent.find('> ul').hide();
+        parent.removeClass('collapsibleListOpen');
+        parent.addClass('collapsibleListClosed');
+      }
+
+      $(this).data('collapsed', !collapsed);
+    }
+    $('#nav-menu .collapsibleListOpen > .menu-item > span').click(toggleMenu);
+    $('#nav-menu .collapsibleListClosed > .menu-item > span').click(toggleMenu);
+  })();
+</script>

@@ -2,6 +2,7 @@
 title: Deploying Blueprints
 layout: website-normal
 menu_parent: index.md
+weight: 9
 children:
 - { section: Launching from a Blueprint, title: Blueprint } 
 - { section: Launching from the Catalog, title: Catalog } 

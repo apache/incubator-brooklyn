@@ -2,6 +2,7 @@
 title: Monitoring and Managing Applications
 title_in_menu: Monitoring and Managing Applications
 layout: website-normal
+weight: 8
 menu_parent: index.md
 ---
 

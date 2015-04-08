@@ -1,6 +1,7 @@
 ---
 title: Getting Started - Policies
 title_in_menu: Policies
+weight: 7
 layout: website-normal
 ---
 

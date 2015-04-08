@@ -2,6 +2,7 @@
 title: Running Brooklyn
 title_in_menu: Running Brooklyn
 layout: website-normal
+weight: 10
 menu_parent: index.md
 ---
 

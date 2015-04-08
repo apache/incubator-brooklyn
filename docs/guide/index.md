@@ -1,6 +1,7 @@
 ---
 title: User Guide
 layout: website-normal
+weight: 3
 breadcrumbs:
 - /website/documentation/index.md
 - index.md

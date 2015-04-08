@@ -1,0 +1,55 @@
+#nav-menu {
+  > li:first-child {
+    padding-left: 0;
+  }
+
+  li {
+    padding-left: 1.2em;
+
+    > ul {
+      display: none;
+    }
+
+    $item-padding-top: 8px;
+
+    &.parent {
+      .menu-item {
+        align-items: center;
+        display: table;
+        width: 100%;
+
+        > span {
+          display: table-cell;
+          vertical-align: middle;
+          cursor: pointer;
+          padding: 6px 13px;
+          width: 1%;
+        }
+
+        > a {
+          display: inline-block;
+          padding: $item-padding-top 0 $item-padding-top 4px;
+          width: 90%;
+          width: calc(100% - 40px);
+        }
+      }
+    }
+
+    &.collapsibleListOpen {
+      > .menu-item > span {
+        background: no-repeat url("../img/nav_menu/minus-green.png");
+        background-position: 50% 50%;
+      }
+      > ul {
+        display: block;
+      }
+    }
+
+    &.collapsibleListClosed {
+      > .menu-item > span {
+        background: no-repeat url('../img/nav_menu/plus-green.png');
+        background-position: 50% 50%;
+      }
+    }
+  }
+}
