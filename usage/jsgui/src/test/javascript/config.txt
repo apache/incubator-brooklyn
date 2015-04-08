@@ -41,6 +41,7 @@
         "text":"js/libs/text",
         "uri":"js/libs/URI",
         "zeroclipboard":"js/libs/ZeroClipboard",
+        "js-yaml":"js/libs/js-yaml",
 
         "model":"js/model",
         "view":"js/view",

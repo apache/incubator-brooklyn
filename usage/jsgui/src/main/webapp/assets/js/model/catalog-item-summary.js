@@ -18,7 +18,10 @@
 */
 define(["underscore", "backbone"], function (_, Backbone) {
 
-    // not used currently
+    // NB: THIS IS NOT USED CURRENTLY
+    // the logic in application-add-wizard.js simply loads and manipulates json
+    // TODO change that so that it uses this backbone model + collection 
+    // allowing a way to specify on creation what we are looking up in the catalog -- apps or entities or policies
     
     var CatalogItem = {}
 
@@ -29,6 +32,7 @@ define(["underscore", "backbone"], function (_, Backbone) {
                 name:"",
                 type:"",
                 description:"",
+                planYaml:"",
                 iconUrl:""
             }
         }
@@ -36,7 +40,7 @@ define(["underscore", "backbone"], function (_, Backbone) {
 
     CatalogItem.Collection = Backbone.Collection.extend({
         model:CatalogItem.Model,
-        url:'/v1/catalog'  // not used?
+        url:'/v1/catalog'  // TODO is this application or entities or policies?
     })
 
     return CatalogItem

@@ -21,7 +21,7 @@
  * Also creates an empty Application model.
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "js-yaml",
     "model/entity", "model/application", "model/location",
     "text!tpl/app-add-wizard/modal-wizard.html",
     "text!tpl/app-add-wizard/create.html",
@@ -32,13 +32,12 @@ define([
     "text!tpl/app-add-wizard/deploy.html",
     "text!tpl/app-add-wizard/deploy-location-row.html",
     "text!tpl/app-add-wizard/deploy-location-option.html",
-    "text!tpl/app-add-wizard/preview.html",
     "bootstrap"
     
-], function (_, $, Backbone, Util, Entity, Application, Location,
+], function (_, $, Backbone, Util, JsYaml, Entity, Application, Location,
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
-             DeployLocationRowHtml, DeployLocationOptionHtml, PreviewHtml
+             DeployLocationRowHtml, DeployLocationOptionHtml
 ) {
 
     /** Special ID to indicate that no locations will be provided when starting the server. */
@@ -53,32 +52,38 @@ define([
         obj.attr("disabled", !isEnabled)
     }
     
-    function specToCAMP(spec) {
+    /** converts old-style spec with "entities" to camp-style spec with services */
+    function oldSpecToCamp(spec) {
         var services;
         if (spec.type) {
-            services = [entityToCAMP(spec)];
+            services = [entityToCamp({type: spec.type, config: spec.config})];
         } else if (spec.entities) {
             services = [];
             var entities = spec.entities;
             for (var i = 0; i < entities.length; i++) {
-                services.push(entityToCAMP(entities[i]));
+                services.push(entityToCamp(entities[i]));
             }
         }
-        return {
-            name: spec.name,
-            locations: spec.locations,
-            services: services
-        };
+        var result = {};
+        if (spec.name) result.name = spec.name;
+        if (spec.locations) {
+          if (spec.locations.length>1)
+            result.locations = spec.locations;
+          else
+            result.location = spec.locations[0];
+        }
+        if (services) result.services = services;
+        // NB: currently nothing else is supported in this spec
+        return result;
     }
-
-    function entityToCAMP(entity) {
-        return {
-            name: entity.name,
-            type: entity.type,
-            "brooklyn.config": entity.config
-        };
+    function entityToCamp(entity) {
+        var result = {};
+        if (entity.name && (!options || !options.exclude_name)) result.name = entity.name;
+        if (entity.type) result.type = entity.type;
+        if (entity.config && _.size(entity.config)) result["brooklyn.config"] = entity.config;
+        return result;
     }
-
+    
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
         className:'modal hide fade',
@@ -103,16 +108,12 @@ define([
                               view:new ModalWizard.StepCreate({ model:this.model, wizard: this })
                           },
                           {
+                              // TODO rather than make this another step -- since we now on preview revert to the yaml tab
+                              // this should probably be shown in the catalog tab, replacing the other contents.
                               step_id:'name-and-locations',
                               title:'<%= appName %>',
                               instructions:'Specify the locations to deploy to and any additional configuration',
                               view:new ModalWizard.StepDeploy({ model:this.model })
-                          },
-                          {
-                              step_id:'preview',
-                              title:'<%= appName %>',
-                              instructions:'Confirm the code which will be sent to the server, optionally tweaking it or saving it for future reference',
-                              view:new ModalWizard.StepPreview({ model:this.model })
                           }
                           ]
         },
@@ -128,7 +129,7 @@ define([
             return this
         },
 
-        renderCurrentStep:function () {
+        renderCurrentStep:function (callback) {
             var name = this.model.name || "";
             this.title = this.$("h3#step_title")
             this.instructions = this.$("p#step_instructions")
@@ -142,6 +143,7 @@ define([
             this.currentView.render()
             this.currentView.updateForState()
             this.$(".modal-body").replaceWith(this.currentView.el)
+            if (callback) callback(this.currentView);
 
             this.updateButtonVisibility();
         },
@@ -201,7 +203,7 @@ define([
             } else {
                 // Drop any "None" locations.
                 this.model.spec.pruneLocations();
-                yaml = JSON.stringify(specToCAMP(this.model.spec.toJSON()));
+                yaml = JsYaml.safeDump(oldSpecToCamp(this.model.spec.toJSON()));
             }
 
             $.ajax({
@@ -245,24 +247,66 @@ define([
         },
 
         prevStep:function () {
-            this.currentStep -= 1
-            this.renderCurrentStep()
+            this.currentStep -= 1;
+            this.renderCurrentStep();
         },
         nextStep:function () {
-            if (this.currentStep < 2) {
+            if (this.currentStep == 0) {
                 if (this.currentView.validate()) {
-                    this.currentStep += 1
-                    this.renderCurrentStep()
+                    var yaml = (this.currentView && this.currentView.selectedTemplate && this.currentView.selectedTemplate.yaml);
+                    if (yaml) {
+                        try {
+                            yaml = JsYaml.safeLoad(yaml);
+                            hasLocation = yaml.location || yaml.locations;
+                            if (!hasLocation) {
+                              // look for locations defined in locations
+                              svcs = yaml.services;
+                              if (svcs) {
+                                for (svcI in svcs) {
+                                  if (svcs[svcI].location || svcs[svcI].locations) {
+                                    hasLocation = true;
+                                    break;
+                                  }
+                                }
+                              }
+                            }
+                            yaml = (hasLocation ? true : false);
+                        } catch (e) {
+                            log("Warning: could not parse yaml template")
+                            log(yaml);
+                            yaml = false;
+                        }
+                    }
+                    if (yaml) {
+                        // it's a yaml catalog template which includes a location, show the yaml tab
+           	            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
+                        $("#yaml_code").focus();
+                    } else {
+                        // it's a java catalog template or yaml template without a location, go to wizard
+                        this.currentStep += 1;
+                        this.renderCurrentStep();
+                    }
                 } else {
-                    // call to validate should showFailure
+                    // the call to validate will have done the showFailure
                 }
             } else {
-                this.finishStep()
+                throw "Unexpected step: "+this.currentStep;
             }
         },
         previewStep:function () {
-            // slight cheat, but good enough for now
-            this.nextStep()
+            if (this.currentView.validate()) {
+                this.currentStep = 0;
+                var that = this;
+                this.renderCurrentStep(function callback(view) {
+                    // Drop any "None" locations.
+                    that.model.spec.pruneLocations();
+                    $("textarea#yaml_code").val(JsYaml.safeDump(oldSpecToCamp(that.model.spec.toJSON())));
+                    $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
+                    $("#yaml_code").focus();
+                });
+            } else {
+                // call to validate should showFailure
+            }
         },
         finishStep:function () {
             if (this.currentView.validate()) {
@@ -314,6 +358,7 @@ define([
                 self.catalogEntityIds = _.map(result, function(item) { return item.id })
                 self.$(".entity-type-input").typeahead().data('typeahead').source = self.catalogEntityIds
             })
+            // TODO use catalog-item-summary.js instead of raw json; see comments in that file
             $.get('/v1/catalog/applications', {}, function (result) {
                 self.catalogApplicationItems = result
                 self.catalogApplicationIds = _.map(result, function(item) { return item.id })
@@ -398,8 +443,9 @@ define([
         addTemplateLozenge: function(that, item) {
             var $tempel = _.template(CreateStepTemplateEntryHtml, {
                 id: item.id,
-                name: item.name,
+                name: item.name || item.id,
                 description: item.description,
+                planYaml:  item.planYaml,
                 iconUrl: item.iconUrl
             })
             $("#create-step-template-entries", that.$el).append($tempel)
@@ -412,8 +458,14 @@ define([
                 $tl.addClass("selected")
                 this.selectedTemplate = {
                     type: $tl.attr('id'),
-                    name: $tl.data("name")
+                    name: $tl.data("name"),
+                    yaml: $tl.data("yaml")
                 };
+                if (this.selectedTemplate.yaml) {
+                    $("textarea#yaml_code").val(this.selectedTemplate.yaml);
+                } else {
+                    $("textarea#yaml_code").val("services:\n- type: "+this.selectedTemplate.type);
+                }
             } else {
                 this.selectedTemplate = null;
             }
@@ -539,7 +591,7 @@ define([
                 // TODO - other tabs not implemented yet 
                 // do nothing, show error return false below
             }
-            this.$('div.app-add-wizard-create-info-message').slideDown(250).delay(10000).slideUp(500)
+            this.showFailure("Invalid application type/spec");
             return false
         },
 
@@ -736,53 +788,6 @@ define([
             this.$('div.error-message').slideDown(250).delay(10000).slideUp(500);
         }
     })
-
-    ModalWizard.StepPreview = Backbone.View.extend({
-        className:'modal-body',
-        initialize:function () {
-            this.$el.html(_.template(PreviewHtml))
-            this.model.spec.on("change", this.render, this)
-        },
-        beforeClose:function () {
-            this.model.spec.off("change", this.render)
-        },
-        updateForState: function () {
-            if (!this.model.spec.get("entities") || this.model.spec.get("entities").length==0) {
-                delete this.model.spec.attributes["entities"]
-            }
-            if (!this.model.spec.get("name"))
-                delete this.model.spec.attributes["name"]
-            if (!this.model.spec.get("config") || _.keys(this.model.spec.get("config")).length==0) {
-                delete this.model.spec.attributes["config"]
-            }
-            this.$('#app-summary').val(Util.toTextAreaString(specToCAMP(this.model.spec.toJSON())))
-        },
-        render:function () {
-            this.delegateEvents()
-            return this
-        },
-        validate:function () {
-            // need locations, and type or entities
-            if ((this.model.spec.get("locations").length > 0) && 
-                (this.model.spec.get("type")!=null || 
-                    this.model.spec.getEntities().length > 0)) {
-                return true
-            }
-            
-            if (this.model.spec.get("locations").length <= 0) {
-                this.showFailure("A location is required");
-                return false;
-            }
-
-            this.showFailure();
-            return false
-        },
-        showFailure: function(text) {
-            if (!text) text = "Failure performing the specified action";
-            this.$('div.error-message .error-message-text').html(_.escape(text))
-            this.$('div.error-message').slideDown(250).delay(10000).slideUp(500)
-        }
-    })
-
+    
     return ModalWizard
 })
