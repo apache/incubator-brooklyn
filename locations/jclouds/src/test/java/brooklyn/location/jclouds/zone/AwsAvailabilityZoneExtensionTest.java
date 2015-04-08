@@ -95,7 +95,7 @@ public class AwsAvailabilityZoneExtensionTest {
         JcloudsLocation subLocation = (JcloudsLocation) Iterables.getOnlyElement(subLocations);
         JcloudsSshMachineLocation machine = null;
         try {
-            machine = subLocation.obtain(ImmutableMap.builder()
+            machine = (JcloudsSshMachineLocation)subLocation.obtain(ImmutableMap.builder()
                     .put(JcloudsLocation.IMAGE_ID, US_EAST_IMAGE_ID)
                     .put(JcloudsLocation.HARDWARE_ID, SMALL_HARDWARE_ID)
                     .put(JcloudsLocation.INBOUND_PORTS, ImmutableList.of(22))
