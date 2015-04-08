@@ -31,7 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Startable;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.location.jclouds.pool.MachinePool;
 import brooklyn.location.jclouds.pool.MachineSet;
 import brooklyn.location.jclouds.pool.ReusableMachineTemplate;
@@ -117,7 +119,13 @@ public class BrooklynMachinePool extends MachinePool {
             // TODO this in parallel
             JcloudsSshMachineLocation m;
             try {
-                m = location.obtain(MutableMap.of("callerContext", ""+this+"("+template+")"), template);
+                MachineLocation machineLocation = location.obtain(MutableMap.of("callerContext", ""+this+"("+template+")"), template);
+                // Class has been deprecated since 0.6.0, and prior to that, obtain would have returned a JcloudsSshMachineLocation
+                if (machineLocation instanceof JcloudsSshMachineLocation) {
+                    m = (JcloudsSshMachineLocation) machineLocation;
+                } else {
+                    throw new UnsupportedOperationException("Cannot create WinRmMachineLocation");
+                }
             } catch (Exception e) {
                 throw Throwables.propagate(e);
             }
