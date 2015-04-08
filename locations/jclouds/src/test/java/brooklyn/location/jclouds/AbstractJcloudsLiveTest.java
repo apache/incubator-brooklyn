@@ -141,7 +141,7 @@ public class AbstractJcloudsLiveTest {
     // Use this utility method to ensure machines are released on tearDown
     protected JcloudsSshMachineLocation obtainMachine(Map<?, ?> conf) throws Exception {
         assertNotNull(jcloudsLocation);
-        JcloudsSshMachineLocation result = jcloudsLocation.obtain(conf);
+        JcloudsSshMachineLocation result = (JcloudsSshMachineLocation)jcloudsLocation.obtain(conf);
         machines.add(checkNotNull(result, "result"));
         return result;
     }
