@@ -24,20 +24,21 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * TODO javadoc
@@ -52,7 +53,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         "6", "6-8",
         "7", "7-5"
     );
-    
+
     public RabbitSshDriver(RabbitBrokerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
@@ -75,7 +76,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         resolver = Entities.newDownloader(this);
         setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("rabbitmq_server-%s", getVersion()))));
     }
-    
+
     @Override
     public void install() {
         List<String> urls = resolver.getTargets();
@@ -124,11 +125,21 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
     @Override
     public void customize() {
         Networking.checkPortsValid(MutableMap.of("amqpPort", getAmqpPort()));
-        newScript(CUSTOMIZING)
-                .body.append(
-                    format("cp -R %s/* .", getExpandedInstallDir())
-                )
-                .execute();
+        ScriptHelper scriptHelper = newScript(CUSTOMIZING);
+
+        scriptHelper.body.append(
+                format("cp -R %s/* .", getExpandedInstallDir())
+        );
+
+        if (Boolean.TRUE.equals(entity.getConfig(RabbitBroker.ENABLE_MANAGEMENT_PLUGIN))) {
+            scriptHelper.body.append(
+                    "./sbin/rabbitmq-plugins enable rabbitmq_management"
+            );
+        }
+        scriptHelper.failOnNonZeroResultCode();
+        scriptHelper.execute();
+
+        copyTemplate(entity.getConfig(RabbitBroker.CONFIG_TEMPLATE_URL), getConfigPath() + ".config");
     }
 
     @Override
@@ -155,8 +166,9 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
             ).execute();
     }
 
+
     public String getPidFile() { return "rabbitmq.pid"; }
-    
+
     @Override
     public boolean isRunning() {
         return newScript(MutableMap.of("usePidFile", false), CHECK_RUNNING)
@@ -164,13 +176,13 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
                 .execute() == 0;
     }
 
-
     @Override
     public void stop() {
         newScript(MutableMap.of("usePidFile", false), STOPPING)
                 .body.append("./sbin/rabbitmqctl stop")
                 .execute();
     }
+
 
     @Override
     public void kill() {
@@ -186,6 +198,11 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
                 .put("RABBITMQ_NODENAME", getEntity().getId())
                 .put("RABBITMQ_NODE_PORT", getAmqpPort().toString())
                 .put("RABBITMQ_PID_FILE", getRunDir()+"/"+getPidFile())
+                .put("RABBITMQ_CONFIG_FILE", getConfigPath())
                 .build();
+    }
+
+    private String getConfigPath() {
+        return getRunDir() + "/rabbitmq";
     }
 }

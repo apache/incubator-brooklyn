@@ -20,6 +20,8 @@ package brooklyn.entity.messaging.rabbit;
 
 import java.util.Map;
 
+import com.google.common.annotations.Beta;
+
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -27,12 +29,12 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpServer;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
-
-import com.google.common.annotations.Beta;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
@@ -50,7 +52,12 @@ public interface RabbitBroker extends SoftwareProcess, MessageBroker, AmqpServer
     
     @SetFromFlag("erlangVersion")
     public static final BasicConfigKey<String> ERLANG_VERSION = new BasicConfigKey<String>(String.class, "erlang.version", "Erlang runtime version", "R15B");
-    
+
+    @SetFromFlag("rabbitmqConfigTemplateUrl")
+    ConfigKey<String> CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
+            "rabbitmq.templateUrl", "Template file (in freemarker format) for the rabbitmq.config config file",
+            "classpath://brooklyn/entity/messaging/rabbit/rabbitmq.config");
+
     @SetFromFlag("amqpPort")
     public static final PortAttributeSensorAndConfigKey AMQP_PORT = AmqpServer.AMQP_PORT;
 
@@ -60,7 +67,18 @@ public interface RabbitBroker extends SoftwareProcess, MessageBroker, AmqpServer
     @SetFromFlag("amqpVersion")
     public static final BasicAttributeSensorAndConfigKey<String> AMQP_VERSION = new BasicAttributeSensorAndConfigKey<String>(
             AmqpServer.AMQP_VERSION, AmqpServer.AMQP_0_9_1);
-    
+
+    @SetFromFlag("managmentPort")
+    public static final PortAttributeSensorAndConfigKey MANAGEMENT_PORT = new PortAttributeSensorAndConfigKey(
+            "rabbitmq.management.port", "Port on which management interface will be available", "15672+");
+
+    public static AttributeSensor<String> MANAGEMENT_URL = Sensors.newStringSensor(
+            "rabbitmq.management.url", "Management URL is only available if management plugin flag is true");
+
+    @SetFromFlag("enableManagementPlugin")
+    public static final ConfigKey<Boolean> ENABLE_MANAGEMENT_PLUGIN = ConfigKeys.newBooleanConfigKey(
+            "rabbitmq.management.plugin", "Management plugin will be enabled", false);
+
     RabbitQueue createQueue(Map properties);
 
     // TODO required by RabbitDestination due to close-coupling between that and RabbitBroker; how best to improve?

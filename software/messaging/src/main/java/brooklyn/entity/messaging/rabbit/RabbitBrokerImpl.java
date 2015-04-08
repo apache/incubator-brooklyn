@@ -18,16 +18,18 @@
  */
 package brooklyn.entity.messaging.rabbit;
 
+import static java.lang.String.format;
+
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Objects.ToStringHelper;
+
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.proxying.EntitySpec;
-
-import com.google.common.base.Objects.ToStringHelper;
 
 /**
  * An {@link brooklyn.entity.Entity} that represents a single Rabbit MQ broker instance, using AMQP 0-9-1.
@@ -70,7 +72,7 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
 
     public void setBrokerUrl() {
         String urlFormat = "amqp://guest:guest@%s:%d/%s";
-        setAttribute(BROKER_URL, String.format(urlFormat, getAttribute(HOSTNAME), getAttribute(AMQP_PORT), getAttribute(VIRTUAL_HOST_NAME)));
+        setAttribute(BROKER_URL, format(urlFormat, getAttribute(HOSTNAME), getAttribute(AMQP_PORT), getAttribute(VIRTUAL_HOST_NAME)));
     }
 
     public RabbitQueue createQueue(Map properties) {
@@ -92,12 +94,24 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
         connectServiceUpIsRunning();
 
         setBrokerUrl();
+
+        if (getEnableManagementPlugin()) {
+            setAttribute(MANAGEMENT_URL, format("http://%s:%s/", getAttribute(HOSTNAME), getAttribute(MANAGEMENT_PORT)));
+        }
     }
 
     @Override
     public void disconnectSensors() {
         super.disconnectSensors();
         disconnectServiceUpIsRunning();
+    }
+
+    public boolean getEnableManagementPlugin() {
+        return Boolean.TRUE.equals(getConfig(ENABLE_MANAGEMENT_PLUGIN));
+    }
+
+    public Integer getManagementPort() {
+        return getAttribute(MANAGEMENT_PORT);
     }
 
     @Override
