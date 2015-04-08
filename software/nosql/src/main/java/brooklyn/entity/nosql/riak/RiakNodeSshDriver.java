@@ -178,7 +178,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
                 "which yum",
                 ok(sudo("yum -y install openssl")),
                 String.format("wget -O %s %s", saveAsYum, entity.getAttribute(RiakNode.DOWNLOAD_URL_RHEL_CENTOS)),
-                sudo(String.format("rpm -Uvh %s", saveAsYum)));
+                sudo(String.format("yum localinstall -y %s", saveAsYum)));
         return ImmutableList.<String>builder()
                 .add("mkdir -p " + installBin)
                 .add(INSTALL_CURL)
