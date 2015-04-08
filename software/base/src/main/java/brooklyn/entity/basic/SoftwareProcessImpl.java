@@ -442,11 +442,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * plus any ports defined with a config keys ending in .port 
      */
     protected Collection<Integer> getRequiredOpenPorts() {
-        Set<Integer> ports = MutableSet.of(22);
+        // TODO: Should only open 22 *or* 5985. Perhaps a flag / ConfigKey on SoftwareProcessImpl?
+        Set<Integer> ports = MutableSet.of(22, 5985, 3389);
         Map<ConfigKey<?>, ?> allConfig = config().getBag().getAllConfigAsConfigKeyMap();
         Set<ConfigKey<?>> configKeys = Sets.newHashSet(allConfig.keySet());
         configKeys.addAll(getEntityType().getConfigKeys());
-        
+
         for (ConfigKey<?> k: configKeys) {
             if (PortRange.class.isAssignableFrom(k.getType())) {
                 PortRange p = (PortRange)getConfig(k);

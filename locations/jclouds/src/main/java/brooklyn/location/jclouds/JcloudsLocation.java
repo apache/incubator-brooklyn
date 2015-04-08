@@ -107,6 +107,7 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.LocationConfigUtils.OsCredential;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.location.cloud.names.AbstractCloudMachineNamer;
@@ -149,6 +150,8 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
+import io.cloudsoft.winrm4j.pywinrm.Session;
+import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -181,7 +184,7 @@ import com.google.common.reflect.TypeToken;
  * Configuration flags are defined in {@link JcloudsLocationConfig}.
  */
 @SuppressWarnings("serial")
-public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig, RichMachineProvisioningLocation<SshMachineLocation>, LocationWithObjectStore {
+public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig, RichMachineProvisioningLocation<MachineLocation>, LocationWithObjectStore {
 
     // TODO After converting from Groovy to Java, this is now very bad code! It relies entirely on putting
     // things into and taking them out of maps; it's not type-safe, and it's thus very error-prone.
@@ -209,8 +212,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
 
     @SetFromFlag // so it's persisted
-    private final Map<JcloudsSshMachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
-
+    private final Map<MachineLocation,String> vmInstanceIds = Maps.newLinkedHashMap();
+    
     static { Networking.init(); }
 
     public JcloudsLocation() {
@@ -508,14 +511,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     // ----------------- obtaining a new machine ------------------------
-
-    public JcloudsSshMachineLocation obtain() throws NoMachinesAvailableException {
+    public MachineLocation obtain() throws NoMachinesAvailableException {
         return obtain(MutableMap.of());
     }
-    public JcloudsSshMachineLocation obtain(TemplateBuilder tb) throws NoMachinesAvailableException {
+    public MachineLocation obtain(TemplateBuilder tb) throws NoMachinesAvailableException {
         return obtain(MutableMap.of(), tb);
     }
-    public JcloudsSshMachineLocation obtain(Map<?,?> flags, TemplateBuilder tb) throws NoMachinesAvailableException {
+    public MachineLocation obtain(Map<?,?> flags, TemplateBuilder tb) throws NoMachinesAvailableException {
         return obtain(MutableMap.builder().putAll(flags).put(TEMPLATE_BUILDER, tb).build());
     }
 
@@ -524,7 +526,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * as well as ACCESS_IDENTITY and ACCESS_CREDENTIAL,
      * plus any further properties to specify e.g. images, hardware profiles, accessing user
      * (for initial login, and a user potentially to create for subsequent ie normal access) */
-    public JcloudsSshMachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
+    public MachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(config().getBag(), flags);
         Integer attempts = setup.get(MACHINE_CREATE_ATTEMPTS);
         List<Exception> exceptions = Lists.newArrayList();
@@ -553,7 +555,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    protected JcloudsSshMachineLocation obtainOnce(ConfigBag setup) throws NoMachinesAvailableException {
+    protected MachineLocation obtainOnce(ConfigBag setup) throws NoMachinesAvailableException {
         AccessController.Response access = getManagementContext().getAccessController().canProvisionLocation(this);
         if (!access.isAllowed()) {
             throw new IllegalStateException("Access controller forbids provisioning in "+this+": "+access.getMsg());
@@ -570,8 +572,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         CloudMachineNamer cloudMachineNamer = getCloudMachineNamer(setup);
         String groupId = elvis(setup.get(GROUP_ID), cloudMachineNamer.generateNewGroupId(setup));
         NodeMetadata node = null;
-        JcloudsSshMachineLocation sshMachineLocation = null;
-
+        MachineLocation machineLocation = null;
+        
         try {
             LOG.info("Creating VM "+setup.getDescription()+" in "+this);
 
@@ -639,6 +641,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (node == null)
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in " + setup.getDescription());
 
+            boolean windows = node.getOperatingSystem().getFamily().equals(OsFamily.WINDOWS);
+
+            if (windows) {
+                // FIXME: Tidy this up and allow for user-specified credentials
+                setup.put(USER, node.getCredentials().getUser());
+                setup.put(PASSWORD, node.getCredentials().getOptionalPassword().orNull());
+            }
+
             // Setup port-forwarding, if required
             Optional<HostAndPort> sshHostAndPortOverride;
             if (usePortForwarding) {
@@ -652,10 +662,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 sshHostAndPortOverride = Optional.absent();
             }
 
-            if (waitForSshable && skipJcloudsSshing) {
+            if (waitForSshable && skipJcloudsSshing && !windows) {
                 // once that host:port is definitely reachable, we can create the user
                 waitForReachable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
                 userCredentials = createUser(computeService, node, sshHostAndPortOverride, setup);
+            } else if (windows) {
+                waitForWinRmAvailable(node, node.getCredentials(), setup);
             }
 
             // Figure out which login-credentials to use
@@ -682,42 +694,55 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             setup.putIfNotNull(JcloudsLocationConfig.PRIVATE_KEY_DATA, userCredentials.getOptionalPrivateKey().orNull());
 
             // Wait for the VM to be reachable over SSH
-            if (waitForSshable) {
+            if (waitForSshable && !windows) {
                 waitForReachable(computeService, node, sshHostAndPortOverride, userCredentials, setup);
             } else {
                 LOG.debug("Skipping ssh check for {} ({}) due to config waitForSshable=false", node, setup.getDescription());
             }
             usableTimestamp = Duration.of(provisioningStopwatch);
 
+            JcloudsSshMachineLocation jcloudsSshMachineLocation = null;
+            WinRmMachineLocation winRmMachineLocation = null;
             // Create a JcloudsSshMachineLocation, and register it
-            sshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, userCredentials, sshHostAndPortOverride, setup);
-            if (template!=null && sshMachineLocation.getTemplate()==null) {
-                sshMachineLocation.template = template;
+            if (windows) {
+                // FIMXE: Need to write WinRM equivalent of getPublicHostname
+                String hostName = node.getPublicAddresses().iterator().next();
+                winRmMachineLocation = registerWinRmMachineLocation(hostName, setup);
+                machineLocation = winRmMachineLocation;
+            } else {
+                jcloudsSshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, userCredentials, sshHostAndPortOverride, setup);
+                machineLocation = jcloudsSshMachineLocation;
+                if (template!=null && jcloudsSshMachineLocation.getTemplate()==null) {
+                    jcloudsSshMachineLocation.template = template;
+                }
             }
 
             if (usePortForwarding && sshHostAndPortOverride.isPresent()) {
                 // Now that we have the sshMachineLocation, we can associate the port-forwarding address with it.
                 PortForwardManager portForwardManager = setup.get(PORT_FORWARDING_MANAGER);
                 if (portForwardManager != null) {
-                    portForwardManager.associate(node.getId(), sshHostAndPortOverride.get(), sshMachineLocation, node.getLoginPort());
+                    portForwardManager.associate(node.getId(), sshHostAndPortOverride.get(), machineLocation, node.getLoginPort());
                 } else {
                     LOG.warn("No port-forward manager for {} so could not associate {} -> {} for {}",
-                            new Object[] {this, node.getLoginPort(), sshHostAndPortOverride, sshMachineLocation});
+                            new Object[] {this, node.getLoginPort(), sshHostAndPortOverride, machineLocation});
                 }
             }
 
             if ("docker".equals(this.getProvider())) {
+                if (windows) {
+                    throw new UnsupportedOperationException("Docker not supported on Windows");
+                }
                 Map<Integer, Integer> portMappings = JcloudsUtil.dockerPortMappingsFor(this, node.getId());
                 PortForwardManager portForwardManager = setup.get(PORT_FORWARDING_MANAGER);
                 if (portForwardManager != null) {
                     for(Integer containerPort : portMappings.keySet()) {
                         Integer hostPort = portMappings.get(containerPort);
-                        String dockerHost = sshMachineLocation.getSshHostAndPort().getHostText();
-                        portForwardManager.associate(node.getId(), HostAndPort.fromParts(dockerHost, hostPort), sshMachineLocation, containerPort);
+                        String dockerHost = jcloudsSshMachineLocation.getSshHostAndPort().getHostText();
+                        portForwardManager.associate(node.getId(), HostAndPort.fromParts(dockerHost, hostPort), jcloudsSshMachineLocation, containerPort);
                     }
                 } else {
                     LOG.warn("No port-forward manager for {} so could not associate docker port-mappings for {}",
-                            this, sshMachineLocation);
+                            this, jcloudsSshMachineLocation);
                 }
             }
 
@@ -729,80 +754,105 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 List<String> setupScripts = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL_LIST);
                 Collection<String> allScripts = new MutableList<String>().appendIfNotNull(setupScript).appendAll(setupScripts);
                 for (String setupScriptItem : allScripts) {
-                    if (Strings.isNonBlank(setupScriptItem)) {
-                        customisationForLogging.add("custom setup script "+setupScriptItem);
+                    if (Strings.isNonBlank(setupScript)) {
+                        customisationForLogging.add("custom setup script " + setupScript);
 
                         String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
                         Map<String, String> substitutions = (setupVarsString != null)
                                 ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
                                 : ImmutableMap.<String, String>of();
-                        String scriptContent =  ResourceUtils.create(this).getResourceAsString(setupScriptItem);
+                        String scriptContent = ResourceUtils.create(this).getResourceAsString(setupScriptItem);
                         String script = TemplateProcessor.processTemplateContents(scriptContent, getManagementContext(), substitutions);
-                        sshMachineLocation.execCommands("Customizing node " + this + " with script " + setupScriptItem, ImmutableList.of(script));
+                        if (windows) {
+                            winRmMachineLocation.executeScript(ImmutableList.copyOf((script.replace("\r", "").split("\n"))));
+                        } else {
+                            jcloudsSshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
+                        }
                     }
                 }
 
                 if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM)) {
-                    customisationForLogging.add("point /dev/random to urandom");
+                    if (windows) {
+                        LOG.warn("Ignoring flag MAP_DEV_RANDOM_TO_DEV_URANDOM on Windows location {}", winRmMachineLocation);
+                    } else {
+                        customisationForLogging.add("point /dev/random to urandom");
 
-                    sshMachineLocation.execCommands("using urandom instead of random",
-                            Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
+                        jcloudsSshMachineLocation.execCommands("using urandom instead of random",
+                                Arrays.asList("sudo mv /dev/random /dev/random-real", "sudo ln -s /dev/urandom /dev/random"));
+                    }
                 }
 
 
                 if (setup.get(GENERATE_HOSTNAME)) {
-                    customisationForLogging.add("configure hostname");
+                    if (windows) {
+                        // TODO: Generate Windows Hostname
+                        LOG.warn("Ignoring flag GENERATE_HOSTNAME on Windows location {}", winRmMachineLocation);
+                    } else {
+                        customisationForLogging.add("configure hostname");
 
-                    sshMachineLocation.execCommands("Generate hostname " + node.getName(),
-                            Arrays.asList("sudo hostname " + node.getName(),
-                                    "sudo sed -i \"s/HOSTNAME=.*/HOSTNAME=" + node.getName() + "/g\" /etc/sysconfig/network",
-                                    "sudo bash -c \"echo 127.0.0.1   `hostname` >> /etc/hosts\"")
-                   );
+                        jcloudsSshMachineLocation.execCommands("Generate hostname " + node.getName(),
+                                Arrays.asList("sudo hostname " + node.getName(),
+                                        "sudo sed -i \"s/HOSTNAME=.*/HOSTNAME=" + node.getName() + "/g\" /etc/sysconfig/network",
+                                        "sudo bash -c \"echo 127.0.0.1   `hostname` >> /etc/hosts\"")
+                        );
+                    }
                 }
 
                 if (setup.get(OPEN_IPTABLES)) {
-                    @SuppressWarnings("unchecked")
-                    Iterable<Integer> inboundPorts = (Iterable<Integer>) setup.get(INBOUND_PORTS);
-
-                    if (inboundPorts == null || Iterables.isEmpty(inboundPorts)) {
-                        LOG.info("No ports to open in iptables (no inbound ports) for {} at {}", sshMachineLocation, this);
+                    if (windows) {
+                        LOG.warn("Ignoring flag OPEN_IPTABLES on Windows location {}", winRmMachineLocation);
                     } else {
-                        customisationForLogging.add("open iptables");
+                        @SuppressWarnings("unchecked")
+                        Iterable<Integer> inboundPorts = (Iterable<Integer>) setup.get(INBOUND_PORTS);
 
-                        List<String> iptablesRules = createIptablesRulesForNetworkInterface(inboundPorts);
-                        iptablesRules.add(IptablesCommands.saveIptablesRules());
-                        List<String> batch = Lists.newArrayList();
-                        // Some entities, such as Riak (erlang based) have a huge range of ports, which leads to a script that
-                        // is too large to run (fails with a broken pipe). Batch the rules into batches of 50
-                        for (String rule : iptablesRules) {
-                            batch.add(rule);
-                            if (batch.size() == 50) {
-                                sshMachineLocation.execCommands("Inserting iptables rules, 50 command batch", batch);
-                                batch.clear();
+                        if (inboundPorts == null || Iterables.isEmpty(inboundPorts)) {
+                            LOG.info("No ports to open in iptables (no inbound ports) for {} at {}", jcloudsSshMachineLocation, this);
+                        } else {
+                            customisationForLogging.add("open iptables");
+
+                            List<String> iptablesRules = createIptablesRulesForNetworkInterface(inboundPorts);
+                            iptablesRules.add(IptablesCommands.saveIptablesRules());
+                            List<String> batch = Lists.newArrayList();
+                            // Some entities, such as Riak (erlang based) have a huge range of ports, which leads to a script that
+                            // is too large to run (fails with a broken pipe). Batch the rules into batches of 50
+                            for (String rule : iptablesRules) {
+                                batch.add(rule);
+                                if (batch.size() == 50) {
+                                    jcloudsSshMachineLocation.execCommands("Inserting iptables rules, 50 command batch", batch);
+                                    batch.clear();
+                                }
                             }
+                            if (batch.size() > 0) {
+                                jcloudsSshMachineLocation.execCommands("Inserting iptables rules", batch);
+                            }
+                            jcloudsSshMachineLocation.execCommands("List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
                         }
-                        if (batch.size() > 0) {
-                            sshMachineLocation.execCommands("Inserting iptables rules", batch);
-                        }
-                        sshMachineLocation.execCommands("List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
                     }
                 }
 
                 if (setup.get(STOP_IPTABLES)) {
-                    customisationForLogging.add("stop iptables");
+                    if (windows) {
+                        LOG.warn("Ignoring flag OPEN_IPTABLES on Windows location {}", winRmMachineLocation);
+                    } else {
+                        customisationForLogging.add("stop iptables");
 
-                    List<String> cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
-                    sshMachineLocation.execCommands("Stopping iptables", cmds);
+                        List<String> cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
+                        jcloudsSshMachineLocation.execCommands("Stopping iptables", cmds);
+                    }
                 }
 
                 List<String> extraKeyUrlsToAuth = setup.get(EXTRA_PUBLIC_KEY_URLS_TO_AUTH);
                 if (extraKeyUrlsToAuth!=null && !extraKeyUrlsToAuth.isEmpty()) {
-                    List<String> extraKeyDataToAuth = MutableList.of();
-                    for (String keyUrl: extraKeyUrlsToAuth) {
-                        extraKeyDataToAuth.add(ResourceUtils.create().getResourceAsString(keyUrl));
+                    if (windows) {
+                        LOG.warn("Ignoring flag EXTRA_PUBLIC_KEY_URLS_TO_AUTH on Windows location", winRmMachineLocation);
+                    } else {
+                        List<String> extraKeyDataToAuth = MutableList.of();
+                        for (String keyUrl : extraKeyUrlsToAuth) {
+                            extraKeyDataToAuth.add(ResourceUtils.create().getResourceAsString(keyUrl));
+                        }
+                        jcloudsSshMachineLocation.execCommands("Authorizing ssh keys",
+                                ImmutableList.of(new AuthorizeRSAPublicKeys(extraKeyDataToAuth).render(org.jclouds.scriptbuilder.domain.OsFamily.UNIX)));
                     }
-                    sshMachineLocation.execCommands("Authorizing ssh keys",
-                        ImmutableList.of(new AuthorizeRSAPublicKeys(extraKeyDataToAuth).render(org.jclouds.scriptbuilder.domain.OsFamily.UNIX)));
                 }
 
             } else {
@@ -812,24 +862,48 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
-                customizer.customize(this, computeService, sshMachineLocation);
+                if (windows) {
+                    LOG.warn("Ignoring customizer {} on Windows location {}", customizer, winRmMachineLocation);
+                    // TODO: WinRm based JcloudsLocationCustomizer
+                } else {
+                    customizer.customize(this, computeService, jcloudsSshMachineLocation);
+                }
             }
 
             customizedTimestamp = Duration.of(provisioningStopwatch);
 
-            LOG.info("Finished VM "+setup.getDescription()+" creation:"
-                    + " "+sshMachineLocation.getUser()+"@"+sshMachineLocation.getAddress()+":"+sshMachineLocation.getPort()
-                    + (Boolean.TRUE.equals(setup.get(LOG_CREDENTIALS))
-                              ? "password=" + userCredentials.getOptionalPassword().or("<absent>")
-                                      + " && key=" + userCredentials.getOptionalPrivateKey().or("<absent>")
-                              : "")
-                    + " ready after "+Duration.of(provisioningStopwatch).toStringRounded()
-                    + " ("+template+" template built in "+Duration.of(templateTimestamp).toStringRounded()+";"
-                    + " "+node+" provisioned in "+Duration.of(provisionTimestamp).subtract(templateTimestamp).toStringRounded()+";"
-                    + " "+sshMachineLocation+" ssh usable in "+Duration.of(usableTimestamp).subtract(provisionTimestamp).toStringRounded()+";"
-                    + " and os customized in "+Duration.of(customizedTimestamp).subtract(usableTimestamp).toStringRounded()+" - "+Joiner.on(", ").join(customisationForLogging)+")");
+            String logMessage;
 
-            return sshMachineLocation;
+            if (windows) {
+                // TODO: More complete logging for WinRmMachineLocation
+                // FIXME: Remove try-catch!
+                try {
+                    logMessage = "Finished VM " + setup.getDescription() + " creation:"
+                            + " " + winRmMachineLocation.getConfig(WinRmMachineLocation.WINDOWS_USERNAME) + "@" + machineLocation.getAddress()
+                            + " username=" + winRmMachineLocation.getUsername()
+                            + " ready after " + Duration.of(provisioningStopwatch).toStringRounded()
+                            + " (" + template + " template built in " + Duration.of(templateTimestamp).toStringRounded() + ";"
+                            + " " + node + " provisioned in " + Duration.of(provisionTimestamp).subtract(templateTimestamp).toStringRounded() + ";";
+                } catch (Exception e){
+                    logMessage = Arrays.toString(e.getStackTrace());
+                }
+            } else {
+                logMessage = "Finished VM "+setup.getDescription()+" creation:"
+                        + " "+jcloudsSshMachineLocation.getUser()+"@"+machineLocation.getAddress()+":"+jcloudsSshMachineLocation.getPort()
+                        + (Boolean.TRUE.equals(setup.get(LOG_CREDENTIALS))
+                        ? "password=" + userCredentials.getOptionalPassword().or("<absent>")
+                        + " && key=" + userCredentials.getOptionalPrivateKey().or("<absent>")
+                        : "")
+                        + " ready after "+Duration.of(provisioningStopwatch).toStringRounded()
+                        + " ("+template+" template built in "+Duration.of(templateTimestamp).toStringRounded()+";"
+                        + " "+node+" provisioned in "+Duration.of(provisionTimestamp).subtract(templateTimestamp).toStringRounded()+";"
+                        + " "+jcloudsSshMachineLocation+" ssh usable in "+Duration.of(usableTimestamp).subtract(provisionTimestamp).toStringRounded()+";"
+                        + " and os customized in "+Duration.of(customizedTimestamp).subtract(usableTimestamp).toStringRounded()+" - "+Joiner.on(", ").join(customisationForLogging)+")";
+            }
+            
+            LOG.info(logMessage);
+
+            return machineLocation;
         } catch (Exception e) {
             if (e instanceof RunNodesException && ((RunNodesException)e).getNodeErrors().size() > 0) {
                 node = Iterables.get(((RunNodesException)e).getNodeErrors().keySet(), 0);
@@ -842,8 +916,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.debug(Throwables.getStackTraceAsString(e));
 
             if (destroyNode) {
-                if (sshMachineLocation != null) {
-                    releaseSafely(sshMachineLocation);
+                if (machineLocation != null) {
+                    releaseSafely(machineLocation);
                 } else {
                     releaseNodeSafely(node);
                 }
@@ -851,6 +925,52 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
             throw Exceptions.propagate(e);
         }
+    }
+
+    private void waitForWinRmAvailable(final NodeMetadata node, final LoginCredentials expectedCredentials, ConfigBag setup) {
+        // TODO: Reduce / remove duplication between this and waitForReachable
+        String waitForWinRmAvailable = setup.get(WAIT_FOR_WINRM_AVAILABLE);
+        checkArgument(!"false".equalsIgnoreCase(waitForWinRmAvailable), "waitForWinRmAvailable called despite waitForWinRmAvailable=%s", waitForWinRmAvailable);
+
+        long delayMs = -1;
+        try {
+            delayMs = Time.parseTimeString(""+waitForWinRmAvailable);
+        } catch (Exception e) {
+            // normal if 'true'; just fall back to default
+        }
+        if (delayMs<0)
+            delayMs = Time.parseTimeString(WAIT_FOR_WINRM_AVAILABLE.getDefaultValue());
+
+        // FIXME: remove this
+        LOG.info("Address: " + node.getPublicAddresses().iterator().next());
+        LOG.info("User: " + expectedCredentials.getUser());
+        LOG.info("Password: " + expectedCredentials.getOptionalPassword().get());
+        final Session session = WinRMFactory.INSTANCE.createSession(node.getPublicAddresses().iterator().next(),
+                expectedCredentials.getUser(), expectedCredentials.getOptionalPassword().get());
+
+        Callable<Boolean> checker = new Callable<Boolean>() {
+            public Boolean call() {
+                return session.run_cmd("hostname").getStatusCode() == 0;
+            }};
+
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        ReferenceWithError<Boolean> reachable = new Repeater()
+                .every(1, SECONDS)
+                .until(checker)
+                .limitTimeTo(delayMs, MILLISECONDS)
+                .runKeepingError();
+
+        if (!reachable.getWithoutError()) {
+            throw new IllegalStateException("WinRm failed for "+
+                    expectedCredentials.getUser()+"@"+node.getPublicAddresses().iterator().next()+" ("+setup.getDescription()+") after waiting "+
+                    Time.makeTimeStringRounded(delayMs), reachable.getError());
+        }
+
+        LOG.debug("VM {}: is available via WinRm after {} on {}@{}",new Object[] {
+                setup.getDescription(), Time.makeTimeStringRounded(stopwatch),
+                expectedCredentials.getUser(), node.getPublicAddresses().iterator().next()});
+
     }
 
 
@@ -955,7 +1075,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof EC2TemplateOptions) {
                             if (v==null) return;
-                            ((EC2TemplateOptions)t).userData(v.toString().getBytes());
+                            String data = v.toString();
+                            if (!(data.startsWith("<script>") || data.startsWith("<powershell>"))) {
+                                data = "<script> " + data + " </script>";
+                            }
+                            ((EC2TemplateOptions)t).userData(data.getBytes());
                             // TODO avail in next jclouds thanks to @andreaturli
 //                          } else if (t instanceof SoftLayerTemplateOptions) {
 //                              ((SoftLayerTemplateOptions)t).userData(Strings.toString(v));
@@ -1247,6 +1371,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         TemplateOptions options = template.getOptions();
 
+        if (template.getImage().getOperatingSystem().getFamily().equals(OsFamily.WINDOWS)) {
+            if (!(config.containsKey(JcloudsLocationConfig.USER_METADATA_STRING) || config.containsKey(JcloudsLocationConfig.USER_METADATA_MAP))) {
+                config.put(JcloudsLocationConfig.USER_METADATA_STRING, WinRmMachineLocation.getDefaultUserMetadataString());
+            }
+        }
+               
         for (Map.Entry<ConfigKey<?>, CustomizeTemplateOptions> entry : SUPPORTED_TEMPLATE_OPTIONS_PROPERTIES.entrySet()) {
             ConfigKey<?> key = entry.getKey();
             CustomizeTemplateOptions code = entry.getValue();
@@ -1803,6 +1933,26 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
+    protected WinRmMachineLocation registerWinRmMachineLocation(String vmHostname, ConfigBag setup) {
+        WinRmMachineLocation winRmMachineLocation = createWinRmMachineLocation(vmHostname, setup);
+        winRmMachineLocation.setParent(this);
+        return winRmMachineLocation;
+    }
+
+    protected WinRmMachineLocation createWinRmMachineLocation(String vmHostname, ConfigBag setup) {
+        if (isManaged()) {
+            return getManagementContext().getLocationManager().createLocation(LocationSpec.create(WinRmMachineLocation.class)
+                    .configure("displayName", vmHostname)
+                    .configure("address", vmHostname)
+                    .configure("user", getUser(setup))
+                    .configure(WinRmMachineLocation.WINDOWS_USERNAME, setup.get(USER))
+                    .configure(WinRmMachineLocation.WINDOWS_PASSWORD, setup.get(PASSWORD))
+            );
+        } else {
+            throw new UnsupportedOperationException("Cannot create WinRmMachineLocation because " + this + " is not managed");
+        }
+    }
+
     // -------------- give back the machines------------------
 
     protected Map<String,Object> extractSshConfig(ConfigBag setup, NodeMetadata node) {
@@ -1838,7 +1988,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
 
     @Override
-    public void release(SshMachineLocation machine) {
+    public void release(MachineLocation machine) {
         String instanceId = vmInstanceIds.remove(machine);
         if (instanceId == null) {
             LOG.info("Attempted release of unknown machine "+machine+" in "+toString());
@@ -1866,7 +2016,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
 
         try {
-            releasePortForwarding(machine);
+            if (!machine.getMachineDetails().getOsDetails().isWindows()) {
+                releasePortForwarding((SshMachineLocation)machine);
+            }
         } catch (Exception e) {
             LOG.error("Problem releasing port-forwarding for machine "+machine+" in "+this+", instance id "+instanceId+
                 "; ignoring and continuing, "
@@ -1904,7 +2056,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    protected void releaseSafely(SshMachineLocation machine) {
+    protected void releaseSafely(MachineLocation machine) {
         try {
             release(machine);
         } catch (Exception e) {

@@ -69,6 +69,10 @@ public interface CloudLocationConfig {
             "Whether and how long to wait for a newly provisioned VM to be accessible via ssh; " +
             "if 'false', won't check; if 'true' uses default duration; otherwise accepts a time string e.g. '5m' (the default) or a number of milliseconds", "5m");
 
+    public static final ConfigKey<String> WAIT_FOR_WINRM_AVAILABLE = ConfigKeys.newStringConfigKey("waitForWinRmAvailable",
+            "Whether and how long to wait for a newly provisioned VM to be accessible via WinRm; " +
+                    "if 'false', won't check; if 'true' uses default duration; otherwise accepts a time string e.g. '30m' (the default) or a number of milliseconds", "30m");
+
     public static final ConfigKey<Boolean> LOG_CREDENTIALS = ConfigKeys.newBooleanConfigKey(
             "logCredentials", 
             "Whether to log credentials of a new VM - strongly recommended never be used in production, as it is a big security hole!",
