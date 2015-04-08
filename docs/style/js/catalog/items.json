@@ -1,4 +1,4 @@
-var items = {
+{
   "entities" : [ {
     "type" : "brooklyn.entity.messaging.activemq.ActiveMQBroker",
     "defaultVersion" : "5.7.0",
