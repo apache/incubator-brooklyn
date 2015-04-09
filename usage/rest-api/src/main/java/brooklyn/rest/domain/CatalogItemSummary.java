@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+/* This class is placed here as a workaround to an issue where registeredType was missing */
 package brooklyn.rest.domain;
 
 import java.net.URI;
@@ -78,6 +80,32 @@ public class CatalogItemSummary implements HasId, HasName {
         this.deprecated = deprecated;
         this.registeredType=registeredType;
     }
+
+    public CatalogItemSummary(
+            @JsonProperty("symbolicName") String symbolicName,
+            @JsonProperty("version") String version,
+            @JsonProperty("name") String displayName,
+            @JsonProperty("javaType") String javaType,
+            @JsonProperty("planYaml") String planYaml,
+            @JsonProperty("description") String description,
+            @JsonProperty("iconUrl") String iconUrl,
+            @JsonProperty("deprecated") boolean deprecated,
+            @JsonProperty("links") Map<String, URI> links
+    ) {
+        this.id = symbolicName + ":" + version;
+        this.symbolicName = symbolicName;
+        this.type = symbolicName;
+        this.version = version;
+        this.name = displayName;
+        this.javaType = javaType;
+        this.planYaml = planYaml;
+        this.description = description;
+        this.iconUrl = iconUrl;
+        this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
+        this.deprecated = deprecated;
+        this.registeredType=null;
+    }
+
 
     @Override
     public String getId() {
