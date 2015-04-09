@@ -39,7 +39,7 @@ import brooklyn.util.text.Strings;
  */
 public class BrooklynServiceTypeResolver implements ServiceTypeResolver {
 
-    private static final Logger log = LoggerFactory.getLogger(ServiceTypeResolver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
 
     @Override
     public String getTypePrefix() { return DEFAULT_TYPE_PREFIX; }

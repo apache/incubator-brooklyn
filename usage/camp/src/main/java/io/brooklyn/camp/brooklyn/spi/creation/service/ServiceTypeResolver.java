@@ -18,17 +18,40 @@
  */
 package io.brooklyn.camp.brooklyn.spi.creation.service;
 
+import java.util.ServiceLoader;
+
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 
+/**
+ * Resolves and decorates {@link EntitySpec entity specifications} based on the {@code serviceType} in a template.
+ * <p>
+ * The {@link #getTypePrefix()} method returns a string that should match the beginning of the
+ * service type. The resolver implementation will use the rest of the service type information
+ * to create and decorate an approprate {@link EntitySpec entity}.
+ * <p>
+ * The resolvers are loaded using the {@link ServiceLoader} mechanism, allowing external libraries
+ * to add extra service type implementations that will be picked up at runtime.
+ *
+ * @see BrooklynServiceTypeResolver
+ * @see ChefServiceTypeResolver
+ */
 public interface ServiceTypeResolver {
 
     String DEFAULT_TYPE_PREFIX = "brooklyn";
 
+    /**
+     * The service type prefix the resolver is responsible for.
+     */
     String getTypePrefix();
 
+    /**
+     * The name of the Java type that Brooklyn will instantiate to create the
+     * service. This can be generated from parts of the service type information
+     * or may be a fixed value.
+     */
     String getBrooklynType(String serviceType);
 
     /**
@@ -38,6 +61,13 @@ public interface ServiceTypeResolver {
      */
     CatalogItem<Entity, EntitySpec<?>> getCatalogItem(BrooklynComponentTemplateResolver resolver, String serviceType);
 
+    /**
+     * Takes the provided {@link EntitySpec} and decorates it appropriately for the service type.
+     * <p>
+     * This includes setting configuration and adding policies, enrichers and initializers.
+     *
+     * @see BrooklynServiceTypeResolver#decorateSpec(BrooklynComponentTemplateResolver, EntitySpec)
+     */
     <T extends Entity> void decorateSpec(BrooklynComponentTemplateResolver resolver, EntitySpec<T> spec);
 
 }

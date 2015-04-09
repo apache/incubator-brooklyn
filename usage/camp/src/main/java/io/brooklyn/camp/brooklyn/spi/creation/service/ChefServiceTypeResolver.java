@@ -37,7 +37,7 @@ import brooklyn.util.text.Strings;
  */
 public class ChefServiceTypeResolver extends BrooklynServiceTypeResolver {
 
-    private static final Logger log = LoggerFactory.getLogger(ServiceTypeResolver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
 
     @Override
     public String getTypePrefix() { return "chef"; }
@@ -47,7 +47,7 @@ public class ChefServiceTypeResolver extends BrooklynServiceTypeResolver {
         return ChefEntity.class.getName();
     }
 
-    // chef: items are not in catalog
+    /** Chef items are not in the catalog. */
     @Override
     public CatalogItem<Entity, EntitySpec<?>> getCatalogItem(BrooklynComponentTemplateResolver resolver, String serviceType) {
         return null;

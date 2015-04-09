@@ -18,11 +18,20 @@
  */
 package io.brooklyn.camp.brooklyn.spi.creation.service;
 
+import io.brooklyn.camp.spi.PlatformComponentTemplate;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.entity.proxying.EntitySpec;
+
 /**
  * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code java:}
  * to Brooklyn {@link EntitySpec} instances.
  */
 public class JavaServiceTypeResolver extends BrooklynServiceTypeResolver {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
 
     @Override
     public String getTypePrefix() { return "java"; }

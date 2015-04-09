@@ -20,13 +20,21 @@ package io.brooklyn.camp.brooklyn.spi.creation.service;
 
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.VanillaSoftwareProcess;
+import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicRegionsFabric;
+import brooklyn.entity.java.VanillaJavaApp;
 import brooklyn.entity.proxying.EntitySpec;
+
+import com.google.common.base.CaseFormat;
+import com.google.common.base.Converter;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code catalog:}
@@ -34,7 +42,21 @@ import brooklyn.entity.proxying.EntitySpec;
  */
 public class CatalogServiceTypeResolver extends BrooklynServiceTypeResolver {
 
-    private static final Logger log = LoggerFactory.getLogger(ServiceTypeResolver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
+
+    // TODO currently a hardcoded list of aliases; would like that to come from mgmt somehow
+    private static final Map<String, String> CATALOG_TYPES = ImmutableMap.<String, String>builder()
+            .put("cluster", DynamicCluster.class.getName())
+            .put("fabric", DynamicRegionsFabric.class.getName())
+            .put("vanilla", VanillaSoftwareProcess.class.getName())
+            .put("software-process", VanillaSoftwareProcess.class.getName())
+            .put("java-app", VanillaJavaApp.class.getName())
+            .put("brooklyn-node", BrooklynNode.class.getName())
+            .put("web-app-cluster","brooklyn.entity.webapp.ControlledDynamicWebAppCluster")
+            .build();
+
+    // Allow catalog-type or CatalogType as service type string
+    private static final Converter<String, String> FMT = CaseFormat.LOWER_HYPHEN.converterTo(CaseFormat.UPPER_CAMEL);
 
     @Override
     public String getTypePrefix() { return "catalog"; }
@@ -44,13 +66,11 @@ public class CatalogServiceTypeResolver extends BrooklynServiceTypeResolver {
         String type = super.getBrooklynType(serviceType);
         if (type == null) return null;
 
-        // TODO currently a hardcoded list of aliases; would like that to come from mgmt somehow
-        if (type.equals("cluster") || type.equals("Cluster")) return DynamicCluster.class.getName();
-        if (type.equals("fabric") || type.equals("Fabric")) return DynamicRegionsFabric.class.getName();
-        if (type.equals("vanilla") || type.equals("Vanilla")) return VanillaSoftwareProcess.class.getName();
-        if (type.equals("web-app-cluster") || type.equals("WebAppCluster"))
-            // TODO use service discovery; currently included as string to avoid needing a reference to it
-            return "brooklyn.entity.webapp.ControlledDynamicWebAppCluster";
+        for (String check : CATALOG_TYPES.keySet()) {
+            if (type.equals(check) || type.equals(FMT.convert(check))) {
+                return CATALOG_TYPES.get(check);
+            }
+        }
 
         return type;
     }

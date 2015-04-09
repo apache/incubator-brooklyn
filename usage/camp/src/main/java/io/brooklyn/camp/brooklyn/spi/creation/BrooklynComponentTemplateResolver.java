@@ -28,6 +28,7 @@ import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -71,12 +72,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 /**
- * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code brooklyn:}
- * to Brooklyn {@link EntitySpec} instances.
- * <p>
- * but TODO this should probably be done by {@link BrooklynEntityMatcher}
- * so we have a spec by the time we come to instantiate.
- * (currently privileges "brooklyn.*" key names are checked in both places!)
+ * This generates instances of a template resolver that use a {@link ServiceTypeResolver}
+ * to parse the {@code serviceType} line in the template.
  */
 public class BrooklynComponentTemplateResolver {
 
@@ -118,11 +115,17 @@ public class BrooklynComponentTemplateResolver {
             return findService(context, type);
         }
 
+        // TODO This could be extended to support multiple prefixes per resolver and a 'best-match' algorithm
         protected static ServiceTypeResolver findService(BrooklynClassLoadingContext context, String type) {
-            String prefix = Splitter.on(":").splitToList(type).get(0);
-            ServiceLoader<ServiceTypeResolver> loader = ServiceLoader.load(ServiceTypeResolver.class, context.getManagementContext().getCatalog().getRootClassLoader());
-            for (ServiceTypeResolver resolver : loader) {
-               if (prefix.equalsIgnoreCase(resolver.getTypePrefix())) return resolver;
+            if (type.indexOf(':') != -1) {
+                String prefix = Splitter.on(":").splitToList(type).get(0);
+                ServiceLoader<ServiceTypeResolver> loader = ServiceLoader.load(ServiceTypeResolver.class,
+                        context.getManagementContext().getCatalog().getRootClassLoader());
+                for (ServiceTypeResolver resolver : loader) {
+                   if (prefix.equals(resolver.getTypePrefix())) {
+                       return resolver;
+                   }
+                }
             }
             return null;
         }
