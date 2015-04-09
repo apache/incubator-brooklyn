@@ -18,22 +18,29 @@
  */
 package brooklyn.location.basic;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+
+import org.apache.commons.codec.binary.Base64;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.MachineDetails;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
@@ -43,6 +50,9 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
 
     public static final ConfigKey<String> WINDOWS_PASSWORD = ConfigKeys.newStringConfigKey("windows.password",
             "Password to use when connecting to the remote machine");
+
+    public static final ConfigKey<Integer> COPY_FILE_CHUNK_SIZE_BYTES = ConfigKeys.newIntegerConfigKey("windows.copy.file.size.bytes",
+            "Size of file chunks (in bytes) to be used when copying a file to the remote server", 1024);
 
     @SetFromFlag
     protected String user;
@@ -88,13 +98,36 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public int executePsScript(List<String> psScript) {
-        // FIXME: Remove this!
-        System.out.println("Host: " + getHostname());
-        System.out.println("User: " + getUsername());
-        System.out.println("Password: " + getPassword());
         WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
         WinRmToolResponse response = winRmTool.executePs(psScript);
         return response.getStatusCode();
+    }
+
+    public int copyTo(File source, File destination) {
+        try {
+            return copyTo(new FileInputStream(source), destination);
+        } catch (FileNotFoundException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    public int copyTo(InputStream source, File destination) {
+        executePsScript(ImmutableList.of("rm -ErrorAction SilentlyContinue " + destination.getPath()));
+        try {
+            byte[] inputData = new byte[getConfig(COPY_FILE_CHUNK_SIZE_BYTES)];
+            int bytesRead = source.read(inputData);
+            while (bytesRead > 0) {
+                byte[] chunk = Arrays.copyOf(inputData, bytesRead);
+                String encoded = new String(Base64.encodeBase64(chunk));
+                executePsScript(ImmutableList.of("Add-Content -Encoding Byte -path " + destination.getPath() +
+                        " -value ([System.Convert]::FromBase64String(\"" + encoded + "\"))"));
+                bytesRead = source.read(inputData);
+            }
+
+            return 0;
+        } catch (java.io.IOException e) {
+            throw Exceptions.propagate(e);
+        }
     }
 
     public String getUsername() {
