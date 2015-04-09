@@ -81,7 +81,7 @@ public class Yamls {
             x = Iterables.getOnlyElement(result);
         }
         if (type.isInstance(x)) return (T)x;
-        throw new ClassCastException("Cannot convert "+x+" to "+type);
+        throw new ClassCastException("Cannot convert "+x+" ("+x.getClass()+") to "+type);
     }
 
     /**
