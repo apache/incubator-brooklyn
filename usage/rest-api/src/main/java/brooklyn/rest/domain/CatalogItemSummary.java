@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+/* This class is placed here as a workaround to an issue where registeredType was missing */
 package brooklyn.rest.domain;
 
 import java.net.URI;
@@ -40,9 +42,9 @@ public class CatalogItemSummary implements HasId, HasName {
     //needed for backwards compatibility only (json serializer works on fields, not getters)
     @Deprecated
     private final String type;
-    
+
     private final String javaType;
-    
+
     private final String name;
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String description;
@@ -50,7 +52,7 @@ public class CatalogItemSummary implements HasId, HasName {
     private final String iconUrl;
     private final String planYaml;
     private final boolean deprecated;
-    
+    private final String registeredType;
     private final Map<String, URI> links;
 
     public CatalogItemSummary(
@@ -62,8 +64,9 @@ public class CatalogItemSummary implements HasId, HasName {
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
             @JsonProperty("deprecated") boolean deprecated,
-            @JsonProperty("links") Map<String, URI> links
-            ) {
+            @JsonProperty("links") Map<String, URI> links,
+            @JsonProperty("registeredType") String registeredType
+    ) {
         this.id = symbolicName + ":" + version;
         this.symbolicName = symbolicName;
         this.type = symbolicName;
@@ -75,11 +78,42 @@ public class CatalogItemSummary implements HasId, HasName {
         this.iconUrl = iconUrl;
         this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
         this.deprecated = deprecated;
+        this.registeredType=registeredType;
     }
+
+    public CatalogItemSummary(
+            @JsonProperty("symbolicName") String symbolicName,
+            @JsonProperty("version") String version,
+            @JsonProperty("name") String displayName,
+            @JsonProperty("javaType") String javaType,
+            @JsonProperty("planYaml") String planYaml,
+            @JsonProperty("description") String description,
+            @JsonProperty("iconUrl") String iconUrl,
+            @JsonProperty("deprecated") boolean deprecated,
+            @JsonProperty("links") Map<String, URI> links
+    ) {
+        this.id = symbolicName + ":" + version;
+        this.symbolicName = symbolicName;
+        this.type = symbolicName;
+        this.version = version;
+        this.name = displayName;
+        this.javaType = javaType;
+        this.planYaml = planYaml;
+        this.description = description;
+        this.iconUrl = iconUrl;
+        this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
+        this.deprecated = deprecated;
+        this.registeredType=null;
+    }
+
 
     @Override
     public String getId() {
         return id;
+    }
+
+    public String getRegisteredType(){
+        return registeredType;
     }
 
     public String getSymbolicName() {
@@ -136,10 +170,10 @@ public class CatalogItemSummary implements HasId, HasName {
     public int hashCode() {
         return Objects.hashCode(symbolicName, version, name, javaType, deprecated);
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         return EqualsBuilder.reflectionEquals(this, obj);
     }
-    
+
 }
