@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.basic;
 
+import java.io.File;
+import java.io.InputStream;
 import java.util.List;
 
 import brooklyn.location.basic.WinRmMachineLocation;
@@ -38,6 +40,14 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
 
     public int executePowerShell(List<String> psScript) {
         return getMachine().executePsScript(psScript);
+    }
+
+    public int copyTo(File source, File destination) {
+        return getMachine().copyTo(source, destination);
+    }
+
+    public int copyTo(InputStream source, File destination) {
+        return getMachine().copyTo(source, destination);
     }
 
 }
