@@ -207,7 +207,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
     private ImmutableList<String> installRpmBased() {
         return ImmutableList.<String>builder()
                 .add("curl https://packagecloud.io/install/repositories/basho/riak/script.rpm | " + BashCommands.sudo("bash"))
-                .add(BashCommands.sudo("yum install -y riak-" + getEntity().getFullVersion() + "-1"))
+                .add(BashCommands.sudo("yum install -y riak-" + getEntity().getFullVersion() + "*"))
                 .build();
     }
 
