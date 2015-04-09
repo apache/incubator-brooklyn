@@ -20,7 +20,7 @@ package brooklyn.util.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -37,6 +37,7 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.JavaClassNames;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 
@@ -47,7 +48,9 @@ import com.google.common.collect.Sets;
  * It is recommended to use {@link ConfigKey} instances to access,
  * although in some cases (such as setting fields from flags, or copying a map)
  * it may be necessary to mark things as used, or put, when only a string key is available.
- * 
+ * <p>
+ * This bag is order-preserving and thread-safe except where otherwise indicated.
+ * <p>
  * @author alex
  */
 public class ConfigBag {
@@ -71,6 +74,9 @@ public class ConfigBag {
 
     /**
      * Creates an instance that is backed by a "live map" (e.g. storage in a datagrid).
+     * The order-preserving nature of this class is only guaranteed if the
+     * provided storage has those properties. External modifications to the store can cause
+     * {@link ConcurrentModificationException} to be thrown, here or elsewhere. 
      */
     public static ConfigBag newLiveInstance(Map<String,Object> storage) {
         return new ConfigBag(checkNotNull(storage, "storage map must be specified"));
@@ -96,14 +102,42 @@ public class ConfigBag {
      * (note: this applies even for values which are overridden and the overridden value is used);
      * however subsequent uses in the original set will not be marked here
      */
-    public static ConfigBag newInstanceExtending(final ConfigBag configBag, Map<?,?> flags) {
+    @Beta
+    public static ConfigBag newInstanceExtending(final ConfigBag parentBag) {
+        return new ConfigBagExtendingParent(parentBag).copy(parentBag);
+    }
+
+    /** @see #newInstanceExtending(ConfigBag) */
+    public static class ConfigBagExtendingParent extends ConfigBag {
+        ConfigBag parentBag;
+        private ConfigBagExtendingParent(ConfigBag parentBag) {
+            this.parentBag = parentBag;
+        }
+        @Override
+        public void markUsed(String key) {
+            super.markUsed(key);
+            if (parentBag!=null)
+                parentBag.markUsed(key);
+        }
+    }
+    
+    /** As {@link #newInstanceExtending(ConfigBag)} but also putting the supplied values. */
+    @Beta
+    public static ConfigBag newInstanceExtending(final ConfigBag configBag, Map<?,?> optionalAdditionalValues) {
+        return newInstanceExtending(configBag).putAll(optionalAdditionalValues);
+    }
+
+    /** @deprecated since 0.7.0, not used; kept only for rebind compatibility where the inner class is used 
+     * (now replaced by a static class above) */
+    @Beta @Deprecated
+    public static ConfigBag newInstanceWithInnerClass(final ConfigBag configBag, Map<?,?> optionalAdditionalValues) {
         return new ConfigBag() {
             @Override
             public void markUsed(String key) {
                 super.markUsed(key);
                 configBag.markUsed(key);
             }
-        }.copy(configBag).putAll(flags);
+        }.copy(configBag).putAll(optionalAdditionalValues);
     }
 
     public ConfigBag() {
@@ -132,12 +166,12 @@ public class ConfigBag {
     
     /** current values for all entries 
      * @return non-modifiable map of strings to object */
-    public Map<String,Object> getAllConfig() {
-        return Collections.unmodifiableMap(config);
+    public synchronized Map<String,Object> getAllConfig() {
+        return MutableMap.copyOf(config).asUnmodifiable();
     }
 
     /** current values for all entries in a map where the keys are converted to {@link ConfigKey} instances */
-    public Map<ConfigKey<?>, ?> getAllConfigAsConfigKeyMap() {
+    public synchronized Map<ConfigKey<?>, ?> getAllConfigAsConfigKeyMap() {
         Map<ConfigKey<?>,Object> result = MutableMap.of();
         for (Map.Entry<String,Object> entry: config.entrySet()) {
             result.put(ConfigKeys.newConfigKey(Object.class, entry.getKey()), entry.getValue());
@@ -145,15 +179,18 @@ public class ConfigBag {
         return result;
     }
 
-    /** internal map containing the current values for all entries;
-     * for use where the caller wants to modify this directly and knows it is safe to do so */ 
+    /** Returns the internal map containing the current values for all entries;
+     * for use where the caller wants to modify this directly and knows it is safe to do so 
+     * <p>
+     * Accesses to the returned map must be synchronized on this bag if the 
+     * thread-safe behaviour is required. */ 
     public Map<String,Object> getAllConfigMutable() {
         if (live) {
             // TODO sealed no longer works as before, because `config` is the backing storage map.
             // Therefore returning it is dangerous! Even if we were to replace our field with an immutable copy,
             // the underlying datagrid's map would still be modifiable. We need a way to switch the returned
             // value's behaviour to sealable (i.e. wrapping the returned map).
-            return (sealed) ? Collections.unmodifiableMap(config) : config;
+            return (sealed) ? MutableMap.copyOf(config).asUnmodifiable() : config;
         } else {
             return config;
         }
@@ -161,12 +198,15 @@ public class ConfigBag {
 
     /** current values for all entries which have not yet been used 
      * @return non-modifiable map of strings to object */
-    public Map<String,Object> getUnusedConfig() {
-        return Collections.unmodifiableMap(unusedConfig);
+    public synchronized Map<String,Object> getUnusedConfig() {
+        return MutableMap.copyOf(unusedConfig).asUnmodifiable();
     }
 
-    /** internal map containing the current values for all entries which have not yet been used;
-     * for use where the caller wants to modify this directly and knows it is safe to do so */
+    /** Returns the internal map containing the current values for all entries which have not yet been used;
+     * for use where the caller wants to modify this directly and knows it is safe to do so 
+     * <p>
+     * Accesses to the returned map must be synchronized on this bag if the 
+     * thread-safe behaviour is required. */ 
     public Map<String,Object> getUnusedConfigMutable() {
         return unusedConfig;
     }
@@ -191,7 +231,7 @@ public class ConfigBag {
         return putIfAbsent(MutableMap.of(key, value));
     }
 
-    public ConfigBag putIfAbsent(Map<?, ?> propertiesToSet) {
+    public synchronized ConfigBag putIfAbsent(Map<?, ?> propertiesToSet) {
         if (propertiesToSet==null)
             return this;
         for (Map.Entry<?, ?> entry: propertiesToSet.entrySet()) {
@@ -242,7 +282,7 @@ public class ConfigBag {
         return this;
     }
     
-    protected void putAsStringKey(Object key, Object value) {
+    protected synchronized void putAsStringKey(Object key, Object value) {
         if (key instanceof HasConfigKey<?>) key = ((HasConfigKey<?>)key).getConfigKey();
         if (key instanceof ConfigKey<?>) key = ((ConfigKey<?>)key).getName();
         if (key instanceof String) {
@@ -262,7 +302,7 @@ public class ConfigBag {
     /** recommended to use {@link #put(ConfigKey, Object)} but there are times
      * (e.g. when copying a map) where we want to put a string key directly 
      */
-    public Object putStringKey(String key, Object value) {
+    public synchronized Object putStringKey(String key, Object value) {
         if (sealed) 
             throw new IllegalStateException("Cannot insert "+key+"="+value+": this config bag has been sealed and is now immutable.");
         boolean isNew = !config.containsKey(key);
@@ -285,14 +325,14 @@ public class ConfigBag {
     }
 
     public boolean containsKey(HasConfigKey<?> key) {
-        return config.containsKey(key.getConfigKey());
+        return containsKey(key.getConfigKey());
     }
 
     public boolean containsKey(ConfigKey<?> key) {
-        return config.containsKey(key.getName());
+        return containsKey(key.getName());
     }
 
-    public boolean containsKey(String key) {
+    public synchronized boolean containsKey(String key) {
         return config.containsKey(key);
     }
 
@@ -318,7 +358,7 @@ public class ConfigBag {
     }
 
     /** returns the first key in the list for which a value is explicitly set, then defaulting to defaulting value of preferred key */
-    public <T> T getFirst(ConfigKey<T> preferredKey, ConfigKey<T> ...otherCurrentKeysInOrderOfPreference) {
+    public synchronized <T> T getFirst(ConfigKey<T> preferredKey, ConfigKey<T> ...otherCurrentKeysInOrderOfPreference) {
         if (containsKey(preferredKey)) 
             return get(preferredKey);
         for (ConfigKey<T> key: otherCurrentKeysInOrderOfPreference) {
@@ -336,7 +376,7 @@ public class ConfigBag {
     /** returns the value for the first key in the list for which a value is set,
      * warning if any of the deprecated keys have a value which is different to that set on the first set current key
      * (including warning if a deprecated key has a value but no current key does) */
-    public Object getWithDeprecation(ConfigKey<?>[] currentKeysInOrderOfPreference, ConfigKey<?> ...deprecatedKeys) {
+    public synchronized Object getWithDeprecation(ConfigKey<?>[] currentKeysInOrderOfPreference, ConfigKey<?> ...deprecatedKeys) {
         // Get preferred key (or null)
         ConfigKey<?> preferredKeyProvidingValue = null;
         Object result = null;
@@ -399,10 +439,8 @@ public class ConfigBag {
     protected <T> T get(ConfigKey<T> key, boolean markUsed) {
         // TODO for now, no evaluation -- maps / closure content / other smart (self-extracting) keys are NOT supported
         // (need a clean way to inject that behaviour, as well as desired TypeCoercions)
-        if (config.containsKey(key.getName()))
-            return coerceFirstNonNullKeyValue(key, getStringKey(key.getName(), markUsed));
-        
-        return coerceFirstNonNullKeyValue(key);
+        // this method, and the coercion, is not synchronized, nor does it need to be, because the "get" is synchronized. 
+        return coerceFirstNonNullKeyValue(key, getStringKey(key.getName(), markUsed));
     }
 
     /** returns the first non-null value to be the type indicated by the key, or the keys default value if no non-null values are supplied */
@@ -415,7 +453,7 @@ public class ConfigBag {
     protected Object getStringKey(String key, boolean markUsed) {
         return getStringKeyMaybe(key, markUsed).orNull();
     }
-    protected Maybe<Object> getStringKeyMaybe(String key, boolean markUsed) {
+    protected synchronized Maybe<Object> getStringKeyMaybe(String key, boolean markUsed) {
         if (config.containsKey(key)) {
             if (markUsed) markUsed(key);
             return Maybe.of(config.get(key));
@@ -424,11 +462,11 @@ public class ConfigBag {
     }
 
     /** indicates that a string key in the config map has been accessed */
-    public void markUsed(String key) {
+    public synchronized void markUsed(String key) {
         unusedConfig.remove(key);
     }
 
-    public void clear() {
+    public synchronized void clear() {
         if (sealed) 
             throw new IllegalStateException("Cannot clear this config bag has been sealed and is now immutable.");
         config.clear();
@@ -440,7 +478,7 @@ public class ConfigBag {
         return this;
     }
 
-    public void remove(ConfigKey<?> key) {
+    public synchronized void remove(ConfigKey<?> key) {
         remove(key.getName());
     }
 
@@ -449,7 +487,7 @@ public class ConfigBag {
         return this;
     }
 
-    public void remove(String key) {
+    public synchronized void remove(String key) {
         if (sealed) 
             throw new IllegalStateException("Cannot remove "+key+": this config bag has been sealed and is now immutable.");
         config.remove(key);
@@ -457,6 +495,28 @@ public class ConfigBag {
     }
 
     public ConfigBag copy(ConfigBag other) {
+        // ensure locks are taken in a canonical order to prevent deadlock
+        if (other==null) {
+            synchronized (this) {
+                return copyWhileSynched(other);
+            }
+        }
+        if (System.identityHashCode(other) < System.identityHashCode(this)) {
+            synchronized (other) {
+                synchronized (this) {
+                    return copyWhileSynched(other);
+                }
+            }
+        } else {
+            synchronized (this) {
+                synchronized (other) {
+                    return copyWhileSynched(other);
+                }
+            }
+        }
+    }
+    
+    protected ConfigBag copyWhileSynched(ConfigBag other) {
         if (sealed) 
             throw new IllegalStateException("Cannot copy "+other+" to "+this+": this config bag has been sealed and is now immutable.");
         putAll(other.getAllConfig());
@@ -465,11 +525,11 @@ public class ConfigBag {
         return this;
     }
 
-    public int size() {
+    public synchronized int size() {
         return config.size();
     }
     
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return config.isEmpty();
     }
     
@@ -479,7 +539,7 @@ public class ConfigBag {
         return this;
     }
 
-    public boolean isUnused(ConfigKey<?> key) {
+    public synchronized boolean isUnused(ConfigKey<?> key) {
         return unusedConfig.containsKey(key.getName());
     }
     
@@ -499,6 +559,8 @@ public class ConfigBag {
         return this;
     }
 
+    // TODO why have both this and mutable
+    /** @see #getAllConfigMutable() */
     public Map<String, Object> getAllConfigRaw() {
         return getAllConfigMutable();
     }
