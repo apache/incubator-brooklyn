@@ -95,9 +95,12 @@ public class BrooklynDslCommon {
         return new DslComponent(Scope.THIS, "").attributeWhenReady(sensorName);
     }
 
-    // TODO Would be nice to have sensor(String sensorName), which would take the sensor
-    // from the entity in question, but that would require refactoring of Brooklyn DSL
-
+    /** Returns a {@link Sensor}, looking up the sensor on the context if available and using that,
+     * or else defining an untyped (Object) sensor */
+    public static BrooklynDslDeferredSupplier<Sensor<?>> sensor(String sensorName) {
+        return new DslComponent(Scope.THIS, "").sensor(sensorName);
+    }
+    
     /** Returns a {@link Sensor} from the given entity type. */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static Sensor<?> sensor(String clazzName, String sensorName) {

@@ -230,6 +230,41 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
             return component.toString()+"."+"config("+keyName+")";
         }
     }
+    
+    public BrooklynDslDeferredSupplier<Sensor<?>> sensor(final String sensorName) {
+        return new DslSensorSupplier(this, sensorName);
+    }
+    protected final static class DslSensorSupplier extends BrooklynDslDeferredSupplier<Sensor<?>> {
+        private final DslComponent component;
+        private final String sensorName;
+        private static final long serialVersionUID = -4735177561947722511L;
+
+        public DslSensorSupplier(DslComponent component, String sensorName) {
+            this.component = Preconditions.checkNotNull(component);
+            this.sensorName = sensorName;
+        }
+
+        @Override
+        public Task<Sensor<?>> newTask() {
+            return Tasks.<Sensor<?>>builder().name("looking up sensor for "+sensorName).dynamic(false).body(new Callable<Sensor<?>>() {
+                @Override
+                public Sensor<?> call() throws Exception {
+                    Entity targetEntity = component.get();
+                    Sensor<?> result = null;
+                    if (targetEntity!=null) {
+                        result = targetEntity.getEntityType().getSensor(sensorName);
+                    }
+                    if (result!=null) return result;
+                    return Sensors.newSensor(Object.class, sensorName);
+                }
+            }).build();
+        }
+
+        @Override
+        public String toString() {
+            return component.toString()+"."+"sensor("+sensorName+")";
+        }
+    }
 
     public static enum Scope {
         GLOBAL ("global"),

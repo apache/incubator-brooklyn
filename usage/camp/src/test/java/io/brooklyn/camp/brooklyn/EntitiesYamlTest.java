@@ -460,7 +460,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
                 Assert.assertEquals(getResolvedConfigInTask(entity, key).get(), keyToEntity.get(key));
             } catch (Throwable t) {
                 Exceptions.propagateIfFatal(t);
-                Assert.fail("Wrong value for "+entity+":"+key+", "+entity.getConfigRaw(key,  false)+": "+t, t);
+                Assert.fail("Wrong value for "+entity+":"+key+", "+((EntityInternal)entity).config().getLocalRaw(key)+": "+t, t);
             }
         }
     }
@@ -699,7 +699,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         
         Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
         TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
-        EntitySpec<?> entitySpec = (EntitySpec<?>) entity.getAllConfigBag().getStringKey("key.does.not.match");
+        EntitySpec<?> entitySpec = (EntitySpec<?>) entity.config().getBag().getStringKey("key.does.not.match");
         assertEquals(entitySpec.getType(), TestEntity.class);
         assertEquals(entitySpec.getConfig(), ImmutableMap.of(TestEntity.CONF_NAME, "inchildspec"));
     }

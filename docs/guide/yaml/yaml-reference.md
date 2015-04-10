@@ -147,6 +147,7 @@ concise DSL defined here:
     until the given `sensor` from the component `ID` has a "truthy" (i.e. non-trivial, non-empty, non-zero) value
   * `.config("key")` will insert the value set against the given key at this entity (or nearest ancestor);
     can be used to supply config at the root which is used in multiple places in the plan
+  * `$brooklyn:sensor("sensor.name")` returns the given sensor on the current entity if found, or an untyped (Object) sensor;
 * `$brooklyn:component("scope", "ID")` is also supported, to limit scope to any of
   * `global`: looks for the `ID` anywhere in the plan
   * `child`: looks for the `ID` anywhere in the child only
@@ -157,7 +158,7 @@ concise DSL defined here:
 * `$brooklyn:formatString("pattern e.g. %s %s", "field 1", "field 2")` returns a future which creates the formatted string
   with the given parameters, where parameters may be strings *or* other tasks such as `attributeWhenReady`
 * `$brooklyn:literal("string")` returns the given string as a literal (suppressing any `$brooklyn:` expansion)
-* `$brooklyn:sensor("io.brooklyn.ContainingEntityClass", "sensor.name")` returns the strongly typed sensor defined in the given class
+  `$brooklyn:sensor("io.brooklyn.ContainingEntityClass", "sensor.name")` returns the strongly typed sensor defined in the given class
 * `$brooklyn:entitySpec(Map)` returns a new `ServiceSpecification` as defined by the given `Map`,
   but as an `EntitySpec` suitable for setting as the value of `ConfigKey<EntitySpec>` config items
   (such as `memberSpec` in `DynamicCluster`)
