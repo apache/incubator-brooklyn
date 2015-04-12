@@ -75,6 +75,11 @@ public interface CloudLocationConfig {
     public static final ConfigKey<Object> INBOUND_PORTS = new BasicConfigKey<Object>(Object.class, "inboundPorts", 
         "Inbound ports to be applied when creating a VM, on supported clouds " +
             "(either a single port as a String, or an Iterable<Integer> or Integer[])", null);
+    
+    public static final ConfigKey<Object> ADDITIONAL_INBOUND_PORTS = new BasicConfigKey<Object>(Object.class, "required.ports", 
+            "Required additional ports to be applied when creating a VM, on supported clouds " +
+                    "(either a single port as an Integer, or an Iterable<Integer> or Integer[])", null);
+    
     public static final ConfigKey<Boolean> OS_64_BIT = ConfigKeys.newBooleanConfigKey("os64Bit", 
         "Whether to require 64-bit OS images (true), 32-bit images (false), or either (null)");
     

@@ -21,8 +21,6 @@ package brooklyn.entity.basic;
 import groovy.time.TimeDuration;
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -416,6 +414,14 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         result.putAll(getConfig(PROVISIONING_PROPERTIES));
         if (result.get(CloudLocationConfig.INBOUND_PORTS) == null) {
             Collection<Integer> ports = getRequiredOpenPorts();
+            Object requiredPorts = result.get(CloudLocationConfig.ADDITIONAL_INBOUND_PORTS);
+            if (requiredPorts instanceof Integer){
+                ports.add((Integer)requiredPorts);
+            }else if (requiredPorts instanceof Iterable) {
+                for(Object o : (Iterable<?>)requiredPorts){
+                    if(o instanceof Integer) ports.add((Integer)o);
+                }
+            }
             if (ports != null && ports.size() > 0) result.put(CloudLocationConfig.INBOUND_PORTS, ports);
         }
         result.put(LocationConfigKeys.CALLER_CONTEXT, this);
@@ -423,8 +429,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     /** returns the ports that this entity wants to use;
-     * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange
-     * and any ports specified in provisioning properties as required.
+     * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange.
      */
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = MutableSet.of(22);
@@ -433,18 +438,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                 PortRange p = (PortRange)getConfig(k);
                 if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
             }   
-        }
-        
-        Map<String, Object> provisioningProperties = getConfig(PROVISIONING_PROPERTIES);
-        if(provisioningProperties.containsKey("required.ports")){
-            Object requiredPorts = provisioningProperties.get("required.ports");
-            if (requiredPorts instanceof Integer){
-                ports.add((Integer)requiredPorts);
-            }else if (requiredPorts instanceof List) {
-                for(Object o : (List<?>)requiredPorts){
-                    if(o instanceof Integer) ports.add((Integer)o);
-                }
-            }
         }
         
         log.debug("getRequiredOpenPorts detected default {} for {}", ports, this);
