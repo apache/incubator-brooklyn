@@ -20,17 +20,18 @@ package brooklyn.event.basic;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Iterables;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Identifiers;
+
+import com.google.common.collect.Iterables;
 
 public abstract class AbstractCollectionConfigKey<T, RawT extends Collection<Object>, V> extends AbstractStructuredConfigKey<T, RawT, V> {
 
@@ -54,15 +55,18 @@ public abstract class AbstractCollectionConfigKey<T, RawT extends Collection<Obj
     }
 
     @Override
-    protected RawT extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce) {
+    protected RawT extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce) throws InterruptedException, ExecutionException {
+        if (coerce) {
+            potentialBase = resolveValue(potentialBase, exec);
+        }
+
+        if (potentialBase==null) return null;
         if (potentialBase instanceof Map<?,?>) {
             return merge(false, ((Map<?,?>) potentialBase).values() );
         } else if (potentialBase instanceof Collection<?>) {
             return merge(false, (Collection<?>) potentialBase );
-        } else if (coerce) {
-            // TODO if it's a future could attempt type coercion
-            // (e.g. if we have a MapConfigKey we use to set dependent configuration
         }
+        log.warn("Unable to extract "+getName()+" as Collection; it is "+potentialBase.getClass().getName()+" "+potentialBase);
         return null;
     }
 
