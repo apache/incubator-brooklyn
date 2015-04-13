@@ -314,11 +314,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      */
     public void copyRuntimeResources() {
         try {
-            // Ensure environment variables are not looked up here, otherwise sub-classes might
-            // lookup port numbers and fail with ugly error if port is not set. It could also
-            // cause us to block for attribute ready earlier than we need.
-            DynamicTasks.queue(SshEffectorTasks.ssh("mkdir -p " + getRunDir()).summary("create run directory")
-                    .requiringExitCodeZero()).get();
+            createDirectory(getRunDir(), "create run directory");
 
             Map<String, String> runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
             if (runtimeFiles != null && runtimeFiles.size() > 0) {
