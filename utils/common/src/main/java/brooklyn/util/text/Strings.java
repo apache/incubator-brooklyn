@@ -181,6 +181,7 @@ public class Strings {
 
     /** convenience for {@link com.google.common.base.Joiner} */
     public static String join(Iterable<? extends Object> list, String seperator) {
+        if (list==null) return null;
         boolean app = false;
         StringBuilder out = new StringBuilder();
         for (Object s: list) {
