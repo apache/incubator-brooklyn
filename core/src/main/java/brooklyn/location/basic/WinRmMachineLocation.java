@@ -122,14 +122,18 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     public int copyTo(InputStream source, File destination) {
         executePsScript(ImmutableList.of("rm -ErrorAction SilentlyContinue " + destination.getPath()));
         try {
-            byte[] inputData = new byte[getConfig(COPY_FILE_CHUNK_SIZE_BYTES)];
-            int bytesRead = source.read(inputData);
-            while (bytesRead > 0) {
-                byte[] chunk = Arrays.copyOf(inputData, bytesRead);
-                String encoded = new String(Base64.encodeBase64(chunk));
+            int chunkSize = getConfig(COPY_FILE_CHUNK_SIZE_BYTES);
+            byte[] inputData = new byte[chunkSize];
+            int bytesRead;
+            while ((bytesRead = source.read(inputData)) > 0) {
+                byte[] chunk;
+                if (bytesRead == chunkSize) {
+                    chunk = inputData;
+                } else {
+                    chunk = Arrays.copyOf(inputData, bytesRead);
+                }
                 executePsScript(ImmutableList.of("Add-Content -Encoding Byte -path " + destination.getPath() +
-                        " -value ([System.Convert]::FromBase64String(\"" + encoded + "\"))"));
-                bytesRead = source.read(inputData);
+                        " -value ([System.Convert]::FromBase64String(\"" + new String(Base64.encodeBase64(chunk)) + "\"))"));
             }
 
             return 0;
