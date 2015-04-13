@@ -18,6 +18,10 @@
  */
 package brooklyn.entity.basic;
 
-public interface VanillaSoftwareProcessDriver extends AbstractVanillaSoftwareProcessDriver {
+import brooklyn.config.ConfigKey;
 
+public interface VanillaWindowsProcess extends AbstractVanillaSoftwareProcess {
+    ConfigKey<String> LAUNCH_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("launch.powershell.command", "command to run to launch the process", "./start.sh");
+    ConfigKey<String> CHECK_RUNNING_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("checkRunning.powershell.command", "command to determine whether the process is running");
+    ConfigKey<String> STOP_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("stop.powershell.command", "command to run to stop the process");
 }

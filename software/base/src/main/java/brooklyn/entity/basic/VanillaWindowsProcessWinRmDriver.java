@@ -18,6 +18,37 @@
  */
 package brooklyn.entity.basic;
 
-public interface VanillaSoftwareProcessDriver extends AbstractVanillaSoftwareProcessDriver {
+import brooklyn.location.basic.WinRmMachineLocation;
+
+public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWinRmDriver implements VanillaWindowsProcessDriver {
+
+    public VanillaWindowsProcessWinRmDriver(EntityLocal entity, WinRmMachineLocation location) {
+        super(entity, location);
+    }
+
+    @Override
+    public void install() {
+
+    }
+
+    @Override
+    public void customize() {
+
+    }
+
+    @Override
+    public void launch() {
+
+    }
+
+    @Override
+    public boolean isRunning() {
+        return executeCommand(VanillaWindowsProcess.CHECK_RUNNING_COMMAND, VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND);
+    }
+
+    @Override
+    public void stop() {
+
+    }
 
 }

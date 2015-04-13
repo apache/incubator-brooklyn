@@ -18,6 +18,5 @@
  */
 package brooklyn.entity.basic;
 
-public interface VanillaSoftwareProcessDriver extends AbstractVanillaSoftwareProcessDriver {
-
+public interface AbstractVanillaSoftwareProcessDriver extends SoftwareProcessDriver {
 }
