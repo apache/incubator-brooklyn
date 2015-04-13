@@ -30,6 +30,8 @@ import java.util.Map;
 
 public class EntitySummary implements HasId, HasName, Serializable {
 
+    private static final long serialVersionUID = 100490507982229165L;
+    
     private final String id;
     private final String name;
     private final String type;

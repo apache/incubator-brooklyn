@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -36,8 +37,10 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
-public abstract class ConfigSummary implements HasName {
+public abstract class ConfigSummary implements HasName, Serializable {
 
+    private static final long serialVersionUID = -2831796487073496730L;
+    
     private final String name;
     private final String type;
     @JsonSerialize(include = Inclusion.NON_NULL)

@@ -20,6 +20,8 @@ package brooklyn.rest.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Serializable;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -34,7 +36,9 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 
-public class ApiError {
+public class ApiError implements Serializable {
+
+    private static final long serialVersionUID = -8244515572813244686L;
 
     public static Builder builder() {
         return new Builder();

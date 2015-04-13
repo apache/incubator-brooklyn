@@ -28,6 +28,8 @@ import com.google.common.collect.ImmutableSet;
 
 public class CatalogPolicySummary extends CatalogItemSummary {
 
+    private static final long serialVersionUID = -588856488327394445L;
+    
     private final Set<PolicyConfigSummary> config;
 
     public CatalogPolicySummary(

@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
 
@@ -31,8 +32,10 @@ import com.google.common.collect.ImmutableMap;
 
 /** variant of Catalog*ItemDto objects for JS/JSON serialization;
  * see also, subclasses */
-public class CatalogItemSummary implements HasId, HasName {
+public class CatalogItemSummary implements HasId, HasName, Serializable {
 
+    private static final long serialVersionUID = -823483595879417681L;
+    
     private final String id;
     private final String symbolicName;
     private final String version;

@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -28,9 +29,11 @@ import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 
 @Beta
-public class LinkWithMetadata {
+public class LinkWithMetadata implements Serializable {
 
     // TODO remove 'metadata' and promote its contents to be top-level fields; then unmark as Beta
+
+    private static final long serialVersionUID = 3146368899471495143L;
     
     private final String link;
     private final Map<String,Object> metadata;

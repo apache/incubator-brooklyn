@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,8 +36,10 @@ import brooklyn.util.collections.Jsonya;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class TaskSummary implements HasId {
+public class TaskSummary implements HasId, Serializable {
 
+    private static final long serialVersionUID = 4637850742127078158L;
+    
     private final String id;
     private final String displayName;
     private final String entityId;

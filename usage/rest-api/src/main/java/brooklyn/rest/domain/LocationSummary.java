@@ -34,6 +34,8 @@ import com.google.common.collect.ImmutableMap;
 
 public class LocationSummary extends LocationSpec implements HasName, HasId {
 
+    private static final long serialVersionUID = -4559153719273573670L;
+
     private final String id;
 
     /** only intended for instantiated Locations, not definitions */

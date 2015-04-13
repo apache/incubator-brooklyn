@@ -20,6 +20,7 @@ package brooklyn.rest.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
 
@@ -27,7 +28,9 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.collect.ImmutableMap;
 
-public class ApplicationSummary implements HasId {
+public class ApplicationSummary implements HasId, Serializable {
+
+    private static final long serialVersionUID = -247411021540729088L;
 
     private final static Map<Status, Status> validTransitions =
             ImmutableMap.<Status, Status>builder()

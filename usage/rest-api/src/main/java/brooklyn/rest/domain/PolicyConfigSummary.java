@@ -29,6 +29,8 @@ import com.google.common.collect.ImmutableMap;
 
 public class PolicyConfigSummary extends ConfigSummary {
 
+    private static final long serialVersionUID = 4339330833863794513L;
+    
     @JsonSerialize(include = Inclusion.NON_NULL)
     private final Map<String, URI> links;
 

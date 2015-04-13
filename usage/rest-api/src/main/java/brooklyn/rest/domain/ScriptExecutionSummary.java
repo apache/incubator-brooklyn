@@ -18,12 +18,16 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
-public class ScriptExecutionSummary {
+public class ScriptExecutionSummary implements Serializable {
 
+    private static final long serialVersionUID = -7707936602991185960L;
+    
     @JsonSerialize(include = Inclusion.NON_NULL)
     private final Object result;
     @JsonSerialize(include = Inclusion.NON_EMPTY)

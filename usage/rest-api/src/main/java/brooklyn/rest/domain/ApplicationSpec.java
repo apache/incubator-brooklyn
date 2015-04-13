@@ -20,6 +20,7 @@ package brooklyn.rest.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -32,7 +33,9 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class ApplicationSpec implements HasName {
+public class ApplicationSpec implements HasName, Serializable {
+
+    private static final long serialVersionUID = -7090404504233835343L;
 
     public static Builder builder() {
         return new Builder();
