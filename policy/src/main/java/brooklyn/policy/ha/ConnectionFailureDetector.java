@@ -18,35 +18,17 @@
  */
 package brooklyn.policy.ha;
 
-import static brooklyn.util.time.Time.makeTimeStringRounded;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityLocal;
+import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.management.Task;
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Networking;
-import brooklyn.util.task.BasicTask;
-import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.net.HostAndPort;
 
@@ -56,24 +38,12 @@ import com.google.common.net.HostAndPort;
  */
 @Catalog(name="Connection Failure Detector", description="HA policy for monitoring a host:port, "
         + "emitting an event if the connection is lost/restored")
-public class ConnectionFailureDetector extends AbstractPolicy {
-
-    // TODO Remove duplication from ServiceFailureDetector, particularly for the stabilisation delays.
-
-    public enum LastPublished {
-        NONE,
-        FAILED,
-        RECOVERED;
-    }
-
-    private static final Logger LOG = LoggerFactory.getLogger(ConnectionFailureDetector.class);
-
-    private static final long MIN_PERIOD_BETWEEN_EXECS_MILLIS = 100;
+public class ConnectionFailureDetector extends AbstractFailureDetector {
 
     public static final ConfigKey<HostAndPort> ENDPOINT = ConfigKeys.newConfigKey(HostAndPort.class, "connectionFailureDetector.endpoint");
-    
+
     public static final ConfigKey<Duration> POLL_PERIOD = ConfigKeys.newConfigKey(Duration.class, "connectionFailureDetector.pollPeriod", "", Duration.ONE_SECOND);
-    
+
     public static final BasicNotificationSensor<FailureDescriptor> CONNECTION_FAILED = HASensors.CONNECTION_FAILED;
 
     public static final BasicNotificationSensor<FailureDescriptor> CONNECTION_RECOVERED = HASensors.CONNECTION_RECOVERED;
@@ -95,245 +65,61 @@ public class ConnectionFailureDetector extends AbstractPolicy {
             .defaultValue(Duration.ZERO)
             .build();
 
-    protected final AtomicReference<Long> connectionLastUp = new AtomicReference<Long>();
-    protected final AtomicReference<Long> connectionLastDown = new AtomicReference<Long>();
-    
-    protected Long currentFailureStartTime = null;
-    protected Long currentRecoveryStartTime = null;
-
-    protected LastPublished lastPublished = LastPublished.NONE;
-
-    private final AtomicBoolean executorQueued = new AtomicBoolean(false);
-    private volatile long executorTime = 0;
-
-    private Callable<Task<?>> pollingTaskFactory;
-
-    private Task<?> scheduledTask;
-    
-    public ConnectionFailureDetector() {
-    }
-    
     @Override
     public void init() {
+        super.init();
         getRequiredConfig(ENDPOINT); // just to confirm it's set, failing fast
-
-        pollingTaskFactory = new Callable<Task<?>>() {
-            @Override public Task<?> call() {
-                BasicTask<Void> task = new BasicTask<Void>(new Runnable() {
-                    @Override public void run() {
-                        checkHealth();
-                    }});
-                BrooklynTaskTags.setTransient(task);
-                return task;
-            }
-        };
-    }
-    
-    @Override
-    public void setEntity(EntityLocal entity) {
-        super.setEntity(entity);
-
-        if (isRunning()) {
-            doStartPolling();
+        if (config().getRaw(SENSOR_FAILED).isAbsent()) {
+            config().set(SENSOR_FAILED, CONNECTION_FAILED);
+        }
+        if (config().getRaw(SENSOR_RECOVERED).isAbsent()) {
+            config().set(SENSOR_RECOVERED, CONNECTION_RECOVERED);
         }
     }
 
     @Override
-    public void suspend() {
-        scheduledTask.cancel(true);
-        super.suspend();
+    protected CalculatedStatus calculateStatus() {
+        HostAndPort endpoint = getConfig(ENDPOINT);
+        boolean isHealthy = Networking.isReachable(endpoint);
+        return new BasicCalculatedStatus(isHealthy, "endpoint=" + endpoint);
     }
-    
+
+    //Persistence compatibility overrides
     @Override
-    public void resume() {
-        currentFailureStartTime = null;
-        currentRecoveryStartTime = null;
-        lastPublished = LastPublished.NONE;
-        executorQueued.set(false);
-        executorTime = 0;
-        
-        super.resume();
-        doStartPolling();
+    protected Duration getPollPeriod() {
+        return getConfig(POLL_PERIOD);
     }
-    
-    protected void doStartPolling() {
-        if (scheduledTask == null || scheduledTask.isDone()) {
-            ScheduledTask task = new ScheduledTask(MutableMap.of("period", getConfig(POLL_PERIOD)), pollingTaskFactory);
-            scheduledTask = ((EntityInternal)entity).getExecutionContext().submit(task);
-        }
-    }
-    
-    private Duration getConnectionFailedStabilizationDelay() {
+
+    @Override
+    protected Duration getFailedStabilizationDelay() {
         return getConfig(CONNECTION_FAILED_STABILIZATION_DELAY);
     }
 
-    private Duration getConnectionRecoveredStabilizationDelay() {
+    @Override
+    protected Duration getRecoveredStabilizationDelay() {
         return getConfig(CONNECTION_RECOVERED_STABILIZATION_DELAY);
     }
 
-    private synchronized void checkHealth() {
-        CalculatedStatus status = calculateStatus();
-        boolean connected = status.connected;
-        long now = System.currentTimeMillis();
-        
-        if (connected) {
-            connectionLastUp.set(now);
-            if (lastPublished == LastPublished.FAILED) {
-                if (currentRecoveryStartTime == null) {
-                    LOG.info("{} connectivity-check for {}, now recovering: {}", new Object[] {this, entity, status.getDescription()});
-                    currentRecoveryStartTime = now;
-                    schedulePublish();
-                } else {
-                    if (LOG.isTraceEnabled()) LOG.trace("{} connectivity-check for {}, continuing recovering: {}", new Object[] {this, entity, status.getDescription()});
-                }
-            } else {
-                if (currentFailureStartTime != null) {
-                    LOG.info("{} connectivity-check for {}, now healthy: {}", new Object[] {this, entity, status.getDescription()});
-                    currentFailureStartTime = null;
-                } else {
-                    if (LOG.isTraceEnabled()) LOG.trace("{} connectivity-check for {}, still healthy: {}", new Object[] {this, entity, status.getDescription()});
-                }
-            }
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Sensor<FailureDescriptor> getSensorFailed() {
+        Maybe<Object> sensorFailed = config().getRaw(SENSOR_FAILED);
+        if (sensorFailed.isPresent()) {
+            return (Sensor<FailureDescriptor>)sensorFailed.get();
         } else {
-            connectionLastDown.set(now);
-            if (lastPublished != LastPublished.FAILED) {
-                if (currentFailureStartTime == null) {
-                    LOG.info("{} connectivity-check for {}, now failing: {}", new Object[] {this, entity, status.getDescription()});
-                    currentFailureStartTime = now;
-                    schedulePublish();
-                } else {
-                    if (LOG.isTraceEnabled()) LOG.trace("{} connectivity-check for {}, continuing failing: {}", new Object[] {this, entity, status.getDescription()});
-                }
-            } else {
-                if (currentRecoveryStartTime != null) {
-                    LOG.info("{} connectivity-check for {}, now failing: {}", new Object[] {this, entity, status.getDescription()});
-                    currentRecoveryStartTime = null;
-                } else {
-                    if (LOG.isTraceEnabled()) LOG.trace("{} connectivity-check for {}, still failed: {}", new Object[] {this, entity, status.getDescription()});
-                }
-            }
+            return CONNECTION_FAILED;
         }
     }
-    
-    protected CalculatedStatus calculateStatus() {
-        return new CalculatedStatus();
-    }
 
-    protected void schedulePublish() {
-        schedulePublish(0);
-    }
-    
-    protected void schedulePublish(long delay) {
-        if (isRunning() && executorQueued.compareAndSet(false, true)) {
-            long now = System.currentTimeMillis();
-            delay = Math.max(0, Math.max(delay, (executorTime + MIN_PERIOD_BETWEEN_EXECS_MILLIS) - now));
-            if (LOG.isTraceEnabled()) LOG.trace("{} scheduling publish in {}ms", this, delay);
-            
-            Runnable job = new Runnable() {
-                @Override public void run() {
-                    try {
-                        executorTime = System.currentTimeMillis();
-                        executorQueued.set(false);
-
-                        publishNow();
-                        
-                    } catch (Exception e) {
-                        if (isRunning()) {
-                            LOG.error("Problem resizing: "+e, e);
-                        } else {
-                            if (LOG.isDebugEnabled()) LOG.debug("Problem resizing, but no longer running: "+e, e);
-                        }
-                    } catch (Throwable t) {
-                        LOG.error("Problem in service-failure-detector: "+t, t);
-                        throw Exceptions.propagate(t);
-                    }
-                }
-            };
-            
-            ScheduledTask task = new ScheduledTask(MutableMap.of("delay", Duration.of(delay, TimeUnit.MILLISECONDS)), new BasicTask(job));
-            ((EntityInternal)entity).getExecutionContext().submit(task);
-        }
-    }
-    
-    private synchronized void publishNow() {
-        if (!isRunning()) return;
-        
-        CalculatedStatus calculatedStatus = calculateStatus();
-        boolean connected = calculatedStatus.connected;
-        
-        Long lastUpTime = connectionLastUp.get();
-        Long lastDownTime = connectionLastDown.get();
-        long serviceFailedStabilizationDelay = getConnectionFailedStabilizationDelay().toMilliseconds();
-        long serviceRecoveredStabilizationDelay = getConnectionRecoveredStabilizationDelay().toMilliseconds();
-        long now = System.currentTimeMillis();
-        
-        if (connected) {
-            if (lastPublished == LastPublished.FAILED) {
-                // only publish if consistently up for serviceRecoveredStabilizationDelay
-                long currentRecoveryPeriod = getTimeDiff(now, currentRecoveryStartTime);
-                long sinceLastDownPeriod = getTimeDiff(now, lastDownTime);
-                if (currentRecoveryPeriod > serviceRecoveredStabilizationDelay && sinceLastDownPeriod > serviceRecoveredStabilizationDelay) {
-                    String description = calculatedStatus.getDescription();
-                    LOG.warn("{} connectivity-check for {}, publishing recovered: {}", new Object[] {this, entity, description});
-                    entity.emit(CONNECTION_RECOVERED, new HASensors.FailureDescriptor(entity, description));
-                    lastPublished = LastPublished.RECOVERED;
-                    currentFailureStartTime = null;
-                } else {
-                    long nextAttemptTime = Math.max(serviceRecoveredStabilizationDelay - currentRecoveryPeriod, serviceRecoveredStabilizationDelay - sinceLastDownPeriod);
-                    schedulePublish(nextAttemptTime);
-                }
-            }
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Sensor<FailureDescriptor> getSensorRecovered() {
+        Maybe<Object> sensorRecovered = config().getRaw(SENSOR_RECOVERED);
+        if (sensorRecovered.isPresent()) {
+            return (Sensor<FailureDescriptor>)sensorRecovered.get();
         } else {
-            if (lastPublished != LastPublished.FAILED) {
-                // only publish if consistently down for serviceFailedStabilizationDelay
-                long currentFailurePeriod = getTimeDiff(now, currentFailureStartTime);
-                long sinceLastUpPeriod = getTimeDiff(now, lastUpTime);
-                if (currentFailurePeriod > serviceFailedStabilizationDelay && sinceLastUpPeriod > serviceFailedStabilizationDelay) {
-                    String description = calculatedStatus.getDescription();
-                    LOG.warn("{} connectivity-check for {}, publishing failed: {}", new Object[] {this, entity, description});
-                    entity.emit(CONNECTION_FAILED, new HASensors.FailureDescriptor(entity, description));
-                    lastPublished = LastPublished.FAILED;
-                    currentRecoveryStartTime = null;
-                } else {
-                    long nextAttemptTime = Math.max(serviceFailedStabilizationDelay - currentFailurePeriod, serviceFailedStabilizationDelay - sinceLastUpPeriod);
-                    schedulePublish(nextAttemptTime);
-                }
-            }
+            return CONNECTION_RECOVERED;
         }
     }
 
-    public class CalculatedStatus {
-        public final boolean connected;
-        
-        public CalculatedStatus() {
-            HostAndPort endpoint = getConfig(ENDPOINT);
-            connected = Networking.isReachable(endpoint);
-        }
-        
-        public String getDescription() {
-            Long lastUpTime = connectionLastUp.get();
-            Long lastDownTime = connectionLastDown.get();
-            Duration serviceFailedStabilizationDelay = getConnectionFailedStabilizationDelay();
-            Duration serviceRecoveredStabilizationDelay = getConnectionRecoveredStabilizationDelay();
-
-            return String.format("endpoint=%s; connected=%s; timeNow=%s; lastUp=%s; lastDown=%s; lastPublished=%s; "+
-                        "currentFailurePeriod=%s; currentRecoveryPeriod=%s",
-                    getConfig(ENDPOINT), 
-                    connected,
-                    Time.makeDateString(System.currentTimeMillis()),
-                    (lastUpTime != null ? Time.makeDateString(lastUpTime) : "<never>"),
-                    (lastDownTime != null ? Time.makeDateString(lastDownTime) : "<never>"),
-                    lastPublished,
-                    (currentFailureStartTime != null ? getTimeStringSince(currentFailureStartTime) : "<none>") + " (stabilization "+makeTimeStringRounded(serviceFailedStabilizationDelay) + ")",
-                    (currentRecoveryStartTime != null ? getTimeStringSince(currentRecoveryStartTime) : "<none>") + " (stabilization "+makeTimeStringRounded(serviceRecoveredStabilizationDelay) + ")");
-        }
-    }
-    
-    private long getTimeDiff(Long recent, Long previous) {
-        return (previous == null) ? recent : (recent - previous);
-    }
-    
-    private String getTimeStringSince(Long time) {
-        return time == null ? null : Time.makeTimeStringRounded(System.currentTimeMillis() - time);
-    }
 }
