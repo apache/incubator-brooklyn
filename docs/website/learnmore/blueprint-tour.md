@@ -71,21 +71,6 @@ services:</div></div>
 <div class="block">
       <div class="annotations_wrapper1"><div class="annotations_wrapper2"><div class="annotations">
         <div class="short">
-          Configure locations
-        </div>
-        <div class="long"><p>
-            Give generic VM properties or specific images and flavors.
-            Networking topologies and geographic constraints are also supported.
-        </p></div>
-      </div><div class="connector"><div>&nbsp;</div></div></div></div>
-<div>  provisioning.properties:
-<span class="ann_highlight">    osFamily: ubuntu
-    minRam: 4gb</span>
-</div></div>
-
-<div class="block">
-      <div class="annotations_wrapper1"><div class="annotations_wrapper2"><div class="annotations">
-        <div class="short">
           Inject dependencies
         </div>
         <div class="long"><p>
@@ -100,6 +85,21 @@ services:</div></div>
     COUCHBASE_URL:
 <span class="ann_highlight">      $brooklyn:entity("chat-couchbase").
         attributeWhenReady("couchbase.cluster.connection.url")</span></div></div>
+
+<div class="block">
+      <div class="annotations_wrapper1"><div class="annotations_wrapper2"><div class="annotations">
+        <div class="short">
+          Configure locations
+        </div>
+        <div class="long"><p>
+            Give generic VM properties or specific images and flavors.
+            Networking topologies and geographic constraints are also supported.
+        </p></div>
+      </div><div class="connector"><div>&nbsp;</div></div></div></div>
+<div>  provisioning.properties:
+<span class="ann_highlight">    osFamily: ubuntu
+    minRam: 4gb</span>
+</div></div>
 
 <div class="block">
       <div class="annotations_wrapper1"><div class="annotations_wrapper2"><div class="annotations">
@@ -119,7 +119,7 @@ services:</div></div>
 <div>- type: <span class="ann_highlight">brooklyn.entity.webapp.ControlledDynamicWebAppCluster:1.1.0</span>
   war: http://example.com/couchbase-chat/chatroom.war
   java.sysprops:
-    chat.db.url: $brooklyn:entity("couchbase").attributeWhenReady("couchbase.cluster.connection.url")</div></div>
+    chat.db.url: $brooklyn:entity("chat-couchbase").attributeWhenReady("couchbase.cluster.connection.url")</div></div>
 
 <div class="block">
       <div class="annotations_wrapper1"><div class="annotations_wrapper2"><div class="annotations">
@@ -133,9 +133,9 @@ services:</div></div>
         </p></div>
       </div><div class="connector"><div>&nbsp;</div></div></div></div>
 <div>  brooklyn.policies:
-  - type: <span class="ann_highlight">brooklyn.policy.autoscaling.AutoScalerPolicy</span>
+  - type: <span class="ann_highlight">autoscaler</span>
     brooklyn.config:
-      metric: $brooklyn:sensor("brooklyn.entity.webapp.DynamicWebAppCluster", "webapp.reqs.perSec.windowed.perNode")
+      metric: $brooklyn:sensor(""webapp.reqs.perSec.windowed.perNode")
       metricLowerBound: 400
       metricUpperBound: 600</div></div>
 
