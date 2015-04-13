@@ -41,6 +41,7 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
+import brooklyn.util.collections.MutableList;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
@@ -428,14 +429,14 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     /** adds the supplied policies to the spec */
     public <V> EntitySpec<T> policySpecs(Iterable<? extends PolicySpec<?>> val) {
         checkMutable();
-        policySpecs.addAll(Sets.newLinkedHashSet(checkNotNull(val, "policySpecs")));
+        policySpecs.addAll(MutableList.copyOf(checkNotNull(val, "policySpecs")));
         return this;
     }
     
     /** adds the supplied policies to the spec */
     public <V> EntitySpec<T> policies(Iterable<? extends Policy> val) {
         checkMutable();
-        policies.addAll(Sets.newLinkedHashSet(checkNotNull(val, "policies")));
+        policies.addAll(MutableList.copyOf(checkNotNull(val, "policies")));
         return this;
     }
     
@@ -456,14 +457,14 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     /** adds the supplied policies to the spec */
     public <V> EntitySpec<T> enricherSpecs(Iterable<? extends EnricherSpec<?>> val) {
         checkMutable();
-        enricherSpecs.addAll(Sets.newLinkedHashSet(checkNotNull(val, "enricherSpecs")));
+        enricherSpecs.addAll(MutableList.copyOf(checkNotNull(val, "enricherSpecs")));
         return this;
     }
     
     /** adds the supplied policies to the spec */
     public <V> EntitySpec<T> enrichers(Iterable<? extends Enricher> val) {
         checkMutable();
-        enrichers.addAll(Sets.newLinkedHashSet(checkNotNull(val, "enrichers")));
+        enrichers.addAll(MutableList.copyOf(checkNotNull(val, "enrichers")));
         return this;
     }
     
@@ -477,7 +478,7 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     /** adds the supplied locations to the spec */
     public <V> EntitySpec<T> locations(Iterable<? extends Location> val) {
         checkMutable();
-        locations.addAll(Sets.newLinkedHashSet(checkNotNull(val, "locations")));
+        locations.addAll(MutableList.copyOf(checkNotNull(val, "locations")));
         return this;
     }
 

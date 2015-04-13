@@ -37,7 +37,10 @@ the entity being defined, with these being the most common:
 
 * `brooklyn.policies`: a list of policies, each as a map described with their `type` and their `brooklyn.config` as keys
 
-* `brooklyn.enrichers`: a list of enrichers, each as a map described with their `type` and their `brooklyn.config` as keys
+* `brooklyn.enrichers`: a list of enrichers, each as a map described with their `type` and their `brooklyn.config` as keys;
+  see the keys declared on individual enrichers; 
+  also see [this enricher example](example_yaml/test-app-with-enrichers-slightly-simpler.yaml) for a detailed and commented illustration
+  <!-- TODO assert that this yaml maches the yaml we test against -->
 
 * `brooklyn.initializers`: a list of `EntityInitializer` instances to be constructed and run against the entity, 
   each as a map described with their `type` and their `brooklyn.config` as keys.

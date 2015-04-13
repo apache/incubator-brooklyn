@@ -67,6 +67,28 @@ public class StringPredicates {
         };
     }
 
+
+    /** Tests if object is non-null and not a blank string.
+     * <p>
+     * Predicate form of {@link Strings#isNonBlank(CharSequence)} also accepting objects non-null, for convenience */
+    public static <T> Predicate<T> isNonBlank() {
+        return new IsNonBlank<T>();
+    }
+
+    private static final class IsNonBlank<T> implements Predicate<T> {
+        @Override
+        public boolean apply(@Nullable Object input) {
+            if (input==null) return false;
+            if (!(input instanceof CharSequence)) return true;
+            return Strings.isNonBlank((CharSequence)input);
+        }
+
+        @Override
+        public String toString() {
+            return "isNonBlank()";
+        }
+    }
+    
     // -----------------
     
     public static <T extends CharSequence> Predicate<T> containsLiteralIgnoreCase(final String fragment) {

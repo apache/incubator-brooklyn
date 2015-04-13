@@ -27,10 +27,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
-import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.AttributeSensor;
@@ -40,8 +38,11 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
@@ -54,6 +55,7 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
 
     public static final ConfigKey<Sensor<?>> SOURCE_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.sourceSensor");
     public static final ConfigKey<Function<? super Collection<?>, ?>> TRANSFORMATION = ConfigKeys.newConfigKey(new TypeToken<Function<? super Collection<?>, ?>>() {}, "enricher.transformation");
+    public static final ConfigKey<Boolean> EXCLUDE_BLANK = ConfigKeys.newBooleanConfigKey("enricher.aggregator.excludeBlank", "Whether explicit nulls or blank strings should be excluded (default false); this only applies if no value filter set", false);
 
     protected Sensor<T> sourceSensor;
     protected Function<? super Collection<T>, ? extends U> transformation;
@@ -71,7 +73,7 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
     protected void setEntityLoadingConfig() {
         super.setEntityLoadingConfig();
         this.sourceSensor = (Sensor<T>) getRequiredConfig(SOURCE_SENSOR);
-        this.transformation = (Function<? super Collection<T>, ? extends U>) getRequiredConfig(TRANSFORMATION);
+        this.transformation = (Function<? super Collection<T>, ? extends U>) config().get(TRANSFORMATION);
     }
         
     @Override
@@ -124,6 +126,14 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
     }
     
     @Override
+    protected Predicate<?> getDefaultValueFilter() {
+        if (getConfig(EXCLUDE_BLANK))
+            return StringPredicates.isNonBlank();
+        else
+            return Predicates.alwaysTrue();
+    }
+    
+    @Override
     protected void onProducerRemoved(Entity producer) {
         values.remove(producer);
         onUpdated();
@@ -156,6 +166,7 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
         synchronized (values) {
             // TODO Could avoid copying when filter not needed
             List<T> vs = MutableList.copyOf(Iterables.filter(values.values(), valueFilter));
+            if (transformation==null) return vs;
             return transformation.apply(vs);
         }
     }

@@ -101,7 +101,7 @@ public class BrooklynDslCommon {
         return new DslComponent(Scope.THIS, "").sensor(sensorName);
     }
     
-    /** Returns a {@link Sensor} from the given entity type. */
+    /** Returns a {@link Sensor} declared on the type (e.g. entity class) declared in the first argument. */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static Sensor<?> sensor(String clazzName, String sensorName) {
         try {
@@ -117,6 +117,7 @@ public class BrooklynDslCommon {
                 sensor = sensors.get(sensorName);
             }
             if (sensor == null) {
+                // TODO could extend API to return a sensor of the given type; useful but makes API ambiguous in theory (unlikely in practise, but still...)
                 throw new IllegalArgumentException("Sensor " + sensorName + " not found on class " + clazzName);
             }
             return sensor;
