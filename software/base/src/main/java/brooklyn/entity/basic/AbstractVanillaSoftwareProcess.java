@@ -18,6 +18,15 @@
  */
 package brooklyn.entity.basic;
 
-public interface VanillaSoftwareProcessDriver extends AbstractVanillaSoftwareProcessDriver {
+import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.AttributeSensorAndConfigKey;
 
+public interface AbstractVanillaSoftwareProcess extends SoftwareProcess {
+    AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL = SoftwareProcess.DOWNLOAD_URL;
+
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "0.0.0");
+
+    ConfigKey<String> LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("launch.command", "command to run to launch the process", "./start.sh");
+    ConfigKey<String> CHECK_RUNNING_COMMAND = ConfigKeys.newStringConfigKey("checkRunning.command", "command to determine whether the process is running");
+    ConfigKey<String> STOP_COMMAND = ConfigKeys.newStringConfigKey("stop.command", "command to run to stop the process");
 }

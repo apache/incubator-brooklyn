@@ -91,10 +91,18 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         return null;
     }
 
+    public int executeScript(String script) {
+        return executeScript(ImmutableList.of(script));
+    }
+
     public int executeScript(List<String> script) {
         WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
         WinRmToolResponse response = winRmTool.executeScript(script);
         return response.getStatusCode();
+    }
+
+    public int executePsScript(String psScript) {
+        return executePsScript(ImmutableList.of(psScript));
     }
 
     public int executePsScript(List<String> psScript) {
