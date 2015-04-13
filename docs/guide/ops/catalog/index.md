@@ -49,17 +49,6 @@ brooklyn.catalog:
       <blueprint-or-resource-definition>
 ```
 
-In some cases it is desired to define a default blueprint in a catalog file,
-so that the catalog file can be used unchanged to launch an application.
-To support this use case, the following format is also supported:
-
-```yaml
-<blueprint-definition>
-brooklyn.catalog:
-  <catalog-metadata>
-```
-
-
 
 #### Catalog Metadata
 
@@ -93,7 +82,8 @@ In addition to the above fields, exactly **one** of the following is also requir
 - `items`: a list of catalog items, where each entry in the map follows the same schema as
   the `brooklyn.catalog` value, and the keys in these map override any metadata specified as
   a sibling of this `items` key (or, in the case of `libraries` they add to the list);
-  if there are references between items, then order is important, with forward references not supported.
+  if there are references between items, then order is important, 
+  `items` are processed in order, depth-first, and forward references are not supported.
 
 The following optional catalog metadata is supported:
   
@@ -202,6 +192,29 @@ The items this will install are:
   will access this version because it is a higher number);
   because it is a template, users will have the opportunity to edit the YAML (see below).
   (This must be supplied after `riak-cluster`, because it refers to `riak-cluster`.)
+
+
+#### Legacy Syntax
+
+The following legacy and experimental syntax is also supported:
+
+```yaml
+<blueprint-definition>
+brooklyn.catalog:
+  <catalog-metadata>
+```
+
+In this format, the `brooklyn.catalog` block is optional;
+and an `id` in the `<blueprint-definition>` will be used to determine the catalog ID. 
+This is primarily supplied for OASIS CAMP 1.1 compatibility,
+where the same YAML blueprint can be POSTed to the catalog endpoint to add to a catalog
+or POSTed to the applications endpoint to deploy an instance.
+(This syntax is discouraged as the latter usage, 
+POSTing to the applications endpoint,
+will ignored the `brooklyn.catalog` information;
+this means references to any `item` blocks in the `<catalog-metadata>` will not be resolved,
+and any OSGi `libraries` defined there will not be loaded.)
+
 
 
 ### Templates and the Add-Application Wizard
