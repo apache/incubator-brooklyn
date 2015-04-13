@@ -24,10 +24,11 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
 
-public class EntitySummary implements HasId, HasName {
+public class EntitySummary implements HasId, HasName, Serializable {
 
     private final String id;
     private final String name;
