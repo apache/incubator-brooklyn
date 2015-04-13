@@ -49,7 +49,8 @@ import com.google.common.collect.Sets;
  * although in some cases (such as setting fields from flags, or copying a map)
  * it may be necessary to mark things as used, or put, when only a string key is available.
  * <p>
- * This bag is order-preserving and thread-safe except where otherwise indicated.
+ * This bag is order-preserving and thread-safe except where otherwise indicated,
+ * currently by synching on this instance (but that behaviour may change).
  * <p>
  * @author alex
  */
@@ -104,14 +105,15 @@ public class ConfigBag {
      */
     @Beta
     public static ConfigBag newInstanceExtending(final ConfigBag parentBag) {
-        return new ConfigBagExtendingParent(parentBag).copy(parentBag);
+        return new ConfigBagExtendingParent(parentBag);
     }
 
     /** @see #newInstanceExtending(ConfigBag) */
-    public static class ConfigBagExtendingParent extends ConfigBag {
+    private static class ConfigBagExtendingParent extends ConfigBag {
         ConfigBag parentBag;
         private ConfigBagExtendingParent(ConfigBag parentBag) {
             this.parentBag = parentBag;
+            copy(parentBag);
         }
         @Override
         public void markUsed(String key) {
