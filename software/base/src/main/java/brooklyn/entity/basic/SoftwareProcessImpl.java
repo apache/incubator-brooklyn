@@ -21,6 +21,7 @@ package brooklyn.entity.basic;
 import groovy.time.TimeDuration;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -38,6 +39,7 @@ import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.effector.EffectorBody;
+import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.function.FunctionFeed;
@@ -429,7 +431,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     /** returns the ports that this entity wants to use;
-     * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange.
+     * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange
+     * plus any ports defined with a config keys ending in .port 
      */
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = MutableSet.of(22);
@@ -439,6 +442,16 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
                 if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
             }   
         }
+        
+        Map<String, Object> allConfig = config().getBag().getAllConfig();
+        for (String key : allConfig.keySet()) {
+            if(key.matches(".*\\.port")){
+                Object value = allConfig.get(key);
+                if (value instanceof Integer){
+                    ports.add((Integer)value);
+                }
+            }
+        }         
         
         log.debug("getRequiredOpenPorts detected default {} for {}", ports, this);
         return ports;
