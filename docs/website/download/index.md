@@ -16,9 +16,8 @@ You can also verify that you build has not been tampered with by [verifying the 
 ## Binary Releases
 
 We do not yet have an official binary package for Apache Brooklyn. 
-We plan to address this in our next release.
-Unofficial [latest snapshot binary builds are available here]({{ site.path.guide }}/misc/download.html), 
-but read the warnings there and use at your own risk.
+For more information, and for information on unofficial binary builds,
+see the [download details for the latest version]({{ site.path.guide }}/misc/download.html).
 
 
 ## Build the Binary Package
