@@ -8,16 +8,22 @@ children:
 
 ## Latest Brooklyn Source Code Release
 
-[Download Apache Brooklyn {{ site.brooklyn-stable-version }} from our mirror sites](https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}.tar.gz)
+[Download Apache Brooklyn {{ site.brooklyn-stable-version }} source release from our mirror sites](https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}.tar.gz)
 
 You can also verify that you build has not been tampered with by [verifying the hashes and signatures](verify.html).
 
 
+## Binary Releases
+
+We do not yet have an official binary package for Apache Brooklyn. 
+We plan to address this in our next release.
+Unofficial [latest snapshot binary builds are available here]({{ site.path.guide }}/misc/download.html), 
+but read the warnings there and use at your own risk.
+
+
 ## Build the Binary Package
 
-We do not yet have an official binary package for Apache Brooklyn. We plan to address this in our next release.
-
-However, it is relatively easy to create the binary package from source code, if you have a working recent JDK and Maven 3.
+It is relatively easy to create the binary package from source code, if you have a working recent JDK and Maven 3.
 
 **1)** Unpack `apache-brooklyn-{{ site.brooklyn-stable-version }}.tar.gz`
 

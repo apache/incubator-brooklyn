@@ -20,7 +20,7 @@
 
 {% if SNAPSHOT %}
   {% capture this_dist_url_zip %}{{ this_repo_base_url_artifact }}?r=snapshots&g={{ brooklyn_group_id }}&a=brooklyn-dist&v={{ site.brooklyn-version }}&e=zip&c=dist{% endcapture %}
-  {% capture this_dist_url_tgz %}{{ this_repo_base_url_artifact }}?r=snapshots&g={{ brooklyn_group_id }}&a=brooklyn-dist&v={{ site.brooklyn-version }}&e=tgz&c=dist{% endcapture %}
+  {% capture this_dist_url_tgz %}{{ this_repo_base_url_artifact }}?r=snapshots&g={{ brooklyn_group_id }}&a=brooklyn-dist&v={{ site.brooklyn-version }}&e=tar.gz&c=dist{% endcapture %}
   {% capture this_alljar_url_jar %}{{ this_repo_base_url_artifact }}?r=snapshots&g={{ brooklyn_group_id }}&a=brooklyn-all&v={{ site.brooklyn-version }}&e=jar&c=with-dependencies{% endcapture %}
 {% else %}<!--- RELEASE -->
   {% capture this_dist_url_zip %}{{ this_dist_url_list }}/brooklyn-dist-{{ site.brooklyn-version }}-dist.zip{% endcapture %}
