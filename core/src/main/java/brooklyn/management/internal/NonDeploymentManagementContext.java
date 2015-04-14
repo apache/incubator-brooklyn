@@ -227,7 +227,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     @Override
     public synchronized SubscriptionContext getSubscriptionContext(Entity entity) {
         if (!this.entity.equals(entity)) throw new IllegalStateException("Non-deployment context "+this+" can only use a single Entity: has "+this.entity+", but passed "+entity);
-        if (mode==NonDeploymentManagementContextMode.MANAGEMENT_STOPPED) return new NonDeploymentSubscriptionContext(entity);
+        if (mode==NonDeploymentManagementContextMode.MANAGEMENT_STOPPED) return new NonDeploymentSubscriptionContext(initialManagementContext, entity);
         return subscriptionContext;
     }
 
