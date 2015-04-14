@@ -110,13 +110,17 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     }
     
     @Override
-    public void start(Collection<? extends Location> locations) {
-        Preconditions.checkNotNull(locations, "locations must be supplied");
-        Preconditions.checkArgument(locations.size() >= 1, "One or more location must be supplied");
-        addLocations(locations);
+    public void start(Collection<? extends Location> locsO) {
+        if (locsO!=null) {
+            addLocations(locsO);
+        }
         
-        List<Location> newLocations = MutableList.copyOf(locations);
+        List<Location> newLocations = MutableList.copyOf(locsO);
         if (newLocations.isEmpty()) newLocations.addAll(getLocations());
+        
+        Preconditions.checkNotNull(newLocations, "locations must be supplied");
+        Preconditions.checkArgument(newLocations.size() >= 1, "One or more locations must be supplied");
+        
         int locIndex = 0;
         
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
