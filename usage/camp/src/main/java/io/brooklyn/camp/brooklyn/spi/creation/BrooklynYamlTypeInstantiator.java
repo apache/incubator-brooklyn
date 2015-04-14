@@ -197,10 +197,9 @@ public abstract class BrooklynYamlTypeInstantiator {
     public <T> Class<? extends T> getType(@Nonnull Class<T> type) {
         try {
             return getClassLoadingContext().loadClass(getTypeName().get(), type);
-//            return loadClass(type, getTypeName().get(), factory.mgmt, factory.contextForLogging);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            log.warn("Unable to resolve " + type + " " + getTypeName().get() + " (rethrowing) in spec " + factory.contextForLogging);
+            log.debug("Unable to resolve " + type + " " + getTypeName().get() + " (rethrowing) in spec " + factory.contextForLogging);
             throw Exceptions.propagate(e);
         }
     }

@@ -139,7 +139,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         String yaml = "name: simple-app-yaml\n" +
                       "location: localhost\n" +
                       "services: \n" +
-                      "  - serviceType: "+ ver(referrerSymbolicName);
+                      "- type: "+ ver(referrerSymbolicName);
 
         Entity app = createAndStartApplication(yaml);
 
@@ -150,7 +150,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         deleteCatalogEntity(referencedSymbolicName);
     }
 
-    private void addCatalogOsgiPolicy(String symbolicName, String serviceType) {
+    private void addCatalogOsgiPolicy(String symbolicName, String policyType) {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         addCatalogItem(
@@ -162,15 +162,14 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
             "  version: " + TEST_VERSION,
             "  libraries:",
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
-            "  item_type: policy",
             "  item:",
-            "    type: " + serviceType,
+            "    type: " + policyType,
             "    brooklyn.config:",
             "      config1: config1",
             "      config2: config2");
     }
 
-    private void addCatalogOsgiPolicyTopLevelSyntax(String symbolicName, String serviceType) {
+    private void addCatalogOsgiPolicyTopLevelSyntax(String symbolicName, String policyType) {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         addCatalogItem(
@@ -184,7 +183,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "",
             "brooklyn.policies:",
-            "- type: " + serviceType,
+            "- type: " + policyType,
             "  brooklyn.config:",
             "    config1: config1",
             "    config2: config2");

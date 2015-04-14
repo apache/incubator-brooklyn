@@ -30,7 +30,7 @@ services:
   createBuckets: [ { bucket: default } ]
   brooklyn.config:
     provisioning.properties:
-      minRam: 16384
+      minRam: 16g
       minCores: 4
   brooklyn.policies:
   - type: brooklyn.policy.autoscaling.AutoScalerPolicy

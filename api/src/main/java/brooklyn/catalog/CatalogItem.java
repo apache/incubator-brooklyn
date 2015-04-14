@@ -84,7 +84,8 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
 
     public String toXmlString();
 
-    /** @return The underlying YAML for this item, if known */
+    /** @return The underlying YAML for this item, if known; 
+     * currently including `services:` or `brooklyn.policies:` prefix (but this will likely be removed) */
     @Nullable public String getPlanYaml();
 
     @Override

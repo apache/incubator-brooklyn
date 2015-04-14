@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Durations;
@@ -129,7 +130,8 @@ Beyond this you get blacklisted and requests may time out, or return none.
                 try {
                     result.set(retrieveHostGeoInfo(address));
                 } catch (Exception e) {
-                    throw Exceptions.propagate(e);
+                    log.warn("Error computing geo info for "+address+"; internet issues or too many requests to (free) servers for "+JavaClassNames.simpleClassName(UtraceHostGeoLookup.this)+": "+e);
+                    log.debug("Detail of host geo error: "+e, e);
                 }
             }
         };

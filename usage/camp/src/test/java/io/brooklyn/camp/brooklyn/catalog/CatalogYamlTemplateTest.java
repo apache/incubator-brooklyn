@@ -39,6 +39,31 @@ public class CatalogYamlTemplateTest extends AbstractYamlTest {
 
     @Test
     public void testAddCatalogItem() throws Exception {
+        CatalogItem<?, ?> item = makeItem();
+        assertEquals(item.getCatalogItemType(), CatalogItemType.TEMPLATE);
+        Assert.assertTrue(item.getPlanYaml().indexOf("sample comment")>=0,
+            "YAML did not include original comments; it was:\n"+item.getPlanYaml());
+        Assert.assertFalse(item.getPlanYaml().indexOf("description")>=0,
+            "YAML included metadata which should have been excluded; it was:\n"+item.getPlanYaml());
+
+        deleteCatalogEntity("t1");
+    }
+
+    @Test
+    public void testAddCatalogItemAndCheckSource() throws Exception {
+        // this will fail with the Eclipse TestNG plugin -- use the static main instead to run in eclipse!
+        // see Yamls.KnownClassVersionException for details
+        
+        CatalogItem<?, ?> item = makeItem();
+        Assert.assertTrue(item.getPlanYaml().indexOf("sample comment")>=0,
+            "YAML did not include original comments; it was:\n"+item.getPlanYaml());
+        Assert.assertFalse(item.getPlanYaml().indexOf("description")>=0,
+            "YAML included metadata which should have been excluded; it was:\n"+item.getPlanYaml());
+
+        deleteCatalogEntity("t1");
+    }
+
+    private CatalogItem<?, ?> makeItem() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         
         addCatalogItem(
@@ -57,13 +82,7 @@ public class CatalogYamlTemplateTest extends AbstractYamlTest {
             "    - type: " + SIMPLE_ENTITY_TYPE);
 
         CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem("t1", TEST_VERSION);
-        assertEquals(item.getCatalogItemType(), CatalogItemType.TEMPLATE);
-        Assert.assertTrue(item.getPlanYaml().indexOf("sample comment")>=0,
-            "YAML did not include original comments; it was:\n"+item.getPlanYaml());
-        Assert.assertFalse(item.getPlanYaml().indexOf("description")>=0,
-            "YAML included metadata which should have been excluded; it was:\n"+item.getPlanYaml());
-
-        deleteCatalogEntity("t1");
+        return item;
     }
 
     // convenience for running in eclipse when the TestNG plugin drags in old version of snake yaml

@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
@@ -211,7 +212,31 @@ public class Yamls {
             try {
                 return mark.getIndex();
             } catch (NoSuchMethodError e) {
-                throw new IllegalStateException("Class version error. This can happen if using a TestNG plugin in your IDE "
+                try {
+                    getClass().getClassLoader().loadClass("org.testng.TestNG");
+                } catch (ClassNotFoundException e1) {
+                    // not using TestNG
+                    Exceptions.propagateIfFatal(e1);
+                    throw e;
+                }
+                if (!LOGGED_TESTNG_WARNING.getAndSet(true)) {
+                    log.warn("Detected TestNG/SnakeYAML version incompatibilities: "
+                        + "some YAML source reconstruction will be unavailable. "
+                        + "This can happen with TestNG plugins which force an older version of SnakeYAML "
+                        + "which does not support Mark.getIndex. "
+                        + "It should not occur from maven CLI runs. "
+                        + "(Subsequent occurrences will be silently dropped, and source code reconstructed from YAML.)");
+                }
+                // using TestNG
+                throw new KnownClassVersionException(e);
+            }
+        }
+        
+        static AtomicBoolean LOGGED_TESTNG_WARNING = new AtomicBoolean();
+        static class KnownClassVersionException extends IllegalStateException {
+            private static final long serialVersionUID = -1620847775786753301L;
+            public KnownClassVersionException(Throwable e) {
+                super("Class version error. This can happen if using a TestNG plugin in your IDE "
                     + "which is an older version, dragging in an older version of SnakeYAML which does not support Mark.getIndex.", e);
             }
         }
@@ -322,7 +347,11 @@ public class Yamls {
                 return getMatchedYamlText();
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                log.warn("Unable to match yaml text in "+this+": "+e, e);
+                if (e instanceof KnownClassVersionException) {
+                    log.debug("Known class version exception; no yaml text being matched for "+this+": "+e);
+                } else {
+                    log.warn("Unable to match yaml text in "+this+": "+e, e);
+                }
                 return null;
             }
         }

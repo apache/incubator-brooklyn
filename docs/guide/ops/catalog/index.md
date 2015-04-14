@@ -77,8 +77,9 @@ services:
 
 In addition to the above fields, exactly **one** of the following is also required:
 
-- `item`: the blueprint (in the usual YAML format) for an entity or application template,
-  or a map containing `type` and optional `brooklyn.config` for policies and locations; **or**
+- `item`: the YAML for a service or policy or location specification 
+  (a map containing `type` and optional `brooklyn.config`)
+  or a full application blueprint (in the usual YAML format) for a template; **or*
 - `items`: a list of catalog items, where each entry in the map follows the same schema as
   the `brooklyn.catalog` value, and the keys in these map override any metadata specified as
   a sibling of this `items` key (or, in the case of `libraries` they add to the list);
@@ -87,17 +88,17 @@ In addition to the above fields, exactly **one** of the following is also requir
 
 The following optional catalog metadata is supported:
   
-- `item.type`: the type of the item being defined.
-  If omitted, all `item` definitions are taken to be entities;
-  for any type other than an entity, this field must be supplied.
-  The supported types are:
+- `itemType`: the type of the item being defined.
+  When adding a template (see below) this must be set.
+  In most other cases this can be omitted and type type will be inferred.
+  The supported item types are:
   - `entity`
   - `template`
   - `policy`
   - `location`
 - `name`: a nicely formatted display name for the item, used when presenting it in a GUI
 - `description`: supplies an extended textual description for the item
-- `icon.url`: points to an icon for the item, used when presenting it in a GUI.
+- `iconUrl`: points to an icon for the item, used when presenting it in a GUI.
   The URL prefix `classpath` is supported but these URLs may *not* refer items in any OSGi bundle in the `libraries` section 
   (to prevent requiring all OSGi bundles to be loaded at launch).
   Icons are instead typically installed either at the server from which the OSGi bundles or catalog items are supplied 
@@ -131,14 +132,13 @@ and its implementation will be the Java class `brooklyn.entity.nosql.riak.RiakNo
 brooklyn.catalog:
   id: datastore
   version: 1.0
-  item.type: template
-  icon.url: classpath://brooklyn/entity/nosql/riak/riak.png
+  itemType: template
+  iconUrl: classpath://brooklyn/entity/nosql/riak/riak.png
   name: Datastore (Riak)
   description: Riak is an open-source NoSQL key-value data store.
   item:
-    services:
-    - type: brooklyn.entity.nosql.riak.RiakNode
-      name: Riak Node
+    type: brooklyn.entity.nosql.riak.RiakNode
+    name: Riak Node
 ```
 
 
@@ -149,22 +149,20 @@ This YAML will install three items:
 ```yaml
 brooklyn.catalog:
   version: 1.1
-  icon.url: classpath://brooklyn/entity/nosql/riak/riak.png
+  iconUrl: classpath://brooklyn/entity/nosql/riak/riak.png
   description: Riak is an open-source NoSQL key-value data store.
   items:
     - id: riak-node
       item:
-        services:
-        - type: brooklyn.entity.nosql.riak.RiakNode
-          name: Riak Node
+        type: brooklyn.entity.nosql.riak.RiakNode
+        name: Riak Node
     - id: riak-cluster
       item:
-        services:
-        - type: brooklyn.entity.nosql.riak.RiakCluster
-          name: Riak Cluster
+        type: brooklyn.entity.nosql.riak.RiakCluster
+        name: Riak Cluster
     - id: datastore
       name: Datastore (Riak Cluster)
-      item.type: template
+      itemType: template
       item:
         services:
         - type: riak-cluster
