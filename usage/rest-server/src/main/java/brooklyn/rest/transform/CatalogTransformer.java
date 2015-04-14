@@ -33,13 +33,17 @@ import brooklyn.entity.EntityType;
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.Sensor;
+import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
+import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.rest.domain.CatalogPolicySummary;
 import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.EntityConfigSummary;
+import brooklyn.rest.domain.LocationConfigSummary;
 import brooklyn.rest.domain.PolicyConfigSummary;
 import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.domain.SummaryComparators;
@@ -86,6 +90,14 @@ public class CatalogTransformer {
     public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
         Set<PolicyConfigSummary> config = ImmutableSet.of();
         return new CatalogPolicySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
+                item.getJavaType(), item.getPlanYaml(),
+                item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
+                item.isDeprecated(), makeLinks(item));
+    }
+
+    public static CatalogLocationSummary catalogLocationSummary(BrooklynRestResourceUtils b, CatalogItem<? extends Location,LocationSpec<?>> item) {
+        Set<LocationConfigSummary> config = ImmutableSet.of();
+        return new CatalogLocationSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
                 item.isDeprecated(), makeLinks(item));

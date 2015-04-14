@@ -47,10 +47,14 @@ import com.wordnik.swagger.core.ApiParam;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface LocationApi {
 
+    /**
+     * @deprecated since 0.7.0; use {@link CatalogApi#listLocations(String, String)}
+     */
     @GET
-    @ApiOperation(value = "Fetch the list of locations",
+    @ApiOperation(value = "Fetch the list of location definitions",
             responseClass = "brooklyn.rest.domain.LocationSummary",
             multiValueResponse = true)
+    @Deprecated
     public List<LocationSummary> list();
 
     // this is here to support the web GUI's circles
@@ -59,9 +63,13 @@ public interface LocationApi {
     @ApiOperation(value = "Return a summary of all usage", notes="interim API, expected to change")
     public Map<String,Map<String,Object>> getLocatedLocations();
 
+    /**
+     * WARNING: behaviour will change in a future release; this will only return location instances.
+     * See {@link CatalogApi#getLocation(String, String)} for retrieving location definitions.
+     */
     @GET
     @Path("/{locationId}")
-    @ApiOperation(value = "Fetch details about a location",
+    @ApiOperation(value = "Fetch details about a location instance, or a location definition",
             responseClass = "brooklyn.rest.domain.LocationSummary",
             multiValueResponse = true)
     public LocationSummary get(
@@ -71,15 +79,23 @@ public interface LocationApi {
             @DefaultValue("false")
             @QueryParam("full") String fullConfig);
 
+    /**
+     * @deprecated since 0.7.0; use {@link CatalogApi#create(String)}
+     */
     @POST
-    @ApiOperation(value = "Create a new location", responseClass = "String")
+    @ApiOperation(value = "Create a new location definition", responseClass = "String")
+    @Deprecated
     public Response create(
             @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
             @Valid LocationSpec locationSpec);
 
+    /**
+     * @deprecated since 0.7.0; use {@link CatalogApi#deleteLocation(String, String)}
+     */
     @DELETE
     @Path("/{locationId}")
-    @ApiOperation(value = "Delete a location object by id")
+    @ApiOperation(value = "Deletes a location definition by id")
+    @Deprecated
     public void delete(
             @ApiParam(value = "Location id to delete", required = true)
             @PathParam("locationId") String locationId);

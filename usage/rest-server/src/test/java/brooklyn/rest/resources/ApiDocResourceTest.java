@@ -98,7 +98,7 @@ public class ApiDocResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testCatalogDetails() throws Exception {
         ApidocRoot response = client().resource("/v1/apidoc/brooklyn.rest.resources.CatalogResource").get(ApidocRoot.class);
-        assertEquals(countOperations(response), 16, "ops="+getOperations(response));
+        assertEquals(countOperations(response), 21, "ops="+getOperations(response));
     }
 
     @SuppressWarnings("rawtypes")

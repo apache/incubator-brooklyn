@@ -146,7 +146,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
     }
 
     @Test
-    public void testAddAndRebindLocation() {
+    public void testAddAndRebindAndDeleteLocation() {
         String yaml = Joiner.on("\n").join(ImmutableList.of(
                 "name: Test Location",
                 "brooklyn.catalog:",
@@ -159,6 +159,11 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
                 "    cfg2: 222"));
         CatalogItem<?, ?> added = addItem(origManagementContext, yaml);
         assertEquals(added.getCatalogItemType(), CatalogItemType.LOCATION);
+        rebindAndAssertCatalogsAreEqual();
+        
+        deleteItem(newManagementContext, added.getSymbolicName(), added.getVersion());
+        
+        switchOriginalToNewManagementContext();
         rebindAndAssertCatalogsAreEqual();
     }
 
@@ -237,6 +242,12 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         LOG.info("Added item to catalog: {}, id={}", added, added.getId());
         assertCatalogContains(mgmt.getCatalog(), added);
         return added;
+    }
+    
+    protected void deleteItem(ManagementContext mgmt, String symbolicName, String version) {
+        mgmt.getCatalog().deleteCatalogItem(symbolicName, version);
+        LOG.info("Deleted item from catalog: {}:{}", symbolicName, version);
+        assertCatalogDoesNotContain(mgmt.getCatalog(), symbolicName, version);
     }
     
     private void rebindAndAssertCatalogsAreEqual() {

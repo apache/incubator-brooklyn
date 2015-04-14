@@ -18,8 +18,8 @@
  */
 package brooklyn.rest.resources;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.Map;
@@ -35,12 +35,15 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
 
+import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
@@ -50,62 +53,111 @@ import com.sun.jersey.api.client.GenericType;
 public class LocationResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(LocationResourceTest.class);
-    private URI addedLocationUri;
+    private String legacyLocationName = "my-jungle-legacy";
+    private String legacyLocationVersion = "0.0.0.SNAPSHOT";
+    
+    private String locationName = "my-jungle";
+    private String locationVersion = "0.1.2";
     
     @Test
-    public void testAddNewLocation() {
+    @Deprecated
+    public void testAddLegacyLocationDefinition() {
         Map<String, String> expectedConfig = ImmutableMap.of(
                 "identity", "bob",
                 "credential", "CR3dential");
         ClientResponse response = client().resource("/v1/locations")
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, new LocationSpec("my-jungle", "aws-ec2:us-east-1", expectedConfig));
+                .post(ClientResponse.class, new LocationSpec(legacyLocationName, "aws-ec2:us-east-1", expectedConfig));
 
-        addedLocationUri = response.getLocation();
-        log.info("added, at: " + addedLocationUri);
+        URI addedLegacyLocationUri = response.getLocation();
+        log.info("added legacy, at: " + addedLegacyLocationUri);
         LocationSummary location = client().resource(response.getLocation()).get(LocationSummary.class);
         log.info(" contents: " + location);
-        Assert.assertEquals(location.getSpec(), "brooklyn.catalog:my-jungle:0.0.0.SNAPSHOT");
-        Assert.assertTrue(addedLocationUri.toString().startsWith("/v1/locations/"));
+        assertEquals(location.getSpec(), "brooklyn.catalog:"+legacyLocationName+":"+legacyLocationVersion);
+        assertTrue(addedLegacyLocationUri.toString().startsWith("/v1/locations/"));
 
-        JcloudsLocation l = (JcloudsLocation) getManagementContext().getLocationRegistry().resolve("my-jungle");
+        JcloudsLocation l = (JcloudsLocation) getManagementContext().getLocationRegistry().resolve(legacyLocationName);
         Assert.assertEquals(l.getProvider(), "aws-ec2");
         Assert.assertEquals(l.getRegion(), "us-east-1");
         Assert.assertEquals(l.getIdentity(), "bob");
         Assert.assertEquals(l.getCredential(), "CR3dential");
     }
 
-    @Test(dependsOnMethods = { "testAddNewLocation" })
-    public void testListAllLocations() {
+    @Test
+    public void testAddNewLocationDefinition() {
+        String yaml = Joiner.on("\n").join(ImmutableList.of(
+                "brooklyn.catalog:",
+                "  symbolicName: "+locationName,
+                "  version: " + locationVersion,
+                "",
+                "brooklyn.locations:",
+                "- type: "+"aws-ec2:us-east-1",
+                "  brooklyn.config:",
+                "    identity: bob",
+                "    credential: CR3dential"));
+
+        
+        ClientResponse response = client().resource("/v1/catalog")
+                .post(ClientResponse.class, yaml);
+
+        assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
+        
+
+        URI addedCatalogItemUri = response.getLocation();
+        log.info("added, at: " + addedCatalogItemUri);
+        
+        // Ensure location definition exists
+        CatalogLocationSummary locationItem = client().resource("/v1/catalog/locations/"+locationName + "/" + locationVersion)
+                .get(CatalogLocationSummary.class);
+        log.info(" item: " + locationItem);
+        LocationSummary locationSummary = client().resource(URI.create("/v1/locations/"+locationName+"/")).get(LocationSummary.class);
+        log.info(" summary: " + locationSummary);
+        Assert.assertEquals(locationSummary.getSpec(), "brooklyn.catalog:"+locationName+":"+locationVersion);
+
+        // Ensure location is usable - can instantiate, and has right config
+        JcloudsLocation l = (JcloudsLocation) getManagementContext().getLocationRegistry().resolve(locationName);
+        Assert.assertEquals(l.getProvider(), "aws-ec2");
+        Assert.assertEquals(l.getRegion(), "us-east-1");
+        Assert.assertEquals(l.getIdentity(), "bob");
+        Assert.assertEquals(l.getCredential(), "CR3dential");
+    }
+
+    @Test(dependsOnMethods = { "testAddNewLocationDefinition" })
+    public void testListAllLocationDefinitions() {
         Set<LocationSummary> locations = client().resource("/v1/locations")
                 .get(new GenericType<Set<LocationSummary>>() {});
         Iterable<LocationSummary> matching = Iterables.filter(locations, new Predicate<LocationSummary>() {
             @Override
             public boolean apply(@Nullable LocationSummary l) {
-                return "my-jungle".equals(l.getName());
+                return locationName.equals(l.getName());
             }
         });
         LocationSummary location = Iterables.getOnlyElement(matching);
-        assertThat(location.getSpec(), is("brooklyn.catalog:my-jungle:0.0.0.SNAPSHOT"));
-        Assert.assertEquals(location.getLinks().get("self"), addedLocationUri);
+        
+        URI expectedLocationUri = URI.create("/v1/locations/"+locationName);
+        Assert.assertEquals(location.getSpec(), "brooklyn.catalog:"+locationName+":"+locationVersion);
+        Assert.assertEquals(location.getLinks().get("self"), expectedLocationUri);
     }
 
-    @Test(dependsOnMethods = { "testListAllLocations" })
-    public void testGetASpecificLocation() {
-        LocationSummary location = client().resource(addedLocationUri.toString()).get(LocationSummary.class);
-        assertThat(location.getSpec(), is("brooklyn.catalog:my-jungle:0.0.0.SNAPSHOT"));
+    @Test(dependsOnMethods = { "testListAllLocationDefinitions" })
+    public void testGetSpecificLocation() {
+        URI expectedLocationUri = URI.create("/v1/locations/"+locationName);
+        LocationSummary location = client().resource(expectedLocationUri).get(LocationSummary.class);
+        assertEquals(location.getSpec(), "brooklyn.catalog:"+locationName+":"+locationVersion);
     }
 
-    @Test(dependsOnMethods = { "testGetASpecificLocation" })
+    @Test(dependsOnMethods = { "testAddLegacyLocationDefinition" })
+    @Deprecated
     public void testDeleteLocation() {
         final int size = getLocationRegistry().getDefinedLocations().size();
+        URI expectedLocationUri = URI.create("/v1/locations/"+legacyLocationName);
 
-        ClientResponse response = client().resource(addedLocationUri).delete(ClientResponse.class);
-        assertThat(response.getStatus(), is(Response.Status.NO_CONTENT.getStatusCode()));
+        ClientResponse response = client().resource(expectedLocationUri).delete(ClientResponse.class);
+        assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
         Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
-                assertThat(getLocationRegistry().getDefinedLocations().size(), is(size - 1));
+                assertEquals(getLocationRegistry().getDefinedLocations().size(), size - 1);
             }
         });
     }

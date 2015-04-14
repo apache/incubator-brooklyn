@@ -37,6 +37,8 @@ import javax.ws.rs.core.Response;
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
+import brooklyn.rest.domain.CatalogLocationSummary;
+import brooklyn.rest.domain.CatalogPolicySummary;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
@@ -52,7 +54,7 @@ import com.wordnik.swagger.core.ApiParam;
 public interface CatalogApi {
 
     @POST
-    @ApiOperation(value = "Add a catalog item (e.g. new entity or policy type) by uploading YAML descriptor from browser using multipart/form-data",
+    @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor from browser using multipart/form-data",
         responseClass = "String")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response createFromMultipart(
@@ -62,7 +64,7 @@ public interface CatalogApi {
 
     @Consumes
     @POST
-    @ApiOperation(value = "Add a catalog item (e.g. new entity or policy type) by uploading YAML descriptor", responseClass = "String")
+    @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor", responseClass = "String")
     public Response create(
             @ApiParam(name = "yaml", value = "YAML descriptor of catalog item", required = true)
             @Valid String yaml);
@@ -75,7 +77,7 @@ public interface CatalogApi {
             @ApiParam(name = "xml", value = "XML descriptor of the entire catalog to install", required = true)
             @Valid String xml);
 
-    /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
+    /** @deprecated since 0.7.0 use {@link #deleteEntity(String, String)} */
     @Deprecated
     @DELETE
     @Path("/entities/{entityId}")
@@ -100,10 +102,36 @@ public interface CatalogApi {
         @ApiParam(name = "version", value = "The version identifier of the entity or template to delete", required = true)
         @PathParam("version") String version) throws Exception;
 
+    @DELETE
+    @Path("/policies/{policyId}/{version}")
+    @ApiOperation(value = "Deletes a specific version of an policy's definition from the catalog")
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Policy not found")
+    })
+    public void deletePolicy(
+        @ApiParam(name = "policyId", value = "The ID of the policy to delete", required = true)
+        @PathParam("policyId") String policyId,
+
+        @ApiParam(name = "version", value = "The version identifier of the policy to delete", required = true)
+        @PathParam("version") String version) throws Exception;
+
+    @DELETE
+    @Path("/locations/{locationId}/{version}")
+    @ApiOperation(value = "Deletes a specific version of an location's definition from the catalog")
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Location not found")
+    })
+    public void deleteLocation(
+        @ApiParam(name = "locationId", value = "The ID of the location to delete", required = true)
+        @PathParam("locationId") String locationId,
+
+        @ApiParam(name = "version", value = "The version identifier of the location to delete", required = true)
+        @PathParam("version") String version) throws Exception;
+
     @GET
     @Path("/entities")
     @ApiOperation(value = "List available entity types optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)
-    public List<CatalogItemSummary> listEntities(
+    public List<CatalogEntitySummary> listEntities(
         @ApiParam(name = "regex", value = "Regular expression to search for")
         @QueryParam("regex") @DefaultValue("") String regex,
         @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
@@ -170,14 +198,14 @@ public interface CatalogApi {
 
     @GET
     @Path("/policies")
-    @ApiOperation(value = "List available policies optionally matching a query", responseClass = "CatalogItemSummary", multiValueResponse = true)
-    public List<CatalogItemSummary> listPolicies(
+    @ApiOperation(value = "List available policies optionally matching a query", responseClass = "CatalogPolicySummary", multiValueResponse = true)
+    public List<CatalogPolicySummary> listPolicies(
             @ApiParam(name = "regex", value = "Regular expression to search for")
             @QueryParam("regex") @DefaultValue("") String regex,
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
             @QueryParam("fragment") @DefaultValue("") String fragment);
     
-    /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
+    /** @deprecated since 0.7.0 use {@link #getPolicy(String, String)} */
     @Deprecated
     @GET
     @Path("/policies/{policyId}")
@@ -201,6 +229,39 @@ public interface CatalogApi {
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
         @PathParam("version") String version) throws Exception;
     
+    @GET
+    @Path("/locations")
+    @ApiOperation(value = "List available locations optionally matching a query", responseClass = "CatalogLocationSummary", multiValueResponse = true)
+    public List<CatalogLocationSummary> listLocations(
+            @ApiParam(name = "regex", value = "Regular expression to search for")
+            @QueryParam("regex") @DefaultValue("") String regex,
+            @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
+            @QueryParam("fragment") @DefaultValue("") String fragment);
+    
+    /** @deprecated since 0.7.0 use {@link #getLocation(String, String)} */
+    @Deprecated
+    @GET
+    @Path("/locations/{locationId}")
+    @ApiOperation(value = "Fetch a location's definition from the catalog", responseClass = "CatalogItemSummary", multiValueResponse = true)
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Entity not found")
+    })
+    public CatalogItemSummary getLocation(
+        @ApiParam(name = "locationId", value = "The ID of the location to retrieve", required = true)
+        @PathParam("locationId") String locationId) throws Exception;
+    
+    @GET
+    @Path("/locations/{locationId}/{version}")
+    @ApiOperation(value = "Fetch a location's definition from the catalog", responseClass = "CatalogItemSummary", multiValueResponse = true)
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Entity not found")
+    })
+    public CatalogItemSummary getLocation(
+        @ApiParam(name = "locationId", value = "The ID of the location to retrieve", required = true)
+        @PathParam("locationId") String locationId,
+        @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
+        @PathParam("version") String version) throws Exception;
+    
     /** @deprecated since 0.7.0 use {@link #getIcon(String, String)} */
     @Deprecated
     @GET
@@ -211,7 +272,7 @@ public interface CatalogApi {
         })
     @Produces("application/image")
     public Response getIcon(
-        @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy)")
+        @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy, location)")
         @PathParam("itemId") @DefaultValue("") String itemId);
 
     @GET
@@ -222,10 +283,10 @@ public interface CatalogApi {
         })
     @Produces("application/image")
     public Response getIcon(
-        @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy)", required=true)
+        @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy, location)", required=true)
         @PathParam("itemId") String itemId,
 
-        @ApiParam(name = "version", value = "version identifier of catalog item (application, entity, policy)", required=true)
+        @ApiParam(name = "version", value = "version identifier of catalog item (application, entity, policy, location)", required=true)
         @PathParam("version") String version);
 
     @POST

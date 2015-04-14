@@ -32,7 +32,6 @@ import java.util.Set;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -47,9 +46,12 @@ import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.rest.domain.CatalogEntitySummary;
 import brooklyn.rest.domain.CatalogItemSummary;
+import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.rest.domain.CatalogPolicySummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
+import brooklyn.test.TestResourceUnavailableException;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
@@ -256,6 +258,57 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 asp = p;
         }
         Assert.assertNotNull(asp, "didn't find AutoScalerPolicy");
+    }
+
+    @Test
+    public void testLocationAddGetAndRemove() {
+        String symbolicName = "my.catalog.location.id";
+        String locationType = "localhost";
+        String yaml = Joiner.on("\n").join(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName,
+                "  name: My Catalog Location",
+                "  description: My description",
+                "  version: " + TEST_VERSION,
+                "",
+                "brooklyn.locations:",
+                "- type: " + locationType);
+
+        // Create location item
+        CatalogLocationSummary locationItem = client().resource("/v1/catalog")
+                .post(CatalogLocationSummary.class, yaml);
+
+        Assert.assertNotNull(locationItem.getPlanYaml());
+        Assert.assertTrue(locationItem.getPlanYaml().contains(locationType));
+        assertEquals(locationItem.getId(), ver(symbolicName));
+        assertEquals(locationItem.getSymbolicName(), symbolicName);
+        assertEquals(locationItem.getVersion(), TEST_VERSION);
+
+        // Retrieve location item
+        CatalogLocationSummary location = client().resource("/v1/catalog/locations/"+symbolicName+"/"+TEST_VERSION)
+                .get(CatalogLocationSummary.class);
+        assertEquals(location.getSymbolicName(), symbolicName);
+
+        // Retrieve all locations
+        Set<CatalogLocationSummary> locations = client().resource("/v1/catalog/locations")
+                .get(new GenericType<Set<CatalogLocationSummary>>() {});
+        boolean found = false;
+        for (CatalogLocationSummary contender : locations) {
+            if (contender.getSymbolicName().equals(symbolicName)) {
+                found = true;
+                break;
+            }
+        }
+        Assert.assertTrue(found, "contenders="+locations);
+        
+        // Delete
+        ClientResponse deleteResponse = client().resource("/v1/catalog/locations/"+symbolicName+"/"+TEST_VERSION)
+                .delete(ClientResponse.class);
+        assertEquals(deleteResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+
+        ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/locations/"+symbolicName+"/"+TEST_VERSION)
+                .get(ClientResponse.class);
+        assertEquals(getPostDeleteResponse.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
