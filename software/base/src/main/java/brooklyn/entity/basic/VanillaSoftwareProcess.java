@@ -52,6 +52,6 @@ import brooklyn.entity.proxying.ImplementedBy;
  */
 @Catalog(name="Vanilla Software Process", description="A software process configured with scripts, e.g. for launch, check-running and stop")
 @ImplementedBy(VanillaSoftwareProcessImpl.class)
-public interface VanillaSoftwareProcess extends AbstractVanillaSoftwareProcess {
+public interface VanillaSoftwareProcess extends AbstractVanillaProcess {
 
 }

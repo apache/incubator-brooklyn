@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.WinRmMachineLocation;
 
 import com.google.api.client.util.Strings;
@@ -31,8 +33,15 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwareProcessDriver {
 
+    AttributeSensor<String> WINDOWS_USERNAME = Sensors.newStringSensor("windows.username",
+            "Default Windows username to be used when connecting to the Entity's VM");
+    AttributeSensor<String> WINDOWS_PASSWORD = Sensors.newStringSensor("windows.password",
+            "Default Windows password to be used when connecting to the Entity's VM");
+
     public AbstractSoftwareProcessWinRmDriver(EntityLocal entity, WinRmMachineLocation location) {
         super(entity, location);
+        entity.setAttribute(WINDOWS_USERNAME, location.config().get(WinRmMachineLocation.WINDOWS_USERNAME));
+        entity.setAttribute(WINDOWS_PASSWORD, location.config().get(WinRmMachineLocation.WINDOWS_PASSWORD));
     }
 
     @Override
@@ -98,13 +107,19 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         getLocation().executePsScript("New-Item -path \"" + directoryName + "\" -type directory -ErrorAction SilentlyContinue");
     }
 
-    protected boolean executeCommand(ConfigKey<String> regularCommandKey, ConfigKey<String> powershellCommandKey) {
+    protected boolean executeCommand(ConfigKey<String> regularCommandKey, ConfigKey<String> powershellCommandKey, boolean allowNoOp) {
         String regularCommand = getEntity().getConfig(regularCommandKey);
         String powershellCommand = getEntity().getConfig(powershellCommandKey);
-        if ((Strings.isNullOrEmpty(regularCommand) && Strings.isNullOrEmpty(powershellCommand)) || (
-                !Strings.isNullOrEmpty(regularCommand) && !Strings.isNullOrEmpty(powershellCommand))) {
-            throw new IllegalStateException(String.format("Exactly one of %s or %s must be set", regularCommandKey.getName(), powershellCommandKey.getName()));
+        if (Strings.isNullOrEmpty(regularCommand) && Strings.isNullOrEmpty(powershellCommand)) {
+            if (allowNoOp) {
+                return true;
+            } else {
+                throw new IllegalStateException(String.format("Exactly one of %s or %s must be set", regularCommandKey.getName(), powershellCommandKey.getName()));
+            }
+        } else if (!Strings.isNullOrEmpty(regularCommand) && !Strings.isNullOrEmpty(powershellCommand)) {
+            throw new IllegalStateException(String.format("%s and %s cannot both be set", regularCommandKey.getName(), powershellCommandKey.getName()));
         }
+
         if (Strings.isNullOrEmpty(regularCommand)) {
             return getLocation().executePsScript(ImmutableList.of(powershellCommand)) == 0;
         } else {
