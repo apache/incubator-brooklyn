@@ -35,4 +35,5 @@ public class VanillaWindowsProcessImpl extends SoftwareProcessImpl implements Va
         disconnectServiceUpIsRunning();
         super.disconnectSensors();
     }
+
 }

@@ -28,27 +28,30 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
 
     @Override
     public void install() {
-
+        // TODO: Follow install path of VanillaSoftwareProcessSshDriver
+        executeCommand(VanillaWindowsProcess.INSTALL_COMMAND, VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND, true);
     }
 
     @Override
     public void customize() {
-
+        // TODO: Follow customize path of VanillaSoftwareProcessSshDriver
+        executeCommand(VanillaWindowsProcess.CUSTOMIZE_COMMAND, VanillaWindowsProcess.CUSTOMIZE_POWERSHELL_COMMAND, true);
     }
 
     @Override
     public void launch() {
-
+        executeCommand(VanillaWindowsProcess.LAUNCH_COMMAND, VanillaWindowsProcess.LAUNCH_POWERSHELL_COMMAND, true);
     }
 
     @Override
     public boolean isRunning() {
-        return executeCommand(VanillaWindowsProcess.CHECK_RUNNING_COMMAND, VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND);
+        return executeCommand(VanillaWindowsProcess.CHECK_RUNNING_COMMAND,
+                VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, false);
     }
 
     @Override
     public void stop() {
-
+        executeCommand(VanillaWindowsProcess.STOP_POWERSHELL_COMMAND, VanillaWindowsProcess.STOP_COMMAND, true);
     }
 
 }

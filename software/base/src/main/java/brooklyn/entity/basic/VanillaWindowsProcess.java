@@ -19,9 +19,22 @@
 package brooklyn.entity.basic;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.proxying.ImplementedBy;
 
-public interface VanillaWindowsProcess extends AbstractVanillaSoftwareProcess {
-    ConfigKey<String> LAUNCH_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("launch.powershell.command", "command to run to launch the process", "./start.sh");
-    ConfigKey<String> CHECK_RUNNING_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("checkRunning.powershell.command", "command to determine whether the process is running");
-    ConfigKey<String> STOP_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("stop.powershell.command", "command to run to stop the process");
+@ImplementedBy(VanillaWindowsProcessImpl.class)
+public interface VanillaWindowsProcess extends AbstractVanillaProcess {
+    ConfigKey<String> LAUNCH_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("launch.powershell.command",
+            "command to run to launch the process", "./start.sh");
+    ConfigKey<String> CHECK_RUNNING_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("checkRunning.powershell.command",
+            "command to determine whether the process is running");
+    ConfigKey<String> STOP_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("stop.powershell.command",
+            "command to run to stop the process");
+    ConfigKey<String> CUSTOMIZE_COMMAND = ConfigKeys.newStringConfigKey("customize.command",
+            "command to run during the customization phase");
+    ConfigKey<String> CUSTOMIZE_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("customize.powershell.command",
+            "powershell command to run during the customization phase");
+    ConfigKey<String> INSTALL_COMMAND = ConfigKeys.newStringConfigKey("install.command",
+            "command to run during the install phase");
+    ConfigKey<String> INSTALL_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("install.powershell.command",
+            "powershell command to run during the install phase");
 }
