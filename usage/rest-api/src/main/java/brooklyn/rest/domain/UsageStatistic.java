@@ -23,6 +23,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
 
@@ -31,7 +32,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author Adam Lowe
  */
-public class UsageStatistic implements HasId {
+public class UsageStatistic implements HasId, Serializable {
+    
+    private static final long serialVersionUID = 5701414937003064442L;
+    
     private final Status status;
     private final String id;
     private final String applicationId;

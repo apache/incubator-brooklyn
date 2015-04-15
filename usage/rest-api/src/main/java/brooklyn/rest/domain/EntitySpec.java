@@ -19,14 +19,19 @@
 package brooklyn.rest.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.ImmutableMap;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
-public class EntitySpec implements HasName {
+public class EntitySpec implements HasName, Serializable {
 
+    private static final long serialVersionUID = -3882575609132757188L;
+    
     private final String name;
     private final String type;
     private final Map<String, String> config;

@@ -26,6 +26,8 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 public class CatalogEntitySummary extends CatalogItemSummary {
 
+    private static final long serialVersionUID = 1063908984191424539L;
+    
     private final Set<EntityConfigSummary> config;
     private final Set<SensorSummary> sensors;
     private final Set<EffectorSummary> effectors;

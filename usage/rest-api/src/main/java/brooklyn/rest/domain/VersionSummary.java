@@ -20,13 +20,17 @@ package brooklyn.rest.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.Serializable;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
-public class VersionSummary {
+public class VersionSummary implements Serializable {
 
+    private static final long serialVersionUID = 7275038546963638540L;
+    
     private final String version;
     private final String buildSha1;
     private final String buildBranch;

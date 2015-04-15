@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
 
@@ -26,9 +27,13 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
-public class HighAvailabilitySummary {
+public class HighAvailabilitySummary implements Serializable {
 
-    public static class HaNodeSummary {
+    private static final long serialVersionUID = -317333127094471223L;
+
+    public static class HaNodeSummary implements Serializable {
+        private static final long serialVersionUID = 9205960988226816539L;
+        
         private final String nodeId;
         private final URI nodeUri;
         private final String status;

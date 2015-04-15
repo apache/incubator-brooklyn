@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
@@ -29,9 +30,13 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
-public class EffectorSummary implements HasName {
+public class EffectorSummary implements HasName, Serializable {
 
-    public static class ParameterSummary<T> implements HasName {
+    private static final long serialVersionUID = 8103535211378449509L;
+
+    public static class ParameterSummary<T> implements HasName, Serializable {
+        private static final long serialVersionUID = -6393686096290306153L;
+        
         private final String name;
         private final String type;
         @JsonSerialize(include = Inclusion.NON_NULL)

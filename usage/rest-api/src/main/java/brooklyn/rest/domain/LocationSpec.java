@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
@@ -32,8 +33,10 @@ import com.google.common.collect.ImmutableMap;
 
 // FIXME change name, due to confusion with brooklyn.location.LocationSpec <- no need, as we can kill the class instead soon!
 /** @deprecated since 0.7.0 location spec objects will not be used from the client, instead pass yaml location spec strings */
-public class LocationSpec implements HasName, HasConfig {
+public class LocationSpec implements HasName, HasConfig, Serializable {
 
+    private static final long serialVersionUID = -1562824224808185255L;
+    
     @JsonSerialize(include = Inclusion.NON_NULL)
     private final String name;
     @JsonSerialize(include = Inclusion.NON_NULL)

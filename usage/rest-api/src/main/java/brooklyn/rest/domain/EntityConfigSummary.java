@@ -30,6 +30,8 @@ import java.util.Map;
 
 public class EntityConfigSummary extends ConfigSummary {
 
+    private static final long serialVersionUID = -1336134336883426030L;
+    
     @JsonSerialize(include = Inclusion.NON_NULL)
     private final Map<String, URI> links;
 

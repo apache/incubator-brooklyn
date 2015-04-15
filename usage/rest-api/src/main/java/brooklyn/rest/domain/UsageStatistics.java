@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +32,10 @@ import com.google.common.collect.ImmutableMap;
 /**
  * @author Aled Sage
  */
-public class UsageStatistics {
+public class UsageStatistics implements Serializable {
 
+    private static final long serialVersionUID = -1842301852728290967L;
+    
     // TODO populate links with /apps endpoint to link to /usage/applications/{id}, to make it more
     // RESTy
 

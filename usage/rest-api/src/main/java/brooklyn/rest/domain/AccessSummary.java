@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.domain;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
 
@@ -28,8 +29,10 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 @Beta
-public class AccessSummary {
+public class AccessSummary implements Serializable {
 
+    private static final long serialVersionUID = 5097292906225042890L;
+    
     private final boolean locationProvisioningAllowed;
     private final Map<String, URI> links;
 
