@@ -30,8 +30,12 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.EntityDriver;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -225,6 +229,40 @@ public class TemplateProcessor {
         }
     }
 
+    protected final static class EntityAttributeTemplateModel implements TemplateHashModel {
+        protected final EntityInternal entity;
+
+        protected EntityAttributeTemplateModel(EntityInternal entity) {
+            this.entity = entity;
+        }
+
+        @Override
+        public boolean isEmpty() throws TemplateModelException {
+            return false;
+        }
+
+        @Override
+        public TemplateModel get(String key) throws TemplateModelException {
+            Object result;
+            try {
+                result = Entities.submit(entity, DependentConfiguration.attributeWhenReady(entity,
+                        Sensors.builder(Object.class, key).persistence(AttributeSensor.SensorPersistenceMode.NONE).build())).get();
+            } catch (Exception e) {
+                throw new TemplateModelException("Error obtaining sensor data for " + key, e);
+            }
+            if (result == null) {
+                return null;
+            } else {
+                return wrapAsTemplateModel(result);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getName()+"["+entity+"]";
+        }
+    }
+
     /**
      * Provides access to config on an entity or management context, using
      * <code>${config['entity.config.key']}</code> or <code>${mgmt['brooklyn.properties.key']}</code> notation,
@@ -286,6 +324,9 @@ public class TemplateProcessor {
                     return wrapAsTemplateModel( driver.getLocation() );
                 if (entity!=null)
                     return wrapAsTemplateModel( Iterables.getOnlyElement( entity.getLocations() ) );
+            }
+            if ("attribute".equals(key)) {
+                return new EntityAttributeTemplateModel(entity);
             }
             
             if (mgmt!=null) {
