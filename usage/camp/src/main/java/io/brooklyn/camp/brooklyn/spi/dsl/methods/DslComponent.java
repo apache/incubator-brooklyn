@@ -42,6 +42,8 @@ import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -122,14 +124,15 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
                 default:
                     throw new IllegalStateException("Unexpected scope "+scope);
             }
-            
-            Optional<Entity> result = Iterables.tryFind(entitiesToSearch, EntityPredicates.configEqualTo(BrooklynCampConstants.PLAN_ID, componentId));
+            Predicate<Entity> configEqualTo = EntityPredicates.configEqualTo(BrooklynCampConstants.PLAN_ID, componentId);
+            Predicate<Entity> classNameEquals = EntityPredicates.classNameEquals(componentId);
+            Optional<Entity> result = Iterables.tryFind(entitiesToSearch, Predicates.or(configEqualTo, classNameEquals));
             
             if (result.isPresent())
                 return result.get();
             
             // TODO may want to block and repeat on new entities joining?
-            throw new NoSuchElementException("No entity matching id " + componentId+
+            throw new NoSuchElementException("No entity matching id or type " + componentId+
                 (scope==Scope.GLOBAL ? "" : ", in scope "+scope+" wrt "+getEntity()+
                 (scopeComponent!=null ? " ("+scopeComponent+" from "+entity()+")" : "")));
         }        

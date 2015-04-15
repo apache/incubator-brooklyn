@@ -156,6 +156,36 @@ public class EntityPredicates {
             return "applicationIdSatisfies("+condition+")";
         }
     }
+    
+    public static Predicate<Entity> classNameEquals(final String name) {
+        return classNameSatisfies(Predicates.equalTo(name));
+    }
+
+    public static Predicate<Entity> classNameSatisfies(
+            final Predicate<? super String> condition) {
+        return new ClassNameSatisfies(condition);
+    }
+
+    protected static class ClassNameSatisfies implements
+            SerializablePredicate<Entity> {
+        protected final Predicate<? super String> condition;
+
+        protected ClassNameSatisfies(Predicate<? super String> condition) {
+            this.condition = condition;
+        }
+
+        @Override
+        public boolean apply(@Nullable Entity input) {
+            if (input == null)
+                return false;
+            return condition.apply(input.getEntityType().getName());
+        }
+
+        @Override
+        public String toString() {
+            return "classNameSatisfies(" + condition + ")";
+        }
+    }
 
     /** @deprecated since 0.7.0 kept only to allow conversion of anonymous inner classes */
     @SuppressWarnings("unused") @Deprecated 
