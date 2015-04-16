@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.collections.Sets;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
@@ -57,6 +58,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -436,22 +438,20 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      */
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = MutableSet.of(22);
-        for (ConfigKey k: getEntityType().getConfigKeys()) {
+        Map<ConfigKey<?>, ?> allConfig = config().getBag().getAllConfigAsConfigKeyMap();
+        Set<ConfigKey<?>> configKeys = Sets.newHashSet(allConfig.keySet());
+        configKeys.addAll(getEntityType().getConfigKeys());
+        
+        for (ConfigKey<?> k: configKeys) {
             if (PortRange.class.isAssignableFrom(k.getType())) {
                 PortRange p = (PortRange)getConfig(k);
                 if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
             }   
-        }
-        
-        Map<String, Object> allConfig = config().getBag().getAllConfig();
-        for (String key : allConfig.keySet()) {
-            if(key.matches(".*\\.port")){
-                Object value = allConfig.get(key);
-                if (value instanceof Integer){
-                    ports.add((Integer)value);
-                }
+            if(k.getName().matches(".*\\.port")){
+                Integer value = TypeCoercions.coerce(getConfig(k), Integer.class);
+                if (value !=null)ports.add(value);
             }
-        }         
+        }        
         
         log.debug("getRequiredOpenPorts detected default {} for {}", ports, this);
         return ports;
