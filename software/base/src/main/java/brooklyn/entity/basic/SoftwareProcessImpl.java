@@ -21,7 +21,6 @@ package brooklyn.entity.basic;
 import groovy.time.TimeDuration;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -31,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.collections.Sets;
+import com.google.common.collect.Sets;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
@@ -40,7 +39,6 @@ import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.effector.EffectorBody;
-import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.function.FunctionFeed;
