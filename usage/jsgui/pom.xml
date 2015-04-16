@@ -146,6 +146,16 @@
                 <targetPath>${project.build.directory}/jasmine/fixtures</targetPath>
             </resource>
         </resources>
+        <!-- Insert special LICENSE/NOTICE into the <test-jar>/META-INF folder -->
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <targetPath>META-INF</targetPath>
+                <directory>${basedir}/src/test/license</directory>
+            </testResource>
+        </testResources>
         <plugins>
             <!--
                  run js tests with: $ mvn clean process-resources jasmine:test
@@ -220,7 +230,30 @@
                 <version>${maven-war-plugin.version}</version>
                 <configuration>
                     <useCache>true</useCache> <!-- to prevent replaced files being overwritten -->
+                    <!-- Insert special LICENSE/NOTICE into the <war>/META-INF folder -->
+                    <webResources>
+                        <webResource>
+                            <targetPath>META-INF</targetPath>
+                            <directory>${basedir}/src/main/license</directory>
+                        </webResource>
+                    </webResources>
                 </configuration>
+            </plugin>
+            <!-- Disable the automatic LICENSE/NOTICE placement from the upstream pom, because we need to include
+                 bundled dependencies. See "webResources" section above for where we include the new LICENSE/NOTICE -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 
