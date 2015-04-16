@@ -125,11 +125,12 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
                     throw new IllegalStateException("Unexpected scope "+scope);
             }
             Predicate<Entity> configEqualTo = EntityPredicates.configEqualTo(BrooklynCampConstants.PLAN_ID, componentId);
-            Predicate<Entity> classNameEquals = EntityPredicates.classNameEquals(componentId);
-            Optional<Entity> result = Iterables.tryFind(entitiesToSearch, Predicates.or(configEqualTo, classNameEquals));
+            Optional<Entity> result = Iterables.tryFind(entitiesToSearch, configEqualTo);
+            if (result.isPresent()) return result.get();
             
-            if (result.isPresent())
-                return result.get();
+            Predicate<Entity> typeNameEquals = EntityPredicates.typeNameEquals(componentId);
+            result = Iterables.tryFind(entitiesToSearch, typeNameEquals);
+            if (result.isPresent()) return result.get();
             
             // TODO may want to block and repeat on new entities joining?
             throw new NoSuchElementException("No entity matching id or type " + componentId+

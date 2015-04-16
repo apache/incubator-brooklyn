@@ -157,20 +157,20 @@ public class EntityPredicates {
         }
     }
     
-    public static Predicate<Entity> classNameEquals(final String name) {
-        return classNameSatisfies(Predicates.equalTo(name));
+    public static Predicate<Entity> typeNameEquals(final String name) {
+        return typeNameSatisfies(Predicates.equalTo(name));
     }
 
-    public static Predicate<Entity> classNameSatisfies(
+    public static Predicate<Entity> typeNameSatisfies(
             final Predicate<? super String> condition) {
-        return new ClassNameSatisfies(condition);
+        return new TypeNameSatisfies(condition);
     }
 
-    protected static class ClassNameSatisfies implements
+    protected static class TypeNameSatisfies implements
             SerializablePredicate<Entity> {
         protected final Predicate<? super String> condition;
 
-        protected ClassNameSatisfies(Predicate<? super String> condition) {
+        protected TypeNameSatisfies(Predicate<? super String> condition) {
             this.condition = condition;
         }
 
@@ -183,7 +183,7 @@ public class EntityPredicates {
 
         @Override
         public String toString() {
-            return "classNameSatisfies(" + condition + ")";
+            return "typeNameSatisfies(" + condition + ")";
         }
     }
 
