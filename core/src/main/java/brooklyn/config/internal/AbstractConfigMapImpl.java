@@ -64,7 +64,7 @@ public abstract class AbstractConfigMapImpl implements ConfigMap {
         return getConfigRaw(key, true).orNull();
     }
     
-    protected Object setConfigPrep1(ConfigKey<?> key, Object v) {
+    protected Object coerceConfigVal(ConfigKey<?> key, Object v) {
         Object val;
         if ((v instanceof Future) || (v instanceof DeferredSupplier)) {
             // no coercion for these (coerce on exit)
@@ -82,8 +82,9 @@ public abstract class AbstractConfigMapImpl implements ConfigMap {
                 val = TypeCoercions.coerce(v, key.getTypeToken());
             } catch (Exception e) {
                 throw new IllegalArgumentException("Cannot coerce or set "+v+" to "+key, e);
-                // if can't coerce, we could just log, and *throw* the error when we retrieve the config
-                // but for now, fail fast (above)
+                // if can't coerce, we could just log as below and *throw* the error when we retrieve the config
+                // but for now, fail fast (above), because we haven't encountered strong use cases
+                // where we want to do coercion on retrieval, except for the exceptions above
 //                Exceptions.propagateIfFatal(e);
 //                LOG.warn("Cannot coerce or set "+v+" to "+key+" (ignoring): "+e, e);
 //                val = v;

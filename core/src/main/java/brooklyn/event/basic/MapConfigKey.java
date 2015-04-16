@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
@@ -132,15 +133,20 @@ public class MapConfigKey<V> extends AbstractStructuredConfigKey<Map<String,V>,M
         } else {
             // supplier or other unexpected value
             if (k instanceof Supplier) {
-                // TODO not thread-safe
                 Object mapAtRoot = target.get(this);
                 if (mapAtRoot==null) {
                     mapAtRoot = new LinkedHashMap();
                     target.put(this, mapAtRoot);
                 }
+                // TODO above is not thread-safe, and below is assuming synching on map 
+                // is the best way to prevent CME's, which is often but not always true
                 if (mapAtRoot instanceof Map) {
-                    synchronized (mapAtRoot) {
+                    if (mapAtRoot instanceof ConcurrentMap) {
                         return ((Map)mapAtRoot).put(k, value.getValue());
+                    } else {
+                        synchronized (mapAtRoot) {
+                            return ((Map)mapAtRoot).put(k, value.getValue());
+                        }
                     }
                 }
             }

@@ -146,13 +146,15 @@ Dependency injection other powerful references and types can be built up within 
 concise DSL defined here:
  
 * `$brooklyn:attributeWhenReady("sensor")` will store a future which will be blocked when it is accessed,
-  until the given `sensor` from the component `ID` has a "truthy" (i.e. non-trivial, non-empty, non-zero) value
+  until the given `sensor` from this entity "truthy" (i.e. non-trivial, non-empty, non-zero) value
+  (see below on `component` for looking up values on other sensors) 
 * `$brooklyn:config("key")` will insert the value set against the given key at this entity (or nearest ancestor);
   can be used to supply config at the root which is used in multiple places in the plan
 * `$brooklyn:sensor("sensor.name")` returns the given sensor on the current entity if found, or an untyped (Object) sensor;
   `$brooklyn:sensor("io.brooklyn.ContainingEntityClass", "sensor.name")` returns the strongly typed sensor defined in the given class
 * `$brooklyn:component("ID")` refers to a Brooklyn component with the given ID; you can then access the following subfields,
-  using the same syntax as defined above but with a different reference entity:
+  using the same syntax as defined above but with a different reference entity,
+  e.g. `$brooklyn:component("ID").attributeWhenReady("sensor")`:
   * `.attributeWhenReady("sensor")`
   * `.config("key")`
   * `.sensor("sensor.name")`
@@ -171,6 +173,8 @@ concise DSL defined here:
 * `$brooklyn:entitySpec(Map)` returns a new `ServiceSpecification` as defined by the given `Map`,
   but as an `EntitySpec` suitable for setting as the value of `ConfigKey<EntitySpec>` config items
   (such as `memberSpec` in `DynamicCluster`)
+
+<!-- TODO examples for object and entitySpec -->
 
 Parameters above can be supplied either as strings or as lists and maps in YAML, 
 and the `$brooklyn:` syntax can be used within those parameters.  

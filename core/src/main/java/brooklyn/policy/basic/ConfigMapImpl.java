@@ -105,7 +105,7 @@ public class ConfigMapImpl extends AbstractConfigMapImpl {
     }
 
     public Object setConfig(ConfigKey<?> key, Object v) {
-        Object val = setConfigPrep1(key, v);
+        Object val = coerceConfigVal(key, v);
         if (key instanceof StructuredConfigKey) {
             return ((StructuredConfigKey)key).applyValueToMap(val, ownConfig);
         } else {

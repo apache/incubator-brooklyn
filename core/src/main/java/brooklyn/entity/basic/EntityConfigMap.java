@@ -187,7 +187,7 @@ public class EntityConfigMap extends AbstractConfigMapImpl {
 
     @SuppressWarnings("unchecked")
     public Object setConfig(ConfigKey<?> key, Object v) {
-        Object val = setConfigPrep1(key, v);
+        Object val = coerceConfigVal(key, v);
         Object oldVal;
         if (key instanceof StructuredConfigKey) {
             oldVal = ((StructuredConfigKey)key).applyValueToMap(val, ownConfig);
