@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Sets;
 
 import brooklyn.config.ConfigKey;
@@ -444,10 +445,11 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             if (PortRange.class.isAssignableFrom(k.getType())) {
                 PortRange p = (PortRange)getConfig(k);
                 if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
-            }   
-            if(k.getName().matches(".*\\.port")){
-                Integer value = TypeCoercions.coerce(getConfig(k), Integer.class);
-                if (value !=null)ports.add(value);
+            } else if(k.getName().matches(".*\\.port")){
+                Object value = getConfig(k);
+                if (value instanceof Integer){
+                    ports.add((Integer)value);
+                }
             }
         }        
         
