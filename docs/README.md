@@ -11,8 +11,8 @@ familiarise yourself with the standard workflow for Apache Brooklyn:
 * [Guide for contributors][CONTRIB]
 * [Guide for committers][COMMIT]
 
-[CONTRIB]: https://brooklyn.incubator.apache.org/community/how-to-contribute-docs.html
-[COMMIT]: https://brooklyn.incubator.apache.org/community/committers.html
+[CONTRIB]: https://brooklyn.incubator.apache.org/community/how-to-contribute-docs.htmlq
+[COMMIT]: https://brooklyn.incubator.apache.org/developers/committers/index.html
 
 
 Workstation Setup
