@@ -133,6 +133,23 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Disable the automatic LICENSE/NOTICE placement from the upstream pom, because we need to include
+                 bloodhound.js. See "resources" section below for where we include the new LICENSE/NOTICE -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -152,5 +169,26 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-	</build>
+
+        <!-- Install our own LICENSE/NOTICE -->
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+            </resource>
+            <resource>
+                <targetPath>META-INF</targetPath>
+                <directory>${basedir}/src/main/license</directory>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <targetPath>META-INF</targetPath>
+                <directory>${basedir}/src/test/license</directory>
+            </testResource>
+        </testResources>
+    </build>
+
 </project>
