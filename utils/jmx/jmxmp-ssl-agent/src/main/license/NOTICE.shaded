@@ -1,0 +1,15 @@
+Apache Brooklyn
+Copyright 2014-2015 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+-----------------------------------------------------------------------------
+
+This package incorporates the binaries of Project OpenDMK, JMX(TM) Remote API
+RI, Optional Packages.
+
+Per the requirements of paragraph 3.1 of the COMMON DEVELOPMENT AND
+DISTRIBUTION LICENSE (CDDL)Version 1.0, please be informed that the source
+code for the OpenDMK portions of this package may be obtained from:
+https://opendmk.java.net/download/index.html

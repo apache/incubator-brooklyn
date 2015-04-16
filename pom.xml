@@ -1203,6 +1203,8 @@
                   <!-- files not requiring licence -->
                   <exclude>ignored/**</exclude>
                   <exclude>LICENSE.md</exclude>
+                  <exclude>**/src/main/license/**</exclude>
+                  <exclude>**/src/test/license/**</exclude>
                   <exclude>**/MANIFEST.MF</exclude>
                   <exclude>**/test-output/**</exclude>
                   <exclude>**/*.pem.pub</exclude>
