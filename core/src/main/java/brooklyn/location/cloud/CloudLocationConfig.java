@@ -18,6 +18,8 @@
  */
 package brooklyn.location.cloud;
 
+import com.google.common.annotations.Beta;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
@@ -75,7 +77,7 @@ public interface CloudLocationConfig {
     public static final ConfigKey<Object> INBOUND_PORTS = new BasicConfigKey<Object>(Object.class, "inboundPorts", 
         "Inbound ports to be applied when creating a VM, on supported clouds " +
             "(either a single port as a String, or an Iterable<Integer> or Integer[])", null);
-    
+    @Beta
     public static final ConfigKey<Object> ADDITIONAL_INBOUND_PORTS = new BasicConfigKey<Object>(Object.class, "required.ports", 
             "Required additional ports to be applied when creating a VM, on supported clouds " +
                     "(either a single port as an Integer, or an Iterable<Integer> or Integer[])", null);
