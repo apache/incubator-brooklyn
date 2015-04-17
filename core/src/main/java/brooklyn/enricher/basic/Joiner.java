@@ -57,7 +57,6 @@ public class Joiner<T> extends AbstractEnricher implements SensorEventListener<T
     @SetFromFlag("maximum")
     public static ConfigKey<Integer> MAXIMUM = ConfigKeys.newIntegerConfigKey("enricher.joiner.maximum", "Maximum number of elements to join; default null means all elements always taken");
     
-//    protected Function<? super SensorEvent<T>, ? extends U> transformation;
     protected Entity producer;
     protected AttributeSensor<T> sourceSensor;
     protected Sensor<String> targetSensor;

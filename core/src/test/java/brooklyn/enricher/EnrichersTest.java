@@ -456,7 +456,6 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, null);
     }
 
-    
     @Test
     public void testJoinerUnquoted() {
         entity.setAttribute(LIST_SENSOR, MutableList.<String>of("a", "\"b", "ccc").append(null));
@@ -475,5 +474,28 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.setAttribute(LIST_SENSOR, MutableList.<String>of().append(null));
         EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, null);
     }
+
+    @Test
+    public void testJoinerMinMax() {
+        entity.addEnricher(Enrichers.builder()
+                .joining(LIST_SENSOR)
+                .publishing(TestEntity.NAME)
+                .minimum(2)
+                .maximum(4)
+                .quote(false)
+                .build());
+        // null values ignored, and it quotes
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of("a", "b"));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, "a,b");
+        
+        // empty list causes ""
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of("x"));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, null);
+        
+        // null causes null
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of("a", "b", "c", "d", "e"));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, "a,b,c,d");
+    }
+
 
 }

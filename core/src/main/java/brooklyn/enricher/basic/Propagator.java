@@ -122,6 +122,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
                 // user specified nothing, so *set* the all_but to the default set
                 // if desired, we could allow this to be dynamically reconfigurable, remove this field and always look up;
                 // slight performance hit (always looking up), and might need to recompute subscriptions, so not supported currently
+                // TODO this default is @Beta behaviour! -- maybe better to throw?
                 propagatingAllBut = SENSORS_NOT_USUALLY_PROPAGATED;
             } else {
                 propagatingAllBut = getConfig(PROPAGATING_ALL_BUT);

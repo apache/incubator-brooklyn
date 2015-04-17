@@ -57,7 +57,6 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
 
     public static ConfigKey<Sensor<?>> TARGET_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.targetSensor");
     
-//    protected Function<? super SensorEvent<T>, ? extends U> transformation;
     protected Entity producer;
     protected Sensor<T> sourceSensor;
     protected Sensor<U> targetSensor;
@@ -153,6 +152,8 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
     }
 
     protected Object compute(SensorEvent<T> event) {
+        // transformation is not going to change, but this design makes it easier to support changing config in future. 
+        // if it's an efficiency hole we can switch to populate the transformation at start.
         U result = getTransformation().apply(event);
         if (LOG.isTraceEnabled())
             LOG.trace("Enricher "+this+" computed "+result+" from "+event);
