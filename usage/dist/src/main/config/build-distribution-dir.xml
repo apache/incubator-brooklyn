@@ -33,10 +33,14 @@
             <directoryMode>0755</directoryMode>
             <includes>
                 <include>README*</include>
-                <include>LICENSE*</include>
-                <include>NOTICE*</include>
                 <include>DISCLAIMER*</include>
             </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/license</directory>
+            <outputDirectory>/</outputDirectory>
+            <fileMode>0644</fileMode>
+            <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/dist/bin</directory>
@@ -79,6 +83,7 @@
             <outputDirectory>/lib/brooklyn</outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
+            <outputFileNameMapping>${artifact.groupId}-${artifact.artifactId}-${artifact.version}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
     </dependencySets>
 </assembly>
