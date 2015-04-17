@@ -78,6 +78,7 @@
                                 <resources>
                                     <resource>META-INF/LICENSE</resource>
                                     <resource>META-INF/NOTICE</resource>
+                                    <resource>META-INF/DISCLAIMER</resource>
                                 </resources>
                             </transformer>
                             <!-- Replace it with license/notice for the shaded artifact -->
@@ -88,6 +89,10 @@
                             <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                                 <resource>META-INF/NOTICE</resource>
                                 <file>src/main/license/NOTICE.shaded</file>
+                            </transformer>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                <resource>META-INF/DISCLAIMER</resource>
+                                <file>src/main/license/DISCLAIMER.shaded</file>
                             </transformer>
                         </transformers>
                     </configuration>

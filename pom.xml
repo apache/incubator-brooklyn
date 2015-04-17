@@ -1231,6 +1231,26 @@
                 </excludes>
               </configuration>
             </plugin>
+
+            <!-- Add off-the-schelf LICENSE, NOTICE and DISCLAIMER to each jar. Where off-the-shelf isn't suitable
+               - for submodules, they can disable this processing and intergrate their own files. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <configuration>
+                            <resourceBundles>
+                                <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
+                                <resourceBundle>org.apache:apache-incubator-disclaimer-resource-bundle:1.1</resourceBundle>
+                            </resourceBundles>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <extensions>
             <extension>
