@@ -301,6 +301,62 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertNotNull(object);
         Assert.assertEquals(object, firstEntity, "Expected second entity's test.confObject to contain first entity");
     }
+    
+    @Test
+    public void testDescendantReferenceWithType() throws Exception {
+    	Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml", 
+                "  brooklyn.config:",
+                "    test.confName: first entity",
+                "    test.confObject: $brooklyn:descendant(\"brooklyn.test.entity.TestEntity\")",
+                "  brooklyn.children:",
+                "  - type: brooklyn.test.entity.TestEntity",
+                "    name: Child Entity",
+                "    brooklyn.config:",
+                "      test.confName: Name of the first Child"));
+    	testDescendantReference(app);
+    }
+    
+    @Test
+    public void testDescendantWithId() throws Exception {
+    	Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml", 
+                "  brooklyn.config:",
+                "    test.confName: first entity",
+                "    test.confObject: $brooklyn:descendant(\"child\")",
+                "  brooklyn.children:",
+                "  - type: brooklyn.test.entity.TestEntity",
+                "    id: child",
+                "    name: Child Entity",
+                "    brooklyn.config:",
+                "      test.confName: Name of the first Child"));
+    	testDescendantReference(app);
+    }
+    
+    private void testDescendantReference(Entity app) throws Exception{
+    	waitForApplicationTasks(app);
+        Entity firstEntity = null;
+        Entity secondEntity = null;
+        Assert.assertEquals(app.getChildren().size(), 1);
+        for (Entity entity : app.getChildren()) {
+        	if (entity.getDisplayName().equals("testentity")) {
+                firstEntity = entity;
+                Assert.assertEquals(firstEntity.getChildren().size(), 1);
+                for (Entity child : firstEntity.getChildren()){
+                	if(child.getDisplayName().equals("Child Entity")){
+                		secondEntity = child;
+                	}
+                }
+        	}
+        }
+        final Entity[] entities = {firstEntity, secondEntity};
+        Assert.assertNotNull(entities[0], "Expected app to contain child named 'testentity'");
+        Assert.assertNotNull(entities[1], "Expected app to contain child named 'second entity'");
+        Object object = ((EntityInternal)app).getExecutionContext().submit(MutableMap.of(), new Callable<Object>() {
+            public Object call() {
+                return entities[0].getConfig(TestEntity.CONF_OBJECT);
+            }}).get();
+        Assert.assertNotNull(object);
+        Assert.assertEquals(object, secondEntity, "Expected first entity's test.confObject to contain second entity");
+    }
 
     @Test
     public void testGrandchildEntities() throws Exception {
