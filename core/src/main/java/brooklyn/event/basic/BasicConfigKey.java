@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.TypeTokens;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
 import brooklyn.util.task.Tasks;
@@ -41,7 +42,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
@@ -232,11 +232,8 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         Object v = vals.get(this);
         try {
             return (T) resolveValue(v, exec);
-        } catch (ExecutionException e) {
-            throw Throwables.propagate(e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw Throwables.propagate(e);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
         }
     }
     

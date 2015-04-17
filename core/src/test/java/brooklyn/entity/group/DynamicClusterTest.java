@@ -65,6 +65,7 @@ import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Time;
@@ -898,4 +899,55 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
             return e;
         }
     }
+    
+    @Test
+    public void testDifferentFirstMemberSpec() throws Exception {
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+            .configure(DynamicCluster.FIRST_MEMBER_SPEC, 
+                EntitySpec.create(BasicEntity.class).configure(TestEntity.CONF_NAME, "first"))
+            .configure(DynamicCluster.MEMBER_SPEC, 
+                EntitySpec.create(BasicEntity.class).configure(TestEntity.CONF_NAME, "non-first"))
+            .configure(DynamicCluster.UP_QUORUM_CHECK, QuorumChecks.alwaysTrue())
+            .configure(DynamicCluster.INITIAL_SIZE, 3));
+        cluster.start(ImmutableList.of(loc));
+        
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertTrue(cluster.getAttribute(Attributes.SERVICE_UP));
+        
+        assertEquals(cluster.getMembers().size(), 3);
+        
+        assertFirstAndNonFirstCounts(cluster.getMembers(), 1, 2);
+        
+        // and after re-size
+        cluster.resize(4);
+//        Entities.dumpInfo(cluster);
+        assertFirstAndNonFirstCounts(cluster.getMembers(), 1, 3);
+        
+        // and re-size to 1
+        cluster.resize(1);
+        assertFirstAndNonFirstCounts(cluster.getMembers(), 1, 0);
+        
+        // and re-size to 0
+        cluster.resize(0);
+        assertFirstAndNonFirstCounts(cluster.getMembers(), 0, 0);
+        
+        // and back to 3
+        cluster.resize(3);
+        assertFirstAndNonFirstCounts(cluster.getMembers(), 1, 2);
+    }
+
+    private void assertFirstAndNonFirstCounts(Collection<Entity> members, int expectedFirstCount, int expectedNonFirstCount) {
+        Set<Entity> found = MutableSet.of();
+        for (Entity e: members) {
+            if ("first".equals(e.getConfig(TestEntity.CONF_NAME))) found.add(e);
+        }
+        assertEquals(found.size(), expectedFirstCount);
+        
+        found.clear();
+        for (Entity e: members) {
+            if ("non-first".equals(e.getConfig(TestEntity.CONF_NAME))) found.add(e);
+        }
+        assertEquals(found.size(), expectedNonFirstCount);
+    }
+
 }

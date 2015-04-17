@@ -117,10 +117,15 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
         this.fromMembers = Maybe.fromNullable(getConfig(FROM_MEMBERS)).or(fromMembers);
         this.fromChildren = Maybe.fromNullable(getConfig(FROM_CHILDREN)).or(fromChildren);
         this.entityFilter = (Predicate<? super Entity>) (getConfig(ENTITY_FILTER) == null ? Predicates.alwaysTrue() : getConfig(ENTITY_FILTER));
-        this.valueFilter = (Predicate<? super T>) (getConfig(VALUE_FILTER) == null ? Predicates.alwaysTrue() : getConfig(VALUE_FILTER));
+        this.valueFilter = (Predicate<? super T>) (getConfig(VALUE_FILTER) == null ? getDefaultValueFilter() : getConfig(VALUE_FILTER));
         
         setEntityLoadingTargetConfig();
     }
+    
+    protected Predicate<?> getDefaultValueFilter() {
+        return Predicates.alwaysTrue();
+    }
+
     @SuppressWarnings({ "unchecked" })
     protected void setEntityLoadingTargetConfig() {
         this.targetSensor = (Sensor<U>) getRequiredConfig(TARGET_SENSOR);

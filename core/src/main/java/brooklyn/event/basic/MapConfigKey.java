@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
 
 /** A config key which represents a map, where contents can be accessed directly via subkeys.
@@ -76,13 +79,16 @@ public class MapConfigKey<V> extends AbstractStructuredConfigKey<Map<String,V>,M
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<String, Object> extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce) {
+    protected Map<String, Object> extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce) throws InterruptedException, ExecutionException {
+        if (coerce) {
+            potentialBase = resolveValue(potentialBase, exec);
+        }
+
+        if (potentialBase==null) return null;
         if (potentialBase instanceof Map<?,?>) {
             return Maps.<String,Object>newLinkedHashMap( (Map<String,Object>) potentialBase);
-        } else if (coerce) {
-            // TODO if it's a future could attempt type coercion
-            // (e.g. if we have a MapConfigKey we use to set dependent configuration
         }
+        log.warn("Unable to extract "+getName()+" as Map; it is "+potentialBase.getClass().getName()+" "+potentialBase);
         return null;
     }
     
@@ -125,6 +131,25 @@ public class MapConfigKey<V> extends AbstractStructuredConfigKey<Map<String,V>,M
         } else if (k instanceof String) {
             k = subKey((String)k);
         } else {
+            // supplier or other unexpected value
+            if (k instanceof Supplier) {
+                Object mapAtRoot = target.get(this);
+                if (mapAtRoot==null) {
+                    mapAtRoot = new LinkedHashMap();
+                    target.put(this, mapAtRoot);
+                }
+                // TODO above is not thread-safe, and below is assuming synching on map 
+                // is the best way to prevent CME's, which is often but not always true
+                if (mapAtRoot instanceof Map) {
+                    if (mapAtRoot instanceof ConcurrentMap) {
+                        return ((Map)mapAtRoot).put(k, value.getValue());
+                    } else {
+                        synchronized (mapAtRoot) {
+                            return ((Map)mapAtRoot).put(k, value.getValue());
+                        }
+                    }
+                }
+            }
             log.warn("Unexpected subkey "+k+" being inserted into "+this+"; ignoring");
             k = null;
         }

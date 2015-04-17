@@ -19,9 +19,11 @@
 package brooklyn.event.basic;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.management.ExecutionContext;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Maps;
 
@@ -87,9 +89,13 @@ public abstract class AbstractStructuredConfigKey<T,RawT,V> extends BasicConfigK
         Map<String,Object> subkeys = Maps.newLinkedHashMap();
         for (Map.Entry<?,?> entry : vals.entrySet()) {
             Object k = entry.getKey();
+            // we don't resolve the key above because this map is the root map;
+            // deferred values as keys must be at an explicit config key entry
             
             if (acceptsKeyMatch(k)) {
-                base = extractValueMatchingThisKey(entry.getValue(), exec, coerce);
+                try {
+                    base = extractValueMatchingThisKey(entry.getValue(), exec, coerce);
+                } catch (Exception e) { throw Exceptions.propagate(e); }
             }
             
             if (acceptsSubkey(k)) {
@@ -123,7 +129,7 @@ public abstract class AbstractStructuredConfigKey<T,RawT,V> extends BasicConfigK
     }
 
     /** returns value against *this* key, if it is of an acceptable type (ignoring subkeys which are added on top) */
-    protected abstract RawT extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce);
+    protected abstract RawT extractValueMatchingThisKey(Object potentialBase, ExecutionContext exec, boolean coerce) throws InterruptedException, ExecutionException;
     
     protected abstract RawT merge(RawT base, Map<String, Object> subkeys, boolean unmodifiable);
     

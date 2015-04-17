@@ -1,0 +1,57 @@
+#
+# example showing how enrichers can be set 
+# 
+name: test-app-with-enrichers
+description: Testing many enrichers
+services:
+- type: brooklyn.entity.group.DynamicCluster
+  id: cluster
+  initialSize: 3
+  location: localhost
+  memberSpec:
+    $brooklyn:entitySpec:
+      type: brooklyn.test.entity.TestEntity
+      brooklyn.enrichers:
+      - type: brooklyn.enricher.basic.Transformer
+        # transform "ip" (which we expect a feed, not shown here, to set) to a URL;
+        # you can curl an address string to the sensors/ip endpoint an entity to trigger these enrichers 
+        brooklyn.config:
+          enricher.sourceSensor: $brooklyn:sensor("ip")
+          enricher.targetSensor: $brooklyn:sensor("url")
+          enricher.targetValue: $brooklyn:formatString("http://%s/", $brooklyn:attributeWhenReady("ip"))
+      - type: brooklyn.enricher.basic.Propagator
+        # use propagator to duplicate one sensor as another, giving the supplied sensor mapping;
+        # the other use of Propagator is where you specify a producer (using $brooklyn:entity(...) as below)
+        # from which to take sensors; in that mode you can specify `propagate` as a list of sensors whose names are unchanged,
+        # instead of (or in addition to) this map 
+        brooklyn.config:
+          sensorMapping:
+            $brooklyn:sensor("url"): $brooklyn:sensor("brooklyn.entity.basic.Attributes", "main.uri")
+  brooklyn.enrichers:
+  - type: brooklyn.enricher.basic.Aggregator
+    # aggregate `url` sensors from children into a list
+    brooklyn.config:
+      enricher.sourceSensor: $brooklyn:sensor("url")
+      enricher.targetSensor: $brooklyn:sensor("urls.list")
+      enricher.aggregating.fromMembers: true
+  - type: brooklyn.enricher.basic.Joiner
+    # create a string from that list, for use e.g. in bash scripts
+    brooklyn.config:
+      enricher.sourceSensor: $brooklyn:sensor("urls.list")
+      enricher.targetSensor: $brooklyn:sensor("urls.list.comma_separated.max_2")
+      maximum: 2
+      # TODO infer uniqueTag, name etc
+      uniqueTag: urls.list.comma_separated.max_2
+  - type: brooklyn.enricher.basic.Joiner
+    # pick one uri as the main one to use
+    brooklyn.config:
+      enricher.sourceSensor: $brooklyn:sensor("urls.list")
+      enricher.targetSensor: $brooklyn:sensor("brooklyn.entity.basic.Attributes", "main.uri")
+      quote: false
+      maximum: 1
+brooklyn.enrichers:
+- type: brooklyn.enricher.basic.Propagator
+  # if nothing specified for `propagating` or `sensorMapping` then 
+  # Propagator will do all but the usual lifecycle defaults, handy at the root!
+  brooklyn.config:
+    producer: $brooklyn:entity("cluster")

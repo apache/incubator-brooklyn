@@ -767,7 +767,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
-        EntitySpec<?> memberSpec = getMemberSpec();
+        EntitySpec<?> memberSpec = null;
+        if (getMembers().isEmpty()) memberSpec = getConfig(FIRST_MEMBER_SPEC);
+        if (memberSpec == null) memberSpec = getMemberSpec();
+        
         if (memberSpec != null) {
             return addChild(EntitySpec.create(memberSpec).configure(flags).location(loc));
         }

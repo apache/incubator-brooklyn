@@ -40,6 +40,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.CollectionFunctionals;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.guava.Functionals;
@@ -250,6 +251,9 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         
         entity2.setAttribute(STR1, "myval");
         EntityTestUtils.assertAttributeEqualsEventually(entity, STR1, "myval");
+        
+        entity2.setAttribute(STR1, null);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, STR1, null);
     }
     
     @Test
@@ -430,5 +434,68 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
         entity.setAttribute(LONG1, 1L);
         EntityTestUtils.assertAttributeEqualsEventually(entity, mapSensor, MutableMap.<String,String>of());
     }
+
+    private static AttributeSensor<Object> LIST_SENSOR = Sensors.newSensor(Object.class, "sensor.list");
+    
+    @Test
+    public void testJoinerDefault() {
+        entity.addEnricher(Enrichers.builder()
+                .joining(LIST_SENSOR)
+                .publishing(TestEntity.NAME)
+                .build());
+        // null values ignored, and it quotes
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of("a", "\"b").append(null));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, "\"a\",\"\\\"b\"");
+        
+        // empty list causes ""
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of().append(null));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, "");
+        
+        // null causes null
+        entity.setAttribute(LIST_SENSOR, null);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, null);
+    }
+
+    @Test
+    public void testJoinerUnquoted() {
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of("a", "\"b", "ccc").append(null));
+        entity.addEnricher(Enrichers.builder()
+            .joining(LIST_SENSOR)
+            .publishing(TestEntity.NAME)
+            .minimum(1)
+            .maximum(2)
+            .separator(":")
+            .quote(false)
+            .build());
+        // in this case, it should be immediately available upon adding the enricher
+        EntityTestUtils.assertAttributeEquals(entity, TestEntity.NAME, "a:\"b");
+        
+        // empty list causes null here, because below the minimum
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of().append(null));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, null);
+    }
+
+    @Test
+    public void testJoinerMinMax() {
+        entity.addEnricher(Enrichers.builder()
+                .joining(LIST_SENSOR)
+                .publishing(TestEntity.NAME)
+                .minimum(2)
+                .maximum(4)
+                .quote(false)
+                .build());
+        // null values ignored, and it quotes
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of("a", "b"));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, "a,b");
+        
+        // empty list causes ""
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of("x"));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, null);
+        
+        // null causes null
+        entity.setAttribute(LIST_SENSOR, MutableList.<String>of("a", "b", "c", "d", "e"));
+        EntityTestUtils.assertAttributeEqualsEventually(entity, TestEntity.NAME, "a,b,c,d");
+    }
+
 
 }

@@ -21,18 +21,14 @@ package brooklyn.policy.basic;
 import static brooklyn.util.GroovyJavaMethods.elvis;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.config.internal.AbstractConfigMapImpl;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.ConfigMapViewWithStringKeys;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Sanitizer;
@@ -41,20 +37,17 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
-import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 
-public class ConfigMapImpl implements brooklyn.config.ConfigMap {
+public class ConfigMapImpl extends AbstractConfigMapImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigMapImpl.class);
 
     /** policy against which config resolution / task execution will occur */
     private final AbstractEntityAdjunct adjunct;
-
-    private final ConfigMapViewWithStringKeys mapViewWithStringKeys = new ConfigMapViewWithStringKeys(this);
 
     /*
      * TODO An alternative implementation approach would be to have:
@@ -65,33 +58,11 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
      * 
      * (Alex) i lean toward the config key getting to make the decision
      */
-    
-    /**
-     * Map of configuration information that is defined at start-up time for the entity. These
-     * configuration parameters are shared and made accessible to the "children" of this
-     * entity.
-     */
-    private final Map<ConfigKey<?>,Object> ownConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
 
     public ConfigMapImpl(AbstractEntityAdjunct adjunct) {
         this.adjunct = Preconditions.checkNotNull(adjunct, "AbstractEntityAdjunct must be specified");
     }
 
-    @Override
-    public <T> T getConfig(ConfigKey<T> key) {
-        return getConfig(key, null);
-    }
-    
-    @Override
-    public <T> T getConfig(HasConfigKey<T> key) {
-        return getConfig(key.getConfigKey(), null);
-    }
-    
-    @Override
-    public <T> T getConfig(HasConfigKey<T> key, T defaultValue) {
-        return getConfig(key.getConfigKey(), defaultValue);
-    }
-    
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
@@ -120,11 +91,6 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
         return TypeCoercions.coerce((defaultValue != null) ? defaultValue : ownKey.getDefaultValue(), key.getTypeToken());
     }
     
-    @Override @Deprecated
-    public Object getRawConfig(ConfigKey<?> key) {
-        return getConfigRaw(key, true).orNull();
-    }
-    
     @Override
     public Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited) {
         if (ownConfig.containsKey(key)) return Maybe.of(ownConfig.get(key));
@@ -139,27 +105,12 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
     }
 
     public Object setConfig(ConfigKey<?> key, Object v) {
-        Object val;
-        if ((v instanceof Future) || (v instanceof DeferredSupplier)) {
-            // no coercion for these (coerce on exit)
-            val = v;
-        } else if (key instanceof StructuredConfigKey) {
-            // no coercion for these structures (they decide what to do)
-            val = v;
-        } else {
-            try {
-                val = TypeCoercions.coerce(v, key.getTypeToken());
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Cannot coerce or set "+v+" to "+key, e);
-            }
-        }
-        Object oldVal;
+        Object val = coerceConfigVal(key, v);
         if (key instanceof StructuredConfigKey) {
-            oldVal = ((StructuredConfigKey)key).applyValueToMap(val, ownConfig);
+            return ((StructuredConfigKey)key).applyValueToMap(val, ownConfig);
         } else {
-            oldVal = ownConfig.put(key, val);
+            return ownConfig.put(key, val);
         }
-        return oldVal;
     }
     
     public void addToLocalBag(Map<String, ?> vals) {
@@ -181,19 +132,5 @@ public class ConfigMapImpl implements brooklyn.config.ConfigMap {
     public String toString() {
         return super.toString()+"[own="+Sanitizer.sanitize(ownConfig)+"]";
     }
-    
-    @Override
-    public Map<String,Object> asMapWithStringKeys() {
-        return mapViewWithStringKeys;
-    }
 
-    @Override
-    public int size() {
-        return ownConfig.size();
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return ownConfig.isEmpty();
-    }
 }

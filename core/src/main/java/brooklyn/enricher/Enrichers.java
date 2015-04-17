@@ -29,6 +29,7 @@ import java.util.Set;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.enricher.basic.Aggregator;
 import brooklyn.enricher.basic.Combiner;
+import brooklyn.enricher.basic.Joiner;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.enricher.basic.Transformer;
 import brooklyn.enricher.basic.UpdatingMap;
@@ -42,13 +43,14 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -166,6 +168,12 @@ public class Enrichers {
         public <S,TKey,TVal> UpdatingMapBuilder<S, TKey, TVal> updatingMap(AttributeSensor<Map<TKey,TVal>> target) {
             return new UpdatingMapBuilder<S, TKey, TVal>(target);
         }
+        /** creates a {@link brooklyn.enricher.basic.Joiner} enricher builder
+         * which joins entries in a list to produce a String
+         **/
+        public JoinerBuilder joining(AttributeSensor<?> source) {
+            return new JoinerBuilder(source);
+        }
     }
 
 
@@ -262,6 +270,8 @@ public class Enrichers {
                                 ((input instanceof CharSequence) ? Strings.isNonBlank((CharSequence)input) : true);
                     }
                 };
+                // above kept for deserialization; not sure necessary
+                valueFilter = StringPredicates.isNonBlank(); 
             } else {
                 valueFilter = null;
             }
@@ -496,10 +506,10 @@ public class Enrichers {
             if (propagatingAllBut!=null && !Iterables.isEmpty(propagatingAllBut)) {
                 List<String> allBut = MutableList.of();
                 for (Sensor<?> s: propagatingAllBut) allBut.add(s.getName());
-                summary.add("ALL_BUT:"+Joiner.on(",").join(allBut));
+                summary.add("ALL_BUT:"+com.google.common.base.Joiner.on(",").join(allBut));
             }
             
-            return "propagating["+fromEntity.getId()+":"+Joiner.on(",").join(summary)+"]";
+            return "propagating["+fromEntity.getId()+":"+com.google.common.base.Joiner.on(",").join(summary)+"]";
         }
         public EnricherSpec<? extends Enricher> build() {
             return super.build().configure(MutableMap.builder()
@@ -581,6 +591,67 @@ public class Enrichers {
         }
     }
 
+    protected abstract static class AbstractJoinerBuilder<B extends AbstractJoinerBuilder<B>> extends AbstractEnricherBuilder<B> {
+        protected final AttributeSensor<?> transforming;
+        protected AttributeSensor<String> publishing;
+        protected Entity fromEntity;
+        protected String separator;
+        protected Boolean quote;
+        protected Integer minimum;
+        protected Integer maximum;
+
+        public AbstractJoinerBuilder(AttributeSensor<?> source) {
+            super(Joiner.class);
+            this.transforming = checkNotNull(source);
+        }
+        public B publishing(AttributeSensor<String> target) {
+            this.publishing = checkNotNull(target);
+            return self();
+        }
+        public B separator(String separator) {
+            this.separator = separator;
+            return self();
+        }
+        public B quote(Boolean quote) {
+            this.quote = quote;
+            return self();
+        }
+        public B minimum(Integer minimum) {
+            this.minimum = minimum;
+            return self();
+        }
+        public B maximum(Integer maximum) {
+            this.maximum = maximum;
+            return self();
+        }
+        @Override
+        protected String getDefaultUniqueTag() {
+            if (transforming==null || publishing==null) return null;
+            return "joiner:"+transforming.getName()+"->"+publishing.getName();
+        }
+        public EnricherSpec<?> build() {
+            return super.build().configure(MutableMap.builder()
+                            .putIfNotNull(Joiner.PRODUCER, fromEntity)
+                            .put(Joiner.TARGET_SENSOR, publishing)
+                            .put(Joiner.SOURCE_SENSOR, transforming)
+                            .putIfNotNull(Joiner.SEPARATOR, separator)
+                            .putIfNotNull(Joiner.QUOTE, quote)
+                            .putIfNotNull(Joiner.MINIMUM, minimum)
+                            .putIfNotNull(Joiner.MAXIMUM, maximum)
+                            .build());
+        }
+        
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .omitNullValues()
+                    .add("publishing", publishing)
+                    .add("transforming", transforming)
+                    .add("separator", separator)
+                    .toString();
+        }
+    }
+    
     public static class InitialBuilder extends AbstractInitialBuilder<InitialBuilder> {
     }
 
@@ -623,6 +694,12 @@ public class Enrichers {
     public static class UpdatingMapBuilder<S, TKey, TVal> extends AbstractUpdatingMapBuilder<S, TKey, TVal, UpdatingMapBuilder<S, TKey, TVal>> {
         public UpdatingMapBuilder(AttributeSensor<Map<TKey,TVal>> val) {
             super(val);
+        }
+    }
+
+    public static class JoinerBuilder extends AbstractJoinerBuilder<JoinerBuilder> {
+        public JoinerBuilder(AttributeSensor<?> source) {
+            super(source);
         }
     }
 

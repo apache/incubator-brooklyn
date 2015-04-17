@@ -21,6 +21,8 @@ package brooklyn.entity.basic
 import static org.testng.Assert.*
 
 import java.util.concurrent.Callable
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
@@ -35,7 +37,9 @@ import brooklyn.event.basic.SetConfigKey.SetModifications
 import brooklyn.location.basic.SimulatedLocation
 import brooklyn.test.entity.TestApplication
 import brooklyn.test.entity.TestEntity
+import brooklyn.util.collections.MutableMap
 import brooklyn.util.exceptions.Exceptions
+import brooklyn.util.task.DeferredSupplier
 
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
@@ -64,15 +68,67 @@ public class MapListAndOtherStructuredConfigKeyTest {
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), "bval")
         app.start(locs)
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING.subKey("akey")), "aval")
     }
     
     @Test
-    public void testMapConfigKeyCanStoreAndRetrieveFutureVals() throws Exception {
+    public void testMapConfigKeyCanStoreAndRetrieveFutureValsPutByKeys() throws Exception {
+        String bval = "bval-too-early"
         entity.setConfig(TestEntity.CONF_MAP_THING.subKey("akey"), DependentConfiguration.whenDone( {return "aval"} as Callable))
-        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), DependentConfiguration.whenDone( {return "bval"} as Callable))
+        entity.setConfig(TestEntity.CONF_MAP_THING.subKey("bkey"), DependentConfiguration.whenDone( {return bval} as Callable))
         app.start(locs)
+        bval = "bval";
         
         assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
+    }
+
+    @Test
+    public void testMapConfigKeyCanStoreAndRetrieveFutureValsPutAsMap() throws Exception {
+        String bval = "bval-too-early"
+        entity.setConfig(TestEntity.CONF_MAP_THING, MutableMap.of("akey", DependentConfiguration.whenDone( {return "aval"} as Callable),
+            "bkey", DependentConfiguration.whenDone( {return bval} as Callable)));
+        app.start(locs)
+        bval = "bval";
+        
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
+    }
+
+    @Test
+    public void testUnstructuredConfigKeyCanStoreAndRetrieveFutureValsPutAsMap() throws Exception {
+        final AtomicReference<String> bval = new AtomicReference<String>("bval-too-early");
+        final AtomicInteger bref = new AtomicInteger(0);
+        
+        entity.setConfig(ConfigKeys.newConfigKey(Object.class, TestEntity.CONF_MAP_THING.getName()), 
+            MutableMap.of("akey", DependentConfiguration.whenDone( {return "aval"} as Callable),
+                "bkey", {bref.incrementAndGet(); return bval.get();} as DeferredSupplier));
+        app.start(locs)
+        assertEquals(bref.get(), 0);
+        bval.set("bval");
+  
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING.subKey("akey")), "aval")
+        assertEquals(bref.get(), 0);
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING.subKey("bkey")), "bval")
+        assertEquals(bref.get(), 1);
+        
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval"])
+        assertEquals(bref.get(), 2);
+        
+        // and changes are also visible
+        bval.set("bval2");
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval",bkey:"bval2"])
+        assertEquals(bref.get(), 3);
+    }
+
+    @Test
+    public void testResolvesMapKeysOnGetNotPut() throws Exception {
+        entity.setConfig(TestEntity.CONF_MAP_THING,
+            MutableMap.of({return "akey";} as DeferredSupplier, {return "aval";} as DeferredSupplier));
+        app.start(locs)
+  
+        // subkey is not resolvable in this way
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING.subKey("akey")), null)
+        // deferred supplier keys are only resolved when map is gotten
+        assertEquals(entity.getConfig(TestEntity.CONF_MAP_THING), [akey:"aval"])
     }
 
     @Test

@@ -31,9 +31,12 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindTestUtils;
+import brooklyn.event.Sensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
@@ -133,6 +136,62 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
             "  id: x",
             "  brooklyn.config:",
             "    test.confName: $brooklyn:component(\"x\").attributeWhenReady(\"foo\")");
+    }
+
+    private void doTestOnEntityWithSensor(Entity testEntity, Sensor<?> expectedSensor) throws Exception {
+        doTestOnEntityWithSensor(testEntity, expectedSensor, true);
+    }
+    private void doTestOnEntityWithSensor(Entity testEntity, Sensor<?> expectedSensor, boolean inTask) throws Exception {
+        @SuppressWarnings("rawtypes")
+        ConfigKey<Sensor> configKey = ConfigKeys.newConfigKey(Sensor.class, "test.sensor");
+        Sensor<?> s;
+        s = inTask ? getConfigInTask(testEntity, configKey) : testEntity.getConfig(configKey);
+        Assert.assertEquals(s, expectedSensor);
+        Application app2 = rebind(testEntity.getApplication());
+        Entity te2 = Iterables.getOnlyElement( app2.getChildren() );
+        s = inTask ? getConfigInTask(te2, configKey) : te2.getConfig(configKey);
+        Assert.assertEquals(s, expectedSensor);
+    }
+    
+    @Test
+    public void testDslSensorFromClass() throws Exception {
+        doTestOnEntityWithSensor(entityWithSensorFromClass(), Attributes.SERVICE_UP);
+        // without context it can still find it
+        doTestOnEntityWithSensor(entityWithSensorFromClass(), Attributes.SERVICE_UP, false);
+    }
+    @Test
+    public void testDslSensorLocal() throws Exception {
+        doTestOnEntityWithSensor(entityWithSensorLocal(), TestEntity.SEQUENCE);
+        // here without context it makes one up, so type info (and description etc) not present; 
+        // but context is needed to submit the DslDeferredSupplier object, so this would fail
+//        doTestOnEntityWithSensor(entityWithSensorAdHoc(), Sensors.newSensor(Object.class, TestEntity.SEQUENCE.getName()), false);
+    }
+    @Test
+    public void testDslSensorAdHoc() throws Exception {
+        doTestOnEntityWithSensor(entityWithSensorAdHoc(), Sensors.newSensor(Object.class, "sensor.foo"));
+        // here context has no impact, but it is needed to submit the DslDeferredSupplier object so this would fail
+//        doTestOnEntityWithSensor(entityWithSensorAdHoc(), Sensors.newSensor(Object.class, "sensor.foo"), false);
+    }
+    
+    private Entity entityWithSensorFromClass() throws Exception {
+        return setupAndCheckTestEntityInBasicYamlWith( 
+            "  id: x",
+            "  brooklyn.config:",
+            "    test.sensor: $brooklyn:sensor(\""+Attributes.class.getName()+"\", \""+Attributes.SERVICE_UP.getName()+"\")");
+    }
+
+    private Entity entityWithSensorLocal() throws Exception {
+        return setupAndCheckTestEntityInBasicYamlWith( 
+            "  id: x",
+            "  brooklyn.config:",
+            "    test.sensor: $brooklyn:sensor(\""+TestEntity.SEQUENCE.getName()+"\")");
+    }
+
+    private Entity entityWithSensorAdHoc() throws Exception {
+        return setupAndCheckTestEntityInBasicYamlWith( 
+            "  id: x",
+            "  brooklyn.config:",
+            "    test.sensor: $brooklyn:sensor(\"sensor.foo\")");
     }
 
 

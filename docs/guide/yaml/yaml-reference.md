@@ -10,7 +10,7 @@ layout: website-normal
 * `location` (or `locations` taking a list): a `LocationSpecification` element as a string or a map
 
 
-## `ServiceSpecification` Elements
+## Service Specification Elements
 
 Within the `services` block, a list of maps should be supplied, with each map
 defining a `ServiceSpecification`.  Each `ServiceSpecification` should declare the
@@ -37,7 +37,10 @@ the entity being defined, with these being the most common:
 
 * `brooklyn.policies`: a list of policies, each as a map described with their `type` and their `brooklyn.config` as keys
 
-* `brooklyn.enrichers`: a list of enrichers, each as a map described with their `type` and their `brooklyn.config` as keys
+* `brooklyn.enrichers`: a list of enrichers, each as a map described with their `type` and their `brooklyn.config` as keys;
+  see the keys declared on individual enrichers; 
+  also see [this enricher example](example_yaml/test-app-with-enrichers-slightly-simpler.yaml) for a detailed and commented illustration
+  <!-- TODO assert that this yaml maches the yaml we test against -->
 
 * `brooklyn.initializers`: a list of `EntityInitializer` instances to be constructed and run against the entity, 
   each as a map described with their `type` and their `brooklyn.config` as keys.
@@ -63,7 +66,7 @@ these declared flags and config keys may be passed in at the root of the `Servic
 (Undeclared config is only accepted in the `brooklyn.config` map.)
 
 
-## `LocationSpecification` Elements
+## Location Specification Elements
 
 <!-- TODO - expand this, currently it's concise notes -->
 
@@ -142,11 +145,19 @@ However you can combine locations using `multi`:
 Dependency injection other powerful references and types can be built up within the YAML using the
 concise DSL defined here:
  
-* `$brooklyn:component("ID")` refers to a Brooklyn component with the given ID; you can then access the following subfields:
-  * `.attributeWhenReady("sensor")` will store a future which will be blocked when it is accessed,
-    until the given `sensor` from the component `ID` has a "truthy" (i.e. non-trivial, non-empty, non-zero) value
-  * `.config("key")` will insert the value set against the given key at this entity (or nearest ancestor);
-    can be used to supply config at the root which is used in multiple places in the plan
+* `$brooklyn:attributeWhenReady("sensor")` will store a future which will be blocked when it is accessed,
+  until the given `sensor` from this entity "truthy" (i.e. non-trivial, non-empty, non-zero) value
+  (see below on `component` for looking up values on other sensors) 
+* `$brooklyn:config("key")` will insert the value set against the given key at this entity (or nearest ancestor);
+  can be used to supply config at the root which is used in multiple places in the plan
+* `$brooklyn:sensor("sensor.name")` returns the given sensor on the current entity if found, or an untyped (Object) sensor;
+  `$brooklyn:sensor("io.brooklyn.ContainingEntityClass", "sensor.name")` returns the strongly typed sensor defined in the given class
+* `$brooklyn:component("ID")` refers to a Brooklyn component with the given ID; you can then access the following subfields,
+  using the same syntax as defined above but with a different reference entity,
+  e.g. `$brooklyn:component("ID").attributeWhenReady("sensor")`:
+  * `.attributeWhenReady("sensor")`
+  * `.config("key")`
+  * `.sensor("sensor.name")`
 * `$brooklyn:component("scope", "ID")` is also supported, to limit scope to any of
   * `global`: looks for the `ID` anywhere in the plan
   * `child`: looks for the `ID` anywhere in the child only
@@ -157,12 +168,16 @@ concise DSL defined here:
 * `$brooklyn:formatString("pattern e.g. %s %s", "field 1", "field 2")` returns a future which creates the formatted string
   with the given parameters, where parameters may be strings *or* other tasks such as `attributeWhenReady`
 * `$brooklyn:literal("string")` returns the given string as a literal (suppressing any `$brooklyn:` expansion)
-* `$brooklyn:sensor("io.brooklyn.ContainingEntityClass", "sensor.name")` returns the strongly typed sensor defined in the given class
+* `$brooklyn:object(Map)` creates an object, using keys `type` to define the java type,
+  and either `object.fields` or `brooklyn.config` to supply bean/constructor/flags to create an instance
 * `$brooklyn:entitySpec(Map)` returns a new `ServiceSpecification` as defined by the given `Map`,
   but as an `EntitySpec` suitable for setting as the value of `ConfigKey<EntitySpec>` config items
   (such as `memberSpec` in `DynamicCluster`)
 
-These can be supplied either as strings or as lists and maps in YAML. 
+<!-- TODO examples for object and entitySpec -->
+
+Parameters above can be supplied either as strings or as lists and maps in YAML, 
+and the `$brooklyn:` syntax can be used within those parameters.  
 
 
 ## Some Powerful YAML Entities

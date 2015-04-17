@@ -25,15 +25,13 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.config.ConfigMap;
+import brooklyn.config.internal.AbstractConfigMapImpl;
 import brooklyn.event.basic.StructuredConfigKey;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
@@ -44,27 +42,23 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
-import brooklyn.util.task.DeferredSupplier;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class EntityConfigMap implements ConfigMap {
+public class EntityConfigMap extends AbstractConfigMapImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(EntityConfigMap.class);
 
     /** entity against which config resolution / task execution will occur */
     private final AbstractEntity entity;
 
-    private final ConfigMapViewWithStringKeys mapViewWithStringKeys = new ConfigMapViewWithStringKeys(this);
-
     /**
      * Map of configuration information that is defined at start-up time for the entity. These
      * configuration parameters are shared and made accessible to the "children" of this
      * entity.
      */
-    private final Map<ConfigKey<?>,Object> ownConfig;
     private final Map<ConfigKey<?>,Object> inheritedConfig = Collections.synchronizedMap(new LinkedHashMap<ConfigKey<?>, Object>());
     // TODO do we really want to have *both* bags and maps for these?  danger that they get out of synch.
     // have added some logic (Oct 2014) so that the same changes are applied to both, in most places at least;
@@ -82,18 +76,6 @@ public class EntityConfigMap implements ConfigMap {
         this.inheritedConfigBag = ConfigBag.newInstance();
     }
 
-    public <T> T getConfig(ConfigKey<T> key) {
-        return getConfig(key, null);
-    }
-    
-    public <T> T getConfig(HasConfigKey<T> key) {
-        return getConfig(key.getConfigKey(), null);
-    }
-    
-    public <T> T getConfig(HasConfigKey<T> key, T defaultValue) {
-        return getConfig(key.getConfigKey(), defaultValue);
-    }
-    
     @SuppressWarnings("unchecked")
     public <T> T getConfig(ConfigKey<T> key, T defaultValue) {
         // FIXME What about inherited task in config?!
@@ -166,12 +148,6 @@ public class EntityConfigMap implements ConfigMap {
     }
 
     @Override
-    @Deprecated
-    public Object getRawConfig(ConfigKey<?> key) {
-        return getConfigRaw(key, true).orNull();
-    }
-    
-    @Override
     public Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited) {
         if (ownConfig.containsKey(key)) return Maybe.of(ownConfig.get(key));
         if (includeInherited && inheritedConfig.containsKey(key)) return Maybe.of(inheritedConfig.get(key));
@@ -211,20 +187,7 @@ public class EntityConfigMap implements ConfigMap {
 
     @SuppressWarnings("unchecked")
     public Object setConfig(ConfigKey<?> key, Object v) {
-        Object val;
-        if ((v instanceof Future) || (v instanceof DeferredSupplier)) {
-            // no coercion for these (coerce on exit)
-            val = v;
-        } else if (key instanceof StructuredConfigKey) {
-            // no coercion for these structures (they decide what to do)
-            val = v;
-        } else {
-            try {
-                val = TypeCoercions.coerce(v, key.getTypeToken());
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Cannot coerce or set "+v+" to "+key, e);
-            }
-        }
+        Object val = coerceConfigVal(key, v);
         Object oldVal;
         if (key instanceof StructuredConfigKey) {
             oldVal = ((StructuredConfigKey)key).applyValueToMap(val, ownConfig);
@@ -236,7 +199,7 @@ public class EntityConfigMap implements ConfigMap {
             oldVal = ownConfig.put(key, val);
             localConfigBag.put((ConfigKey<Object>)key, v);
         }
-        entity.refreshInheritedConfigOfChildren();
+        entity.config().refreshInheritedConfigOfChildren();
         return oldVal;
     }
     
@@ -332,20 +295,6 @@ public class EntityConfigMap implements ConfigMap {
     @Override
     public String toString() {
         return super.toString()+"[own="+Sanitizer.sanitize(ownConfig)+"; inherited="+Sanitizer.sanitize(inheritedConfig)+"]";
-    }
-    
-    public Map<String,Object> asMapWithStringKeys() {
-        return mapViewWithStringKeys;
-    }
-
-    @Override
-    public int size() {
-        return ownConfig.size() + inheritedConfig.size();
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return ownConfig.isEmpty() && inheritedConfig.isEmpty();
     }
     
 }

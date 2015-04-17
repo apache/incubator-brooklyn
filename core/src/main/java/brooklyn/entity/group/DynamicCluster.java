@@ -120,6 +120,11 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
             new TypeToken<EntitySpec<?>>() { },
             "dynamiccluster.memberspec", "entity spec for creating new cluster members", null);
 
+    @SetFromFlag("firstMemberSpec")
+    ConfigKey<EntitySpec<?>> FIRST_MEMBER_SPEC = ConfigKeys.newConfigKey(
+            new TypeToken<EntitySpec<?>>() { },
+            "dynamiccluster.firstmemberspec", "entity spec for creating new cluster members, used for the very first member if different", null);
+
     /** @deprecated since 0.7.0; use {@link #MEMBER_SPEC} instead. */
     @SuppressWarnings("rawtypes")
     @Deprecated

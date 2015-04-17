@@ -288,11 +288,15 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
                 //and if a map or list we look inside
                 Map result = Maps.newLinkedHashMap();
                 for (Map.Entry<?,?> entry : ((Map<?,?>)v).entrySet()) {
+                    Maybe<?> kk = new ValueResolver(entry.getKey(), type, this)
+                        .description( (description!=null ? description+", " : "") + "map key "+entry.getKey() )
+                        .getMaybe();
+                    if (kk.isAbsent()) return (Maybe<T>)kk;
                     Maybe<?> vv = new ValueResolver(entry.getValue(), type, this)
-                        .description( (description!=null ? description+", " : "") + "map entry "+entry.getKey() )
+                        .description( (description!=null ? description+", " : "") + "map value for key "+kk.get() )
                         .getMaybe();
                     if (vv.isAbsent()) return (Maybe<T>)vv;
-                    result.put(entry.getKey(), vv.get());
+                    result.put(kk.get(), vv.get());
                 }
                 return Maybe.of((T) result);
 

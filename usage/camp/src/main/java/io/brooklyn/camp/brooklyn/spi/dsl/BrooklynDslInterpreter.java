@@ -115,8 +115,10 @@ public class BrooklynDslInterpreter extends PlanInterpreterAdapter {
                 try {
                     // TODO in future we should support functions of the form 'Maps.clear', 'Maps.reset', 'Maps.remove', etc;
                     // default approach only supported if mapIn has single item and mapOut is empty
-                    if (mapIn.size()!=1) throw new IllegalStateException("Map-entry DSL syntax only supported with single item in map, not "+mapIn);
-                    if (mapOut.size()!=0) throw new IllegalStateException("Map-entry DSL syntax only supported with empty output map-so-far, not "+mapOut);
+                    if (mapIn.size()!=1) 
+                        throw new IllegalStateException("Map-entry DSL syntax only supported with single item in map, not "+mapIn);
+                    if (mapOut.size()!=0) 
+                        throw new IllegalStateException("Map-entry DSL syntax only supported with empty output map-so-far, not "+mapOut);
 
                     node.setNewValue( evaluate(new FunctionWithArgs(f.getFunction(), args), false) );
                     return false;

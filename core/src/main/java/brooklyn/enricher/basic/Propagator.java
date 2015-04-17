@@ -34,6 +34,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Preconditions;
@@ -42,7 +43,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
@@ -73,6 +73,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
     protected Entity producer;
     protected Map<? extends Sensor<?>, ? extends Sensor<?>> sensorMapping;
     protected boolean propagatingAll;
+    protected Collection<Sensor<?>> propagatingAllBut;
     protected Predicate<Sensor<?>> sensorFilter;
 
     public Propagator() {
@@ -83,44 +84,63 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
         super.setEntity(entity);
         
         this.producer = getConfig(PRODUCER) == null ? entity : getConfig(PRODUCER);
+        boolean sensorMappingSet = getConfig(SENSOR_MAPPING)!=null;
+        MutableMap<Sensor<?>,Sensor<?>> sensorMappingTemp = MutableMap.copyOf(getConfig(SENSOR_MAPPING)); 
+        this.propagatingAll = Boolean.TRUE.equals(getConfig(PROPAGATING_ALL)) || getConfig(PROPAGATING_ALL_BUT)!=null;
+        
         if (getConfig(PROPAGATING) != null) {
-            if (Boolean.TRUE.equals(getConfig(PROPAGATING_ALL)) || getConfig(PROPAGATING_ALL_BUT) != null) {
+            if (propagatingAll) {
                 throw new IllegalStateException("Propagator enricher "+this+" must not have 'propagating' set at same time as either 'propagatingAll' or 'propagatingAllBut'");
             }
             
-            Map<Sensor<?>, Sensor<?>> sensorMappingTemp = Maps.newLinkedHashMap();
-            if (getConfig(SENSOR_MAPPING) != null) {
-                sensorMappingTemp.putAll(getConfig(SENSOR_MAPPING));
-            }
             for (Sensor<?> sensor : getConfig(PROPAGATING)) {
                 if (!sensorMappingTemp.containsKey(sensor)) {
                     sensorMappingTemp.put(sensor, sensor);
                 }
             }
             this.sensorMapping = ImmutableMap.copyOf(sensorMappingTemp);
-            this.propagatingAll = false;
             this.sensorFilter = new Predicate<Sensor<?>>() {
                 @Override public boolean apply(Sensor<?> input) {
-                    return input != null && sensorMapping.keySet().contains(input);
+                    // TODO kept for deserialization of inner classes, but shouldn't be necessary, as with other inner classes (qv);
+                    // NB: previously this did this check:
+//                    return input != null && sensorMapping.keySet().contains(input);
+                    // but those clauses seems wrong (when would input be null?) and unnecessary (we are doing an explicit subscribe in this code path) 
+                    return true;
                 }
             };
-        } else if (getConfig(PROPAGATING_ALL_BUT) == null) {
-            this.sensorMapping = getConfig(SENSOR_MAPPING) == null ? ImmutableMap.<Sensor<?>, Sensor<?>>of() : getConfig(SENSOR_MAPPING);
-            this.propagatingAll = Boolean.TRUE.equals(getConfig(PROPAGATING_ALL));
+        } else if (sensorMappingSet) {
+            if (propagatingAll) {
+                throw new IllegalStateException("Propagator enricher "+this+" must not have 'sensorMapping' set at same time as either 'propagatingAll' or 'propagatingAllBut'");
+            }
+            this.sensorMapping = ImmutableMap.copyOf(sensorMappingTemp);
             this.sensorFilter = Predicates.alwaysTrue();
         } else {
-            this.sensorMapping = getConfig(SENSOR_MAPPING) == null ? ImmutableMap.<Sensor<?>, Sensor<?>>of() : getConfig(SENSOR_MAPPING);
-            this.propagatingAll = true;
+            this.sensorMapping = ImmutableMap.<Sensor<?>, Sensor<?>>of();
+            if (!propagatingAll) {
+                // default if nothing specified is to do all but the ones not usually propagated
+                propagatingAll = true;
+                // user specified nothing, so *set* the all_but to the default set
+                // if desired, we could allow this to be dynamically reconfigurable, remove this field and always look up;
+                // slight performance hit (always looking up), and might need to recompute subscriptions, so not supported currently
+                // TODO this default is @Beta behaviour! -- maybe better to throw?
+                propagatingAllBut = SENSORS_NOT_USUALLY_PROPAGATED;
+            } else {
+                propagatingAllBut = getConfig(PROPAGATING_ALL_BUT);
+            }
             this.sensorFilter = new Predicate<Sensor<?>>() {
                 @Override public boolean apply(Sensor<?> input) {
-                    Collection<Sensor<?>> exclusions = getConfig(PROPAGATING_ALL_BUT);
-                    return input != null && !exclusions.contains(input);
+                    Collection<Sensor<?>> exclusions = propagatingAllBut;
+                    // TODO this anonymous inner class and getConfig check kept should be removed / confirmed for rebind compatibility.
+                    // we *should* be regenerating these fields on each rebind (calling to this method), 
+                    // so serialization of this class shouldn't be needed (and should be skipped), but that needs to be checked.
+                    if (propagatingAllBut==null) exclusions = getConfig(PROPAGATING_ALL_BUT);
+                    return input != null && (exclusions==null || !exclusions.contains(input));
                 }
             };
         }
             
         Preconditions.checkState(propagatingAll ^ sensorMapping.size() > 0,
-                "Exactly one must be set of propagatingAll (%s, excluding %s), sensorMapping (%s)", propagatingAll, getConfig(PROPAGATING_ALL_BUT), sensorMapping);
+                "Nothing to propagate; detected: propagatingAll (%s, excluding %s), sensorMapping (%s)", propagatingAll, getConfig(PROPAGATING_ALL_BUT), sensorMapping);
 
         if (propagatingAll) {
             subscribe(producer, null, this);
