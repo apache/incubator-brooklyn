@@ -777,10 +777,6 @@
                                         </excludes>
                                     </filter>
                                 </filters>
-                                <transformers>
-                                    <!-- whirr, among others, uses services which need careful attention -->
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                                </transformers>
                             </configuration>
                         </execution>
                     </executions>
