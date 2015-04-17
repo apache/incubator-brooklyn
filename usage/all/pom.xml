@@ -25,8 +25,7 @@
 
     <name>Brooklyn All Things</name>
     <description>
-        All Brooklyn entities and policies including web-console and CLI launcher
-        packaged as a single Jar with dependencies for easy usage
+        A meta-dependency for all the major Brooklyn modules.
     </description>
 
     <parent>
@@ -108,48 +107,5 @@
             <artifactId>jclouds-allcompute</artifactId>
         </dependency>
     </dependencies>
-
-    <profiles>
-        <profile>
-            <activation>
-                <property>
-                    <name>!skipShade</name>
-                </property>
-            </activation>
-            <id>shade</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <configuration>
-                            <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-with-dependencies.jar</outputFile>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-distribution</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>attach-artifact</goal>
-                                </goals>
-                                <configuration>
-                                    <artifacts>
-                                        <artifact>
-                                            <file>${project.build.directory}/${project.artifactId}-${project.version}-with-dependencies.jar</file>
-                                            <type>jar</type>
-                                            <classifier>with-dependencies</classifier>
-                                        </artifact>
-                                    </artifacts>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
 </project>
