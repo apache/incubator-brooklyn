@@ -62,7 +62,8 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
     private Function<? super V, T> onfailure;
     private Function<? super Exception, T> onexception;
     private Predicate<? super V> checkSuccess;
-
+    private boolean suppressDuplicates;
+    
     public FeedConfig(AttributeSensor<T> sensor) {
         this.sensor = checkNotNull(sensor, "sensor");
     }
@@ -73,6 +74,7 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
         this.onfailure = other.onfailure;
         this.onexception = other.onexception;
         this.checkSuccess = other.checkSuccess;
+        this.suppressDuplicates = other.suppressDuplicates;
     }
 
     @SuppressWarnings("unchecked")
@@ -100,6 +102,10 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
         return onexception;
     }
 
+    public boolean getSupressDuplicates() {
+        return suppressDuplicates;
+    }
+    
     /** sets the predicate used to check whether a feed run is successful */
     public F checkSuccess(Predicate<? super V> val) {
         this.checkSuccess = checkNotNull(val, "checkSuccess");
@@ -175,6 +181,11 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
         return onFailureOrException(Functions.constant(val));
     }
 
+    public F suppressDuplicates(boolean val) {
+        suppressDuplicates = val;
+        return self();
+    }
+    
     public boolean hasSuccessHandler() {
         return this.onsuccess != null;
     }
