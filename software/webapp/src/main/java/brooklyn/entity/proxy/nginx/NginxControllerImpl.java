@@ -121,7 +121,8 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                         // Accept any nginx response (don't assert specific version), so that sub-classing
                         // for a custom nginx build is not strict about custom version numbers in headers
                         .onResult(HttpValueFunctions.containsHeader("Server"))
-                        .setOnException(false))
+                        .setOnException(false)
+                        .suppressDuplicates(true))
                 .build());
         
         // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state

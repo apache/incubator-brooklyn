@@ -89,10 +89,12 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                 .baseUri(managementUri)
                 .credentials(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                 .poll(new HttpPollConfig<Integer>(MANAGEMENT_STATUS)
-                        .onSuccess(HttpValueFunctions.responseCode()))
+                        .onSuccess(HttpValueFunctions.responseCode())
+                        .suppressDuplicates(true))
                 .poll(new HttpPollConfig<Boolean>(MANAGEMENT_URL_UP)
                         .onSuccess(HttpValueFunctions.responseCodeEquals(200))
-                        .onFailureOrException(Functions.constant(false)))
+                        .onFailureOrException(Functions.constant(false))
+                        .suppressDuplicates(true))
                 .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
                         .vars(includeRuntimeUriVars)
                         .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class)))
@@ -123,6 +125,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(MANAGEMENT_URL_UP)
             .computing(Functionals.ifNotEquals(true).value("Management URL not reachable") )
+            .suppressDuplicates(true)
             .build());
     }
     

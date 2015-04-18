@@ -114,7 +114,8 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                                     return ReplicaSetMemberStatus.fromCode(state);
                                 }
                             })
-                            .onException(Functions.constant(ReplicaSetMemberStatus.UNKNOWN)))
+                            .onException(Functions.constant(ReplicaSetMemberStatus.UNKNOWN))
+                            .suppressDuplicates(true))
                     .build();
         } else {
             setAttribute(IS_PRIMARY_FOR_REPLICA_SET, false);

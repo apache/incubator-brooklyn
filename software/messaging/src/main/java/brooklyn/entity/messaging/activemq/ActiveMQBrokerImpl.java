@@ -101,7 +101,8 @@ public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTop
                         .objectName(brokerMbeanName)
                         .attributeName("BrokerName")
                         .onSuccess(Functions.forPredicate(Predicates.notNull()))
-                        .onFailureOrException(Functions.constant(false)))
+                        .onFailureOrException(Functions.constant(false))
+                        .suppressDuplicates(true))
                 .build();
     }
 

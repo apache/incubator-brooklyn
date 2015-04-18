@@ -76,7 +76,8 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
                             .objectName(connectorMbeanName)
                             .attributeName("stateName")
                             .onSuccess(Functions.forPredicate(Predicates.<Object>equalTo("STARTED")))
-                            .setOnFailureOrException(false))
+                            .setOnFailureOrException(false)
+                            .suppressDuplicates(true))
                     .build();
 
             jmxAppFeed = JavaAppUtils.connectMXBeanSensors(this);
