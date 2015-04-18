@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.AttributeSensor;
@@ -38,6 +39,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Function;
@@ -54,7 +56,13 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
     private static final Logger LOG = LoggerFactory.getLogger(Aggregator.class);
 
     public static final ConfigKey<Sensor<?>> SOURCE_SENSOR = ConfigKeys.newConfigKey(new TypeToken<Sensor<?>>() {}, "enricher.sourceSensor");
+    
+    @SetFromFlag("transformation")
+    public static final ConfigKey<Object> TRANSFORMATION_UNTYPED = ConfigKeys.newConfigKey(Object.class, "enricher.transformation.untyped",
+        "Specifies a transformation, as a function from a collection to the value, or as a string matching a pre-defined named transformation, "
+        + "such as 'average' (for numbers), 'add' (for numbers), or 'list' (the default, putting any collection of items into a list)");
     public static final ConfigKey<Function<? super Collection<?>, ?>> TRANSFORMATION = ConfigKeys.newConfigKey(new TypeToken<Function<? super Collection<?>, ?>>() {}, "enricher.transformation");
+    
     public static final ConfigKey<Boolean> EXCLUDE_BLANK = ConfigKeys.newBooleanConfigKey("enricher.aggregator.excludeBlank", "Whether explicit nulls or blank strings should be excluded (default false); this only applies if no value filter set", false);
 
     protected Sensor<T> sourceSensor;
@@ -73,9 +81,35 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
     protected void setEntityLoadingConfig() {
         super.setEntityLoadingConfig();
         this.sourceSensor = (Sensor<T>) getRequiredConfig(SOURCE_SENSOR);
+        
+        Object t1 = config().get(TRANSFORMATION_UNTYPED);
+        if (t1 instanceof String) t1 = lookupTransformation((String)t1);
+        
         this.transformation = (Function<? super Collection<T>, ? extends U>) config().get(TRANSFORMATION);
+        if (this.transformation==null) {
+            this.transformation = (Function<? super Collection<T>, ? extends U>) t1;
+        } else if (t1!=null && !t1.equals(this.transformation)) {
+            throw new IllegalStateException("Cannot supply both "+TRANSFORMATION_UNTYPED+" and "+TRANSFORMATION+" unless they are equal.");
+        }
     }
         
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Function<? super Collection<?>, ?> lookupTransformation(String t1) {
+        if ("average".equalsIgnoreCase(t1)) return new Enrichers.ComputingAverage(null, null, targetSensor.getTypeToken());
+        if ("sum".equalsIgnoreCase(t1)) return new Enrichers.ComputingAverage(null, null, targetSensor.getTypeToken());
+        if ("list".equalsIgnoreCase(t1)) return new ComputingList();
+        return null;
+    }
+
+    private class ComputingList<TT> implements Function<Collection<TT>, List<TT>> {
+        @Override
+        public List<TT> apply(Collection<TT> input) {
+            if (input==null) return null;
+            return MutableList.copyOf(input).asUnmodifiable();
+        }
+        
+    }
+    
     @Override
     protected void setEntityBeforeSubscribingProducerChildrenEvents() {
         BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(producer),

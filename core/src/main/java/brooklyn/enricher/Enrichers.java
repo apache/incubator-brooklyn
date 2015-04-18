@@ -46,11 +46,13 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -181,7 +183,8 @@ public class Enrichers {
         protected final AttributeSensor<S> aggregating;
         protected AttributeSensor<T> publishing;
         protected Entity fromEntity;
-        protected Function<? super Collection<S>, ? extends T> computing;
+        // use supplier so latest values of other fields can be used
+        protected Supplier<Function<? super Collection<S>, ? extends T>> computingSupplier;
         protected Boolean fromMembers;
         protected Boolean fromChildren;
         protected Boolean excludingBlank;
@@ -216,13 +219,25 @@ public class Enrichers {
             this.fromHardcodedProducers = ImmutableSet.copyOf(val);
             return self();
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public B computing(Function<? super Collection<S>, ? extends T> val) {
-            this.computing = checkNotNull(val);
+            this.computingSupplier = (Supplier)Suppliers.ofInstance(checkNotNull(val));
             return self();
         }
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public B computingSum() {
-            // relies of TypeCoercion of result from Number to T, and type erasure for us to get away with it!
+            this.computingSupplier = new Supplier<Function<? super Collection<S>, ? extends T>>() {
+                @Override
+                @SuppressWarnings({ "unchecked", "rawtypes" })
+                public Function<? super Collection<S>, ? extends T> get() {
+                    // relies on TypeCoercion of result from Number to T, and type erasure for us to get away with it!
+                    return (Function)new ComputingSum((Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, publishing.getTypeToken());
+                }
+            };
+            return self();
+        }
+        @SuppressWarnings({ "unchecked", "rawtypes", "unused" })
+        private B computingSumLegacy() {
+            // since 0.7.0, kept in case we need to rebind to this
             Function<Collection<S>, Number> function = new Function<Collection<S>, Number>()  {
                 @Override public Number apply(Collection<S> input) {
                     return sum((Collection)input, (Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, (TypeToken) publishing.getTypeToken());
@@ -230,9 +245,21 @@ public class Enrichers {
             this.computing((Function)function);
             return self();
         }
-        @SuppressWarnings({ "unchecked", "rawtypes" })
+
         public B computingAverage() {
-            // relies of TypeCoercion of result from Number to T, and type erasure for us to get away with it!
+            this.computingSupplier = new Supplier<Function<? super Collection<S>, ? extends T>>() {
+                @Override
+                @SuppressWarnings({ "unchecked", "rawtypes" })
+                public Function<? super Collection<S>, ? extends T> get() {
+                    // relies on TypeCoercion of result from Number to T, and type erasure for us to get away with it!
+                    return (Function)new ComputingAverage((Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, publishing.getTypeToken());
+                }
+            };
+            return self();
+        }
+        @SuppressWarnings({ "unchecked", "rawtypes", "unused" })
+        private B computingAverageLegacy() {
+            // since 0.7.0, kept in case we need to rebind to this
             Function<Collection<S>, Number> function = new Function<Collection<S>, Number>() {
                 @Override public Number apply(Collection<S> input) {
                     return average((Collection)input, (Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, (TypeToken) publishing.getTypeToken());
@@ -240,6 +267,7 @@ public class Enrichers {
             this.computing((Function)function);
             return self();
         }
+        
         public B defaultValueForUnreportedSensors(S val) {
             this.defaultValueForUnreportedSensors = val;
             return self();
@@ -282,7 +310,7 @@ public class Enrichers {
                             .put(Aggregator.SOURCE_SENSOR, aggregating)
                             .putIfNotNull(Aggregator.FROM_CHILDREN, fromChildren)
                             .putIfNotNull(Aggregator.FROM_MEMBERS, fromMembers)
-                            .putIfNotNull(Aggregator.TRANSFORMATION, computing)
+                            .putIfNotNull(Aggregator.TRANSFORMATION, computingSupplier.get())
                             .putIfNotNull(Aggregator.FROM_HARDCODED_PRODUCERS, fromHardcodedProducers)
                             .putIfNotNull(Aggregator.ENTITY_FILTER, entityFilter)
                             .putIfNotNull(Aggregator.VALUE_FILTER, valueFilter)
@@ -297,7 +325,7 @@ public class Enrichers {
                     .add("aggregating", aggregating)
                     .add("publishing", publishing)
                     .add("fromEntity", fromEntity)
-                    .add("computing", computing)
+                    .add("computing", computingSupplier)
                     .add("fromMembers", fromMembers)
                     .add("fromChildren", fromChildren)
                     .add("excludingBlank", excludingBlank)
@@ -700,6 +728,49 @@ public class Enrichers {
     public static class JoinerBuilder extends AbstractJoinerBuilder<JoinerBuilder> {
         public JoinerBuilder(AttributeSensor<?> source) {
             super(source);
+        }
+    }
+
+    @Beta
+    private abstract static class ComputingNumber<T extends Number> implements Function<Collection<T>, T> {
+        protected final Number defaultValueForUnreportedSensors;
+        protected final Number valueToReportIfNoSensors;
+        protected final TypeToken<T> typeToken;
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        public ComputingNumber(Number defaultValueForUnreportedSensors, Number valueToReportIfNoSensors, TypeToken<T> typeToken) {
+            this.defaultValueForUnreportedSensors = defaultValueForUnreportedSensors;
+            this.valueToReportIfNoSensors = valueToReportIfNoSensors;
+            if (typeToken!=null && TypeToken.of(Number.class).isAssignableFrom(typeToken.getType())) {
+                this.typeToken = typeToken;
+            } else if (typeToken==null || typeToken.isAssignableFrom(Number.class)) {
+                // use double if e.g. Object is supplied
+                this.typeToken = (TypeToken)TypeToken.of(Double.class);
+            } else {
+                throw new IllegalArgumentException("Type "+typeToken+" is not valid for "+this);
+            }
+        }
+        @Override public abstract T apply(Collection<T> input);
+    }
+
+    @Beta
+    public static class ComputingSum<T extends Number> extends ComputingNumber<T> {
+        public ComputingSum(Number defaultValueForUnreportedSensors, Number valueToReportIfNoSensors, TypeToken<T> typeToken) {
+            super(defaultValueForUnreportedSensors, valueToReportIfNoSensors, typeToken);
+        }
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @Override public T apply(Collection<T> input) {
+            return (T) sum((Collection)input, (Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, typeToken);
+        }
+    }
+
+    @Beta
+    public static class ComputingAverage<T extends Number> extends ComputingNumber<T> {
+        public ComputingAverage(Number defaultValueForUnreportedSensors, Number valueToReportIfNoSensors, TypeToken<T> typeToken) {
+            super(defaultValueForUnreportedSensors, valueToReportIfNoSensors, typeToken);
+        }
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @Override public T apply(Collection<T> input) {
+            return (T) average((Collection)input, (Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, typeToken);
         }
     }
 
