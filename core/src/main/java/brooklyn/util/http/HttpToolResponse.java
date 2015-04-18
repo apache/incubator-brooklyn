@@ -86,7 +86,7 @@ public class HttpToolResponse implements HttpPollValue {
         }
     }
 
-    public HttpToolResponse(int responseCode, Map<String,List<String>> headers, byte[] content,
+    public HttpToolResponse(int responseCode, Map<String,? extends List<String>> headers, byte[] content,
             long startTime, long durationMillisOfFirstResponse, long durationMillisOfFullContent) {
         this.response = null;
         this.responseCode = responseCode;

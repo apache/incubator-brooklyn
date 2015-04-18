@@ -44,6 +44,7 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
+import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.policy.PolicySpec;
 import brooklyn.util.ResourceUtils;
@@ -117,16 +118,22 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                 .poll(new HttpPollConfig<Boolean>(NGINX_URL_ANSWERS_NICELY)
                         // Any response from Nginx is good.
                         .checkSuccess(Predicates.alwaysTrue())
-                        .onResult(new Function<HttpToolResponse, Boolean>() {
-                                @Override
-                                public Boolean apply(HttpToolResponse input) {
-                                    // Accept any nginx response (don't assert specific version), so that sub-classing
-                                    // for a custom nginx build is not strict about custom version numbers in headers
-                                    List<String> actual = input.getHeaderLists().get("Server");
-                                    return actual != null && actual.size() == 1;
-                                }})
+                        // Accept any nginx response (don't assert specific version), so that sub-classing
+                        // for a custom nginx build is not strict about custom version numbers in headers
+                        .onResult(HttpValueFunctions.containsHeader("Server"))
                         .setOnException(false))
                 .build());
+        
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+        new Function<HttpToolResponse, Boolean>() {
+            @Override
+            public Boolean apply(HttpToolResponse input) {
+                // Accept any nginx response (don't assert specific version), so that sub-classing
+                // for a custom nginx build is not strict about custom version numbers in headers
+                List<String> actual = input.getHeaderLists().get("Server");
+                return actual != null && actual.size() == 1;
+            }
+        };
         
         if (!Lifecycle.RUNNING.equals(getAttribute(SERVICE_STATE_ACTUAL))) {
             // TODO when updating the map, if it would change from empty to empty on a successful run
