@@ -198,6 +198,7 @@ public class JmxFeed extends AbstractFeed {
         
         SetMultimap<String, JmxAttributePollConfig<?>> attributePolls = HashMultimap.<String,JmxAttributePollConfig<?>>create();
         for (JmxAttributePollConfig<?> config : builder.attributePolls) {
+            if (!config.isEnabled()) continue;
             @SuppressWarnings({ "rawtypes", "unchecked" })
             JmxAttributePollConfig<?> configCopy = new JmxAttributePollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
@@ -207,6 +208,7 @@ public class JmxFeed extends AbstractFeed {
         
         SetMultimap<List<?>, JmxOperationPollConfig<?>> operationPolls = HashMultimap.<List<?>,JmxOperationPollConfig<?>>create();
         for (JmxOperationPollConfig<?> config : builder.operationPolls) {
+            if (!config.isEnabled()) continue;
             @SuppressWarnings({ "rawtypes", "unchecked" })
             JmxOperationPollConfig<?> configCopy = new JmxOperationPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);
@@ -216,6 +218,7 @@ public class JmxFeed extends AbstractFeed {
         
         SetMultimap<NotificationFilter, JmxNotificationSubscriptionConfig<?>> notificationSubscriptions = HashMultimap.create();
         for (JmxNotificationSubscriptionConfig<?> config : builder.notificationSubscriptions) {
+            if (!config.isEnabled()) continue;
             notificationSubscriptions.put(config.getNotificationFilter(), config);
         }
         setConfig(NOTIFICATION_SUBSCRIPTIONS, notificationSubscriptions);

@@ -31,6 +31,8 @@ import brooklyn.entity.webapp.WebAppServiceMethods;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -62,27 +64,28 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
 
         connectServiceUpIsRunning();
 
+        boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
+        
         httpFeed = HttpFeed.builder()
                 .entity(this)
                 .period(500, TimeUnit.MILLISECONDS)
                 .baseUri(String.format("http://%s:%d/_stats", getAttribute(HOSTNAME), getHttpPort()))
                 .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] { "httpd", "requests", "count" }, Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
+                        .onFailureOrException(Functions.constant(-1))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] { "httpd_status_codes", "404", "count" }, Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
+                        .onFailureOrException(Functions.constant(-1))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new HttpPollConfig<Integer>(TOTAL_PROCESSING_TIME)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] { "couchdb", "request_time", "count" }, Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
+                        .onFailureOrException(Functions.constant(-1))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new HttpPollConfig<Integer>(MAX_PROCESSING_TIME)
-                        .onSuccess(HttpValueFunctions.chain(HttpValueFunctions.jsonContents(new String[] { "couchdb", "request_time", "max" }, Double.class), new Function<Double, Integer>() {
-                            @Override
-                            public Integer apply(@Nullable Double input) {
-                                return Integer.valueOf(input.intValue());
-                            }
-                        }))
-                        .onFailureOrException(Functions.constant(-1)))
+                        .onSuccess(Functionals.chain(HttpValueFunctions.jsonContents(new String[] { "couchdb", "request_time", "max" }, Double.class), TypeCoercions.function(Integer.class)))
+                        .onFailureOrException(Functions.constant(-1))
+                        .enabled(retrieveUsageMetrics))
                 .build();
 
         WebAppServiceMethods.connectWebAppServerPolicies(this);

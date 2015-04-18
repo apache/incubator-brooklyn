@@ -279,6 +279,7 @@ public class HttpFeed extends AbstractFeed {
         
         SetMultimap<HttpPollIdentifier, HttpPollConfig<?>> polls = HashMultimap.<HttpPollIdentifier,HttpPollConfig<?>>create();
         for (HttpPollConfig<?> config : builder.polls) {
+            if (!config.isEnabled()) continue;
             @SuppressWarnings({ "unchecked", "rawtypes" })
             HttpPollConfig<?> configCopy = new HttpPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period);

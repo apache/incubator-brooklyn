@@ -56,28 +56,35 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
 
             Integer port = isHttpsEnabled() ? getAttribute(HTTPS_PORT) : getAttribute(HTTP_PORT);
             String connectorMbeanName = format("Catalina:type=Connector,port=%s", port);
+            boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
 
             jmxWebFeed = JmxFeed.builder()
                     .entity(this)
                     .period(3000, TimeUnit.MILLISECONDS)
-                    .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
-                            .objectName(requestProcessorMbeanName)
-                            .attributeName("errorCount"))
-                    .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
-                            .objectName(requestProcessorMbeanName)
-                            .attributeName("requestCount"))
-                    .pollAttribute(new JmxAttributePollConfig<Integer>(TOTAL_PROCESSING_TIME)
-                            .objectName(requestProcessorMbeanName)
-                            .attributeName("processingTime"))
-                    .pollAttribute(new JmxAttributePollConfig<String>(CONNECTOR_STATUS)
-                            .objectName(connectorMbeanName)
-                            .attributeName("stateName"))
                     .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_PROCESS_IS_RUNNING)
+                            // TODO Want to use something different from SERVICE_PROCESS_IS_RUNNING,
+                            // to indicate this is jmx MBean's reported state (or failure to connect)
                             .objectName(connectorMbeanName)
                             .attributeName("stateName")
                             .onSuccess(Functions.forPredicate(Predicates.<Object>equalTo("STARTED")))
                             .setOnFailureOrException(false)
                             .suppressDuplicates(true))
+                    .pollAttribute(new JmxAttributePollConfig<String>(CONNECTOR_STATUS)
+                            .objectName(connectorMbeanName)
+                            .attributeName("stateName")
+                            .suppressDuplicates(true))
+                    .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
+                            .objectName(requestProcessorMbeanName)
+                            .attributeName("errorCount")
+                            .enabled(retrieveUsageMetrics))
+                    .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
+                            .objectName(requestProcessorMbeanName)
+                            .attributeName("requestCount")
+                            .enabled(retrieveUsageMetrics))
+                    .pollAttribute(new JmxAttributePollConfig<Integer>(TOTAL_PROCESSING_TIME)
+                            .objectName(requestProcessorMbeanName)
+                            .attributeName("processingTime")
+                            .enabled(retrieveUsageMetrics))
                     .build();
 
             jmxAppFeed = JavaAppUtils.connectMXBeanSensors(this);

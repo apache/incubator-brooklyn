@@ -82,6 +82,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         setAttribute(MANAGEMENT_URL, managementUri);
         log.debug("JBoss sensors for "+this+" reading from "+managementUri);
         Map<String, String> includeRuntimeUriVars = ImmutableMap.of("include-runtime","true");
+        boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
         
         httpFeed = HttpFeed.builder()
                 .entity(this)
@@ -97,23 +98,29 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                         .suppressDuplicates(true))
                 .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
                         .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class)))
+                        .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
                         .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("errorCount", Integer.class)))
+                        .onSuccess(HttpValueFunctions.jsonContents("errorCount", Integer.class))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new HttpPollConfig<Integer>(TOTAL_PROCESSING_TIME)
                         .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("processingTime", Integer.class)))
+                        .onSuccess(HttpValueFunctions.jsonContents("processingTime", Integer.class))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new HttpPollConfig<Integer>(MAX_PROCESSING_TIME)
                         .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class)))
+                        .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new HttpPollConfig<Long>(BYTES_RECEIVED)
                         .vars(includeRuntimeUriVars)
                         // jboss seems to report 0 even if it has received lots of requests; dunno why.
-                        .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class)))
+                        .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new HttpPollConfig<Long>(BYTES_SENT)
                         .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class)))
+                        .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class))
+                        .enabled(retrieveUsageMetrics))
                 .build();
         
         connectServiceUp();

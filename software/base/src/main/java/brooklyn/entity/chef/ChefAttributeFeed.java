@@ -199,6 +199,7 @@ public class ChefAttributeFeed extends AbstractFeed {
 
         Set<ChefAttributePollConfig<?>> polls = Sets.newLinkedHashSet();
         for (ChefAttributePollConfig<?> config : builder.polls) {
+            if (!config.isEnabled()) continue;
             @SuppressWarnings({ "unchecked", "rawtypes" })
             ChefAttributePollConfig<?> configCopy = new ChefAttributePollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period);

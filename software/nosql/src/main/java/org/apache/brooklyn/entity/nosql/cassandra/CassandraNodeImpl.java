@@ -406,6 +406,8 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         super.connectSensors();
 
         jmxHelper = new JmxHelper(this);
+        boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
+        
         jmxFeed = JmxFeed.builder()
                 .entity(this)
                 .period(3000, TimeUnit.MILLISECONDS)
@@ -493,27 +495,33 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 .pollAttribute(new JmxAttributePollConfig<Integer>(READ_ACTIVE)
                         .objectName(readStageMBean)
                         .attributeName("ActiveCount")
-                        .onException(Functions.constant((Integer)null)))
+                        .onException(Functions.constant((Integer)null))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Long>(READ_PENDING)
                         .objectName(readStageMBean)
                         .attributeName("PendingTasks")
-                        .onException(Functions.constant((Long)null)))
+                        .onException(Functions.constant((Long)null))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Long>(READ_COMPLETED)
                         .objectName(readStageMBean)
                         .attributeName("CompletedTasks")
-                        .onException(Functions.constant((Long)null)))
+                        .onException(Functions.constant((Long)null))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Integer>(WRITE_ACTIVE)
                         .objectName(mutationStageMBean)
                         .attributeName("ActiveCount")
-                        .onException(Functions.constant((Integer)null)))
+                        .onException(Functions.constant((Integer)null))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Long>(WRITE_PENDING)
                         .objectName(mutationStageMBean)
                         .attributeName("PendingTasks")
-                        .onException(Functions.constant((Long)null)))
+                        .onException(Functions.constant((Long)null))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Long>(WRITE_COMPLETED)
                         .objectName(mutationStageMBean)
                         .attributeName("CompletedTasks")
-                        .onException(Functions.constant((Long)null)))
+                        .onException(Functions.constant((Long)null))
+                        .enabled(retrieveUsageMetrics))
                 .build();
         
         functionFeed = FunctionFeed.builder()
@@ -543,8 +551,8 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                                 setAttribute(SERVICE_UP,
                                         getAttribute(THRIFT_PORT_LATENCY)!=null && getAttribute(THRIFT_PORT_LATENCY)>=0 && 
                                         Boolean.TRUE.equals(getAttribute(SERVICE_UP_JMX)));
-                            }
-                        }))
+                            }})
+                        .enabled(retrieveUsageMetrics))
                 .build();
         
         jmxMxBeanFeed = JavaAppUtils.connectMXBeanSensors(this);

@@ -305,6 +305,7 @@ public class ZabbixFeed extends AbstractFeed {
 
         Set<ZabbixPollConfig<?>> polls = Sets.newLinkedHashSet();
         for (ZabbixPollConfig<?> config : builder.polls) {
+            if (!config.isEnabled()) continue;
             @SuppressWarnings({ "unchecked", "rawtypes" })
             ZabbixPollConfig<?> configCopy = new ZabbixPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);

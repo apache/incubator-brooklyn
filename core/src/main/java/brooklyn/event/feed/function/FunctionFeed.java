@@ -175,6 +175,7 @@ public class FunctionFeed extends AbstractFeed {
         
         SetMultimap<FunctionPollIdentifier, FunctionPollConfig<?,?>> polls = HashMultimap.<FunctionPollIdentifier,FunctionPollConfig<?,?>>create();
         for (FunctionPollConfig<?,?> config : builder.polls) {
+            if (!config.isEnabled()) continue;
             @SuppressWarnings({ "rawtypes", "unchecked" })
             FunctionPollConfig<?,?> configCopy = new FunctionPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period, builder.periodUnits);

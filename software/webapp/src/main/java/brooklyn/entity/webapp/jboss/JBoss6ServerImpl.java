@@ -25,7 +25,9 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
@@ -60,24 +62,31 @@ public class JBoss6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
 
         String requestProcessorMbeanName = "jboss.web:type=GlobalRequestProcessor,name=http-*";
         String serverMbeanName = "jboss.system:type=Server";
-        
+        boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
+
         jmxFeed = JmxFeed.builder()
                 .entity(this)
                 .period(500, TimeUnit.MILLISECONDS)
-                .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
-                        .objectName(requestProcessorMbeanName)
-                        .attributeName("errorCount"))
-                .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
-                        .objectName(requestProcessorMbeanName)
-                        .attributeName("requestCount"))
-                .pollAttribute(new JmxAttributePollConfig<Integer>(TOTAL_PROCESSING_TIME)
-                        .objectName(requestProcessorMbeanName)
-                        .attributeName("processingTime"))
                 .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
+                        // TODO instead of setting SERVICE_UP directly, want to use equivalent of 
+                        // addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS).key("serverMBean")...
+                        // but not supported in feed?
                         .objectName(serverMbeanName)
                         .attributeName("Started")
                         .onException(Functions.constant(false))
                         .suppressDuplicates(true))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
+                        .objectName(requestProcessorMbeanName)
+                        .attributeName("errorCount")
+                        .enabled(retrieveUsageMetrics))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
+                        .objectName(requestProcessorMbeanName)
+                        .attributeName("requestCount")
+                        .enabled(retrieveUsageMetrics))
+                .pollAttribute(new JmxAttributePollConfig<Integer>(TOTAL_PROCESSING_TIME)
+                        .objectName(requestProcessorMbeanName)
+                        .attributeName("processingTime")
+                        .enabled(retrieveUsageMetrics))
                 .build();
     }
 

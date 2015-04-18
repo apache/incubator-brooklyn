@@ -93,6 +93,8 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
          * So can extract lots of sensors from that.
          */
         Maybe<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
+        boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
+
         if (machine.isPresent()) {
             String cmd = getDriver().getStatusCmd();
             feed = SshFeed.builder()
@@ -108,7 +110,8 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                                     if (q==null) return null;
                                     return Double.parseDouble(q);
                                 }})
-                            .setOnFailureOrException(null) )
+                            .setOnFailureOrException(null)
+                            .enabled(retrieveUsageMetrics))
                     .poll(new SshPollConfig<Boolean>(SERVICE_PROCESS_IS_RUNNING)
                             .command(cmd)
                             .setOnSuccess(true)
