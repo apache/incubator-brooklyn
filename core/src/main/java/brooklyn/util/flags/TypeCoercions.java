@@ -274,6 +274,28 @@ public class TypeCoercions {
     }
 
     /**
+     * Returns a function that does a type coercion to the given type. For example,
+     * {@code TypeCoercions.function(Double.class)} will return a function that will
+     * coerce its input value to a {@link Double} (or throw a {@link ClassCoercionException}
+     * if that is not possible).
+     */
+    public static <T> Function<Object, T> function(final Class<T> type) {
+        return new CoerceFunction<T>(type);
+    }
+    
+    private static class CoerceFunction<T> implements Function<Object, T> {
+        private final Class<T> type;
+
+        public CoerceFunction(Class<T> type) {
+            this.type = type;
+        }
+        @Override
+        public T apply(Object input) {
+            return coerce(input, type);
+        }
+    }
+
+    /**
      * Type coercion {@link Function function} for {@link Enum enums}.
      * <p>
      * Tries to convert the string to {@link CaseFormat#UPPER_UNDERSCORE} first,
@@ -286,27 +308,36 @@ public class TypeCoercions {
      * @see Enum#valueOf(Class, String)
      */
     public static <E extends Enum<E>> Function<String, E> stringToEnum(final Class<E> type, @Nullable final E defaultValue) {
-        return new Function<String, E>() {
-            @Override
-            public E apply(String input) {
-                Preconditions.checkNotNull(input, "input");
-                List<String> options = ImmutableList.of(
-                        input,
-                        CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_UNDERSCORE, input),
-                        CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_UNDERSCORE, input),
-                        CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, input),
-                        CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, input));
-                for (String value : options) {
-                    try {
-                        return Enum.valueOf(type, value);
-                    } catch (IllegalArgumentException iae) {
-                        continue;
-                    }
+        return new StringToEnumFunction<E>(type, defaultValue);
+    }
+    
+    private static class StringToEnumFunction<E extends Enum<E>> implements Function<String, E> {
+        private final Class<E> type;
+        private final E defaultValue;
+        
+        public StringToEnumFunction(Class<E> type, @Nullable E defaultValue) {
+            this.type = type;
+            this.defaultValue = defaultValue;
+        }
+        @Override
+        public E apply(String input) {
+            Preconditions.checkNotNull(input, "input");
+            List<String> options = ImmutableList.of(
+                    input,
+                    CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_UNDERSCORE, input),
+                    CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_UNDERSCORE, input),
+                    CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, input),
+                    CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, input));
+            for (String value : options) {
+                try {
+                    return Enum.valueOf(type, value);
+                } catch (IllegalArgumentException iae) {
+                    continue;
                 }
-                Maybe<E> result = Enums.valueOfIgnoreCase(type, input);
-                return (result.isPresent()) ? result.get() : defaultValue;
             }
-        };
+            Maybe<E> result = Enums.valueOfIgnoreCase(type, input);
+            return (result.isPresent()) ? result.get() : defaultValue;
+        }
     }
 
     /**
