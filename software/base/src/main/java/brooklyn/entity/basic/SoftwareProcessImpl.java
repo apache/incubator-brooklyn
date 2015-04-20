@@ -418,11 +418,11 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         if (result.get(CloudLocationConfig.INBOUND_PORTS) == null) {
             Collection<Integer> ports = getRequiredOpenPorts();
             Object requiredPorts = result.get(CloudLocationConfig.ADDITIONAL_INBOUND_PORTS);
-            if (requiredPorts instanceof Integer){
-                ports.add((Integer)requiredPorts);
-            }else if (requiredPorts instanceof Iterable) {
-                for(Object o : (Iterable<?>)requiredPorts){
-                    if(o instanceof Integer) ports.add((Integer)o);
+            if (requiredPorts instanceof Integer) {
+                ports.add((Integer) requiredPorts);
+            } else if (requiredPorts instanceof Iterable) {
+                for (Object o : (Iterable<?>) requiredPorts) {
+                    if (o instanceof Integer) ports.add((Integer) o);
                 }
             }
             if (ports != null && ports.size() > 0) result.put(CloudLocationConfig.INBOUND_PORTS, ports);
