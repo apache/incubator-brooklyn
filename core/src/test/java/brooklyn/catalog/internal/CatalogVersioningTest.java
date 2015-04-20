@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -49,6 +50,28 @@ public class CatalogVersioningTest {
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
         if (managementContext != null) Entities.destroyAll(managementContext);
+    }
+
+    @Test
+    public void testParsingVersion() {
+        assertVersionParsesAs("foo:1", "foo", "1");
+        assertVersionParsesAs("foo", null, null);
+        assertVersionParsesAs("foo:1.1", "foo", "1.1");
+        assertVersionParsesAs("foo:1_SNAPSHOT", "foo", "1_SNAPSHOT");
+        assertVersionParsesAs("foo:10.9.8_SNAPSHOT", "foo", "10.9.8_SNAPSHOT");
+        assertVersionParsesAs("foo:bar", null, null);
+        assertVersionParsesAs("chef:cookbook", null, null);
+        assertVersionParsesAs("http://foo:8080", null, null);
+    }
+
+    private static void assertVersionParsesAs(String versionedId, String id, String version) {
+        if (version==null) {
+            Assert.assertFalse(CatalogUtils.looksLikeVersionedId(versionedId));
+        } else {
+            Assert.assertTrue(CatalogUtils.looksLikeVersionedId(versionedId));
+            Assert.assertEquals(CatalogUtils.getIdFromVersionedId(versionedId), id);
+            Assert.assertEquals(CatalogUtils.getVersionFromVersionedId(versionedId), version);
+        }
     }
 
     @Test

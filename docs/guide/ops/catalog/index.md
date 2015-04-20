@@ -82,7 +82,7 @@ In addition to the above fields, exactly **one** of the following is also requir
   or a full application blueprint (in the usual YAML format) for a template; **or*
 - `items`: a list of catalog items, where each entry in the map follows the same schema as
   the `brooklyn.catalog` value, and the keys in these map override any metadata specified as
-  a sibling of this `items` key (or, in the case of `libraries` they add to the list);
+  a sibling of this `items` key (or, in the case of `brooklyn.libraries` they add to the list);
   if there are references between items, then order is important, 
   `items` are processed in order, depth-first, and forward references are not supported.
 
@@ -99,18 +99,18 @@ The following optional catalog metadata is supported:
 - `name`: a nicely formatted display name for the item, used when presenting it in a GUI
 - `description`: supplies an extended textual description for the item
 - `iconUrl`: points to an icon for the item, used when presenting it in a GUI.
-  The URL prefix `classpath` is supported but these URLs may *not* refer items in any OSGi bundle in the `libraries` section 
+  The URL prefix `classpath` is supported but these URLs may *not* refer items in any OSGi bundle in the `brooklyn.libraries` section 
   (to prevent requiring all OSGi bundles to be loaded at launch).
   Icons are instead typically installed either at the server from which the OSGi bundles or catalog items are supplied 
   or in the `conf` folder of the Brooklyn distro.
-- `libraries`: a list of pointers to OSGi bundles required for the catalog item,.
+- `brooklyn.libraries`: a list of pointers to OSGi bundles required for the catalog item.
   This can be omitted if blueprints are pure YAML and everything required is included in the classpath and catalog.
   Where custom Java code or bundled resources is needed, however, OSGi JARs supply
   a convenient packaging format and a very powerful versioning format.
   Libraries should be supplied in the form 
-  `libraries: [ "http://...", "http://..." ]`, 
+  `brooklyn.libraries: [ "http://...", "http://..." ]`, 
   or as
-  `libraries: [ { name: symbolic-name, version: 1.0, url: http://... }, ... ]` if `symbolic-name:1.0` 
+  `brooklyn.libraries: [ { name: symbolic-name, version: 1.0, url: http://... }, ... ]` if `symbolic-name:1.0` 
   might already be installed from a different URL and you want to skip the download.
   Note that these URLs should point at immutable OSGi bundles;
   if the contents at any of these URLs changes, the behaviour of the blueprint may change 
@@ -211,7 +211,7 @@ or POSTed to the applications endpoint to deploy an instance.
 POSTing to the applications endpoint,
 will ignored the `brooklyn.catalog` information;
 this means references to any `item` blocks in the `<catalog-metadata>` will not be resolved,
-and any OSGi `libraries` defined there will not be loaded.)
+and any OSGi `brooklyn.libraries` defined there will not be loaded.)
 
 
 

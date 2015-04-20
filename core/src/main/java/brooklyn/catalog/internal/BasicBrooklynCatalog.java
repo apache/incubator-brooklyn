@@ -584,7 +584,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         Map<Object,Object> catalogMetadata = MutableMap.builder().putAll(parentMetadata).putAll(itemMetadata).build();
         
-        // libraries we treat specially, to append the list, with the child's list preferred in classloading order
+        // brooklyn.libraries we treat specially, to append the list, with the child's list preferred in classloading order
+        // `libraries` is supported in some places as a legacy syntax; it should always be `brooklyn.libraries` for new apps
+        // TODO in 0.8.0 require brooklyn.libraries, don't allow "libraries" on its own
         List<?> librariesNew = MutableList.copyOf(getFirstAs(itemMetadata, List.class, "brooklyn.libraries", "libraries").orNull());
         Collection<CatalogBundle> libraryBundlesNew = CatalogItemDtoAbstract.parseLibraries(librariesNew);
         
@@ -621,7 +623,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, loader, result).reconstruct();
         if (!planInterpreter.isResolved()) {
-            throw new IllegalStateException("Could not resolve plan: "+sourceYaml);
+            throw Exceptions.create("Could not resolve item:\n"+sourceYaml, planInterpreter.getErrors());
         }
         itemType = planInterpreter.getCatalogItemType();
         Map<?, ?> itemAsMap = planInterpreter.getItem();
@@ -761,6 +763,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         DeploymentPlan plan;
         AbstractBrooklynObjectSpec<?,?> spec;
         boolean resolved = false;
+        List<Exception> errors = MutableList.of();
         
         public PlanInterpreterGuessingType(@Nullable String id, Object item, String itemYaml, @Nullable CatalogItemType optionalCiType, 
                 BrooklynClassLoadingContext loader, List<CatalogItemDtoAbstract<?,?>> itemsDefinedSoFar) {
@@ -781,12 +784,17 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
 
         public PlanInterpreterGuessingType reconstruct() {
-            attemptType(null, CatalogItemType.ENTITY);
-            attemptType(null, CatalogItemType.TEMPLATE);
-            
-            attemptType("services", CatalogItemType.ENTITY);
-            attemptType(POLICIES_KEY, CatalogItemType.POLICY);
-            attemptType(LOCATIONS_KEY, CatalogItemType.LOCATION);
+            if (catalogItemType==CatalogItemType.TEMPLATE) {
+                // template *must* be explicitly defined, and if so, none of the other calls apply
+                attemptType(null, CatalogItemType.TEMPLATE);
+                
+            } else {
+                attemptType(null, CatalogItemType.ENTITY);
+
+                attemptType("services", CatalogItemType.ENTITY);
+                attemptType(POLICIES_KEY, CatalogItemType.POLICY);
+                attemptType(LOCATIONS_KEY, CatalogItemType.LOCATION);
+            }
             
             if (!resolved && catalogItemType==CatalogItemType.TEMPLATE) {
                 // anything goes, for an explicit template, because we can't easily recurse into the types
@@ -798,6 +806,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
         
         public boolean isResolved() { return resolved; }
+        
+        /** Returns potentially useful errors encountered while guessing types. 
+         * May only be available where the type is known. */
+        public List<Exception> getErrors() {
+            return errors;
+        }
         
         public CatalogItemType getCatalogItemType() {
             return catalogItemType; 
@@ -821,14 +835,21 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             }
             // first look in collected items, if a key is given
             String type = (String) item.get("type");
+            String version = null;
+            if (CatalogUtils.looksLikeVersionedId(type)) {
+                version = CatalogUtils.getVersionFromVersionedId(type);
+                type = CatalogUtils.getIdFromVersionedId(type);
+            }
             if (type!=null && key!=null) {
                 for (CatalogItemDtoAbstract<?,?> candidate: itemsDefinedSoFar) {
                     if (type.equals(candidate.getSymbolicName()) || type.equals(candidate.getId())) {
-                        // matched - exit
-                        catalogItemType = candidateCiType;
-                        planYaml = candidateYaml;
-                        resolved = true;
-                        return true;
+                        if (version==null || version.equals(candidate.getVersion())) {
+                            // matched - exit
+                            catalogItemType = candidateCiType;
+                            planYaml = candidateYaml;
+                            resolved = true;
+                            return true;
+                        }
                     }
                 }
             }
@@ -846,6 +867,19 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                 return true;
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
+                // record the error if we have reason to expect this guess to succeed
+                if (item.containsKey("services") && (candidateCiType==CatalogItemType.ENTITY || candidateCiType==CatalogItemType.TEMPLATE)) {
+                    // explicit services supplied, so plan should have been parseable for an entity or a a service
+                    errors.add(e);
+                } else if (catalogItemType!=null && key!=null) {
+                    // explicit itemType supplied, so plan should be parseable in the cases where we're given a key
+                    // (when we're not given a key, the previous block should apply)
+                    errors.add(e);
+                } else {
+                    // all other cases, the error is probably due to us not getting the type right, ignore it
+                    if (log.isTraceEnabled())
+                        log.trace("Guessing type of plan, it looks like it isn't "+candidateCiType+"/"+key+": "+e);
+                }
             }
             
             // finally try parsing a cut-down plan, in case there is a nested reference to a newly defined catalog item

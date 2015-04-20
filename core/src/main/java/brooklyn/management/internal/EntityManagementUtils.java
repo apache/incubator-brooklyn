@@ -112,8 +112,17 @@ public class EntityManagementUtils {
             Entities.startManagement((Application)app, mgmt);
             return (T) app;
         } else {
-            assembly = instantiator.instantiate(at, camp);
-            return (T) mgmt.getEntityManager().getEntity(assembly.getId());
+            // currently, all brooklyn plans should produce the above; currently this will always throw Unsupported  
+            try {
+                assembly = instantiator.instantiate(at, camp);
+                return (T) mgmt.getEntityManager().getEntity(assembly.getId());
+            } catch (UnsupportedOperationException e) {
+                // map this (expected) error to a nicer message
+                throw new IllegalArgumentException("Unrecognized application blueprint format");
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                throw new IllegalArgumentException("Invalid plan: "+at, e);
+            }
         }
     }
     

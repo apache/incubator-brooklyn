@@ -176,7 +176,22 @@ public class CatalogUtils {
     }
 
     public static boolean looksLikeVersionedId(String versionedId) {
-        return versionedId != null && versionedId.indexOf(VERSION_DELIMITER) != -1;
+        if (versionedId==null) return false;
+        int fi = versionedId.indexOf(VERSION_DELIMITER);
+        if (fi<0) return false;
+        int li = versionedId.lastIndexOf(VERSION_DELIMITER);
+        if (li!=fi) {
+            // if multiple colons, we say it isn't a versioned reference; the prefix in that case must understand any embedded versioning scheme
+            // this fixes the case of:  http://localhost:8080
+            return false;
+        }
+        String candidateVersion = versionedId.substring(li+1);
+        if (!candidateVersion.matches("[0-9]+(|(\\.|_).*)")) {
+            // version must start with a number, followed if by anything with full stop or underscore before any other characters
+            // e.g.  foo:1  or foo:1.1  or foo:1_SNAPSHOT all supported, but not e.g. foo:bar (or chef:cookbook or docker:my/image)
+            return false;
+        }
+        return true;
     }
 
     public static String getIdFromVersionedId(String versionedId) {
