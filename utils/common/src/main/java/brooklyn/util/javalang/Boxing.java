@@ -20,6 +20,8 @@ package brooklyn.util.javalang;
 
 import java.lang.reflect.Array;
 
+import brooklyn.util.guava.Maybe;
+
 import com.google.common.collect.ImmutableBiMap;
 
 public class Boxing {
@@ -41,6 +43,19 @@ public class Boxing {
             .put(Short.TYPE, Short.class)
             .put(Void.TYPE, Void.class)
             .build();
+    
+    /** Returns the unboxed type for the given primitive type name, if available;
+     * e.g. {@link Integer#TYPE} for <code>int</code> (distinct from <code>Integer.class</code>),
+     * or null if not a primitive.
+     * */
+    public static Maybe<Class<?>> getPrimitiveType(String typeName) {
+        if (typeName!=null) {
+            for (Class<?> t: PRIMITIVE_TO_BOXED.keySet()) {
+                if (typeName.equals(t.getName())) return Maybe.<Class<?>>of(t);
+            }
+        }
+        return Maybe.absent("Not a primitive: "+typeName);
+    }
     
     public static Class<?> boxedType(Class<?> type) {
         if (PRIMITIVE_TO_BOXED.containsKey(type))
