@@ -46,7 +46,7 @@ public interface RiakNode extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
-            "Version to install (Default 2.0.5)", "2.0.5");
+            "Version to install (Default 2.1.0)", "2.1.0");
 
     @SetFromFlag("optimizeNetworking")
     ConfigKey<Boolean> OPTIMIZE_HOST_NETWORKING  = ConfigKeys.newBooleanConfigKey("riak.networking.optimize", "Optimize host networking when running in a VM", Boolean.TRUE);
