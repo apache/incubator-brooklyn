@@ -33,20 +33,20 @@ import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
+import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableMap;
@@ -87,7 +87,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         EntitySpec<? extends WebAppService> webServerSpec = getAttribute(MEMBER_SPEC);
         if (webServerFactory == null && webServerSpec == null) {
             log.debug("creating default web server spec for {}", this);
-            webServerSpec = EntitySpec.create(JBoss7Server.class);
+            webServerSpec = EntitySpec.create(TomcatServer.class);
             setAttribute(MEMBER_SPEC, webServerSpec);
         }
         
@@ -139,8 +139,8 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
 
     @Override
     protected void initEnrichers() {
-        if (getConfigRaw(UP_QUORUM_CHECK, false).isAbsent()) {
-            setConfig(UP_QUORUM_CHECK, QuorumChecks.newInstance(2, 1.0, false));
+        if (config().getLocalRaw(UP_QUORUM_CHECK).isAbsent()) {
+            config().set(UP_QUORUM_CHECK, QuorumChecks.newInstance(2, 1.0, false));
         }
         super.initEnrichers();
         ServiceStateLogic.newEnricherFromChildrenUp().checkChildrenOnly().requireUpChildren(getConfig(UP_QUORUM_CHECK)).addTo(this);

@@ -39,7 +39,6 @@ import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.ControlledDynamicWebAppClusterTest.RecordingSensorEventListener;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
@@ -78,7 +77,7 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
     public void testConfiguresController() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar())));
+                .configure("memberSpec", EntitySpec.create(TomcatServer.class).configure("war", getTestWar())));
         app.start(locs);
 
         String url = cluster.getController().getAttribute(NginxController.ROOT_URL);
@@ -90,7 +89,7 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
     public void testSetsToplevelHostnameFromController() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar())));
+                .configure("memberSpec", EntitySpec.create(TomcatServer.class).configure("war", getTestWar())));
         app.start(locs);
 
         String expectedHostname = cluster.getController().getAttribute(LoadBalancer.HOSTNAME);
@@ -109,8 +108,8 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
     public void testCustomWebClusterSpecGetsMemberSpec() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
                 .configure("initialSize", 1)
-                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class)
-                        .configure(JBoss7Server.ROOT_WAR, getTestWar()))
+                .configure(ControlledDynamicWebAppCluster.MEMBER_SPEC, EntitySpec.create(TomcatServer.class)
+                        .configure(TomcatServer.ROOT_WAR, getTestWar()))
                 .configure(ControlledDynamicWebAppCluster.WEB_CLUSTER_SPEC, EntitySpec.create(DynamicWebAppCluster.class)
                         .displayName("mydisplayname")));
         app.start(locs);
