@@ -10,6 +10,7 @@ children:
 - code/
 - { link: "http://github.com/apache/incubator-brooklyn", title: "GitHub" }
 - code/tests.md
+- code/licensing.md
 - tips/
 - tips/logging.md
 - tips/debugging-remote-brooklyn.md
