@@ -306,7 +306,10 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     }
     
     protected <K> K getRequiredConfig(ConfigKey<K> key) {
-        return checkNotNull(config().get(key), key.getName());
+        K result = config().get(key);
+        if (result==null) 
+            throw new NullPointerException("Value required for '"+key.getName()+"' in "+this);
+        return result;
     }
 
     @Override

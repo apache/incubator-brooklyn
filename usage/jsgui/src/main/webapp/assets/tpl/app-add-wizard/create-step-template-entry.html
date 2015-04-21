@@ -18,16 +18,16 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div class="template-lozenge frame" id="<%= id %>" data-name="<%= name %>" data-yaml="<%= planYaml %>">
+<div class="template-lozenge frame" id="<%- id %>" data-name="<%- name %>" data-yaml="<%- planYaml %>">
     <% if (iconUrl) { %>
     <div class="icon">
-        <img src="<%= iconUrl %>" alt="(icon)" />
+        <img src="<%- iconUrl %>" alt="(icon)" />
     </div>
     <% } %>
     <div class="blurb">
-        <div class="title"><%= name %></div>
+        <div class="title"><%- name %></div>
         <div class="description">
-            <%= description ? description : "" %>
+            <%- description ? description : "" %>
         </div>
     </div>
 </div>

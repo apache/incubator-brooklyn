@@ -40,6 +40,7 @@ import brooklyn.management.osgi.OsgiTestResources;
 import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Iterables;
 
@@ -217,7 +218,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         String yaml = "name: simple-app-yaml\n" +
                       "location: localhost\n" +
                       "services: \n" +
-                      "  - serviceType: " + ver(referrerSymbolicName);
+                      "  - type: " + ver(referrerSymbolicName);
         Entity app = createAndStartApplication(yaml);
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
@@ -344,7 +345,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             // TODO only fails if using 'services', because that forces plan parsing; should fail in all cases
             addCatalogChildOSGiEntityWithServicesBlock(referrerSymbolicName, ver(referrerSymbolicName));
             fail("Expected to throw");
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
             assertTrue(e.getMessage().contains(referrerSymbolicName), "message was: "+e);
         }
     }

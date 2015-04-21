@@ -621,16 +621,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         CatalogItemType itemType = TypeCoercions.coerce(getFirstAs(catalogMetadata, Object.class, "itemType", "item_type").orNull(), CatalogItemType.class);
         BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, "<load>:0", libraryBundles);
 
-        PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, loader, result).reconstruct();
-        if (!planInterpreter.isResolved()) {
-            throw Exceptions.create("Could not resolve item:\n"+sourceYaml, planInterpreter.getErrors());
-        }
-        itemType = planInterpreter.getCatalogItemType();
-        Map<?, ?> itemAsMap = planInterpreter.getItem();
-        // the "plan yaml" includes the services: ... or brooklyn.policies: ... outer key,
-        // as opposed to the rawer { type: xxx } map without that outer key which is valid as item input
-        // TODO this plan yaml is needed for subsequent reconstruction; would be nicer if it weren't! 
-        
         String id = getFirstAs(catalogMetadata, String.class, "id").orNull();
         String version = getFirstAs(catalogMetadata, String.class, "version").orNull();
         String symbolicName = getFirstAs(catalogMetadata, String.class, "symbolicName").orNull();
@@ -642,6 +632,18 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                 Strings.isNonBlank(name) && !name.equals(displayName)) {
             log.warn("Name property will be ignored due to the existence of displayName and at least one of id, symbolicName");
         }
+
+        PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, loader, result).reconstruct();
+        if (!planInterpreter.isResolved()) {
+            throw Exceptions.create("Could not resolve item "
+                + (Strings.isNonBlank(id) ? id : Strings.isNonBlank(symbolicName) ? symbolicName : Strings.isNonBlank(name) ? name : "<no-name>")
+                + ":\n"+sourceYaml, planInterpreter.getErrors());
+        }
+        itemType = planInterpreter.getCatalogItemType();
+        Map<?, ?> itemAsMap = planInterpreter.getItem();
+        // the "plan yaml" includes the services: ... or brooklyn.policies: ... outer key,
+        // as opposed to the rawer { type: xxx } map without that outer key which is valid as item input
+        // TODO this plan yaml is needed for subsequent reconstruction; would be nicer if it weren't! 
 
         // if symname not set, infer from: id, then name, then item id, then item name
         if (Strings.isBlank(symbolicName)) {

@@ -117,6 +117,11 @@ public class EntityManagementUtils {
                 assembly = instantiator.instantiate(at, camp);
                 return (T) mgmt.getEntityManager().getEntity(assembly.getId());
             } catch (UnsupportedOperationException e) {
+                if (at.getPlatformComponentTemplates()==null || at.getPlatformComponentTemplates().isEmpty()) {
+                    if (at.getCustomAttributes().containsKey("brooklyn.catalog"))
+                        throw new IllegalArgumentException("Unrecognized application blueprint format: expected an application, not a brooklyn.catalog");
+                    throw new IllegalArgumentException("Unrecognized application blueprint format: no services defined");
+                }
                 // map this (expected) error to a nicer message
                 throw new IllegalArgumentException("Unrecognized application blueprint format");
             } catch (Exception e) {
