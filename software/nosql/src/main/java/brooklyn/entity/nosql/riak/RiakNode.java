@@ -70,6 +70,9 @@ public interface RiakNode extends SoftwareProcess {
             "riak.riakConf.templateUrl.mac", "Template file (in freemarker format) for the app.config config file",
             "classpath://brooklyn/entity/nosql/riak/riak-mac.conf");
 
+    ConfigKey<String> RIAK_CONF_ADDITIONAL_CONTENT = ConfigKeys.newStringConfigKey(
+            "riak.riakConf.additionalContent", "Template file (in freemarker format) for setting up additional settings in the riak.conf file", "");
+
     @SetFromFlag("downloadUrlRhelCentos")
     AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL_RHEL_CENTOS = ConfigKeys.newTemplateSensorAndConfigKey("download.url.rhelcentos",
             "URL pattern for downloading the linux RPM installer (will substitute things like ${version} automatically)",
