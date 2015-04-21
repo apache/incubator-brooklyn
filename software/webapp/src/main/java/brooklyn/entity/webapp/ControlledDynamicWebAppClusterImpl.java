@@ -130,6 +130,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
                 log.debug("creating controller using custom spec for {}", this);
             }
             controller = addChild(controllerSpec);
+            addEnricher(Enrichers.builder().propagating(LoadBalancer.PROXY_HTTP_PORT, LoadBalancer.PROXY_HTTPS_PORT).from(controller).build());
             if (Entities.isManaged(this)) Entities.manage(controller);
             setAttribute(CONTROLLER, controller);
         }

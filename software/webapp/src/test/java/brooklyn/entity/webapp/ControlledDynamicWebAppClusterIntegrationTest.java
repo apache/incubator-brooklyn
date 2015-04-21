@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import brooklyn.test.TestResourceUnavailableException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -48,6 +49,7 @@ import brooklyn.test.entity.TestJavaWebAppEntity;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 
+import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -72,7 +74,17 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
         return "classpath://hello-world.war";
     }
+    
+    @Test(groups="Integration")
+    public void testPropogateHttpPorts() {
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 1));
+        app.start(locs);
 
+        EntityTestUtils.assertAttributeEventuallyNonNull(cluster, LoadBalancer.PROXY_HTTP_PORT);
+        EntityTestUtils.assertAttributeEventuallyNonNull(cluster, LoadBalancer.PROXY_HTTPS_PORT);
+    }
+    
     @Test(groups="Integration")
     public void testConfiguresController() {
         ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
