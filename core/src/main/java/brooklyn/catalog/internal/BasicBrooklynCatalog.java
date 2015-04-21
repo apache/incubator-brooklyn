@@ -24,11 +24,10 @@ import io.brooklyn.camp.CampPlatform;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
-import io.brooklyn.camp.spi.pdp.Service;
 
 import java.io.FileNotFoundException;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -37,6 +36,7 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
@@ -47,19 +47,19 @@ import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.LoadedClassLoader;
@@ -69,8 +69,10 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 import brooklyn.util.yaml.Yamls;
+import brooklyn.util.yaml.Yamls.YamlExtract;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
@@ -319,6 +321,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         String yaml = loadedItem.getPlanYaml();
 
         if (yaml!=null) {
+            // preferred way is to parse the yaml, to resolve references late;
+            // the parsing on load is to populate some fields, but it is optional.
+            // TODO messy for location and policy that we need brooklyn.{locations,policies} root of the yaml, but it works;
+            // see related comment when the yaml is set, in addAbstractCatalogItems
+            // (not sure if anywhere else relies on that syntax; if not, it should be easy to fix!)
             DeploymentPlan plan = makePlanFromYaml(yaml);
             BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, item);
             SpecT spec;
@@ -357,6 +364,18 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return spec;
     }
 
+    private <T, SpecT> SpecT createSpec(String optionalId, CatalogItemType ciType, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+        Preconditions.checkNotNull(ciType, "catalog item type for "+plan); 
+        switch (ciType) {
+        case TEMPLATE:
+        case ENTITY: 
+            return createEntitySpec(optionalId, plan, loader);
+        case LOCATION: return createLocationSpec(plan, loader);
+        case POLICY: return createPolicySpec(plan, loader);
+        }
+        throw new IllegalStateException("Unknown CI Type "+ciType+" for "+plan);
+    }
+    
     @SuppressWarnings("unchecked")
     private <T, SpecT> SpecT createEntitySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
@@ -373,7 +392,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         try {
             AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
             if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createNestedSpec(at, camp, loader, MutableSet.of(symbolicName));
+                return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createNestedSpec(at, camp, loader, 
+                    symbolicName==null ? MutableSet.<String>of() : MutableSet.of(symbolicName));
             }
             throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
         } catch (Exception e) {
@@ -381,7 +401,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private <T, SpecT> SpecT createPolicySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         //Would ideally re-use io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver.PolicySpecResolver
         //but it is CAMP specific and there is no easy way to get hold of it.
@@ -392,17 +411,23 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         Object policy = Iterables.getOnlyElement((Iterable<?>)policies);
 
-        Map<String, Object> config;
+        return createPolicySpec(loader, policy);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T, SpecT> SpecT createPolicySpec(BrooklynClassLoadingContext loader, Object policy) {
+        // TODO this (and LocationSpec) lack the loop-prevention which createEntitySpec has (hence different signature)
+        Map<String, Object> itemMap;
         if (policy instanceof String) {
-            config = ImmutableMap.<String, Object>of("type", policy);
+            itemMap = ImmutableMap.<String, Object>of("type", policy);
         } else if (policy instanceof Map) {
-            config = (Map<String, Object>) policy;
+            itemMap = (Map<String, Object>) policy;
         } else {
             throw new IllegalStateException("Policy expected to be string or map. Unsupported object type " + policy.getClass().getName() + " (" + policy.toString() + ")");
         }
 
-        String type = (String) checkNotNull(Yamls.getMultinameAttribute(config, "policy_type", "policyType", "type"), "policy type");
-        Map<String, Object> brooklynConfig = (Map<String, Object>) config.get("brooklyn.config");
+        String type = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "policy_type", "policyType", "type"), "policy type");
+        Map<String, Object> brooklynConfig = (Map<String, Object>) itemMap.get("brooklyn.config");
         PolicySpec<? extends Policy> spec = PolicySpec.create(loader.loadClass(type, Policy.class));
         if (brooklynConfig != null) {
             spec.configure(brooklynConfig);
@@ -410,7 +435,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return (SpecT) spec;
     }
     
-    @SuppressWarnings("unchecked")
     private <T, SpecT> SpecT createLocationSpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         // See #createPolicySpec; this impl is modeled on that.
         // spec.catalogItemId is set by caller
@@ -421,17 +445,22 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         Object location = Iterables.getOnlyElement((Iterable<?>)locations);
 
-        Map<String, Object> config;
+        return createLocationSpec(loader, location); 
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T, SpecT> SpecT createLocationSpec(BrooklynClassLoadingContext loader, Object location) {
+        Map<String, Object> itemMap;
         if (location instanceof String) {
-            config = ImmutableMap.<String, Object>of("type", location);
+            itemMap = ImmutableMap.<String, Object>of("type", location);
         } else if (location instanceof Map) {
-            config = (Map<String, Object>) location;
+            itemMap = (Map<String, Object>) location;
         } else {
             throw new IllegalStateException("Location expected to be string or map. Unsupported object type " + location.getClass().getName() + " (" + location.toString() + ")");
         }
 
-        String type = (String) checkNotNull(Yamls.getMultinameAttribute(config, "location_type", "locationType", "type"), "location type");
-        Map<String, Object> brooklynConfig = (Map<String, Object>) config.get("brooklyn.config");
+        String type = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "location_type", "locationType", "type"), "location type");
+        Map<String, Object> brooklynConfig = (Map<String, Object>) itemMap.get("brooklyn.config");
         Maybe<Class<? extends Location>> javaClass = loader.tryLoadClass(type, Location.class);
         if (javaClass.isPresent()) {
             LocationSpec<?> spec = LocationSpec.create(javaClass.get());
@@ -454,7 +483,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             } else {
                 throw new IllegalStateException("No class or resolver found for location type "+type);
             }
-        } 
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -491,37 +520,112 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (item instanceof CatalogItemDtoAbstract) return (CatalogItemDtoAbstract<T,SpecT>) item;
         throw new IllegalStateException("Cannot unwrap catalog item '"+item+"' (type "+item.getClass()+") to restore DTO");
     }
-
-    private CatalogItemDtoAbstract<?,?> getAbstractCatalogItem(String yaml) {
-        DeploymentPlan plan = makePlanFromYaml(yaml);
-
-        @SuppressWarnings("rawtypes")
-        Maybe<Map> possibleCatalog = plan.getCustomAttribute("brooklyn.catalog", Map.class, true);
-        MutableMap<String, Object> catalog = MutableMap.of();
-        if (possibleCatalog.isPresent()) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> catalog2 = (Map<String, Object>) possibleCatalog.get();
-            catalog.putAll(catalog2);
+    
+    @SuppressWarnings("unchecked")
+    private <T> Maybe<T> getFirstAs(Map<?,?> map, Class<T> type, String firstKey, String ...otherKeys) {
+        if (map==null) return Maybe.absent("No map available");
+        String foundKey = null;
+        Object value = null;
+        if (map.containsKey(firstKey)) foundKey = firstKey;
+        else for (String key: otherKeys) {
+            if (map.containsKey(key)) {
+                foundKey = key;
+                break;
+            }
         }
+        if (foundKey==null) return Maybe.absent("Missing entry '"+firstKey+"'");
+        value = map.get(foundKey);
+        if (type.equals(String.class) && Number.class.isInstance(value)) value = value.toString();
+        if (!type.isInstance(value)) 
+            throw new IllegalArgumentException("Entry for '"+firstKey+"' should be of type "+type+", not "+value.getClass());
+        return Maybe.of((T)value);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private Maybe<Map<?,?>> getFirstAsMap(Map<?,?> map, String firstKey, String ...otherKeys) {
+        return (Maybe<Map<?,?>>)(Maybe) getFirstAs(map, Map.class, firstKey, otherKeys);
+    }
 
-        Collection<CatalogBundle> libraries = Collections.emptyList();
-        Maybe<Object> possibleLibraries = catalog.getMaybe("libraries");
-        if (possibleLibraries.isAbsent()) possibleLibraries = catalog.getMaybe("brooklyn.libraries");
-        if (possibleLibraries.isPresentAndNonNull()) {
-            if (!(possibleLibraries.get() instanceof Collection))
-                throw new IllegalArgumentException("Libraries should be a list, not "+possibleLibraries.get());
-            libraries = CatalogItemDtoAbstract.parseLibraries((Collection<?>) possibleLibraries.get());
+    private List<CatalogItemDtoAbstract<?,?>> collectCatalogItems(String yaml) {
+        Map<?,?> itemDef = Yamls.getAs(Yamls.parseAll(yaml), Map.class);
+        Map<?,?> catalogMetadata = getFirstAsMap(itemDef, "brooklyn.catalog").orNull();
+        if (catalogMetadata==null)
+            log.warn("No `brooklyn.catalog` supplied in catalog request; using legacy mode for "+itemDef);
+        catalogMetadata = MutableMap.copyOf(catalogMetadata);
+
+        List<CatalogItemDtoAbstract<?, ?>> result = MutableList.of();
+        
+        collectCatalogItems(Yamls.getTextOfYamlAtPath(yaml, "brooklyn.catalog").getMatchedYamlTextOrWarn(), 
+            catalogMetadata, result, null);
+        
+        itemDef.remove("brooklyn.catalog");
+        catalogMetadata.remove("item");
+        catalogMetadata.remove("items");
+        if (!itemDef.isEmpty()) {
+            log.debug("Reading brooklyn.catalog peer keys as item ('top-level syntax')");
+            Map<String,?> rootItem = MutableMap.of("item", itemDef);
+            String rootItemYaml = yaml;
+            YamlExtract yamlExtract = Yamls.getTextOfYamlAtPath(rootItemYaml, "brooklyn.catalog");
+            String match = yamlExtract.withOriginalIndentation(true).withKeyIncluded(true).getMatchedYamlTextOrWarn();
+            if (match!=null) {
+                if (rootItemYaml.startsWith(match)) rootItemYaml = Strings.removeFromStart(rootItemYaml, match);
+                else rootItemYaml = Strings.replaceAllNonRegex(rootItemYaml, "\n"+match, "");
+            }
+            collectCatalogItems("item:\n"+makeAsIndentedObject(rootItemYaml), rootItem, result, catalogMetadata);
         }
+        
+        return result;
+    }
 
-        final String id = (String) catalog.getMaybe("id").orNull();
-        final String version = Strings.toString(catalog.getMaybe("version").orNull());
-        final String symbolicName = (String) catalog.getMaybe("symbolicName").orNull();
-        final String name = (String) catalog.getMaybe("name").orNull();
-        final String displayName = (String) catalog.getMaybe("displayName").orNull();
-        final String description = (String) catalog.getMaybe("description").orNull();
-        final String iconUrl = (String) catalog.getMaybe("iconUrl").orNull();
-        final String iconUrlUnderscore = (String) catalog.getMaybe("icon_url").orNull();
-        final String deprecated = (String) catalog.getMaybe("deprecated").orNull();
+    @SuppressWarnings("unchecked")
+    private void collectCatalogItems(String sourceYaml, Map<?,?> itemMetadata, List<CatalogItemDtoAbstract<?, ?>> result, Map<?,?> parentMetadata) {
+
+        if (sourceYaml==null) sourceYaml = new Yaml().dump(itemMetadata);
+
+        Map<Object,Object> catalogMetadata = MutableMap.builder().putAll(parentMetadata).putAll(itemMetadata).build();
+        
+        // brooklyn.libraries we treat specially, to append the list, with the child's list preferred in classloading order
+        // `libraries` is supported in some places as a legacy syntax; it should always be `brooklyn.libraries` for new apps
+        // TODO in 0.8.0 require brooklyn.libraries, don't allow "libraries" on its own
+        List<?> librariesNew = MutableList.copyOf(getFirstAs(itemMetadata, List.class, "brooklyn.libraries", "libraries").orNull());
+        Collection<CatalogBundle> libraryBundlesNew = CatalogItemDtoAbstract.parseLibraries(librariesNew);
+        
+        List<?> librariesCombined = MutableList.copyOf(librariesNew)
+            .appendAll(getFirstAs(parentMetadata, List.class, "brooklyn.libraries", "libraries").orNull());
+        if (!librariesCombined.isEmpty())
+            catalogMetadata.put("brooklyn.libraries", librariesCombined);
+        Collection<CatalogBundle> libraryBundles = CatalogItemDtoAbstract.parseLibraries(librariesCombined);
+
+        // TODO as this may take a while if downloading, the REST call should be async
+        CatalogUtils.installLibraries(mgmt, libraryBundlesNew);
+        
+        Object items = catalogMetadata.remove("items");
+        Object item = catalogMetadata.remove("item");
+
+        if (items!=null) {
+            int count = 0;
+            for (Map<?,?> i: ((List<Map<?,?>>)items)) {
+                collectCatalogItems(Yamls.getTextOfYamlAtPath(sourceYaml, "items", count).getMatchedYamlTextOrWarn(), 
+                    i, result, catalogMetadata);
+                count++;
+            }
+        }
+        
+        if (item==null) return;
+
+        // now look at the actual item, first correcting the sourceYaml and interpreting the catalog metadata
+        String itemYaml = Yamls.getTextOfYamlAtPath(sourceYaml, "item").getMatchedYamlTextOrWarn();
+        if (itemYaml!=null) sourceYaml = itemYaml;
+        else sourceYaml = new Yaml().dump(item);
+        
+        CatalogItemType itemType = TypeCoercions.coerce(getFirstAs(catalogMetadata, Object.class, "itemType", "item_type").orNull(), CatalogItemType.class);
+        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, "<load>:0", libraryBundles);
+
+        String id = getFirstAs(catalogMetadata, String.class, "id").orNull();
+        String version = getFirstAs(catalogMetadata, String.class, "version").orNull();
+        String symbolicName = getFirstAs(catalogMetadata, String.class, "symbolicName").orNull();
+        String displayName = getFirstAs(catalogMetadata, String.class, "displayName").orNull();
+        String name = getFirstAs(catalogMetadata, String.class, "name").orNull();
 
         if ((Strings.isNonBlank(id) || Strings.isNonBlank(symbolicName)) && 
                 Strings.isNonBlank(displayName) &&
@@ -529,145 +633,359 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             log.warn("Name property will be ignored due to the existence of displayName and at least one of id, symbolicName");
         }
 
-        final String catalogSymbolicName;
-        if (Strings.isNonBlank(symbolicName)) {
-            catalogSymbolicName = symbolicName;
-        } else if (Strings.isNonBlank(id)) {
-            if (Strings.isNonBlank(id) && CatalogUtils.looksLikeVersionedId(id)) {
-                catalogSymbolicName = CatalogUtils.getIdFromVersionedId(id);
+        PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, loader, result).reconstruct();
+        if (!planInterpreter.isResolved()) {
+            throw Exceptions.create("Could not resolve item "
+                + (Strings.isNonBlank(id) ? id : Strings.isNonBlank(symbolicName) ? symbolicName : Strings.isNonBlank(name) ? name : "<no-name>")
+                + ":\n"+sourceYaml, planInterpreter.getErrors());
+        }
+        itemType = planInterpreter.getCatalogItemType();
+        Map<?, ?> itemAsMap = planInterpreter.getItem();
+        // the "plan yaml" includes the services: ... or brooklyn.policies: ... outer key,
+        // as opposed to the rawer { type: xxx } map without that outer key which is valid as item input
+        // TODO this plan yaml is needed for subsequent reconstruction; would be nicer if it weren't! 
+
+        // if symname not set, infer from: id, then name, then item id, then item name
+        if (Strings.isBlank(symbolicName)) {
+            if (Strings.isNonBlank(id)) {
+                if (CatalogUtils.looksLikeVersionedId(id)) {
+                    symbolicName = CatalogUtils.getIdFromVersionedId(id);
+                } else {
+                    symbolicName = id;
+                }
+            } else if (Strings.isNonBlank(name)) {
+                if (CatalogUtils.looksLikeVersionedId(name)) {
+                    symbolicName = CatalogUtils.getIdFromVersionedId(name);
+                } else {
+                    symbolicName = name;
+                }
             } else {
-                catalogSymbolicName = id;
+                symbolicName = setFromItemIfUnset(symbolicName, itemAsMap, "id");
+                symbolicName = setFromItemIfUnset(symbolicName, itemAsMap, "name");
+                if (Strings.isBlank(symbolicName)) {
+                    log.error("Can't infer catalog item symbolicName from the following plan:\n" + sourceYaml);
+                    throw new IllegalStateException("Can't infer catalog item symbolicName from catalog item metadata");
+                }
             }
-        } else if (Strings.isNonBlank(name)) {
-            catalogSymbolicName = name;
-        } else if (Strings.isNonBlank(plan.getName())) {
-            catalogSymbolicName = plan.getName();
-        } else if (plan.getServices().size()==1) {
-            Service svc = Iterables.getOnlyElement(plan.getServices());
-            if (Strings.isBlank(svc.getServiceType())) {
-                throw new IllegalStateException("CAMP service type not expected to be missing for " + svc);
-            }
-            catalogSymbolicName = svc.getServiceType();
-        } else {
-            log.error("Can't infer catalog item symbolicName from the following plan:\n" + yaml);
-            throw new IllegalStateException("Can't infer catalog item symbolicName from catalog item description");
         }
 
-        final String catalogVersion;
+        // if version not set, infer from: id, then from name, then item version
         if (CatalogUtils.looksLikeVersionedId(id)) {
-            catalogVersion = CatalogUtils.getVersionFromVersionedId(id);
-            if (version != null  && !catalogVersion.equals(version)) {
-                throw new IllegalArgumentException("Discrepency between version set in id " + catalogVersion + " and version property " + version);
+            String versionFromId = CatalogUtils.getVersionFromVersionedId(id);
+            if (versionFromId != null && Strings.isNonBlank(version) && !versionFromId.equals(version)) {
+                throw new IllegalArgumentException("Discrepency between version set in id " + versionFromId + " and version property " + version);
             }
-        } else if (Strings.isNonBlank(version)) {
-            catalogVersion = version;
-        } else {
-            log.warn("No version specified for catalog item " + catalogSymbolicName + ". Using default value.");
-            catalogVersion = null;
+            version = versionFromId;
+        }
+        if (Strings.isBlank(version)) {
+            if (CatalogUtils.looksLikeVersionedId(name)) {
+                version = CatalogUtils.getVersionFromVersionedId(name);
+            } else if (Strings.isBlank(version)) {
+                version = setFromItemIfUnset(version, itemAsMap, "version");
+                if (version==null) {
+                    log.warn("No version specified for catalog item " + symbolicName + ". Using default value.");
+                    version = null;
+                }
+            }
+        }
+        
+        // if not set, ID can come from symname:version, failing that, from the plan.id, failing that from the sym name
+        if (Strings.isBlank(id)) {
+            // let ID be inferred, especially from name, to support style where only "name" is specified, with inline version
+            if (Strings.isNonBlank(symbolicName) && Strings.isNonBlank(version)) {
+                id = symbolicName + ":" + version;
+            }
+            id = setFromItemIfUnset(id, itemAsMap, "id");
+            if (Strings.isBlank(id)) {
+                if (Strings.isNonBlank(symbolicName)) {
+                    id = symbolicName;
+                } else {
+                    log.error("Can't infer catalog item id from the following plan:\n" + sourceYaml);
+                    throw new IllegalStateException("Can't infer catalog item id from catalog item metadata");
+                }
+            }
         }
 
-        final String catalogDisplayName;
-        if (Strings.isNonBlank(displayName)) {
-            catalogDisplayName = displayName;
-        } else if (Strings.isNonBlank(name)) {
-            catalogDisplayName = name;
-        } else if (Strings.isNonBlank(plan.getName())) {
-            catalogDisplayName = plan.getName();
-        } else {
-            catalogDisplayName = null;
+        if (Strings.isBlank(displayName)) {
+            if (Strings.isNonBlank(name)) displayName = name;
+            displayName = setFromItemIfUnset(displayName, itemAsMap, "name");
         }
 
-        final String catalogDescription;
-        if (Strings.isNonBlank(description)) {
-            catalogDescription = description;
-        } else if (Strings.isNonBlank(plan.getDescription())) {
-            catalogDescription = plan.getDescription();
-        } else {
-            catalogDescription = null;
-        }
+        String description = getFirstAs(catalogMetadata, String.class, "description").orNull();
+        description = setFromItemIfUnset(description, itemAsMap, "description");
 
-        final String catalogIconUrl;
-        if (Strings.isNonBlank(iconUrl)) {
-            catalogIconUrl = iconUrl;
-        } else if (Strings.isNonBlank(iconUrlUnderscore)) {
-            catalogIconUrl = iconUrlUnderscore;
-        } else {
-            catalogIconUrl = null;
-        }
+        // icon.url is discouraged, but kept for legacy compatibility; should deprecate this
+        final String catalogIconUrl = getFirstAs(catalogMetadata, String.class, "iconUrl", "icon_url", "icon.url").orNull();
 
+        final String deprecated = getFirstAs(catalogMetadata, String.class, "deprecated").orNull();
         final Boolean catalogDeprecated = Boolean.valueOf(deprecated);
 
-        CatalogUtils.installLibraries(mgmt, libraries);
-
-        String versionedId = CatalogUtils.getVersionedId(catalogSymbolicName, catalogVersion);
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, versionedId, libraries);
-        AbstractBrooklynObjectSpec<?, ?> spec = createSpec(catalogSymbolicName, plan, loader);
-
-        CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(spec, catalogSymbolicName, catalogVersion)
-            .libraries(libraries)
-            .displayName(catalogDisplayName)
-            .description(catalogDescription)
+        // run again now that we know the ID
+        planInterpreter = new PlanInterpreterGuessingType(id, item, sourceYaml, itemType, loader, result).reconstruct();
+        if (!planInterpreter.isResolved()) {
+            throw new IllegalStateException("Could not resolve plan once id and itemType are known (recursive reference?): "+sourceYaml);
+        }
+        String sourcePlanYaml = planInterpreter.getPlanYaml();
+        
+        CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(itemType, symbolicName, version)
+            .libraries(libraryBundles)
+            .displayName(displayName)
+            .description(description)
+            .deprecated(catalogDeprecated)
             .iconUrl(catalogIconUrl)
-            .plan(yaml)
+            .plan(sourcePlanYaml)
             .build();
 
         dto.setManagementContext((ManagementContextInternal) mgmt);
-        return dto;
+        result.add(dto);
     }
 
-    private AbstractBrooklynObjectSpec<?,?> createSpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
-        if (isPolicyPlan(plan)) {
-            return createPolicySpec(plan, loader);
-        } else if (isLocationPlan(plan)) {
-            return createLocationSpec(plan, loader);
-        } else {
-            return createEntitySpec(symbolicName, plan, loader);
+    private String setFromItemIfUnset(String oldValue, Map<?,?> item, String fieldAttr) {
+        if (Strings.isNonBlank(oldValue)) return oldValue;
+        if (item!=null) {
+            Object newValue = item.get(fieldAttr);
+            if (newValue instanceof String && Strings.isNonBlank((String)newValue)) 
+                return (String)newValue;
         }
+        return oldValue;
     }
 
-    private CatalogItemBuilder<?> createItemBuilder(AbstractBrooklynObjectSpec<?, ?> spec, String itemId, String version) {
-        if (spec instanceof EntitySpec) {
-            if (isApplicationSpec((EntitySpec<?>)spec)) {
-                return CatalogItemBuilder.newTemplate(itemId, version);
+    
+    private class PlanInterpreterGuessingType {
+
+        final String id;
+        final Map<?,?> item;
+        final String itemYaml;
+        final BrooklynClassLoadingContext loader;
+        final List<CatalogItemDtoAbstract<?, ?>> itemsDefinedSoFar;
+        
+        CatalogItemType catalogItemType;
+        String planYaml;
+        @SuppressWarnings("unused")
+        DeploymentPlan plan;
+        AbstractBrooklynObjectSpec<?,?> spec;
+        boolean resolved = false;
+        List<Exception> errors = MutableList.of();
+        
+        public PlanInterpreterGuessingType(@Nullable String id, Object item, String itemYaml, @Nullable CatalogItemType optionalCiType, 
+                BrooklynClassLoadingContext loader, List<CatalogItemDtoAbstract<?,?>> itemsDefinedSoFar) {
+            // ID is useful to prevent recursive references (currently for entities only)
+            this.id = id;
+            
+            if (item instanceof String) {
+                // if just a string supplied, wrap as map
+                this.item = MutableMap.of("type", item);
+                this.itemYaml = "type:\n"+makeAsIndentedObject(itemYaml);                
             } else {
-                return CatalogItemBuilder.newEntity(itemId, version);
+                this.item = (Map<?,?>)item;
+                this.itemYaml = itemYaml;
             }
-        } else if (spec instanceof PolicySpec) {
-            return CatalogItemBuilder.newPolicy(itemId, version);
-        } else if (spec instanceof LocationSpec) {
-            return CatalogItemBuilder.newLocation(itemId, version);
-        } else {
-            throw new IllegalStateException("Unknown spec type " + spec.getClass().getName() + " (" + spec + ")");
+            this.catalogItemType = optionalCiType;
+            this.loader = loader;
+            this.itemsDefinedSoFar = itemsDefinedSoFar;
+        }
+
+        public PlanInterpreterGuessingType reconstruct() {
+            if (catalogItemType==CatalogItemType.TEMPLATE) {
+                // template *must* be explicitly defined, and if so, none of the other calls apply
+                attemptType(null, CatalogItemType.TEMPLATE);
+                
+            } else {
+                attemptType(null, CatalogItemType.ENTITY);
+
+                attemptType("services", CatalogItemType.ENTITY);
+                attemptType(POLICIES_KEY, CatalogItemType.POLICY);
+                attemptType(LOCATIONS_KEY, CatalogItemType.LOCATION);
+            }
+            
+            if (!resolved && catalogItemType==CatalogItemType.TEMPLATE) {
+                // anything goes, for an explicit template, because we can't easily recurse into the types
+                planYaml = itemYaml;
+                resolved = true;
+            }
+            
+            return this;
+        }
+        
+        public boolean isResolved() { return resolved; }
+        
+        /** Returns potentially useful errors encountered while guessing types. 
+         * May only be available where the type is known. */
+        public List<Exception> getErrors() {
+            return errors;
+        }
+        
+        public CatalogItemType getCatalogItemType() {
+            return catalogItemType; 
+        }
+        
+        public String getPlanYaml() {
+            return planYaml;
+        }
+        
+        private boolean attemptType(String key, CatalogItemType candidateCiType) {
+            if (resolved) return false;
+            if (catalogItemType!=null && catalogItemType!=candidateCiType) return false;
+            
+            final String candidateYaml;
+            if (key==null) candidateYaml = itemYaml;
+            else {
+                if (item.containsKey(key))
+                    candidateYaml = itemYaml;
+                else
+                    candidateYaml = key + ":\n" + makeAsIndentedList(itemYaml);
+            }
+            // first look in collected items, if a key is given
+            String type = (String) item.get("type");
+            String version = null;
+            if (CatalogUtils.looksLikeVersionedId(type)) {
+                version = CatalogUtils.getVersionFromVersionedId(type);
+                type = CatalogUtils.getIdFromVersionedId(type);
+            }
+            if (type!=null && key!=null) {
+                for (CatalogItemDtoAbstract<?,?> candidate: itemsDefinedSoFar) {
+                    if (type.equals(candidate.getSymbolicName()) || type.equals(candidate.getId())) {
+                        if (version==null || version.equals(candidate.getVersion())) {
+                            // matched - exit
+                            catalogItemType = candidateCiType;
+                            planYaml = candidateYaml;
+                            resolved = true;
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            // then try parsing plan - this will use loader
+            try {
+                DeploymentPlan candidatePlan = makePlanFromYaml(candidateYaml);
+                spec = createSpec(id, candidateCiType, candidatePlan, loader);
+                if (spec!=null) {
+                    catalogItemType = candidateCiType;
+                    plan = candidatePlan;
+                    planYaml = candidateYaml;
+                    resolved = true;
+                }
+                return true;
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                // record the error if we have reason to expect this guess to succeed
+                if (item.containsKey("services") && (candidateCiType==CatalogItemType.ENTITY || candidateCiType==CatalogItemType.TEMPLATE)) {
+                    // explicit services supplied, so plan should have been parseable for an entity or a a service
+                    errors.add(e);
+                } else if (catalogItemType!=null && key!=null) {
+                    // explicit itemType supplied, so plan should be parseable in the cases where we're given a key
+                    // (when we're not given a key, the previous block should apply)
+                    errors.add(e);
+                } else {
+                    // all other cases, the error is probably due to us not getting the type right, ignore it
+                    if (log.isTraceEnabled())
+                        log.trace("Guessing type of plan, it looks like it isn't "+candidateCiType+"/"+key+": "+e);
+                }
+            }
+            
+            // finally try parsing a cut-down plan, in case there is a nested reference to a newly defined catalog item
+            if (type!=null && key!=null) {
+                try {
+                    String cutDownYaml = key + ":\n" + makeAsIndentedList("type: "+type);
+                    DeploymentPlan candidatePlan = makePlanFromYaml(cutDownYaml);
+                    Object cutdownSpec = createSpec(id, candidateCiType, candidatePlan, loader);
+                    if (cutdownSpec!=null) {
+                        catalogItemType = candidateCiType;
+                        planYaml = candidateYaml;
+                        resolved = true;
+                    }
+                    return true;
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                }
+            }
+            
+            return false;
+        }
+        public Map<?,?> getItem() {
+            return item;
         }
     }
-
-    private boolean isApplicationSpec(EntitySpec<?> spec) {
-        return !Boolean.TRUE.equals(spec.getConfig().get(EntityManagementUtils.WRAPPER_APP_MARKER));
+    
+    private String makeAsIndentedList(String yaml) {
+        String[] lines = yaml.split("\n");
+        lines[0] = "- "+lines[0];
+        for (int i=1; i<lines.length; i++)
+            lines[i] = "  " + lines[i];
+        return Strings.join(lines, "\n");
     }
 
-    private boolean isPolicyPlan(DeploymentPlan plan) {
-        return plan.getCustomAttributes().containsKey(POLICIES_KEY);
+    private String makeAsIndentedObject(String yaml) {
+        String[] lines = yaml.split("\n");
+        for (int i=0; i<lines.length; i++)
+            lines[i] = "  " + lines[i];
+        return Strings.join(lines, "\n");
     }
 
-    private boolean isLocationPlan(DeploymentPlan plan) {
-        return plan.getCustomAttributes().containsKey(LOCATIONS_KEY);
+    private CatalogItemBuilder<?> createItemBuilder(CatalogItemType itemType, String itemId, String version) {
+        Preconditions.checkNotNull(itemType, "itemType required");
+        switch (itemType) {
+        case ENTITY: return CatalogItemBuilder.newEntity(itemId, version);
+        case TEMPLATE: return CatalogItemBuilder.newTemplate(itemId, version);
+        case POLICY: return CatalogItemBuilder.newPolicy(itemId, version);
+        case LOCATION: return CatalogItemBuilder.newLocation(itemId, version);
+        }
+        throw new IllegalStateException("Unexpected itemType: "+itemType);
     }
+
+    // these kept as their logic may prove useful; Apr 2015
+//    private boolean isApplicationSpec(EntitySpec<?> spec) {
+//        return !Boolean.TRUE.equals(spec.getConfig().get(EntityManagementUtils.WRAPPER_APP_MARKER));
+//    }
+//
+//    private boolean isEntityPlan(DeploymentPlan plan) {
+//        return plan!=null && !plan.getServices().isEmpty() || !plan.getArtifacts().isEmpty();
+//    }
+//    
+//    private boolean isPolicyPlan(DeploymentPlan plan) {
+//        return !isEntityPlan(plan) && plan.getCustomAttributes().containsKey(POLICIES_KEY);
+//    }
+//
+//    private boolean isLocationPlan(DeploymentPlan plan) {
+//        return !isEntityPlan(plan) && plan.getCustomAttributes().containsKey(LOCATIONS_KEY);
+//    }
 
     private DeploymentPlan makePlanFromYaml(String yaml) {
         CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
         return camp.pdp().parseDeploymentPlan(Streams.newReaderWithContents(yaml));
     }
 
+    //------------------------
+    
     @Override
     public CatalogItem<?,?> addItem(String yaml) {
         return addItem(yaml, false);
     }
 
     @Override
+    public List<? extends CatalogItem<?,?>> addItems(String yaml) {
+        return addItems(yaml, false);
+    }
+
+    @Override
     public CatalogItem<?,?> addItem(String yaml, boolean forceUpdate) {
+        return Iterables.getOnlyElement(addItems(yaml, forceUpdate));
+    }
+    
+    @Override
+    public List<? extends CatalogItem<?,?>> addItems(String yaml, boolean forceUpdate) {
         log.debug("Adding manual catalog item to "+mgmt+": "+yaml);
         checkNotNull(yaml, "yaml");
-        CatalogItemDtoAbstract<?,?> itemDto = getAbstractCatalogItem(yaml);
+        List<CatalogItemDtoAbstract<?, ?>> result = collectCatalogItems(yaml);
+        // do this at the end for atomic updates; if there are intra-yaml references, we handle them specially
+        for (CatalogItemDtoAbstract<?, ?> item: result) {
+            addItemDto(item, forceUpdate);
+        }
+        return result;
+    }
+    
+    private CatalogItem<?,?> addItemDto(CatalogItemDtoAbstract<?, ?> itemDto, boolean forceUpdate) {
         checkItemNotExists(itemDto, forceUpdate);
 
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();

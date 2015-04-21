@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -60,6 +61,7 @@ import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.CatalogTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
@@ -96,7 +98,6 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     static Set<String> missingIcons = MutableSet.of();
     
-    @SuppressWarnings("unchecked")
     @Override
     public Response create(String yaml) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.ADD_CATALOG_ITEM, yaml)) {
@@ -104,39 +105,24 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
         
-        CatalogItem<?,?> item;
+        Iterable<? extends CatalogItem<?, ?>> items; 
         try {
-            item = brooklyn().getCatalog().addItem(yaml);
+            items = brooklyn().getCatalog().addItems(yaml);
         } catch (IllegalArgumentException e) {
             return Response.status(Status.BAD_REQUEST)
                     .type(MediaType.APPLICATION_JSON)
                     .entity(ApiError.of(e))
                     .build();
         }
-        String itemId = item.getId();
-        log.info("REST created catalog item: "+item);
 
-        // FIXME configurations/ not supported
-        switch (item.getCatalogItemType()) {
-        case TEMPLATE:
-            return Response.created(URI.create("applications/" + itemId + "/" + item.getVersion()))
-                    .entity(CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) item))
-                    .build();
-        case ENTITY:
-            return Response.created(URI.create("entities/" + itemId + "/" + item.getVersion()))
-                    .entity(CatalogTransformer.catalogEntitySummary(brooklyn(), (CatalogItem<? extends Entity, EntitySpec<?>>) item))
-                    .build();
-        case POLICY:
-            return Response.created(URI.create("policies/" + itemId))
-                    .entity(CatalogTransformer.catalogPolicySummary(brooklyn(), (CatalogItem<? extends Policy, PolicySpec<?>>) item))
-                    .build();
-        case LOCATION:
-            return Response.created(URI.create("locations/" + itemId + "/" + item.getVersion()))
-                    .entity(CatalogTransformer.catalogLocationSummary(brooklyn(), (CatalogItem<? extends Location, LocationSpec<?>>) item))
-                    .build();
-        default:
-            throw new IllegalStateException("Unsupported catalog item type "+item.getCatalogItemType()+": "+item);
+        log.info("REST created catalog items: "+items);
+
+        Map<String,Object> result = MutableMap.of();
+        
+        for (CatalogItem<?,?> item: items) {
+            result.put(item.getId(), CatalogTransformer.catalogItemSummary(brooklyn(), item));
         }
+        return Response.status(Status.CREATED).entity(result).build();
     }
 
     @Override
@@ -223,17 +209,17 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public List<CatalogEntitySummary> listEntities(String regex, String fragment) {
-        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_ENTITY, regex, fragment);
-        return cast(result, CatalogEntitySummary.class);
+    public List<CatalogEntitySummary> listEntities(String regex, String fragment, boolean allVersions) {
+        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_ENTITY, regex, fragment, allVersions);
+        return castList(result, CatalogEntitySummary.class);
     }
 
     @Override
-    public List<CatalogItemSummary> listApplications(String regex, String fragment) {
+    public List<CatalogItemSummary> listApplications(String regex, String fragment, boolean allVersions) {
         Predicate<CatalogItem<Application, EntitySpec<? extends Application>>> filter =
                 Predicates.and(CatalogPredicates.<Application,EntitySpec<? extends Application>>deprecated(false),
                         CatalogPredicates.IS_TEMPLATE);
-        return getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment);
+        return getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment, allVersions);
     }
 
     @Override
@@ -286,9 +272,9 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public List<CatalogPolicySummary> listPolicies(String regex, String fragment) {
-        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_POLICY, regex, fragment);
-        return cast(result, CatalogPolicySummary.class);
+    public List<CatalogPolicySummary> listPolicies(String regex, String fragment, boolean allVersions) {
+        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_POLICY, regex, fragment, allVersions);
+        return castList(result, CatalogPolicySummary.class);
     }
 
     @Override
@@ -328,9 +314,9 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public List<CatalogLocationSummary> listLocations(String regex, String fragment) {
-        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_LOCATION, regex, fragment);
-        return cast(result, CatalogLocationSummary.class);
+    public List<CatalogLocationSummary> listLocations(String regex, String fragment, boolean allVersions) {
+        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(CatalogPredicates.IS_LOCATION, regex, fragment, allVersions);
+        return castList(result, CatalogLocationSummary.class);
     }
 
     @Override
@@ -370,13 +356,15 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private <T,SpecT> List<CatalogItemSummary> getCatalogItemSummariesMatchingRegexFragment(Predicate<CatalogItem<T,SpecT>> type, String regex, String fragment) {
+    private <T,SpecT> List<CatalogItemSummary> getCatalogItemSummariesMatchingRegexFragment(Predicate<CatalogItem<T,SpecT>> type, String regex, String fragment, boolean allVersions) {
         List filters = new ArrayList();
         filters.add(type);
         if (Strings.isNonEmpty(regex))
             filters.add(CatalogPredicates.xml(StringPredicates.containsRegex(regex)));
         if (Strings.isNonEmpty(fragment))
             filters.add(CatalogPredicates.xml(StringPredicates.containsLiteralIgnoreCase(fragment)));
+        if (!allVersions)
+            filters.add(CatalogPredicates.isBestVersion(mgmt()));
         
         filters.add(CatalogPredicates.entitledToSee(mgmt()));
 
@@ -464,7 +452,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     // TODO Move to an appropriate utility class?
     @SuppressWarnings("unchecked")
-    private static <T> List<T> cast(List<? super T> list, Class<T> elementType) {
+    private static <T> List<T> castList(List<? super T> list, Class<T> elementType) {
         List<T> result = Lists.newArrayList();
         for (Object element : list) {
             result.add((T) element);

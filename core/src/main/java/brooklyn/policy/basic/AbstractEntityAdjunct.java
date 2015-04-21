@@ -40,6 +40,7 @@ import brooklyn.config.ConfigMap;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
@@ -58,6 +59,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
@@ -74,6 +76,10 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
 
     private boolean _legacyNoConstructionInit;
 
+    /**
+     * @deprecated since 0.7.0; leftover properties are put into config, since when coming from yaml this is normal.
+     */
+    @Deprecated
     protected Map<String,Object> leftoverProperties = Maps.newLinkedHashMap();
 
     protected transient ExecutionContext execution;
@@ -168,6 +174,17 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
             Preconditions.checkArgument(flags.get("displayName") instanceof CharSequence, "'displayName' property should be a string");
             setDisplayName(flags.remove("displayName").toString());
         }
+        
+        // set leftover flags should as config items; particularly useful when these have come from a brooklyn.config map 
+        for (Object flag: flags.keySet()) {
+            ConfigKey<Object> key = ConfigKeys.newConfigKey(Object.class, Strings.toString(flag));
+            if (config().getRaw(key).isPresent()) {
+                log.warn("Config '"+flag+"' on "+this+" conflicts with key already set; ignoring");
+            } else {
+                config().set(key, flags.get(flag));
+            }
+        }
+        
         return this;
     }
     
@@ -289,7 +306,10 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     }
     
     protected <K> K getRequiredConfig(ConfigKey<K> key) {
-        return checkNotNull(config().get(key), key.getName());
+        K result = config().get(key);
+        if (result==null) 
+            throw new NullPointerException("Value required for '"+key.getName()+"' in "+this);
+        return result;
     }
 
     @Override

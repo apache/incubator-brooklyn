@@ -84,7 +84,7 @@ import com.google.common.collect.Sets;
  * it goes through the following steps:
  * 
  * <ol>
- *   <li>Call {@link BrooklynCatalog#addItem(String)}
+ *   <li>Call {@link BrooklynCatalog#addItems(String)}
  *     <ol>
  *       <li>This automatically calls {@link #updateDefinedLocation(CatalogItem)}
  *       <li>A LocationDefinition is creating, using as its id the {@link CatalogItem#getSymbolicName()}.

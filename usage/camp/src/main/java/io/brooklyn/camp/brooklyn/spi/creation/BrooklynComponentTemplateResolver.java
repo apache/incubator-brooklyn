@@ -56,6 +56,7 @@ import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
@@ -209,20 +210,57 @@ public class BrooklynComponentTemplateResolver {
     }
 
     /** resolves the spec, updating the loader if a catalog item is loaded */
-    protected <T extends Entity> EntitySpec<T> resolveSpec() {
+    protected <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredCatalogTypes) {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
 
-        EntitySpec<T> spec = createSpec();
+        EntitySpec<T> spec = createSpec(encounteredCatalogTypes);
         populateSpec(spec);
 
         return spec;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected <T extends Entity> EntitySpec<T> createSpec() {
-        Class<T> type = (Class<T>) loadEntityClass();
+    protected <T extends Entity> EntitySpec<T> createSpec(Set<String> encounteredCatalogTypes) {
+        CatalogItem<Entity, EntitySpec<?>> item = getServiceTypeResolver().getCatalogItem(this, getDeclaredType());
+        if (encounteredCatalogTypes==null) encounteredCatalogTypes = MutableSet.of();
+        
+        //Take the symoblicName part of the catalog item only for recursion detection to prevent
+        //cross referencing of different versions. Not interested in non-catalog item types.
+        //Prevent catalog items self-referencing even if explicitly different version.
+        boolean firstOccurrence = (item == null || encounteredCatalogTypes.add(item.getSymbolicName()));
+        boolean recursiveButTryJava = !firstOccurrence;
 
+        // - Load a java class from current loader (item == null || entityResolver.isJavaTypePrefix())
+        // - Load a java class specified in an old-style catalog item (item != null && item.getJavaType() != null)
+        //   Old-style catalog items (can be defined in catalog.xml only) don't have structure, only a single type, so
+        //   they are loaded as a simple java type, only taking the class name from the catalog item instead of the
+        //   type value in the YAML. Classpath entries in the item are also used (through the catalog root classloader).
+        if (item == null || item.getJavaType() != null || isJavaTypePrefix()) {
+            return createSpecFromJavaType();
+
+        // Same as above case, but this time force java type loading (either as plain class or through an old-style
+        // catalog item, since we have already loaded a class item with the same name as the type value.
+        } else if (recursiveButTryJava) {
+            if (tryLoadEntityClass().isAbsent()) {
+                throw new IllegalStateException("Recursive reference to " + item + " (and cannot be resolved as a Java type)");
+            }
+            return createSpecFromJavaType();
+
+        // Only case that's left is a catalog item with YAML content - try to parse it recursively
+        // including it's OSGi bundles in the loader classpath.
+        } else {
+            // TODO perhaps migrate to catalog.createSpec ?
+            EntitySpec<?> spec = BrooklynAssemblyTemplateInstantiator.resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
+            spec.catalogItemId(item.getId());
+            
+            return (EntitySpec<T>)spec;
+        }
+    }
+    
+    protected <T extends Entity> EntitySpec<T> createSpecFromJavaType() {
+        Class<T> type = (Class<T>) loadEntityClass();
+        
         EntitySpec<T> spec;
         if (type.isInterface()) {
             spec = EntitySpec.create(type);
@@ -256,17 +294,15 @@ public class BrooklynComponentTemplateResolver {
 
         Object childrenObj = attrs.getStringKey("brooklyn.children");
         if (childrenObj != null) {
+            // Creating a new set of encounteredCatalogTypes means that this won't check things recursively;
+            // but we are looking at children so we probably *should* be resetting the recursive list we've looked at;
+            // (but see also, a previous comment here which suggested otherwise? - Apr 2015)
             Set<String> encounteredCatalogTypes = MutableSet.of();
 
             Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
             for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                BrooklynAssemblyTemplateInstantiator instantiator = new BrooklynAssemblyTemplateInstantiator();
-                // TODO: Creating a new set of encounteredCatalogTypes prevents the recursive definition check in
-                // BrooklynAssemblyTemplateInstantiator.resolveSpec from correctly determining if a YAML entity is
-                // defined recursively. However, the number of overrides of newInstance, and the number of places
-                // calling populateSpec make it difficult to pass encounteredCatalogTypes in as a parameter
-                EntitySpec<? extends Entity> childSpec = instantiator.resolveSpec(entityResolver, encounteredCatalogTypes);
+                EntitySpec<? extends Entity> childSpec = BrooklynAssemblyTemplateInstantiator.resolveSpec(ResourceUtils.create(this), entityResolver, encounteredCatalogTypes);
                 spec.child(childSpec);
             }
         }
@@ -411,7 +447,7 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec();
+                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(null);
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);

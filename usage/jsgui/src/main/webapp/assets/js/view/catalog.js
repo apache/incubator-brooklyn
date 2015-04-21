@@ -24,7 +24,7 @@ define([
     "text!tpl/catalog/details-generic.html",
     "text!tpl/catalog/details-location.html",
     "text!tpl/catalog/add-catalog-entry.html",
-    "text!tpl/catalog/add-entity.html",
+    "text!tpl/catalog/add-yaml.html",
     "text!tpl/catalog/add-location.html",
     "text!tpl/catalog/nav-entry.html",
 
@@ -32,7 +32,7 @@ define([
 ], function(_, $, Backbone, Brooklyn,
         Location, Entity,
         CatalogPageHtml, DetailsEntityHtml, DetailsGenericHtml, LocationDetailsHtml,
-        AddCatalogEntryHtml, AddEntityHtml, AddLocationHtml, EntryHtml) {
+        AddCatalogEntryHtml, AddYamlHtml, AddLocationHtml, EntryHtml) {
 
     // Holds the currently active details type, e.g. applications, policies. Bit of a workaround
     // to share the active view with all instances of AccordionItemView, so clicking the 'reload
@@ -130,15 +130,21 @@ define([
         render: function (initialView) {
             this.$el.html(this.template());
             if (initialView) {
+                if (initialView == "entity") initialView = "yaml";
+                
                 this.$("[data-context='"+initialView+"']").addClass("active");
                 this.showFormForType(initialView)
             }
             return this;
         },
+        clearWithHtml: function(template) {
+            if (this.contextView) this.contextView.close();
+            this.context = undefined;
+            this.$(".btn").removeClass("active");
+            this.$("#catalog-add-form").html(template);
+        },
         beforeClose: function () {
-            if (this.contextView) {
-                this.contextView.close();
-            }
+            if (this.contextView) this.contextView.close();
         },
         showContext: function(event) {
             var $event = $(event.currentTarget);
@@ -152,13 +158,13 @@ define([
         },
         showFormForType: function (type) {
             this.context = type;
-            if (type == "entity") {
-                this.contextView = newEntityForm(this.options.parent);
+            if (type == "yaml" || type == "entity") {
+                this.contextView = newYamlForm(this, this.options.parent);
             } else if (type == "location") {
-                this.contextView = newLocationForm(this.options.parent);
+                this.contextView = newLocationForm(this, this.options.parent);
             } else if (type !== undefined) {
                 console.log("unknown catalog type " + type);
-                this.showFormForType("entity");
+                this.showFormForType("yaml");
                 return;
             }
             Backbone.history.navigate("/v1/catalog/new/" + type);
@@ -166,11 +172,10 @@ define([
         }
     });
 
-    function newEntityForm(parent) {
+    function newYamlForm(addView, addViewParent) {
         return new Brooklyn.view.Form({
-            template: _.template(AddEntityHtml),
+            template: _.template(AddYamlHtml),
             onSubmit: function (model) {
-                console.log("Submit entity", model.get("yaml"));
                 var submitButton = this.$(".catalog-submit-button");
                 // "loading" is an indicator to Bootstrap, not a string to display
                 submitButton.button("loading");
@@ -185,9 +190,13 @@ define([
                     .done(function (data, status, xhr) {
                         // Can extract location of new item with:
                         //model.url = Brooklyn.util.pathOf(xhr.getResponseHeader("Location"));
-                        self.close();  // one of the calls below should draw a different view
-                        parent.loadAccordionItem("entities", data.id);
-                        parent.loadAccordionItem("applications", data.id);
+                        if (_.size(data)==0) {
+                          addView.clearWithHtml( "No items supplied." );
+                        } else {
+                          addView.clearWithHtml( "Added: "+_.escape(_.keys(data).join(", ")) 
+                            + (_.size(data)==1 ? ". Loading..." : "") );
+                          addViewParent.loadAnyAccordionItem(_.size(data)==1 ? _.keys(data)[0] : undefined);
+                        }
                     })
                     .fail(function (xhr, status, error) {
                         submitButton.button("reset");
@@ -201,7 +210,7 @@ define([
     }
 
     // Could adapt to edit existing locations too.
-    function newLocationForm(parent) {
+    function newLocationForm(addView, addViewParent) {
         // Renders with config key list
         var body = new (Backbone.View.extend({
             beforeClose: function() {
@@ -235,10 +244,9 @@ define([
                 submitButton.button("loading");
                 location.set("config", configKeys);
                 location.save()
-                    .done(function (newModel) {
-                        newModel = new Location.Model(newModel);
-                        self.close();  // the call below should draw a different view
-                        parent.loadAccordionItem("locations", newModel.id);
+                    .done(function (data) {
+                        addView.clearWithHtml( "Added: "+data.id+". Loading..." ); 
+                        addViewParent.loadAccordionItem("locations", data.id);
                     })
                     .fail(function (response) {
                         submitButton.button("reset");
@@ -264,7 +272,7 @@ define([
             this.model = model;
         },
         url: function() {
-            return "/v1/catalog/" + this.name;
+            return "/v1/catalog/" + this.name+"?allVersions=true";
         }
     });
 
@@ -507,6 +515,13 @@ define([
                 parent: this
             }).render(type);
             this.setDetailsView(newView);
+        },
+
+        loadAnyAccordionItem: function (id) {
+            this.loadAccordionItem("entities", id);
+            this.loadAccordionItem("applications", id);
+            this.loadAccordionItem("policies", id);
+            this.loadAccordionItem("locations", id);
         },
 
         loadAccordionItem: function (kind, id) {

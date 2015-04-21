@@ -94,6 +94,11 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
         return this;
     }
 
+    public CatalogItemBuilder<CatalogItemType> deprecated(boolean deprecated) {
+        dto.setDeprecated(deprecated);
+        return this;
+    }
+
     public CatalogItemBuilder<CatalogItemType> libraries(Collection<CatalogBundle> libraries) {
         dto.setLibraries(libraries);
         return this;

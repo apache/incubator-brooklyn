@@ -156,7 +156,7 @@ public class CampYamlLiteTest {
     public void testYamlServiceForCatalog() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
-        CatalogItem<?, ?> realItem = mgmt.getCatalog().addItem(Streams.readFullyString(getClass().getResourceAsStream("test-app-service-blueprint.yaml")));
+        CatalogItem<?, ?> realItem = Iterables.getOnlyElement(mgmt.getCatalog().addItems(Streams.readFullyString(getClass().getResourceAsStream("test-app-service-blueprint.yaml"))));
         Iterable<CatalogItem<Object, Object>> retrievedItems = mgmt.getCatalog()
                 .getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo("catalog-name")));
         
@@ -185,7 +185,7 @@ public class CampYamlLiteTest {
         String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
         String yaml = getSampleMyCatalogAppYaml(symbolicName, bundleUrl);
 
-        mgmt.getCatalog().addItem(yaml);
+        mgmt.getCatalog().addItems(yaml);
 
         assertMgmtHasSampleMyCatalogApp(symbolicName, bundleUrl);
     }
@@ -203,7 +203,7 @@ public class CampYamlLiteTest {
             CampPlatformWithJustBrooklynMgmt platform2 = new CampPlatformWithJustBrooklynMgmt(mgmt2);
             MockWebPlatform.populate(platform2, TestAppAssemblyInstantiator.class);
 
-            mgmt2.getCatalog().addItem(yaml);
+            mgmt2.getCatalog().addItems(yaml);
             String xml = ((BasicBrooklynCatalog) mgmt2.getCatalog()).toXmlString();
             ((BasicBrooklynCatalog) mgmt.getCatalog()).reset(CatalogDto.newDtoFromXmlContents(xml, "copy of temporary catalog"));
         } finally {

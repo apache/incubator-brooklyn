@@ -271,7 +271,7 @@ public class Exceptions {
         }
         if (exceptions.isEmpty()) {
             if (Strings.isBlank(prefix)) return new CompoundRuntimeException("(empty compound exception)", exceptions);
-            return new CompoundRuntimeException(prefix+": (empty compound exception)", exceptions);
+            return new CompoundRuntimeException(prefix, exceptions);
         }
         if (Strings.isBlank(prefix)) return new CompoundRuntimeException(exceptions.size()+" errors, including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
         return new CompoundRuntimeException(prefix+", "+exceptions.size()+" errors including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);

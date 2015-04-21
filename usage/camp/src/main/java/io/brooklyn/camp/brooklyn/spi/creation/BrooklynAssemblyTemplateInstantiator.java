@@ -93,7 +93,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
 
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
             loader, buildWrapperAppTemplate(template));
-        EntitySpec<? extends Application> app = resolver.resolveSpec();
+        EntitySpec<? extends Application> app = resolver.resolveSpec(null);
 
         // first build the children into an empty shell app
         List<EntitySpec<?>> childSpecs = buildTemplateServicesAsSpecs(loader, template, platform);
@@ -156,26 +156,18 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
-            EntitySpec<?> spec = resolveSpec(entityResolver, encounteredCatalogTypes);
+            EntitySpec<?> spec = resolveSpec(ResourceUtils.create(this), entityResolver, encounteredCatalogTypes);
 
             result.add(spec);
         }
         return result;
     }
 
-    protected EntitySpec<?> resolveSpec(
+    static EntitySpec<?> resolveSpec(ResourceUtils ru,
             BrooklynComponentTemplateResolver entityResolver,
             Set<String> encounteredCatalogTypes) {
-        ManagementContext mgmt = entityResolver.getLoader().getManagementContext();
-
         String brooklynType = entityResolver.getServiceTypeResolver().getBrooklynType(entityResolver.getDeclaredType());
         CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getServiceTypeResolver().getCatalogItem(entityResolver, entityResolver.getDeclaredType());
-
-        //Take the symoblicName part of the catalog item only for recursion detection to prevent
-        //cross referencing of different versions. Not interested in non-catalog item types.
-        //Prevent catalog items self-referencing even if explicitly different version.
-        boolean firstOccurrence = (item == null || encounteredCatalogTypes.add(item.getSymbolicName()));
-        boolean recursiveButTryJava = !firstOccurrence;
 
         if (log.isTraceEnabled()) log.trace("Building CAMP template services: type="+brooklynType+"; item="+item+"; loader="+entityResolver.getLoader()+"; encounteredCatalogTypes="+encounteredCatalogTypes);
 
@@ -183,11 +175,14 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         String protocol = Urls.getProtocol(brooklynType);
         if (protocol != null) {
             if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(protocol)) {
-                spec = tryResolveYamlURLReferenceSpec(brooklynType, entityResolver.getLoader(), encounteredCatalogTypes);
+                spec = tryResolveYamlUrlReferenceSpec(ru, brooklynType, entityResolver.getLoader(), encounteredCatalogTypes);
                 if (spec != null) {
                     entityResolver.populateSpec(spec);
                 }
             } else {
+                // TODO support https above
+                // TODO this will probably be logged if we refer to  chef:cookbook  or other service types which BCTR accepts;
+                // better would be to have BCTR supporting the calls above
                 log.warn("The reference " + brooklynType + " looks like an URL but the protocol " +
                         protocol + " isn't white listed (" + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + "). " +
                         "Will try to load it as catalog item or java type.");
@@ -195,42 +190,20 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
 
         if (spec == null) {
-            // - Load a java class from current loader (item == null || entityResolver.isJavaTypePrefix())
-            // - Load a java class specified in an old-style catalog item (item != null && item.getJavaType() != null)
-            //   Old-style catalog items (can be defined in catalog.xml only) don't have structure, only a single type, so
-            //   they are loaded as a simple java type, only taking the class name from the catalog item instead of the
-            //   type value in the YAML. Classpath entries in the item are also used (through the catalog root classloader).
-            if (item == null || item.getJavaType() != null || entityResolver.isJavaTypePrefix()) {
-                spec = entityResolver.resolveSpec();
-
-            // Same as above case, but this time force java type loading (either as plain class or through an old-style
-            // catalog item, since we have already loaded a class item with the same name as the type value.
-            } else if (recursiveButTryJava) {
-                if (entityResolver.tryLoadEntityClass().isAbsent()) {
-                    throw new IllegalStateException("Recursive reference to " + brooklynType + " (and cannot be resolved as a Java type)");
-                }
-                spec = entityResolver.resolveSpec();
-
-            // Only case that's left is a catalog item with YAML content - try to parse it recursively
-            // including it's OSGi bundles in the loader classpath.
-            } else {
-                //TODO migrate to catalog.createSpec
-                spec = resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
-                spec.catalogItemId(item.getId());
-                entityResolver.populateSpec(spec);
-            }
+            // load from java or yaml
+            spec = entityResolver.resolveSpec(encounteredCatalogTypes);
         }
 
         return spec;
     }
 
-    private EntitySpec<?> tryResolveYamlURLReferenceSpec(
+    private static EntitySpec<?> tryResolveYamlUrlReferenceSpec(
+            ResourceUtils ru,
             String brooklynType, BrooklynClassLoadingContext itemLoader,
             Set<String> encounteredCatalogTypes) {
         ManagementContext mgmt = itemLoader.getManagementContext();
         Reader yaml;
         try {
-            ResourceUtils ru = ResourceUtils.create(this);
             yaml = new InputStreamReader(ru.getResourceFromUrl(brooklynType), "UTF-8");
         } catch (Exception e) {
             log.warn("AssemblyTemplate type " + brooklynType + " which looks like a URL can't be fetched.", e);
@@ -247,7 +220,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
     }
 
-    private EntitySpec<?> resolveCatalogYamlReferenceSpec(
+    static EntitySpec<?> resolveCatalogYamlReferenceSpec(
             ManagementContext mgmt,
             CatalogItem<Entity, EntitySpec<?>> item,
             Set<String> encounteredCatalogTypes) {
@@ -259,7 +232,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return createNestedSpec(mgmt, encounteredCatalogTypes, input, itemLoader);
     }
 
-    private EntitySpec<?> createNestedSpec(ManagementContext mgmt,
+    private static EntitySpec<?> createNestedSpec(ManagementContext mgmt,
             Set<String> encounteredCatalogTypes, Reader input,
             BrooklynClassLoadingContext itemLoader) {
         CampPlatform platform = BrooklynServerConfig.getCampPlatform(mgmt).get();
@@ -271,7 +244,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         } finally {
             BrooklynLoaderTracker.unsetLoader(itemLoader);
         }
-        return createNestedSpec(at, platform, itemLoader, encounteredCatalogTypes);
+        return createNestedSpecStatic(at, platform, itemLoader, encounteredCatalogTypes);
     }
 
     @Override
@@ -280,6 +253,14 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             CampPlatform platform,
             BrooklynClassLoadingContext itemLoader,
             Set<String> encounteredCatalogTypes) {
+        return createNestedSpecStatic(template, platform, itemLoader, encounteredCatalogTypes);
+    }
+    
+    private static EntitySpec<?> createNestedSpecStatic(
+        AssemblyTemplate template,
+        CampPlatform platform,
+        BrooklynClassLoadingContext itemLoader,
+        Set<String> encounteredCatalogTypes) {
         // In case we want to allow multiple top-level entities in a catalog we need to think
         // about what it would mean to subsequently call buildChildrenEntitySpecs on the list of top-level entities!
         try {

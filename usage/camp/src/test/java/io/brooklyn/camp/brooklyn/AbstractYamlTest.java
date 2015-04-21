@@ -104,7 +104,7 @@ public abstract class AbstractYamlTest {
     }
     
     protected Entity createAndStartApplication(String... multiLineYaml) throws Exception {
-        return createAndStartApplication(join(multiLineYaml));
+        return createAndStartApplication(joinLines(multiLineYaml));
     }
     
     protected Entity createAndStartApplication(String input) throws Exception {
@@ -145,15 +145,15 @@ public abstract class AbstractYamlTest {
     }
 
     protected void addCatalogItem(Iterable<String> catalogYaml) {
-        addCatalogItem(join(catalogYaml));
+        addCatalogItem(joinLines(catalogYaml));
     }
 
     protected void addCatalogItem(String... catalogYaml) {
-        addCatalogItem(join(catalogYaml));
+        addCatalogItem(joinLines(catalogYaml));
     }
 
     protected void addCatalogItem(String catalogYaml) {
-        mgmt().getCatalog().addItem(catalogYaml, forceUpdate);
+        mgmt().getCatalog().addItems(catalogYaml, forceUpdate);
     }
 
     protected void deleteCatalogEntity(String catalogItem) {
@@ -164,11 +164,11 @@ public abstract class AbstractYamlTest {
         return LOG;
     }
 
-    private String join(Iterable<String> catalogYaml) {
+    private String joinLines(Iterable<String> catalogYaml) {
         return Joiner.on("\n").join(catalogYaml);
     }
 
-    private String join(String[] catalogYaml) {
+    private String joinLines(String[] catalogYaml) {
         return Joiner.on("\n").join(catalogYaml);
     }
 

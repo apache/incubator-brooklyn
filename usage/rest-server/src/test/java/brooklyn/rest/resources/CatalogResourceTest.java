@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
@@ -76,7 +77,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     @Test
     /** based on CampYamlLiteTest */
-    public void testRegisterCustomEntityWithBundleWhereEntityIsFromCoreAndIconFromBundle() {
+    public void testRegisterCustomEntityTopLevelSyntaxWithBundleWhereEntityIsFromCoreAndIconFromBundle() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String symbolicName = "my.catalog.entity.id";
@@ -127,7 +128,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     }
 
     @Test
-    public void testRegisterOSGiPolicy() {
+    public void testRegisterOsgiPolicyTopLevelSyntax() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String symbolicName = "my.catalog.policy.id";
@@ -146,8 +147,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "brooklyn.policies:\n"+
                 "- type: " + policyType;
 
-        CatalogPolicySummary entityItem = client().resource("/v1/catalog")
-                .post(CatalogPolicySummary.class, yaml);
+        CatalogPolicySummary entityItem = Iterables.getOnlyElement( client().resource("/v1/catalog")
+                .post(new GenericType<Map<String,CatalogPolicySummary>>() {}, yaml).values() );
 
         Assert.assertNotNull(entityItem.getPlanYaml());
         Assert.assertTrue(entityItem.getPlanYaml().contains(policyType));
@@ -158,6 +159,14 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testListAllEntities() {
+        List<CatalogEntitySummary> entities = client().resource("/v1/catalog/entities")
+                .get(new GenericType<List<CatalogEntitySummary>>() {});
+        assertTrue(entities.size() > 0);
+    }
+
+    @Test
+    public void testListAllEntitiesAsItem() {
+        // ensure things are happily downcasted and unknown properties ignored (e.g. sensors, effectors)
         List<CatalogItemSummary> entities = client().resource("/v1/catalog/entities")
                 .get(new GenericType<List<CatalogItemSummary>>() {});
         assertTrue(entities.size() > 0);
@@ -165,24 +174,24 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testFilterListOfEntitiesByName() {
-        List<CatalogItemSummary> entities = client().resource("/v1/catalog/entities")
-                .queryParam("fragment", "reDISclusTER").get(new GenericType<List<CatalogItemSummary>>() {});
+        List<CatalogEntitySummary> entities = client().resource("/v1/catalog/entities")
+                .queryParam("fragment", "reDISclusTER").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities.size(), 1);
 
         log.info("RedisCluster-like entities are: " + entities);
 
-        List<CatalogItemSummary> entities2 = client().resource("/v1/catalog/entities")
-                .queryParam("regex", "[Rr]ed.[sulC]+ter").get(new GenericType<List<CatalogItemSummary>>() {});
+        List<CatalogEntitySummary> entities2 = client().resource("/v1/catalog/entities")
+                .queryParam("regex", "[Rr]ed.[sulC]+ter").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities2.size(), 1);
 
         assertEquals(entities, entities2);
     
-        List<CatalogItemSummary> entities3 = client().resource("/v1/catalog/entities")
-                .queryParam("fragment", "bweqQzZ").get(new GenericType<List<CatalogItemSummary>>() {});
+        List<CatalogEntitySummary> entities3 = client().resource("/v1/catalog/entities")
+                .queryParam("fragment", "bweqQzZ").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities3.size(), 0);
 
-        List<CatalogItemSummary> entities4 = client().resource("/v1/catalog/entities")
-                .queryParam("regex", "bweq+z+").get(new GenericType<List<CatalogItemSummary>>() {});
+        List<CatalogEntitySummary> entities4 = client().resource("/v1/catalog/entities")
+                .queryParam("regex", "bweq+z+").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities4.size(), 0);
     }
 
@@ -215,7 +224,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testGetCatalogEntityIconDetails() throws IOException {
         String catalogItemId = "testGetCatalogEntityIconDetails";
-        addTestCatalogItem(catalogItemId);
+        addTestCatalogItemRedisAsEntity(catalogItemId);
         ClientResponse response = client().resource(URI.create("/v1/catalog/icon/" + catalogItemId + "/" + TEST_VERSION))
                 .get(ClientResponse.class);
         response.bufferEntity();
@@ -225,15 +234,16 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         Assert.assertNotNull(image);
     }
 
-    private void addTestCatalogItem(String catalogItemId) {
-        addTestCatalogItem(catalogItemId, TEST_VERSION, "brooklyn.entity.nosql.redis.RedisStore");
+    private void addTestCatalogItemRedisAsEntity(String catalogItemId) {
+        addTestCatalogItem(catalogItemId, null, TEST_VERSION, "brooklyn.entity.nosql.redis.RedisStore");
     }
 
-    private void addTestCatalogItem(String catalogItemId, String version, String service) {
+    private void addTestCatalogItem(String catalogItemId, String itemType, String version, String service) {
         String yaml =
                 "brooklyn.catalog:\n"+
                 "  id: " + catalogItemId + "\n"+
                 "  name: My Catalog App\n"+
+                (itemType!=null ? "  item_type: "+itemType+"\n" : "")+
                 "  description: My description\n"+
                 "  icon_url: classpath:///redis-logo.png\n"+
                 "  version: " + version + "\n"+
@@ -248,8 +258,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testListPolicies() {
-        Set<CatalogItemSummary> policies = client().resource("/v1/catalog/policies")
-                .get(new GenericType<Set<CatalogItemSummary>>() {});
+        Set<CatalogPolicySummary> policies = client().resource("/v1/catalog/policies")
+                .get(new GenericType<Set<CatalogPolicySummary>>() {});
 
         assertTrue(policies.size() > 0);
         CatalogItemSummary asp = null;
@@ -275,8 +285,9 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "- type: " + locationType);
 
         // Create location item
-        CatalogLocationSummary locationItem = client().resource("/v1/catalog")
-                .post(CatalogLocationSummary.class, yaml);
+        Map<String, CatalogLocationSummary> items = client().resource("/v1/catalog")
+                .post(new GenericType<Map<String,CatalogLocationSummary>>() {}, yaml);
+        CatalogLocationSummary locationItem = Iterables.getOnlyElement(items.values());
 
         Assert.assertNotNull(locationItem.getPlanYaml());
         Assert.assertTrue(locationItem.getPlanYaml().contains(locationType));
@@ -343,10 +354,10 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     public void testSetDeprecated() {
         String itemId = "my.catalog.item.id.for.deprecation";
         String serviceType = "brooklyn.entity.basic.BasicApplication";
-        addTestCatalogItem(itemId, TEST_VERSION, serviceType);
-        addTestCatalogItem(itemId, "2.0", serviceType);
-        List<CatalogItemSummary> applications = client().resource("/v1/catalog/applications")
-                .queryParam("fragment", itemId).get(new GenericType<List<CatalogItemSummary>>() {});
+        addTestCatalogItem(itemId, "template", TEST_VERSION, serviceType);
+        addTestCatalogItem(itemId, "template", "2.0", serviceType);
+        List<CatalogEntitySummary> applications = client().resource("/v1/catalog/applications")
+                .queryParam("fragment", itemId).queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(applications.size(), 2);
         CatalogItemSummary summary0 = applications.get(0);
         CatalogItemSummary summary1 = applications.get(1);
@@ -359,8 +370,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
         assertEquals(getDeprecationResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
 
-        List<CatalogItemSummary> applicationsAfterDeprecation = client().resource("/v1/catalog/applications")
-                .queryParam("fragment", "basicapp").get(new GenericType<List<CatalogItemSummary>>() {});
+        List<CatalogEntitySummary> applicationsAfterDeprecation = client().resource("/v1/catalog/applications")
+                .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
 
         assertEquals(applicationsAfterDeprecation.size(), 1);
         assertTrue(applicationsAfterDeprecation.contains(summary1));
@@ -370,8 +381,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
         assertEquals(getUnDeprecationResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
 
-        List<CatalogItemSummary> applicationsAfterUnDeprecation = client().resource("/v1/catalog/applications")
-                .queryParam("fragment", "basicapp").get(new GenericType<List<CatalogItemSummary>>() {});
+        List<CatalogEntitySummary> applicationsAfterUnDeprecation = client().resource("/v1/catalog/applications")
+                .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
 
         assertEquals(applications, applicationsAfterUnDeprecation);
     }

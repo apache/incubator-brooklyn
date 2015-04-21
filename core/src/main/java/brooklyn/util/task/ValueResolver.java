@@ -265,7 +265,12 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
                 final Object vf = v;
                 Callable<Object> callable = new Callable<Object>() {
                     public Object call() throws Exception {
-                        return ((DeferredSupplier<?>) vf).get();
+                        try {
+                            Tasks.setBlockingDetails("Retrieving "+vf);
+                            return ((DeferredSupplier<?>) vf).get();
+                        } finally {
+                            Tasks.resetBlockingDetails();
+                        }
                     } };
                     
                 if (Boolean.TRUE.equals(embedResolutionInTask) || timeout!=null) {

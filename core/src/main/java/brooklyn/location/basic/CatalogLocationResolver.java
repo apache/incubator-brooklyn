@@ -39,6 +39,7 @@ import brooklyn.management.ManagementContext;
  */
 public class CatalogLocationResolver implements LocationResolver {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(CatalogLocationResolver.class);
 
     public static final String NAME = "brooklyn.catalog";
@@ -51,7 +52,7 @@ public class CatalogLocationResolver implements LocationResolver {
     }
     
     @Override
-    @SuppressWarnings({ "rawtypes" })
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public Location newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         String id = spec.substring(NAME.length()+1);
         CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(managementContext, id);

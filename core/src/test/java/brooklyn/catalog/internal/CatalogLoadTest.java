@@ -44,8 +44,10 @@ public class CatalogLoadTest {
         return ResourceUtils.create(this).getResourceAsString(file);
     }
 
+    // CAMP YAML parsing not available in core, so YAML catalog tests are in camp, e.g. CatalogYamlEntitiesTest 
+    
     @Test
-    public void testLoadCatalog() {
+    public void testLoadXmlCatalog() {
         CatalogDto catalog = (CatalogDto) serializer.fromString(
                 loadFile("classpath://brooklyn/catalog/internal/osgi-catalog.xml"));
         assertNotNull(catalog);

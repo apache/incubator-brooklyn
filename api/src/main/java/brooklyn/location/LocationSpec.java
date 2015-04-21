@@ -78,8 +78,11 @@ public class LocationSpec<T extends Location> extends AbstractBrooklynObjectSpec
      * original entity spec.
      */
     public static <T extends Location> LocationSpec<T> create(LocationSpec<T> spec) {
-        // FIXME Why can I not use LocationSpec<T>?
-        LocationSpec<?> result = create(spec.getType())
+        // need this to get LocationSpec<T> rather than LocationSpec<? extends T>
+        @SuppressWarnings("unchecked")
+        Class<T> exactType = (Class<T>)spec.getType();
+        
+        LocationSpec<T> result = create(exactType)
                 .displayName(spec.getDisplayName())
                 .tags(spec.getTags())
                 .configure(spec.getConfig())
@@ -176,7 +179,7 @@ public class LocationSpec<T extends Location> extends AbstractBrooklynObjectSpec
         return this;
     }
     
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <E> LocationSpec<T> extensions(Map<Class<?>, ?> extensions) {
         for (Map.Entry<Class<?>, ?> entry : extensions.entrySet()) {
             extension((Class)entry.getKey(), entry.getValue());

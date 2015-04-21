@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -32,6 +33,9 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BasicApplication;
+import brooklyn.entity.basic.BasicEntity;
+import brooklyn.entity.basic.ConfigKeys;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -144,7 +148,7 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
         String parentName = "parentId";
         String v1 = "0.1.0";
         String v2 = "0.2.0";
-        String expectedType = "brooklyn.entity.basic.BasicApplication";
+        String expectedType = BasicApplication.class.getName();
 
         addCatalogEntity(symbolicName, v1, expectedType);
         addCatalogEntity(symbolicName, v2);
@@ -163,7 +167,7 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
         String parentName = "parentId";
         String v1 = "0.1.0";
         String v2 = "0.2.0";
-        String expectedType = "brooklyn.entity.basic.BasicApplication";
+        String expectedType = BasicApplication.class.getName();
 
         addCatalogEntity(symbolicName, v1);
         addCatalogEntity(symbolicName, v2, expectedType);
@@ -176,6 +180,52 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
         assertEquals(app.getEntityType().getName(), expectedType);
     }
 
+    private void doTestVersionedReferenceJustAdded(boolean isVersionImplicitSyntax) throws Exception {
+        addCatalogItem(            "brooklyn.catalog:",
+            "  version: 0.9",
+            "  items:",
+            "  - id: referrent",
+            "    item:",
+            "      type: "+BasicEntity.class.getName(),
+            "  - id: referrent",
+            "    version: 1.1",
+            "    item:",
+            "      type: "+BasicEntity.class.getName(),
+            "      brooklyn.config: { foo: bar }",
+            "  - id: referrer",
+            "    version: 1.0",
+            "    item:",
+            (isVersionImplicitSyntax ? 
+                "      type: referrent:1.1" :
+                "      type: referrent\n" +
+                "      version: 1.1"));
+        
+        Iterable<CatalogItem<Object, Object>> items = catalog.getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo("referrer")));
+        Assert.assertEquals(Iterables.size(items), 1, "Wrong number of: "+items);
+        CatalogItem<Object, Object> item = Iterables.getOnlyElement(items);
+        Assert.assertEquals(item.getVersion(), "1.0");
+        
+        Entity app = createAndStartApplication(
+            "services:",
+            (isVersionImplicitSyntax ? 
+                "- type: referrer:1.0" :
+                "- type: referrer\n" +
+                "  version: 1.0") );
+        Entity child = Iterables.getOnlyElement(app.getChildren());
+        Assert.assertTrue(child instanceof BasicEntity, "Wrong child: "+child);
+        Assert.assertEquals(child.getConfig(ConfigKeys.newStringConfigKey("foo")), "bar");
+    }
+
+    @Test
+    public void testVersionedReferenceJustAddedExplicitVersion() throws Exception {
+        doTestVersionedReferenceJustAdded(false);
+    }
+    
+    @Test
+    public void testVersionedReferenceJustAddedImplicitVersionSyntax() throws Exception {
+        doTestVersionedReferenceJustAdded(true);
+    }
+    
     private void assertSingleCatalogItem(String symbolicName, String version) {
         Iterable<CatalogItem<Object, Object>> items = catalog.getCatalogItems(CatalogPredicates.symbolicName(Predicates.equalTo(symbolicName)));
         CatalogItem<Object, Object> item = Iterables.getOnlyElement(items);
@@ -184,7 +234,7 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
     }
     
     private void addCatalogEntity(String symbolicName, String version) {
-        addCatalogEntity(symbolicName, version, "brooklyn.entity.basic.BasicEntity");
+        addCatalogEntity(symbolicName, version, BasicEntity.class.getName());
     }
 
     private void addCatalogEntity(String symbolicName, String version, String type) {

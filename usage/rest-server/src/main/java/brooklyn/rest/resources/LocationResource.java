@@ -29,7 +29,6 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.CatalogItem;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.basic.LocationConfigKeys;
@@ -51,6 +50,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
+@SuppressWarnings("deprecation")
 @HaHotStateRequired
 public class LocationResource extends AbstractBrooklynRestResource implements LocationApi {
 
@@ -142,7 +142,7 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
               }
           }
 
-          CatalogItem<?, ?> item = brooklyn().getCatalog().addItem(Joiner.on("\n").join(yaml.build()));
+          brooklyn().getCatalog().addItems(Joiner.on("\n").join(yaml.build()));
           LocationDefinition l = brooklyn().getLocationRegistry().getDefinedLocationByName(name);
           return Response.created(URI.create(name))
                   .entity(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET))
