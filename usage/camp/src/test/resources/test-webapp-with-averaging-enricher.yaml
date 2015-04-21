@@ -1,0 +1,47 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# example showing how enrichers can be set 
+#
+name: test-webapp-with-averaging-enricher
+description: Testing many enrichers
+services:
+- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  initialSize: 3
+  location: localhost
+  
+  # define the web cluster, adding an averaging enricher to the cluster.
+  # this assumes the test fixture will set the "my.load" sensor on the member-specs in here. 
+  webClusterSpec:
+    $brooklyn:entitySpec:
+      type: brooklyn.entity.webapp.DynamicWebAppCluster
+      id: cluster
+      brooklyn.enrichers:
+      - type: brooklyn.enricher.basic.Aggregator
+        brooklyn.config:
+          enricher.sourceSensor: $brooklyn:sensor("my.load")
+          enricher.targetSensor: $brooklyn:sensor("my.load.averaged")
+          enricher.aggregating.fromMembers: true
+          transformation: average
+            
+  brooklyn.enrichers:
+  - type: brooklyn.enricher.basic.Propagator
+    brooklyn.config:
+      producer: $brooklyn:entity("cluster")
+      propagating:
+      - $brooklyn:sensor("my.load.averaged")

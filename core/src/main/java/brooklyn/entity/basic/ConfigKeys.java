@@ -235,10 +235,11 @@ public class ConfigKeys {
         public static final ConfigKey<Object> DEFAULT_VALUE = ConfigKeys.newConfigKey(Object.class, "defaultValue");
         
         public static ConfigKey<?> newInstance(ConfigBag keyDefs) {
-            // TODO dynamic typing - see TYPE key commented out above
             String typeName = Strings.toString(keyDefs.getStringKey("type"));
-            if (Strings.isNonBlank(typeName))
+            if (Strings.isNonBlank(typeName)) {
+                // TODO dynamic typing - see TYPE key commented out above; also see AddSensor.getType for type lookup
                 log.warn("Setting 'type' is not currently supported for dynamic config keys; ignoring in definition of "+keyDefs);
+            }
             
             Class<Object> type = Object.class;
             String name = keyDefs.get(NAME);

@@ -28,6 +28,8 @@ import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.Boxing;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
@@ -79,6 +81,9 @@ public class AddSensor<T> implements EntityInitializer {
     @SuppressWarnings("unchecked")
     protected Class<T> getType(String className) {
         try {
+            // TODO use OSGi loader (low priority however); also ensure that allows primitives
+            Maybe<Class<?>> primitive = Boxing.getPrimitiveType(className);
+            if (primitive.isPresent()) return (Class<T>) primitive.get();
             return (Class<T>) Class.forName(className);
         } catch (ClassNotFoundException e) {
             if (!className.contains(".")) {
