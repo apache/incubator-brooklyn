@@ -24,16 +24,22 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
+import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
 import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
+import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
+import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.Enricher;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 
@@ -240,7 +246,33 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         assertAttributeEquals(entity, Attributes.SERVICE_UP, true);
         assertAttributeEquals(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
     }
-        
+
+    @Test
+    public void testQuorumWithStringStates() {
+        final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntityWithoutEnrichers.class))
+                .configure(DynamicCluster.INITIAL_SIZE, 1));
+
+        RecordingSensorEventListener r = new RecordingSensorEventListener();
+        app.subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, r);
+
+        cluster.start(ImmutableList.of(new SimulatedLocation()));
+        EntityTestUtils.assertGroupSizeEqualsEventually(cluster, 1);
+
+        //manually set state to healthy as enrichers are disabled
+        EntityInternal child = (EntityInternal) cluster.getMembers().iterator().next();
+        child.setAttribute(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        child.setAttribute(Attributes.SERVICE_UP, Boolean.TRUE);
+
+        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+
+        //set untyped service state, the quorum check should be able to handle coercion
+        AttributeSensor<Object> stateSensor = Sensors.newSensor(Object.class, Attributes.SERVICE_STATE_ACTUAL.getName());
+        child.setAttribute(stateSensor, "running");
+
+        EntityTestUtils.assertAttributeEqualsContinually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+    }
+
     private static <T> void assertAttributeEqualsEventually(Entity x, AttributeSensor<T> sensor, T value) {
         try {
             EntityTestUtils.assertAttributeEqualsEventually(ImmutableMap.of("timeout", Duration.seconds(3)), x, sensor, value);

@@ -20,8 +20,10 @@ package brooklyn.enricher.basic;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,7 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -138,11 +141,26 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
         onUpdated();
     }
 
-    @SuppressWarnings("unchecked")
     public <T> Map<Entity,T> getValues(Sensor<T> sensor) {
+        Map<Entity, T> valuesCopy = copyValues(sensor);
+        return coerceValues(valuesCopy, sensor.getType());
+    }
+
+    private <T> Map<Entity, T> coerceValues(Map<Entity, T> values, Class<? super T> type) {
+        Map<Entity, T> typedValues = MutableMap.of();
+        for (Entry<Entity, T> entry : values.entrySet()) {
+            @SuppressWarnings("unchecked")
+            T typedValue = (T) TypeCoercions.coerce(entry.getValue(), type);
+            typedValues.put(entry.getKey(), typedValue);
+        }
+        return typedValues;
+    }
+
+    private <T> Map<Entity, T> copyValues(Sensor<T> sensor) {
         synchronized (values) {
+            @SuppressWarnings("unchecked")
             Map<Entity, T> sv = (Map<Entity, T>) values.get(sensor.getName());
-            if (sv==null) return ImmutableMap.of();
+            //use MutableMap because of potentially null values
             return MutableMap.copyOf(sv).asUnmodifiable();
         }
     }
