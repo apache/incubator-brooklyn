@@ -56,7 +56,6 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -237,19 +236,26 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         if (isVersion1()) {
             String vmArgsTemplate = processTemplate(entity.getConfig(RiakNode.RIAK_VM_ARGS_TEMPLATE_URL));
             String saveAsVmArgs = Urls.mergePaths(getRunDir(), "vm.args");
-            DynamicTasks.queueIfPossible(SshEffectorTasks.put(saveAsVmArgs).contents(vmArgsTemplate));
+            DynamicTasks.queue(SshEffectorTasks.put(saveAsVmArgs).contents(vmArgsTemplate));
             commands.add(sudo("mv " + saveAsVmArgs + " " + getRiakEtcDir()));
 
             String appConfigTemplate = processTemplate(entity.getConfig(RiakNode.RIAK_APP_CONFIG_TEMPLATE_URL));
             String saveAsAppConfig = Urls.mergePaths(getRunDir(), "app.config");
-            DynamicTasks.queueIfPossible(SshEffectorTasks.put(saveAsAppConfig).contents(appConfigTemplate));
+            DynamicTasks.queue(SshEffectorTasks.put(saveAsAppConfig).contents(appConfigTemplate));
             commands.add(sudo("mv " + saveAsAppConfig + " " + getRiakEtcDir()));
         } else {
             String templateUrl = osDetails.isMac() ? entity.getConfig(RiakNode.RIAK_CONF_TEMPLATE_URL_MAC) :
                     entity.getConfig(RiakNode.RIAK_CONF_TEMPLATE_URL_LINUX);
-            String riakConfTemplate = processTemplate(templateUrl);
+            String riakConfContent = processTemplate(templateUrl);
             String saveAsRiakConf = Urls.mergePaths(getRunDir(), "riak.conf");
-            DynamicTasks.queueIfPossible(SshEffectorTasks.put(saveAsRiakConf).contents(riakConfTemplate));
+
+            if(Strings.isNonBlank(entity.getConfig(RiakNode.RIAK_CONF_ADDITIONAL_CONTENT))) {
+                String additionalConfigContent = processTemplateContents(entity.getConfig(RiakNode.RIAK_CONF_ADDITIONAL_CONTENT));
+                riakConfContent += "\n## Brooklyn note: additional config\n";
+                riakConfContent += additionalConfigContent;
+            }
+
+            DynamicTasks.queue(SshEffectorTasks.put(saveAsRiakConf).contents(riakConfContent));
             commands.add(sudo("mv " + saveAsRiakConf + " " + getRiakEtcDir()));
         }
 

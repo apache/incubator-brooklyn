@@ -46,7 +46,7 @@ public interface RiakNode extends SoftwareProcess {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
-            "Version to install (Default 2.0.5)", "2.0.5");
+            "Version to install (Default 2.1.0)", "2.1.0");
 
     @SetFromFlag("optimizeNetworking")
     ConfigKey<Boolean> OPTIMIZE_HOST_NETWORKING  = ConfigKeys.newBooleanConfigKey("riak.networking.optimize", "Optimize host networking when running in a VM", Boolean.TRUE);
@@ -69,6 +69,9 @@ public interface RiakNode extends SoftwareProcess {
     ConfigKey<String> RIAK_CONF_TEMPLATE_URL_MAC = ConfigKeys.newStringConfigKey(
             "riak.riakConf.templateUrl.mac", "Template file (in freemarker format) for the app.config config file",
             "classpath://brooklyn/entity/nosql/riak/riak-mac.conf");
+
+    ConfigKey<String> RIAK_CONF_ADDITIONAL_CONTENT = ConfigKeys.newStringConfigKey(
+            "riak.riakConf.additionalContent", "Template file (in freemarker format) for setting up additional settings in the riak.conf file", "");
 
     @SetFromFlag("downloadUrlRhelCentos")
     AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL_RHEL_CENTOS = ConfigKeys.newTemplateSensorAndConfigKey("download.url.rhelcentos",
