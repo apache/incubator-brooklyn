@@ -54,6 +54,8 @@ public interface RiakCluster extends DynamicCluster {
 
     AttributeSensor<String> NODE_LIST = Sensors.newStringSensor("riak.cluster.nodeList", "List of nodes (including ports), comma separated");
 
+    AttributeSensor<String> NODE_LIST_PB_PORT = Sensors.newStringSensor("riak.cluster.nodeListPbPort", "List of nodes (including ports for riak db clients), comma separated");
+
     AttributeSensor<URI> RIAK_CONSOLE_URI = Attributes.MAIN_URI;
 
 }

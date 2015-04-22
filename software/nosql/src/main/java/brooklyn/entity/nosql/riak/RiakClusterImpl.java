@@ -182,13 +182,16 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
 
     private void calculateClusterAddresses() {
         List<String> addresses = Lists.newArrayList();
+        List<String> addressesPbPort = Lists.newArrayList();
         for (Entity entity : this.getMembers()) {
             if (entity instanceof RiakNode && entity.getAttribute(Attributes.SERVICE_UP)) {
                 RiakNode riakNode = (RiakNode) entity;
                 addresses.add(riakNode.getAttribute(Attributes.SUBNET_HOSTNAME) + ":" + riakNode.getAttribute(RiakNode.RIAK_WEB_PORT));
+                addressesPbPort.add(riakNode.getAttribute(Attributes.SUBNET_HOSTNAME) + ":" + riakNode.getAttribute(RiakNode.RIAK_PB_PORT));
             }
         }
         setAttribute(RiakCluster.NODE_LIST, Joiner.on(",").join(addresses));
+        setAttribute(RiakCluster.NODE_LIST_PB_PORT, Joiner.on(",").join(addressesPbPort));
     }
 
     protected boolean belongsInServerPool(Entity member) {

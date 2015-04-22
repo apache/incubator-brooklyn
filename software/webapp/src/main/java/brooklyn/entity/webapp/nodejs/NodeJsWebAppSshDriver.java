@@ -103,6 +103,7 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
                         BashCommands.installPackage("software-properties-common python-software-properties python g++ make"),
                         BashCommands.sudo("add-apt-repository ppa:chris-lea/node.js"))))
                 .add(BashCommands.installPackage(MutableMap.of("yum", "git nodejs npm", "apt", "git-core nodejs"), null))
+                .add("mkdir \"$HOME/.npm\"")
                 .add(BashCommands.sudo("npm install -g n"))
                 .add(BashCommands.sudo("n " + getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION)))
                 .build();
@@ -116,11 +117,6 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
     public void customize() {
         List<String> commands = Lists.newLinkedList();
 
-        List<String> packages = getEntity().getConfig(NodeJsWebAppService.NODE_PACKAGE_LIST);
-        if (packages != null && packages.size() > 0) {
-            commands.add(BashCommands.sudo("npm install -g " + Joiner.on(' ').join(packages)));
-        }
-
         String gitRepoUrl = getEntity().getConfig(NodeJsWebAppService.APP_GIT_REPOSITORY_URL);
         String archiveUrl = getEntity().getConfig(NodeJsWebAppService.APP_ARCHIVE_URL);
         String appName = getEntity().getConfig(NodeJsWebAppService.APP_NAME);
@@ -128,10 +124,17 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
             throw new IllegalStateException("Only one of Git or archive URL must be set for " + getEntity());
         } else if (Strings.isNonBlank(gitRepoUrl)) {
             commands.add(String.format("git clone %s %s", gitRepoUrl, appName));
+            commands.add(String.format("cd %s", appName));
         } else if (Strings.isNonBlank(archiveUrl)) {
             ArchiveUtils.deploy(archiveUrl, getMachine(), getRunDir());
         } else {
             throw new IllegalStateException("At least one of Git or archive URL must be set for " + getEntity());
+        }
+
+        commands.add(BashCommands.ifFileExistsElse1("package.json", "npm install"));
+        List<String> packages = getEntity().getConfig(NodeJsWebAppService.NODE_PACKAGE_LIST);
+        if (packages != null && packages.size() > 0) {
+            commands.add(BashCommands.sudo("npm install -g " + Joiner.on(' ').join(packages)));
         }
 
         newScript(CUSTOMIZING)
