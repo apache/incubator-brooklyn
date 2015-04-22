@@ -180,7 +180,6 @@ public class ServiceStateLogic {
         /** static only; not for instantiation */
         private ServiceNotUpLogic() {}
         
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public static final EnricherSpec<?> newEnricherForServiceUpIfNotUpIndicatorsEmpty() {
             return Enrichers.builder()
                 .transforming(SERVICE_NOT_UP_INDICATORS).<Object>publishing(Attributes.SERVICE_UP)
@@ -247,6 +246,7 @@ public class ServiceStateLogic {
             if (uniqueTag==null) uniqueTag = DEFAULT_ENRICHER_UNIQUE_TAG;
         }
         
+        @Override
         public void setEntity(EntityLocal entity) {
             super.setEntity(entity);
             if (suppressDuplicates==null) {
@@ -409,11 +409,13 @@ public class ServiceStateLogic {
             Preconditions.checkNotNull(getKeyForMapSensor());
         }
 
+        @Override
         protected void setEntityLoadingTargetConfig() {
             if (getConfig(TARGET_SENSOR)!=null)
                 throw new IllegalArgumentException("Must not set "+TARGET_SENSOR+" when using "+this);
         }
 
+        @Override
         public void setEntity(EntityLocal entity) {
             super.setEntity(entity);
             if (suppressDuplicates==null) {
@@ -472,19 +474,24 @@ public class ServiceStateLogic {
             Map<Entity, Boolean> values = getValues(SERVICE_UP);
             List<Entity> violators = MutableList.of();
             boolean ignoreNull = getConfig(IGNORE_ENTITIES_WITH_SERVICE_UP_NULL);
+            Set<Lifecycle> ignoreStates = getConfig(IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES);
             int entries=0;
+            int numUp=0;
             for (Map.Entry<Entity, Boolean> state: values.entrySet()) {
                 if (ignoreNull && state.getValue()==null)
                     continue;
                 entries++;
-                if (!Boolean.TRUE.equals(state.getValue())) {
+                Lifecycle entityState = state.getKey().getAttribute(SERVICE_STATE_ACTUAL);
+                
+                if (Boolean.TRUE.equals(state.getValue())) numUp++;
+                else if (!ignoreStates.contains(entityState)) {
                     violators.add(state.getKey());
                 }
             }
 
             QuorumCheck qc = getConfig(UP_QUORUM_CHECK);
             if (qc!=null) {
-                if (qc.isQuorate(entries-violators.size(), entries))
+                if (qc.isQuorate(numUp, violators.size()+numUp))
                     // quorate
                     return null;
 

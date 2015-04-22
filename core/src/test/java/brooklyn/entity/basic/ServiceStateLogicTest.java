@@ -24,9 +24,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
-import brooklyn.entity.basic.QuorumCheck.QuorumChecks;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
@@ -40,6 +38,7 @@ import brooklyn.policy.Enricher;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
+import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 
@@ -57,6 +56,7 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
 
     protected TestEntity entity;
 
+    @Override
     protected void setUpApp() {
         super.setUpApp();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
@@ -165,13 +165,21 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         
-        // if we then put a not-up indicator on the TestEntity, it publishes false, so app also is false, and thus stopped
+        // if we then put a not-up indicator on the TestEntity, it publishes false, but app is still up. State
+        // won't propagate due to it's SERVICE_STATE_ACTUAL (null) being in IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES
         ServiceNotUpLogic.updateNotUpIndicator(entity, INDICATOR_KEY_1, "We're also pretending to block service up");
+        assertAttributeEqualsEventually(entity, Attributes.SERVICE_UP, false);
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        // the entity still has no opinion about its state
+        assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, null);
+        
+        // switching the entity state to one not in IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES will propagate the up state
+        ServiceStateLogic.setExpectedState(entity, Lifecycle.RUNNING);
         assertAttributeEqualsEventually(entity, Attributes.SERVICE_UP, false);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, false);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
-        // but the entity still has no opinion about its state
-        assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, null);
+
         
         // if the entity expects to be stopped, it will report stopped
         ServiceStateLogic.setExpectedState(entity, Lifecycle.STOPPED);
@@ -191,7 +199,7 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         // if we change the state quorum check for the app to be "all are healthy and at least one running" *then* it shows stopped
         // (normally this would be done in `initEnrichers` of course)
         Enricher appChildrenBasedEnricher = EntityAdjuncts.tryFindWithUniqueTag(app.getEnrichers(), ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG).get();
-        appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK, QuorumChecks.allAndAtLeastOne());
+        appChildrenBasedEnricher.config().set(ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK, QuorumChecks.allAndAtLeastOne());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
         // if entity is expected running, then it will show running because service is up; this is reflected at app and at entity
@@ -207,7 +215,7 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         assertAttributeEqualsContinually(app, Attributes.SERVICE_UP, true);
         
         // if we change its up-quorum to atLeastOne then state becomes stopped (because there is no expected state; has not been started)
-        appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumChecks.atLeastOne());
+        appChildrenBasedEnricher.config().set(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumChecks.atLeastOne());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, false);
         
@@ -218,7 +226,7 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
         // restoring up-quorum to "atLeastOneUnlessEmpty" causes it to become RUNNING, because happy with empty
-        appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
+        appChildrenBasedEnricher.config().set(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
         // but running-quorum is still allAndAtLeastOne, so remains on-fire
         assertAttributeEqualsContinually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
@@ -229,13 +237,13 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         assertAttributeEqualsContinually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
         // tell it not to ignore null values for children states, and it will go onfire (but still be service up)
-        appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES, 
+        appChildrenBasedEnricher.config().set(ComputeServiceIndicatorsFromChildrenAndMembers.IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES, 
             ImmutableSet.<Lifecycle>of());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         assertAttributeEquals(app, Attributes.SERVICE_UP, true);
         
         // tell it not to ignore null values for service up and it will go service down
-        appChildrenBasedEnricher.setConfig(ComputeServiceIndicatorsFromChildrenAndMembers.IGNORE_ENTITIES_WITH_SERVICE_UP_NULL, false);
+        appChildrenBasedEnricher.config().set(ComputeServiceIndicatorsFromChildrenAndMembers.IGNORE_ENTITIES_WITH_SERVICE_UP_NULL, false);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, false);
         
         // set the entity to RUNNING and the app will be healthy again
