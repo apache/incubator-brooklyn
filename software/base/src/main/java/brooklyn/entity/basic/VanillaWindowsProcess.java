@@ -24,7 +24,7 @@ import brooklyn.entity.proxying.ImplementedBy;
 @ImplementedBy(VanillaWindowsProcessImpl.class)
 public interface VanillaWindowsProcess extends AbstractVanillaProcess {
     ConfigKey<String> LAUNCH_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("launch.powershell.command",
-            "command to run to launch the process", "./start.sh");
+            "command to run to launch the process");
     ConfigKey<String> CHECK_RUNNING_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("checkRunning.powershell.command",
             "command to determine whether the process is running");
     ConfigKey<String> STOP_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("stop.powershell.command",

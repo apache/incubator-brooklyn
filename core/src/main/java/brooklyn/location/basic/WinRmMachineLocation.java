@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +42,7 @@ import brooklyn.util.flags.SetFromFlag;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
@@ -151,21 +153,19 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public static String getDefaultUserMetadataString() {
+        // Using an encoded command obviates the need to escape
+        String unencodePowershell =
+                "$RDP = Get-WmiObject -Class Win32_TerminalServiceSetting -ComputerName $env:computername -Namespace root\\CIMV2\\TerminalServices -Authentication PacketPrivacy\r\n" +
+                "$RDP.SetAllowTSConnections(1,1)\r\n" +
+                "Set-ExecutionPolicy Unrestricted";
+        String encoded = new String(Base64.encodeBase64(unencodePowershell.getBytes(Charsets.UTF_16LE)));
         return "winrm quickconfig -q & " +
                 "winrm set winrm/config/service/auth @{Basic=\"true\"} & " +
                 "winrm set winrm/config/client @{AllowUnencrypted=\"true\"} & " +
                 "winrm set winrm/config/service @{AllowUnencrypted=\"true\"} & " +
                 "netsh advfirewall firewall add rule name=RDP dir=in protocol=tcp localport=3389 action=allow profile=any & " +
                 "netsh advfirewall firewall add rule name=WinRM dir=in protocol=tcp localport=5985 action=allow profile=any & " +
-                // Using an encoded command necessitates the need to escape. The unencoded command is as follows:
-                // $RDP = Get-WmiObject -Class Win32_TerminalServiceSetting -ComputerName $env:computername -Namespace root\CIMV2\TerminalServices -Authentication PacketPrivacy
-                // $Result = $RDP.SetAllowTSConnections(1,1)
-                "powershell -EncodedCommand JABSAEQAUAAgAD0AIABHAGUAdAAtAFcAbQBpAE8AYgBqAGUAYwB0ACAALQBDAGwAYQBzAHMAI" +
-                        "ABXAGkAbgAzADIAXwBUAGUAcgBtAGkAbgBhAGwAUwBlAHIAdgBpAGMAZQBTAGUAdAB0AGkAbgBnACAALQBDAG8AbQBwA" +
-                        "HUAdABlAHIATgBhAG0AZQAgACQAZQBuAHYAOgBjAG8AbQBwAHUAdABlAHIAbgBhAG0AZQAgAC0ATgBhAG0AZQBzAHAAY" +
-                        "QBjAGUAIAByAG8AbwB0AFwAQwBJAE0AVgAyAFwAVABlAHIAbQBpAG4AYQBsAFMAZQByAHYAaQBjAGUAcwAgAC0AQQB1A" +
-                        "HQAaABlAG4AdABpAGMAYQB0AGkAbwBuACAAUABhAGMAawBlAHQAUAByAGkAdgBhAGMAeQANAAoAJABSAGUAcwB1AGwAd" +
-                        "AAgAD0AIAAkAFIARABQAC4AUwBlAHQAQQBsAGwAbwB3AFQAUwBDAG8AbgBuAGUAYwB0AGkAbwBuAHMAKAAxACwAMQApAA==";
+                "powershell -EncodedCommand " + encoded;
         /* TODO: Find out why scripts with new line characters aren't working on AWS. The following appears as if it *should*
            work but doesn't - the script simply isn't run. By connecting to the machine via RDP, you can get the script
            from 'http://169.254.169.254/latest/user-data', and running it at the command prompt works, but for some
