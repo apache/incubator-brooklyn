@@ -163,6 +163,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     private final BrooklynStorage storage;
 
     private volatile boolean running = true;
+    protected boolean startupComplete = false;
 
     protected Maybe<URI> uri = Maybe.absent();
 
@@ -200,6 +201,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     @Override
     public boolean isRunning() {
         return running;
+    }
+    
+    @Override
+    public boolean isStartupComplete() {
+        return startupComplete;
     }
 
     @Override

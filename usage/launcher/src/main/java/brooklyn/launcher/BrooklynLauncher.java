@@ -158,6 +158,7 @@ public class BrooklynLauncher {
     private StopWhichAppsOnShutdown stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
     
     private Function<ManagementContext,Void> customizeManagement = null;
+    private Function<BrooklynLauncher,Void> customizeInitialCatalog = null;
     
     private PersistMode persistMode = PersistMode.DISABLED;
     private HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.DISABLED;
@@ -420,6 +421,11 @@ public class BrooklynLauncher {
         return this;
     }
 
+    public BrooklynLauncher customizeInitialCatalog(Function<BrooklynLauncher, Void> customizeInitialCatalog) {
+        this.customizeInitialCatalog = customizeInitialCatalog;
+        return this;
+    }
+
     public BrooklynLauncher shutdownOnExit(boolean val) {
         LOG.warn("Call to deprecated `shutdownOnExit`", new Throwable("source of deprecated call"));
         stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
@@ -555,13 +561,22 @@ public class BrooklynLauncher {
         // Create the management context
         initManagementContext();
 
+        // Start webapps as soon as mgmt context available -- can use them to detect progress of other processes
+        if (startWebApps) {
+            try {
+                startWebApps();
+            } catch (Exception e) {
+                handleSubsystemStartupError(ignoreWebErrors, "core web apps", e);
+            }
+        }
+        
         // Add a CAMP platform
         campPlatform = new BrooklynCampPlatformLauncherNoServer()
                 .useManagementContext(managementContext)
                 .launch()
                 .getCampPlatform();
         // TODO start CAMP rest _server_ in the below (at /camp) ?
-        
+
         try {
             initPersistence();
             startPersistence();
@@ -569,34 +584,34 @@ public class BrooklynLauncher {
             handleSubsystemStartupError(ignorePersistenceErrors, "persistence", e);
         }
 
+        try {
+            if (customizeInitialCatalog!=null)
+                customizeInitialCatalog.apply(this);
+        } catch (Exception e) {
+            handleSubsystemStartupError(true, "initial catalog", e);
+        }
+
         // Create the locations. Must happen after persistence is started in case the
         // management context's catalog is loaded from persisted state. (Location
         // resolution uses the catalog's classpath to scan for resolvers.)
         locations.addAll(managementContext.getLocationRegistry().resolve(locationSpecs));
 
-        // Start the web-console
-        if (startWebApps) {
-            try {
-                startWebApps();
-            } catch (Exception e) {
-                handleSubsystemStartupError(ignoreWebErrors, "web apps", e);
-            }
-        }
-
         try {
             createApps();
             startApps();
         } catch (Exception e) {
-            handleSubsystemStartupError(ignoreAppErrors, "managed apps", e);
+            handleSubsystemStartupError(ignoreAppErrors, "brooklyn autostart apps", e);
         }
 
         if (startBrooklynNode) {
             try {
                 startBrooklynNode();
             } catch (Exception e) {
-                handleSubsystemStartupError(ignoreWebErrors, "web apps", e);
+                handleSubsystemStartupError(true, "brooklyn node / self entity", e);
             }
         }
+        
+        ((LocalManagementContext)managementContext).noteStartupComplete();
 
         return this;
     }

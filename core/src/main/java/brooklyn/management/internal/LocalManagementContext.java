@@ -412,4 +412,8 @@ public class LocalManagementContext extends AbstractManagementContext {
     public void removePropertiesReloadListener(PropertiesReloadListener listener) {
         reloadListeners.remove(listener);
     }
+
+    public void noteStartupComplete() {
+        startupComplete = true;
+    }
 }

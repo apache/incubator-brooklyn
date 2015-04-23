@@ -135,6 +135,11 @@ public class ManagementContextMock implements ManagementContext {
     }
 
     @Override
+    public boolean isStartupComplete() {
+        throw fail();
+    }
+    
+    @Override
     public LocationRegistry getLocationRegistry() {
         throw fail();
     }

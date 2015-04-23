@@ -32,6 +32,7 @@ import brooklyn.management.ManagementContextInjectable;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
@@ -52,12 +53,16 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
     private BrooklynRestResourceUtils brooklynRestResourceUtils;
     private ObjectMapper mapper;
 
-    public synchronized ManagementContext mgmt() {
-        if (managementContext!=null) return managementContext;
+    public ManagementContext mgmt() {
+        return mgmtMaybe().get();
+    }
+    
+    protected synchronized Maybe<ManagementContext> mgmtMaybe() {
+        if (managementContext!=null) return Maybe.of(managementContext);
         managementContext = (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
-        if (managementContext!=null) return managementContext;
+        if (managementContext!=null) return Maybe.of(managementContext);
         
-        throw new IllegalStateException("ManagementContext not supplied for Brooklyn Jersey Resource "+this);
+        return Maybe.absent("ManagementContext not available for Brooklyn Jersey Resource "+this);
     }
     
     public void injectManagementContext(ManagementContext managementContext) {

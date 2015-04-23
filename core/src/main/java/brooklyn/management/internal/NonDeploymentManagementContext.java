@@ -164,6 +164,14 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         // Assume that the real management context has not been terminated, so always true
         return true;
     }
+    
+    @Override
+    public boolean isStartupComplete() {
+        // This mgmt context is only used by items who are not yet fully started.
+        // It's slightly misleading as this does not refer to the main mgmt context.
+        // OTOH it probably won't be used.  TBC.  -Alex, Apr 2015
+        return false;
+    }
 
     @Override
     public InternalEntityFactory getEntityFactory() {

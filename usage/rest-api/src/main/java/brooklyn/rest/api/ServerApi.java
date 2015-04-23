@@ -82,6 +82,16 @@ public interface ServerApi {
     @ApiOperation(value = "Return version identifier information for this Brooklyn instance", responseClass = "String", multiValueResponse = false)
     public VersionSummary getVersion();
 
+    @GET
+    @Path("/up")
+    @ApiOperation(value = "Returns whether this server is up - fully started, and not stopping, though it may have errors")
+    public boolean isUp();
+    
+    @GET
+    @Path("/healthy")
+    @ApiOperation(value = "Returns whether this node is healthy - fully started, not stopping, and no errors")
+    public boolean isHealthy();
+    
     @Deprecated /** @deprecated since 0.7.0 use /ha/node (which returns correct JSON) */
     @GET
     @Path("/status")

@@ -82,6 +82,7 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 
@@ -377,7 +378,15 @@ public class Main extends AbstractMain {
                 }
     
                 launcher = createLauncher();
-    
+
+                launcher.customizeInitialCatalog(new Function<BrooklynLauncher,Void>() {
+                    @Override
+                    public Void apply(BrooklynLauncher launcher) {
+                        populateCatalog(launcher.getServerDetails().getManagementContext().getCatalog());
+                        return null;
+                    }
+                });
+                
                 launcher.persistMode(persistMode);
                 launcher.persistenceDir(persistenceDir);
                 launcher.persistenceLocation(persistenceLocation);
@@ -418,14 +427,6 @@ public class Main extends AbstractMain {
             BrooklynServerDetails server = launcher.getServerDetails();
             ManagementContext ctx = server.getManagementContext();
             
-            try {
-                populateCatalog(launcher.getServerDetails().getManagementContext().getCatalog());
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                // don't fail to start just because catalog is not available
-                log.error("Error populating catalog: "+e, e);
-            }
-
             if (verbose) {
                 Entities.dumpInfo(launcher.getApplications());
             }
