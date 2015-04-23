@@ -63,4 +63,8 @@ public class MockBrooklynNode extends AbstractEntity implements BrooklynNode {
     public void restart() {
     }
 
+    @Override
+    public void populateServiceNotUpDiagnostics() {
+        // no-op
+    }    
 }

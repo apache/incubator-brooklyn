@@ -88,4 +88,8 @@ public class SameBrooklynNodeImpl extends AbstractEntity implements BrooklynNode
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void populateServiceNotUpDiagnostics() {
+        // no-op
+    }    
 }

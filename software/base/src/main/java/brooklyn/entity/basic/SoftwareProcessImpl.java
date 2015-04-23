@@ -49,6 +49,7 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.Task;
 import brooklyn.policy.EnricherSpec;
@@ -64,6 +65,7 @@ import brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
@@ -133,8 +135,70 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         ServiceNotUpLogic.updateNotUpIndicator(this, SERVICE_PROCESS_IS_RUNNING, "No information yet on whether this service is running");
         // add an indicator above so that if is_running comes through, the map is cleared and an update is guaranteed
         addEnricher(EnricherSpec.create(UpdatingNotUpFromServiceProcessIsRunning.class).uniqueTag("service-process-is-running-updating-not-up"));
+        addEnricher(EnricherSpec.create(ServiceNotUpDiagnosticsCollector.class).uniqueTag("service-not-up-diagnostics-collector"));
     }
     
+    /**
+     * @since 0.8.0
+     */
+    protected static class ServiceNotUpDiagnosticsCollector extends AbstractEnricher implements SensorEventListener<Object> {
+        public ServiceNotUpDiagnosticsCollector() {
+        }
+        
+        @Override
+        public void setEntity(EntityLocal entity) {
+            super.setEntity(entity);
+            if (!(entity instanceof SoftwareProcess)) {
+                throw new IllegalArgumentException("Expected SoftwareProcess, but got entity "+entity);
+            }
+            subscribe(entity, Attributes.SERVICE_UP, this);
+            onUpdated();
+        }
+
+        @Override
+        public void onEvent(SensorEvent<Object> event) {
+            onUpdated();
+        }
+
+        protected void onUpdated() {
+            Boolean up = entity.getAttribute(SERVICE_UP);
+            if (up == null || up) {
+                entity.setAttribute(ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, ImmutableMap.<String, Object>of());
+            } else {
+                ((SoftwareProcess)entity).populateServiceNotUpDiagnostics();
+            }
+        }
+    }
+    
+    @Override
+    public void populateServiceNotUpDiagnostics() {
+        if (getDriver() == null) {
+            ServiceStateLogic.updateMapSensorEntry(this, ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, "driver", "No driver");
+            return;
+        }
+
+        Location loc = getDriver().getLocation();
+        if (loc instanceof SshMachineLocation) {
+            if (!((SshMachineLocation)loc).isSshable()) {
+                ServiceStateLogic.updateMapSensorEntry(
+                        this, 
+                        ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, 
+                        "sshable", 
+                        "The machine for this entity does not appear to be sshable");
+            }
+            return;
+        }
+
+        boolean processIsRunning = getDriver().isRunning();
+        if (!processIsRunning) {
+            ServiceStateLogic.updateMapSensorEntry(
+                    this, 
+                    ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, 
+                    SERVICE_PROCESS_IS_RUNNING.getName(), 
+                    "The software process for this entity does not appear to be running");
+        }
+    }
+
     /** subscribes to SERVICE_PROCESS_IS_RUNNING and SERVICE_UP; the latter has no effect if the former is set,
      * but to support entities which set SERVICE_UP directly we want to make sure that the absence of 
      * SERVICE_PROCESS_IS_RUNNING does not trigger any not-up indicators */

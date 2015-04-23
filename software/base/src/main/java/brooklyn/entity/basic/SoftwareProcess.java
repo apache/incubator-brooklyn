@@ -24,6 +24,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle.Transition;
+import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
@@ -348,4 +349,10 @@ public interface SoftwareProcess extends Entity, Startable {
     
     // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks
 
+    /**
+     * @since 0.8.0
+     */
+    @Effector(description="Populates the attribute service.notUp.diagnostics, with any available health indicators")
+    @Beta
+    void populateServiceNotUpDiagnostics();
 }

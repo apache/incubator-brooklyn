@@ -75,6 +75,7 @@ public class ServiceStateLogic {
     
     public static final AttributeSensor<Boolean> SERVICE_UP = Attributes.SERVICE_UP;
     public static final AttributeSensor<Map<String,Object>> SERVICE_NOT_UP_INDICATORS = Attributes.SERVICE_NOT_UP_INDICATORS;
+    public static final AttributeSensor<Map<String,Object>> SERVICE_NOT_UP_DIAGNOSTICS = Attributes.SERVICE_NOT_UP_DIAGNOSTICS;
     
     public static final AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
     public static final AttributeSensor<Lifecycle.Transition> SERVICE_STATE_EXPECTED = Attributes.SERVICE_STATE_EXPECTED;

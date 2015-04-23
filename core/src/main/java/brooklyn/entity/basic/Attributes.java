@@ -102,6 +102,7 @@ public interface Attributes {
      */
     AttributeSensor<Boolean> SERVICE_UP = Sensors.newBooleanSensor("service.isUp", 
             "Whether the service is active and availability (confirmed and monitored)");
+    
     @SuppressWarnings("serial")
     AttributeSensor<Map<String,Object>> SERVICE_NOT_UP_INDICATORS = Sensors.newSensor(
         new TypeToken<Map<String,Object>>() {},
@@ -114,6 +115,15 @@ public interface Attributes {
         "service.problems", 
         "A map of namespaced indicators of problems with a service");
 
+    /**
+     * @since 0.8.0
+     */
+    @SuppressWarnings("serial")
+    AttributeSensor<Map<String,Object>> SERVICE_NOT_UP_DIAGNOSTICS = Sensors.newSensor(
+        new TypeToken<Map<String,Object>>() {},
+        "service.notUp.diagnostics", 
+        "A map of namespaced diagnostics, from when the service is not up");
+    
     AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Sensors.newSensor(Lifecycle.class,
             "service.state", "Actual lifecycle state of the service");
     AttributeSensor<Lifecycle.Transition> SERVICE_STATE_EXPECTED = Sensors.newSensor(Lifecycle.Transition.class,

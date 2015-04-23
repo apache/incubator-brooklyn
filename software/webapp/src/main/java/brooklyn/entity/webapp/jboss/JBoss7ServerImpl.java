@@ -127,8 +127,6 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     }
     
     protected void connectServiceUp() {
-        connectServiceUpIsRunning();
-        
         addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(MANAGEMENT_URL_UP)
             .computing(Functionals.ifNotEquals(true).value("Management URL not reachable") )
