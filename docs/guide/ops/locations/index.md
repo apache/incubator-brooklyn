@@ -237,8 +237,8 @@ brooklyn.location.named.my-aws.KEY=VAL5
 
 ### Localhost
 
-If passwordless ssh login to `localhost` is enabled on your machine,
-you should be able to deploy blueprints with no special configuration,
+If passwordless ssh login to `localhost` and passwordless `sudo` is enabled on your 
+machine, you should be able to deploy blueprints with no special configuration,
 just by specifying `location: localhost` in YAML.
 
 If you use a passpharse or prefer a different key, these can be configured as follows: 
