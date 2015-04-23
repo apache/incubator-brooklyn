@@ -101,6 +101,11 @@ public interface ServerApi {
     public String getStatus();
 
     @GET
+    @Path("/up/extended")
+    @ApiOperation(value = "Returns extended server-up information, a map including up (/up), healthy (/healthy), and ha (/ha/states) (qv)")
+    public Map<String,Object> getUpExtended();
+
+    @GET
     @Path("/config/{configKey}")
     @ApiOperation(value = "Get the value of the specified config key from brooklyn properties")
     @ApiErrors(value = {

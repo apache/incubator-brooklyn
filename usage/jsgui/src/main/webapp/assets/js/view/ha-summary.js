@@ -18,9 +18,9 @@
 */
 define([
     "jquery", "underscore", "backbone", "moment", "view/viewutils",
-    "model/ha",
+    "model/server-extended-status",
     "text!tpl/home/ha-summary.html"
-], function ($, _, Backbone, moment, ViewUtils, ha, HASummaryHtml) {
+], function ($, _, Backbone, moment, ViewUtils, serverStatus, HASummaryHtml) {
 
     var template = _.template(HASummaryHtml);
     var nodeRowTemplate = _.template(
@@ -38,26 +38,27 @@ define([
         initialize: function() {
             _.bindAll(this);
             this.updateTimestampCallback = setInterval(this.updateTimestamps, 1000);
-            this.listenTo(ha, "change", this.renderNodeStatus);
+            this.listenTo(serverStatus, "change", this.renderNodeStatus);
         },
         beforeClose: function() {
             clearInterval(this.updateTimestampCallback);
             this.stopListening();
         },
         updateNow: function() {
-            ha.fetch();
+            serverStatus.fetch();
         },
         render: function() {
             this.$el.html(template());
-            if (ha.loaded) {
+            if (serverStatus.loaded) {
                 this.renderNodeStatus();
             }
             return this;
         },
         renderNodeStatus: function() {
-            var master = ha.get("masterId"),
-                self = ha.get("ownId"),
-                nodes = ha.get("nodes"),
+            var serverHa = serverStatus.get("ha") || {};
+            var master = serverHa.masterId,
+                self = serverHa.ownId,
+                nodes = serverHa.nodes,
                 $target = this.$(".ha-summary-table-body");
             $target.empty();
             // undefined check just in case server returns something odd

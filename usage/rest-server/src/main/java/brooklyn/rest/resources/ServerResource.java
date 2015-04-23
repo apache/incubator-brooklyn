@@ -33,14 +33,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
@@ -63,6 +62,7 @@ import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveBuilder;
 import brooklyn.util.flags.TypeCoercions;
@@ -282,6 +282,15 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         if (!((ManagementContextInternal)mgmt()).errors().isEmpty()) return false;
         return true;
     }
+    
+    @Override
+    public Map<String,Object> getUpExtended() {
+        return MutableMap.<String,Object>of(
+            "up", isUp(),
+            "healthy", isHealthy(),
+            "ha", getHighAvailabilityPlaneStates());
+    }
+    
     
     @Deprecated
     @Override

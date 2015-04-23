@@ -40,19 +40,17 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.util.WebResourceUtils;
-import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Sets;
 
 /**
- * Checks that for requests that want HA master state, the server is up and in that state.
- * <p>
- * Post POSTs and PUTs are assumed to need master state, with the exception of shutdown.
- * Requests with {@link #SKIP_CHECK_HEADER} set as a header skip this check.
+ * Checks that the request is appropriate given the high availability status of the server.
+ *
+ * @see brooklyn.management.ha.ManagementNodeState
  */
-public class HaMasterCheckFilter implements Filter {
+public class ServerStatusCheckFilter implements Filter {
 
-    private static final Logger log = LoggerFactory.getLogger(HaMasterCheckFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(ServerStatusCheckFilter.class);
     
     public static final String SKIP_CHECK_HEADER = "Brooklyn-Allow-Non-Master-Access";
     private static final Set<String> SAFE_STANDBY_METHODS = Sets.newHashSet("GET", "HEAD");
@@ -66,27 +64,13 @@ public class HaMasterCheckFilter implements Filter {
         mgmt = (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
     }
 
-    static String lookForProblemIfServerNotRunning(ManagementContext mgmt) {
-        if (mgmt==null) return "no management context available";
-        if (!mgmt.isRunning()) return "server no longer running";
-        if (!mgmt.isStartupComplete()) return "server not in required startup-completed state";
-        return null;
-    }
-    
     private String lookForProblem(ServletRequest request) {
-        if (isSkipCheckHeaderSet(request)) 
-            return null;
-        
-        if (!isMasterRequiredForRequest(request))
-            return null;
-        
-        String problem = lookForProblemIfServerNotRunning(mgmt);
-        if (Strings.isNonBlank(problem)) 
-            return problem;
-        
-        if (!isMaster()) 
-            return "server not in required HA master state";
-        
+        if (isMasterRequiredForRequest(request)) {
+            if (mgmt==null) return "no management context available";
+            if (!mgmt.isRunning()) return "server no longer running";
+            if (!mgmt.isStartupComplete()) return "server not in required startup-completed state";
+            if (!isMaster()) return "server not in required HA master state";
+        }
         return null;
     }
     
@@ -94,7 +78,7 @@ public class HaMasterCheckFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         String problem = lookForProblem(request);
         if (problem!=null) {
-            log.warn("Disallowing request as "+problem+": "+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
+            log.warn("Disallowing request as "+problem+"/"+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
             WebResourceUtils.applyJsonResponse(servletContext, ApiError.builder()
                 .message("This request is only permitted against an active master Brooklyn server")
                 .errorCode(Response.Status.FORBIDDEN).build().asJsonResponse(), (HttpServletResponse)response);
@@ -114,6 +98,8 @@ public class HaMasterCheckFilter implements Filter {
     private boolean isMasterRequiredForRequest(ServletRequest request) {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
+            String checkOverridden = httpRequest.getHeader(SKIP_CHECK_HEADER);
+            if ("true".equalsIgnoreCase(checkOverridden)) return false;
             
             String method = httpRequest.getMethod().toUpperCase();
             // gets usually okay
@@ -129,12 +115,6 @@ public class HaMasterCheckFilter implements Filter {
         }
         // previously non-HttpServletRequests were allowed but I don't think they should be
         return true;
-    }
-
-    private boolean isSkipCheckHeaderSet(ServletRequest httpRequest) {
-        if (httpRequest instanceof HttpServletRequest)
-            return "true".equalsIgnoreCase(((HttpServletRequest)httpRequest).getHeader(SKIP_CHECK_HEADER));
-        return false;
     }
 
 }

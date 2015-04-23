@@ -125,6 +125,11 @@ public interface RebindManager {
      * setting if the process fails after the clear!) */
     @VisibleForTesting
     public void forcePersistNow(boolean full, @Nullable PersistenceExceptionHandler exceptionHandler);
+    
+    /** Whether the management state has changed to a state where a rebind is needed
+     * but we are still awaiting the first run; 
+     * ie state is master or hot, but list of apps is not yet accurate */
+    public boolean isAwaitingInitialRebind();
 
     /** Metrics about rebind, last success, etc. */
     public Map<String,Object> getMetrics();

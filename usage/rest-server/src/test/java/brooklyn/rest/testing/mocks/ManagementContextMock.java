@@ -42,16 +42,26 @@ import brooklyn.management.entitlement.EntitlementManager;
 import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.JavaClassNames;
 
 public class ManagementContextMock implements ManagementContext {
+    private Boolean running;
+    private Boolean startupComplete;
     private HighAvailabilityManagerStub haMock = new HighAvailabilityManagerStub();
 
+    public void setRunning(Boolean running) {
+        this.running = running;
+    }
+    public void setStartupComplete(Boolean startupComplete) {
+        this.startupComplete = startupComplete;
+    }
+    
     public void setState(ManagementNodeState state) {
         haMock.setState(state);
     }
 
     private static RuntimeException fail() {
-        throw new UnsupportedOperationException("Mocked method not implemented");
+        throw new UnsupportedOperationException("Mocked method not implemented - "+JavaClassNames.callerNiceClassAndMethod(1));
     }
 
     @Override
@@ -131,12 +141,14 @@ public class ManagementContextMock implements ManagementContext {
 
     @Override
     public boolean isRunning() {
-        throw fail();
+        if (running==null) throw fail();
+        return running;
     }
 
     @Override
     public boolean isStartupComplete() {
-        throw fail();
+        if (startupComplete==null) throw fail();
+        return startupComplete;
     }
     
     @Override

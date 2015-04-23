@@ -29,12 +29,12 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.rest.domain.ApiError;
-import brooklyn.util.time.Duration;
+import brooklyn.util.text.Strings;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.api.model.AbstractMethod;
 import com.sun.jersey.spi.container.ContainerRequest;
@@ -43,17 +43,32 @@ import com.sun.jersey.spi.container.ContainerResponseFilter;
 import com.sun.jersey.spi.container.ResourceFilter;
 import com.sun.jersey.spi.container.ResourceFilterFactory;
 
+/** 
+ * Checks that if the method or resource class corresponding to a request
+ * has a {@link HaHotStateRequired} annotation,
+ * that the server is in that state (and up). 
+ * Requests with {@link #SKIP_CHECK_HEADER} set as a header skip this check.
+ * <p>
+ * This follows a different pattern to {@link HaMasterCheckFilter} 
+ * as this needs to know the method being invoked. 
+ */
 public class HaHotCheckResourceFilter implements ResourceFilterFactory {
     
     private static final Logger log = LoggerFactory.getLogger(HaHotCheckResourceFilter.class);
     
     private static final Set<ManagementNodeState> HOT_STATES = ImmutableSet.of(
             ManagementNodeState.MASTER, ManagementNodeState.HOT_STANDBY, ManagementNodeState.HOT_BACKUP);
-    private static final long STATE_CHANGE_SETTLE_OFFSET = Duration.seconds(10).toMilliseconds();
 
     @Context
     private ManagementContext mgmt;
 
+    public HaHotCheckResourceFilter() {}
+    
+    @VisibleForTesting
+    public HaHotCheckResourceFilter(ManagementContext mgmt) {
+        this.mgmt = mgmt;
+    }
+    
     private static class MethodFilter implements ResourceFilter, ContainerRequestFilter {
 
         private AbstractMethod am;
@@ -74,39 +89,54 @@ public class HaHotCheckResourceFilter implements ResourceFilterFactory {
             return null;
         }
 
+        private String lookForProblem(ContainerRequest request) {
+            if (isSkipCheckHeaderSet(request)) 
+                return null;
+            
+            if (!isHaHotStateRequired(request))
+                return null;
+            
+            String problem = HaMasterCheckFilter.lookForProblemIfServerNotRunning(mgmt);
+            if (Strings.isNonBlank(problem)) 
+                return problem;
+            
+            if (!isHaHotStatus())
+                return "server not in required HA hot state";
+            if (isStateNotYetValid())
+                return "server not yet completed loading data for required HA hot state";
+            
+            return null;
+        }
+        
         @Override
         public ContainerRequest filter(ContainerRequest request) {
-            if (!isStateLoaded() && isUnsafe(request)) {
-                log.warn("Disallowed request to standby brooklyn: "+request+"/"+am+" (caller should set '"+HaMasterCheckFilter.SKIP_CHECK_HEADER+"' to force)");
+            String problem = lookForProblem(request);
+            if (Strings.isNonBlank(problem)) {
+                log.warn("Disallowing request as "+problem+": "+request+"/"+am+" (caller should set '"+HaMasterCheckFilter.SKIP_CHECK_HEADER+"' to force)");
                 throw new WebApplicationException(ApiError.builder()
-                    .message("This request is not permitted against a standby Brooklyn server")
+                    .message("This request is only permitted against an active hot Brooklyn server")
                     .errorCode(Response.Status.FORBIDDEN).build().asJsonResponse());
             }
             return request;
         }
 
-        private boolean isStateLoaded() {
-            return isHaHotStatusOrDisabled() && !RebindTracker.isRebinding() && !recentlySwitchedState();
+        // Maybe there should be a separate state to indicate that we have switched state
+        // but still haven't finished rebinding. (Previously there was a time delay and an
+        // isRebinding check, but introducing RebindManager#isAwaitingInitialRebind() seems cleaner.)
+        private boolean isStateNotYetValid() {
+            return mgmt.getRebindManager().isAwaitingInitialRebind();
         }
 
-        // Ideally there will be a separate state to indicate that we switched state
-        // but still haven't finished rebinding. There's a gap between changing the state
-        // and starting rebind so add a time offset just to be sure.
-        private boolean recentlySwitchedState() {
-            long lastStateChange = mgmt.getHighAvailabilityManager().getLastStateChange();
-            if (lastStateChange == -1) return false;
-            return System.currentTimeMillis() - lastStateChange < STATE_CHANGE_SETTLE_OFFSET;
-        }
-
-        private boolean isUnsafe(ContainerRequest request) {
-            boolean isOverriden = "true".equalsIgnoreCase(request.getHeaderValue(HaMasterCheckFilter.SKIP_CHECK_HEADER));
-            return !isOverriden &&
-                    (am.getAnnotation(HaHotStateRequired.class) != null ||
+        private boolean isHaHotStateRequired(ContainerRequest request) {
+            return (am.getAnnotation(HaHotStateRequired.class) != null ||
                     am.getResource().getAnnotation(HaHotStateRequired.class) != null);
         }
 
-        private boolean isHaHotStatusOrDisabled() {
-            if (!mgmt.getHighAvailabilityManager().isRunning()) return true;
+        private boolean isSkipCheckHeaderSet(ContainerRequest request) {
+            return "true".equalsIgnoreCase(request.getHeaderValue(HaMasterCheckFilter.SKIP_CHECK_HEADER));
+        }
+
+        private boolean isHaHotStatus() {
             ManagementNodeState state = mgmt.getHighAvailabilityManager().getNodeState();
             return HOT_STATES.contains(state);
         }

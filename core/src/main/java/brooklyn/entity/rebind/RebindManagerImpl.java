@@ -132,6 +132,8 @@ public class RebindManagerImpl implements RebindManager {
     private RebindFailureMode loadPolicyFailureMode;
     private QuorumCheck danglingRefsQuorumRequiredHealthy;
     
+    private boolean isAwaitingInitialRebind;
+    
     private PersistenceActivityMetrics rebindMetrics = new PersistenceActivityMetrics();
     private PersistenceActivityMetrics persistMetrics = new PersistenceActivityMetrics();
 
@@ -547,6 +549,7 @@ public class RebindManagerImpl implements RebindManager {
             firstRebindEntityCount = iteration.getRebindContext().getEntities().size();
             firstRebindItemCount = iteration.getRebindContext().getAllBrooklynObjects().size();
         }
+        isAwaitingInitialRebind = false;
 
         return iteration.getApplications();
     }
@@ -578,6 +581,14 @@ public class RebindManagerImpl implements RebindManager {
         return result;
     }
 
+    public boolean isAwaitingInitialRebind() {
+        return isAwaitingInitialRebind;
+    }
+
+    public void setAwaitingInitialRebind(boolean isAwaitingInitialRebind) {
+        this.isAwaitingInitialRebind = isAwaitingInitialRebind;
+    }
+    
     /**
      * Wraps a ChangeListener, to log and never propagate any exceptions that it throws.
      * 

@@ -1,0 +1,94 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="server-caution-overlay overlay-with-opacity"></div>
+<div class="server-caution-overlay">
+    <div class="overlay-content">
+        <h1 class="lead">Warning!</h1>
+
+<% if (!loaded) { %>
+        <p><strong>
+            Connecting to server...</strong></p>
+
+            <center><img src="/assets/images/throbber.gif"/></center>        
+        <p>
+            No response from server (yet). 
+            Please check your network connection, or if you are on a slow connection simply be patient!
+            This dialog will disappear if and when the server responds.</p>
+        
+        <p><i>
+            If you understand the risks, that information may be unavailable and operations may fail, 
+            and wish to proceed regardless, click <a id="dismiss-standby-warning">here</a>.</i></p>
+
+<% } else if (!up) { %>
+            <div style="float: right; position: relative; top: -45px; height: 0; overflow: visible;">
+                <img src="/assets/img/icon-status-starting.gif" width="60"/></div>
+            
+        <p><strong>
+            Starting up...</strong></p>
+                    
+        <p>
+            The Brooklyn server is starting.
+            It is recommended to wait before proceeding.
+            This dialog will disappear when the server is ready.</p>
+        
+        <p><i>
+            If you understand the risks, that information may be unavailable and operations may fail, 
+            and wish to proceed regardless, click <a id="dismiss-standby-warning">here</a>.</i></p>
+
+<% } else if (healthy && !master) { %>
+        <p><strong>
+            This Brooklyn server is not the high availability master.</strong></p>
+        
+        <p>
+            It is recommended not to use this server directly.</p>
+            
+    <% if (masterUri) { %>
+        <p>Redirecting to the master server at <a href="<%= masterUri %>"><%= masterUri %></a> shortly.</p>
+    <% } else { %>
+        <p>The address of the master Brooklyn server is not currently known.</p>
+    <% } %>
+
+        <p><i>
+            If you understand the risks, that write operations will likely fail, 
+            and wish to proceed regardless, click <a id="dismiss-standby-warning">here</a>.</i></p>
+          
+<% } else { %>
+        <p><strong>
+            This Brooklyn server has errors.</strong></p>
+        
+        <p>
+            Please check with your system administrator.</p>
+
+    <% if (healthy) { /* this page should not be displayed in this case */ %>
+        <p>
+            The misconfiguration may be in Javascript as the server is reporting it is healthy.</p><% } %>
+        
+        <p><i>
+          If you would like to debug the server, click <a id="dismiss-standby-warning">here</a>
+          to dismiss this warning until you reload this page. 
+          (You should reload the page once you believe the errors are fixed
+          to confirm that this dialog does not return.)
+          </i></p>
+
+<% } %>
+
+    </div>
+</div>

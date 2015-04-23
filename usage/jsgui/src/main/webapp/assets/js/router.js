@@ -18,46 +18,95 @@
 */
 define([
     "brooklyn", "underscore", "jquery", "backbone",
-    "model/application", "model/app-tree", "model/location", "model/ha",
+    "model/application", "model/app-tree", "model/location", 
+    "model/server-extended-status",
     "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy",
-    "text!tpl/help/page.html","text!tpl/labs/page.html", "text!tpl/home/server-not-ha-master.html"
+    "text!tpl/help/page.html","text!tpl/labs/page.html", "text!tpl/home/server-caution.html"
 ], function (Brooklyn, _, $, Backbone,
-        Application, AppTree, Location, ha,
-        HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView,
-        HelpHtml, LabsHtml, ServerNotMasterHtml) {
+        Application, AppTree, Location, 
+        serverStatus,
+        HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView, 
+        HelpHtml, LabsHtml, ServerCautionHtml) {
 
-    /**
-     * @returns {jquery.Deferred}
-     *      A promise that resolves when the high availability status has been
-     *      loaded. Actions to be taken on the view after it has loaded should
-     *      be registered with calls to .done()
-     */
-    // Not just defined as a function on Router because the delay if the HA status
-    // hasn't loaded requires a reference to the function, which we lose if we use
-    // 'this.showView'.
-    function showViewImpl(router, selector, view) {
-        // Don't do anything until the HA status has loaded.
-        var promise = $.Deferred()
-            .done(function () {
-                // close the previous view - does binding clean-up and avoids memory leaks
-                if (router.currentView) {
-                    router.currentView.close();
-                }
-                // render the view inside the selector element
-                $(selector).html(view.render().el);
-                router.currentView = view;
-                return view
+    var ServerCautionOverlay = Backbone.View.extend({
+        template: _.template(ServerCautionHtml),
+        scheduledRedirect: false,
+        initialize: function() {
+            var that = this;
+            this.carryOnRegardless = false;
+            _.bindAll(this);
+            serverStatus.addCallback(this.renderAndAddCallback);
+        },
+        renderAndAddCallback: function() {
+            this.renderOnUpdate();
+            serverStatus.addCallback(this.renderAndAddCallback);
+        },
+        renderOnUpdate: function() {
+            var that = this;
+            if (this.carryOnRegardless) return this.renderEmpty();
+            
+            var state = {
+                    loaded: serverStatus.loaded,
+                    up: serverStatus.isUp(),
+                    healthy: serverStatus.isHealthy(),
+                    master: serverStatus.isMaster(),
+                    masterUri: serverStatus.getMasterUri(),
+                };
+            if (state.loaded && state.up && state.healthy && state.master) return this.renderEmpty();
+            
+            this.warningActive = true;
+            this.$el.html(this.template(state));
+                
+            $("#dismiss-standby-warning", this.$el).click(function() {
+                that.carryOnRegardless = true;
+                if (that.redirectPending) {
+                    log("Cancelling redirect, using this non-master instance");
+                    clearTimeout(that.redirectPending);
+                    that.redirectPending = null;
+                }       
+                that.renderOnUpdate();
             });
-        (function isComplete() {
-            if (ha.loaded) {
-                promise.resolve();
-            } else {
-                _.defer(isComplete, 100);
+            
+            if (!state.master && state.masterUri) {
+                if (!this.scheduledRedirect && !this.redirectPending) {
+                    log("Not master; will redirect shortly to: "+state.masterUri);
+                    var destination = state.masterUri + "#" + Backbone.history.fragment;
+                    var time = 10;
+                    this.scheduledRedirect = true;
+                    log("Redirecting to " + destination + " in " + time + " seconds");
+                    this.redirectPending = setTimeout(function () {
+                        // re-check, in case the server's status changed in the wait
+                        if (!serverStatus.isMaster()) {
+                            if (that.redirectPending) {
+                                window.location.href = destination;
+                            } else {
+                                log("Cancelled redirect, using this non-master instance");
+                            }
+                        } else {
+                            log("Cancelled redirect, this instance is now master");
+                        }
+                    }, time * 1000);
+                }
             }
-        })();
-        return promise;
-    }
-
+            return this;
+        },
+        renderEmpty: function() {
+            this.warningActive = false;
+            this.$el.empty();
+            return this;
+        },
+        beforeClose: function() {
+            this.stopListening();
+        },
+        warnIfNotLoaded: function() {
+            if (!this.loaded)
+                this.renderOnUpdate();
+        }
+    });
+    // look for ha-standby-overlay for compatibility with older index.html copies
+    var serverCautionOverlay = new ServerCautionOverlay({ el: $("#server-caution-overlay").length ? $("#server-caution-overlay") : $("#ha-standby-overlay")});
+    serverCautionOverlay.render();
+    
     var Router = Backbone.Router.extend({
         routes:{
             'v1/home/*trail':'homePage',
@@ -75,7 +124,14 @@ define([
         },
 
         showView: function(selector, view) {
-            return showViewImpl(this, selector, view);
+            // close the previous view - does binding clean-up and avoids memory leaks
+            if (this.currentView) {
+                this.currentView.close();
+            }
+            // render the view inside the selector element
+            $(selector).html(view.render().el);
+            this.currentView = view;
+            return view;
         },
 
         defaultRoute: function() {
@@ -94,6 +150,7 @@ define([
                 homeView = new HomeView({
                     collection:that.applications,
                     locations:that.locations,
+                    cautionOverlay:serverCautionOverlay,
                     appRouter:that
                 });
                 veryFirstViewLoad = !that.currentView;
@@ -102,13 +159,10 @@ define([
             this.applications.fetch({success:function () {
                 render();
                 // show add application wizard if none already exist and this is the first page load
-                if ((veryFirstViewLoad && trail=='auto' && that.applications.isEmpty()) ||
-                     (trail=='add_application') ) {
-                    ha.onLoad(function() {
-                        if (ha.isMaster()) {
-                            homeView.createApplication();
-                        }
-                    });
+                if ((veryFirstViewLoad && trail=='auto' && that.applications.isEmpty()) || (trail=='add_application') ) {
+                    if (serverStatus.isMaster()) {
+                        homeView.createApplication();
+                    }
                 }
             }, error: render});
         },
@@ -156,64 +210,17 @@ define([
         labsPage:function () {
             $("#application-content").html(_.template(LabsHtml, {}))
             $(".nav1").removeClass("active")
-        }
-    })
+        },
 
-    var HaStandbyOverlay = Backbone.View.extend({
-        template: _.template(ServerNotMasterHtml),
-        scheduledRedirect: false,
-        initialize: function() {
-            this.carryOnRegardless = false;
-            this.listenTo(ha, "change", this.render);
-        },
-        render: function() {
-            var that = this;
-            
-            if (!ha.isMaster() && !this.carryOnRegardless) {
-                var masterUri = ha.getMasterUri();
-                this.$el.html(this.template({"masterUri": masterUri}));
-                
-                log("render, redirect = "+this.redirectPending);
-                
-                $("#dismiss-standby-warning", this.$el).click(function() {
-                    that.carryOnRegardless = true;
-                    if (that.redirectPending) {
-                        console.log("Cancelling redirect, using this non-master instance");
-                        clearTimeout(that.redirectPending);
-                        that.redirectPending = null;
-                    }       
-                    that.render();
-                });
-                
-                if (masterUri && !this.scheduledRedirect && !this.redirectPending) {
-                    var destination = masterUri + "#" + Backbone.history.fragment;
-                    var time = 10;
-                    this.scheduledRedirect = true;
-                    console.log("Redirecting to " + destination + " in " + time + " seconds");
-                    this.redirectPending = setTimeout(function () {
-                        // re-check, in case the server's status changed in the wait
-                        if (!ha.isMaster()) {
-                            if (that.redirectPending) {
-                                window.location.href = destination;
-                            } else {
-                                console.log("Cancelled redirect, using this non-master instance");
-                            }
-                        } else {
-                            console.log("Cancelled redirect, this instance is now master");
-                        }
-                    }, time * 1000);
-                }
-            } else {
-                this.$el.empty();
-            }
-            return this;
-        },
-        beforeClose: function() {
-            this.stopListening();
+        /** Triggers the Backbone.Router process which drives this GUI through Backbone.history,
+         *  after starting background server health checks and waiting for confirmation of health
+         *  (or user click-through). */
+        startBrooklynGui: function() {
+            serverStatus.whenUp(function() { Backbone.history.start(); });
+            serverStatus.autoUpdate();
+            _.delay(serverCautionOverlay.warnIfNotLoaded, 2*1000)
         }
     });
-    new HaStandbyOverlay({ el: $("#ha-standby-overlay") }).render();
-
 
     $.ajax({
         type: "GET",
@@ -221,7 +228,7 @@ define([
         dataType: "text"
     }).done(function (data) {
         if (data != null) {
-            $("#user").html(data);
+            $("#user").html(_.escape(data));
         }
     });
 

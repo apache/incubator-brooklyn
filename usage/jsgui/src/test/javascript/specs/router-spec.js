@@ -20,9 +20,6 @@ define([
     "brooklyn", "router", "model/ha"
 ], function (Brooklyn, Router, ha) {
 
-    ha.url = "fixtures/ha-summary.json";
-    ha.loaded = true;
-
     var View = Backbone.View.extend({
         render:function () {
             this.$el.html("<p>fake view</p>")
