@@ -25,8 +25,14 @@ import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URI;
+import java.nio.charset.Charset;
+import java.util.Properties;
 
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -40,6 +46,7 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
@@ -47,13 +54,18 @@ import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.exceptions.FatalRuntimeException;
 import brooklyn.util.io.FileUtil;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
+import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
 
+import com.google.api.client.util.Preconditions;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
 public class BrooklynLauncherTest {
@@ -65,12 +77,13 @@ public class BrooklynLauncherTest {
     public void tearDown() throws Exception {
         if (launcher != null) launcher.terminate();
         if (persistenceDir != null) RebindTestUtils.deleteMementoDir(persistenceDir);
+        launcher = null;
     }
     
     // Integration because takes a few seconds to start web-console
     @Test(groups="Integration")
     public void testStartsWebServerOnExpectectedPort() throws Exception {
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .webconsolePort("10000+")
                 .start();
         
@@ -88,7 +101,7 @@ public class BrooklynLauncherTest {
         String dataDirName = ".brooklyn-foo"+Strings.makeRandomId(4);
         String dataDir = "~/"+dataDirName;
 
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .brooklynProperties(BrooklynServerConfig.MGMT_BASE_DIR, dataDir)
                 .start();
         
@@ -101,17 +114,18 @@ public class BrooklynLauncherTest {
     
     @Test
     public void testCanDisableWebServerStartup() throws Exception {
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .webconsole(false)
                 .start();
         
         assertNull(launcher.getServerDetails().getWebServer());
         assertNull(launcher.getServerDetails().getWebServerUrl());
+        Assert.assertTrue( ((ManagementContextInternal)launcher.getServerDetails().getManagementContext()).errors().isEmpty() );
     }
     
     @Test
     public void testStartsAppInstance() throws Exception {
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .webconsole(false)
                 .application(new TestApplicationImpl())
                 .start();
@@ -121,7 +135,7 @@ public class BrooklynLauncherTest {
     
     @Test
     public void testStartsAppFromSpec() throws Exception {
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .webconsole(false)
                 .application(EntitySpec.create(TestApplication.class))
                 .start();
@@ -131,7 +145,7 @@ public class BrooklynLauncherTest {
     
     @Test
     public void testStartsAppFromBuilder() throws Exception {
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .webconsole(false)
                 .application(new ApplicationBuilder(EntitySpec.create(TestApplication.class)) {
                         @Override protected void doBuild() {
@@ -147,7 +161,7 @@ public class BrooklynLauncherTest {
                 "services:\n" +
                 "- serviceType: brooklyn.test.entity.TestEntity\n" +
                 "  name: test-app";
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .webconsole(false)
                 .application(yaml)
                 .start();
@@ -158,9 +172,9 @@ public class BrooklynLauncherTest {
         assertTrue(Iterables.getOnlyElement(app.getChildren()) instanceof TestEntity);
     }
     
-    @Test
+    @Test  // may take 2s initializing location if running this test case alone, but noise if running suite 
     public void testStartsAppInSuppliedLocations() throws Exception {
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .webconsole(false)
                 .location("localhost")
                 .application(new ApplicationBuilder(EntitySpec.create(TestApplication.class)) {
@@ -175,7 +189,7 @@ public class BrooklynLauncherTest {
     @Test
     public void testUsesSuppliedManagementContext() throws Exception {
         LocalManagementContext myManagementContext = LocalManagementContextForTests.newInstance();
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(false)
                 .webconsole(false)
                 .managementContext(myManagementContext)
                 .start();
@@ -185,9 +199,9 @@ public class BrooklynLauncherTest {
     
     @Test
     public void testUsesSuppliedBrooklynProperties() throws Exception {
-        BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
+        BrooklynProperties props = LocalManagementContextForTests.builder(true).buildProperties();
         props.put("mykey", "myval");
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(false)
                 .webconsole(false)
                 .brooklynProperties(props)
                 .start();
@@ -197,7 +211,7 @@ public class BrooklynLauncherTest {
 
     @Test
     public void testUsesSupplementaryBrooklynProperties() throws Exception {
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .webconsole(false)
                 .brooklynProperties("mykey", "myval")
                 .start();
@@ -207,7 +221,7 @@ public class BrooklynLauncherTest {
     
     @Test
     public void testReloadBrooklynPropertiesRestoresProgrammaticProperties() throws Exception {
-        launcher = BrooklynLauncher.newInstance()
+        launcher = newLauncherForTests(true)
                 .webconsole(false)
                 .brooklynProperties("mykey", "myval")
                 .start();
@@ -225,15 +239,15 @@ public class BrooklynLauncherTest {
         FileUtil.setFilePermissionsTo600(globalPropertiesFile);
         try {
             String property = "mykey=myval";
-            Files.write(property, globalPropertiesFile, Charsets.UTF_8);
-            launcher = BrooklynLauncher.newInstance()
+            Files.append(getMinimalLauncherPropertiesString()+property, globalPropertiesFile, Charsets.UTF_8);
+            launcher = newLauncherForTests(false)
                     .webconsole(false)
                     .globalBrooklynPropertiesFile(globalPropertiesFile.getAbsolutePath())
                     .start();
             LocalManagementContext managementContext = (LocalManagementContext)launcher.getServerDetails().getManagementContext();
             assertEquals(managementContext.getConfig().getFirst("mykey"), "myval");
             property = "mykey=newval";
-            Files.write(property, globalPropertiesFile, Charsets.UTF_8);
+            Files.write(getMinimalLauncherPropertiesString()+property, globalPropertiesFile, Charsets.UTF_8);
             managementContext.reloadBrooklynProperties();
             assertEquals(managementContext.getConfig().getFirst("mykey"), "newval");
         } finally {
@@ -246,12 +260,12 @@ public class BrooklynLauncherTest {
         File propsFile = File.createTempFile("testChecksGlobalBrooklynPropertiesPermissionsX00", ".properties");
         propsFile.setReadable(true, false);
         try {
-            launcher = BrooklynLauncher.newInstance()
+            launcher = newLauncherForTests(false)
                     .webconsole(false)
                     .globalBrooklynPropertiesFile(propsFile.getAbsolutePath())
                     .start();
-            
-            assertEquals(launcher.getServerDetails().getManagementContext().getConfig().getFirst("mykey"), "myval");
+
+            Assert.fail("Should have thrown");
         } catch (FatalRuntimeException e) {
             if (!e.toString().contains("Invalid permissions for file")) throw e;
         } finally {
@@ -264,12 +278,12 @@ public class BrooklynLauncherTest {
         File propsFile = File.createTempFile("testChecksLocalBrooklynPropertiesPermissionsX00", ".properties");
         propsFile.setReadable(true, false);
         try {
-            launcher = BrooklynLauncher.newInstance()
+            launcher = newLauncherForTests(false)
                     .webconsole(false)
                     .localBrooklynPropertiesFile(propsFile.getAbsolutePath())
                     .start();
             
-            assertEquals(launcher.getServerDetails().getManagementContext().getConfig().getFirst("mykey"), "myval");
+            Assert.fail("Should have thrown");
         } catch (FatalRuntimeException e) {
             if (!e.toString().contains("Invalid permissions for file")) throw e;
         } finally {
@@ -280,20 +294,66 @@ public class BrooklynLauncherTest {
     @Test(groups="Integration")
     public void testStartsWithBrooklynPropertiesPermissionsX00() throws Exception {
         File globalPropsFile = File.createTempFile("testChecksLocalBrooklynPropertiesPermissionsX00_global", ".properties");
+        Files.write(getMinimalLauncherPropertiesString()+"key_in_global=1", globalPropsFile, Charset.defaultCharset());
         File localPropsFile = File.createTempFile("testChecksLocalBrooklynPropertiesPermissionsX00_local", ".properties");
+        Files.write("key_in_local=2", localPropsFile, Charset.defaultCharset());
         FileUtil.setFilePermissionsTo600(globalPropsFile);
         FileUtil.setFilePermissionsTo600(localPropsFile);
         try {
-            launcher = BrooklynLauncher.newInstance()
+            launcher = newLauncherForTests(false)
                     .webconsole(false)
-                    .localBrooklynPropertiesFile(globalPropsFile.getAbsolutePath())
+                    .localBrooklynPropertiesFile(localPropsFile.getAbsolutePath())
+                    .globalBrooklynPropertiesFile(globalPropsFile.getAbsolutePath())
                     .start();
+            assertEquals(launcher.getServerDetails().getManagementContext().getConfig().getFirst("key_in_global"), "1");
+            assertEquals(launcher.getServerDetails().getManagementContext().getConfig().getFirst("key_in_local"), "2");
         } finally {
             globalPropsFile.delete();
             localPropsFile.delete();
         }
     }
     
+    @Test  // takes a few seconds because starts webapp, but also tests rest api so useful
+    public void testErrorsCaughtByApiAndRestApiWorks() throws Exception {
+        launcher = newLauncherForTests(true)
+                .customizeInitialCatalog(new Function<BrooklynLauncher, Void>() {
+                    @Override
+                    public Void apply(BrooklynLauncher input) {
+                        throw new RuntimeException("deliberate-exception-for-testing");
+                    }
+                })
+                .start();
+        // such an error should be thrown, then caught in this calling thread
+        ManagementContext mgmt = launcher.getServerDetails().getManagementContext();
+        Assert.assertFalse( ((ManagementContextInternal)mgmt).errors().isEmpty() );
+        Assert.assertTrue( ((ManagementContextInternal)mgmt).errors().get(0).toString().contains("deliberate"), ""+((ManagementContextInternal)mgmt).errors() );
+        HttpTestUtils.assertContentMatches(
+            Urls.mergePaths(launcher.getServerDetails().getWebServerUrl(), "v1/server/up"), 
+            "true");
+        HttpTestUtils.assertContentMatches(
+            Urls.mergePaths(launcher.getServerDetails().getWebServerUrl(), "v1/server/healthy"), 
+            "false");
+        // TODO test errors api?
+    }
+
+    private BrooklynLauncher newLauncherForTests(boolean minimal) {
+        Preconditions.checkArgument(launcher==null, "can only be used if no launcher yet");
+        BrooklynLauncher launcher = BrooklynLauncher.newInstance();
+        if (minimal)
+            launcher.brooklynProperties(LocalManagementContextForTests.builder(true).buildProperties());
+        return launcher;
+    }
+
+    private String getMinimalLauncherPropertiesString() throws IOException {
+        BrooklynProperties p1 = LocalManagementContextForTests.builder(true).buildProperties();
+        Properties p = new Properties();
+        p.putAll(Maps.transformValues(p1.asMapWithStringKeys(), StringFunctions.toStringFunction()));
+        Writer w = new StringWriter();
+        p.store(w, "test");
+        w.close();
+        return w.toString()+"\n";
+    }
+
     private void assertOnlyApp(BrooklynLauncher launcher, Class<? extends Application> expectedType) {
         assertEquals(launcher.getApplications().size(), 1, "apps="+launcher.getApplications());
         assertNotNull(Iterables.find(launcher.getApplications(), Predicates.instanceOf(TestApplication.class), null), "apps="+launcher.getApplications());

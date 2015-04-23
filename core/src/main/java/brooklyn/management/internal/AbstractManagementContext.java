@@ -23,6 +23,8 @@ import static java.lang.String.format;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -72,14 +74,15 @@ import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.BasicExecutionContext;
 import brooklyn.util.task.Tasks;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
@@ -164,6 +167,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     private volatile boolean running = true;
     protected boolean startupComplete = false;
+    protected final List<Throwable> errors = Collections.synchronizedList(MutableList.<Throwable>of()); 
 
     protected Maybe<URI> uri = Maybe.absent();
 
@@ -457,4 +461,9 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return null;
     }
 
+    @Override
+    public List<Throwable> errors() {
+        return errors;
+    }
+    
 }

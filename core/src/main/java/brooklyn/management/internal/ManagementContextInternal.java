@@ -20,6 +20,7 @@ package brooklyn.management.internal;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -39,6 +40,8 @@ import brooklyn.management.Task;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.TaskTags;
+
+import com.google.common.annotations.Beta;
 
 public interface ManagementContextInternal extends ManagementContext {
 
@@ -104,4 +107,10 @@ public interface ManagementContextInternal extends ManagementContext {
      * Registers a location that has been created, but that has not yet begun to be managed.
      */
     void prePreManage(Location location);
+
+    /** Object which allows adding, removing, and clearing errors.
+     * TODO In future this will change to a custom interface with a unique identifier for each error. */
+    @Beta
+    List<Throwable> errors();
+    
 }

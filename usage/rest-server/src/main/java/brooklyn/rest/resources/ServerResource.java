@@ -279,7 +279,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     @Override
     public boolean isHealthy() {
         if (!isUp()) return false;
-        // TODO errors
+        if (!((ManagementContextInternal)mgmt()).errors().isEmpty()) return false;
         return true;
     }
     

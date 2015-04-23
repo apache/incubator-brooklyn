@@ -45,7 +45,6 @@ import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
-import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.entity.Application;
@@ -101,6 +100,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
@@ -151,9 +151,9 @@ public class BrooklynLauncher {
     private Map<String, ?> webconsoleFlags = Maps.newLinkedHashMap();
     private Boolean skipSecurityFilter = null;
     
-    private boolean ignorePersistenceErrors = false;
     private boolean ignoreWebErrors = false;
-    private boolean ignoreAppErrors = false;
+    private boolean ignorePersistenceErrors = true;
+    private boolean ignoreAppErrors = true;
     
     private StopWhichAppsOnShutdown stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
     
@@ -296,13 +296,14 @@ public class BrooklynLauncher {
      */
     public BrooklynLauncher brooklynProperties(BrooklynProperties brooklynProperties){
         if (managementContext != null) throw new IllegalStateException("Cannot set brooklynProperties and managementContext");
-        this.brooklynProperties = checkNotNull(brooklynProperties, "brooklynProperties");
+        if (this.brooklynProperties!=null && brooklynProperties!=null && this.brooklynProperties!=brooklynProperties)
+            LOG.warn("Brooklyn properties being reset in "+this+"; set null first if you wish to clear it", new Throwable("Source of brooklyn properties reset"));
+        this.brooklynProperties = brooklynProperties;
         return this;
     }
     
     /**
-     * Specifies an attribute passed to deployed webapps 
-     * (in addition to {@link BrooklynServiceAttributes#BROOKLYN_MANAGEMENT_CONTEXT}
+     * Specifies a property to be added to the brooklyn properties
      */
     public BrooklynLauncher brooklynProperties(String field, Object value) {
         brooklynAdditionalProperties.put(checkNotNull(field, "field"), value);
@@ -421,7 +422,10 @@ public class BrooklynLauncher {
         return this;
     }
 
+    @Beta
     public BrooklynLauncher customizeInitialCatalog(Function<BrooklynLauncher, Void> customizeInitialCatalog) {
+        if (this.customizeInitialCatalog!=null)
+            throw new IllegalStateException("Initial catalog customization already set.");
         this.customizeInitialCatalog = customizeInitialCatalog;
         return this;
     }
@@ -585,6 +589,8 @@ public class BrooklynLauncher {
         }
 
         try {
+            // TODO currently done *after* above to mirror existing usage, 
+            // but where this runs will likely change
             if (customizeInitialCatalog!=null)
                 customizeInitialCatalog.apply(this);
         } catch (Exception e) {
@@ -660,6 +666,10 @@ public class BrooklynLauncher {
                 }
                 managementContext = new LocalManagementContext(builder, brooklynAdditionalProperties);
             } else {
+                if (globalBrooklynPropertiesFile != null)
+                    LOG.warn("Ignoring globalBrooklynPropertiesFile "+globalBrooklynPropertiesFile+" because explicit brooklynProperties supplied");
+                if (localBrooklynPropertiesFile != null)
+                    LOG.warn("Ignoring localBrooklynPropertiesFile "+localBrooklynPropertiesFile+" because explicit brooklynProperties supplied");
                 managementContext = new LocalManagementContext(brooklynProperties, brooklynAdditionalProperties);
             }
             brooklynProperties = ((ManagementContextInternal)managementContext).getBrooklynProperties();
@@ -711,6 +721,8 @@ public class BrooklynLauncher {
         Exceptions.propagateIfFatal(e);
         if (ignoreSuchErrors) {
             LOG.error("Subsystem for "+system+" had startup error (continuing with startup): "+e, e);
+            if (managementContext!=null)
+                ((ManagementContextInternal)managementContext).errors().add(e);
         } else {
             throw Exceptions.propagate(e);
         }

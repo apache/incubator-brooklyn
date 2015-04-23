@@ -441,6 +441,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         return initialManagementContext.lookup(id, type);
     }
 
+    @Override
+    public List<Throwable> errors() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.errors();
+    }
+
     /**
      * For when the initial management context is not "real"; the changeListener is a no-op, but everything else forbidden.
      * 

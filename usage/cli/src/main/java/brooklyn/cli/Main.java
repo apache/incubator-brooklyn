@@ -237,21 +237,22 @@ public class Main extends AbstractMain {
         public Boolean noConsoleSecurity = false;
 
         @Option(name = { "--ignoreWebStartupErrors" },
-            description = "Ignore web subsystem failures on startup (default is to abort if it fails to start)")
+            description = "Ignore web subsystem failures on startup (default is to abort if the web API fails to start, as management is not possible)")
         public boolean ignoreWebErrors = false;
 
         @Option(name = { "--ignorePersistenceStartupErrors" },
-            description = "Ignore persistence/HA subsystem failures on startup (default is to abort if it fails to start)")
-        public boolean ignorePersistenceErrors = false;
+            description = "Ignore persistence/HA subsystem failures on startup "
+                + "(default is true, so errors can be viewed via the API)")
+        public boolean ignorePersistenceErrors = true;
 
         @Option(name = { "--ignoreManagedAppsStartupErrors" },
             description = "Ignore failures starting managed applications passed on the command line on startup "
-                + "(default is to abort if they fail to start)")
-        public boolean ignoreAppErrors = false;
+                + "(default is true, so errors can be viewed via the API)")
+        public boolean ignoreAppErrors = true;
 
         @Beta
         @Option(name = { "--startBrooklynNode" },
-                description = "Whether to start a BrooklynNode entity representing this Brooklyn instance")
+                description = "Whether to start a BrooklynNode entity representing this Brooklyn instance (default false)")
         public boolean startBrooklynNode = false;
 
         // Note in some cases, you can get java.util.concurrent.RejectedExecutionException
@@ -259,7 +260,7 @@ public class Main extends AbstractMain {
         // looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
         @Beta
         @Option(name = { "-sk", "--stopOnKeyPress" },
-                description = "After startup, shutdown on user text entry")
+                description = "After startup, shutdown on user text entry (default false)")
         public boolean stopOnKeyPress = false;
 
         final static String STOP_WHICH_APPS_ON_SHUTDOWN = "--stopOnShutdown";
