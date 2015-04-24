@@ -35,7 +35,6 @@
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-all</artifactId>
             <version>${project.version}</version>
-            <classifier>with-dependencies</classifier>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
