@@ -38,7 +38,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.basic.BrooklynTypes;
 import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
 import brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
 import brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
@@ -72,6 +74,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
@@ -79,12 +82,15 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * This class is the primary CLI for brooklyn.
@@ -573,11 +579,37 @@ public class Main extends AbstractMain {
         /** method intended for subclassing, to add items to the catalog */
         protected void populateCatalog(BrooklynCatalog catalog) {
             // Force load of catalog (so web console is up to date)
-            catalog.getCatalogItems();
+            confirmCatalog(catalog);
 
             // nothing else added here
         }
 
+        protected void confirmCatalog(BrooklynCatalog catalog) {
+            // Force load of catalog (so web console is up to date)
+            Stopwatch time = Stopwatch.createStarted();
+            Iterable<CatalogItem<Object, Object>> items = catalog.getCatalogItems();
+            for (CatalogItem<Object, Object> item: items) {
+                try {
+                    Object spec = catalog.createSpec(item);
+                    if (spec instanceof EntitySpec) {
+                        BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
+                    }
+                    log.debug("Catalog loaded spec "+spec+" for item "+item);                      
+                } catch (Throwable throwable) {
+                    // swallow errors, apart from interrupted
+                    if (throwable instanceof InterruptedException)
+                        throw new RuntimeInterruptedException((InterruptedException) throwable);
+                    if (throwable instanceof RuntimeInterruptedException)
+                        throw (RuntimeInterruptedException) throwable;
+
+                    log.error("Error loading catalog item '"+item+"': "+throwable);
+                    log.debug("Trace for error loading catalog item '"+item+"': "+throwable, throwable);
+                }
+            }
+            log.debug("Catalog (size "+Iterables.size(items)+") confirmed in "+Duration.of(time));                      
+            // nothing else added here
+        }
+        
         /** convenience for subclasses to specify that an app should run,
          * throwing the right (caught) error if another app has already been specified */
         protected void setAppToLaunch(String className) {

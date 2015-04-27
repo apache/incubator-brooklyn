@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
@@ -67,10 +66,13 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * of container resource in the pool respectively. These events may be consumed by a separate policy that is capable
  * of resizing the container pool.
  */
-@Catalog(name="Load Balancer", description="Policy that is attached to a pool of \"containers\", each of which "
-        + "can host one or more migratable \"items\". The policy monitors the workrates of the items and effects "
-        + "migrations in an attempt to ensure that the containers are all sufficiently utilized without any of "
-        + "them being overloaded.")
+    // removed from catalog because it cannot currently be configured via catalog mechanisms
+    // PolicySpec.create fails due to no no-arg constructor
+    // TODO make metric and model things which can be initialized from config then reinstate in catalog
+//@Catalog(name="Load Balancer", description="Policy that is attached to a pool of \"containers\", each of which "
+//        + "can host one or more migratable \"items\". The policy monitors the workrates of the items and effects "
+//        + "migrations in an attempt to ensure that the containers are all sufficiently utilized without any of "
+//        + "them being overloaded.")
 public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movable> extends AbstractPolicy {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadBalancingPolicy.class);
@@ -120,6 +122,10 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
         }
     };
 
+    public LoadBalancingPolicy() {
+        this(null, null);
+    }
+    
     public LoadBalancingPolicy(AttributeSensor<? extends Number> metric,
             BalanceablePoolModel<NodeType, ItemType> model) {
         this(MutableMap.of(), metric, model);
