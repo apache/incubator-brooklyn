@@ -88,6 +88,11 @@ public interface ServerApi {
     public boolean isUp();
     
     @GET
+    @Path("/shuttingDown")
+    @ApiOperation(value = "Returns whether this server is shutting down")
+    public boolean isShuttingDown();
+    
+    @GET
     @Path("/healthy")
     @ApiOperation(value = "Returns whether this node is healthy - fully started, not stopping, and no errors")
     public boolean isHealthy();
@@ -102,7 +107,7 @@ public interface ServerApi {
 
     @GET
     @Path("/up/extended")
-    @ApiOperation(value = "Returns extended server-up information, a map including up (/up), healthy (/healthy), and ha (/ha/states) (qv)")
+    @ApiOperation(value = "Returns extended server-up information, a map including up (/up), shuttingDown (/shuttingDown), healthy (/healthy), and ha (/ha/states) (qv)")
     public Map<String,Object> getUpExtended();
 
     @GET

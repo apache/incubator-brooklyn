@@ -277,6 +277,16 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     }
     
     @Override
+    public boolean isShuttingDown() {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
+        Maybe<ManagementContext> mm = mgmtMaybe();
+        if (mm.isAbsent()) return false;
+        ManagementContext m = mm.get();
+        return (m.isStartupComplete() && !m.isRunning());
+    }
+    
+    @Override
     public boolean isHealthy() {
         if (!isUp()) return false;
         if (!((ManagementContextInternal)mgmt()).errors().isEmpty()) return false;
@@ -287,6 +297,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     public Map<String,Object> getUpExtended() {
         return MutableMap.<String,Object>of(
             "up", isUp(),
+            "shuttingDown", isShuttingDown(),
             "healthy", isHealthy(),
             "ha", getHighAvailabilityPlaneStates());
     }

@@ -22,6 +22,20 @@ define(["backbone", "brooklyn", "view/viewutils"], function (Backbone, Brooklyn,
         callbacks: [],
         loaded: false,
         url: "/v1/server/up/extended",
+        onError: function(thiz,xhr,modelish) {
+            log("ServerExtendedStatus: error contacting Brooklyn server");
+            log(xhr);
+            if (xhr.readyState==0) {
+                // server not contactable
+                this.loaded = false;
+            } else {
+                // server error
+                log(xhr.responseText);
+                // simply set unhealthy
+                this.set("healthy", false);
+            }
+            this.applyCallbacks();
+        },
         whenUp: function(f) {
             var that = this;
             if (this.isUp()) {
@@ -48,6 +62,7 @@ define(["backbone", "brooklyn", "view/viewutils"], function (Backbone, Brooklyn,
         },
 
         isUp: function() { return this.get("up") },
+        isShuttingDown: function() { return this.get("shuttingDown") },
         isHealthy: function() { return this.get("healthy") },
         isMaster: function() {
             ha = this.get("ha") || {};
@@ -70,15 +85,19 @@ define(["backbone", "brooklyn", "view/viewutils"], function (Backbone, Brooklyn,
                 return master.nodeUri;
             }
         },
+        applyCallbacks: function() {
+            var currentCallbacks = this.callbacks;
+            this.callbacks = [];
+            _.invoke(currentCallbacks, "apply");
+        },
     });
 
     var serverExtendedStatus = new ServerExtendedStatus();
     serverExtendedStatus.on("sync", function() {
         serverExtendedStatus.loaded = true;
-        var currentCallbacks = serverExtendedStatus.callbacks;
-        serverExtendedStatus.callbacks = [];
-        _.invoke(currentCallbacks, "apply");
+        serverExtendedStatus.applyCallbacks();
     });
+    serverExtendedStatus.on("error", serverExtendedStatus.onError);
 
     // Will returning the instance rather than the object be confusing?
     // It breaks the pattern used by all the other models.

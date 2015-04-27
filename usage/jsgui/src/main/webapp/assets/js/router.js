@@ -48,15 +48,22 @@ define([
             var state = {
                     loaded: serverStatus.loaded,
                     up: serverStatus.isUp(),
+                    shuttingDown: serverStatus.isShuttingDown(),
                     healthy: serverStatus.isHealthy(),
                     master: serverStatus.isMaster(),
                     masterUri: serverStatus.getMasterUri(),
                 };
-            if (state.loaded && state.up && state.healthy && state.master) return this.renderEmpty();
+            
+            if (state.loaded && state.up && state.healthy && state.master) {
+                // this div shows nothing in normal operation
+                return this.renderEmpty();
+            }
             
             this.warningActive = true;
             this.$el.html(this.template(state));
-                
+            $('#application-content').fadeTo(500,0.1);
+            this.$el.fadeTo(200,1);
+            
             $("#dismiss-standby-warning", this.$el).click(function() {
                 that.carryOnRegardless = true;
                 if (that.redirectPending) {
@@ -91,8 +98,13 @@ define([
             return this;
         },
         renderEmpty: function() {
+            var that = this;
             this.warningActive = false;
-            this.$el.empty();
+            this.$el.fadeTo(200,0.2, function() {
+                if (!that.warningActive)
+                    that.$el.empty();
+            });
+            $('#application-content').fadeTo(200,1);
             return this;
         },
         beforeClose: function() {

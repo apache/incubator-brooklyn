@@ -27,11 +27,23 @@ under the License.
         <p><strong>
             Connecting to server...</strong></p>
 
-            <center><img src="/assets/images/throbber.gif"/></center>        
         <p>
             No response from server (yet). 
-            Please check your network connection, or if you are on a slow connection simply be patient!
+            Please check your network connection and the URL, or if you are on a slow connection simply be patient!
             This dialog will disappear if and when the server responds.</p>
+        
+        <p><i>
+            If you understand the risks, that information may be unavailable and operations may fail, 
+            and wish to proceed regardless, click <a id="dismiss-standby-warning">here</a>.</i></p>
+
+<% } else if (shuttingDown) { %>
+        <p><strong>
+            Server shutting down...</strong></p>
+                    
+        <p>
+            The Brooklyn server is shutting down.
+            This dialog will disappear if and when the server is restarted at this address.
+            If in doubt, contact your system administrator.</p>
         
         <p><i>
             If you understand the risks, that information may be unavailable and operations may fail, 
@@ -50,7 +62,7 @@ under the License.
             This dialog will disappear when the server is ready.</p>
         
         <p><i>
-            If you understand the risks, that information may be unavailable and operations may fail, 
+            If you understand the risks, that information may be incomplete and operations may fail, 
             and wish to proceed regardless, click <a id="dismiss-standby-warning">here</a>.</i></p>
 
 <% } else if (healthy && !master) { %>
