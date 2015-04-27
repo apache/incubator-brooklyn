@@ -707,7 +707,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (windows) {
                 // FIMXE: Need to write WinRM equivalent of getPublicHostname
                 String hostName = node.getPublicAddresses().iterator().next();
-                winRmMachineLocation = registerWinRmMachineLocation(hostName, setup);
+                winRmMachineLocation = registerWinRmMachineLocation(hostName, setup, node.getId());
                 machineLocation = winRmMachineLocation;
             } else {
                 jcloudsSshMachineLocation = registerJcloudsSshMachineLocation(computeService, node, userCredentials, sshHostAndPortOverride, setup);
@@ -1933,9 +1933,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    protected WinRmMachineLocation registerWinRmMachineLocation(String vmHostname, ConfigBag setup) {
+    protected WinRmMachineLocation registerWinRmMachineLocation(String vmHostname, ConfigBag setup, String nodeId) {
         WinRmMachineLocation winRmMachineLocation = createWinRmMachineLocation(vmHostname, setup);
         winRmMachineLocation.setParent(this);
+        vmInstanceIds.put(winRmMachineLocation, nodeId);
         return winRmMachineLocation;
     }
 
