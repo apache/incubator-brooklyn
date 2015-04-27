@@ -30,6 +30,7 @@ import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshTasks;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 
@@ -153,7 +154,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         final String canonicalTargetName = getFilenameContextMapper().convertDeploymentTargetNameToFilename(targetName);
         final String dest = getDeployDir() + "/" + canonicalTargetName;
         //write to a .tmp so autodeploy is not triggered during upload
-        final String tmpDest = dest + ".tmp";
+        final String tmpDest = dest + "." + Strings.makeRandomId(8) + ".tmp";
         final String msg = String.format("deploying %s to %s:%s", new Object[]{url, getHostname(), dest});
         log.info(entity + " " + msg);
         Tasks.setBlockingDetails(msg);

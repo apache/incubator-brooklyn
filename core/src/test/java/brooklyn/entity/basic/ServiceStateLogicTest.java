@@ -24,7 +24,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
@@ -33,7 +32,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
-import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.Enricher;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
@@ -261,10 +259,7 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntityWithoutEnrichers.class))
                 .configure(DynamicCluster.INITIAL_SIZE, 1));
 
-        RecordingSensorEventListener r = new RecordingSensorEventListener();
-        app.subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, r);
-
-        cluster.start(ImmutableList.of(new SimulatedLocation()));
+        cluster.start(ImmutableList.of(app.newSimulatedLocation()));
         EntityTestUtils.assertGroupSizeEqualsEventually(cluster, 1);
 
         //manually set state to healthy as enrichers are disabled
