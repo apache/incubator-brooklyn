@@ -19,6 +19,7 @@
 package brooklyn.entity.basic;
 
 import brooklyn.location.basic.WinRmMachineLocation;
+import brooklyn.util.time.Duration;
 
 public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWinRmDriver implements VanillaWindowsProcessDriver {
 
