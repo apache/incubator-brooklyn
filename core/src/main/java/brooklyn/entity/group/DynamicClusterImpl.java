@@ -588,16 +588,22 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         // choose locations to be deployed to
         List<Location> chosenLocations;
-        if (isAvailabilityZoneEnabled()) {
-            List<Location> subLocations = getNonFailedSubLocations();
-            Multimap<Location, Entity> membersByLocation = getMembersByLocation();
-            chosenLocations = getZonePlacementStrategy().locationsForAdditions(membersByLocation, subLocations, delta);
-            if (chosenLocations.size() != delta) {
-                throw new IllegalStateException("Node placement strategy chose " + Iterables.size(chosenLocations)
-                        + ", when expected delta " + delta + " in " + this);
+        chosenLocations = getMemberSpec().getLocations();
+        if (chosenLocations == null) {
+            if (isAvailabilityZoneEnabled()) {
+                List<Location> subLocations = getNonFailedSubLocations();
+                Multimap<Location, Entity> membersByLocation = getMembersByLocation();
+                chosenLocations = getZonePlacementStrategy().locationsForAdditions(membersByLocation, subLocations, delta);
+                if (chosenLocations.size() != delta) {
+                    throw new IllegalStateException("Node placement strategy chose " + Iterables.size(chosenLocations)
+                            + ", when expected delta " + delta + " in " + this);
+                }
+            } else {
+                chosenLocations = Collections.nCopies(delta, getLocation());
             }
         } else {
-            chosenLocations = Collections.nCopies(delta, getLocation());
+            // FIXME: Tidy this up!
+            chosenLocations = Collections.nCopies(delta, chosenLocations.get(0));
         }
 
         // create and start the entities
