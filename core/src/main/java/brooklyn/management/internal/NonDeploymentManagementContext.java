@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
@@ -73,6 +75,7 @@ import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 
 public class NonDeploymentManagementContext implements ManagementContextInternal {
@@ -447,6 +450,31 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         return initialManagementContext.errors();
     }
 
+    @Override
+    public CatalogInitialization getCatalogInitialization() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getCatalogInitialization();
+    }
+    
+    @Override
+    public void setCatalogInitialization(CatalogInitialization catalogInitialization) {
+        checkInitialManagementContextReal();
+        initialManagementContext.setCatalogInitialization(catalogInitialization);
+    }
+
+    @Override
+    public Maybe<BrooklynCatalog> getCatalogIfSet() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getCatalogIfSet();
+    }
+    
+    /** For use from {@link CatalogInitialization} to set the catalog */
+    @Beta @Override
+    public void setCatalog(BrooklynCatalog catalog) {
+        checkInitialManagementContextReal();
+        initialManagementContext.setCatalog(catalog);
+    }
+    
     /**
      * For when the initial management context is not "real"; the changeListener is a no-op, but everything else forbidden.
      * 

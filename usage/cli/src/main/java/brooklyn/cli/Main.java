@@ -41,6 +41,7 @@ import brooklyn.BrooklynVersion;
 import brooklyn.basic.BrooklynTypes;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
 import brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
 import brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
@@ -217,6 +218,24 @@ public class Main extends AbstractMain {
                         "(or as a JSON array, if the values are complex)")
         public String locations;
 
+        @Option(name = { "--catalogInitial" }, title = "catalog initial bom URI",
+            description = "Specifies a catalog.bom URI to be used to populate the initial catalog, "
+                + "if nothing is yet persisted in the catalog (or if it is reset)")
+        public String catalogInitial;
+
+        @Option(name = { "--catalogReset" }, title = "clear catalog",
+            description = "Specifies that any catalog items which have been persisted should be cleared")
+        public boolean catalogReset;
+
+        @Option(name = { "--catalogAdd" }, title = "catalog bom URI to add",
+            description = "Specifies a catalog.bom to be added to the catalog")
+        public String catalogAdd;
+
+        @Option(name = { "--catalogForce" }, title = "force catalog addition",
+            description = "Specifies that catalog items added via the CLI should be forcibly added, "
+                + "replacing any identical versions already registered (use with care!)")
+        public boolean catalogForce;
+
         @Option(name = { "-p", "--port" }, title = "port number",
                 description = "Specifies the port to be used by the Brooklyn Management Console; "
                     + "default is 8081+ for http, 8443+ for https.")
@@ -386,13 +405,15 @@ public class Main extends AbstractMain {
     
                 launcher = createLauncher();
 
-                launcher.customizeInitialCatalog(new Function<BrooklynLauncher,Void>() {
+                CatalogInitialization catInit = new CatalogInitialization(catalogInitial, catalogReset, catalogAdd, catalogForce);
+                catInit.addPopulationCallback(new Function<ManagementContext,Void>() {
                     @Override
-                    public Void apply(BrooklynLauncher launcher) {
-                        populateCatalog(launcher.getServerDetails().getManagementContext().getCatalog());
+                    public Void apply(ManagementContext mgmt) {
+                        populateCatalog(mgmt.getCatalog());
                         return null;
                     }
                 });
+                launcher.catalogInitialization(catInit);
                 
                 launcher.persistMode(persistMode);
                 launcher.persistenceDir(persistenceDir);
@@ -652,7 +673,7 @@ public class Main extends AbstractMain {
                 stopAllApps(ctx.getApplications());
             } else {
                 // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
-                log.info("Launched Brooklyn; will now block until shutdown issued. Shutdown via GUI or API or process interrupt.");
+                log.info("Launched Brooklyn; will now block until shutdown command received via GUI/API (recommended) or process interrupt.");
                 waitUntilInterrupted();
             }
         }

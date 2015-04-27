@@ -22,10 +22,10 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNotSame;
 
+import java.io.Closeable;
 import java.net.URL;
 import java.util.List;
 
-import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -40,10 +40,13 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.Sensors;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.util.javalang.UrlClassLoader;
-import brooklyn.util.os.Os;
+
+import com.google.common.base.Function;
 
 public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplication> {
 
@@ -89,6 +92,8 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
     //
     // Note: to test before/after behaviour (i.e. that we're really fixing what we think we are) then comment out the body of:
     //       AbstractMemento.injectTypeClass(Class)
+    //
+    // NB: this behaviour is generally deprecated in favour of OSGi now.
     @Test
     public void testRestoresAppFromCatalogClassloader() throws Exception {
         @SuppressWarnings("unchecked")
@@ -100,7 +105,7 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
         origApp = ApplicationBuilder.newManagedApp(appSpec, origManagementContext);
         ((EntityInternal)origApp).setAttribute(Sensors.newStringSensor("mysensor"), "mysensorval");
         
-        newApp = rebind();
+        newApp = rebindWithAppClass();
         Entities.dumpInfo(newApp);
         assertNotSame(newApp, origApp);
         assertEquals(newApp.getId(), origApp.getId());
@@ -118,17 +123,27 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
     // TODO Not using RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
     //      because that won't have right catalog classpath.
     //      How to reuse that code cleanly?
-    @Override
-    protected StartableApplication rebind() throws Exception {
+    protected StartableApplication rebindWithAppClass() throws Exception {
         RebindTestUtils.waitForPersisted(origApp);
-
         LocalManagementContext newManagementContext = RebindTestUtils.newPersistingManagementContextUnstarted(mementoDir, classLoader);
-        
+
+        UrlClassLoader ucl = new UrlClassLoader(url);
         @SuppressWarnings("unchecked")
-        Class<? extends AbstractApplication> appClazz = (Class<? extends AbstractApplication>) new UrlClassLoader(url).loadClass(APP_CLASSNAME);
-        newManagementContext.getCatalog().addItem(appClazz);
+        final Class<? extends AbstractApplication> appClazz = (Class<? extends AbstractApplication>) ucl.loadClass(APP_CLASSNAME);
+        // ucl.close is only introduced in java 1.7
+        if (ucl instanceof Closeable) ((Closeable)ucl).close();
+
+        newManagementContext.getCatalogInitialization().addPopulationCallback(new Function<ManagementContext, Void>() {
+            @Override
+            public Void apply(ManagementContext input) {
+                input.getCatalog().addItem(appClazz);
+                return null;
+            }
+        });
         
         ClassLoader classLoader = newManagementContext.getCatalog().getRootClassLoader();
+        
+        classLoader.loadClass(appClazz.getName());
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader, null, ManagementNodeState.MASTER);
         newManagementContext.getRebindManager().startPersistence();
         return (StartableApplication) newApps.get(0);

@@ -200,7 +200,7 @@ public class RebindTestUtils {
                     ? this.properties
                     : BrooklynProperties.Factory.newDefault();
             if (this.emptyCatalog) {
-                properties.putIfAbsent(BrooklynServerConfig.BROOKLYN_CATALOG_URL, "classpath://brooklyn-catalog-empty.xml");
+                properties.putIfAbsent(BrooklynServerConfig.BROOKLYN_CATALOG_URL, ManagementContextInternal.EMPTY_CATALOG_URL);
             }
             if (forLive) {
                 unstarted = new LocalManagementContext(properties);

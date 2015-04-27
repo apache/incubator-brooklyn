@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
@@ -200,7 +201,7 @@ public class BrooklynRestApiLauncher {
 
         if (forceUseOfDefaultCatalogWithJavaClassPath) {
             // don't use any catalog.xml which is set
-            ((BrooklynProperties) mgmt.getConfig()).put(ManagementContextInternal.BROOKLYN_CATALOG_URL, "");
+            ((BrooklynProperties) mgmt.getConfig()).put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, ManagementContextInternal.EMPTY_CATALOG_URL);
             // sets URLs for a surefire
             ((LocalManagementContext) mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
         }

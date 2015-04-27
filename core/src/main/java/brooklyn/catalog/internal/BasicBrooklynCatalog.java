@@ -25,7 +25,6 @@ import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 
-import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +74,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -140,6 +138,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         catalog.load(mgmt, null);
         CatalogUtils.logDebugOrTraceIfRebinding(log, "Reloaded catalog for "+this+", now switching");
         this.catalog = catalog;
+        this.manualAdditionsCatalog = null;
 
         // Inject management context into and persist all the new entries.
         for (CatalogItem<?, ?> entry : getCatalogItems()) {
@@ -1100,41 +1099,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private synchronized void loadSerializer() {
         if (serializer==null) 
             serializer = new CatalogXmlSerializer();
-    }
-
-    public void resetCatalogToContentsAtConfiguredUrl() {
-        CatalogDto dto = null;
-        String catalogUrl = mgmt.getConfig().getConfig(BrooklynServerConfig.BROOKLYN_CATALOG_URL);
-        try {
-            if (!Strings.isEmpty(catalogUrl)) {
-                dto = CatalogDto.newDtoFromUrl(catalogUrl);
-                if (log.isDebugEnabled()) {
-                    log.debug("Loading catalog from {}: {}", catalogUrl, catalog);
-                }
-            }
-        } catch (Exception e) {
-            if (Throwables.getRootCause(e) instanceof FileNotFoundException) {
-                Maybe<Object> nonDefaultUrl = mgmt.getConfig().getConfigRaw(BrooklynServerConfig.BROOKLYN_CATALOG_URL, true);
-                if (nonDefaultUrl.isPresentAndNonNull() && !"".equals(nonDefaultUrl.get())) {
-                    log.warn("Could not find catalog XML specified at {}; using default (local classpath) catalog. Error was: {}", nonDefaultUrl, e);
-                } else {
-                    if (log.isDebugEnabled()) {
-                        log.debug("No default catalog file available at {}; trying again using local classpath to populate catalog. Error was: {}", catalogUrl, e);
-                    }
-                }
-            } else {
-                log.warn("Error importing catalog XML at " + catalogUrl + "; using default (local classpath) catalog. Error was: " + e, e);
-            }
-        }
-        if (dto == null) {
-            // retry, either an error, or was blank
-            dto = CatalogDto.newDefaultLocalScanningDto(CatalogClasspathDo.CatalogScanningModes.ANNOTATIONS);
-            if (log.isDebugEnabled()) {
-                log.debug("Loaded default (local classpath) catalog: " + catalog);
-            }
-        }
-
-        reset(dto);
     }
 
     @Deprecated

@@ -65,7 +65,15 @@ public class CatalogDto {
         return result.dto;
     }
 
+    /** @deprecated since 0.7.0 use {@link #newDtoFromXmlUrl(String)} if you must, but note the xml format itself is deprecated */
+    @Deprecated
     public static CatalogDto newDtoFromUrl(String url) {
+        return newDtoFromXmlUrl(url);
+    }
+    
+    /** @deprecated since 0.7.0 the xml format is deprecated; use YAML parse routines on BasicBrooklynCatalog */
+    @Deprecated
+    public static CatalogDto newDtoFromXmlUrl(String url) {
         if (LOG.isDebugEnabled()) LOG.debug("Retrieving catalog from: {}", url);
         try {
             InputStream source = ResourceUtils.create().getResourceFromUrl(url);
@@ -77,6 +85,7 @@ public class CatalogDto {
         }
     }
 
+    /** @deprecated since 0.7.0 the xml format is deprecated; use YAML parse routines on BasicBrooklynCatalog */
     public static CatalogDto newDtoFromXmlContents(String xmlContents, String originDescription) {
         CatalogDto result = (CatalogDto) new CatalogXmlSerializer().deserialize(new StringReader(xmlContents));
         result.contentsDescription = originDescription;

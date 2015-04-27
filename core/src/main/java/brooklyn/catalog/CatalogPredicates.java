@@ -72,6 +72,7 @@ public class CatalogPredicates {
         }
     };
 
+    /** @deprecated since 0.7.0 use {@link #displayName(Predicate)} */
     @Deprecated
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> name(final Predicate<? super String> filter) {
         return displayName(filter);

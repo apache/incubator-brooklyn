@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
@@ -51,7 +51,7 @@ public interface ManagementContextInternal extends ManagementContext {
     public static final String NON_TRANSIENT_TASK_TAG = BrooklynTaskTags.NON_TRANSIENT_TASK_TAG;
     public static final String TRANSIENT_TASK_TAG = BrooklynTaskTags.TRANSIENT_TASK_TAG;
 
-    public static final ConfigKey<String> BROOKLYN_CATALOG_URL = BrooklynServerConfig.BROOKLYN_CATALOG_URL;
+    public static final String EMPTY_CATALOG_URL = "classpath://brooklyn/empty.catalog.bom";
     
     ClassLoader getBaseClassLoader();
 
@@ -112,5 +112,18 @@ public interface ManagementContextInternal extends ManagementContext {
      * TODO In future this will change to a custom interface with a unique identifier for each error. */
     @Beta
     List<Throwable> errors();
+
+    @Beta
+    CatalogInitialization getCatalogInitialization();
+
+    @Beta
+    void setCatalogInitialization(CatalogInitialization catalogInitialization);
+
+    @Beta
+    public Maybe<BrooklynCatalog> getCatalogIfSet();
     
+    /** For use from {@link CatalogInitialization} to set the catalog */
+    @Beta
+    public void setCatalog(BrooklynCatalog catalog);
+
 }

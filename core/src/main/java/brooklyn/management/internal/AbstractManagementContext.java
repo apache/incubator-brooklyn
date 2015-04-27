@@ -38,11 +38,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -170,6 +169,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected final List<Throwable> errors = Collections.synchronizedList(MutableList.<Throwable>of()); 
 
     protected Maybe<URI> uri = Maybe.absent();
+    protected CatalogInitialization catalogInitialization;
 
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
         this(brooklynProperties, null);
@@ -359,24 +359,28 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     }
 
     @Override
-    public BrooklynCatalog getCatalog() {
-        if (catalog==null) {
-            loadCatalog();
-        }
-        return catalog;
+    public Maybe<BrooklynCatalog> getCatalogIfSet() {
+        return Maybe.<BrooklynCatalog>fromNullable(catalog);
     }
 
-    protected synchronized void loadCatalog() {
-        if (catalog != null) return;
-        BasicBrooklynCatalog catalog = new BasicBrooklynCatalog(this);
-        CatalogLoadMode loadMode = getConfig().getConfig(BrooklynServerConfig.CATALOG_LOAD_MODE);
-        if (CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL.equals(loadMode)) {
-            log.debug("Resetting catalog to configured URL. Catalog mode is: {}", loadMode.name());
-            catalog.resetCatalogToContentsAtConfiguredUrl();
-        } else if (log.isDebugEnabled()) {
-            log.debug("Deferring catalog load to rebind manager. Catalog mode is: {}", loadMode.name());
+    @Override
+    public void setCatalog(BrooklynCatalog catalog) {
+        if (this.catalog!=null && catalog!=null) {
+            // should only happen if process has accessed catalog before rebind/startup populated it
+            log.warn("Replacing catalog in management context; new catalog is: "+catalog);
         }
-        this.catalog = catalog;
+        this.catalog = (BasicBrooklynCatalog) catalog;
+    }
+
+    @Override
+    public BrooklynCatalog getCatalog() {
+        if (catalog!=null) 
+            return catalog;
+        
+        // catalog init is needed; normally this will be done from start sequence,
+        // but if accessed early -- and in tests -- we will load it here
+        // TODO log if in launcher mode
+        return getCatalogInitialization().getCatalogPopulatingBestEffort(this);
     }
 
     /**
@@ -443,6 +447,21 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return uri;
     }
     
+    @Override
+    public CatalogInitialization getCatalogInitialization() {
+        if (catalogInitialization!=null) return catalogInitialization;
+        synchronized (this) {
+            if (catalogInitialization!=null) return catalogInitialization;
+            CatalogInitialization ci = new CatalogInitialization();
+            setCatalogInitialization(ci);
+            return ci;
+        }
+    }
+    
+    @Override
+    public synchronized void setCatalogInitialization(CatalogInitialization catalogInitialization) {
+        this.catalogInitialization = catalogInitialization;
+    }
     
     public BrooklynObject lookup(String id) {
         return lookup(id, BrooklynObject.class);
