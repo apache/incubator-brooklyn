@@ -567,7 +567,7 @@ public abstract class MachineLifecycleEffectorTasks {
             return null;
         }});
 
-        Maybe<SshMachineLocation> sshMachine = Machines.findUniqueSshMachineLocation(entity().getLocations());
+        Maybe<MachineLocation> machine = Machines.findUniqueMachineLocation(entity().getLocations());
         Task<String> stoppingProcess = null;
         if (canStop(stopProcessMode, entity())) {
             stoppingProcess = DynamicTasks.queue("stopping (process)", new Callable<String>() { public String call() {
@@ -579,7 +579,7 @@ public abstract class MachineLifecycleEffectorTasks {
         }
 
         Task<StopMachineDetails<Integer>> stoppingMachine = null;
-        if (canStop(stopMachineMode, sshMachine.isAbsent())) {
+        if (canStop(stopMachineMode, machine.isAbsent())) {
             // Release this machine (even if error trying to stop process - we rethrow that after)
             stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<StopMachineDetails<Integer>>() {
                 public StopMachineDetails<Integer> call() {
@@ -615,7 +615,7 @@ public abstract class MachineLifecycleEffectorTasks {
             if (checkStopProcesses) {
                 // TODO we should test for destruction above, not merely successful "stop", as things like localhost and ssh won't be destroyed
                 DynamicTasks.waitForLast();
-                if (sshMachine.isPresent()) {
+                if (machine.isPresent()) {
                     // throw early errors *only if* there is a machine and we have not destroyed it
                     stoppingProcess.get();
                 }

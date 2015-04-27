@@ -157,12 +157,25 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         String unencodePowershell =
                 "$RDP = Get-WmiObject -Class Win32_TerminalServiceSetting -ComputerName $env:computername -Namespace root\\CIMV2\\TerminalServices -Authentication PacketPrivacy\r\n" +
                 "$RDP.SetAllowTSConnections(1,1)\r\n" +
-                "Set-ExecutionPolicy Unrestricted";
+                "Set-ExecutionPolicy Unrestricted\r\n" +
+                "Set-Item WSMan:\\localhost\\Shell\\MaxConcurrentUsers 100\r\n" +
+                "Set-Item WSMan:\\localhost\\Shell\\MaxMemoryPerShellMB 0\r\n" +
+                "Set-Item WSMan:\\localhost\\Shell\\MaxProcessesPerShell 0\r\n" +
+                "Set-Item WSMan:\\localhost\\Shell\\MaxShellsPerUser 0\r\n" +
+                "New-ItemProperty \"HKLM:\\System\\CurrentControlSet\\Control\\LSA\" -Name \"SuppressExtendedProtection\" -Value 1 -PropertyType \"DWord\"";
+//                "New-ItemProperty \"HKLM:\\System\\CurrentControlSet\\Control\\LSA\" -Name \"LmCompatibilityLevel\" -Value 3 -PropertyType \"DWord\" \r\n";
+
         String encoded = new String(Base64.encodeBase64(unencodePowershell.getBytes(Charsets.UTF_16LE)));
         return "winrm quickconfig -q & " +
                 "winrm set winrm/config/service/auth @{Basic=\"true\"} & " +
+                "winrm set winrm/config/service/auth @{CredSSP=\"true\"} & " +
+                "winrm set winrm/config/client/auth @{CredSSP=\"true\"} & " +
                 "winrm set winrm/config/client @{AllowUnencrypted=\"true\"} & " +
                 "winrm set winrm/config/service @{AllowUnencrypted=\"true\"} & " +
+                "winrm set winrm/config/winrs @{MaxConcurrentUsers=\"100\"} & " +
+                "winrm set winrm/config/winrs @{MaxMemoryPerShellMB=\"0\"} & " +
+                "winrm set winrm/config/winrs @{MaxProcessesPerShell=\"0\"} & " +
+                "winrm set winrm/config/winrs @{MaxShellsPerUser=\"0\"} & " +
                 "netsh advfirewall firewall add rule name=RDP dir=in protocol=tcp localport=3389 action=allow profile=any & " +
                 "netsh advfirewall firewall add rule name=WinRM dir=in protocol=tcp localport=5985 action=allow profile=any & " +
                 "powershell -EncodedCommand " + encoded;
