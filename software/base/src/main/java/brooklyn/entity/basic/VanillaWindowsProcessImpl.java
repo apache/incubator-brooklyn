@@ -18,6 +18,22 @@
  */
 package brooklyn.entity.basic;
 
-public interface VanillaSoftwareProcessDriver extends AbstractVanillaProcessDriver {
+public class VanillaWindowsProcessImpl extends SoftwareProcessImpl implements VanillaWindowsProcess {
+    @Override
+    public Class getDriverInterface() {
+        return VanillaWindowsProcessDriver.class;
+    }
+
+    @Override
+    protected void connectSensors() {
+        super.connectSensors();
+        connectServiceUpIsRunning();
+    }
+
+    @Override
+    protected void disconnectSensors() {
+        disconnectServiceUpIsRunning();
+        super.disconnectSensors();
+    }
 
 }

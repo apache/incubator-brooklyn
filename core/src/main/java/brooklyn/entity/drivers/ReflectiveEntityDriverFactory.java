@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -54,6 +55,7 @@ public class ReflectiveEntityDriverFactory {
     
     public ReflectiveEntityDriverFactory() {
         addRule(DriverInferenceForSshLocation.DEFAULT_IDENTIFIER, new DriverInferenceForSshLocation());
+        addRule(DriverInferenceForWinRmLocation.DEFAULT_IDENTIFIER, new DriverInferenceForWinRmLocation());
     }
     
     public interface DriverInferenceRule {
@@ -162,6 +164,21 @@ public class ReflectiveEntityDriverFactory {
                 throw new IllegalArgumentException(String.format("Driver name [%s] doesn't end with 'Driver'; cannot auto-detect SshDriver class name", driverInterfaceName));
             }
             return Strings.removeFromEnd(driverInterfaceName, "Driver")+"SshDriver";
+        }
+    }
+
+    public static class DriverInferenceForWinRmLocation extends AbstractDriverInferenceRule {
+
+        public static final String DEFAULT_IDENTIFIER = "winrm-location-driver-inference-rule";
+
+        @Override
+        public <D extends EntityDriver> String inferDriverClassName(DriverDependentEntity<D> entity, Class<D> driverInterface, Location location) {
+            String driverInterfaceName = driverInterface.getName();
+            if (!(location instanceof WinRmMachineLocation)) return null;
+            if (!driverInterfaceName.endsWith("Driver")) {
+                throw new IllegalArgumentException(String.format("Driver name [%s] doesn't end with 'Driver'; cannot auto-detect WinRmDriver class name", driverInterfaceName));
+            }
+            return Strings.removeFromEnd(driverInterfaceName, "Driver")+"WinRmDriver";
         }
     }
 

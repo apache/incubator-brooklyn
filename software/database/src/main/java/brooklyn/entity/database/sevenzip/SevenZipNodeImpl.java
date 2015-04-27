@@ -16,8 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.basic;
+package brooklyn.entity.database.sevenzip;
 
-public interface VanillaSoftwareProcessDriver extends AbstractVanillaProcessDriver {
+import brooklyn.entity.basic.SoftwareProcessImpl;
 
+public class SevenZipNodeImpl extends SoftwareProcessImpl implements SevenZipNode {
+    @Override
+    public Class getDriverInterface() {
+        return SevenZipWinRmDriver.class;
+    }
+
+    @Override
+    protected void connectSensors() {
+        super.connectSensors();
+        connectServiceUpIsRunning();
+    }
+
+    @Override
+    protected void disconnectSensors() {
+        super.disconnectSensors();
+        disconnectServiceUpIsRunning();
+    }
 }

@@ -58,7 +58,7 @@ public interface LiveTestEntity extends TestEntity {
             addLocations(locs);
             provisioningLocation = (JcloudsLocation) Iterables.find(locs, Predicates.instanceOf(JcloudsLocation.class));
             try {
-                obtainedLocation = provisioningLocation.obtain(((LocationInternal)provisioningLocation).config().getBag().getAllConfig());
+                obtainedLocation = (JcloudsSshMachineLocation)provisioningLocation.obtain(((LocationInternal)provisioningLocation).config().getBag().getAllConfig());
             } catch (NoMachinesAvailableException e) {
                 throw Throwables.propagate(e);
             }

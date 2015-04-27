@@ -424,7 +424,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange.
      */
     protected Collection<Integer> getRequiredOpenPorts() {
-        Set<Integer> ports = MutableSet.of(22);
+        // TODO: Should only open 22 *or* 5985. Perhaps a flag / ConfigKey on SoftwareProcessImpl?
+        Set<Integer> ports = MutableSet.of(22, 5985, 3389);
         for (ConfigKey k: getEntityType().getConfigKeys()) {
             if (PortRange.class.isAssignableFrom(k.getType())) {
                 PortRange p = (PortRange)getConfig(k);
