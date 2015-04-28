@@ -31,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Sets;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
@@ -55,6 +57,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -414,6 +417,14 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         result.putAll(getConfig(PROVISIONING_PROPERTIES));
         if (result.get(CloudLocationConfig.INBOUND_PORTS) == null) {
             Collection<Integer> ports = getRequiredOpenPorts();
+            Object requiredPorts = result.get(CloudLocationConfig.ADDITIONAL_INBOUND_PORTS);
+            if (requiredPorts instanceof Integer) {
+                ports.add((Integer) requiredPorts);
+            } else if (requiredPorts instanceof Iterable) {
+                for (Object o : (Iterable<?>) requiredPorts) {
+                    if (o instanceof Integer) ports.add((Integer) o);
+                }
+            }
             if (ports != null && ports.size() > 0) result.put(CloudLocationConfig.INBOUND_PORTS, ports);
         }
         result.put(LocationConfigKeys.CALLER_CONTEXT, this);
@@ -421,16 +432,27 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     /** returns the ports that this entity wants to use;
-     * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange.
+     * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange
+     * plus any ports defined with a config keys ending in .port 
      */
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = MutableSet.of(22);
-        for (ConfigKey k: getEntityType().getConfigKeys()) {
+        Map<ConfigKey<?>, ?> allConfig = config().getBag().getAllConfigAsConfigKeyMap();
+        Set<ConfigKey<?>> configKeys = Sets.newHashSet(allConfig.keySet());
+        configKeys.addAll(getEntityType().getConfigKeys());
+        
+        for (ConfigKey<?> k: configKeys) {
             if (PortRange.class.isAssignableFrom(k.getType())) {
                 PortRange p = (PortRange)getConfig(k);
                 if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
+            } else if(k.getName().matches(".*\\.port")){
+                Object value = getConfig(k);
+                if (value instanceof Integer){
+                    ports.add((Integer)value);
+                }
             }
-        }
+        }        
+        
         log.debug("getRequiredOpenPorts detected default {} for {}", ports, this);
         return ports;
     }
