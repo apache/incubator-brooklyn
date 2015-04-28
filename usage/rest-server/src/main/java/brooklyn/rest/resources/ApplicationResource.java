@@ -22,6 +22,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
+
+import brooklyn.entity.basic.EntityPredicates;
+import brooklyn.util.text.Strings;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 
 import java.io.StringReader;
@@ -216,9 +219,18 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
 
     @Override
     public List<ApplicationSummary> list() {
+        return list(".*");
+    }
+
+    @Override
+    public List<ApplicationSummary> list(String typeRegex) {
+        if (Strings.isBlank(typeRegex)) {
+            typeRegex = ".*";
+        }
         return FluentIterable
                 .from(mgmt().getApplications())
                 .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
+                .filter(EntityPredicates.hasInterfaceMatching(typeRegex))
                 .transform(ApplicationTransformer.FROM_APPLICATION)
                 .toList();
     }
