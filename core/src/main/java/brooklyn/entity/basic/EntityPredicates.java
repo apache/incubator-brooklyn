@@ -19,6 +19,7 @@
 package brooklyn.entity.basic;
 
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -30,6 +31,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.guava.SerializablePredicate;
+import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Objects;
@@ -271,9 +273,38 @@ public class EntityPredicates {
     // ---------------------------
 
     /**
+     * @param typeRegex a regular expression
+     * @return true if any of the interfaces implemented by the entity (including those derived) match typeRegex.
+     */
+    public static Predicate<Entity> hasInterfaceMatching(String typeRegex) {
+        return new ImplementsInterface(typeRegex);
+    }
+
+    protected static class ImplementsInterface implements SerializablePredicate<Entity> {
+        protected final Pattern pattern;
+
+        public ImplementsInterface(String typeRegex) {
+            this.pattern = Pattern.compile(typeRegex);
+        }
+
+        @Override
+        public boolean apply(@Nullable Entity input) {
+            if (input == null) return false;
+            for (Class<?> cls : Reflections.getAllInterfaces(input.getClass())) {
+                if (pattern.matcher(cls.getName()).matches()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    // ---------------------------
+
+    /**
      * Returns a predicate that determines if a given entity is a direct child of this {@code parent}.
      */
-    public static <T> Predicate<Entity> isChildOf(final Entity parent) {
+    public static Predicate<Entity> isChildOf(final Entity parent) {
         return new IsChildOf(parent);
     }
 
@@ -307,7 +338,7 @@ public class EntityPredicates {
 
     // ---------------------------
     
-    public static <T> Predicate<Entity> isMemberOf(final Group group) {
+    public static Predicate<Entity> isMemberOf(final Group group) {
         return new IsMemberOf(group);
     }
 
