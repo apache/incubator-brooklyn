@@ -49,6 +49,7 @@ import brooklyn.util.javalang.UrlClassLoader;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -91,7 +92,9 @@ public class ClassFinder {
             }
         };
     }
-    
+
+    /** finds a jar at a url, or for directories, jars under a path */
+    @Beta
     public static List<URL> toJarUrls(String url) throws MalformedURLException {
         if (url==null) throw new NullPointerException("Cannot read from null");
         if (url=="") throw new NullPointerException("Cannot read from empty string");
@@ -126,6 +129,8 @@ public class ClassFinder {
                         log.info("Cannot read "+file+"; not a file or directory");
                     }
                 }
+            } else {
+                result.add(new URL("file://"+tidiedFile));
             }
         }
         

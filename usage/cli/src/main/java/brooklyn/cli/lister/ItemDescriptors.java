@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.basic.BrooklynDynamicType;
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynType;
@@ -42,6 +45,8 @@ import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.EffectorTransformer;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.transform.SensorTransformer;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -50,6 +55,8 @@ import com.google.common.collect.Sets;
 
 public class ItemDescriptors {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ItemDescriptors.class);
+    
     public static List<Map<String, Object>> toItemDescriptors(Iterable<? extends Class<? extends BrooklynObject>> types, boolean headingsOnly) {
         return toItemDescriptors(types, headingsOnly, null);
     }
@@ -58,8 +65,17 @@ public class ItemDescriptors {
         List<Map<String, Object>> itemDescriptors = Lists.newArrayList();
         
         for (Class<? extends BrooklynObject> type : types) {
-            Map<String, Object> itemDescriptor = toItemDescriptor(type, headingsOnly);
-            itemDescriptors.add(itemDescriptor);
+            try {
+                Map<String, Object> itemDescriptor = toItemDescriptor(type, headingsOnly);
+                itemDescriptors.add(itemDescriptor);
+            } catch (Throwable throwable) {
+                if (throwable instanceof InterruptedException)
+                    throw new RuntimeInterruptedException((InterruptedException) throwable);
+                if (throwable instanceof RuntimeInterruptedException)
+                    throw (RuntimeInterruptedException) throwable;
+
+                LOG.warn("Could not load "+type+": "+throwable);
+            }
         }
         
         if (!Strings.isNullOrEmpty(sortField)) {
