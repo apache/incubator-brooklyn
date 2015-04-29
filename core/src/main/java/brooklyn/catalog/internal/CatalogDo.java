@@ -208,19 +208,28 @@ public class CatalogDo {
                 child.clearCache(true);
             }
         }
+        clearParentCache();
+    }
+    protected void clearParentCache() {
+        if (this.parent!=null)
+            this.parent.clearCache(false);
     }
     
     /**
      * Adds the given entry to the catalog, with no enrichment.
      * Callers may prefer {@link CatalogClasspathDo#addCatalogEntry(CatalogItemDtoAbstract, Class)}
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public synchronized void addEntry(CatalogItemDtoAbstract<?,?> entry) {
         dto.addEntry(entry);
+        
+        // could do clearCache(false); but this is slightly more efficient...
         if (cacheById != null) {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
             CatalogItemDo<?, ?> cdo = new CatalogItemDo(this, entry);
             cacheById.put(entry.getId(), cdo);
-        }
+        }        
+        clearParentCache();
+        
         if (mgmt != null) {
             mgmt.getRebindManager().getChangeListener().onManaged(entry);
         }
@@ -231,12 +240,19 @@ public class CatalogDo {
      */
     public synchronized void deleteEntry(CatalogItemDtoAbstract<?, ?> entry) {
         dto.removeEntry(entry);
+        
+        // could do clearCache(false); but this is slightly more efficient...
         if (cacheById != null) {
             cacheById.remove(entry.getId());
         }
+        clearParentCache();
+        
         if (mgmt != null) {
             // TODO: Can the entry be in more than one catalogue? The management context has no notion of
             // catalogue hierarchy so this will effectively remove it from all catalogues.
+            // (YES- we're assuming ID's are unique across all catalogues; if not, things get out of sync;
+            // however see note at top of BasicBrooklynCatalog --
+            // manualCatalog and OSGi is used for everything now except legacy XML trees)
             mgmt.getRebindManager().getChangeListener().onUnmanaged(entry);
         }
     }
@@ -254,8 +270,10 @@ public class CatalogDo {
     public synchronized void addToClasspath(String ...urls) {
         if (dto.classpath == null)
             dto.classpath = new CatalogClasspathDto();
-        for (String url: urls)
-            dto.classpath.addEntry(url);
+        for (String url: urls) {
+            if (url!=null)
+                dto.classpath.addEntry(url);
+        }
         if (isLoaded())
             throw new IllegalStateException("dynamic classpath entry value update not supported");
         // easy enough to add, just support unload+reload (and can also allow dynamic setScan below)

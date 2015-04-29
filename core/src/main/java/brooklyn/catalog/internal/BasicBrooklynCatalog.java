@@ -45,6 +45,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.catalog.CatalogPredicates;
+import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
@@ -74,11 +75,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+/* TODO the complex tree-structured catalogs are only useful when we are relying on those separate catalog classloaders
+ * to isolate classpaths. with osgi everything is just put into the "manual additions" catalog. */
 public class BasicBrooklynCatalog implements BrooklynCatalog {
     private static final String POLICIES_KEY = "brooklyn.policies";
     private static final String LOCATIONS_KEY = "brooklyn.locations";
@@ -185,12 +189,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             return null;
         }
 
-        String versionedId = CatalogUtils.getVersionedId(symbolicName, fixedVersionId);
-        CatalogItemDo<?, ?> item = null;
-        //TODO should remove "manual additions" bucket; just have one map a la osgi
-        if (manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getIdCache().get(versionedId);
-        if (item == null) item = catalog.getIdCache().get(versionedId);
-        return item;
+        return catalog.getIdCache().get( CatalogUtils.getVersionedId(symbolicName, fixedVersionId) );
     }
     
     private String getFixedVersionId(String symbolicName, String version) {
@@ -596,7 +595,22 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         Collection<CatalogBundle> libraryBundles = CatalogItemDtoAbstract.parseLibraries(librariesCombined);
 
         // TODO as this may take a while if downloading, the REST call should be async
+        // (this load is required for the scan below and I think also for yaml resolution)
         CatalogUtils.installLibraries(mgmt, libraryBundlesNew);
+
+        Boolean scanJavaAnnotations = getFirstAs(itemMetadata, Boolean.class, "scanJavaAnnotations", "scan_java_annotations").orNull();
+        if (scanJavaAnnotations==null || !scanJavaAnnotations) {
+            // don't scan
+        } else {
+            // scan for annotations: if libraries here, scan them; if inherited libraries error; else scan classpath
+            if (!libraryBundlesNew.isEmpty()) {
+                result.addAll(scanAnnotations(mgmt, libraryBundlesNew));
+            } else if (libraryBundles.isEmpty()) {
+                result.addAll(scanAnnotations(mgmt, null));
+            } else {
+                throw new IllegalStateException("Cannot scan catalog node no local bundles, and with inherited bundles we will not scan the classpath");
+            }
+        }
         
         Object items = catalogMetadata.remove("items");
         Object item = catalogMetadata.remove("item");
@@ -749,7 +763,36 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return oldValue;
     }
 
-    
+    /** scans the given libraries for annotated items, or if null scans the local classpath */ 
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotations(ManagementContext mgmt, Collection<CatalogBundle> libraries) {
+//        CatalogDto dto = CatalogDto.newDefaultLocalScanningDto(CatalogClasspathDo.CatalogScanningModes.ANNOTATIONS);
+        CatalogDto dto;
+        String[] urls = null;
+        if (libraries==null) {
+            dto = CatalogDto.newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-local-classpath");
+        } else {
+            dto = CatalogDto.newNamedInstance("Bundles Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-bundles-classpath-"+libraries.hashCode());
+            urls = new String[libraries.size()];
+            int i=0;
+            for (CatalogBundle b: libraries)
+                urls[i++] = b.getUrl();
+        }
+        CatalogDo subCatalog = new CatalogDo(dto);
+        subCatalog.mgmt = mgmt;
+        if (urls!=null) {
+            subCatalog.addToClasspath(urls);
+        } // else use local classpath
+        subCatalog.setClasspathScanForEntities(CatalogScanningModes.ANNOTATIONS);
+        subCatalog.load();
+        // TODO apply metadata?  (extract YAML from the items returned)
+        // also see doc .../catalog/index.md which says we might not apply metadata
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        Collection<CatalogItemDtoAbstract<?, ?>> result = (Collection<CatalogItemDtoAbstract<?, ?>>)(Collection)Collections2.transform(
+                (Collection<CatalogItemDo<Object,Object>>)(Collection)subCatalog.getIdCache().values(), 
+                itemDoToDto());
+        return result;
+    }
+
     private class PlanInterpreterGuessingType {
 
         final String id;
@@ -1084,6 +1127,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return new Function<CatalogItemDo<T,SpecT>, CatalogItem<T,SpecT>>() {
             @Override
             public CatalogItem<T,SpecT> apply(@Nullable CatalogItemDo<T,SpecT> item) {
+                if (item==null) return null;
                 return item.getDto();
             }
         };

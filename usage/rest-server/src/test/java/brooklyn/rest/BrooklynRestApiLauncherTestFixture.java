@@ -82,8 +82,10 @@ public abstract class BrooklynRestApiLauncherTestFixture {
     }
 
     public static void forceUseOfDefaultCatalogWithJavaClassPath(ManagementContext manager) {
+        // TODO duplication with BrooklynRestApiLauncher ?
+        
         // don't use any catalog.xml which is set
-        ((BrooklynProperties)manager.getConfig()).put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, ManagementContextInternal.EMPTY_CATALOG_URL);
+        ((BrooklynProperties)manager.getConfig()).put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, BrooklynRestApiLauncher.SCANNING_CATALOG_BOM_URL);
         // sets URLs for a surefire
         ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
         // this also works

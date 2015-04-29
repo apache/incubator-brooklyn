@@ -38,7 +38,6 @@ import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
-import brooklyn.util.yaml.Yamls;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -189,15 +188,18 @@ public class CatalogInitialization {
             return;
         }
 
-        // TODO scan for default.catalog.bom files and add all of them
+        // otherwise look for for classpath:/brooklyn/default.catalog.bom --
+        // there is one on the classpath which says to scan, and provides a few templates;
+        // if one is supplied by user in the conf/ dir that will override the item from the classpath
+        // (TBD - we might want to scan for all such bom's?)
         
-//        // TODO optionally scan for classpath items
-//        // retry, either an error, or was blank
-//        dto = CatalogDto.newDefaultLocalScanningDto(CatalogClasspathDo.CatalogScanningModes.ANNOTATIONS);
-//        if (log.isDebugEnabled()) {
-//            log.debug("Loaded default (local classpath) catalog: " + catalogDo);
-//        }
+        catalogUrl = "classpath:/brooklyn/default.catalog.bom";
+        if (new ResourceUtils(this).doesUrlExist(catalogUrl)) {
+            populateInitialFromUri(catalog, managementContext, catalogUrl, PopulateMode.YAML);
+            return;
+        }
         
+        log.info("No catalog found on classpath or specified; catalog will not be initialized.");
         return;
     }
     
@@ -228,17 +230,7 @@ public class CatalogInitialization {
         
         if (result==null && contents!=null && (mode==PopulateMode.XML || mode==PopulateMode.AUTODETECT)) {
             // then try XML
-            CatalogDto dto = null;
-            try {
-                dto = CatalogDto.newDtoFromXmlContents(contents, catalogUrl);
-                problem = null;
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                if (problem==null) problem = e;
-            }
-            if (dto!=null) {
-                catalog.reset(dto);
-            }
+            problem = populateInitialFromUriXml(catalog, catalogUrl, problem, contents);
         }
         
         if (result!=null) {
@@ -249,6 +241,23 @@ public class CatalogInitialization {
             // TODO inform mgmt of error
         }
 
+    }
+
+    // deprecated XML format
+    @SuppressWarnings("deprecation")
+    private Exception populateInitialFromUriXml(BasicBrooklynCatalog catalog, String catalogUrl, Exception problem, String contents) {
+        CatalogDto dto = null;
+        try {
+            dto = CatalogDto.newDtoFromXmlContents(contents, catalogUrl);
+            problem = null;
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            if (problem==null) problem = e;
+        }
+        if (dto!=null) {
+            catalog.reset(dto);
+        }
+        return problem;
     }
 
     protected void populateAdditions(BasicBrooklynCatalog catalog, ManagementContext mgmt) {

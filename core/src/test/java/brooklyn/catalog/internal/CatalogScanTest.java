@@ -162,13 +162,13 @@ public class CatalogScanTest {
     
     @Test
     public void testAnnotationIsDefault() {
-        loadAnnotationsOnlyCatalog();
         loadTheDefaultCatalog();
-        
-        int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
         int numInDefault = Iterables.size(defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
         
-        Assert.assertEquals(numFromAnnots, numInDefault);
+        loadAnnotationsOnlyCatalog();
+        int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
+        
+        Assert.assertEquals(numInDefault, numFromAnnots);
     }
 
     // a simple test asserting no errors when listing the real catalog, and listing them for reference

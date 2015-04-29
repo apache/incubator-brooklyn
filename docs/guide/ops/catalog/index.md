@@ -103,6 +103,11 @@ The following optional catalog metadata is supported:
   (to prevent requiring all OSGi bundles to be loaded at launch).
   Icons are instead typically installed either at the server from which the OSGi bundles or catalog items are supplied 
   or in the `conf` folder of the Brooklyn distro.
+- `scanJavaAnnotations` [experimental]: if provided (as `true`), this will scan any locally provided
+  libraries for types annotated `@Catalog` and extract metadata to include them as catalog items.
+  If no libraries are specified this will scan the default classpath.
+  This feature is experimental and may change or be removed.
+  Also note that other metadata (such as versions, etc) may not be applied.
 - `brooklyn.libraries`: a list of pointers to OSGi bundles required for the catalog item.
   This can be omitted if blueprints are pure YAML and everything required is included in the classpath and catalog.
   Where custom Java code or bundled resources is needed, however, OSGi JARs supply

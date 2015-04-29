@@ -129,8 +129,9 @@ public interface BrooklynCatalog {
      * adds an item to the 'manual' catalog;
      * this does not update the classpath or have a record to the java Class
      *
-     * @deprecated since 0.7.0 Construct catalogs with OSGi bundles instead
+     * @deprecated since 0.7.0 Construct catalogs with yaml (referencing OSGi bundles) instead
      */
+    // TODO maybe this should stay on the API? -AH Apr 2015 
     @Deprecated
     void addItem(CatalogItem<?,?> item);
 

@@ -44,6 +44,7 @@ import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
 
@@ -58,7 +59,7 @@ public class BrooklynRestResourceUtilsTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = new LocalManagementContext();
+        managementContext = LocalManagementContextForTests.newInstance();
         util = new BrooklynRestResourceUtils(managementContext);
     }
     
@@ -114,7 +115,7 @@ public class BrooklynRestResourceUtilsTest {
             .javaType(SampleNoOpApplication.class.getName())
             .build();
         managementContext.getCatalog().addItem(item);
-
+        
         ApplicationSpec spec = ApplicationSpec.builder()
                 .name("myname")
                 .type(type)
