@@ -345,7 +345,8 @@ public abstract class RebindIteration {
         
         Collection<CatalogItem<?, ?>> catalogItems = rebindContext.getCatalogItems();
         CatalogInitialization catInit = ((ManagementContextInternal)managementContext).getCatalogInitialization();
-        catInit.applyCatalogLoadMode(managementContext);
+        catInit.injectManagementContext(managementContext);
+        catInit.applyCatalogLoadMode();
         Collection<CatalogItem<?,?>> itemsForResettingCatalog = null;
         boolean needsInitialCatalog;
         if (rebindManager.persistCatalogItemsEnabled) {
@@ -390,7 +391,7 @@ public abstract class RebindIteration {
         }
 
         // TODO in read-only mode, perhaps do this less frequently than entities etc ?
-        catInit.populateCatalog(managementContext, needsInitialCatalog, itemsForResettingCatalog);
+        catInit.populateCatalog(needsInitialCatalog, itemsForResettingCatalog);
     }
 
     protected void instantiateLocationsAndEntities() {

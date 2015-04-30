@@ -30,10 +30,13 @@ import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.FatalRuntimeException;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
@@ -41,10 +44,11 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 
 @Beta
-public class CatalogInitialization {
+public class CatalogInitialization implements ManagementContextInjectable {
 
     /*
 
@@ -74,8 +78,12 @@ public class CatalogInitialization {
     boolean force;
 
     boolean disallowLocal = false;
-    List<Function<ManagementContext, Void>> callbacks = MutableList.of();
+    List<Function<CatalogInitialization, Void>> callbacks = MutableList.of();
     AtomicInteger runCount = new AtomicInteger();
+    
+    ManagementContext managementContext;
+    boolean isStartingUp = false;
+    boolean failOnStartupErrors = false;
     
     public CatalogInitialization(String initialUri, boolean reset, String additionUri, boolean force) {
         this.initialUri = initialUri;
@@ -88,7 +96,17 @@ public class CatalogInitialization {
         this(null, false, null, false);
     }
 
-    public CatalogInitialization addPopulationCallback(Function<ManagementContext, Void> callback) {
+    public void injectManagementContext(ManagementContext managementContext) {
+        if (this.managementContext!=null && managementContext!=null && !this.managementContext.equals(managementContext))
+            throw new IllegalStateException("Cannot switch management context of "+this+"; from "+this.managementContext+" to "+managementContext);
+        this.managementContext = managementContext;
+    }
+    
+    public ManagementContext getManagementContext() {
+        return Preconditions.checkNotNull(managementContext, "management context has not been injected into "+this);
+    }
+
+    public CatalogInitialization addPopulationCallback(Function<CatalogInitialization, Void> callback) {
         callbacks.add(callback);
         return this;
     }
@@ -106,51 +124,51 @@ public class CatalogInitialization {
     }
 
     /** makes or updates the mgmt catalog, based on the settings in this class */
-    public void populateCatalog(ManagementContext managementContext, boolean needsInitial, Collection<CatalogItem<?, ?>> optionalItemsForResettingCatalog) {
+    public void populateCatalog(boolean needsInitial, Collection<CatalogItem<?, ?>> optionalItemsForResettingCatalog) {
         try {
             BasicBrooklynCatalog catalog;
             Maybe<BrooklynCatalog> cm = ((ManagementContextInternal)managementContext).getCatalogIfSet();
             if (cm.isAbsent()) {
                 if (hasRun()) {
-                    log.warn("Odd: catalog initialization has run but management context has no catalog; re-creating");
+                    log.warn("Catalog initialization has already run but management context has no catalog; re-creating");
                 }
                 catalog = new BasicBrooklynCatalog(managementContext);
                 setCatalog(managementContext, catalog, "Replacing catalog with newly populated catalog", true);
             } else {
                 if (!hasRun()) {
-                    log.warn("Odd: catalog initialization has not run but management context has a catalog; re-populating");
+                    log.warn("Catalog initialization has not properly run but management context has a catalog; re-populating, possibly overwriting items installed during earlier access (it may have been an early web request)");
                 }
                 catalog = (BasicBrooklynCatalog) cm.get();
             }
 
-            populateCatalog(managementContext, catalog, needsInitial, true, optionalItemsForResettingCatalog);
+            populateCatalog(catalog, needsInitial, true, optionalItemsForResettingCatalog);
             
         } finally {
             runCount.incrementAndGet();
         }
     }
 
-    private void populateCatalog(ManagementContext managementContext, BasicBrooklynCatalog catalog, boolean needsInitial, boolean runCallbacks, Collection<CatalogItem<?, ?>> optionalItemsForResettingCatalog) {
-        applyCatalogLoadMode(managementContext);
+    private void populateCatalog(BasicBrooklynCatalog catalog, boolean needsInitial, boolean runCallbacks, Collection<CatalogItem<?, ?>> optionalItemsForResettingCatalog) {
+        applyCatalogLoadMode();
         
         if (optionalItemsForResettingCatalog!=null) {
             catalog.reset(optionalItemsForResettingCatalog);
         }
         
         if (needsInitial) {
-            populateInitial(catalog, managementContext);
+            populateInitial(catalog);
         }
         
-        populateAdditions(catalog, managementContext);
+        populateAdditions(catalog);
 
         if (runCallbacks) {
-            populateViaCallbacks(catalog, managementContext);
+            populateViaCallbacks(catalog);
         }
     }
 
     private enum PopulateMode { YAML, XML, AUTODETECT }
     
-    protected void populateInitial(BasicBrooklynCatalog catalog, ManagementContext managementContext) {
+    protected void populateInitial(BasicBrooklynCatalog catalog) {
         if (disallowLocal) {
             if (!hasRun()) {
                 log.debug("CLI initial catalog not being read with disallow-local mode set.");
@@ -166,25 +184,25 @@ public class CatalogInitialization {
 //        B6) go to C1
 
         if (initialUri!=null) {
-            populateInitialFromUri(catalog, managementContext, initialUri, PopulateMode.AUTODETECT);
+            populateInitialFromUri(catalog, initialUri, PopulateMode.AUTODETECT);
             return;
         }
         
         String catalogUrl = managementContext.getConfig().getConfig(BrooklynServerConfig.BROOKLYN_CATALOG_URL);
         if (Strings.isNonBlank(catalogUrl)) {
-            populateInitialFromUri(catalog, managementContext, catalogUrl, PopulateMode.AUTODETECT);
+            populateInitialFromUri(catalog, catalogUrl, PopulateMode.AUTODETECT);
             return;
         }
         
         catalogUrl = Urls.mergePaths(BrooklynServerConfig.getMgmtBaseDir( managementContext.getConfig() ), "catalog.bom");
         if (new File(catalogUrl).exists()) {
-            populateInitialFromUri(catalog, managementContext, "file:"+catalogUrl, PopulateMode.YAML);
+            populateInitialFromUri(catalog, "file:"+catalogUrl, PopulateMode.YAML);
             return;
         }
         
         catalogUrl = Urls.mergePaths(BrooklynServerConfig.getMgmtBaseDir( managementContext.getConfig() ), "catalog.xml");
         if (new File(catalogUrl).exists()) {
-            populateInitialFromUri(catalog, managementContext, "file:"+catalogUrl, PopulateMode.XML);
+            populateInitialFromUri(catalog, "file:"+catalogUrl, PopulateMode.XML);
             return;
         }
 
@@ -195,7 +213,7 @@ public class CatalogInitialization {
         
         catalogUrl = "classpath:/brooklyn/default.catalog.bom";
         if (new ResourceUtils(this).doesUrlExist(catalogUrl)) {
-            populateInitialFromUri(catalog, managementContext, catalogUrl, PopulateMode.YAML);
+            populateInitialFromUri(catalog, catalogUrl, PopulateMode.YAML);
             return;
         }
         
@@ -203,7 +221,7 @@ public class CatalogInitialization {
         return;
     }
     
-    private void populateInitialFromUri(BasicBrooklynCatalog catalog, ManagementContext managementContext, String catalogUrl, PopulateMode mode) {
+    private void populateInitialFromUri(BasicBrooklynCatalog catalog, String catalogUrl, PopulateMode mode) {
         log.debug("Loading initial catalog from {}", catalogUrl);
 
         Exception problem = null;
@@ -260,7 +278,7 @@ public class CatalogInitialization {
         return problem;
     }
 
-    protected void populateAdditions(BasicBrooklynCatalog catalog, ManagementContext mgmt) {
+    protected void populateAdditions(BasicBrooklynCatalog catalog) {
         if (Strings.isNonBlank(additionsUri)) {
             if (disallowLocal) {
                 if (!hasRun()) {
@@ -281,17 +299,18 @@ public class CatalogInitialization {
         }
     }
 
-    protected void populateViaCallbacks(BasicBrooklynCatalog catalog, ManagementContext managementContext) {
-        for (Function<ManagementContext, Void> callback: callbacks)
-            callback.apply(managementContext);
+    protected void populateViaCallbacks(BasicBrooklynCatalog catalog) {
+        for (Function<CatalogInitialization, Void> callback: callbacks)
+            callback.apply(this);
     }
 
     private boolean setFromCatalogLoadMode = false;
+
     /** @deprecated since introduced in 0.7.0, only for legacy compatibility with 
      * {@link CatalogLoadMode} {@link BrooklynServerConfig#CATALOG_LOAD_MODE},
      * allowing control of catalog loading from a brooklyn property */
     @Deprecated
-    public void applyCatalogLoadMode(ManagementContext managementContext) {
+    public void applyCatalogLoadMode() {
         if (setFromCatalogLoadMode) return;
         setFromCatalogLoadMode = true;
         Maybe<Object> clmm = ((ManagementContextInternal)managementContext).getConfig().getConfigRaw(BrooklynServerConfig.CATALOG_LOAD_MODE, false);
@@ -314,7 +333,7 @@ public class CatalogInitialization {
     /** makes the catalog, warning if persistence is on and hasn't run yet 
      * (as the catalog will be subsequently replaced) */
     @Beta
-    public BrooklynCatalog getCatalogPopulatingBestEffort(ManagementContext managementContext) {
+    public BrooklynCatalog getCatalogPopulatingBestEffort() {
         Maybe<BrooklynCatalog> cm = ((ManagementContextInternal)managementContext).getCatalogIfSet();
         if (cm.isPresent()) return cm.get();
 
@@ -323,7 +342,7 @@ public class CatalogInitialization {
         if (oldC==null) {
             // our catalog was added, so run population
             // NB: we need the catalog to be saved already so that we can run callbacks
-            populateCatalog(managementContext, (BasicBrooklynCatalog) managementContext.getCatalog(), true, true, null);
+            populateCatalog((BasicBrooklynCatalog) managementContext.getCatalog(), true, true, null);
         }
         
         return managementContext.getCatalog();
@@ -350,6 +369,31 @@ public class CatalogInitialization {
             log.warn(messageIfAlready);
         }
         return cm.get();
+    }
+
+    public void setStartingUp(boolean isStartingUp) {
+        this.isStartingUp = isStartingUp;
+    }
+
+    public void setFailOnStartupErrors(boolean startupFailOnCatalogErrors) {
+        this.failOnStartupErrors = startupFailOnCatalogErrors;
+    }
+
+    public void handleException(Throwable throwable, Object details) {
+        if (throwable instanceof InterruptedException)
+            throw new RuntimeInterruptedException((InterruptedException) throwable);
+        if (throwable instanceof RuntimeInterruptedException)
+            throw (RuntimeInterruptedException) throwable;
+
+        log.error("Error loading catalog item '"+details+"': "+throwable);
+        log.debug("Trace for error loading catalog item '"+details+"': "+throwable, throwable);
+
+        // TODO give more detail when adding
+        ((ManagementContextInternal)getManagementContext()).errors().add(throwable);
+        
+        if (isStartingUp && failOnStartupErrors) {
+            throw new FatalRuntimeException("Unable to load catalog item '"+details+"': "+throwable, throwable);
+        }
     }
     
 }

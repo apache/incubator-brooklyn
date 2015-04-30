@@ -75,7 +75,6 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
@@ -192,11 +191,11 @@ public class Main extends AbstractMain {
     public static class LaunchCommand extends BrooklynCommandCollectingArgs {
 
         @Option(name = { "--localBrooklynProperties" }, title = "local brooklyn.properties file",
-                description = "local brooklyn.properties file, specific to this launch (appending to and overriding global properties)")
+                description = "Load the given properties file, specific to this launch (appending to and overriding global properties)")
         public String localBrooklynProperties;
 
         @Option(name = { "--noGlobalBrooklynProperties" }, title = "do not use any global brooklyn.properties file found",
-            description = "do not use the default global brooklyn.properties file found")
+            description = "Do not use the default global brooklyn.properties file found")
         public boolean noGlobalBrooklynProperties = false;
 
         @Option(name = { "-a", "--app" }, title = "application class or file",
@@ -223,7 +222,7 @@ public class Main extends AbstractMain {
                 + "if nothing is yet persisted in the catalog (or if it is reset)")
         public String catalogInitial;
 
-        @Option(name = { "--catalogReset" }, title = "clear catalog",
+        @Option(name = { "--catalogReset" }, 
             description = "Specifies that any catalog items which have been persisted should be cleared")
         public boolean catalogReset;
 
@@ -231,22 +230,22 @@ public class Main extends AbstractMain {
             description = "Specifies a catalog.bom to be added to the catalog")
         public String catalogAdd;
 
-        @Option(name = { "--catalogForce" }, title = "force catalog addition",
+        @Option(name = { "--catalogForce" }, 
             description = "Specifies that catalog items added via the CLI should be forcibly added, "
                 + "replacing any identical versions already registered (use with care!)")
         public boolean catalogForce;
 
         @Option(name = { "-p", "--port" }, title = "port number",
-                description = "Specifies the port to be used by the Brooklyn Management Console; "
+                description = "Use this port for the brooklyn management web console and REST API; "
                     + "default is 8081+ for http, 8443+ for https.")
         public String port;
 
         @Option(name = { "--https" },
-            description = "Specifies that the server should start on https.")
+            description = "Launch the web console on https")
         public boolean useHttps = false;
         
         @Option(name = { "-nc", "--noConsole" },
-                description = "Whether to start the web console")
+                description = "Do not start the web console or REST API")
         public boolean noConsole = false;
 
         @Option(name = { "-b", "--bindAddress" },
@@ -258,26 +257,32 @@ public class Main extends AbstractMain {
         public String publicAddress = null;
 
         @Option(name = { "--noConsoleSecurity" },
-                description = "Whether to disable security for the web console with no security (i.e. no authentication required)")
+                description = "Whether to disable authentication and security filters for the web console (for use when debugging on a secure network or bound to localhost)")
         public Boolean noConsoleSecurity = false;
 
-        @Option(name = { "--ignoreWebStartupErrors" },
-            description = "Ignore web subsystem failures on startup (default is to abort if the web API fails to start, as management is not possible)")
-        public boolean ignoreWebErrors = false;
+        @Option(name = { "--startupContinueOnWebErrors" },
+            description = "Continue on web subsystem failures during startup "
+                + "(default is to abort if the web API fails to start, as management access is not normally possible)")
+        public boolean startupContinueOnWebErrors = false;
 
-        @Option(name = { "--ignorePersistenceStartupErrors" },
-            description = "Ignore persistence/HA subsystem failures on startup "
-                + "(default is true, so errors can be viewed via the API)")
-        public boolean ignorePersistenceErrors = true;
+        @Option(name = { "--startupFailOnPersistenceErrors" },
+            description = "Fail on persistence/HA subsystem failures during startup "
+                + "(default is to continue, so errors can be viewed via the API)")
+        public boolean startupFailOnPersistenceErrors = false;
 
-        @Option(name = { "--ignoreManagedAppsStartupErrors" },
-            description = "Ignore failures starting managed applications passed on the command line on startup "
-                + "(default is true, so errors can be viewed via the API)")
-        public boolean ignoreAppErrors = true;
+        @Option(name = { "--startupFailOnCatalogErrors" },
+            description = "Fail on catalog subsystem failures during startup "
+                + "(default is to continue, so errors can be viewed via the API)")
+        public boolean startupFailOnCatalogErrors = false;
+
+        @Option(name = { "--startupFailOnManagedAppsErrors" },
+            description = "Fail startup on errors deploying of managed apps specified via the command line "
+                + "(default is to continue, so errors can be viewed via the API)")
+        public boolean startupFailOnManagedAppsErrors = false;
 
         @Beta
         @Option(name = { "--startBrooklynNode" },
-                description = "Whether to start a BrooklynNode entity representing this Brooklyn instance (default false)")
+                description = "Start a BrooklynNode entity representing this Brooklyn instance")
         public boolean startBrooklynNode = false;
 
         // Note in some cases, you can get java.util.concurrent.RejectedExecutionException
@@ -285,7 +290,7 @@ public class Main extends AbstractMain {
         // looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
         @Beta
         @Option(name = { "-sk", "--stopOnKeyPress" },
-                description = "After startup, shutdown on user text entry (default false)")
+                description = "Shutdown immediately on user text entry after startup (useful for debugging and demos)")
         public boolean stopOnKeyPress = false;
 
         final static String STOP_WHICH_APPS_ON_SHUTDOWN = "--stopOnShutdown";
@@ -406,13 +411,21 @@ public class Main extends AbstractMain {
                 launcher = createLauncher();
 
                 CatalogInitialization catInit = new CatalogInitialization(catalogInitial, catalogReset, catalogAdd, catalogForce);
-                catInit.addPopulationCallback(new Function<ManagementContext,Void>() {
+                catInit.addPopulationCallback(new Function<CatalogInitialization,Void>() {
                     @Override
-                    public Void apply(ManagementContext mgmt) {
-                        populateCatalog(mgmt.getCatalog());
+                    public Void apply(CatalogInitialization catInit) {
+                        try {
+                            populateCatalog(catInit.getManagementContext().getCatalog());
+                        } catch (Throwable e) {
+                            catInit.handleException(e, "overridden main class populate catalog");
+                        }
+                        
+                        // Force load of catalog (so web console is up to date)
+                        confirmCatalog(catInit);
                         return null;
                     }
                 });
+                catInit.setFailOnStartupErrors(startupFailOnCatalogErrors);
                 launcher.catalogInitialization(catInit);
                 
                 launcher.persistMode(persistMode);
@@ -557,9 +570,10 @@ public class Main extends AbstractMain {
             BrooklynLauncher launcher;
             launcher = BrooklynLauncher.newInstance();
             launcher.localBrooklynPropertiesFile(localBrooklynProperties)
-                    .ignorePersistenceErrors(ignorePersistenceErrors)
-                    .ignoreWebErrors(ignoreWebErrors)
-                    .ignoreAppErrors(ignoreAppErrors)
+                    .ignorePersistenceErrors(!startupFailOnPersistenceErrors)
+                    .ignoreCatalogErrors(!startupFailOnCatalogErrors)
+                    .ignoreWebErrors(startupContinueOnWebErrors)
+                    .ignoreAppErrors(!startupFailOnManagedAppsErrors)
                     .locations(Strings.isBlank(locations) ? ImmutableList.<String>of() : JavaStringEscapes.unwrapJsonishListIfPossible(locations));
             
             launcher.webconsole(!noConsole);
@@ -597,17 +611,15 @@ public class Main extends AbstractMain {
             return launcher;
         }
 
-        /** method intended for subclassing, to add items to the catalog */
+        /** method intended for subclassing, to add custom items to the catalog */
         protected void populateCatalog(BrooklynCatalog catalog) {
-            // Force load of catalog (so web console is up to date)
-            confirmCatalog(catalog);
-
             // nothing else added here
         }
 
-        protected void confirmCatalog(BrooklynCatalog catalog) {
+        protected void confirmCatalog(CatalogInitialization catInit) {
             // Force load of catalog (so web console is up to date)
             Stopwatch time = Stopwatch.createStarted();
+            BrooklynCatalog catalog = catInit.getManagementContext().getCatalog();
             Iterable<CatalogItem<Object, Object>> items = catalog.getCatalogItems();
             for (CatalogItem<Object, Object> item: items) {
                 try {
@@ -617,14 +629,7 @@ public class Main extends AbstractMain {
                     }
                     log.debug("Catalog loaded spec "+spec+" for item "+item);                      
                 } catch (Throwable throwable) {
-                    // swallow errors, apart from interrupted
-                    if (throwable instanceof InterruptedException)
-                        throw new RuntimeInterruptedException((InterruptedException) throwable);
-                    if (throwable instanceof RuntimeInterruptedException)
-                        throw (RuntimeInterruptedException) throwable;
-
-                    log.error("Error loading catalog item '"+item+"': "+throwable);
-                    log.debug("Trace for error loading catalog item '"+item+"': "+throwable, throwable);
+                    catInit.handleException(throwable, item);
                 }
             }
             log.debug("Catalog (size "+Iterables.size(items)+") confirmed in "+Duration.of(time));                      
@@ -777,9 +782,10 @@ public class Main extends AbstractMain {
                     .add("bindAddress", bindAddress)
                     .add("noConsole", noConsole)
                     .add("noConsoleSecurity", noConsoleSecurity)
-                    .add("ignorePersistenceErrors", ignorePersistenceErrors)
-                    .add("ignoreWebErrors", ignoreWebErrors)
-                    .add("ignoreAppErrors", ignoreAppErrors)
+                    .add("startupFailOnPersistenceErrors", startupFailOnPersistenceErrors)
+                    .add("startupFailsOnCatalogErrors", startupFailOnCatalogErrors)
+                    .add("startupContinueOnWebErrors", startupContinueOnWebErrors)
+                    .add("startupFailOnManagedAppsErrors", startupFailOnManagedAppsErrors)
                     .add("stopWhichAppsOnShutdown", stopWhichAppsOnShutdown)
                     .add("noShutdownOnExit", noShutdownOnExit)
                     .add("stopOnKeyPress", stopOnKeyPress)

@@ -152,6 +152,7 @@ public class BrooklynLauncher {
     
     private boolean ignoreWebErrors = false;
     private boolean ignorePersistenceErrors = true;
+    private boolean ignoreCatalogErrors = true;
     private boolean ignoreAppErrors = true;
     
     private StopWhichAppsOnShutdown stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
@@ -401,6 +402,11 @@ public class BrooklynLauncher {
         return this;
     }
 
+    public BrooklynLauncher ignoreCatalogErrors(boolean ignoreCatalogErrors) {
+        this.ignoreCatalogErrors = ignoreCatalogErrors;
+        return this;
+    }
+
     public BrooklynLauncher ignoreWebErrors(boolean ignoreWebErrors) {
         this.ignoreWebErrors = ignoreWebErrors;
         return this;
@@ -562,6 +568,10 @@ public class BrooklynLauncher {
         // Create the management context
         initManagementContext();
 
+        // Inform catalog initialization that it is starting up
+        CatalogInitialization catInit = ((ManagementContextInternal)managementContext).getCatalogInitialization();
+        catInit.setStartingUp(true);
+
         // Start webapps as soon as mgmt context available -- can use them to detect progress of other processes
         if (startWebApps) {
             try {
@@ -586,15 +596,16 @@ public class BrooklynLauncher {
         }
 
         try {
-            // run cat init now if it hasn't yet been run
-            CatalogInitialization catInit = ((ManagementContextInternal)managementContext).getCatalogInitialization();
+            // run cat init now if it hasn't yet been run; 
+            // will also run if there was an ignored error in catalog above, allowing it to fail startup here if requested
             if (catInit!=null && !catInit.hasRun()) {
                 LOG.debug("Loading catalog as part of launcher (persistence did not run it)");
-                catInit.populateCatalog(managementContext, true, null);
+                catInit.populateCatalog(true, null);
             }
         } catch (Exception e) {
-            handleSubsystemStartupError(true, "initial catalog", e);
+            handleSubsystemStartupError(ignoreCatalogErrors, "initial catalog", e);
         }
+        catInit.setStartingUp(false);
 
         // Create the locations. Must happen after persistence is started in case the
         // management context's catalog is loaded from persisted state. (Location
@@ -612,7 +623,7 @@ public class BrooklynLauncher {
             try {
                 startBrooklynNode();
             } catch (Exception e) {
-                handleSubsystemStartupError(true, "brooklyn node / self entity", e);
+                handleSubsystemStartupError(ignoreAppErrors, "brooklyn node / self entity", e);
             }
         }
         

@@ -25,6 +25,7 @@ import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -346,14 +347,21 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         // revert to legacy mechanism
         SpecT spec = null;
+        Method method;
+        try {
+            method = Reflections.findMethod(specType, "create", Class.class);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            throw new IllegalStateException("Unsupported creation of spec type "+specType+"; it must have a public static create(Class) method", e);            
+        }
         try {
             if (loadedItem.getJavaType()!=null) {
-                SpecT specT = (SpecT) Reflections.findMethod(specType, "create", Class.class).invoke(null, loadedItem.loadJavaClass(mgmt));
+                SpecT specT = (SpecT) method.invoke(null, loadedItem.loadJavaClass(mgmt));
                 spec = specT;
             }
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            throw new IllegalStateException("Unsupported creation of spec type "+specType+"; it must have a public static create(Class) method", e);
+            throw new IllegalStateException("Error creating "+specType+" "+loadedItem.getJavaType()+": "+e, e);
         }
 
         if (spec==null) 

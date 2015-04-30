@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ApplicationBuilder;
@@ -133,10 +134,10 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
         // ucl.close is only introduced in java 1.7
         if (ucl instanceof Closeable) ((Closeable)ucl).close();
 
-        newManagementContext.getCatalogInitialization().addPopulationCallback(new Function<ManagementContext, Void>() {
+        newManagementContext.getCatalogInitialization().addPopulationCallback(new Function<CatalogInitialization, Void>() {
             @Override
-            public Void apply(ManagementContext input) {
-                input.getCatalog().addItem(appClazz);
+            public Void apply(CatalogInitialization input) {
+                input.getManagementContext().getCatalog().addItem(appClazz);
                 return null;
             }
         });

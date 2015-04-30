@@ -380,7 +380,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         // catalog init is needed; normally this will be done from start sequence,
         // but if accessed early -- and in tests -- we will load it here
         // TODO log if in launcher mode
-        return getCatalogInitialization().getCatalogPopulatingBestEffort(this);
+        return getCatalogInitialization().getCatalogPopulatingBestEffort();
     }
 
     /**
@@ -460,6 +460,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     @Override
     public synchronized void setCatalogInitialization(CatalogInitialization catalogInitialization) {
+        if (catalogInitialization!=null) catalogInitialization.injectManagementContext(this);
         this.catalogInitialization = catalogInitialization;
     }
     
