@@ -40,9 +40,6 @@ public interface WildflyServer extends JavaWebAppSoftwareProcess, HasShortName {
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
             ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "8.2.0.Final");
-    // note: 7.1.2.Final fixes many bugs but is not available for download,
-    // see https://community.jboss.org/thread/197780
-    // 7.2.0.Final should be out during Q3 2012
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(

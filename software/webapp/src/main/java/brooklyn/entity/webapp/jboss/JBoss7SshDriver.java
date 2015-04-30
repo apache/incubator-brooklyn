@@ -249,28 +249,4 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
                 .add("-XX:MaxPermSize=400m")
                 .build();
     }
-
-    /**
-     * Creates a hash of a username, password and security realm that is suitable for use
-     * with AS7 and Wildfire.
-     * <p/>
-     * Although AS7 has an <code>add-user.sh</code> script it is unsuitable for use in
-     * non-interactive modes. (See AS7-5061 for details.) Versions 7.1.2+ (EAP) accept
-     * a <code>--silent</code> flag. When this entity is updated past 7.1.1 we should
-     * probably use that instead.
-     * <p/>
-     * This method mirrors AS7 and Wildfire's method of hashing user's passwords. Refer
-     * to its class <code>UsernamePasswordHashUtil.generateHashedURP</code> for their
-     * implementation.
-     *
-     * @see <a href="https://issues.jboss.org/browse/AS7-5061">AS7-5061</a>
-     * @see <a href="https://github.com/jboss-remoting/jboss-sasl/blob/master/src/main/java/org/jboss/sasl/util/UsernamePasswordHashUtil.java">
-     *     UsernamePasswordHashUtil.generateHashedURP</a>
-     * @return <code>HEX(MD5(username ':' realm ':' password))</code>
-     */
-    public static String hashPassword(String username, String password, String realm) {
-        String concat = username + ":" + realm + ":" + password;
-        byte[] hashed = Hashing.md5().hashString(concat, Charsets.UTF_8).asBytes();
-        return BaseEncoding.base16().lowerCase().encode(hashed);
-    }
 }
