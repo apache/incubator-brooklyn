@@ -24,9 +24,9 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.Location;
 
 /**
- * A simple test of installing+running JBoss AS7 on Docker, using various OS distros and versions.
+ * A simple test of installing+running Wildfly 8 on Docker, using various OS distros and versions.
  */
-public class JBoss7ServerDockerLiveTest extends JBossServerDockerLiveTest {
+public class Wildfly8ServerDockerLiveTest extends JBossServerDockerLiveTest {
 
    @Override
    protected void doTest(Location loc) throws Exception {
@@ -39,6 +39,6 @@ public class JBoss7ServerDockerLiveTest extends JBossServerDockerLiveTest {
 
    @Override
    protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-	   return JBoss7Server.class;
+	   return Wildfly8Server.class;
    }
 }

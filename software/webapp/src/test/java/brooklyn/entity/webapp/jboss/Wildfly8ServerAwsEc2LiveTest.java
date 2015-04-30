@@ -24,21 +24,26 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.Location;
 
 /**
- * A simple test of installing+running JBoss AS7 on Docker, using various OS distros and versions.
+ * A simple test of installing+running Wildfly 8 on AWS-EC2, using various OS distros and versions. 
  */
-public class JBoss7ServerDockerLiveTest extends JBossServerDockerLiveTest {
+public class Wildfly8ServerAwsEc2LiveTest extends JBossServerAwsEc2LiveTest {
 
-   @Override
-   protected void doTest(Location loc) throws Exception {
-	   super.doTest(loc);
-   }
+    @Override
+    protected void doTest(Location loc) throws Exception {
+    	super.doTest(loc);
+    }
+    
+    @Test(groups = {"Live", "Live-sanity"})
+    @Override
+    public void test_CentOS_6_3() throws Exception {
+        super.test_CentOS_6_3();
+    }
 
-   @Test(enabled = false)
-   public void testDummy() {
-   } // Convince testng IDE integration that this really does have test methods
+    @Test(enabled=false)
+    public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
 
-   @Override
-   protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-	   return JBoss7Server.class;
-   }
+	@Override
+	protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
+		return Wildfly8Server.class;
+	}
 }

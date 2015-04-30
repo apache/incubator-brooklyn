@@ -18,52 +18,32 @@
  */
 package brooklyn.entity.webapp.jboss;
 
-import static org.testng.Assert.assertNotNull;
-
 import org.testng.annotations.Test;
 
-import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.Location;
-import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestResourceUnavailableException;
-
-import com.google.common.collect.ImmutableList;
 
 /**
- * A simple test of installing+running on AWS-EC2, using various OS distros and versions. 
+ * A simple test of installing+running JBoss AS6 on AWS-EC2, using various OS distros and versions. 
  */
-public class JBoss6ServerAwsEc2LiveTest extends AbstractEc2LiveTest {
-    
-    public String getTestWar() {
-        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world-no-mapping.war");
-        return "classpath://hello-world-no-mapping.war";
-    }
+public class JBoss6ServerAwsEc2LiveTest extends JBossServerAwsEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        final JBoss6Server server = app.createAndManageChild(EntitySpec.create(JBoss6Server.class)
-                .configure("war", getTestWar()));
-        
-        app.start(ImmutableList.of(loc));
-        
-        String url = server.getAttribute(JBoss6Server.ROOT_URL);
-        
-        HttpTestUtils.assertHttpStatusCodeEventuallyEquals(url, 200);
-        HttpTestUtils.assertContentContainsText(url, "Hello");
-        
-        Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
-                assertNotNull(server.getAttribute(JBoss6Server.REQUEST_COUNT));
-                assertNotNull(server.getAttribute(JBoss6Server.ERROR_COUNT));
-                assertNotNull(server.getAttribute(JBoss6Server.TOTAL_PROCESSING_TIME));
-                assertNotNull(server.getAttribute(JBoss6Server.MAX_PROCESSING_TIME));
-                assertNotNull(server.getAttribute(JBoss6Server.BYTES_RECEIVED));
-                assertNotNull(server.getAttribute(JBoss6Server.BYTES_SENT));
-            }});
+    	super.doTest(loc);
     }
     
+    @Test(groups = {"Live", "Live-sanity"})
+    @Override
+    public void test_CentOS_6_3() throws Exception {
+        super.test_CentOS_6_3();
+    }
+
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
+
+	@Override
+	protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
+		return JBoss6Server.class;
+	}
 }

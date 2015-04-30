@@ -18,50 +18,19 @@
  */
 package brooklyn.entity.webapp.jboss;
 
-import static org.testng.Assert.assertNotNull;
-
 import org.testng.annotations.Test;
 
-import brooklyn.entity.AbstractGoogleComputeLiveTest;
-import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.Location;
-import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestResourceUnavailableException;
-
-import com.google.common.collect.ImmutableList;
 
 /**
- * A simple test of installing+running on AWS-EC2, using various OS distros and versions. 
+ * A simple test of installing+running JBoss AS7 on AWS-EC2, using various OS distros and versions. 
  */
-public class JBoss7ServerGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {
-
-    public String getTestWar() {
-        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
-        return "classpath://hello-world.war";
-    }
+public class JBoss7ServerGoogleComputeLiveTest extends JBossServerGoogleComputeLiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
-                .configure("war", getTestWar()));
-        
-        app.start(ImmutableList.of(loc));
-        
-        String url = server.getAttribute(JBoss7Server.ROOT_URL);
-        
-        HttpTestUtils.assertHttpStatusCodeEventuallyEquals(url, 200);
-        HttpTestUtils.assertContentContainsText(url, "Hello");
-        
-        Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
-                assertNotNull(server.getAttribute(JBoss7Server.REQUEST_COUNT));
-                assertNotNull(server.getAttribute(JBoss7Server.ERROR_COUNT));
-                assertNotNull(server.getAttribute(JBoss7Server.TOTAL_PROCESSING_TIME));
-                assertNotNull(server.getAttribute(JBoss7Server.MAX_PROCESSING_TIME));
-                assertNotNull(server.getAttribute(JBoss7Server.BYTES_RECEIVED));
-                assertNotNull(server.getAttribute(JBoss7Server.BYTES_SENT));
-            }});
+    	super.doTest(loc);
     }
     
     @Test(groups = {"Live"})
@@ -71,5 +40,10 @@ public class JBoss7ServerGoogleComputeLiveTest extends AbstractGoogleComputeLive
     }
 
     @Test(enabled=false)
-    public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
+    public void testDummy() {} // Convince testng IDE integration that this really does have test methods
+    
+	@Override
+	protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
+		return JBoss7Server.class;
+	}
 }
