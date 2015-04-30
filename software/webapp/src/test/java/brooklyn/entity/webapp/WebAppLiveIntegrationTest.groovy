@@ -35,13 +35,15 @@ import org.testng.annotations.Test
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.Application
-import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss6ServerImpl
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
+import brooklyn.entity.webapp.jboss.WildflyServer
+import brooklyn.entity.webapp.jboss.WildflyServerImpl
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.location.Location
@@ -78,10 +80,11 @@ public class WebAppLiveIntegrationTest {
      */
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
-        TomcatServer tomcat = new TomcatServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
-        JBoss6Server jboss6 = new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT)
+//        TomcatServer tomcat = new TomcatServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
+//        JBoss6Server jboss6 = new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT)
         JBoss7Server jboss7 = new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
-        return [ [ tomcat ], [ jboss6 ], [ jboss7 ] ]
+		WildflyServer wildfly8 = new WildflyServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
+        return [ [ jboss7 ], [ wildfly8 ] ]
     }
 
     private File getResource(String path) {

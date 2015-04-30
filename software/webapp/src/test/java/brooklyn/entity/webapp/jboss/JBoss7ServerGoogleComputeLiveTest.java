@@ -18,12 +18,8 @@
  */
 package brooklyn.entity.webapp.jboss;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertNotNull;
 
-import java.net.URL;
-
-import brooklyn.test.TestResourceUnavailableException;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractGoogleComputeLiveTest;
@@ -31,13 +27,14 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.TestResourceUnavailableException;
 
 import com.google.common.collect.ImmutableList;
 
 /**
  * A simple test of installing+running on AWS-EC2, using various OS distros and versions. 
  */
-public class Jboss7ServerGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {
+public class JBoss7ServerGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {
 
     public String getTestWar() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");

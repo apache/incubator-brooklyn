@@ -18,19 +18,18 @@
  */
 package brooklyn.entity.webapp.jboss;
 
+import static org.testng.Assert.assertNotNull;
+
+import org.testng.annotations.Test;
+
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.AbstractDockerLiveTest;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.test.TestResourceUnavailableException;
+
 import com.google.common.collect.ImmutableList;
-import org.testng.annotations.Test;
-
-import java.net.URL;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static org.testng.Assert.assertNotNull;
 
 /**
  * A simple test of installing+running on Docker, using various OS distros and versions.
