@@ -29,7 +29,6 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.util.guava.Functionals;
 import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,11 +74,12 @@ public class WildflyServerImpl extends JavaWebAppSoftwareProcessImpl implements 
         HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this,
                 getAttribute(MANAGEMENT_HTTP_PORT) + getConfig(PORT_INCREMENT));
         
-        String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource",
+        String managementUri = String.format("http://%s:%s/management/subsystem/undertow/server/default-server/http-listener/default",
                 hp.getHostText(), hp.getPort());
         setAttribute(MANAGEMENT_URL, managementUri);
         log.debug("JBoss sensors for "+this+" reading from "+managementUri);
-        Map<String, String> includeRuntimeUriVars = ImmutableMap.of("include-runtime","true");
+        
+//        Map<String, String> includeRuntimeUriVars = ImmutableMap.of("include-runtime","true");
         
         httpFeed = HttpFeed.builder()
                 .entity(this)
@@ -91,25 +91,32 @@ public class WildflyServerImpl extends JavaWebAppSoftwareProcessImpl implements 
                 .poll(new HttpPollConfig<Boolean>(MANAGEMENT_URL_UP)
                         .onSuccess(HttpValueFunctions.responseCodeEquals(200))
                         .onFailureOrException(Functions.constant(false)))
-                .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class)))
-                .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("errorCount", Integer.class)))
-                .poll(new HttpPollConfig<Integer>(TOTAL_PROCESSING_TIME)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("processingTime", Integer.class)))
-                .poll(new HttpPollConfig<Integer>(MAX_PROCESSING_TIME)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class)))
-                .poll(new HttpPollConfig<Long>(BYTES_RECEIVED)
-                        .vars(includeRuntimeUriVars)
-                        // jboss seems to report 0 even if it has received lots of requests; dunno why.
-                        .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class)))
-                .poll(new HttpPollConfig<Long>(BYTES_SENT)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class)))
+               /*
+                * TODO Re-enable these metrics once they are supported by Wildfly.
+                * 
+                * See: https://issues.jboss.org/browse/WFLY-3835 
+                */
+                        
+//                .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
+//                        .vars(includeRuntimeUriVars)
+//                        .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class)))
+//                .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
+//                        .vars(includeRuntimeUriVars)
+//                        .onSuccess(HttpValueFunctions.jsonContents("errorCount", Integer.class)))
+//                .poll(new HttpPollConfig<Integer>(TOTAL_PROCESSING_TIME)
+//                        .vars(includeRuntimeUriVars)
+//                        .onSuccess(HttpValueFunctions.jsonContents("processingTime", Integer.class)))
+//                .poll(new HttpPollConfig<Integer>(MAX_PROCESSING_TIME)
+//                        .vars(includeRuntimeUriVars)
+//                        .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class)))
+//                .poll(new HttpPollConfig<Long>(BYTES_RECEIVED)
+//                        .vars(includeRuntimeUriVars)
+//                        // jboss seems to report 0 even if it has received lots of requests; dunno why.
+//                        .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class)))
+//                .poll(new HttpPollConfig<Long>(BYTES_SENT)
+//                        .vars(includeRuntimeUriVars)
+//                        .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class)))
+                        
                 .build();
         
         connectServiceUp();
