@@ -413,7 +413,7 @@
             </core-environment>
             <recovery-environment socket-binding="txn-recovery-environment" status-socket-binding="txn-status-manager"/>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:undertow:1.1">
+        <subsystem xmlns="urn:jboss:domain:undertow:1.1" statistics-enabled="true">
             <buffer-cache name="default"/>
             <server name="default-server">
                 <http-listener name="default" socket-binding="http"/>
@@ -433,29 +433,6 @@
                 <response-header name="server-header" header-name="Server" header-value="WildFly/8"/>
                 <response-header name="x-powered-by-header" header-name="X-Powered-By" header-value="Undertow/1"/>
             </filters>
-        <!--<subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host" native="false">-->
-            <!--<connector name="http" protocol="HTTP/1.1" scheme="http" socket-binding="http" enabled="${entity.httpEnabled?string}"/>-->
-            <!--[#if entity.httpsEnabled]-->
-            <!--<connector name="https" protocol="HTTP/1.1" scheme="https" socket-binding="https" secure="true" enabled="${entity.httpsEnabled?string}">-->
-                <!--<ssl key-alias="${entity.httpsSslKeyAlias}" password="${entity.httpsSslKeystorePassword}" certificate-key-file="${entity.httpsSslKeystoreFile}" protocol="TLSv1,TLSv1.1,TLSv1.2"/>-->
-            <!--</connector>-->
-            <!--[/#if]-->
-            <!--<virtual-server name="default-host" enable-welcome-root="${entity.welcomeRootEnabled?string}">-->
-                <!--<alias name="localhost"/>-->
-                <!--<alias name="example.com"/>-->
-            <!--</virtual-server>-->
-        <!--</subsystem>-->
-        <!--<subsystem xmlns="urn:jboss:domain:webservices:1.2">-->
-            <!--<wsdl-host>${entity.bindAddress}</wsdl-host>-->
-            <!--<endpoint-config name="Standard-Endpoint-Config"/>-->
-            <!--<endpoint-config name="Recording-Endpoint-Config">-->
-                <!--<pre-handler-chain name="recording-handlers" protocol-bindings="##SOAP11_HTTP ##SOAP11_HTTP_MTOM ##SOAP12_HTTP ##SOAP12_HTTP_MTOM">-->
-                    <!--<handler name="RecordingHandler" class="org.jboss.ws.common.invocation.RecordingServerHandler"/>-->
-                <!--</pre-handler-chain>-->
-            <!--</endpoint-config>-->
-            <!--<client-config name="Standard-Client-Config"/>-->
-        <!--</subsystem>-->
-        <!--<subsystem xmlns="urn:jboss:domain:weld:2.0"/>-->
         </subsystem>
     </profile>
     <interfaces>
