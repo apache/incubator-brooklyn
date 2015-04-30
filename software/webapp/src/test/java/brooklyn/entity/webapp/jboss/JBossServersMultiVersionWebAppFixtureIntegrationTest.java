@@ -46,8 +46,8 @@ public class JBossServersMultiVersionWebAppFixtureIntegrationTest extends Abstra
                 .configure(JBoss7Server.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
         
         TestApplication wildfly8App = newTestApplication();
-        WildflyServer wildfly8 = wildfly8App.createAndManageChild(EntitySpec.create(WildflyServer.class)
-                .configure(WildflyServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
+        Wildfly8Server wildfly8 = wildfly8App.createAndManageChild(EntitySpec.create(Wildfly8Server.class)
+                .configure(Wildfly8Server.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
         
         return new JavaWebAppSoftwareProcess[][] {
                 new JavaWebAppSoftwareProcess[] {jboss6}, 

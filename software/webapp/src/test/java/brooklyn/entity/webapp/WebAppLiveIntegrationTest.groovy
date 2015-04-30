@@ -42,8 +42,8 @@ import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss6ServerImpl
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
-import brooklyn.entity.webapp.jboss.WildflyServer
-import brooklyn.entity.webapp.jboss.WildflyServerImpl
+import brooklyn.entity.webapp.jboss.Wildfly8Server
+import brooklyn.entity.webapp.jboss.Wildfly8ServerImpl
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.location.Location
@@ -83,7 +83,7 @@ public class WebAppLiveIntegrationTest {
         TomcatServer tomcat = new TomcatServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
         JBoss6Server jboss6 = new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT)
         JBoss7Server jboss7 = new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
-		WildflyServer wildfly8 = new WildflyServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
+		Wildfly8Server wildfly8 = new Wildfly8ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
         return [ [ tomcat ], [ jboss6 ], [ jboss7 ], [ wildfly8 ] ]
     }
 

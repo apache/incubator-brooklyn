@@ -33,9 +33,9 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.javalang.JavaClassNames;
 
-@Catalog(name="Wildfly Application Server", description="Wildfly: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.png")
-@ImplementedBy(WildflyServerImpl.class)
-public interface WildflyServer extends JavaWebAppSoftwareProcess, HasShortName {
+@Catalog(name="Wildfly 8 Application Server", description="Wildfly: an open source Java application server from JBoss", iconUrl="classpath:///jboss-logo.png")
+@ImplementedBy(Wildfly8ServerImpl.class)
+public interface Wildfly8Server extends JavaWebAppSoftwareProcess, HasShortName {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
@@ -76,7 +76,7 @@ public interface WildflyServer extends JavaWebAppSoftwareProcess, HasShortName {
     
     ConfigKey<String> TEMPLATE_CONFIGURATION_URL = ConfigKeys.newConfigKey(
             "webapp.jboss.templateConfigurationUrl", "Template file (in freemarker format) for the standalone.xml file", 
-            JavaClassNames.resolveClasspathUrl(WildflyServer.class, "wildfly-standalone.xml"));
+            JavaClassNames.resolveClasspathUrl(Wildfly8Server.class, "wildfly8-standalone.xml"));
 
     @SetFromFlag("managementUser")
     ConfigKey<String> MANAGEMENT_USER = ConfigKeys.newConfigKey("webapp.jboss.managementUser",

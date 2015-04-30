@@ -42,9 +42,9 @@ import java.util.Map;
 
 import static java.lang.String.format;
 
-public class WildflySshDriver extends JavaWebAppSshDriver implements WildflyDriver {
+public class Wildfly8SshDriver extends JavaWebAppSshDriver implements Wildfly8Driver {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WildflySshDriver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Wildfly8SshDriver.class);
 
     // TODO more configurability of config files, java memory, etc
 
@@ -53,13 +53,13 @@ public class WildflySshDriver extends JavaWebAppSshDriver implements WildflyDriv
     public static final String KEYSTORE_FILE = ".keystore";
     public static final String MANAGEMENT_REALM = "ManagementRealm";
 
-    public WildflySshDriver(WildflyServerImpl entity, SshMachineLocation machine) {
+    public Wildfly8SshDriver(Wildfly8ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
     @Override
-    public WildflyServerImpl getEntity() {
-        return (WildflyServerImpl) super.getEntity();
+    public Wildfly8ServerImpl getEntity() {
+        return (Wildfly8ServerImpl) super.getEntity();
     }
 
     @Override
@@ -68,7 +68,7 @@ public class WildflySshDriver extends JavaWebAppSshDriver implements WildflyDriv
     }
     
     protected String getTemplateConfigurationUrl() {
-        return entity.getConfig(WildflyServer.TEMPLATE_CONFIGURATION_URL);
+        return entity.getConfig(Wildfly8Server.TEMPLATE_CONFIGURATION_URL);
     }
 
     @Override
@@ -82,23 +82,23 @@ public class WildflySshDriver extends JavaWebAppSshDriver implements WildflyDriv
     }
 
     private Integer getManagementHttpPort() {
-        return entity.getAttribute(WildflyServer.MANAGEMENT_HTTP_PORT);
+        return entity.getAttribute(Wildfly8Server.MANAGEMENT_HTTP_PORT);
     }
 
     private Integer getManagementHttpsPort() {
-        return entity.getAttribute(WildflyServer.MANAGEMENT_HTTPS_PORT);
+        return entity.getAttribute(Wildfly8Server.MANAGEMENT_HTTPS_PORT);
     }
 
     private Integer getManagementNativePort() {
-        return entity.getAttribute(WildflyServer.MANAGEMENT_NATIVE_PORT);
+        return entity.getAttribute(Wildfly8Server.MANAGEMENT_NATIVE_PORT);
     }
 
     private String getManagementUsername() {
-        return entity.getConfig(WildflyServer.MANAGEMENT_USER);
+        return entity.getConfig(Wildfly8Server.MANAGEMENT_USER);
     }
 
     private String getManagementPassword() {
-        return entity.getConfig(WildflyServer.MANAGEMENT_PASSWORD);
+        return entity.getConfig(Wildfly8Server.MANAGEMENT_PASSWORD);
     }
 
     @Override
@@ -143,8 +143,8 @@ public class WildflySshDriver extends JavaWebAppSshDriver implements WildflyDriv
         Preconditions.checkState(Strings.isNonBlank(getManagementUsername()), "User for management realm required");
         String managementPassword = getManagementPassword();
         if (Strings.isBlank(managementPassword)) {
-            LOG.debug(this+" has no password specified for "+WildflyServer.MANAGEMENT_PASSWORD.getName()+"; using a random string");
-            entity.setConfig(WildflyServer.MANAGEMENT_PASSWORD, Strings.makeRandomId(8));
+            LOG.debug(this+" has no password specified for "+Wildfly8Server.MANAGEMENT_PASSWORD.getName()+"; using a random string");
+            entity.setConfig(Wildfly8Server.MANAGEMENT_PASSWORD, Strings.makeRandomId(8));
         }
         String hashedPassword = hashPassword(getManagementUsername(), getManagementPassword(), MANAGEMENT_REALM);
 
@@ -195,7 +195,7 @@ public class WildflySshDriver extends JavaWebAppSshDriver implements WildflyDriv
 
     @Override
     public void launch() {
-        entity.setAttribute(WildflyServer.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
+        entity.setAttribute(Wildfly8Server.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
 
         // We wait for evidence of JBoss running because, using
         // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,

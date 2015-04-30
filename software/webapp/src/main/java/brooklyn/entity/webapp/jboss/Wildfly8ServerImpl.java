@@ -35,32 +35,32 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-public class WildflyServerImpl extends JavaWebAppSoftwareProcessImpl implements WildflyServer {
+public class Wildfly8ServerImpl extends JavaWebAppSoftwareProcessImpl implements Wildfly8Server {
 
-    public static final Logger log = LoggerFactory.getLogger(WildflyServerImpl.class);
+    public static final Logger log = LoggerFactory.getLogger(Wildfly8ServerImpl.class);
 
     private volatile HttpFeed httpFeed;
 
-    public WildflyServerImpl(){
+    public Wildfly8ServerImpl(){
         super();
     }
 
-    public WildflyServerImpl(@SuppressWarnings("rawtypes") Map flags){
+    public Wildfly8ServerImpl(@SuppressWarnings("rawtypes") Map flags){
         this(flags, null);
     }
 
-    public WildflyServerImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
+    public Wildfly8ServerImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
         super(flags, parent);
     }
 
     @Override
     public Class<?> getDriverInterface() {
-        return WildflyDriver.class;
+        return Wildfly8Driver.class;
     }
 
     @Override
-    public WildflyDriver getDriver() {
-        return (WildflyDriver) super.getDriver();
+    public Wildfly8Driver getDriver() {
+        return (Wildfly8Driver) super.getDriver();
     }
     
     static {
