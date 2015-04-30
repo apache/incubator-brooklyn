@@ -30,6 +30,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
@@ -60,10 +64,6 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Start a {@link CassandraNode} in a {@link Location} accessible over ssh.
@@ -112,20 +112,20 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public String getCassandraRackdcConfigFileName() { return entity.getConfig(CassandraNode.CASSANDRA_RACKDC_CONFIG_FILE_NAME); }
 
     public String getMirrorUrl() { return entity.getConfig(CassandraNode.MIRROR_URL); }
-    
+
     protected String getDefaultUnpackedDirectoryName() {
         return "apache-cassandra-"+getVersion();
     }
-    
+
     protected boolean isV2() {
         String version = getVersion();
         return version.startsWith("2.");
     }
-    
+
     @Override
     public boolean installJava() {
         if (isV2()) {
-            return checkForAndInstallJava7or8();
+            return checkForAndInstallJava("1.8");
         } else {
             return super.installJava();
         }
@@ -186,8 +186,8 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .add("mkdir -p brooklyn_commands")
                 .add(String.format("sed -i.bk 's/log4j.appender.R.File=.*/log4j.appender.R.File=%s/g' %s/conf/log4j-server.properties", logFileEscaped, getRunDir()))
                 .add(String.format("sed -i.bk '/JMX_PORT/d' %s/conf/cassandra-env.sh", getRunDir()))
-                // Script sets 180k on Linux which gives Java error:  The stack size specified is too small, Specify at least 228k 
-                .add(String.format("sed -i.bk 's/-Xss180k/-Xss280k/g' %s/conf/cassandra-env.sh", getRunDir())); 
+                // Script sets 180k on Linux which gives Java error:  The stack size specified is too small, Specify at least 228k
+                .add(String.format("sed -i.bk 's/-Xss180k/-Xss280k/g' %s/conf/cassandra-env.sh", getRunDir()));
 
         newScript(CUSTOMIZING)
                 .body.append(commands.build())
@@ -224,7 +224,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     protected void customizeInitialSeeds() {
         if (entity.getConfig(CassandraNode.INITIAL_SEEDS)==null) {
             if (isClustered()) {
-                entity.setConfig(CassandraNode.INITIAL_SEEDS, 
+                entity.setConfig(CassandraNode.INITIAL_SEEDS,
                     DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraDatacenter.CURRENT_SEEDS));
             } else {
                 entity.setConfig(CassandraNode.INITIAL_SEEDS, MutableSet.<Entity>of(entity));
@@ -290,7 +290,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                     }
                 }
             } while (true);
-            
+
             // TODO should look at last start time... but instead we always wait
             CassandraDatacenter.DELAY_BETWEEN_STARTS.countdownTimer().waitForExpiryUnchecked();
         }
@@ -307,7 +307,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                     .execute();
             if (!isClustered()) {
                 InputStream creationScript = DatastoreMixins.getDatabaseCreationScript(entity);
-                if (creationScript!=null) { 
+                if (creationScript!=null) {
                     Tasks.setBlockingDetails("Pausing to ensure Cassandra (singleton) has started before running creation script");
                     Time.sleep(Duration.seconds(20));
                     Tasks.resetBlockingDetails();
@@ -341,7 +341,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         }
         return result;
     }
-    
+
     protected String launchEssentialCommand() {
         if (isV2()) {
             return String.format("./bin/cassandra -p %s > ./cassandra-console.log 2>&1", getPidFile());
@@ -372,7 +372,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 .put("cassandra.config", getCassandraConfigFileName())
                 .build();
     }
-    
+
     @Override
     public Map<String, String> getShellEnvironment() {
         return MutableMap.<String, String>builder()
@@ -416,5 +416,5 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     public String getResolvedAddress(String hostname) {
         return resolvedAddressCache.or(BrooklynAccessUtils.resolvedAddressSupplier(getEntity(), getMachine(), hostname));
     }
-    
+
 }

@@ -29,6 +29,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
@@ -47,9 +50,6 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 public class JavaSoftwareProcessSshDriverIntegrationTest {
 
@@ -76,7 +76,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
     public void setup() {
         setup(new LocalManagementContext());
     }
-    
+
     protected void setup(ManagementContext mgmt) {
         app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
         localhost = mgmt.getLocationManager().createLocation(
@@ -96,7 +96,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
             public void run() {
                 assertTrue(entity.getAttribute(SoftwareProcess.SERVICE_UP));
             }});
-        
+
         entity.stop();
         assertFalse(entity.getAttribute(SoftwareProcess.SERVICE_UP));
     }
@@ -106,7 +106,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         SshMachineLocation sshLocation = app.getManagementContext().getLocationManager().createLocation(
                 LocationSpec.create(SshMachineLocation.class).configure("address", "localhost"));
         JavaSoftwareProcessSshDriver driver = new ConcreteJavaSoftwareProcessSshDriver(app, sshLocation);
-        Optional<String> version = driver.getCurrentJavaVersion();
+        Optional<String> version = driver.getInstalledJavaVersion();
         assertNotNull(version);
         assertTrue(version.isPresent());
         LOG.info("{}.testGetJavaVersion found: {} on localhost", getClass(), version.get());
@@ -119,11 +119,11 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         LocalManagementContext mgmt = new LocalManagementContext();
         mgmt.getBrooklynProperties().put(BrooklynConfigKeys.ONBOX_BASE_DIR, dir);
         setup(mgmt);
-        
+
         doTestSpecifiedDirectory(dir, dir);
         Os.deleteRecursively(dir);
     }
-    
+
     @Test(groups = "Integration")
     public void testStartsInAppSpecifiedDirectoryUnderHome() {
         String dir = Os.mergePathsUnix("~/.brooklyn-test-"+Strings.makeRandomId(4));
@@ -134,7 +134,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
             Os.deleteRecursively(dir);
         }
     }
-    
+
     @Test(groups = "Integration")
     public void testStartsInDifferentRunAndInstallSpecifiedDirectories() {
         String dir1 = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
@@ -145,7 +145,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         Os.deleteRecursively(dir1);
         Os.deleteRecursively(dir2);
     }
-    
+
     @Test(groups = "Integration")
     public void testStartsInLegacySpecifiedDirectory() {
         String dir1 = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
@@ -155,33 +155,33 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         mgmt.getBrooklynProperties().put("brooklyn.dirs.install", dir1);
         mgmt.getBrooklynProperties().put("brooklyn.dirs.run", dir2);
         setup(mgmt);
-        
+
         app.setConfig(BrooklynConfigKeys.RUN_DIR, dir2);
         doTestSpecifiedDirectory(dir1, dir2);
         Os.deleteRecursively(dir1);
         Os.deleteRecursively(dir2);
     }
-    
+
     protected void doTestSpecifiedDirectory(final String installDirPrefix, final String runDirPrefix) {
         final MyEntity entity = app.createAndManageChild(EntitySpec.create(MyEntity.class));
         app.start(ImmutableList.of(localhost));
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 assertTrue(entity.getAttribute(SoftwareProcess.SERVICE_UP));
-                
+
                 String installDir = entity.getAttribute(SoftwareProcess.INSTALL_DIR);
                 Assert.assertNotNull(installDir);
-                
+
                 String runDir = entity.getAttribute(SoftwareProcess.RUN_DIR);
                 Assert.assertNotNull(runDir);
             }});
-        
+
         String installDir = entity.getAttribute(SoftwareProcess.INSTALL_DIR);
         String runDir = entity.getAttribute(SoftwareProcess.RUN_DIR);
         LOG.info("dirs for " + app + " are: install=" + installDir + ", run=" + runDir);
         assertTrue(installDir.startsWith(Os.tidyPath(installDirPrefix)), "INSTALL_DIR is "+installDir+", does not start with expected prefix "+installDirPrefix);
         assertTrue(runDir.startsWith(Os.tidyPath(runDirPrefix)), "RUN_DIR is "+runDir+", does not start with expected prefix "+runDirPrefix);
-        
+
         entity.stop();
         assertFalse(entity.getAttribute(SoftwareProcess.SERVICE_UP));
     }

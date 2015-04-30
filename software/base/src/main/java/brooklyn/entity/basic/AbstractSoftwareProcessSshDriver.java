@@ -30,11 +30,17 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.drivers.downloads.DownloadResolver;
-import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -54,20 +60,13 @@ import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 /**
  * An abstract SSH implementation of the {@link AbstractSoftwareProcessDriver}.
- * 
+ *
  * This provides conveniences for clients implementing the install/customize/launch/isRunning/stop lifecycle
  * over SSH.  These conveniences include checking whether software is already installed,
  * creating/using a PID file for some operations, and reading ssh-specific config from the entity
- * to override/augment ssh flags on the session.  
+ * to override/augment ssh flags on the session.
  */
 public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareProcessDriver implements NaiveScriptRunner {
 
@@ -81,51 +80,36 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     private final Object installDirSetupMutex = new Object();
 
     protected volatile DownloadResolver resolver;
-    
+
     /** include this flag in newScript creation to prevent entity-level flags from being included;
      * any SSH-specific flags passed to newScript override flags from the entity,
      * and flags from the entity override flags on the location
      * (where there aren't conflicts, flags from all three are used however) */
-    public static final String IGNORE_ENTITY_SSH_FLAGS = SshEffectorTasks.IGNORE_ENTITY_SSH_FLAGS.getName(); 
+    public static final String IGNORE_ENTITY_SSH_FLAGS = SshEffectorTasks.IGNORE_ENTITY_SSH_FLAGS.getName();
 
     public AbstractSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
-        
+
         // FIXME this assumes we own the location, and causes warnings about configuring location after deployment;
         // better would be to wrap the ssh-execution-provider to supply these flags
         if (getSshFlags()!=null && !getSshFlags().isEmpty())
             machine.configure(getSshFlags());
-        
-        // ensure these are set using the routines below, not a global ConfigToAttributes.apply() 
+
+        // ensure these are set using the routines below, not a global ConfigToAttributes.apply()
         getInstallDir();
         getRunDir();
     }
 
-    /** returns location (tighten type, since we know it is an ssh machine location here) */    
+    /** returns location (tighten type, since we know it is an ssh machine location here) */
     public SshMachineLocation getLocation() {
         return (SshMachineLocation) super.getLocation();
     }
 
-    /**
-     * Name to be used in the local repo, when looking for the download file.
-     */
-    public String getDownloadFilename() {
-        return getEntity().getEntityType().getSimpleName().toLowerCase() + "-"+getVersion() + ".tar.gz";
-    }
-
-    /**
-     * Suffix to use when looking up the file in the local repo.
-     * Ignored if {@link getDownloadFilename()} returns non-null.
-     */
-    public String getDownloadFileSuffix() {
-        return "tar.gz";
-    }
-    
     protected void setInstallDir(String installDir) {
         this.installDir = installDir;
         entity.setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
     }
-    
+
     public String getInstallDir() {
         if (installDir != null) return installDir;
 
@@ -157,16 +141,16 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             return installDir;
         }
     }
-    
+
     protected void setInstallLabel() {
-        if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, false).isPresentAndNonNull()) return; 
-        getEntity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, 
+        if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, false).isPresentAndNonNull()) return;
+        getEntity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL,
             getEntity().getEntityType().getSimpleName()+
             (Strings.isNonBlank(getVersion()) ? "_"+getVersion() : "")+
             (Strings.isNonBlank(getInstallLabelExtraSalt()) ? "_"+getInstallLabelExtraSalt() : "") );
     }
 
-    /** allows subclasses to return extra salt (ie unique hash) 
+    /** allows subclasses to return extra salt (ie unique hash)
      * for cases where install dirs need to be distinct e.g. based on extra plugins being placed in the install dir;
      * {@link #setInstallLabel()} uses entity-type simple name and version already
      * <p>
@@ -181,10 +165,10 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         this.runDir = runDir;
         entity.setAttribute(SoftwareProcess.RUN_DIR, runDir);
     }
-    
+
     public String getRunDir() {
         if (runDir != null) return runDir;
-        
+
         String existingVal = getEntity().getAttribute(SoftwareProcess.RUN_DIR);
         if (Strings.isNonBlank(existingVal)) { // e.g. on rebind
             runDir = existingVal;
@@ -213,14 +197,14 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         if (Strings.isNonBlank(oldVal) && !oldVal.equals(val)) {
             log.info("Resetting expandedInstallDir (to "+val+" from "+oldVal+") for "+getEntity());
         }
-        
+
         expandedInstallDir = val;
         getEntity().setAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR, val);
     }
-    
+
     public String getExpandedInstallDir() {
         if (expandedInstallDir != null) return expandedInstallDir;
-        
+
         String existingVal = getEntity().getAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR);
         if (Strings.isNonBlank(existingVal)) { // e.g. on rebind
             expandedInstallDir = existingVal;
@@ -258,7 +242,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     @Override
     public int execute(Map flags2, List<String> script, String summaryForLogging) {
         // TODO replace with SshEffectorTasks.ssh ?; remove the use of flags
-        
+
         Map flags = Maps.newLinkedHashMap();
         if (!flags2.containsKey(IGNORE_ENTITY_SSH_FLAGS)) {
             flags.putAll(getSshFlags());
@@ -276,7 +260,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 Tasks.addTagDynamically(BrooklynTaskTags.tagForEnvStream(BrooklynTaskTags.STREAM_ENV, environment));
             }
             if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDIN)==null) {
-                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN, 
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN,
                     Streams.byteArrayOfString(Strings.join(script, "\n"))));
             }
             if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDOUT)==null) {
@@ -334,7 +318,6 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
 
-    
     /**
      * @param sshFlags Extra flags to be used when making an SSH connection to the entity's machine.
      *                 If the map contains the key {@link #IGNORE_ENTITY_SSH_FLAGS} then only the
@@ -374,13 +357,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return result;
     }
 
-    
     /**
      * Input stream will be closed automatically.
      * <p>
      * If using {@link SshjTool} usage, consider using {@link KnownSizeInputStream} to avoid having
-     * to write out stream once to find its size!  
-     * 
+     * to write out stream once to find its size!
+     *
      * @see #copyResource(Map, String, String) for parameter descriptions.
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -519,7 +501,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     protected ScriptHelper newScript(Map<String, ?> flags, String phase) {
         if (!Entities.isManaged(getEntity()))
             throw new IllegalStateException(getEntity()+" is no longer managed; cannot create script to run here ("+phase+")");
-        
+
         if (!Iterables.all(flags.keySet(), StringPredicates.equalToAny(VALID_FLAGS))) {
             throw new IllegalArgumentException("Invalid flags passed: " + flags);
         }
@@ -530,7 +512,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 s.header.prepend("set -x");
             }
             if (INSTALLING.equals(phase)) {
-                // mutexId should be global because otherwise package managers will contend with each other 
+                // mutexId should be global because otherwise package managers will contend with each other
                 s.useMutex(getLocation(), "installation lock at host", "installing "+elvis(entity,this));
                 s.header.append(
                         "export INSTALL_DIR=\""+getInstallDir()+"\"",
@@ -639,8 +621,8 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                     );
                 } else {
                     s.footer.prepend(
-                            "test -f "+pidFile+" || exit 1", 
-                            "ps -p $(cat "+pidFile+") || exit 1" 
+                            "test -f "+pidFile+" || exit 1",
+                            "ps -p $(cat "+pidFile+") || exit 1"
                     );
                 }
                 // no pid, not running; no process; can't restart, 1 is not running
