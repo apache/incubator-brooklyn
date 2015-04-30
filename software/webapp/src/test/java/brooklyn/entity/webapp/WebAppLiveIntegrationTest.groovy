@@ -80,11 +80,11 @@ public class WebAppLiveIntegrationTest {
      */
     @DataProvider(name = "basicEntities")
     public Object[][] basicEntities() {
-//        TomcatServer tomcat = new TomcatServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
-//        JBoss6Server jboss6 = new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT)
+        TomcatServer tomcat = new TomcatServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
+        JBoss6Server jboss6 = new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT)
         JBoss7Server jboss7 = new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
 		WildflyServer wildfly8 = new WildflyServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
-        return [ [ jboss7 ], [ wildfly8 ] ]
+        return [ [ tomcat ], [ jboss6 ], [ jboss7 ], [ wildfly8 ] ]
     }
 
     private File getResource(String path) {
