@@ -18,6 +18,16 @@
  */
 package brooklyn.entity.webapp.jboss;
 
+import static java.lang.String.format;
+
+import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.webapp.JavaWebAppSshDriver;
@@ -28,19 +38,8 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
-import com.google.common.base.Charsets;
+
 import com.google.common.base.Preconditions;
-import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import static java.lang.String.format;
 
 public class Wildfly8SshDriver extends JavaWebAppSshDriver implements Wildfly8Driver {
 

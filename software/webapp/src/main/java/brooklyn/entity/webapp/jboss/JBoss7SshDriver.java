@@ -39,10 +39,7 @@ import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Strings;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
 
 public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
 
