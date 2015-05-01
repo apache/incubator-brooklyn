@@ -179,9 +179,21 @@ function test_site() {
 }
 
 function make_jekyll() {
+  BROOKLYN_BIN=../usage/dist/target/brooklyn-dist/brooklyn/bin/brooklyn
+  if [ -f $BROOKLYN_BIN ]; then
+    ITEMS_JS=style/js/catalog/items.js
+    echo "Generating catalog items in $ITEMS_JS"
+    echo -n "var items = " > "$ITEMS_JS"
+    JAVA_OPTS='-Dlogback.configurationFile=_build/list-objects-logback.xml' $BROOKLYN_BIN \
+      list-objects >> "$ITEMS_JS"
+    echo ";" >> "$ITEMS_JS"
+    echo "Generating catalog items completed"
+  fi
+
   echo JEKYLL running with: jekyll build $JEKYLL_CONFIG
   jekyll build --config $JEKYLL_CONFIG || return 1
   echo JEKYLL completed
+
   for DI in "${!DIRS_TO_MOVE[@]}"; do
     D=${DIRS_TO_MOVE[$DI]}
     DT=${DIRS_TO_MOVE_TARGET[$DI]}
