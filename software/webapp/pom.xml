@@ -47,7 +47,7 @@
                                 perspective of the Brooklyn/Apache contribution.
                             -->
                             <exclude>src/main/resources/brooklyn/entity/webapp/jboss/jboss7-standalone.xml</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/webapp/jboss/wildfly-standalone.xml</exclude>
+                            <exclude>src/main/resources/brooklyn/entity/webapp/jboss/wildfly8-standalone.xml</exclude>
                             <exclude>src/main/resources/brooklyn/entity/webapp/jetty/jetty-brooklyn.xml</exclude>
                         </excludes>
                     </configuration>
