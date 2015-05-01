@@ -2664,6 +2664,69 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
+    /**
+     * Attempts to obtain the private hostname or IP of the node, as advertised by the cloud provider.
+     * 
+     * For some clouds (e.g. aws-ec2), it will attempt to find the fully qualified hostname (as that works in public+private).
+     */
+    protected String getPrivateHostname(NodeMetadata node, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) {
+        String provider = (setup != null) ? setup.get(CLOUD_PROVIDER) : null;
+        if (provider == null) provider= getProvider();
+
+        // TODO Discouraged to do cloud-specific things; think of this code for aws as an
+        // exceptional situation rather than a pattern to follow. We need a better way to
+        // do cloud-specific things.
+        if ("aws-ec2".equals(provider)) {
+            Maybe<String> result = getPrivateHostnameAws(node, sshHostAndPort, setup);
+            if (result.isPresent()) return result.get();
+        }
+
+        return getPrivateHostnameGeneric(node, setup);
+    }
+
+    private Maybe<String> getPrivateHostnameAws(NodeMetadata node, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) {
+        // TODO Remove duplication from getPublicHostname.
+        // TODO Don't like 
+        HostAndPort inferredHostAndPort = null;
+        if (!sshHostAndPort.isPresent()) {
+            try {
+                String vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);
+                int port = node.getLoginPort();
+                inferredHostAndPort = HostAndPort.fromParts(vmIp, port);
+            } catch (Exception e) {
+                LOG.warn("Error reaching aws-ec2 instance "+node.getId()+"@"+node.getLocation()+" on port "+node.getLoginPort()+"; falling back to jclouds metadata for address", e);
+            }
+        }
+        if (sshHostAndPort.isPresent() || inferredHostAndPort != null) {
+            HostAndPort hostAndPortToUse = sshHostAndPort.isPresent() ? sshHostAndPort.get() : inferredHostAndPort;
+            try {
+                return Maybe.of(getPublicHostnameAws(hostAndPortToUse, setup));
+            } catch (Exception e) {
+                LOG.warn("Error querying aws-ec2 instance instance "+node.getId()+"@"+node.getLocation()+" over ssh for its hostname; falling back to jclouds metadata for address", e);
+            }
+        }
+        return Maybe.absent();
+    }
+
+    private String getPrivateHostnameGeneric(NodeMetadata node, @Nullable ConfigBag setup) {
+        //prefer the private address to the hostname because hostname is sometimes wrong/abbreviated
+        //(see that javadoc; also e.g. on rackspace/cloudstack, the hostname is not registered with any DNS).
+        //Don't return local-only address (e.g. never 127.0.0.1)
+        if (groovyTruth(node.getPrivateAddresses())) {
+            for (String p : node.getPrivateAddresses()) {
+                if (Networking.isLocalOnly(p)) continue;
+                return p;
+            }
+        }
+        if (groovyTruth(node.getPublicAddresses())) {
+            return node.getPublicAddresses().iterator().next();
+        } else if (groovyTruth(node.getHostname())) {
+            return node.getHostname();
+        } else {
+            return null;
+        }
+    }
+
     // ------------ static converters (could go to a new file) ------------------
 
     public static File asFile(Object o) {
