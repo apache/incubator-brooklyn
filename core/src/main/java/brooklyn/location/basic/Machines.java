@@ -51,7 +51,7 @@ public class Machines {
             InetAddress addr = ((MachineLocation) where).getAddress();
             if (addr != null) hostname = addr.getHostAddress();
         }
-        log.debug("computed hostname {} for {}", hostname, where);
+        log.debug("computed subnet hostname {} for {}", hostname, where);
         // TODO if Maybe.absent(message) appears, could/should use that
         // TODO If no machine available, should we throw new IllegalStateException("Cannot find hostname for "+where);
         return Maybe.fromNullable(hostname);
@@ -73,7 +73,7 @@ public class Machines {
             InetAddress addr = ((MachineLocation) where).getAddress();
             if (addr != null) result = addr.getHostAddress();
         }
-        log.debug("computed hostname {} for {}", result, where);
+        log.debug("computed subnet host ip {} for {}", result, where);
         return Maybe.fromNullable(result);
     }
 
