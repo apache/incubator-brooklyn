@@ -23,14 +23,17 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.codec.binary.Base64;
+import org.python.core.PyException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -39,13 +42,18 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
+
+    private static final Logger LOG = LoggerFactory.getLogger(WinRmMachineLocation.class);
 
     public static final ConfigKey<String> WINDOWS_USERNAME = ConfigKeys.newStringConfigKey("windows.username",
             "Username to use when connecting to the remote machine");
@@ -98,9 +106,18 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public int executeScript(List<String> script) {
-        WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
-        WinRmToolResponse response = winRmTool.executeScript(script);
-        return response.getStatusCode();
+        Collection<Throwable> exceptions = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            try {
+                WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
+                WinRmToolResponse response = winRmTool.executeScript(script);
+                return response.getStatusCode();
+            } catch (Exception e) {
+                LOG.warn("ignoring winrm exception and retrying:", e);
+                exceptions.add(e);
+            }
+        }
+        throw Exceptions.propagate("failed to execute powershell script", exceptions);
     }
 
     public int executePsScript(String psScript) {
@@ -108,9 +125,19 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public int executePsScript(List<String> psScript) {
-        WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
-        WinRmToolResponse response = winRmTool.executePs(psScript);
-        return response.getStatusCode();
+        Collection<Throwable> exceptions = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            try {
+                WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
+                WinRmToolResponse response = winRmTool.executePs(psScript);
+                return response.getStatusCode();
+            } catch (Exception e) {
+                LOG.warn("ignoring winrm exception and retrying after 5 seconds:", e);
+                Time.sleep(Duration.FIVE_SECONDS);
+                exceptions.add(e);
+            }
+        }
+        throw Exceptions.propagate("failed to execute powershell script", exceptions);
     }
 
     public int copyTo(File source, File destination) {
@@ -127,6 +154,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
             int chunkSize = getConfig(COPY_FILE_CHUNK_SIZE_BYTES);
             byte[] inputData = new byte[chunkSize];
             int bytesRead;
+            int expectedFileSize = 0;
             while ((bytesRead = source.read(inputData)) > 0) {
                 byte[] chunk;
                 if (bytesRead == chunkSize) {
@@ -134,8 +162,10 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
                 } else {
                     chunk = Arrays.copyOf(inputData, bytesRead);
                 }
-                executePsScript(ImmutableList.of("Add-Content -Encoding Byte -path " + destination.getPath() +
-                        " -value ([System.Convert]::FromBase64String(\"" + new String(Base64.encodeBase64(chunk)) + "\"))"));
+                executePsScript(ImmutableList.of("If ((!(Test-Path " + destination.getPath() + ")) -or ((Get-Item '" + destination.getPath() + "').length -eq " +
+                        expectedFileSize + ")) {Add-Content -Encoding Byte -path " + destination.getPath() +
+                        " -value ([System.Convert]::FromBase64String(\"" + new String(Base64.encodeBase64(chunk)) + "\"))}"));
+                expectedFileSize += bytesRead;
             }
 
             return 0;
