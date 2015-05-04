@@ -19,6 +19,7 @@
 package brooklyn.launcher;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.security.KeyPair;
@@ -75,9 +76,11 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.io.FileUtil;
 import brooklyn.util.javalang.Threads;
 import brooklyn.util.logging.LoggingSetup;
 import brooklyn.util.os.Os;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
@@ -441,7 +444,7 @@ public class BrooklynWebServer {
         if (keystoreCertAlias==null) keystoreCertAlias = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_CERTIFICATE_ALIAS);
         
         if (keystoreUrl!=null) {
-            sslContextFactory.setKeyStorePath(ResourceUtils.create(this).checkUrlExists(keystoreUrl, BrooklynWebConfig.KEYSTORE_URL.getName()));
+            sslContextFactory.setKeyStorePath(getLocalKeyStorePath(keystoreUrl));
             if (Strings.isEmpty(keystorePassword))
                 throw new IllegalArgumentException("Keystore password is required and non-empty if keystore is specified.");
             sslContextFactory.setKeyStorePassword(keystorePassword);
@@ -476,6 +479,27 @@ public class BrooklynWebServer {
 
         sslContextFactory.addExcludeProtocols("SSLv3");
         return sslContextFactory;
+    }
+
+    private String getLocalKeyStorePath(String keystoreUrl) {
+        ResourceUtils res = ResourceUtils.create(this);
+        res.checkUrlExists(keystoreUrl, BrooklynWebConfig.KEYSTORE_URL.getName());
+        if (new File(keystoreUrl).exists()) {
+            return keystoreUrl;
+        } else {
+            InputStream keystoreStream;
+            try {
+                keystoreStream = res.getResourceFromUrl(keystoreUrl);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                throw new IllegalArgumentException("Unable to access URL: "+keystoreUrl, e);
+            }
+            File tmp = Os.newTempFile("brooklyn-keystore", "ks");
+            tmp.deleteOnExit();
+            FileUtil.copyTo(keystoreStream, tmp);
+            Streams.closeQuietly(keystoreStream);
+            return tmp.getAbsolutePath();
+        }
     }
 
     private String newTimestampedDirName(String prefix, int randomSuffixLength) {

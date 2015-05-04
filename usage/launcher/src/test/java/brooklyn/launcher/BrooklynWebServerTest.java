@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
@@ -89,11 +90,19 @@ public class BrooklynWebServerTest {
         }
     }
 
-    @Test
-    public void verifyHttps() throws Exception {
+    @DataProvider(name="keystorePaths")
+    public Object[][] getKeystorePaths() {
+        return new Object[][] {
+                {getFile("server.ks")},
+                {new File(getFile("server.ks")).toURI().toString()},
+                {"classpath://server.ks"}};
+    }
+    
+    @Test(dataProvider="keystorePaths")
+    public void verifyHttps(String keystoreUrl) throws Exception {
         Map<String,?> flags = ImmutableMap.<String,Object>builder()
                 .put("httpsEnabled", true)
-                .put("keystoreUrl", getFile("server.ks"))
+                .put("keystoreUrl", keystoreUrl)
                 .put("keystorePassword", "password")
                 .build();
         webServer = new BrooklynWebServer(flags, newManagementContext(brooklynProperties));
