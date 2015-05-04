@@ -39,6 +39,6 @@ public class JBoss7ServerSoftLayerLiveTest extends JBossServerSoftLayerLiveTest 
 
    @Override
    protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-	   return Wildfly8Server.class;
+	   return JBoss7Server.class;
    }
 }
