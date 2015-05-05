@@ -87,6 +87,64 @@ public class BrooklynWebConfig {
             BASE_NAME+".security.keystore.certificate.alias",
             "Alias in "+KEYSTORE_URL+" for the certificate to use; defaults to the first if not supplied");
 
+    public final static ConfigKey<String> TRANSPORT_PROTOCOLS = ConfigKeys.newStringConfigKey(
+            BASE_NAME+".security.transport.protocols",
+            "SSL/TLS protocol versions to use for web console connections",
+            "TLSv1, TLSv1.1, TLSv1.2");
+
+    // https://wiki.mozilla.org/Security/Server_Side_TLS (v3.4)
+    // http://stackoverflow.com/questions/19846020/how-to-map-a-openssls-cipher-list-to-java-jsse
+    // list created on 05.05.2015, Intermediate config from first link
+    public final static ConfigKey<String> TRANSPORT_CIPHERS = ConfigKeys.newStringConfigKey(
+            BASE_NAME+".security.transport.ciphers",
+            "SSL/TLS cipher suites to use for web console connections",
+            "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256," +
+            "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384," +
+            "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_DSS_WITH_AES_128_GCM_SHA256," +
+            "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384," +
+            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256," +
+            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA," +
+            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384," +
+            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA," +
+            "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,TLS_DHE_RSA_WITH_AES_128_CBC_SHA," +
+            "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,TLS_DHE_RSA_WITH_AES_256_CBC_SHA256," +
+            "TLS_DHE_DSS_WITH_AES_256_CBC_SHA,TLS_DHE_RSA_WITH_AES_256_CBC_SHA," +
+            "TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_GCM_SHA384," +
+            "TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA256," +
+            "TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA," +
+            "TLS_SRP_SHA_DSS_WITH_AES_256_CBC_SHA,TLS_SRP_SHA_RSA_WITH_AES_256_CBC_SHA," +
+            "TLS_SRP_SHA_WITH_AES_256_CBC_SHA,TLS_DHE_DSS_WITH_AES_256_CBC_SHA256," +
+            "TLS_SRP_SHA_DSS_WITH_AES_128_CBC_SHA,TLS_SRP_SHA_RSA_WITH_AES_128_CBC_SHA," +
+            "TLS_SRP_SHA_WITH_AES_128_CBC_SHA,TLS_DHE_DSS_WITH_AES_128_CBC_SHA," +
+            "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA," +
+            "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA,TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA," +
+            "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,TLS_RSA_WITH_CAMELLIA_128_CBC_SHA," +
+            "TLS_RSA_WITH_3DES_EDE_CBC_SHA," +
+            // Same as above but with SSL_ prefix, IBM Java compatibility (cipher is independent of protocol)
+            // https://www-01.ibm.com/support/knowledgecenter/SSYKE2_7.0.0/com.ibm.java.security.component.70.doc/security-component/jsse2Docs/ciphersuites.html
+            "SSL_ECDHE_RSA_WITH_AES_128_GCM_SHA256,SSL_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256," +
+            "SSL_ECDHE_RSA_WITH_AES_256_GCM_SHA384,SSL_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384," +
+            "SSL_DHE_RSA_WITH_AES_128_GCM_SHA256,SSL_DHE_DSS_WITH_AES_128_GCM_SHA256," +
+            "SSL_DHE_DSS_WITH_AES_256_GCM_SHA384,SSL_DHE_RSA_WITH_AES_256_GCM_SHA384," +
+            "SSL_ECDHE_RSA_WITH_AES_128_CBC_SHA256,SSL_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256," +
+            "SSL_ECDHE_RSA_WITH_AES_128_CBC_SHA,SSL_ECDHE_ECDSA_WITH_AES_128_CBC_SHA," +
+            "SSL_ECDHE_RSA_WITH_AES_256_CBC_SHA384,SSL_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384," +
+            "SSL_ECDHE_RSA_WITH_AES_256_CBC_SHA,SSL_ECDHE_ECDSA_WITH_AES_256_CBC_SHA," +
+            "SSL_DHE_RSA_WITH_AES_128_CBC_SHA256,SSL_DHE_RSA_WITH_AES_128_CBC_SHA," +
+            "SSL_DHE_DSS_WITH_AES_128_CBC_SHA256,SSL_DHE_RSA_WITH_AES_256_CBC_SHA256," +
+            "SSL_DHE_DSS_WITH_AES_256_CBC_SHA,SSL_DHE_RSA_WITH_AES_256_CBC_SHA," +
+            "SSL_RSA_WITH_AES_128_GCM_SHA256,SSL_RSA_WITH_AES_256_GCM_SHA384," +
+            "SSL_RSA_WITH_AES_128_CBC_SHA256,SSL_RSA_WITH_AES_256_CBC_SHA256," +
+            "SSL_RSA_WITH_AES_128_CBC_SHA,SSL_RSA_WITH_AES_256_CBC_SHA," +
+            "SSL_SRP_SHA_DSS_WITH_AES_256_CBC_SHA,SSL_SRP_SHA_RSA_WITH_AES_256_CBC_SHA," +
+            "SSL_SRP_SHA_WITH_AES_256_CBC_SHA,SSL_DHE_DSS_WITH_AES_256_CBC_SHA256," +
+            "SSL_SRP_SHA_DSS_WITH_AES_128_CBC_SHA,SSL_SRP_SHA_RSA_WITH_AES_128_CBC_SHA," +
+            "SSL_SRP_SHA_WITH_AES_128_CBC_SHA,SSL_DHE_DSS_WITH_AES_128_CBC_SHA," +
+            "SSL_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,SSL_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA," +
+            "SSL_RSA_WITH_CAMELLIA_256_CBC_SHA,SSL_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA," +
+            "SSL_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,SSL_RSA_WITH_CAMELLIA_128_CBC_SHA," +
+            "SSL_RSA_WITH_3DES_EDE_CBC_SHA");
+
     public final static boolean hasNoSecurityOptions(ConfigMap config) {
         return config.submap(ConfigPredicates.startingWith(BASE_NAME_SECURITY)).isEmpty();
     }

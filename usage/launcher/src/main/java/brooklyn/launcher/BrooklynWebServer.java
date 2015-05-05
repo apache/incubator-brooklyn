@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.DispatcherType;
@@ -86,6 +87,7 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -181,6 +183,12 @@ public class BrooklynWebServer {
 
     @SetFromFlag
     private String trustStorePassword;
+    
+    @SetFromFlag
+    private String transportProtocols;
+    
+    @SetFromFlag
+    private String transportCiphers;
 
     private File webappTempDir;
     
@@ -235,9 +243,7 @@ public class BrooklynWebServer {
     }
     
     public boolean getHttpsEnabled() {
-        if (httpsEnabled!=null) return httpsEnabled;
-        httpsEnabled = managementContext.getConfig().getConfig(BrooklynWebConfig.HTTPS_REQUIRED);
-        return httpsEnabled;
+        return getConfig(httpsEnabled, BrooklynWebConfig.HTTPS_REQUIRED);
     }
     
     public PortRange getRequestedPort() {
@@ -352,10 +358,7 @@ public class BrooklynWebServer {
         if (server != null) throw new IllegalStateException(""+this+" already running");
 
         if (actualPort == -1){
-            PortRange portRange = requestedPort;
-            if (portRange==null) {
-                portRange = managementContext.getConfig().getConfig(BrooklynWebConfig.WEB_CONSOLE_PORT);
-            }
+            PortRange portRange = getConfig(requestedPort, BrooklynWebConfig.WEB_CONSOLE_PORT);
             if (portRange==null) {
                 portRange = getHttpsEnabled() ? httpsPort : httpPort;
             }
@@ -430,55 +433,81 @@ public class BrooklynWebServer {
         SslContextFactory sslContextFactory = new SslContextFactory();
 
         // allow webconsole keystore & related properties to be set in brooklyn.properties
-        if (Strings.isNonBlank(keystorePath)) {
-            if (keystoreUrl==null) {
-                log.warn("Deprecated 'keystorePath' used; callers should use 'keystoreUrl'");
-                keystoreUrl = keystorePath;
-            } else if (!keystoreUrl.equals(keystorePath)) {
-                log.warn("Deprecated 'keystorePath' supplied with different value than 'keystoreUrl', preferring the latter: "+
-                    keystorePath+" / "+keystoreUrl);
-            }
-        }
-        if (keystoreUrl==null) keystoreUrl = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_URL);
-        if (keystorePassword==null) keystorePassword = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_PASSWORD);
-        if (keystoreCertAlias==null) keystoreCertAlias = managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_CERTIFICATE_ALIAS);
+        String ksUrl = getKeystoreUrl();
+        String ksPassword = getConfig(keystorePassword, BrooklynWebConfig.KEYSTORE_PASSWORD);
+        String ksCertAlias = getConfig(keystoreCertAlias, BrooklynWebConfig.KEYSTORE_CERTIFICATE_ALIAS);
+        String trProtos = getConfig(transportProtocols, BrooklynWebConfig.TRANSPORT_PROTOCOLS);
+        String trCiphers = getConfig(transportCiphers, BrooklynWebConfig.TRANSPORT_CIPHERS);
         
-        if (keystoreUrl!=null) {
-            sslContextFactory.setKeyStorePath(getLocalKeyStorePath(keystoreUrl));
-            if (Strings.isEmpty(keystorePassword))
+        if (ksUrl!=null) {
+            sslContextFactory.setKeyStorePath(getLocalKeyStorePath(ksUrl));
+            if (Strings.isEmpty(ksPassword))
                 throw new IllegalArgumentException("Keystore password is required and non-empty if keystore is specified.");
-            sslContextFactory.setKeyStorePassword(keystorePassword);
-            if (Strings.isNonEmpty(keystoreCertAlias))
-                sslContextFactory.setCertAlias(keystoreCertAlias);
+            sslContextFactory.setKeyStorePassword(ksPassword);
+            if (Strings.isNonEmpty(ksCertAlias))
+                sslContextFactory.setCertAlias(ksCertAlias);
         } else {
             log.info("No keystore specified but https enabled; creating a default keystore");
             
-            if (Strings.isEmpty(keystoreCertAlias))
-                keystoreCertAlias = "web-console";
+            if (Strings.isEmpty(ksCertAlias))
+                ksCertAlias = "web-console";
             
             // if password is blank the process will block and read from stdin !
-            if (Strings.isEmpty(keystorePassword)) {
-                keystorePassword = Identifiers.makeRandomId(8);
-                log.debug("created random password "+keystorePassword+" for ad hoc internal keystore");
+            if (Strings.isEmpty(ksPassword)) {
+                ksPassword = Identifiers.makeRandomId(8);
+                log.debug("created random password "+ksPassword+" for ad hoc internal keystore");
             }
             
             KeyStore ks = SecureKeys.newKeyStore();
             KeyPair key = SecureKeys.newKeyPair();
             X509Certificate cert = new FluentKeySigner("brooklyn").newCertificateFor("web-console", key);
-            ks.setKeyEntry(keystoreCertAlias, key.getPrivate(), keystorePassword.toCharArray(),
+            ks.setKeyEntry(ksCertAlias, key.getPrivate(), ksPassword.toCharArray(),
                 new Certificate[] { cert });
             
             sslContextFactory.setKeyStore(ks);
-            sslContextFactory.setKeyStorePassword(keystorePassword);
-            sslContextFactory.setCertAlias(keystoreCertAlias);
+            sslContextFactory.setKeyStorePassword(ksPassword);
+            sslContextFactory.setCertAlias(ksCertAlias);
         }
         if (!Strings.isEmpty(truststorePath)) {
             sslContextFactory.setTrustStore(checkFileExists(truststorePath, "truststore"));
             sslContextFactory.setTrustStorePassword(trustStorePassword);
         }
 
-        sslContextFactory.addExcludeProtocols("SSLv3");
+        if (Strings.isNonBlank(trProtos)) {
+            sslContextFactory.setIncludeProtocols(parseArray(trProtos));
+        }
+        if (Strings.isNonBlank(trCiphers)) {
+            sslContextFactory.setIncludeCipherSuites(parseArray(trCiphers));
+        }
         return sslContextFactory;
+    }
+
+    private String[] parseArray(String list) {
+        List<String> arr = Splitter.on(",").omitEmptyStrings().trimResults().splitToList(list);
+        return arr.toArray(new String[arr.size()]);
+    }
+
+    private String getKeystoreUrl() {
+        if (keystoreUrl != null) {
+            if (Strings.isNonBlank(keystorePath) && !keystoreUrl.equals(keystorePath)) {
+                log.warn("Deprecated 'keystorePath' supplied with different value than 'keystoreUrl', preferring the latter: "+
+                        keystorePath+" / "+keystoreUrl);
+            }
+            return keystoreUrl;
+        } else if (Strings.isNonBlank(keystorePath)) {
+            log.warn("Deprecated 'keystorePath' used; callers should use 'keystoreUrl'");
+            return keystorePath;
+        } else {
+            return managementContext.getConfig().getConfig(BrooklynWebConfig.KEYSTORE_URL);
+        }
+    }
+
+    private <T> T getConfig(T override, ConfigKey<T> key) {
+        if (override!=null) {
+            return override;
+        } else {
+            return managementContext.getConfig().getConfig(key);
+        }
     }
 
     private String getLocalKeyStorePath(String keystoreUrl) {
