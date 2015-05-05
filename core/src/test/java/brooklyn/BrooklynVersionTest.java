@@ -31,52 +31,52 @@ import brooklyn.util.text.Strings;
 
 public class BrooklynVersionTest {
 
-  private static final Logger log = LoggerFactory.getLogger(BrooklynVersionTest.class);
-    
-  @Test
-  public void testGetVersion() {
-      assertEquals(BrooklynVersion.get(), BrooklynVersion.INSTANCE.getVersion());
-  }
-    
-  @Test
-  public void testGetHardcodedClasspathVersion() {
-      @SuppressWarnings("deprecation")
-      String v = BrooklynVersion.INSTANCE.getVersionFromClasspath();
-      Assert.assertTrue(BrooklynVersion.get().equals(v) || "0.0.0-SNAPSHOT".equals(v), v);
-  }
-  
-  @Test
-  public void testGetFromMaven() {
-      String v = BrooklynVersion.INSTANCE.getVersionFromMavenProperties();
-      Assert.assertTrue(v==null || BrooklynVersion.get().equals(v), v);
-  }
-  
-  @Test
-  public void testGetFromOsgi() {
-      String v = BrooklynVersion.INSTANCE.getVersionFromOsgiManifest();
-      Assert.assertTrue(v==null || BrooklynVersion.get().equals(v), v);
-  }
-  
-  @Test
-  public void testGetOsgiSha1() {
-      String sha1 = BrooklynVersion.INSTANCE.getSha1FromOsgiManifest();
-      log.info("sha1: "+sha1);
-      if (Strings.isNonBlank(sha1) || BrooklynVersion.isDevelopmentEnvironment())
-          return;
-      // we might not have a SHA1 if it's a standalone (non-git) source build; just log warn in that case
-      log.warn("This build does not have git SHA1 information.");
-      // (can't assert anything, except that sha1 lookup doesn't NPE)
-  }
-  
-  @Test
-  public void testDevEnv() {
-      URL sp = getClass().getClassLoader().getResource("brooklyn/config/sample.properties");
-      if (sp==null) Assert.fail("Can't find test resources");
-      
-      log.info("Test for dev env: "+"Dev env? "+BrooklynVersion.isDevelopmentEnvironment()+"; path "+sp);
-      boolean testResourcePathInClasses = sp.getPath().endsWith("classes/brooklyn/config/sample.properties");
-      Assert.assertEquals(testResourcePathInClasses, BrooklynVersion.isDevelopmentEnvironment(),
-          "Dev env? "+BrooklynVersion.isDevelopmentEnvironment()+"; but resource path: "+sp);
-  }
-  
+    private static final Logger log = LoggerFactory.getLogger(BrooklynVersionTest.class);
+
+    @Test
+    public void testGetVersion() {
+        assertEquals(BrooklynVersion.get(), BrooklynVersion.INSTANCE.getVersion());
+    }
+
+    @Test
+    public void testGetHardcodedClasspathVersion() {
+        @SuppressWarnings("deprecation")
+        String v = BrooklynVersion.INSTANCE.getVersionFromClasspath();
+        Assert.assertTrue(BrooklynVersion.get().equals(v) || "0.0.0-SNAPSHOT".equals(v), v);
+    }
+
+    @Test
+    public void testGetFromMaven() {
+        String v = BrooklynVersion.INSTANCE.getVersionFromMavenProperties();
+        Assert.assertTrue(v == null || BrooklynVersion.get().equals(v), v);
+    }
+
+    @Test
+    public void testGetFromOsgi() {
+        String v = BrooklynVersion.INSTANCE.getVersionFromOsgiManifest();
+        Assert.assertTrue(v == null || BrooklynVersion.get().equals(v), v);
+    }
+
+    @Test
+    public void testGetOsgiSha1() {
+        String sha1 = BrooklynVersion.INSTANCE.getSha1FromOsgiManifest();
+        log.info("sha1: " + sha1);
+        if (Strings.isNonBlank(sha1) || BrooklynVersion.isDevelopmentEnvironment())
+            return;
+        // we might not have a SHA1 if it's a standalone (non-git) source build; just log warn in that case
+        log.warn("This build does not have git SHA1 information.");
+        // (can't assert anything, except that sha1 lookup doesn't NPE)
+    }
+
+    @Test
+    public void testDevEnv() {
+        URL sp = getClass().getClassLoader().getResource("brooklyn/config/sample.properties");
+        if (sp == null) Assert.fail("Can't find test resources");
+
+        log.info("Test for dev env: " + "Dev env? " + BrooklynVersion.isDevelopmentEnvironment() + "; path " + sp);
+        boolean testResourcePathInClasses = sp.getPath().endsWith("classes/brooklyn/config/sample.properties");
+        Assert.assertEquals(testResourcePathInClasses, BrooklynVersion.isDevelopmentEnvironment(),
+                "Dev env? " + BrooklynVersion.isDevelopmentEnvironment() + "; but resource path: " + sp);
+    }
+
 }
