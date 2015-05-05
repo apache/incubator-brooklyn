@@ -21,6 +21,8 @@ package brooklyn.management.ha;
 import java.io.File;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +55,7 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class OsgiManager {
 
@@ -263,6 +266,9 @@ public class OsgiManager {
         return bundleFinder.find();
     }
 
+    /**
+     * Iterates through catalogBundles until one contains a resource with the given name.
+     */
     public URL getResource(String name, Iterable<CatalogBundle> catalogBundles) {
         for (CatalogBundle catalogBundle: catalogBundles) {
             try {
@@ -276,6 +282,25 @@ public class OsgiManager {
             }
         }
         return null;
+    }
+
+    /**
+     * @return An iterable of all resources matching name in catalogBundles.
+     */
+    public Iterable<URL> getResources(String name, Iterable<CatalogBundle> catalogBundles) {
+        List<URL> resources = Lists.newArrayList();
+        for (CatalogBundle catalogBundle : catalogBundles) {
+            try {
+                Maybe<Bundle> bundle = findBundle(catalogBundle);
+                if (bundle.isPresent()) {
+                    Enumeration<URL> result = bundle.get().getResources(name);
+                    resources.addAll(Collections.list(result));
+                }
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+            }
+        }
+        return resources;
     }
 
     public Framework getFramework() {

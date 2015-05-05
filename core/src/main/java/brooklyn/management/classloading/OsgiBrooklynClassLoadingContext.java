@@ -20,6 +20,7 @@ package brooklyn.management.classloading;
 
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
@@ -114,7 +115,18 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         }
         return null;
     }
-    
+
+    @Override
+    public Iterable<URL> getResources(String name) {
+        if (mgmt != null) {
+            Maybe<OsgiManager> osgi = ((ManagementContextInternal) mgmt).getOsgiManager();
+            if (osgi.isPresent() && hasBundles) {
+                return osgi.get().getResources(name, getBundles());
+            }
+        }
+        return Collections.emptyList();
+    }
+
     public String getCatalogItemId() {
         return catalogItemId;
     }

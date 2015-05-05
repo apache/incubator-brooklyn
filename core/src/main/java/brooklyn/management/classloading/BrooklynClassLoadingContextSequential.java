@@ -32,6 +32,8 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public final class BrooklynClassLoadingContextSequential extends AbstractBrooklynClassLoadingContext {
 
@@ -86,7 +88,6 @@ public final class BrooklynClassLoadingContextSequential extends AbstractBrookly
         return Maybe.absent(Exceptions.create("Unable to load "+className+" from "+primaries, errors));
     }
 
-
     @Override
     public URL getResource(String resourceInThatDir) {
         for (BrooklynClassLoadingContext target: primaries) {
@@ -98,6 +99,18 @@ public final class BrooklynClassLoadingContextSequential extends AbstractBrookly
             if (result!=null) return result;
         }
         return null;
+    }
+
+    @Override
+    public Iterable<URL> getResources(String name) {
+        List<Iterable<URL>> resources = Lists.newArrayList();
+        for (BrooklynClassLoadingContext target : primaries) {
+            resources.add(target.getResources(name));
+        }
+        for (BrooklynClassLoadingContext target : secondaries) {
+            resources.add(target.getResources(name));
+        }
+        return Iterables.concat(resources);
     }
 
     @Override

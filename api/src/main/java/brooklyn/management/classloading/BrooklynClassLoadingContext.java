@@ -34,11 +34,17 @@ public interface BrooklynClassLoadingContext {
     public ManagementContext getManagementContext();
     public Class<?> loadClass(String className);
     public <T> Class<? extends T> loadClass(String className, @Nullable Class<T> supertype);
-    
+
     public Maybe<Class<?>> tryLoadClass(String className);
     public <T> Maybe<Class<? extends T>> tryLoadClass(String className, @Nullable Class<T> supertype);
-    
-    /** as {@link ClassLoader#getResource(String)} */
+
+    /** As {@link ClassLoader#getResource(String)} */
     public URL getResource(String name);
-    
+
+    /**
+     * As {@link ClassLoader#getResources(String)} but returning an {@link Iterable} rather than
+     * an {@link java.util.Enumeration}.
+     */
+    public Iterable<URL> getResources(String name);
+
 }
