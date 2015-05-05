@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.paas.PaasLocation;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -54,6 +55,7 @@ public class ReflectiveEntityDriverFactory {
     
     public ReflectiveEntityDriverFactory() {
         addRule(DriverInferenceForSshLocation.DEFAULT_IDENTIFIER, new DriverInferenceForSshLocation());
+        addRule(DriverInferenceForPaasLocation.DEFAULT_IDENTIFIER, new DriverInferenceForPaasLocation());
     }
     
     public interface DriverInferenceRule {
@@ -163,6 +165,21 @@ public class ReflectiveEntityDriverFactory {
             }
             return Strings.removeFromEnd(driverInterfaceName, "Driver")+"SshDriver";
         }
+    }
+
+    public static class DriverInferenceForPaasLocation extends AbstractDriverInferenceRule {
+
+            public static final String DEFAULT_IDENTIFIER = "paas-location-driver-inference-rule";
+
+            @Override
+            public <D extends EntityDriver> String inferDriverClassName(DriverDependentEntity<D> entity, Class<D> driverInterface, Location location) {
+                String driverInterfaceName = driverInterface.getName();
+                if (!(location instanceof PaasLocation)) return null;
+                if (!driverInterfaceName.endsWith("Driver")) {
+                    throw new IllegalArgumentException(String.format("Driver name [%s] doesn't end with 'Driver'; cannot auto-detect PaasDriver class name", driverInterfaceName));
+                }
+                return Strings.removeFromEnd(driverInterfaceName, "Driver")+ ((PaasLocation) location).getPaasProviderName() + "Driver";
+            }
     }
 
     /** adds a rule; possibly replacing an old one if one exists with the given identifier. the new rule is added after all previous ones.

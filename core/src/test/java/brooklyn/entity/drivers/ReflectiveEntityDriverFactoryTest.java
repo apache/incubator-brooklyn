@@ -18,23 +18,25 @@
  */
 package brooklyn.entity.drivers;
 
-import static org.testng.Assert.assertTrue;
-
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.paas.PaasLocation;
+import brooklyn.test.location.TestPaasLocation;
 import brooklyn.util.collections.MutableMap;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertTrue;
 
 public class ReflectiveEntityDriverFactoryTest {
 
     private ReflectiveEntityDriverFactory factory;
     private SshMachineLocation sshLocation;
+    private PaasLocation paasLocation;
     private DriverDependentEntity<MyDriver> entity;
     
     @BeforeMethod
@@ -42,6 +44,8 @@ public class ReflectiveEntityDriverFactoryTest {
         factory = new ReflectiveEntityDriverFactory();
         sshLocation = new SshMachineLocation(MutableMap.of("address", "localhost"));
         entity = new MyDriverDependentEntity<MyDriver>(MyDriver.class);
+
+        paasLocation = new TestPaasLocation();
     }
 
     @AfterMethod
@@ -54,11 +58,21 @@ public class ReflectiveEntityDriverFactoryTest {
         assertTrue(driver.getClass().equals(clazz), "driver="+driver+"; should be "+clazz);
     }
     
+    protected void assertDriverIs(Class<?> clazz, Location location) {
+        MyDriver driver = factory.build(entity, location);
+        assertTrue(driver.getClass().equals(clazz), "driver="+driver+"; should be "+clazz);
+    }
+    
     @Test
     public void testInstantiatesSshDriver() throws Exception {
         assertDriverIs(MySshDriver.class);
     }
 
+    @Test
+    public void testInstantiatesPaasDriver() throws Exception {
+        assertDriverIs(MyTestPaasDriver.class, paasLocation);
+    }
+    
     @Test
     public void testFullNameMapping() throws Exception {
         factory.addClassFullNameMapping(MyDriver.class.getName(), MyCustomDriver.class.getName());
@@ -137,6 +151,21 @@ public class ReflectiveEntityDriverFactoryTest {
     public static class MyCustomDriver extends MySshDriver {
         public MyCustomDriver(Entity entity, SshMachineLocation machine) {
             super(entity, machine);
+        }
+    }
+    
+    public static class MyTestPaasDriver implements MyDriver {
+        public MyTestPaasDriver(Entity entity, PaasLocation location) {
+        }
+
+        @Override
+        public Location getLocation() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public EntityLocal getEntity() {
+            throw new UnsupportedOperationException();
         }
     }
 }
