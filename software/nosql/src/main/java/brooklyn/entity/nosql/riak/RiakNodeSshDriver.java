@@ -198,14 +198,14 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     private ImmutableList<String> installDebianBased() {
         return ImmutableList.<String>builder()
-                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.deb | " + BashCommands.sudo("bash"))
+                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.deb.sh | " + BashCommands.sudo("bash"))
                 .add(BashCommands.sudo("apt-get install --assume-yes riak=" + getEntity().getFullVersion() + "-1"))
                 .build();
     }
 
     private ImmutableList<String> installRpmBased() {
         return ImmutableList.<String>builder()
-                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.rpm | " + BashCommands.sudo("bash"))
+                .add("curl https://packagecloud.io/install/repositories/basho/riak/script.rpm.sh | " + BashCommands.sudo("bash"))
                 .add(BashCommands.sudo("yum install -y riak-" + getEntity().getFullVersion() + "*"))
                 .build();
     }
