@@ -505,7 +505,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
                 isRunningResult = false;
                 if (driver != null) {
-                    log.error("checked " + this + ", 'is running' threw an exception", e);
+                    String msg = "checked " + this + ", 'is running' threw an exception; logging subsequent exceptions at debug level";
+                    if (firstFailure == null) {
+                        log.error(msg, e);
+                    } else {
+                        log.debug(msg, e);
+                    }
                 } else {
                     // provide extra context info, as we're seeing this happen in strange circumstances
                     log.error(this+" concurrent start and shutdown detected", e);
@@ -522,7 +527,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             String msg = "Software process entity "+this+" did not pass is-running check within "+
                     "the required "+startTimeout+" limit ("+timer.getDurationElapsed().toStringRounded()+" elapsed)";
             if (firstFailure != null) {
-                msg += "; check failed with exception: " + firstFailure.getMessage();
+                msg += "; check failed at least once with exception: " + firstFailure.getMessage() + ", see logs for details";
             }
             log.warn(msg+" (throwing)");
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
