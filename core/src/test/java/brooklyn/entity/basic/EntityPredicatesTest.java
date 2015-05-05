@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.trait.Changeable;
 import brooklyn.location.Location;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.text.StringPredicates;
@@ -113,4 +114,14 @@ public class EntityPredicatesTest extends BrooklynAppUnitTestSupport {
         assertTrue(EntityPredicates.locationsIncludes(loc).apply(entity));
         assertFalse(EntityPredicates.locationsIncludes(loc).apply(app));
     }
+
+    @Test
+    public void testHasInterfaceMatching() throws Exception {
+        assertTrue(EntityPredicates.hasInterfaceMatching(".*").apply(entity));
+        assertTrue(EntityPredicates.hasInterfaceMatching(".*TestEntity").apply(entity));
+        assertFalse(EntityPredicates.hasInterfaceMatching(".*TestEntity").apply(group));
+        assertTrue(EntityPredicates.hasInterfaceMatching(Changeable.class.getName()).apply(group));
+        assertTrue(EntityPredicates.hasInterfaceMatching(".*C.*able").apply(group));
+    }
+
 }

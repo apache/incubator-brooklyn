@@ -76,6 +76,12 @@ public interface ApplicationApi {
             value = "Fetch list of applications, as ApplicationSummary objects",
             responseClass = "brooklyn.rest.domain.ApplicationSummary"
     )
+    public List<ApplicationSummary> list(
+            @ApiParam(value = "Regular expression to filter by", required = false)
+            @DefaultValue(".*")
+            @QueryParam("typeRegex") String typeRegex);
+
+    /** As {@link #list(String)}, filtering for <code>.*</code>. */
     public List<ApplicationSummary> list();
 
     @GET
