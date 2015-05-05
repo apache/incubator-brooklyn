@@ -28,7 +28,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 
 import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.Template;
+import org.jclouds.scriptbuilder.domain.OsFamily;
+import org.jclouds.scriptbuilder.domain.StatementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -44,6 +47,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.geo.HostGeoInfo;
+import brooklyn.location.jclouds.JcloudsLocation.UserCreation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -52,6 +56,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -103,6 +108,10 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
                     throw Exceptions.propagate(e);
                 }
             }
+        }
+        @Override @VisibleForTesting
+        public UserCreation createUserStatements(@Nullable Image image, ConfigBag config) {
+            return super.createUserStatements(image, config);
         }
     }
 
@@ -554,4 +563,40 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     }
 
     // TODO more tests, where flags come in from resolver, named locations, etc
+
+    // now test creating users
+    
+    protected String getCreateUserStatementsFor(Map<?,?> config) {
+        BailOutJcloudsLocation jl = newSampleBailOutJcloudsLocationForTesting(MutableMap.<Object,Object>builder()
+            .put(JcloudsLocationConfig.LOGIN_USER, "root").put(JcloudsLocationConfig.LOGIN_USER_PASSWORD, "m0ck")
+            .put(JcloudsLocationConfig.USER, "bob").put(JcloudsLocationConfig.LOGIN_USER_PASSWORD, "b0b")
+            .putAll(config).build());
+        
+        UserCreation creation = jl.createUserStatements(null, jl.config().getBag());
+        return new StatementList(creation.statements).render(OsFamily.UNIX);        
+    }
+    
+    @Test
+    public void testDisablesRoot() {
+        String statements = getCreateUserStatementsFor(ImmutableMap.of());
+        Assert.assertTrue(statements.contains("PermitRootLogin"), "Error:\n"+statements);
+        Assert.assertTrue(statements.matches("(?s).*sudoers.*useradd.*bob.*wheel.*"), "Error:\n"+statements);
+    }
+
+    @Test
+    public void testDisableRootFalse() {
+        String statements = getCreateUserStatementsFor(ImmutableMap.of(JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH, false));
+        Assert.assertFalse(statements.contains("PermitRootLogin"), "Error:\n"+statements);
+        Assert.assertTrue(statements.matches("(?s).*sudoers.*useradd.*bob.*wheel.*"), "Error:\n"+statements);
+    }
+    
+    @Test
+    public void testDisableRootAndSudoFalse() {
+        String statements = getCreateUserStatementsFor(ImmutableMap.of(
+            JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH, false,
+            JcloudsLocationConfig.GRANT_USER_SUDO, false));
+        Assert.assertFalse(statements.contains("PermitRootLogin"), "Error:\n"+statements);
+        Assert.assertFalse(statements.matches("(?s).*sudoers.*useradd.*bob.*wheel.*"), "Error:\n"+statements);
+    }
+
 }

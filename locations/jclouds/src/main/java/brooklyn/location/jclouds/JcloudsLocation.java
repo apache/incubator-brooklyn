@@ -1467,6 +1467,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     .grantSudoToAdminUser(grantUserSudo);
 
             boolean useKey = Strings.isNonBlank(pubKey);
+            adminBuilder.cryptFunction(Sha512Crypt.function());
 
             // always set this password; if not supplied, it will be a random string
             adminBuilder.adminPassword(passwordToSet);
@@ -1499,7 +1500,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
             // lock SSH means no root login and no passwordless login
             // if we're using a password or we don't have sudo, then don't do this!
-            adminBuilder.lockSsh(useKey && grantUserSudo && !config.get(JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH));
+            adminBuilder.lockSsh(useKey && grantUserSudo && config.get(JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH));
 
             statements.add(adminBuilder.build());
 
