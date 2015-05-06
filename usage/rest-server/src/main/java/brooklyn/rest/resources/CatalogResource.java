@@ -21,6 +21,7 @@ package brooklyn.rest.resources;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -454,8 +455,20 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     @SuppressWarnings("unchecked")
     private static <T> List<T> castList(List<? super T> list, Class<T> elementType) {
         List<T> result = Lists.newArrayList();
-        for (Object element : list) {
-            result.add((T) element);
+        Iterator<? super T> li = list.iterator();
+        while (li.hasNext()) {
+            try {
+                result.add((T) li.next());
+            } catch (Throwable throwable) {
+                if (throwable instanceof NoClassDefFoundError) {
+                    // happens if class cannot be loaded for any reason during transformation - don't treat as fatal
+                } else {
+                    Exceptions.propagateIfFatal(throwable);
+                }
+                
+                // item cannot be transformed; we will have logged a warning earlier
+                log.debug("Ignoring invalid catalog item: "+throwable);
+            }
         }
         return result;
     }

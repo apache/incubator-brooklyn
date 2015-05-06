@@ -347,9 +347,15 @@ services:
         log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
+        waitForApps(webConsoleUri.toString());
         String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
         List<String> appType = parseJsonList(apps, ImmutableList.of("spec", "type"), String.class);
         assertEquals(appType, ImmutableList.of(BasicApplication.class.getName()));
+    }
+
+    protected static void waitForApps(String webConsoleUri) {
+        HttpTestUtils.assertHttpStatusCodeEquals(webConsoleUri+"/v1/applications", 200, 403);
+        HttpTestUtils.assertHttpStatusCodeEventuallyEquals(webConsoleUri+"/v1/applications", 200);
     }
 
     @Test(groups="Integration")
@@ -358,12 +364,14 @@ services:
         app.start(locs);
         log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
         
+        // note there is also a test for this in DeployApplication
+        final URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
+        waitForApps(webConsoleUri.toString());
+
         final String id = brooklynNode.invoke(BrooklynNode.DEPLOY_BLUEPRINT, ConfigBag.newInstance()
             .configure(DeployBlueprintEffector.BLUEPRINT_TYPE, BasicApplication.class.getName())
             .getAllConfig()).get();
         
-        // note there is also a test for this in DeployApplication
-        final URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
         String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
         List<String> appType = parseJsonList(apps, ImmutableList.of("spec", "type"), String.class);
         assertEquals(appType, ImmutableList.of(BasicApplication.class.getName()));
@@ -389,6 +397,7 @@ services:
         log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
+        waitForApps(webConsoleUri.toString());
 
         // Check that "mynamedloc" has been picked up from the brooklyn.properties
         String locsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/locations");
@@ -486,6 +495,8 @@ services:
         File pidFile = new File(getDriver(brooklynNode).getPidFile());
         URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
 
+        waitForApps(webConsoleUri.toString());
+
         // Stop just the process; will not have unmanaged entity unless machine was being terminated 
         brooklynNode.invoke(BrooklynNode.STOP, ImmutableMap.<String, Object>of(
                 BrooklynNode.StopSoftwareParameters.STOP_MACHINE_MODE.getName(), StopMode.NEVER,
@@ -512,7 +523,9 @@ services:
 
         // Note can't use driver.isRunning to check shutdown; can't invoke scripts on an unmanaged entity
         EntityTestUtils.assertAttributeEquals(brooklynNode, BrooklynNode.SERVICE_UP, false);
-        assertFalse(Entities.isManaged(brooklynNode));
+        // previously we unmanaged the node on stop, but that behaviour has been removed (noticed May 2015)
+        // TODO remove this after a couple of months, for awareness/confirmation
+//        assertFalse(Entities.isManaged(brooklynNode));
         assertFalse(isPidRunning(pidFile), "pid in "+pidFile+" still running");
     }
 
@@ -548,11 +561,13 @@ services:
 
         EntityTestUtils.assertAttributeEqualsEventually(brooklynNode, BrooklynNode.SERVICE_UP, true);
 
+        String baseUrl = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI).toString();
+        waitForApps(baseUrl);
+        
         final String id = brooklynNode.invoke(BrooklynNode.DEPLOY_BLUEPRINT, ConfigBag.newInstance()
                 .configure(DeployBlueprintEffector.BLUEPRINT_TYPE, BasicApplication.class.getName())
                 .getAllConfig()).get();
 
-        String baseUrl = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI).toString();
         String entityUrl = Urls.mergePaths(baseUrl, "v1/applications/", id, "entities", id);
         
         Entity mirror = brooklynNode.addChild(EntitySpec.create(BrooklynEntityMirror.class)

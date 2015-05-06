@@ -43,10 +43,12 @@ import com.sun.jersey.api.core.ResourceConfig;
 
 public class HaHotCheckTest extends BrooklynRestResourceTest {
 
+    // setup and teardown before/after each method
+    
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception { super.setUp(); }
 
-    @AfterMethod(alwaysRun = false)
+    @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception { super.tearDown(); }
     
     @Override

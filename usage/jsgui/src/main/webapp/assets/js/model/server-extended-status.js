@@ -73,13 +73,9 @@ define(["backbone", "brooklyn", "view/viewutils"], function (Backbone, Brooklyn,
         getMasterUri: function() {
             // Might be undefined if first fetch hasn't completed
             ha = this.get("ha") || {};
-            states = ha.states || {};
-            if (!states) return null;
-            
-            var nodes = this.get("nodes") || {};
-            var master = nodes[this.get("masterId")];
-            // defensive, if this happens something more serious has gone wrong!
-            if (!master) {
+            nodes = ha.nodes || {};
+            master = nodes[ha.masterId];
+            if (!master || master.status != "MASTER") {
                 return null;
             } else {
                 return master.nodeUri;
