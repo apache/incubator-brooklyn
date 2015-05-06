@@ -598,7 +598,7 @@ public class BrooklynLauncher {
         try {
             // run cat init now if it hasn't yet been run; 
             // will also run if there was an ignored error in catalog above, allowing it to fail startup here if requested
-            if (catInit!=null && !catInit.hasRun()) {
+            if (catInit!=null && !catInit.hasRunOfficial()) {
                 LOG.debug("Loading catalog as part of launcher (persistence did not run it)");
                 catInit.populateCatalog(true, null);
             }
@@ -792,7 +792,7 @@ public class BrooklynLauncher {
                 BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
                     objectStore,
                     ((ManagementContextInternal)managementContext).getBrooklynProperties(),
-                    managementContext.getCatalog().getRootClassLoader());
+                    managementContext.getCatalogClassLoader());
                 PersistenceExceptionHandler persistenceExceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
                 ((RebindManagerImpl) rebindManager).setPeriodicPersistPeriod(persistPeriod);
                 rebindManager.setPersister(persister, persistenceExceptionHandler);
@@ -816,7 +816,8 @@ public class BrooklynLauncher {
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
             ManagementPlaneSyncRecordPersister persister =
                 new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext,
-                    objectStore, managementContext.getCatalog().getRootClassLoader());
+                    objectStore,
+                    managementContext.getCatalogClassLoader());
             ((HighAvailabilityManagerImpl)haManager).setHeartbeatTimeout(haHeartbeatTimeoutOverride);
             ((HighAvailabilityManagerImpl)haManager).setPollPeriod(haHeartbeatPeriodOverride);
             haManager.setPersister(persister);
@@ -866,7 +867,7 @@ public class BrooklynLauncher {
         else
             LOG.info("Management node (no HA) rebinding to entities on file system in "+persistenceDir);
 
-        ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
+        ClassLoader classLoader = managementContext.getCatalogClassLoader();
         try {
             rebindManager.rebind(classLoader, null, ManagementNodeState.MASTER);
         } catch (Exception e) {

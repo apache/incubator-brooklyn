@@ -404,7 +404,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     private void checkEntityTypeIsValid(String type) {
         if (CatalogUtils.getCatalogItemOptionalVersion(mgmt(), type) == null) {
             try {
-                brooklyn().getCatalog().getRootClassLoader().loadClass(type);
+                brooklyn().getCatalogClassLoader().loadClass(type);
             } catch (ClassNotFoundException e) {
                 log.debug("Class not found for type '" + type + "'; reporting 404", e);
                 throw WebResourceUtils.notFound("Undefined type '%s'", type);

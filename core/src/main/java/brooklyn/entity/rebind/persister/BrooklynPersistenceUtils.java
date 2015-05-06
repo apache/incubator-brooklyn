@@ -107,7 +107,7 @@ public class BrooklynPersistenceUtils {
         BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
             destinationObjectStore,
             ((ManagementContextInternal)managementContext).getBrooklynProperties(),
-            managementContext.getCatalog().getRootClassLoader());
+            managementContext.getCatalogClassLoader());
         PersistenceExceptionHandler exceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
         persister.enableWriteAccess();
         persister.checkpoint(memento, exceptionHandler);
@@ -117,7 +117,7 @@ public class BrooklynPersistenceUtils {
             PersistenceObjectStore destinationObjectStore) {
         if (optionalPlaneRecord != null) {
             ManagementPlaneSyncRecordPersisterToObjectStore managementPersister = new ManagementPlaneSyncRecordPersisterToObjectStore(
-                    managementContext, destinationObjectStore, managementContext.getCatalog().getRootClassLoader());
+                    managementContext, destinationObjectStore, managementContext.getCatalogClassLoader());
             managementPersister.checkpoint(optionalPlaneRecord);
         }
     }

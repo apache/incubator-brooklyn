@@ -69,7 +69,9 @@ public interface BrooklynCatalog {
     public void persist(CatalogItem<?, ?> catalogItem);
 
     /** @return The classloader which should be used to load classes and entities;
-     * this includes all the catalog's classloaders in the right order */
+     * this includes all the catalog's classloaders in the right order.
+     * This is a wrapper which will update as the underlying catalog items change,
+     * so it is safe for callers to keep a handle on this. */
     public ClassLoader getRootClassLoader();
 
     /** creates a spec for the given catalog item, throwing exceptions if any problems */

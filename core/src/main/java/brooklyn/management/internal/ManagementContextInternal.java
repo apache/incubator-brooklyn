@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Effector;
@@ -118,12 +117,5 @@ public interface ManagementContextInternal extends ManagementContext {
 
     @Beta
     void setCatalogInitialization(CatalogInitialization catalogInitialization);
-
-    @Beta
-    public Maybe<BrooklynCatalog> getCatalogIfSet();
-    
-    /** For use from {@link CatalogInitialization} to set the catalog */
-    @Beta
-    public void setCatalog(BrooklynCatalog catalog);
 
 }

@@ -350,7 +350,7 @@ public abstract class RebindIteration {
         Collection<CatalogItem<?,?>> itemsForResettingCatalog = null;
         boolean needsInitialCatalog;
         if (rebindManager.persistCatalogItemsEnabled) {
-            if (!catInit.hasRun() && catInit.isInitialResetRequested()) {
+            if (!catInit.hasRunOfficial() && catInit.isInitialResetRequested()) {
                 String message = "RebindManager resetting catalog on first run (catalog persistence enabled, but reset explicitly specified). ";
                 if (catalogItems.isEmpty()) {
                     message += "Catalog was empty anyway.";
@@ -371,7 +371,7 @@ public abstract class RebindIteration {
                     itemsForResettingCatalog = rebindContext.getCatalogItems();
                     needsInitialCatalog = false;
                 } else {
-                    if (catInit.hasRun()) {
+                    if (catInit.hasRunOfficial()) {
                         logRebindingDebug("RebindManager will re-add any new items (persisted state empty)");
                         needsInitialCatalog = false;
                     } else {
@@ -381,7 +381,7 @@ public abstract class RebindIteration {
                 }
             }
         } else {
-            if (catInit.hasRun()) {
+            if (catInit.hasRunOfficial()) {
                 logRebindingDebug("RebindManager skipping catalog init because it has already run (catalog persistence disabled)");
                 needsInitialCatalog = false;
             } else {

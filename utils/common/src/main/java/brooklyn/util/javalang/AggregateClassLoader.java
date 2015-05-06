@@ -20,6 +20,7 @@ package brooklyn.util.javalang;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -34,7 +35,7 @@ import com.google.common.collect.Sets;
  * exposing more info, a few conveniences, and a nice toString */
 public class AggregateClassLoader extends ClassLoader {
 
-    private final List<ClassLoader> classLoaders = new CopyOnWriteArrayList<ClassLoader>();
+    private final CopyOnWriteArrayList<ClassLoader> classLoaders = new CopyOnWriteArrayList<ClassLoader>();
 
     private AggregateClassLoader() {
         //Don't pass load requests to the app classloader,
@@ -69,8 +70,25 @@ public class AggregateClassLoader extends ClassLoader {
         if (classLoader != null) classLoaders.add(index, classLoader);
     }
     
-    /** Returns the _live_ (and modifiable) list of classloaders 
-     * @return */ 
+    /** Resets the classloader shown here to be the given set */
+    public void reset(Collection<? extends ClassLoader> newClassLoaders) {
+        synchronized (classLoaders) {
+            int count = classLoaders.size();
+            classLoaders.addAll(newClassLoaders);
+            for (int i=0; i<count; i++) {
+                classLoaders.remove(0);
+            }
+        }
+    }
+
+    /** True if nothing is in the list here */
+    public boolean isEmpty() {
+        return classLoaders.isEmpty();
+    }
+    
+    /** Returns the _live_ (and modifiable) list of classloaders; dangerous and discouraged. 
+     * @deprecated since 0.7.0 */
+    @Deprecated
     public List<ClassLoader> getList() {
         return classLoaders;
     }

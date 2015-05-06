@@ -21,12 +21,10 @@ package brooklyn.catalog.internal;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
@@ -45,6 +43,7 @@ import brooklyn.util.text.Strings;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 @Beta
@@ -79,11 +78,13 @@ public class CatalogInitialization implements ManagementContextInjectable {
 
     boolean disallowLocal = false;
     List<Function<CatalogInitialization, Void>> callbacks = MutableList.of();
-    AtomicInteger runCount = new AtomicInteger();
+    boolean hasRunBestEffort = false, hasRunOfficial = false, isPopulating = false;
     
     ManagementContext managementContext;
     boolean isStartingUp = false;
     boolean failOnStartupErrors = false;
+    
+    Object mutex = new Object();
     
     public CatalogInitialization(String initialUri, boolean reset, String additionUri, boolean force) {
         this.initialUri = initialUri;
@@ -115,36 +116,31 @@ public class CatalogInitialization implements ManagementContextInjectable {
         return reset;
     }
 
-    public int getRunCount() {
-        return runCount.get();
-    }
-    
-    public boolean hasRun() {
-        return getRunCount()>0;
-    }
+    public boolean hasRunOfficial() { return hasRunOfficial; }
+    public boolean hasRunIncludingBestEffort() { return hasRunOfficial || hasRunBestEffort; }
 
     /** makes or updates the mgmt catalog, based on the settings in this class */
     public void populateCatalog(boolean needsInitial, Collection<CatalogItem<?, ?>> optionalItemsForResettingCatalog) {
         try {
-            BasicBrooklynCatalog catalog;
-            Maybe<BrooklynCatalog> cm = ((ManagementContextInternal)managementContext).getCatalogIfSet();
-            if (cm.isAbsent()) {
-                if (hasRun()) {
-                    log.warn("Catalog initialization has already run but management context has no catalog; re-creating");
+            isPopulating = true;
+            synchronized (mutex) {
+                BasicBrooklynCatalog catalog = (BasicBrooklynCatalog) managementContext.getCatalog();
+                if (!catalog.getCatalog().isLoaded()) {
+                    catalog.load();
+                } else {
+                    if (hasRunOfficial || hasRunBestEffort) {
+                        // an indication that something caused it to load early; not severe, but unusual
+                        log.warn("Catalog initialization has not properly run but management context has a catalog; re-populating, possibly overwriting items installed during earlier access (it may have been an early web request)");
+                        catalog.reset(ImmutableList.<CatalogItem<?,?>>of());
+                    }
                 }
-                catalog = new BasicBrooklynCatalog(managementContext);
-                setCatalog(managementContext, catalog, "Replacing catalog with newly populated catalog", true);
-            } else {
-                if (!hasRun()) {
-                    log.warn("Catalog initialization has not properly run but management context has a catalog; re-populating, possibly overwriting items installed during earlier access (it may have been an early web request)");
-                }
-                catalog = (BasicBrooklynCatalog) cm.get();
-            }
+                hasRunOfficial = true;
 
-            populateCatalog(catalog, needsInitial, true, optionalItemsForResettingCatalog);
-            
+                populateCatalog(catalog, needsInitial, true, optionalItemsForResettingCatalog);
+            }
         } finally {
-            runCount.incrementAndGet();
+            hasRunOfficial = true;
+            isPopulating = false;
         }
     }
 
@@ -170,7 +166,7 @@ public class CatalogInitialization implements ManagementContextInjectable {
     
     protected void populateInitial(BasicBrooklynCatalog catalog) {
         if (disallowLocal) {
-            if (!hasRun()) {
+            if (!hasRunOfficial()) {
                 log.debug("CLI initial catalog not being read with disallow-local mode set.");
             }
             return;
@@ -278,24 +274,27 @@ public class CatalogInitialization implements ManagementContextInjectable {
         return problem;
     }
 
+    boolean hasRunAdditions = false;
     protected void populateAdditions(BasicBrooklynCatalog catalog) {
         if (Strings.isNonBlank(additionsUri)) {
             if (disallowLocal) {
-                if (!hasRun()) {
+                if (!hasRunAdditions) {
                     log.warn("CLI additions supplied but not supported in disallow-local mode; ignoring.");
                 }
                 return;
             }   
-            if (!hasRun()) {
+            if (!hasRunAdditions) {
                 log.debug("Adding to catalog from CLI: "+additionsUri+" (force: "+force+")");
             }
             Iterable<? extends CatalogItem<?, ?>> items = catalog.addItems(
                 new ResourceUtils(this).getResourceAsString(additionsUri), force);
             
-            if (!hasRun())
+            if (!hasRunAdditions)
                 log.debug("Added to catalog from CLI: "+items);
             else
                 log.debug("Added to catalog from CLI: count "+Iterables.size(items));
+            
+            hasRunAdditions = true;
         }
     }
 
@@ -332,43 +331,22 @@ public class CatalogInitialization implements ManagementContextInjectable {
 
     /** makes the catalog, warning if persistence is on and hasn't run yet 
      * (as the catalog will be subsequently replaced) */
-    @Beta
-    public BrooklynCatalog getCatalogPopulatingBestEffort() {
-        Maybe<BrooklynCatalog> cm = ((ManagementContextInternal)managementContext).getCatalogIfSet();
-        if (cm.isPresent()) return cm.get();
-
-        BrooklynCatalog oldC = setCatalog(managementContext, new BasicBrooklynCatalog(managementContext),
-            "Request to make local catalog early, but someone else has created it, reverting to that", false);
-        if (oldC==null) {
-            // our catalog was added, so run population
-            // NB: we need the catalog to be saved already so that we can run callbacks
-            populateCatalog((BasicBrooklynCatalog) managementContext.getCatalog(), true, true, null);
-        }
-        
-        return managementContext.getCatalog();
-    }
-
-    /** Sets the catalog in the given management context, warning and choosing appropriately if one already exists. 
-     * Returns any previously existing catalog (whether or not changed). */
-    @Beta
-    public static BrooklynCatalog setCatalog(ManagementContext managementContext, BrooklynCatalog catalog, String messageIfAlready, boolean preferNew) {
-        Maybe<BrooklynCatalog> cm;
-        synchronized (managementContext) {
-            cm = ((ManagementContextInternal)managementContext).getCatalogIfSet();
-            if (cm.isAbsent()) {
-                ((ManagementContextInternal)managementContext).setCatalog(catalog);
-                return null;
-            }
-            if (preferNew) {
-                // set to null first to prevent errors
-                ((ManagementContextInternal)managementContext).setCatalog(null);
-                ((ManagementContextInternal)managementContext).setCatalog(catalog);
+    public void populateBestEffort(BasicBrooklynCatalog catalog) {
+        synchronized (mutex) {
+            if (hasRunOfficial || hasRunBestEffort || isPopulating) return;
+            // if a thread calls back in to this, ie calling to it from a getCatalog() call while populating,
+            // it will own the mutex and observe isRunningBestEffort, returning quickly 
+            isPopulating = true;
+            try {
+                if (isStartingUp) {
+                    log.warn("Catalog access requested when not yet initialized; populating best effort rather than through recommended pathway. Catalog data may be replaced subsequently.");
+                }
+                populateCatalog(catalog, true, true, null);
+            } finally {
+                hasRunBestEffort = true;
+                isPopulating = false;
             }
         }
-        if (Strings.isNonBlank(messageIfAlready)) {
-            log.warn(messageIfAlready);
-        }
-        return cm.get();
     }
 
     public void setStartingUp(boolean isStartingUp) {

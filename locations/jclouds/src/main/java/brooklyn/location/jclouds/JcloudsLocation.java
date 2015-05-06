@@ -321,7 +321,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected CloudMachineNamer getCloudMachineNamer(ConfigBag config) {
         String namerClass = config.get(LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS);
         if (Strings.isNonBlank(namerClass)) {
-            Optional<CloudMachineNamer> cloudNamer = Reflections.invokeConstructorWithArgs(getManagementContext().getCatalog().getRootClassLoader(), namerClass, config);
+            Optional<CloudMachineNamer> cloudNamer = Reflections.invokeConstructorWithArgs(getManagementContext().getCatalogClassLoader(), namerClass, config);
             if (cloudNamer.isPresent()) {
                 return cloudNamer.get();
             } else {
@@ -341,7 +341,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         @SuppressWarnings("deprecation")
         String customizersSupplierType = setup.get(JCLOUDS_LOCATION_CUSTOMIZERS_SUPPLIER_TYPE);
 
-        ClassLoader catalogClassLoader = getManagementContext().getCatalog().getRootClassLoader();
+        ClassLoader catalogClassLoader = getManagementContext().getCatalogClassLoader();
         List<JcloudsLocationCustomizer> result = new ArrayList<JcloudsLocationCustomizer>();
         if (customizer != null) result.add(customizer);
         if (customizers != null) result.addAll(customizers);

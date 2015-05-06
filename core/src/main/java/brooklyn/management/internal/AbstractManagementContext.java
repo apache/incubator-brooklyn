@@ -148,7 +148,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     protected BrooklynProperties configMap;
     protected BasicLocationRegistry locationRegistry;
-    protected volatile BasicBrooklynCatalog catalog;
+    protected final BasicBrooklynCatalog catalog;
     protected ClassLoader baseClassLoader;
     protected Iterable<URL> baseClassPathForScanning;
 
@@ -183,7 +183,9 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             datagridFactory = loadDataGridFactory(brooklynProperties);
         }
         DataGrid datagrid = datagridFactory.newDataGrid(this);
-         
+
+        this.catalog = new BasicBrooklynCatalog(this);
+        
         this.storage = new BrooklynStorageImpl(datagrid);
         this.rebindManager = new RebindManagerImpl(this); // TODO leaking "this" reference; yuck
         this.highAvailabilityManager = new HighAvailabilityManagerImpl(this); // TODO leaking "this" reference; yuck
@@ -359,28 +361,20 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     }
 
     @Override
-    public Maybe<BrooklynCatalog> getCatalogIfSet() {
-        return Maybe.<BrooklynCatalog>fromNullable(catalog);
-    }
-
-    @Override
-    public void setCatalog(BrooklynCatalog catalog) {
-        if (this.catalog!=null && catalog!=null) {
-            // should only happen if process has accessed catalog before rebind/startup populated it
-            log.warn("Replacing catalog in management context; new catalog is: "+catalog);
-        }
-        this.catalog = (BasicBrooklynCatalog) catalog;
-    }
-
-    @Override
     public BrooklynCatalog getCatalog() {
-        if (catalog!=null) 
-            return catalog;
-        
-        // catalog init is needed; normally this will be done from start sequence,
-        // but if accessed early -- and in tests -- we will load it here
-        // TODO log if in launcher mode
-        return getCatalogInitialization().getCatalogPopulatingBestEffort();
+        if (!getCatalogInitialization().hasRunIncludingBestEffort()) {
+            // catalog init is needed; normally this will be done from start sequence,
+            // but if accessed early -- and in tests -- we will load it here
+            getCatalogInitialization().injectManagementContext(this);
+            getCatalogInitialization().populateBestEffort(catalog);
+        }
+        return catalog;
+    }
+    
+    @Override
+    public ClassLoader getCatalogClassLoader() {
+        // catalog does not have to be initialized
+        return catalog.getRootClassLoader();
     }
 
     /**

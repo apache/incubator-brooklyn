@@ -112,6 +112,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private CatalogDo catalog;
     private volatile CatalogDo manualAdditionsCatalog;
     private volatile LoadedClassLoader manualAdditionsClasses;
+    private final AggregateClassLoader rootClassLoader = AggregateClassLoader.newInstanceWithNoLoaders();
 
     public BasicBrooklynCatalog(ManagementContext mgmt) {
         this(mgmt, CatalogDto.newNamedInstance("empty catalog", "empty catalog", "empty catalog, expected to be reset later"));
@@ -143,6 +144,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         catalog.load(mgmt, null);
         CatalogUtils.logDebugOrTraceIfRebinding(log, "Reloaded catalog for "+this+", now switching");
         this.catalog = catalog;
+        resetRootClassLoader();
         this.manualAdditionsCatalog = null;
 
         // Inject management context into and persist all the new entries.
@@ -295,7 +297,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     
     @Override
     public ClassLoader getRootClassLoader() {
-        return catalog.getRootClassLoader();
+        if (rootClassLoader.isEmpty() && catalog!=null) {
+            resetRootClassLoader();
+        }
+        return rootClassLoader;
+    }
+
+    private void resetRootClassLoader() {
+        rootClassLoader.reset(ImmutableList.of(catalog.getRootClassLoader()));
     }
 
     /**

@@ -69,7 +69,7 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
     
     private ClassLoader getClassLoader() {
         if (loader != null) return loader;
-        if (mgmt!=null) return mgmt.getCatalog().getRootClassLoader();
+        if (mgmt!=null) return mgmt.getCatalogClassLoader();
         return JavaBrooklynClassLoadingContext.class.getClassLoader();
     }
     
