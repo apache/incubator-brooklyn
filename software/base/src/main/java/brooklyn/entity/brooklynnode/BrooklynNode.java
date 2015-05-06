@@ -171,14 +171,20 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
             "brooklynnode.brooklynproperties.local.contents", "Contents for the launch-specific brooklyn properties file", null);
     
     // For use in testing primarily
+    /** @deprecated since 0.7.0; TODO this should support BOM files */
+    @Deprecated
     @SetFromFlag("brooklynCatalogRemotePath")
     public static final ConfigKey<String> BROOKLYN_CATALOG_REMOTE_PATH = ConfigKeys.newStringConfigKey(
             "brooklynnode.brooklyncatalog.remotepath", "Remote path for the brooklyn catalog.xml file to be uploaded", "${HOME}/.brooklyn/catalog.xml");
     
+    /** @deprecated since 0.7.0; TODO this should support BOM files */
+    @Deprecated
     @SetFromFlag("brooklynCatalogUri")
     public static final ConfigKey<String> BROOKLYN_CATALOG_URI = ConfigKeys.newStringConfigKey(
             "brooklynnode.brooklyncatalog.uri", "URI for the brooklyn catalog.xml file (uploaded to ~/.brooklyn/catalog.xml)", null);
 
+    /** @deprecated since 0.7.0; TODO this should support BOM files */
+    @Deprecated
     @SetFromFlag("brooklynCatalogContents")
     public static final ConfigKey<String> BROOKLYN_CATALOG_CONTENTS = ConfigKeys.newStringConfigKey(
             "brooklynnode.brooklyncatalog.contents", "Contents for the brooklyn catalog.xml file (uploaded to ~/.brooklyn/catalog.xml)", null);

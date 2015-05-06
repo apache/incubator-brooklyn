@@ -11,7 +11,7 @@ Here we present two *alternatives* to install Brooklyn:
 - [Manual installation](#manual)
 
 
-## <a id="script"></a> Running the installation script
+## <a id="script"></a> Running the Installation Script
 
 There is a simple bash script available to help with the installation process. 
 
@@ -32,16 +32,16 @@ $ ./brooklyn-install.sh -s -r <your-server-ip>
 {% endhighlight %}
 
 
-## <a id="manual"></a> Manual installation
+## <a id="manual"></a> Manual Installation
 
 1. [Set up the prerequisites](#prerequisites)
 1. [Download Brooklyn](#download)
 1. [Configuring brooklyn.properties](#configuring-properties)
-1. [Configuring catalog.xml](#configuring-catalog)
+1. [Configuring default.catalog.bom](#configuring-catalog)
 1. [Test the installation](#confirm)
 
 
-### <a id="prerequisites"></a>Set up the prerequisites
+### <a id="prerequisites"></a>Set up the Prerequisites
 
 Before installing Apache Brooklyn, it is recommented to configure the host as follows. 
 
@@ -105,21 +105,14 @@ $ chmod 600 ~/.brooklyn/brooklyn.properties
 You may need to edit `~/.brooklyn/brooklyn.properties` to ensure that brooklyn can access cloud locations for application deployment.
 
 
-### <a id="configuring-catalog"></a>Configuring catalog.xml
+### <a id="configuring-catalog"></a>Configuring the Catalog
 
 By default Brooklyn loads the catalog of available application components and services from 
-`~/.brooklyn/catalog.xml`. 
-
-{% highlight bash %}
-$ wget -O ~/.brooklyn/catalog.xml {{site.url_root}}{{site.path.website}}/quickstart/catalog.xml
-{% endhighlight %}
-
-The `catalog.xml` is the application blueprint catalog. The above example file contains some blueprints which will be automatically downloaded from the web if you run them.
-
-You may need to edit `~/.brooklyn/catalog.xml` to update links to any resources for download.
+`default.catalog.bom` on the classpath. The initial catalog is in `conf/brooklyn/` in the dist.
+If you have a preferred catalog, simply replace that file.
 
 
-### <a id="confirm"></a>Confirm installation
+### <a id="confirm"></a>Confirm Installation
 
 We can do a quick test drive by launching Brooklyn:
 

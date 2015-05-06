@@ -15,5 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+# this catalog bom simply scans.
+# in a dist a default.catalog.bom from the conf/ dir takes precedence.
+
 brooklyn.catalog:
   scanJavaAnnotations: true

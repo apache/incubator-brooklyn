@@ -63,6 +63,16 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes combine.children="append">
+                        <!-- Exclude sample config files because they are illustrative, intended for changing -->
+                        <exclude>src/main/dist/conf/**</exclude>
+                    </excludes>
+                  </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>

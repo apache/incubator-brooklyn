@@ -8,6 +8,8 @@ children:
 - { section: Adding to the Catalog, title: Adding and Deleting } 
 - { section: Templates and the Add-Application Wizard, title: Templates }
 - { section: Versioning } 
+- { section: CLI Options }
+ 
 ---
 
 Brooklyn provides a **catalog**, which is a persisted collection of versioned blueprints and other resources. 
@@ -288,6 +290,19 @@ increment an internal version number for the catalog item.
 When referencing a blueprint, if a version number is not specified 
 the latest non-snapshot version will be loaded when an entity is instantiated.
 
+
+### CLI Options
+
+The `brooklyn` CLI includes several commands for working with the catalog.
+
+* `--catalogAdd <file.bom>` will add the catalog items in the `bom` file
+* `--catalogReset` will reset the catalog to the initial state 
+  (based on `brooklyn/default.catalog.bom` on the classpath, by default in a dist in the `conf/` directory)
+* `--catalogInitial <file.bom>` will set the catalog items to use on first run,
+  on a catalog reset, or if persistence is off
+
+If [persistence](../persistence/) is enabled, catalog additions will remain between runs.
+For more information on these commands, run `brooklyn help launch`.
 
 
 <!--

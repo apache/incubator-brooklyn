@@ -1005,10 +1005,9 @@
                     <artifactId>apache-rat-plugin</artifactId>
                     <configuration>
                         <excludes combine.children="append">
-                            <!--
-                                Excluding sandbox because not part of distribution: not in tgz, and not uploaded to maven-central.
-                            -->
+                            <!-- Exclude sandbox because not part of distribution: not in tgz, and not uploaded to maven-central -->
                             <exclude>sandbox/**</exclude>
+                            <!-- Exclude netbeans config files (not part of the project, but often on users' drives -->
                             <exclude>**/nbactions.xml</exclude>
                             <exclude>**/nb-configuration.xml</exclude>
                         </excludes>

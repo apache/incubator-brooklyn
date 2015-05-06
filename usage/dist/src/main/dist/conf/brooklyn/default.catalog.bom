@@ -1,0 +1,41 @@
+
+# this catalog bom is an illustration supplying a few useful sample items
+# and templates to get started using Brooklyn
+
+brooklyn.catalog:
+  version: 0.7.0-SNAPSHOT  # BROOKLYN_VERSION
+  items:
+
+  # load everything in the classpath with a @Catalog annotation
+  - scanJavaAnnotations: true
+
+  - id: server
+    description: |
+      Provision a server, with customizable provisioning.properties and credentials installed, 
+      but no other special software process or scripts executed.
+    item:
+      type: brooklyn.entity.basic.EmptySoftwareProcess
+      name: Server
+
+  - id: server-template
+    itemType: template
+    name: Server Template
+    description: |
+      Sample YAML to provision a server in a cloud with illustrative VM properties
+    item:
+      name: My App with a single VM
+      services:
+      - type: server
+        name: My VM
+      location:
+        jclouds:aws-ec2:
+          identity: <REPLACE>
+          credential: <REPLACE>
+          region: eu-west-1
+          # we want Ubuntu, with a lot of RAM
+          osFamily: ubuntu
+          minRam: 8gb
+          # set up this user and password (default is to authorize a public key)
+          user: sample
+          password: s4mpl3
+
