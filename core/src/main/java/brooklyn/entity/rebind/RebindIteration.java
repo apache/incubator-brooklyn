@@ -363,7 +363,14 @@ public abstract class RebindIteration {
                 logRebindingDebug(message);
 
                 itemsForResettingCatalog = MutableList.<CatalogItem<?,?>>of();
-                // TODO destroy persisted items
+                
+                PersisterDeltaImpl delta = new PersisterDeltaImpl();
+                for (String catalogItemId: mementoRawData.getCatalogItems().keySet()) {
+                    delta.removedCatalogItemIds.add(catalogItemId);
+                }
+                getPersister().queueDelta(delta);
+                
+                mementoRawData.clearCatalogItems();
                 needsInitialCatalog = true;
             } else {
                 if (!isEmpty) {

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -109,6 +110,8 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     private volatile boolean writesAllowed = false;
     private volatile boolean writesShuttingDown = false;
     private StringConfigMap brooklynProperties;
+    
+    private List<Delta> queuedDeltas = new CopyOnWriteArrayList<BrooklynMementoPersister.Delta>();
     
     /**
      * Lock used on writes (checkpoint + delta) so that {@link #waitForWritesCompleted(Duration)} can block
@@ -560,14 +563,28 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     public void delta(Delta delta, PersistenceExceptionHandler exceptionHandler) {
         checkWritesAllowed();
 
+        while (!queuedDeltas.isEmpty()) {
+            Delta extraDelta = queuedDeltas.remove(0);
+            doDelta(extraDelta, exceptionHandler, false);
+        }
+
+        doDelta(delta, exceptionHandler, false);
+    }
+    
+    protected void doDelta(Delta delta, PersistenceExceptionHandler exceptionHandler, boolean previouslyQueued) {
         Stopwatch stopwatch = deltaImpl(delta, exceptionHandler);
         
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of memento in {}: "
+        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed "+(previouslyQueued ? "previously queued " : "")+"delta of memento in {}: "
                 + "updated {} entities, {} locations, {} policies, {} enrichers, {} catalog items; "
                 + "removed {} entities, {} locations, {} policies, {} enrichers, {} catalog items",
                     new Object[] {Time.makeTimeStringRounded(stopwatch),
                         delta.entities().size(), delta.locations().size(), delta.policies().size(), delta.enrichers().size(), delta.catalogItems().size(),
                         delta.removedEntityIds().size(), delta.removedLocationIds().size(), delta.removedPolicyIds().size(), delta.removedEnricherIds().size(), delta.removedCatalogItemIds().size()});
+    }
+    
+    @Override
+    public void queueDelta(Delta delta) {
+        queuedDeltas.add(delta);
     }
     
     /**

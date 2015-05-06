@@ -47,7 +47,6 @@ import brooklyn.mementos.EntityMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.io.FileUtil;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
@@ -441,6 +440,11 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         }
     }
 
+    @Override
+    public void queueDelta(Delta delta) {
+        LOG.warn("Legacy persister ignoring queued delta: "+delta);
+    }
+    
     @VisibleForTesting
     public File getDir() {
         return dir;

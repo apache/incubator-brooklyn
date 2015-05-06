@@ -97,10 +97,13 @@ public interface BrooklynMementoPersister {
     /** @deprecated since 0.7.0, use {@link #checkpoint(BrooklynMementoRawData, PersistenceExceptionHandler)} 
      * and javadoc on implementations of that */ @Deprecated  // pretty sure this is not used outwith deprecated code
     void checkpoint(BrooklynMemento memento, PersistenceExceptionHandler exceptionHandler);
-    
-    void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler);
 
+    /** applies a full checkpoint (write) of all state */  
+    void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler);
+    /** applies a partial write of state delta */  
     void delta(Delta delta, PersistenceExceptionHandler exceptionHandler);
+    /** inserts an additional delta to be written on the next delta request */
+    void queueDelta(Delta delta);
 
     void enableWriteAccess();
     void disableWriteAccess(boolean graceful);
