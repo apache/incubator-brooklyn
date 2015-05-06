@@ -71,4 +71,23 @@ public class CatalogBundleDto implements CatalogBundle {
                 .add("url", url)
                 .toString();
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(symbolicName, version, url);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        CatalogBundleDto other = (CatalogBundleDto) obj;
+        if (!Objects.equal(symbolicName, other.symbolicName)) return false;
+        if (!Objects.equal(version, other.version)) return false;
+        if (!Objects.equal(url, other.url)) return false;
+        return true;
+    }
+    
+    
 }

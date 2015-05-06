@@ -219,7 +219,7 @@ public class Main extends AbstractMain {
 
         @Option(name = { "--catalogInitial" }, title = "catalog initial bom URI",
             description = "Specifies a catalog.bom URI to be used to populate the initial catalog, "
-                + "if nothing is yet persisted in the catalog (or if it is reset)")
+                + "loaded on first run, or when persistence is off/empty or the catalog is reset")
         public String catalogInitial;
 
         @Option(name = { "--catalogReset" }, 

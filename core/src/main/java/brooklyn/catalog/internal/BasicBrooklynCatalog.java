@@ -1045,7 +1045,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
     
     private CatalogItem<?,?> addItemDto(CatalogItemDtoAbstract<?, ?> itemDto, boolean forceUpdate) {
-        checkItemNotExists(itemDto, forceUpdate);
+        CatalogItem<?, ?> existingDto = checkItemIsDuplicateOrDisallowed(itemDto, true, forceUpdate);
+        if (existingDto!=null) {
+            // it's a duplicate, and not forced, just return it
+            log.trace("Using existing duplicate for catalog item {}", itemDto.getId());
+            return existingDto;
+        }
 
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsCatalog.addEntry(itemDto);
@@ -1067,8 +1072,19 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDto;
     }
 
-    private void checkItemNotExists(CatalogItem<?,?> itemDto, boolean forceUpdate) {
-        if (!forceUpdate && getCatalogItemDo(itemDto.getSymbolicName(), itemDto.getVersion()) != null) {
+    /** returns item DTO if item is an allowed duplicate, null if it should be added, or false if the item is an allowed duplicate,
+     * throwing if item cannot be added */
+    private CatalogItem<?, ?> checkItemIsDuplicateOrDisallowed(CatalogItem<?,?> itemDto, boolean allowDuplicates, boolean forceUpdate) {
+        if (forceUpdate) return null;
+        CatalogItemDo<?, ?> existingItem = getCatalogItemDo(itemDto.getSymbolicName(), itemDto.getVersion());
+        if (existingItem == null) return null;
+        // check if they are equal
+        CatalogItem<?, ?> existingDto = existingItem.getDto();
+        if (existingDto.equals(itemDto)) {
+            if (allowDuplicates) return existingItem;
+            throw new IllegalStateException("Updating existing catalog entries, even with the same content, is forbidden: " +
+                    itemDto.getSymbolicName() + ":" + itemDto.getVersion() + ". Use forceUpdate argument to override.");
+        } else {
             throw new IllegalStateException("Updating existing catalog entries is forbidden: " +
                     itemDto.getSymbolicName() + ":" + itemDto.getVersion() + ". Use forceUpdate argument to override.");
         }

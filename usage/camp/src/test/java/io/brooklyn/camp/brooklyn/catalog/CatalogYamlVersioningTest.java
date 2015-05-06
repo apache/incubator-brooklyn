@@ -66,12 +66,13 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
     }
 
     @Test
-    public void testAddSameVersionFails() {
+    public void testAddSameVersionFailsWhenIconIsDifferent() {
         String symbolicName = "sampleId";
         String version = "0.1.0";
         addCatalogEntity(symbolicName, version);
+        addCatalogEntity(symbolicName, version);
         try {
-            addCatalogEntity(symbolicName, version);
+            addCatalogEntity(symbolicName, version, BasicEntity.class.getName(), "classpath:/another/icon.png");
             fail("Expected to fail");
         } catch (IllegalStateException e) {
             assertEquals(e.getMessage(), "Updating existing catalog entries is forbidden: " + symbolicName + ":" + version + ". Use forceUpdate argument to override.");
@@ -238,12 +239,16 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
     }
 
     private void addCatalogEntity(String symbolicName, String version, String type) {
+        addCatalogEntity(symbolicName, version, type, "classpath://path/to/myicon.jpg");
+    }
+    
+    private void addCatalogEntity(String symbolicName, String version, String type, String iconUrl) {
         addCatalogItem(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog App",
             "  description: My description",
-            "  icon_url: classpath://path/to/myicon.jpg",
+            "  icon_url: "+iconUrl,
             (version != null ? "  version: " + version : ""),
             "",
             "services:",

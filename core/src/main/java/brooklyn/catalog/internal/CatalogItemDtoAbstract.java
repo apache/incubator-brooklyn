@@ -39,6 +39,7 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -159,6 +160,37 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     @Nullable @Override
     public String getPlanYaml() {
         return planYaml;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(symbolicName, planYaml, javaType, nullIfEmpty(libraries), version, getCatalogItemId());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        CatalogItemDtoAbstract<?,?> other = (CatalogItemDtoAbstract<?,?>) obj;
+        if (!Objects.equal(symbolicName, other.symbolicName)) return false;
+        if (!Objects.equal(planYaml, other.planYaml)) return false;
+        if (!Objects.equal(javaType, other.javaType)) return false;
+        if (!Objects.equal(nullIfEmpty(libraries), nullIfEmpty(other.libraries))) return false;
+        if (!Objects.equal(getCatalogItemId(), other.getCatalogItemId())) return false;
+        if (!Objects.equal(version, other.version)) return false;
+        if (!Objects.equal(deprecated, other.deprecated)) return false;
+        if (!Objects.equal(description, other.description)) return false;
+        if (!Objects.equal(displayName, other.displayName)) return false;
+        if (!Objects.equal(iconUrl, other.iconUrl)) return false;
+        if (!Objects.equal(tags, other.tags)) return false;
+        // 'type' not checked, because deprecated, we might want to allow removal in future
+        return true;
+    }
+
+    private static <T> Collection<T> nullIfEmpty(Collection<T> coll) {
+        if (coll==null || coll.isEmpty()) return null;
+        return coll;
     }
 
     @Override
