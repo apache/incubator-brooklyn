@@ -87,32 +87,6 @@ import org.jclouds.softlayer.compute.options.SoftLayerTemplateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
-import com.google.common.base.Stopwatch;
-import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.common.io.Files;
-import com.google.common.net.HostAndPort;
-import com.google.common.primitives.Ints;
-import com.google.common.reflect.TypeToken;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
@@ -172,6 +146,32 @@ import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.common.io.Files;
+import com.google.common.net.HostAndPort;
+import com.google.common.primitives.Ints;
+import com.google.common.reflect.TypeToken;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -1630,9 +1630,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String vmHostname = getPublicHostname(node, sshHostAndPort, setup);
 
         JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(computeService, node, vmHostname, sshHostAndPort, setup);
-        machine.setParent(this);
-        vmInstanceIds.put(machine, node.getId());
+        registerJcloudsSshMachineLocation(node.getId(), machine);
         return machine;
+    }
+
+    @VisibleForTesting
+    protected void registerJcloudsSshMachineLocation(String nodeId, JcloudsSshMachineLocation machine) {
+        machine.setParent(this);
+        vmInstanceIds.put(machine, nodeId);
     }
 
     /** @deprecated since 0.7.0 use variant which takes compute service; no longer called internally,
@@ -1764,24 +1769,57 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         LOG.info("Releasing machine {} in {}, instance id {}", new Object[] {machine, this, instanceId});
 
         Exception tothrow = null;
+
+        if (machine instanceof JcloudsSshMachineLocation) {
+            ConfigBag setup = config().getBag();
+            for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
+                try {
+                    customizer.preRelease((JcloudsSshMachineLocation) machine);
+                } catch (Exception e) {
+                    LOG.error("Problem invoking pre-release customizer "+customizer+" for machine "+machine+" in "+this+", instance id "+instanceId+
+                        "; ignoring and continuing, "
+                        + (tothrow==null ? "will throw subsequently" : "swallowing due to previous error")+": "+e, e);
+                    if (tothrow==null) tothrow = e;
+                }
+            }
+        } else {
+            LOG.warn("Releasing non-jclouds machine "+machine+" from "+this+"; skipping customizers");
+        }
+
         try {
             releasePortForwarding(machine);
         } catch (Exception e) {
             LOG.error("Problem releasing port-forwarding for machine "+machine+" in "+this+", instance id "+instanceId+
-                    "; discarding instance and continuing...", e);
-            tothrow = e;
+                "; ignoring and continuing, "
+                + (tothrow==null ? "will throw subsequently" : "swallowing due to previous error")+": "+e, e);
+            if (tothrow==null) tothrow = e;
         }
 
         try {
             releaseNode(instanceId);
         } catch (Exception e) {
             LOG.error("Problem releasing machine "+machine+" in "+this+", instance id "+instanceId+
-                    "; discarding instance and continuing...", e);
-            tothrow = e;
+                    "; ignoring and continuing, "
+                    + (tothrow==null ? "will throw subsequently" : "swallowing due to previous error")+": "+e, e);
+            if (tothrow==null) tothrow = e;
         }
 
         removeChild(machine);
 
+        if (machine instanceof JcloudsSshMachineLocation) {
+            ConfigBag setup = config().getBag();
+            for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
+                try {
+                    customizer.postRelease((JcloudsSshMachineLocation) machine);
+                } catch (Exception e) {
+                    LOG.error("Problem invoking pre-release customizer "+customizer+" for machine "+machine+" in "+this+", instance id "+instanceId+
+                        "; ignoring and continuing, "
+                        + (tothrow==null ? "will throw subsequently" : "swallowing due to previous error")+": "+e, e);
+                    if (tothrow==null) tothrow = e;
+                }
+            }
+        }
+        
         if (tothrow != null) {
             throw Exceptions.propagate(tothrow);
         }

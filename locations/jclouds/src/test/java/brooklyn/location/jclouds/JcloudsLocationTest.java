@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Template;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -55,6 +56,7 @@ import brooklyn.util.exceptions.Exceptions;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
@@ -501,11 +503,24 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
 
         @Override
         public JcloudsSshMachineLocation obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
-            return getManagementContext().getLocationManager().createLocation(LocationSpec.create(JcloudsSshMachineLocation.class)
+            JcloudsSshMachineLocation result = getManagementContext().getLocationManager().createLocation(LocationSpec.create(JcloudsSshMachineLocation.class)
                 .configure("address", "127.0.0.1") 
                 .configure("port", 22) 
                 .configure("user", "bob")
                 .configure("jcloudsParent", this));
+            registerJcloudsSshMachineLocation("bogus", result);
+            
+            // explicitly invoke this customizer, to comply with tests
+            for (JcloudsLocationCustomizer customizer : getCustomizers(config().getBag())) {
+                customizer.customize(this, null, result);
+            }
+
+            return result;
+        }
+        
+        @Override
+        protected void releaseNode(String instanceId) {
+            // no-op
         }
     }
 
@@ -553,5 +568,25 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         Assert.assertEquals(geo.longitude, -77.47314d, 0.00001);
     }
 
-    // TODO more tests, where flags come in from resolver, named locations, etc
+    @Test
+    public void testInvokesCustomizerCallbacks() throws Exception {
+        JcloudsLocationCustomizer customizer = Mockito.mock(JcloudsLocationCustomizer.class);
+//        Mockito.when(customizer.customize(Mockito.any(JcloudsLocation.class), Mockito.any(ComputeService.class), Mockito.any(JcloudsSshMachineLocation.class)));
+        ConfigBag allConfig = ConfigBag.newInstance()
+            .configure(CLOUD_PROVIDER, "aws-ec2")
+            .configure(ACCESS_IDENTITY, "bogus")
+            .configure(ACCESS_CREDENTIAL, "bogus")
+            .configure(JcloudsLocationConfig.JCLOUDS_LOCATION_CUSTOMIZERS, ImmutableList.of(customizer))
+            .configure(JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 1);
+        FakeLocalhostWithParentJcloudsLocation ll = managementContext.getLocationManager().createLocation(LocationSpec.create(FakeLocalhostWithParentJcloudsLocation.class).configure(allConfig.getAllConfig()));
+        JcloudsSshMachineLocation l = ll.obtain();
+        Mockito.verify(customizer, Mockito.times(1)).customize(ll, null, l);
+        Mockito.verify(customizer, Mockito.never()).preRelease(l);
+        Mockito.verify(customizer, Mockito.never()).postRelease(l);
+        
+        ll.release(l);
+        Mockito.verify(customizer, Mockito.times(1)).preRelease(l);
+        Mockito.verify(customizer, Mockito.times(1)).postRelease(l);
+    }
+
 }

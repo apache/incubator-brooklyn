@@ -65,4 +65,15 @@ public interface JcloudsLocationCustomizer {
      * machine is guaranteed to be SSHable when this method is called.
      */
     void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine);
+    
+    /**
+     * Override to handle machine-related cleanup before Jclouds is called to release (destroy) the machine.
+     */
+    void preRelease(JcloudsSshMachineLocation machine);
+
+    /**
+     * Override to handle machine-related cleanup after Jclouds is called to release (destroy) the machine.
+     */
+    void postRelease(JcloudsSshMachineLocation machine);
+
 }
