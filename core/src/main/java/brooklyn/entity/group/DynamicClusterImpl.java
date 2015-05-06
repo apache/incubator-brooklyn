@@ -588,8 +588,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         // choose locations to be deployed to
         List<Location> chosenLocations;
-        chosenLocations = getMemberSpec().getLocations();
-        if (chosenLocations == null) {
+        chosenLocations = getMemberSpec() == null ? null : getMemberSpec().getLocations();
+        if (chosenLocations == null || chosenLocations.size() == 0) {
             if (isAvailabilityZoneEnabled()) {
                 List<Location> subLocations = getNonFailedSubLocations();
                 Multimap<Location, Entity> membersByLocation = getMembersByLocation();
