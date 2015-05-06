@@ -19,7 +19,6 @@
 package brooklyn.location.basic;
 
 import brooklyn.location.paas.PaasLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.location.TestPaasLocation;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -27,7 +26,6 @@ import org.testng.annotations.Test;
 public class PaasLocationTest {
 
     private PaasLocation location;
-    private ManagementContext mgmt;
     
     @Test
     public void testProviderName(){
