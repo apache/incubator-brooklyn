@@ -38,7 +38,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.basic.BrooklynTypes;
 import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
 import brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
 import brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
@@ -72,6 +74,7 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;
+import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Enums;
@@ -79,11 +82,15 @@ import brooklyn.util.net.Networking;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * This class is the primary CLI for brooklyn.
@@ -236,21 +243,22 @@ public class Main extends AbstractMain {
         public Boolean noConsoleSecurity = false;
 
         @Option(name = { "--ignoreWebStartupErrors" },
-            description = "Ignore web subsystem failures on startup (default is to abort if it fails to start)")
+            description = "Ignore web subsystem failures on startup (default is to abort if the web API fails to start, as management is not possible)")
         public boolean ignoreWebErrors = false;
 
         @Option(name = { "--ignorePersistenceStartupErrors" },
-            description = "Ignore persistence/HA subsystem failures on startup (default is to abort if it fails to start)")
-        public boolean ignorePersistenceErrors = false;
+            description = "Ignore persistence/HA subsystem failures on startup "
+                + "(default is true, so errors can be viewed via the API)")
+        public boolean ignorePersistenceErrors = true;
 
         @Option(name = { "--ignoreManagedAppsStartupErrors" },
             description = "Ignore failures starting managed applications passed on the command line on startup "
-                + "(default is to abort if they fail to start)")
-        public boolean ignoreAppErrors = false;
+                + "(default is true, so errors can be viewed via the API)")
+        public boolean ignoreAppErrors = true;
 
         @Beta
         @Option(name = { "--startBrooklynNode" },
-                description = "Whether to start a BrooklynNode entity representing this Brooklyn instance")
+                description = "Whether to start a BrooklynNode entity representing this Brooklyn instance (default false)")
         public boolean startBrooklynNode = false;
 
         // Note in some cases, you can get java.util.concurrent.RejectedExecutionException
@@ -258,7 +266,7 @@ public class Main extends AbstractMain {
         // looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
         @Beta
         @Option(name = { "-sk", "--stopOnKeyPress" },
-                description = "After startup, shutdown on user text entry")
+                description = "After startup, shutdown on user text entry (default false)")
         public boolean stopOnKeyPress = false;
 
         final static String STOP_WHICH_APPS_ON_SHUTDOWN = "--stopOnShutdown";
@@ -377,7 +385,15 @@ public class Main extends AbstractMain {
                 }
     
                 launcher = createLauncher();
-    
+
+                launcher.customizeInitialCatalog(new Function<BrooklynLauncher,Void>() {
+                    @Override
+                    public Void apply(BrooklynLauncher launcher) {
+                        populateCatalog(launcher.getServerDetails().getManagementContext().getCatalog());
+                        return null;
+                    }
+                });
+                
                 launcher.persistMode(persistMode);
                 launcher.persistenceDir(persistenceDir);
                 launcher.persistenceLocation(persistenceLocation);
@@ -418,14 +434,6 @@ public class Main extends AbstractMain {
             BrooklynServerDetails server = launcher.getServerDetails();
             ManagementContext ctx = server.getManagementContext();
             
-            try {
-                populateCatalog(launcher.getServerDetails().getManagementContext().getCatalog());
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                // don't fail to start just because catalog is not available
-                log.error("Error populating catalog: "+e, e);
-            }
-
             if (verbose) {
                 Entities.dumpInfo(launcher.getApplications());
             }
@@ -571,11 +579,37 @@ public class Main extends AbstractMain {
         /** method intended for subclassing, to add items to the catalog */
         protected void populateCatalog(BrooklynCatalog catalog) {
             // Force load of catalog (so web console is up to date)
-            catalog.getCatalogItems();
+            confirmCatalog(catalog);
 
             // nothing else added here
         }
 
+        protected void confirmCatalog(BrooklynCatalog catalog) {
+            // Force load of catalog (so web console is up to date)
+            Stopwatch time = Stopwatch.createStarted();
+            Iterable<CatalogItem<Object, Object>> items = catalog.getCatalogItems();
+            for (CatalogItem<Object, Object> item: items) {
+                try {
+                    Object spec = catalog.createSpec(item);
+                    if (spec instanceof EntitySpec) {
+                        BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
+                    }
+                    log.debug("Catalog loaded spec "+spec+" for item "+item);                      
+                } catch (Throwable throwable) {
+                    // swallow errors, apart from interrupted
+                    if (throwable instanceof InterruptedException)
+                        throw new RuntimeInterruptedException((InterruptedException) throwable);
+                    if (throwable instanceof RuntimeInterruptedException)
+                        throw (RuntimeInterruptedException) throwable;
+
+                    log.error("Error loading catalog item '"+item+"': "+throwable);
+                    log.debug("Trace for error loading catalog item '"+item+"': "+throwable, throwable);
+                }
+            }
+            log.debug("Catalog (size "+Iterables.size(items)+") confirmed in "+Duration.of(time));                      
+            // nothing else added here
+        }
+        
         /** convenience for subclasses to specify that an app should run,
          * throwing the right (caught) error if another app has already been specified */
         protected void setAppToLaunch(String className) {

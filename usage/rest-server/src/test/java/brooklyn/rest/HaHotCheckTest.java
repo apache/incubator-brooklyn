@@ -22,20 +22,20 @@ import static org.testng.Assert.assertEquals;
 
 import javax.ws.rs.core.MediaType;
 
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.management.ha.HighAvailabilityManager;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.filter.HaHotCheckResourceFilter;
 import brooklyn.rest.filter.HaMasterCheckFilter;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
-import brooklyn.rest.testing.mocks.ManagementContextMock;
 import brooklyn.rest.util.HaHotStateCheckClassResource;
 import brooklyn.rest.util.HaHotStateCheckResource;
-import brooklyn.rest.util.ManagementContextProvider;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource.Builder;
@@ -43,81 +43,70 @@ import com.sun.jersey.api.core.ResourceConfig;
 
 public class HaHotCheckTest extends BrooklynRestResourceTest {
 
-    private ManagementContextMock mgmtMock;
-
-    @Override
-    @BeforeClass(alwaysRun = true)
-    public void setUp() throws Exception {
-        mgmtMock = new ManagementContextMock();
-        super.setUp();
-    }
-
-    @Override
-    @AfterClass(alwaysRun = true)
-    public void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    // setup and teardown before/after each method
+    
     @BeforeMethod(alwaysRun = true)
-    public void setUpMethod() {
-        mgmtMock.setState(ManagementNodeState.MASTER);
-    }
+    public void setUp() throws Exception { super.setUp(); }
 
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() throws Exception { super.tearDown(); }
+    
     @Override
     protected void addBrooklynResources() {
-        config.getSingletons().add(new ManagementContextProvider(mgmtMock));
-        config.getProperties().put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, HaHotCheckResourceFilter.class.getName());
+        config.getProperties().put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, 
+            new HaHotCheckResourceFilter(getManagementContext()));
         addResource(new HaHotStateCheckResource());
         addResource(new HaHotStateCheckClassResource());
+        
+        ((LocalManagementContext)getManagementContext()).noteStartupComplete();
     }
 
     @Test
     public void testHaCheck() {
-        HighAvailabilityManager ha = mgmtMock.getHighAvailabilityManager();
+        HighAvailabilityManager ha = getManagementContext().getHighAvailabilityManager();
         assertEquals(ha.getNodeState(), ManagementNodeState.MASTER);
         testResourceFetch("/ha/method/ok", 200);
         testResourceFetch("/ha/method/fail", 200);
         testResourceFetch("/ha/class/fail", 200);
 
-        mgmtMock.setState(ManagementNodeState.STANDBY);
+        getManagementContext().getHighAvailabilityManager().changeMode(HighAvailabilityMode.STANDBY);
         assertEquals(ha.getNodeState(), ManagementNodeState.STANDBY);
 
         testResourceFetch("/ha/method/ok", 200);
         testResourceFetch("/ha/method/fail", 403);
         testResourceFetch("/ha/class/fail", 403);
 
-        //forces isRunning = false
-        mgmtMock.setState(ManagementNodeState.TERMINATED);
+        ((ManagementContextInternal)getManagementContext()).terminate();
         assertEquals(ha.getNodeState(), ManagementNodeState.TERMINATED);
 
         testResourceFetch("/ha/method/ok", 200);
-        testResourceFetch("/ha/method/fail", 200);
-        testResourceFetch("/ha/class/fail", 200);
+        testResourceFetch("/ha/method/fail", 403);
+        testResourceFetch("/ha/class/fail", 403);
     }
 
     @Test
     public void testHaCheckForce() {
-        HighAvailabilityManager ha = mgmtMock.getHighAvailabilityManager();
+        HighAvailabilityManager ha = getManagementContext().getHighAvailabilityManager();
         assertEquals(ha.getNodeState(), ManagementNodeState.MASTER);
         testResourceForcedFetch("/ha/method/ok", 200);
         testResourceForcedFetch("/ha/method/fail", 200);
         testResourceForcedFetch("/ha/class/fail", 200);
 
-        mgmtMock.setState(ManagementNodeState.STANDBY);
+        getManagementContext().getHighAvailabilityManager().changeMode(HighAvailabilityMode.STANDBY);
         assertEquals(ha.getNodeState(), ManagementNodeState.STANDBY);
 
         testResourceForcedFetch("/ha/method/ok", 200);
         testResourceForcedFetch("/ha/method/fail", 200);
         testResourceForcedFetch("/ha/class/fail", 200);
 
-        //forces isRunning = false
-        mgmtMock.setState(ManagementNodeState.TERMINATED);
+        ((ManagementContextInternal)getManagementContext()).terminate();
         assertEquals(ha.getNodeState(), ManagementNodeState.TERMINATED);
 
         testResourceForcedFetch("/ha/method/ok", 200);
         testResourceForcedFetch("/ha/method/fail", 200);
         testResourceForcedFetch("/ha/class/fail", 200);
     }
+
 
     private void testResourceFetch(String resourcePath, int code) {
         testResourceFetch(resourcePath, false, code);

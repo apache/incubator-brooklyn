@@ -466,6 +466,10 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                     .baseUri(webConsoleUri)
                     .credentialsIfNotNull(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                     .poll(new HttpPollConfig<Boolean>(WEB_CONSOLE_ACCESSIBLE)
+                            // TODO `BrooklynNode` shouldn't report `SERVICE_UP` until `/v1/server/healthy` returns true;
+                            // but this should wait until v0.8.0 as we'll need managed nodes to implement `/v1/server/healthy` (added May 2015);
+                            // when that is added BrooklynNodeIntegrationTest.waitForApps can remove the 403 check, it should require 200 always.
+                            // .suburl("/v1/server/healthy")  then check: responseTextEquals("true")
                             .onSuccess(HttpValueFunctions.responseCodeEquals(200))
                             .setOnFailureOrException(false))
                     .poll(new HttpPollConfig<ManagementNodeState>(MANAGEMENT_NODE_STATE)

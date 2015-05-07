@@ -165,6 +165,7 @@ public class BrooklynRestApiLauncher {
         BrooklynCampPlatformLauncherAbstract platform = new BrooklynCampPlatformLauncherNoServer()
                 .useManagementContext(mgmt)
                 .launch();
+        ((LocalManagementContext)mgmt).noteStartupComplete();
         log.debug("started "+platform);
 
         ContextHandler context;

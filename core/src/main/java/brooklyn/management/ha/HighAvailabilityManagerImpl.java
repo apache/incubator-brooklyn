@@ -43,6 +43,7 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindManager;
+import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils.CreateBackupMode;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
@@ -151,7 +152,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     private volatile PersistenceActivityMetrics managementStateWritePersistenceMetrics = new PersistenceActivityMetrics();
     private volatile PersistenceActivityMetrics managementStateReadPersistenceMetrics = new PersistenceActivityMetrics();
     private final long startTimeUtc;
-    
+
     public HighAvailabilityManagerImpl(ManagementContextInternal managementContext) {
         this.managementContext = managementContext;
         startTimeUtc = localTickerUtc.read();
@@ -493,6 +494,8 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
                     nodeStateHistory.remove(nodeStateHistory.size()-1);
                 }
             }
+            ((RebindManagerImpl)managementContext.getRebindManager()).setAwaitingInitialRebind(running &&
+                (ManagementNodeState.isHotProxy(newState) || newState==ManagementNodeState.MASTER));
             this.nodeState = newState;
         }
         

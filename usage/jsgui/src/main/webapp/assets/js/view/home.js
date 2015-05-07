@@ -139,7 +139,9 @@ define([
                 this._modal.close()
             }
             var that = this;
-            if (!this.options.offline) {
+            if (this.options.offline || (this.options.cautionOverlay && this.options.cautionOverlay.warningActive)) {
+                // don't show wizard
+            } else {
                 var wizard = new AppAddWizard({appRouter:this.options.appRouter})
                 this._modal = wizard
                 this.$(".add-app #modal-container").html(wizard.render().el)

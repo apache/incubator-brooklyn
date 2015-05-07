@@ -64,6 +64,7 @@ public class HaMasterCheckFilterTest extends BrooklynRestApiLauncherTestFixture 
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
+System.err.println("TEAR DOWN");
         server.stop();
         Entities.destroyAll(writeMgmt);
         Entities.destroyAll(readMgmt);
@@ -151,7 +152,7 @@ public class HaMasterCheckFilterTest extends BrooklynRestApiLauncherTestFixture 
 
         writeMgmt = createManagementContext(mementoDir, writeMode);
         appId = createApp(writeMgmt);
-        writeMgmt.getRebindManager().getPersister().waitForWritesCompleted(TIMEOUT);
+        writeMgmt.getRebindManager().waitForPendingComplete(TIMEOUT);
 
         if (readMode == HighAvailabilityMode.DISABLED) {
             //no HA, one node only

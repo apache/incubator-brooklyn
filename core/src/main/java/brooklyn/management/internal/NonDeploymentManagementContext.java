@@ -164,6 +164,14 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         // Assume that the real management context has not been terminated, so always true
         return true;
     }
+    
+    @Override
+    public boolean isStartupComplete() {
+        // This mgmt context is only used by items who are not yet fully started.
+        // It's slightly misleading as this does not refer to the main mgmt context.
+        // OTOH it probably won't be used.  TBC.  -Alex, Apr 2015
+        return false;
+    }
 
     @Override
     public InternalEntityFactory getEntityFactory() {
@@ -433,6 +441,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         return initialManagementContext.lookup(id, type);
     }
 
+    @Override
+    public List<Throwable> errors() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.errors();
+    }
+
     /**
      * For when the initial management context is not "real"; the changeListener is a no-op, but everything else forbidden.
      * 
@@ -530,7 +544,11 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         public BrooklynMementoRawData retrieveMementoRawData() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
-
+        @Override
+        public boolean isAwaitingInitialRebind() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+        
         @Override
         public Map<String, Object> getMetrics() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");

@@ -40,13 +40,15 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.rest.domain.ApiError;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Sets;
 
 /**
- * Checks that the request is appropriate given the high availability status of the server.
- *
- * @see brooklyn.management.ha.ManagementNodeState
+ * Checks that for requests that want HA master state, the server is up and in that state.
+ * <p>
+ * Post POSTs and PUTs are assumed to need master state, with the exception of shutdown.
+ * Requests with {@link #SKIP_CHECK_HEADER} set as a header skip this check.
  */
 public class HaMasterCheckFilter implements Filter {
 
@@ -64,12 +66,37 @@ public class HaMasterCheckFilter implements Filter {
         mgmt = (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
     }
 
+    static String lookForProblemIfServerNotRunning(ManagementContext mgmt) {
+        if (mgmt==null) return "no management context available";
+        if (!mgmt.isRunning()) return "server no longer running";
+        if (!mgmt.isStartupComplete()) return "server not in required startup-completed state";
+        return null;
+    }
+    
+    private String lookForProblem(ServletRequest request) {
+        if (isSkipCheckHeaderSet(request)) 
+            return null;
+        
+        if (!isMasterRequiredForRequest(request))
+            return null;
+        
+        String problem = lookForProblemIfServerNotRunning(mgmt);
+        if (Strings.isNonBlank(problem)) 
+            return problem;
+        
+        if (!isMaster()) 
+            return "server not in required HA master state";
+        
+        return null;
+    }
+    
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if (!isMaster() && !isRequestAllowedForNonMaster(request)) {
-            log.warn("Disallowed request to non-HA-master brooklyn: "+request+"/"+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
+        String problem = lookForProblem(request);
+        if (problem!=null) {
+            log.warn("Disallowing request as "+problem+": "+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
             WebResourceUtils.applyJsonResponse(servletContext, ApiError.builder()
-                .message("This request is only permitted against a master Brooklyn server")
+                .message("This request is only permitted against an active master Brooklyn server")
                 .errorCode(Response.Status.FORBIDDEN).build().asJsonResponse(), (HttpServletResponse)response);
         } else {
             chain.doFilter(request, response);
@@ -84,23 +111,30 @@ public class HaMasterCheckFilter implements Filter {
         return ManagementNodeState.MASTER.equals(mgmt.getHighAvailabilityManager().getNodeState());
     }
 
-    private boolean isRequestAllowedForNonMaster(ServletRequest request) {
+    private boolean isMasterRequiredForRequest(ServletRequest request) {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
-            String checkOverridden = httpRequest.getHeader(SKIP_CHECK_HEADER);
-            if ("true".equalsIgnoreCase(checkOverridden)) return true;
             
             String method = httpRequest.getMethod().toUpperCase();
-            if (SAFE_STANDBY_METHODS.contains(method)) return true;
+            // gets usually okay
+            if (SAFE_STANDBY_METHODS.contains(method)) return false;
             
             // explicitly allow calls to shutdown
             // (if stopAllApps is specified, the method itself will fail; but we do not want to consume parameters here, that breaks things!)
             // TODO combine with HaHotCheckResourceFilter and use an annotation HaAnyStateAllowed or similar
-            if ("/v1/server/shutdown".equals(httpRequest.getRequestURI())) return true;
+            if ("/v1/server/shutdown".equals(httpRequest.getRequestURI())) return false;
             
-            return false;
+            // master required for everything else
+            return true;
         }
         // previously non-HttpServletRequests were allowed but I don't think they should be
+        return true;
+    }
+
+    private boolean isSkipCheckHeaderSet(ServletRequest httpRequest) {
+        if (httpRequest instanceof HttpServletRequest)
+            return "true".equalsIgnoreCase(((HttpServletRequest)httpRequest).getHeader(SKIP_CHECK_HEADER));
         return false;
     }
+
 }

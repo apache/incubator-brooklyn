@@ -209,6 +209,7 @@ public class BrooklynLauncherHighAvailabilityTest {
                     .persistMode(PersistMode.AUTO)
                     .persistenceDir(persistenceDir)
                     .persistPeriod(Duration.millis(10))
+                    .ignorePersistenceErrors(false)
                     .application(EntitySpec.create(TestApplication.class))
                     .start();
             fail();
@@ -227,6 +228,7 @@ public class BrooklynLauncherHighAvailabilityTest {
                     .persistMode(PersistMode.AUTO)
                     .persistenceDir(persistenceDir)
                     .persistPeriod(Duration.millis(10))
+                    .ignorePersistenceErrors(false)
                     .application(EntitySpec.create(TestApplication.class))
                     .start();
             fail();

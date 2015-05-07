@@ -33,19 +33,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
+import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementContext;
 import brooklyn.management.entitlement.Entitlements;
@@ -61,9 +62,11 @@ import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.file.ArchiveBuilder;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
@@ -229,6 +232,9 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     @Override
     public VersionSummary getVersion() {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
+        
         // TODO reconcile this with BrooklynVersion reading from the OSGi manifest
         // @ahgittin / @sjcorbett to decide, is there need for this in addition to the OSGi manifest?
         // TODO as part of this call should we have a strategy for reporting downstream builds in this call?
@@ -257,6 +263,46 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         return new VersionSummary(BrooklynVersion.get(), gitSha1, gitBranch);
     }
 
+    @Override
+    public boolean isUp() {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
+
+        Maybe<ManagementContext> mm = mgmtMaybe();
+        if (mm.isAbsent()) return false;
+        ManagementContext m = mm.get();
+        if (!m.isStartupComplete()) return false;
+        if (!m.isRunning()) return false;
+        return true;
+    }
+    
+    @Override
+    public boolean isShuttingDown() {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
+        Maybe<ManagementContext> mm = mgmtMaybe();
+        if (mm.isAbsent()) return false;
+        ManagementContext m = mm.get();
+        return (m.isStartupComplete() && !m.isRunning());
+    }
+    
+    @Override
+    public boolean isHealthy() {
+        if (!isUp()) return false;
+        if (!((ManagementContextInternal)mgmt()).errors().isEmpty()) return false;
+        return true;
+    }
+    
+    @Override
+    public Map<String,Object> getUpExtended() {
+        return MutableMap.<String,Object>of(
+            "up", isUp(),
+            "shuttingDown", isShuttingDown(),
+            "healthy", isHealthy(),
+            "ha", getHighAvailabilityPlaneStates());
+    }
+    
+    
     @Deprecated
     @Override
     public String getStatus() {
@@ -282,7 +328,10 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     public ManagementNodeState getHighAvailabilityNodeState() {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
             throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
-        return mgmt().getHighAvailabilityManager().getNodeState();
+        
+        Maybe<ManagementContext> mm = mgmtMaybe();
+        if (mm.isAbsent()) return ManagementNodeState.INITIALIZING;
+        return mm.get().getHighAvailabilityManager().getNodeState();
     }
 
     @Override

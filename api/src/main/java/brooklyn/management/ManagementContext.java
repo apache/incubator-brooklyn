@@ -172,9 +172,24 @@ public interface ManagementContext {
     StringConfigMap getConfig();
     
     /**
-     * Whether this management context is still running, or has been terminated.
+     * Whether the management context has been initialized and not yet terminated.
+     * This does not mean startup is entirely completed. See also {@link #isStartupComplete()}.
      */
+    // TODO should we replace this with isNotYetTerminated() ??
+    // and perhaps introduce isFullyRunning() which does (isStartupComplete() && isRunning()),
+    // and/or move to a MgmtContextStatus subclass where errors can also be stored?
     public boolean isRunning();
+    
+    /**
+     * Whether all startup tasks have completed. Previous to this point the management context is still usable 
+     * (and hence {@link #isRunning()} returns true immediately after construction)
+     * but some subsystems (e.g. persistence, OSGi, webapps, entities started at startup)
+     * may not be available until this returns true.
+     * <p>
+     * Also see {@link #isStartupComplete()}.
+     */
+    @Beta  // see comment on isRunning() as items might move to a status handler
+    public boolean isStartupComplete();
 
     /** Record of configured locations and location resolvers */
     LocationRegistry getLocationRegistry();
