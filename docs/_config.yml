@@ -18,7 +18,7 @@
 #
 
 encoding: utf-8
-markdown: redcarpet
+markdown: kramdown
 
 # where this will publish
 url_root: http://0.0.0.0:4000
