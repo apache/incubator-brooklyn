@@ -54,6 +54,7 @@ import brooklyn.entity.brooklynnode.BrooklynNode.StopNodeAndKillAppsEffector;
 import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.JsonFunctions;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.PortRanges;
@@ -64,6 +65,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Functionals;
+import brooklyn.util.guava.Maybe;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.javalang.JavaClassNames;
@@ -519,13 +521,15 @@ services:
         File pidFile = new File(getDriver(brooklynNode).getPidFile());
         assertTrue(isPidRunning(pidFile));
         
+        Maybe<MachineLocation> l = Locations.findUniqueMachineLocation(brooklynNode.getLocations());
         brooklynNode.invoke(eff, Collections.<String, Object>emptyMap()).getUnchecked();
 
         // Note can't use driver.isRunning to check shutdown; can't invoke scripts on an unmanaged entity
         EntityTestUtils.assertAttributeEquals(brooklynNode, BrooklynNode.SERVICE_UP, false);
-        // previously we unmanaged the node on stop, but that behaviour has been removed (noticed May 2015)
-        // TODO remove this after a couple of months, for awareness/confirmation
+        
+        // unmanaged if the machine is destroyed - ie false on localhost (this test by default), but true in the cloud 
 //        assertFalse(Entities.isManaged(brooklynNode));
+        
         assertFalse(isPidRunning(pidFile), "pid in "+pidFile+" still running");
     }
 

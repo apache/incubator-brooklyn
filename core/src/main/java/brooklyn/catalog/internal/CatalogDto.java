@@ -86,6 +86,7 @@ public class CatalogDto {
     }
 
     /** @deprecated since 0.7.0 the xml format is deprecated; use YAML parse routines on BasicBrooklynCatalog */
+    @Deprecated
     public static CatalogDto newDtoFromXmlContents(String xmlContents, String originDescription) {
         CatalogDto result = (CatalogDto) new CatalogXmlSerializer().deserialize(new StringReader(xmlContents));
         result.contentsDescription = originDescription;
