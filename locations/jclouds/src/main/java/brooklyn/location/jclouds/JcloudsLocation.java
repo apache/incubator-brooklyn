@@ -90,6 +90,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.entity.rebind.persister.LocationWithObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
@@ -108,6 +109,7 @@ import brooklyn.location.basic.LocationConfigUtils.OsCredential;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
+import brooklyn.location.cloud.names.AbstractCloudMachineNamer;
 import brooklyn.location.cloud.names.CloudMachineNamer;
 import brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
@@ -117,6 +119,7 @@ import brooklyn.management.AccessController;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.exceptions.CompoundRuntimeException;
@@ -596,21 +599,33 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     userCredentials = initTemplateForCreateUser(template, setup);
                 }
 
-                //FIXME initialCredentials = initUserTemplateOptions(template, setup);
-                for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
-                    customizer.customize(this, computeService, template);
-                    customizer.customize(this, computeService, template.getOptions());
+                templateTimestamp = Duration.of(provisioningStopwatch);
+                // "Name" sets jclouds hostname
+                template.getOptions().getUserMetadata().put("Name", cloudMachineNamer.generateNewMachineUniqueNameFromGroupId(setup, groupId));
+                
+                if (setup.get(JcloudsLocationConfig.INCLUDE_BROOKLYN_USER_METADATA)) {
+                    template.getOptions().getUserMetadata().put("brooklyn-user", System.getProperty("user.name"));
+                    
+                    Object context = setup.get(CALLER_CONTEXT);
+                    if (context instanceof Entity) {
+                        Entity entity = (Entity)context;
+                        template.getOptions().getUserMetadata().put("brooklyn-app-id", entity.getApplicationId());
+                        template.getOptions().getUserMetadata().put("brooklyn-app-name", entity.getApplication().getDisplayName());
+                        template.getOptions().getUserMetadata().put("brooklyn-entity-id", entity.getId());
+                        template.getOptions().getUserMetadata().put("brooklyn-entity-name", entity.getDisplayName());
+                        template.getOptions().getUserMetadata().put("brooklyn-server-creation-date", Time.makeDateSimpleStampString());
+                    }
                 }
+                
+                customizeTemplate(setup, computeService, template);
+                
                 LOG.debug("jclouds using template {} / options {} to provision machine in {}",
                         new Object[] {template, template.getOptions(), setup.getDescription()});
 
                 if (!setup.getUnusedConfig().isEmpty())
                     LOG.debug("NOTE: unused flags passed to obtain VM in "+setup.getDescription()+": "+
                             setup.getUnusedConfig());
-
-                templateTimestamp = Duration.of(provisioningStopwatch);
-                template.getOptions().getUserMetadata().put("Name", cloudMachineNamer.generateNewMachineUniqueNameFromGroupId(setup, groupId));
-
+                
                 nodes = computeService.createNodesInGroup(groupId, 1, template);
                 provisionTimestamp = Duration.of(provisioningStopwatch);
             } finally {
@@ -1089,6 +1104,37 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
               })
             .build();
 
+    /** hook whereby template customizations can be made for various clouds */
+    protected void customizeTemplate(ConfigBag setup, ComputeService computeService, Template template) {
+        for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
+            customizer.customize(this, computeService, template);
+            customizer.customize(this, computeService, template.getOptions());
+        }
+
+        // these things are nice on softlayer
+        if (template.getOptions() instanceof SoftLayerTemplateOptions) {
+            SoftLayerTemplateOptions slT = ((SoftLayerTemplateOptions)template.getOptions());
+            if (Strings.isEmpty(slT.getDomainName())) {
+                // set a quasi-sensible domain name if none was provided (better than the default, jclouds.org) 
+                slT.domainName("brooklyn.local");
+            }
+            // convert user metadata to tags because user metadata is otherwise ignored
+            Map<String, String> md = slT.getUserMetadata();
+            if (md!=null && !md.isEmpty()) {
+                Set<String> tags = MutableSet.copyOf(slT.getTags());
+                for (Map.Entry<String,String> entry: md.entrySet()) {
+                    if ("Name".equalsIgnoreCase(entry.getKey())) {
+                        // skip "Name" but use the other tags
+                    } else {
+                        tags.add(AbstractCloudMachineNamer.sanitize(entry.getKey())+":"+AbstractCloudMachineNamer.sanitize(entry.getValue()));
+                    }
+                }
+                slT.tags(tags);
+            }
+            // TODO put user metadata and tags into notes, when jclouds exposes notes, because metadata not exposed via web portal 
+        }
+    }
+    
     private static boolean listedAvailableTemplatesOnNoSuchTemplate = false;
 
     /** returns the jclouds Template which describes the image to be built, for the given config and compute service */
@@ -1465,6 +1511,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             AdminAccess.Builder adminBuilder = AdminAccess.builder()
                     .adminUsername(user)
                     .grantSudoToAdminUser(grantUserSudo);
+            adminBuilder.cryptFunction(Sha512Crypt.function());
 
             boolean useKey = Strings.isNonBlank(pubKey);
             adminBuilder.cryptFunction(Sha512Crypt.function());
@@ -1519,7 +1566,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         LOG.debug("Machine we are about to create in "+this+" will be customized with: "+
             statements);
 
-        return new UserCreation(createdUserCreds, statements);
+        return new UserCreation(createdUserCreds, statements);  
     }
 
 

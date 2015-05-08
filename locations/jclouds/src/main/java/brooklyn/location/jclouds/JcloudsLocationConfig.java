@@ -77,7 +77,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     @SuppressWarnings("serial")
     public static final ConfigKey<List<String>> EXTRA_PUBLIC_KEY_URLS_TO_AUTH = ConfigKeys.newConfigKey(new TypeToken<List<String>>() {}, 
         "extraSshPublicKeyUrls", "Additional public keys (files or URLs, in SSH2/RFC4716/id_rsa.pub format) to add to authorized_keys", null);
-    
+
     public static final ConfigKey<Boolean> DONT_CREATE_USER = ConfigKeys.newBooleanConfigKey("dontCreateUser", 
             "Whether to skip creation of 'user' when provisioning machines (default false)", false);
     public static final ConfigKey<Boolean> GRANT_USER_SUDO = ConfigKeys.newBooleanConfigKey("grantUserSudo",
@@ -160,6 +160,9 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "note often values cannot be null", null);
     @Deprecated /** @deprecated since 0.7.0 use #USER_METADATA_MAP */
     public static final ConfigKey<Object> USER_METADATA = USER_METADATA_MAP;
+
+    public static final ConfigKey<Boolean> INCLUDE_BROOKLYN_USER_METADATA = ConfigKeys.newBooleanConfigKey("includeBrooklynUserMetadata", 
+        "Whether to set metadata about the context of a machine, e.g. brooklyn-entity-id, brooklyn-app-name (default true)", true);
 
     public static final ConfigKey<Boolean> MAP_DEV_RANDOM_TO_DEV_URANDOM = ConfigKeys.newBooleanConfigKey(
             "installDevUrandom", "Map /dev/random to /dev/urandom to prevent halting on insufficient entropy", true);
