@@ -124,9 +124,9 @@ public class OsgiManager {
             Bundle b = Osgis.install(framework, bundle.getUrl());
 
             checkCorrectlyInstalled(bundle, b);
-        } catch (BundleException e) {
-            log.debug("Bundle from "+bundle+" failed to install (rethrowing): "+e);
-            throw Throwables.propagate(e);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            throw new IllegalStateException("Bundle from "+bundle.getUrl()+" failed to install: " + e.getMessage(), e);
         }
     }
 
@@ -134,7 +134,7 @@ public class OsgiManager {
         String nv = b.getSymbolicName()+":"+b.getVersion().toString();
 
         if (!isBundleNameEqualOrAbsent(bundle, b)) {
-            throw new IllegalStateException("Bundle from "+bundle.getUrl()+" already installed as "+nv+" but user explicitly requested "+bundle);
+            throw new IllegalStateException("Bundle already installed as "+nv+" but user explicitly requested "+bundle);
         }
 
         List<Bundle> matches = Osgis.bundleFinder(framework)
@@ -161,7 +161,7 @@ public class OsgiManager {
                 Bundle b = installedBundle.get();
                 String nv = b.getSymbolicName()+":"+b.getVersion().toString();
                 if (!isBundleNameEqualOrAbsent(bundle, b)) {
-                    throw new IllegalStateException("Bundle from "+bundle.getUrl()+" already installed as "+nv+" but user explicitly requested "+bundle);
+                    throw new IllegalStateException("User requested bundle " + bundle + " but already installed as "+nv);
                 } else {
                     log.trace("Bundle from "+bundleUrl+" already installed as "+nv+"; not re-registering");
                 }

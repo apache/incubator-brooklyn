@@ -399,7 +399,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "- type: " + SIMPLE_ENTITY_TYPE);
             fail();
         } catch (IllegalStateException e) {
-            Assert.assertEquals(e.getMessage(), "Bundle CatalogBundleDto{symbolicName=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} not previously registered, but URL is empty.");
+            Assert.assertEquals(e.getMessage(), "Bundle from null failed to install: Bundle CatalogBundleDto{symbolicName=" + nonExistentId + ", version=" + nonExistentVersion + ", url=null} not previously registered, but URL is empty.");
         }
     }
 
@@ -479,8 +479,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "- type: " + SIMPLE_ENTITY_TYPE);
             fail();
         } catch (IllegalStateException e) {
-            assertEquals(e.getMessage(), "Bundle from " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + " already " +
-                    "installed as " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_NAME + ":" +
+            assertEquals(e.getMessage(), "Bundle from " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + " failed to install: " +
+                    "Bundle already installed as " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_NAME + ":" +
                     OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_VERSION + " but user explicitly requested " +
                     "CatalogBundleDto{symbolicName=" + nonExistentId + ", version=" + nonExistentVersion + ", url=" +
                     OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + "}");
