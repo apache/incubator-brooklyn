@@ -98,4 +98,7 @@ public interface CloudLocationConfig {
     public static final ConfigKey<Object> MIN_DISK = new BasicConfigKey<Object>(Object.class, "minDisk",
         "Minimum size of disk, either as string (100gb) or number of GB (100), for use in selecting the machine/hardware profile", null);
 
+    public static final ConfigKey<String> DOMAIN_NAME = new BasicConfigKey<String>(String.class, "domainName",
+        "DNS domain where the host should be created, e.g. yourdomain.com (selected clouds only)", null);
+
 }

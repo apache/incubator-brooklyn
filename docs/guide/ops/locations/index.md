@@ -139,6 +139,9 @@ For more keys and more detail on the keys below, see
   For all names, a random suffix will be appended to help guarantee uniqueness;
   this can be removed by setting `vmNameSaltLength: 0`.
   
+- A DNS domain name where this host should be placed can be specified with `domainName`
+  (in selected clouds only)
+
 - User metadata can be attached using the syntax `userMetadata: { key: value, key2: "value 2" }` 
   (or `userMetadata=key=value,key2="value 2"` in a properties file)
 

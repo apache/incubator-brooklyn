@@ -1065,6 +1065,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         t.networks((String)v);
                     }})
+              .put(DOMAIN_NAME, new CustomizeTemplateOptions() {
+                    public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        if (t instanceof SoftLayerTemplateOptions) {
+                            ((SoftLayerTemplateOptions)t).domainName((String)v);
+                        } else {
+                            LOG.info("ignoring domain-name({}) in VM creation because not supported for cloud/type ({})", v, t);                            
+                        }
+                    }})
               .put(TEMPLATE_OPTIONS, new CustomizeTemplateOptions() {
                   @Override
                   public void apply(TemplateOptions options, ConfigBag config, Object v) {
