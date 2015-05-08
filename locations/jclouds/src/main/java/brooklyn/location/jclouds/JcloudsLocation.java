@@ -1555,6 +1555,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 createdUserCreds = LoginCredentials.builder().user(user).privateKey(privKey).build();
             } else if (passwordToSet!=null) {
                 createdUserCreds = LoginCredentials.builder().user(user).password(passwordToSet).build();
+                
+                // if setting a password also ensure password is permitted for ssh
+                statements.add(org.jclouds.scriptbuilder.statements.ssh.SshStatements.sshdConfig(ImmutableMap.of("PasswordAuthentication", "yes")));
             }
         }
 
