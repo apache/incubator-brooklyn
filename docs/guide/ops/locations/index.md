@@ -108,6 +108,55 @@ cloud provisioning.
 For more keys and more detail on the keys below, see 
 {% include java_link.html class_name="JcloudsLocationConfig" package_path="brooklyn/location/jclouds" project_subpath="locations/jclouds" %}.
 
+###### VM Creation
+    
+- Most providers require exactly one of either `region` (e.g. `us-east-1`) or `endpoint` (the URL, usually for private cloud deployments)
+
+- Hardware requirements can be specified, including 
+  `minRam`, `minCores`, and `os64Bit`; or as a specific `hardwareId`
+
+- VM image constraints can be set using `osFamily` (e.g. `Ubuntu`, `CentOS`, `Debian`, `RHEL`)
+  and `osVersionRegex`, or specific VM images can be specified using `imageId` or `imageNameRegex`
+
+- Specific VM images can be specified using `imageId` or `imageNameRegex`
+
+- Specific Security Groups can be specified using `securityGroups`, as a list of strings (the existing security group names),
+  or `inboundPorts` can be set, as a list of numeric ports (selected clouds only)
+
+- A specific existing key pair known at the cloud to use can be specified with `keyPair`
+  (selected clouds only)
+
+- A specific VM name (often the hostname) base to be used can be specified by setting `groupId`.
+  By default, this name is constructed based on the entity which is creating it,
+  including the ID of the app and of the entity.
+  (As many cloud portals let you filter views, this can help find a specific entity or all machines for a given application.)
+  For more sophisticated control over host naming, you can supply a custom 
+  {% include java_link.html class_name="CloudMachineNamer" package_path="brooklyn/location/cloud/names" project_subpath="core" %},
+  for example
+  `cloudMachineNamer: brooklyn.location.cloud.names.CustomMachineNamer`.
+  {% include java_link.html class_name="CustomMachineNamer" package_path="brooklyn/location/cloud/names" project_subpath="core" %}
+  will use the entity's name or following a template you supply.
+  For all names, a random suffix will be appended to help guarantee uniqueness;
+  this can be removed by setting `vmNameSaltLength: 0`.
+  
+- User metadata can be attached using the syntax `userMetadata: { key: value, key2: "value 2" }` 
+  (or `userMetadata=key=value,key2="value 2"` in a properties file)
+
+- By default, several pieces of user metadata are set to correlate VMs with Brooklyn entities,
+  prefixed with `brooklyn-`.
+  This user metadata can be omitted by setting `includeBrooklynUserMetadata: false`.
+
+- You can specify the number of attempts Brooklyn should make to create
+  machines with `machineCreateAttempts` (jclouds only). This is useful as an efficient low-level fix
+  for those occasions when cloud providers give machines that are dead on arrival.
+  You can of course also resolve it at a higher level with a policy such as 
+  {% include java_link.html class_name="ServiceRestarter" package_path="brooklyn/policy/ha" project_subpath="policies" %}.
+
+- If you want to investigate failures, set `destroyOnFailure: false`
+  to keep failed VM's around. (You'll have to manually clean them up.)
+  The default is false: if a VM fails to start, or is never ssh'able, then the VM will be terminated.
+
+
 ###### OS Setup
 
 - `user` and `password` can be used to configure the operating user created on cloud-provisioned machines
@@ -115,20 +164,20 @@ For more keys and more detail on the keys below, see
 - The `loginUser` config key (and subkeys) control the initial user to log in as,
   in cases where this cannot be discovered from the cloud provider
  
-- Private keys can be specified using ``privateKeyFile``; 
+- Private keys can be specified using `privateKeyFile`; 
   these are not copied to provisioned machines, but are required if using a local public key
   or a pre-defined `authorized_keys` on the server.
   (For more information on SSH keys, see [here](ssh-keys.html).) 
 
 - If there is a passphrase on the key file being used, you must supply it to Brooklyn for it to work, of course!
-  ``privateKeyPassphrase`` does the trick (as in ``brooklyn.location.jclouds.privateKeyPassphrase``, or other places
-  where ``privateKeyFile`` is valid).  If you don't like keys, you can just use a plain old ``password``.
+  `privateKeyPassphrase` does the trick (as in `brooklyn.location.jclouds.privateKeyPassphrase`, or other places
+  where `privateKeyFile` is valid).  If you don't like keys, you can just use a plain old `password`.
 
-- Public keys can be specified using ``publicKeyFile``, 
+- Public keys can be specified using `publicKeyFile`, 
   although these can usually be omitted if they follow the common pattern of being
-  the private key file with the suffix ``.pub`` appended.
-  (It is useful in the case of ``loginUser.publicKeyFile``, where you shouldn't need,
-  or might not even have, the private key of the ``root`` user in order to log in.)
+  the private key file with the suffix `.pub` appended.
+  (It is useful in the case of `loginUser.publicKeyFile`, where you shouldn't need,
+  or might not even have, the private key of the `root` user when you log in.)
 
 - Use `dontCreateUser` to have Brooklyn run as the initial `loginUser` (usually `root`),
   without creating any other user.
@@ -137,61 +186,33 @@ For more keys and more detail on the keys below, see
   before making the `Location` available to entities,
   optionally also using `setup.script.vars` (set as `key1:value1,key2:value2`)
 
-- Use `openIptables=true` to automatically configure `iptables`, to open the TCP ports required by
-  the software process. One can alternatively use `stopIptables=true` to entirely stop the
+- Use `openIptables: true` to automatically configure `iptables`, to open the TCP ports required by
+  the software process. One can alternatively use `stopIptables: true` to entirely stop the
   iptables service.
 
-- Use `installDevUrandom=true` to fall back to using `/dev/urandom` rather than `/dev/random`. This setting
+- Use `installDevUrandom: true` to fall back to using `/dev/urandom` rather than `/dev/random`. This setting
   is useful for cloud VMs where there is not enough random entropy, which can cause `/dev/random` to be
   extremely slow (causing `ssh` to be extremely slow to respond).
 
-- Use `useJcloudsSshInit=false` to disable the use of the native jclouds support for initial commands executed 
+- Use `useJcloudsSshInit: false` to disable the use of the native jclouds support for initial commands executed 
   on the VM (e.g. for creating new users, setting root passwords, etc.). Instead, Brooklyn's ssh support will
   be used. Timeouts and retries are more configurable within Brooklyn itself. Therefore this option is particularly 
   recommended when the VM startup is unusual (for example, if guest customizations will cause reboots and/or will 
   change login credentials).
 
-- Use `brooklyn.ssh.config.noDeleteAfterExec=true` can be used during dev/test. This prevents the scripts executed 
-  on the VMs from being deleted on completion. This can help with debugging some issues. However, the contents of the 
-  scripts and the stdout/stderr of their execution is also available in the AMP debug log.
-
-
-###### VM Creation
-    
-- Most providers require exactly one of either `region` (e.g. `us-east-1`) or `endpoint` (the URL, usually for private cloud deployments)
-
-- Hardware requirements can be specified, including 
-  ``minRam``, ``minCores``, and `os64Bit`; or as a specific ``hardwareId``
-
-- VM image constraints can be set using `osFamily` (e.g. `Ubuntu`, `CentOS`, `Debian`, `RHEL`)
-  and `osVersionRegex`, or specific VM images can be specified using ``imageId`` or ``imageNameRegex``
-
-- Specific VM images can be specified using ``imageId`` or ``imageNameRegex``
-
-- Specific Security Groups can be specified using `securityGroups`, as a list of strings (the existing security group names),
-  or `inboundPorts` can be set, as a list of numeric ports (selected clouds only)
-
-- A specific existing key pair for the cloud to set for `loginUser` can be specified using `keyPair`
-  (selected clouds only)
-
-- User metadata can be attached, using the syntax ``userMetadata=key=value,key2="value 2"``
-
-- You can specify the number of attempts Brooklyn should make to create
-  machines with ``machineCreateAttempts`` (jclouds only). This is extremely useful for
-  working around the rare occasions in which cloud providers give machines that
-  are dead on arrival.
-
-- If you want to investigate failures, set `destroyOnFailure=false`
-  to keep failed VM's around. (You'll have to manually clean them up.)
-  The default is false: if a VM fails to start, or is never ssh'able, then the VM will be terminated.
+- Use `brooklyn.ssh.config.noDeleteAfterExec: true` to keep scripts on the server after execution.
+  The contents of the scripts and the stdout/stderr of their execution are available in the Brooklyn web console,
+  but sometimes it can also be useful to have them on the box.
+  This setting prevents scripts executed on the VMs from being deleted on completion.
+  Note that some scripts run periodically so this can eventually fill a disk; it should only be used for dev/test. 
 
 
 ### Inheritance and Named Locations
 
 Named locations can be defined for commonly used groups of properties, 
-with the syntax ``brooklyn.location.named.your-group-name.``
+with the syntax `brooklyn.location.named.your-group-name.`
 followed by the relevant properties.
-These can be accessed at runtime using the syntax ``named:your-group-name`` as the deployment location.
+These can be accessed at runtime using the syntax `named:your-group-name` as the deployment location.
 
 Some illustrative examples using named locations and
 showing the syntax and properties above are as follows:
@@ -285,7 +306,7 @@ As before, if the brooklyn user and its default key are authorized for the hosts
 those fields can be omitted.
 
 Named locations can also be configured in your `brooklyn.properties`,
-using the format ``byon:(key=value,key2=value2)``.
+using the format `byon:(key=value,key2=value2)`.
 For convenience, for hosts wildcard globs are supported.
 
 {% highlight bash %}
