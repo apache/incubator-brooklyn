@@ -30,12 +30,9 @@ import javax.annotation.Nullable;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.Template;
-<<<<<<< HEAD
-import org.mockito.Mockito;
-=======
 import org.jclouds.scriptbuilder.domain.OsFamily;
 import org.jclouds.scriptbuilder.domain.StatementList;
->>>>>>> apache-gh/pr/628
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
