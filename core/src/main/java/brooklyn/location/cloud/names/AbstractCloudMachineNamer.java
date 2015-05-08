@@ -95,6 +95,7 @@ public abstract class AbstractCloudMachineNamer implements CloudMachineNamer {
         return defaultMachineNameMaxLength;  
     }
     
+    // sometimes we create salt string, sometimes jclouds does
     public int getLengthForMachineUniqueNameSalt(ConfigBag setup, boolean includeSeparator) {
         int saltLen;
         if (setup.containsKey(CloudLocationConfig.VM_NAME_SALT_LENGTH)) {

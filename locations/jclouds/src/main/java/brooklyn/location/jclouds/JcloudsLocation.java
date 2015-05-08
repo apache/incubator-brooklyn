@@ -600,7 +600,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
 
                 templateTimestamp = Duration.of(provisioningStopwatch);
-                // "Name" sets jclouds hostname
+                // "Name" metadata seems to set the display name; at least in AWS
+                // TODO it would be nice if this salt comes from the location's ID (but we don't know that yet as the ssh machine location isn't created yet)
+                // TODO in softlayer we want to control the suffix of the hostname which is 3 random hex digits
                 template.getOptions().getUserMetadata().put("Name", cloudMachineNamer.generateNewMachineUniqueNameFromGroupId(setup, groupId));
                 
                 if (setup.get(JcloudsLocationConfig.INCLUDE_BROOKLYN_USER_METADATA)) {
@@ -1068,7 +1070,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
               .put(DOMAIN_NAME, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof SoftLayerTemplateOptions) {
-                            ((SoftLayerTemplateOptions)t).domainName((String)v);
+                            ((SoftLayerTemplateOptions)t).domainName(TypeCoercions.coerce(v, String.class));
                         } else {
                             LOG.info("ignoring domain-name({}) in VM creation because not supported for cloud/type ({})", v, t);                            
                         }
@@ -1122,20 +1124,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         // these things are nice on softlayer
         if (template.getOptions() instanceof SoftLayerTemplateOptions) {
             SoftLayerTemplateOptions slT = ((SoftLayerTemplateOptions)template.getOptions());
-            if (Strings.isEmpty(slT.getDomainName())) {
-                // set a quasi-sensible domain name if none was provided (better than the default, jclouds.org) 
-                slT.domainName("brooklyn.local");
+            if (Strings.isBlank(slT.getDomainName()) || "jclouds.org".equals(slT.getDomainName())) {
+                // set a quasi-sensible domain name if none was provided (better than the default, jclouds.org)
+                // NB: things like brooklyn.local are disallowed
+                slT.domainName("local.brooklyncentral.org");
             }
             // convert user metadata to tags because user metadata is otherwise ignored
             Map<String, String> md = slT.getUserMetadata();
             if (md!=null && !md.isEmpty()) {
                 Set<String> tags = MutableSet.copyOf(slT.getTags());
                 for (Map.Entry<String,String> entry: md.entrySet()) {
-                    if ("Name".equalsIgnoreCase(entry.getKey())) {
-                        // skip "Name" but use the other tags
-                    } else {
-                        tags.add(AbstractCloudMachineNamer.sanitize(entry.getKey())+":"+AbstractCloudMachineNamer.sanitize(entry.getValue()));
-                    }
+                    tags.add(AbstractCloudMachineNamer.sanitize(entry.getKey())+":"+AbstractCloudMachineNamer.sanitize(entry.getValue()));
                 }
                 slT.tags(tags);
             }

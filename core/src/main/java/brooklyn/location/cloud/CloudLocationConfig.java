@@ -57,9 +57,9 @@ public interface CloudLocationConfig {
     /** @deprecated since 0.6.0; included here so it gets picked up in auto-detect routines */ @Deprecated
     public static final ConfigKey<String> LEGACY_PRIVATE_KEY_PASSPHRASE = LocationConfigKeys.LEGACY_PRIVATE_KEY_PASSPHRASE;
 
-    // default is just shy of common 64-char boundary (could perhaps increase slightly...)
+    // default is just shy of common 64-char boundary, leaving 4 chars plus our salt allowance (default 4+1) which allows up to -12345678 by jclouds
     public static final ConfigKey<Integer> VM_NAME_MAX_LENGTH = ConfigKeys.newIntegerConfigKey(
-        "vmNameMaxLength", "Maximum length of VM name", 61);
+        "vmNameMaxLength", "Maximum length of VM name", 60);
 
     public static final ConfigKey<Integer> VM_NAME_SALT_LENGTH = ConfigKeys.newIntegerConfigKey(
         "vmNameSaltLength", "Number of characters to use for a random identifier inserted in hostname "

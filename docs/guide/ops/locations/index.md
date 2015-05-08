@@ -136,8 +136,9 @@ For more keys and more detail on the keys below, see
   `cloudMachineNamer: brooklyn.location.cloud.names.CustomMachineNamer`.
   {% include java_link.html class_name="CustomMachineNamer" package_path="brooklyn/location/cloud/names" project_subpath="core" %}
   will use the entity's name or following a template you supply.
-  For all names, a random suffix will be appended to help guarantee uniqueness;
-  this can be removed by setting `vmNameSaltLength: 0`.
+  On many clouds, a random suffix will be appended to help guarantee uniqueness;
+  this can be removed by setting `vmNameSaltLength: 0` (selected clouds only).
+  <!-- TODO jclouds softlayer includes a 3-char hex suffix -->
   
 - A DNS domain name where this host should be placed can be specified with `domainName`
   (in selected clouds only)
