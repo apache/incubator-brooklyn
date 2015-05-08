@@ -59,7 +59,11 @@ public interface CloudLocationConfig {
 
     // default is just shy of common 64-char boundary (could perhaps increase slightly...)
     public static final ConfigKey<Integer> VM_NAME_MAX_LENGTH = ConfigKeys.newIntegerConfigKey(
-            "vmNameMaxLength", "Maximum length of VM name", 61);
+        "vmNameMaxLength", "Maximum length of VM name", 61);
+
+    public static final ConfigKey<Integer> VM_NAME_SALT_LENGTH = ConfigKeys.newIntegerConfigKey(
+        "vmNameSaltLength", "Number of characters to use for a random identifier inserted in hostname "
+            + "to uniquely identify machines", 4);
 
     public static final ConfigKey<String> WAIT_FOR_SSHABLE = ConfigKeys.newStringConfigKey("waitForSshable", 
             "Whether and how long to wait for a newly provisioned VM to be accessible via ssh; " +

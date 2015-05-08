@@ -108,7 +108,7 @@ import brooklyn.location.basic.LocationConfigUtils.OsCredential;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
-import brooklyn.location.cloud.CloudMachineNamer;
+import brooklyn.location.cloud.names.CloudMachineNamer;
 import brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
@@ -321,14 +321,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected CloudMachineNamer getCloudMachineNamer(ConfigBag config) {
         String namerClass = config.get(LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS);
         if (Strings.isNonBlank(namerClass)) {
-            Optional<CloudMachineNamer> cloudNamer = Reflections.invokeConstructorWithArgs(getManagementContext().getCatalogClassLoader(), namerClass, config);
+            Optional<CloudMachineNamer> cloudNamer = Reflections.invokeConstructorWithArgs(getManagementContext().getCatalogClassLoader(), namerClass);
             if (cloudNamer.isPresent()) {
                 return cloudNamer.get();
             } else {
                 throw new IllegalStateException("Failed to create CloudMachineNamer "+namerClass+" for location "+this);
             }
         } else {
-            return new JcloudsMachineNamer(config);
+            return new JcloudsMachineNamer();
         }
     }
 
@@ -565,7 +565,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         final ComputeService computeService = getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(setup, true);
         CloudMachineNamer cloudMachineNamer = getCloudMachineNamer(setup);
-        String groupId = elvis(setup.get(GROUP_ID), cloudMachineNamer.generateNewGroupId());
+        String groupId = elvis(setup.get(GROUP_ID), cloudMachineNamer.generateNewGroupId(setup));
         NodeMetadata node = null;
         JcloudsSshMachineLocation sshMachineLocation = null;
 
@@ -609,7 +609,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             setup.getUnusedConfig());
 
                 templateTimestamp = Duration.of(provisioningStopwatch);
-                template.getOptions().getUserMetadata().put("Name", cloudMachineNamer.generateNewMachineUniqueNameFromGroupId(groupId));
+                template.getOptions().getUserMetadata().put("Name", cloudMachineNamer.generateNewMachineUniqueNameFromGroupId(setup, groupId));
 
                 nodes = computeService.createNodesInGroup(groupId, 1, template);
                 provisionTimestamp = Duration.of(provisioningStopwatch);

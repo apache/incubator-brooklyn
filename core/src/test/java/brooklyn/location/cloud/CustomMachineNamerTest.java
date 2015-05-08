@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.cloud.names.CustomMachineNamer;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -55,21 +56,21 @@ public class CustomMachineNamerTest {
     @Test
     public void testMachineNameNoConfig() {
         config.configure(CloudLocationConfig.CALLER_CONTEXT, child);
-        Assert.assertEquals(new CustomMachineNamer(config).generateNewMachineUniqueName(), "TestEnt");
+        Assert.assertEquals(new CustomMachineNamer().generateNewMachineUniqueName(config), "TestEnt");
     }
     
     @Test
     public void testMachineNameWithConfig() {
         child.setSequenceValue(999);
         config.configure(CustomMachineNamer.MACHINE_NAME_TEMPLATE, "number${entity.sequenceValue}");
-        Assert.assertEquals(new CustomMachineNamer(config).generateNewMachineUniqueName(), "number999");
+        Assert.assertEquals(new CustomMachineNamer().generateNewMachineUniqueName(config), "number999");
     }
     
     @Test
     public void testMachineNameWithExtraSubstitutions() {
         config.configure(CustomMachineNamer.MACHINE_NAME_TEMPLATE, "foo-${fooName}-bar-${barName}-baz-${bazName.substitution}")
             .configure(CustomMachineNamer.EXTRA_SUBSTITUTIONS, ImmutableMap.of("fooName", "foo", "barName", "bar", "bazName", this));
-        Assert.assertEquals(new CustomMachineNamer(config).generateNewMachineUniqueName(), "foo-foo-bar-bar-baz-baz");
+        Assert.assertEquals(new CustomMachineNamer().generateNewMachineUniqueName(config), "foo-foo-bar-bar-baz-baz");
     }
     
     public String getSubstitution() {

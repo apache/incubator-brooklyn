@@ -30,6 +30,9 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.cloud.names.AbstractCloudMachineNamer;
+import brooklyn.location.cloud.names.BasicCloudMachineNamer;
+import brooklyn.location.cloud.names.CloudMachineNamer;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -54,7 +57,7 @@ public class CloudMachineNamerTest {
         ConfigBag cfg = new ConfigBag()
             .configure(CloudLocationConfig.CALLER_CONTEXT, child);
 
-        String result = new CloudMachineNamer(cfg).generateNewGroupId();
+        String result = new BasicCloudMachineNamer().generateNewGroupId(cfg);
 
         log.info("test entity child group id gives: "+result);
         // e.g. brooklyn-alex-tistapp-uube-testent-xisg-rwad
@@ -75,10 +78,10 @@ public class CloudMachineNamerTest {
 
         ConfigBag cfg = new ConfigBag()
             .configure(CloudLocationConfig.CALLER_CONTEXT, child);
-        CloudMachineNamer namer = new CloudMachineNamer(cfg);
+        BasicCloudMachineNamer namer = new BasicCloudMachineNamer();
         
-        String result = namer.generateNewMachineUniqueName();
-        Assert.assertTrue(result.length() <= namer.getMaxNameLength());
+        String result = namer.generateNewMachineUniqueName(cfg);
+        Assert.assertTrue(result.length() <= namer.getMaxNameLength(cfg));
         String user = Strings.maxlen(System.getProperty("user.name"), 4).toLowerCase();
         Assert.assertTrue(result.indexOf(user) >= 0);
         Assert.assertTrue(result.indexOf("-tistapp-") >= 0);
@@ -94,10 +97,10 @@ public class CloudMachineNamerTest {
 
         ConfigBag cfg = new ConfigBag()
             .configure(CloudLocationConfig.CALLER_CONTEXT, child);
-        CloudMachineNamer namer = new CloudMachineNamer(cfg);
+        CloudMachineNamer namer = new BasicCloudMachineNamer();
         
-        String groupId = namer.generateNewGroupId();
-        String result = namer.generateNewMachineUniqueNameFromGroupId(groupId);
+        String groupId = namer.generateNewGroupId(cfg);
+        String result = namer.generateNewMachineUniqueNameFromGroupId(cfg, groupId);
         Assert.assertTrue(result.startsWith(groupId));
         Assert.assertTrue(result.length() == groupId.length() + 5);
     }
@@ -109,24 +112,28 @@ public class CloudMachineNamerTest {
         
         ConfigBag cfg = new ConfigBag()
             .configure(CloudLocationConfig.CALLER_CONTEXT, child);
-        CloudMachineNamer namer = new CloudMachineNamer(cfg);
-        namer.lengthMaxPermittedForMachineName(10);
-        String result = namer.generateNewMachineUniqueName();
+        BasicCloudMachineNamer namer = new BasicCloudMachineNamer();
+        namer.setDefaultMachineNameMaxLength(10);
+        String result = namer.generateNewMachineUniqueName(cfg);
         Assert.assertEquals(result.length(), 10);
     }
     
     @Test
-    public void testLengthReserverdForNameInGroup() {
+    public void testLengthReservedForNameInGroup() {
         app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).displayName("TistApp"), LocalManagementContextForTests.newInstance());
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("TestEnt"));
         
         ConfigBag cfg = new ConfigBag()
             .configure(CloudLocationConfig.CALLER_CONTEXT, child);
-        CloudMachineNamer namer = new CloudMachineNamer(cfg);
-        namer.lengthMaxPermittedForMachineName(10);
-        namer.lengthReservedForNameInGroup(4);
-        String groupId = namer.generateNewGroupId();
-        Assert.assertEquals(5, groupId.length(), "groupId="+groupId);
+        BasicCloudMachineNamer namer = new BasicCloudMachineNamer();
+        namer.setDefaultMachineNameMaxLength(20);
+        namer.setDefaultMachineNameSeparatorAndSaltLength(":I", 5);
+        String groupId = namer.generateNewGroupId(cfg);
+        Assert.assertEquals(13, groupId.length(), "groupId="+groupId);
+        String machineId = namer.generateNewMachineUniqueNameFromGroupId(cfg, groupId);
+        Assert.assertEquals(20, machineId.length(), "machineId="+machineId);
+        // separator is not sanitized -- caller should know what they are doing there!
+        Assert.assertTrue(machineId.startsWith(groupId+"-i"), "machineId="+machineId);
     }
 
     @Test
@@ -136,9 +143,9 @@ public class CloudMachineNamerTest {
 
         ConfigBag cfg = new ConfigBag()
             .configure(CloudLocationConfig.CALLER_CONTEXT, child);
-        CloudMachineNamer namer = new CloudMachineNamer(cfg);
+        CloudMachineNamer namer = new BasicCloudMachineNamer();
         
-        String result = namer.generateNewMachineUniqueName();
+        String result = namer.generateNewMachineUniqueName(cfg);
         assertTrue(result.indexOf("t-ap") >= 0, "result="+result);
         for (int c : "_%$()\r\n\t[]*.!".getBytes()) {
             assertFalse(result.contains(new String(new char [] {(char)c})), "result="+result);
@@ -147,7 +154,7 @@ public class CloudMachineNamerTest {
     
     @Test
     public void testSanitize() {
-        Assert.assertEquals(CloudMachineNamer.sanitize(
+        Assert.assertEquals(AbstractCloudMachineNamer.sanitize(
                 "me & you like alphanumeric but not _ or !!! or dots...dots...dots %$()\r\n\t[]*etc"),
                 "me-you-like-alphanumeric-but-not-or-or-dots-dots-dots-etc");
     }

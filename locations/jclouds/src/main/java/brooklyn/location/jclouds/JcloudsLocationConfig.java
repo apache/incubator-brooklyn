@@ -250,6 +250,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             "Registry/Factory for creating jclouds ComputeService; default is almost always fine, except where tests want to customize behaviour",
             ComputeServiceRegistryImpl.INSTANCE);
     
+    @SuppressWarnings("serial")
     public static final ConfigKey<Map<String,String>> TEMPLATE_OPTIONS = ConfigKeys.newConfigKey(
             new TypeToken<Map<String, String>>() {}, "templateOptions", "Additional jclouds template options");
 
