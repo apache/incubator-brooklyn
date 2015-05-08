@@ -55,4 +55,15 @@ public class BasicJcloudsLocationCustomizer implements JcloudsLocationCustomizer
     public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
         // no-op
     }
+
+    @Override
+    public void preRelease(JcloudsSshMachineLocation machine) {
+        // no-op
+    }
+
+    @Override
+    public void postRelease(JcloudsSshMachineLocation machine) {
+        // no-op
+    }
+    
 }
