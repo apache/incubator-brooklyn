@@ -301,7 +301,7 @@ public abstract class RebindIteration {
     @SuppressWarnings("deprecation")
     protected void rebuildCatalog() {
         
-        // build catalog early so we can load other things
+        // Build catalog early so we can load other things
         checkEnteringPhase(2);
         
         // Instantiate catalog items
@@ -341,7 +341,7 @@ public abstract class RebindIteration {
             }
         }
 
-        // see notes in CatalogInitialization
+        // See notes in CatalogInitialization
         
         Collection<CatalogItem<?, ?>> catalogItems = rebindContext.getCatalogItems();
         CatalogInitialization catInit = ((ManagementContextInternal)managementContext).getCatalogInitialization();
@@ -398,6 +398,8 @@ public abstract class RebindIteration {
         }
 
         // TODO in read-only mode, perhaps do this less frequently than entities etc ?
+        // both in RW and in RO mode, the first run reads the initialization data;
+        // maybe not desired for RO as it defers problems, although if it's standalone it is desired
         catInit.populateCatalog(needsInitialCatalog, itemsForResettingCatalog);
     }
 

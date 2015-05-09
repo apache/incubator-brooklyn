@@ -447,7 +447,9 @@ public class RebindManagerImpl implements RebindManager {
             }
             persistenceStoreAccess.checkpoint(memento, exceptionHandler);
         } else {
-            persistenceRealChangeListener.persistNow();
+            if (!persistenceRealChangeListener.persistNowSafely(false)) {
+                throw new IllegalStateException("Forced persistence failed; see logs fore more detail");
+            }
         }
     }
     

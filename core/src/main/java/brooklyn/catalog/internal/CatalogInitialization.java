@@ -128,7 +128,7 @@ public class CatalogInitialization implements ManagementContextInjectable {
                 if (!catalog.getCatalog().isLoaded()) {
                     catalog.load();
                 } else {
-                    if (hasRunOfficial || hasRunBestEffort) {
+                    if (needsInitial && (hasRunOfficial || hasRunBestEffort)) {
                         // an indication that something caused it to load early; not severe, but unusual
                         log.warn("Catalog initialization has not properly run but management context has a catalog; re-populating, possibly overwriting items installed during earlier access (it may have been an early web request)");
                         catalog.reset(ImmutableList.<CatalogItem<?,?>>of());

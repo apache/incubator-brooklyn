@@ -73,6 +73,7 @@ import brooklyn.util.time.Time;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Ticker;
@@ -606,9 +607,14 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             return;
         }
         brooklyn.management.ha.ManagementPlaneSyncRecordDeltaImpl.Builder db = ManagementPlaneSyncRecordDeltaImpl.builder();
-        for (Map.Entry<String,ManagementNodeSyncRecord> node: plane.getManagementNodes().entrySet())
-            if (!ManagementNodeState.MASTER.equals(node.getValue().getStatus()))
+        for (Map.Entry<String,ManagementNodeSyncRecord> node: plane.getManagementNodes().entrySet()) {
+            // only keep a node if it both claims master and is recognised as master;
+            // else ex-masters who died are kept around!
+            if (!ManagementNodeState.MASTER.equals(node.getValue().getStatus()) || 
+                    !Objects.equal(plane.getMasterNodeId(), node.getValue().getNodeId())) {
                 db.removedNodeId(node.getKey());
+            }
+        }
         persister.delta(db.build());
         // then get, so model is updated
         loadManagementPlaneSyncRecord(true);
