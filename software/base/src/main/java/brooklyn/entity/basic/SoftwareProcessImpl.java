@@ -31,11 +31,10 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
-
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
@@ -57,7 +56,6 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -67,6 +65,7 @@ import brooklyn.util.time.Time;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -350,10 +349,17 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     
     @Override
     public void rebind() {
-        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
-        if (state == null || state != Lifecycle.RUNNING) {
-            log.warn("On rebind of {}, not calling software process rebind hooks because state is {}", this, state);
+        //SERVICE_STATE_ACTUAL might be ON_FIRE due to a temporary condition (problems map non-empty)
+        //Only if the expected state is ON_FIRE then the entity has permanently failed.
+        Transition expectedState = getAttribute(SERVICE_STATE_EXPECTED);
+        if (expectedState == null || expectedState.getState() != Lifecycle.RUNNING) {
+            log.warn("On rebind of {}, not calling software process rebind hooks because expected state is {}", this, expectedState);
             return;
+        }
+
+        Lifecycle actualState = getAttribute(SERVICE_STATE_ACTUAL);
+        if (actualState == null || actualState != Lifecycle.RUNNING) {
+            log.warn("Rebinding entity {}, even though actual state is {}. Expected state is {}", new Object[] {this, actualState, expectedState});
         }
 
         // e.g. rebinding to a running instance
