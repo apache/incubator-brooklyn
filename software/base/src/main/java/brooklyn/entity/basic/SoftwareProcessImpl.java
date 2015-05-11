@@ -494,17 +494,31 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         CountdownTimer timer = startTimeout.countdownTimer();
         boolean isRunningResult = false;
         long delay = 100;
+        Exception firstFailure = null;
         while (!isRunningResult && !timer.isExpired()) {
             Time.sleep(delay);
             try {
                 isRunningResult = driver.isRunning();
+                if (log.isDebugEnabled()) log.debug("checked {}, 'is running' returned: {}", this, isRunningResult);
             } catch (Exception  e) {
-                ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
-                // provide extra context info, as we're seeing this happen in strange circumstances
-                if (driver==null) throw new IllegalStateException(this+" concurrent start and shutdown detected");
-                throw new IllegalStateException("Error detecting whether "+this+" is running: "+e, e);
+                Exceptions.propagateIfFatal(e);
+
+                isRunningResult = false;
+                if (driver != null) {
+                    String msg = "checked " + this + ", 'is running' threw an exception; logging subsequent exceptions at debug level";
+                    if (firstFailure == null) {
+                        log.error(msg, e);
+                    } else {
+                        log.debug(msg, e);
+                    }
+                } else {
+                    // provide extra context info, as we're seeing this happen in strange circumstances
+                    log.error(this+" concurrent start and shutdown detected", e);
+                }
+                if (firstFailure == null) {
+                    firstFailure = e;
+                }
             }
-            if (log.isDebugEnabled()) log.debug("checked {}, is running returned: {}", this, isRunningResult);
             // slow exponential delay -- 1.1^N means after 40 tries and 50s elapsed, it reaches the max of 5s intervals
             // TODO use Repeater 
             delay = Math.min(delay*11/10, 5000);
@@ -512,9 +526,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         if (!isRunningResult) {
             String msg = "Software process entity "+this+" did not pass is-running check within "+
                     "the required "+startTimeout+" limit ("+timer.getDurationElapsed().toStringRounded()+" elapsed)";
+            if (firstFailure != null) {
+                msg += "; check failed at least once with exception: " + firstFailure.getMessage() + ", see logs for details";
+            }
             log.warn(msg+" (throwing)");
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
-            throw new IllegalStateException(msg);
+            throw new IllegalStateException(msg, firstFailure);
         }
     }
 
