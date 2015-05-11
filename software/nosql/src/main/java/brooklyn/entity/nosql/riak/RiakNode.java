@@ -29,6 +29,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
@@ -42,7 +43,7 @@ import com.google.common.reflect.TypeToken;
 @Catalog(name="Riak Node", description="Riak is a distributed NoSQL key-value data store that offers "
         + "extremely high availability, fault tolerance, operational simplicity and scalability.")
 @ImplementedBy(RiakNodeImpl.class)
-public interface RiakNode extends SoftwareProcess {
+public interface RiakNode extends SoftwareProcess, UsesJava {
 
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION,
@@ -123,8 +124,17 @@ public interface RiakNode extends SoftwareProcess {
     PortAttributeSensorAndConfigKey EPMD_LISTENER_PORT = new PortAttributeSensorAndConfigKey("epmdListenerPort", "Erlang Port Mapper Daemon Listener Port", "4369");
     PortAttributeSensorAndConfigKey ERLANG_PORT_RANGE_START = new PortAttributeSensorAndConfigKey("erlangPortRangeStart", "Erlang Port Range Start", "6000+");
     PortAttributeSensorAndConfigKey ERLANG_PORT_RANGE_END = new PortAttributeSensorAndConfigKey("erlangPortRangeEnd", "Erlang Port Range End", "7999+");
-    PortAttributeSensorAndConfigKey SEARCH_SOLR_PORT = new PortAttributeSensorAndConfigKey("search.solr.port", "Solr port", "8093+");
-    PortAttributeSensorAndConfigKey SEARCH_SOLR_JMX_PORT = new PortAttributeSensorAndConfigKey("search.solr.jmx_port", "Solr port", "8985+");
+
+    @SetFromFlag("searchEnabled")
+    ConfigKey<Boolean> SEARCH_ENABLED = ConfigKeys.newBooleanConfigKey("riak.search", "Deploy Solr and configure Riak to use it", false);
+
+    /**
+     * http://docs.basho.com/riak/latest/dev/using/search/
+     * Solr is powered by Riak's Yokozuna engine and it is used through the riak webport
+     * So SEARCH_SOLR_PORT shouldn't be exposed
+     */
+    ConfigKey<Integer> SEARCH_SOLR_PORT = ConfigKeys.newIntegerConfigKey("search.solr.port", "Solr port", 8983);
+    ConfigKey<Integer> SEARCH_SOLR_JMX_PORT = ConfigKeys.newIntegerConfigKey("search.solr.jmx_port", "Solr port", 8985);
 
     AttributeSensor<Integer> NODE_GETS = Sensors.newIntegerSensor("riak.node.gets", "Gets in the last minute");
     AttributeSensor<Integer> NODE_GETS_TOTAL = Sensors.newIntegerSensor("riak.node.gets.total", "Total gets since node started");
@@ -181,6 +191,8 @@ public interface RiakNode extends SoftwareProcess {
     Integer getErlangPortRangeStart();
 
     Integer getErlangPortRangeEnd();
+
+    Boolean isSearchEnabled();
 
     Integer getSearchSolrPort();
 
