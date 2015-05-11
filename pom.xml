@@ -123,21 +123,29 @@
         <!-- Dependencies -->
         <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
         <jclouds.groupId>org.apache.jclouds</jclouds.groupId>
+
+        <!-- These dependencies also appear in usage/downstream-parent/pom.xml -
+           - please synchronise versions between these two pom files -->
         <jclouds.version>1.9.0</jclouds.version>
-        <guava.version>17.0</guava.version>
-        <groovy.version>2.3.4</groovy.version> <!-- Version supported by https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-2.9.0-Release-Notes -->
         <logback.version>1.0.7</logback.version>
-        <testng.version>6.8.8</testng.version>
-        <mockito.version>1.10.8</mockito.version>
         <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
+        <guava.version>17.0</guava.version>
         <xstream.version>1.4.7</xstream.version>
         <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
         <fasterxml.jackson.version>2.4.2</fasterxml.jackson.version>  <!-- more recent jackson, but not compatible with old annotations! -->
         <jersey.version>1.18.1</jersey.version>
+        <httpclient.version>4.2.5</httpclient.version>
+        <commons-lang3.version>3.1</commons-lang3.version>
+        <groovy.version>2.3.4</groovy.version> <!-- Version supported by https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-2.9.0-Release-Notes -->
+        <jsr305.version>2.0.1</jsr305.version>
+        <snakeyaml.version>1.11</snakeyaml.version>
+
+        <!-- Ordinary dependencies -->
+        <testng.version>6.8.8</testng.version>
+        <mockito.version>1.10.8</mockito.version>
         <swagger.version>1.0.1</swagger.version>
         <jansi.version>1.2.1</jansi.version>
         <gson.version>2.2.2</gson.version>
-        <jsr305.version>2.0.1</jsr305.version>
         <ivy.version>2.2.0</ivy.version>
         <mx4j.version>3.0.1</mx4j.version>
         <bouncycastle.version>1.49</bouncycastle.version>
@@ -147,18 +155,15 @@
         <jetty.version>8.1.4.v20120524</jetty.version>
         <airline.version>0.6</airline.version>
         <mockwebserver.version>20121111</mockwebserver.version>
-        <httpclient.version>4.2.5</httpclient.version>
         <freemarker.version>2.3.19</freemarker.version>
         <commons-io.version>2.4</commons-io.version>
         <hazelcast.version>3.0</hazelcast.version>
         <jsonPath.version>0.9.1</jsonPath.version>
-        <commons-lang3.version>3.1</commons-lang3.version>
         <commons-compress.version>1.4</commons-compress.version>
         <qpid.version>0.20</qpid.version>
         <mongodb.version>2.11.4</mongodb.version>
         <riak.version>1.4.0</riak.version>
         <maven-war-plugin.version>2.4</maven-war-plugin.version>
-        <snakeyaml.version>1.11</snakeyaml.version>
         <validation-api.version>1.0.0.GA</validation-api.version>
         <geronimo-jms_1.1_spec.version>1.1.1</geronimo-jms_1.1_spec.version>
         <sleepycat-je.version>5.0.34</sleepycat-je.version>
