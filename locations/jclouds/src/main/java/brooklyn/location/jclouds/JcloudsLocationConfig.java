@@ -257,8 +257,8 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             ComputeServiceRegistryImpl.INSTANCE);
     
     @SuppressWarnings("serial")
-    public static final ConfigKey<Map<String,String>> TEMPLATE_OPTIONS = ConfigKeys.newConfigKey(
-            new TypeToken<Map<String, String>>() {}, "templateOptions", "Additional jclouds template options");
+    public static final ConfigKey<Map<String,Object>> TEMPLATE_OPTIONS = ConfigKeys.newConfigKey(
+            new TypeToken<Map<String, Object>>() {}, "templateOptions", "Additional jclouds template options");
 
     // TODO
     

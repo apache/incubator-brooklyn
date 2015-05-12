@@ -1039,7 +1039,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info("ignoring keyPair({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
                     }})
-             .put(AUTO_GENERATE_KEYPAIRS, new CustomizeTemplateOptions() {
+            .put(AUTO_GENERATE_KEYPAIRS, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof NovaTemplateOptions) {
                             ((NovaTemplateOptions)t).generateKeyPair((Boolean)v);
@@ -1049,7 +1049,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info("ignoring auto-generate-keypairs({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
                     }})
-             .put(AUTO_CREATE_FLOATING_IPS, new CustomizeTemplateOptions() {
+            .put(AUTO_CREATE_FLOATING_IPS, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof NovaTemplateOptions) {
                             ((NovaTemplateOptions)t).autoAssignFloatingIp((Boolean)v);
@@ -1057,7 +1057,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info("ignoring auto-generate-floating-ips({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
                     }})
-             .put(AUTO_ASSIGN_FLOATING_IP, new CustomizeTemplateOptions() {
+            .put(AUTO_ASSIGN_FLOATING_IP, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof NovaTemplateOptions) {
                             ((NovaTemplateOptions)t).autoAssignFloatingIp((Boolean)v);
@@ -1067,11 +1067,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info("ignoring auto-assign-floating-ip({}) in VM creation because not supported for cloud/type ({})", v, t);
                         }
                     }})
-              .put(NETWORK_NAME, new CustomizeTemplateOptions() {
+            .put(NETWORK_NAME, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         t.networks((String)v);
                     }})
-              .put(DOMAIN_NAME, new CustomizeTemplateOptions() {
+            .put(DOMAIN_NAME, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
                         if (t instanceof SoftLayerTemplateOptions) {
                             ((SoftLayerTemplateOptions)t).domainName(TypeCoercions.coerce(v, String.class));
@@ -1079,42 +1079,59 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info("ignoring domain-name({}) in VM creation because not supported for cloud/type ({})", v, t);                            
                         }
                     }})
-              .put(TEMPLATE_OPTIONS, new CustomizeTemplateOptions() {
-                  @Override
-                  public void apply(TemplateOptions options, ConfigBag config, Object v) {
-                      if (v == null) return;
-                      @SuppressWarnings("unchecked") Map<String, String> optionsMap = (Map<String, String>) v;
-                      if (optionsMap.isEmpty()) return;
+            .put(TEMPLATE_OPTIONS, new CustomizeTemplateOptions() {
+                @Override
+                public void apply(TemplateOptions options, ConfigBag config, Object v) {
+                    if (v == null) return;
+                    @SuppressWarnings("unchecked") Map<String, Object> optionsMap = (Map<String, Object>) v;
+                    if (optionsMap.isEmpty()) return;
 
-                      Class<? extends TemplateOptions> clazz = options.getClass();
-                      Iterable<Method> methods = Arrays.asList(clazz.getMethods());
-                      for(final Map.Entry<String, String> option : optionsMap.entrySet()) {
-                          Optional<Method> methodOptional = Iterables.tryFind(methods, new Predicate<Method>() {
-                              @Override
-                              public boolean apply(@Nullable Method input) {
-                                  // Matches a method with the expected name, and a single parameter that TypeCoercions
-                                  // can coerce to
-                                  if (input == null) return false;
-                                  if (!input.getName().equals(option.getKey())) return false;
-                                  Type[] parameterTypes = input.getGenericParameterTypes();
-                                  return parameterTypes.length == 1
-                                          && TypeCoercions.tryCoerce(option.getValue(), TypeToken.of(parameterTypes[0])).isPresentAndNonNull();
-                              }
-                          });
-                          if(methodOptional.isPresent()) {
-                              try {
-                                  Method method = methodOptional.get();
-                                  method.invoke(options, TypeCoercions.coerce(option.getValue(), TypeToken.of(method.getGenericParameterTypes()[0])));
-                              } catch (IllegalAccessException e) {
-                                  throw Exceptions.propagate(e);
-                              } catch (InvocationTargetException e) {
-                                  throw Exceptions.propagate(e);
-                              }
-                          } else {
-                              LOG.warn("Ignoring request to set template option {} because this is not supported by {}", new Object[] { option.getKey(), clazz.getCanonicalName() });
-                          }
-                      }
-                  }
+                    Class<? extends TemplateOptions> clazz = options.getClass();
+                    Iterable<Method> methods = Arrays.asList(clazz.getMethods());
+                    for(final Map.Entry<String, Object> option : optionsMap.entrySet()) {
+                        Optional<Method> methodOptional = Iterables.tryFind(methods, new Predicate<Method>() {
+                            @Override
+                            public boolean apply(@Nullable Method input) {
+                                // Matches a method with the expected name, and a single parameter that TypeCoercions
+                                // can coerce to
+                                if (input == null) return false;
+                                if (!input.getName().equals(option.getKey())) return false;
+                                int numOptionParams = option.getValue() instanceof List ? ((List)option.getValue()).size() : 1;
+                                Type[] parameterTypes = input.getGenericParameterTypes();
+                                if (parameterTypes.length != numOptionParams) return false;
+                                if (numOptionParams == 1 && !(option.getValue() instanceof List) && parameterTypes.length == 1) {
+                                    return true;
+                                }
+                                for (int paramCount = 0; paramCount < numOptionParams; paramCount ++) {
+                                    if (!TypeCoercions.tryCoerce(((List)option.getValue()).get(paramCount),
+                                            TypeToken.of(parameterTypes[paramCount])).isPresentAndNonNull()) return false;
+                                }
+                                return true;
+                            }
+                        });
+                        if(methodOptional.isPresent()) {
+                            try {
+                                Method method = methodOptional.get();
+                                if (option.getValue() instanceof List) {
+                                    List<Object> parameters = Lists.newArrayList();
+                                    int numOptionParams = ((List)option.getValue()).size();
+                                    for (int paramCount = 0; paramCount < numOptionParams; paramCount++) {
+                                        parameters.add(TypeCoercions.coerce(((List)option.getValue()).get(paramCount), TypeToken.of(method.getGenericParameterTypes()[paramCount])));
+                                    }
+                                    method.invoke(options, parameters.toArray());
+                                } else {
+                                    method.invoke(options, TypeCoercions.coerce(option.getValue(), TypeToken.of(method.getGenericParameterTypes()[0])));
+                                }
+                            } catch (IllegalAccessException e) {
+                                throw Exceptions.propagate(e);
+                            } catch (InvocationTargetException e) {
+                                throw Exceptions.propagate(e);
+                            }
+                        } else {
+                            LOG.warn("Ignoring request to set template option {} because this is not supported by {}", new Object[] { option.getKey(), clazz.getCanonicalName() });
+                        }
+                    }
+                }
               })
             .build();
 
