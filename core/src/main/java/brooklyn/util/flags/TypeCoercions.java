@@ -31,6 +31,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -707,6 +708,13 @@ public class TypeCoercions {
             @Override
             public QuorumCheck apply(final String input) {
                 return QuorumChecks.of(input);
+            }
+        });
+        registerAdapter(ArrayList.class, String[].class, new Function<ArrayList, String[]>() {
+            @Nullable
+            @Override
+            public String[] apply(@Nullable ArrayList arrayList) {
+                return (String[]) arrayList.toArray(new String[]{});
             }
         });
         registerAdapter(String.class, Map.class, new Function<String,Map>() {

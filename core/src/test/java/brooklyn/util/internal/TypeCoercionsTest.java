@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
 public class TypeCoercionsTest {
@@ -305,6 +307,11 @@ public class TypeCoercionsTest {
     public void testCoerceStringToNumber() {
         assertEquals(TypeCoercions.coerce("1", Number.class), (Number) Double.valueOf(1));
         assertEquals(TypeCoercions.coerce("1.0", Number.class), (Number) Double.valueOf(1.0));
+    }
+
+    @Test
+    public void testArrayListToArray() {
+        assertEquals(TypeCoercions.coerce(Lists.newArrayList("Foo", "Bar", "Baz"), String[].class), new String[] {"Foo", "Bar", "Baz"});
     }
 
     @Test(expectedExceptions = ClassCoercionException.class)

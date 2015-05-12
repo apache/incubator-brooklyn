@@ -27,6 +27,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.WinRmMachineLocation;
+import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import com.google.api.client.util.Strings;
 import com.google.common.collect.ImmutableList;
@@ -107,12 +108,12 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         getLocation().executePsScript("New-Item -path \"" + directoryName + "\" -type directory -ErrorAction SilentlyContinue");
     }
 
-    protected boolean executeCommand(ConfigKey<String> regularCommandKey, ConfigKey<String> powershellCommandKey, boolean allowNoOp) {
+    protected WinRmToolResponse executeCommand(ConfigKey<String> regularCommandKey, ConfigKey<String> powershellCommandKey, boolean allowNoOp) {
         String regularCommand = getEntity().getConfig(regularCommandKey);
         String powershellCommand = getEntity().getConfig(powershellCommandKey);
         if (Strings.isNullOrEmpty(regularCommand) && Strings.isNullOrEmpty(powershellCommand)) {
             if (allowNoOp) {
-                return true;
+                return new WinRmToolResponse("", "", 0);
             } else {
                 throw new IllegalStateException(String.format("Exactly one of %s or %s must be set", regularCommandKey.getName(), powershellCommandKey.getName()));
             }
@@ -121,18 +122,18 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         }
 
         if (Strings.isNullOrEmpty(regularCommand)) {
-            return getLocation().executePsScript(ImmutableList.of(powershellCommand)) == 0;
+            return getLocation().executePsScript(ImmutableList.of(powershellCommand));
         } else {
-            return getLocation().executeScript(ImmutableList.of(regularCommand)) == 0;
+            return getLocation().executeScript(ImmutableList.of(regularCommand));
         }
     }
 
     public int execute(List<String> script) {
-        return getLocation().executeScript(script);
+        return getLocation().executeScript(script).getStatusCode();
     }
 
     public int executePowerShell(List<String> psScript) {
-        return getLocation().executePsScript(psScript);
+        return getLocation().executePsScript(psScript).getStatusCode();
     }
 
     public int copyTo(File source, File destination) {
