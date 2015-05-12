@@ -151,20 +151,24 @@ public class Strings {
         return string;
     }
 
-    /** as removeFromEnd, but repeats until all such suffixes are gone */
-    public static String removeAllFromEnd(String string, String ...suffixes) {
+    /**
+     * As removeFromEnd, but repeats until all such suffixes are gone
+     */
+    public static String removeAllFromEnd(String string, String... suffixes) {
+        if (isEmpty(string)) return string;
+        int index = string.length();
         boolean anotherLoopNeeded = true;
         while (anotherLoopNeeded) {
             if (isEmpty(string)) return string;
             anotherLoopNeeded = false;
             for (String suffix : suffixes)
-                if (string.endsWith(suffix)) {
-                    string = string.substring(0, string.length() - suffix.length());
+                if (!isEmpty(suffix) && string.startsWith(suffix, index - suffix.length())) {
+                    index -= suffix.length();
                     anotherLoopNeeded = true;
                     break;
                 }
         }
-        return string;
+        return string.substring(0, index);
     }
 
     /**
@@ -193,20 +197,24 @@ public class Strings {
         return string;
     }
 
-    /** as removeFromStart, but repeats until all such suffixes are gone */
-    public static String removeAllFromStart(String string, String ...prefixes) {
+    /**
+     * As {@link #removeFromStart(String, String)}, repeating until all such prefixes are gone.
+     */
+    public static String removeAllFromStart(String string, String... prefixes) {
+        int index = 0;
         boolean anotherLoopNeeded = true;
         while (anotherLoopNeeded) {
             if (isEmpty(string)) return string;
             anotherLoopNeeded = false;
-            for (String prefix : prefixes)
-                if (string.startsWith(prefix)) {
-                    string = string.substring(prefix.length());
+            for (String prefix : prefixes) {
+                if (!isEmpty(prefix) && string.startsWith(prefix, index)) {
+                    index += prefix.length();
                     anotherLoopNeeded = true;
                     break;
                 }
+            }
         }
-        return string;
+        return string.substring(index);
     }
 
     /** convenience for {@link com.google.common.base.Joiner} */

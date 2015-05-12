@@ -108,12 +108,15 @@ public class StringsTest extends FixedLocaleTest {
     public void testRemoveAllFromEnd() {
         assertEquals(Strings.removeAllFromEnd("", "bar"), "");
         assertEquals(Strings.removeAllFromEnd(null, "bar"), null);
+        assertEquals(Strings.removeAllFromEnd("foo", ""), "foo");
 
         assertEquals(Strings.removeAllFromEnd("foobar", "foo", "bar"), "");
         assertEquals(Strings.removeAllFromEnd("foobar", "ar", "car", "b", "o"), "f");
         // test they are applied in order
         assertEquals(Strings.removeAllFromEnd("foobar", "ar", "car", "b", "ob"), "foo");
         assertEquals(Strings.removeAllFromEnd("foobar", "zz", "x"), "foobar");
+        assertEquals(Strings.removeAllFromEnd("foobarbaz", "bar", "baz"), "foo");
+        assertEquals(Strings.removeAllFromEnd("foobarbaz", "baz", "", "foo", "bar", "baz"), "");
     }
 
     public void testRemoveFromStart() {
@@ -129,6 +132,7 @@ public class StringsTest extends FixedLocaleTest {
     public void testRemoveAllFromStart() {
         assertEquals(Strings.removeAllFromStart("", "foo"), "");
         assertEquals(Strings.removeAllFromStart(null, "foo"), null);
+        assertEquals(Strings.removeAllFromStart("foo", ""), "foo");
 
         assertEquals(Strings.removeAllFromStart("foobar", "foo"), "bar");
         assertEquals(Strings.removeAllFromStart("foo", "bar"), "foo");
@@ -138,6 +142,8 @@ public class StringsTest extends FixedLocaleTest {
         assertEquals(Strings.removeAllFromStart("foobar", "ob", "fo", "o"), "ar");
         // test they are applied in order, "ob" doesn't match because "o" eats the o
         assertEquals(Strings.removeAllFromStart("foobar", "o", "fo", "ob"), "bar");
+        assertEquals(Strings.removeAllFromStart("foobarbaz", "bar", "foo"), "baz");
+        assertEquals(Strings.removeAllFromStart("foobarbaz", "baz", "bar", "foo"), "");
     }
 
     public void testRemoveFromStart2() {
