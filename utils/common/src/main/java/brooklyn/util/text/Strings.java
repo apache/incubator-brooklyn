@@ -125,10 +125,25 @@ public class Strings {
         if (isEmpty(s)) throw new IllegalArgumentException(message);
     }
 
+    /**
+     * Removes suffix from the end of the string. Returns string if it does not end with suffix.
+     */
+    public static String removeFromEnd(String string, String suffix) {
+        if (isEmpty(string)) {
+            return string;
+        } else if (!isEmpty(suffix) && string.endsWith(suffix)) {
+            return string.substring(0, string.length() - suffix.length());
+        } else {
+            return string;
+        }
+    }
+
     /** removes the first suffix in the list which is present at the end of string
      * and returns that string; ignores subsequent suffixes if a matching one is found;
      * returns the original string if no suffixes are at the end
+     * @deprecated since 0.7.0 use {@link #removeFromEnd(String, String)} or {@link #removeAllFromEnd(String, String...)}
      */
+    @Deprecated
     public static String removeFromEnd(String string, String ...suffixes) {
         if (isEmpty(string)) return string;
         for (String suffix : suffixes)
@@ -152,10 +167,25 @@ public class Strings {
         return string;
     }
 
+    /**
+     * Removes prefix from the beginning of string. Returns string if it does not begin with prefix.
+     */
+    public static String removeFromStart(String string, String prefix) {
+        if (isEmpty(string)) {
+            return string;
+        } else if (!isEmpty(prefix) && string.startsWith(prefix)) {
+            return string.substring(prefix.length());
+        } else {
+            return string;
+        }
+    }
+
     /** removes the first prefix in the list which is present at the start of string
      * and returns that string; ignores subsequent prefixes if a matching one is found;
      * returns the original string if no prefixes match
+     * @deprecated since 0.7.0 use {@link #removeFromStart(String, String)}
      */
+    @Deprecated
     public static String removeFromStart(String string, String ...prefixes) {
         if (isEmpty(string)) return string;
         for (String prefix : prefixes)
@@ -180,23 +210,23 @@ public class Strings {
     }
 
     /** convenience for {@link com.google.common.base.Joiner} */
-    public static String join(Iterable<? extends Object> list, String seperator) {
+    public static String join(Iterable<? extends Object> list, String separator) {
         if (list==null) return null;
         boolean app = false;
         StringBuilder out = new StringBuilder();
         for (Object s: list) {
-            if (app) out.append(seperator);
+            if (app) out.append(separator);
             out.append(s);
             app = true;
         }
         return out.toString();
     }
     /** convenience for {@link com.google.common.base.Joiner} */
-    public static String join(Object[] list, String seperator) {
+    public static String join(Object[] list, String separator) {
         boolean app = false;
         StringBuilder out = new StringBuilder();
         for (Object s: list) {
-            if (app) out.append(seperator);
+            if (app) out.append(separator);
             out.append(s);
             app = true;
         }
