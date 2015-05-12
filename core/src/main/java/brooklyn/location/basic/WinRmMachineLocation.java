@@ -101,17 +101,17 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         return null;
     }
 
-    public int executeScript(String script) {
+    public WinRmToolResponse executeScript(String script) {
         return executeScript(ImmutableList.of(script));
     }
 
-    public int executeScript(List<String> script) {
+    public WinRmToolResponse executeScript(List<String> script) {
         Collection<Throwable> exceptions = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
             try {
                 WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
                 WinRmToolResponse response = winRmTool.executeScript(script);
-                return response.getStatusCode();
+                return response;
             } catch (Exception e) {
                 LOG.warn("ignoring winrm exception and retrying:", e);
                 exceptions.add(e);
@@ -120,17 +120,17 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         throw Exceptions.propagate("failed to execute powershell script", exceptions);
     }
 
-    public int executePsScript(String psScript) {
+    public WinRmToolResponse executePsScript(String psScript) {
         return executePsScript(ImmutableList.of(psScript));
     }
 
-    public int executePsScript(List<String> psScript) {
+    public WinRmToolResponse executePsScript(List<String> psScript) {
         Collection<Throwable> exceptions = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
             try {
                 WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
                 WinRmToolResponse response = winRmTool.executePs(psScript);
-                return response.getStatusCode();
+                return response;
             } catch (Exception e) {
                 LOG.warn("ignoring winrm exception and retrying after 5 seconds:", e);
                 Time.sleep(Duration.FIVE_SECONDS);
@@ -187,7 +187,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         String unencodePowershell =
                 "$RDP = Get-WmiObject -Class Win32_TerminalServiceSetting -ComputerName $env:computername -Namespace root\\CIMV2\\TerminalServices -Authentication PacketPrivacy\r\n" +
                 "$RDP.SetAllowTSConnections(1,1)\r\n" +
-                "Set-ExecutionPolicy Unrestricted\r\n" +
+                "Set-ExecutionPolicy Unrestricted -Force\r\n" +
                 "Set-Item WSMan:\\localhost\\Shell\\MaxConcurrentUsers 100\r\n" +
                 "Set-Item WSMan:\\localhost\\Shell\\MaxMemoryPerShellMB 0\r\n" +
                 "Set-Item WSMan:\\localhost\\Shell\\MaxProcessesPerShell 0\r\n" +
