@@ -19,6 +19,7 @@
 package brooklyn.entity.brooklynnode;
 
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,7 +105,10 @@ public class BrooklynEntityMirrorIntegrationTest {
     public void testServiceMirroring() throws Exception {
         setUpServer();
         
+        String catalogItemId = "test-catalog-item:1.0";
+        String catalogItemIdGA = "test-catalog-item:1.0-GA";
         serverApp.setAttribute(TestApplication.MY_ATTRIBUTE, "austria");
+        serverApp.setCatalogItemId(catalogItemId);
 
         String serviceId = serverApp.getId();
         Entity mirror = localApp.addChild(EntitySpec.create(BrooklynEntityMirror.class)
@@ -115,10 +119,14 @@ public class BrooklynEntityMirrorIntegrationTest {
         );
 
         EntityTestUtils.assertAttributeEqualsEventually(mirror, TestApplication.MY_ATTRIBUTE, "austria");
+        EntityTestUtils.assertAttributeEqualsEventually(mirror, BrooklynEntityMirror.MIRROR_CATALOG_ITEM_ID, catalogItemId);
+        assertTrue(mirror.getAttribute(BrooklynEntityMirror.MIRROR_SUMMARY) != null, "entity summary is null");
         log.info("Sensors mirrored are: "+((EntityInternal)mirror).getAllAttributes());
         
         serverApp.setAttribute(TestApplication.MY_ATTRIBUTE, "bermuda");
+        serverApp.setCatalogItemId(catalogItemIdGA);
         EntityTestUtils.assertAttributeEqualsEventually(mirror, TestApplication.MY_ATTRIBUTE, "bermuda");
+        EntityTestUtils.assertAttributeEqualsEventually(mirror, BrooklynEntityMirror.MIRROR_CATALOG_ITEM_ID, catalogItemIdGA);
 
         serverApp.stop();
         assertUnmanagedEventually(mirror);

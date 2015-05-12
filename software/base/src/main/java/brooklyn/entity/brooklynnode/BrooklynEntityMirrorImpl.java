@@ -51,6 +51,16 @@ import com.google.common.net.MediaType;
 import com.google.gson.Gson;
 
 public class BrooklynEntityMirrorImpl extends AbstractEntity implements BrooklynEntityMirror {
+    @SuppressWarnings("rawtypes")
+    private class MirrorSummary implements Function<HttpToolResponse, Map> {
+        @Override
+        public Map apply(HttpToolResponse input) {
+            Map<?, ?> entitySummary = new Gson().fromJson(input.getContentAsString(), Map.class);
+            String catalogItemId = (String)entitySummary.get("catalogItemId");
+            setAttribute(MIRROR_CATALOG_ITEM_ID, catalogItemId);
+            return entitySummary;
+        }
+    }
 
     private HttpFeed mirror;
     
@@ -108,14 +118,13 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
             }
         };
 
-        String sensorsUri = Urls.mergePaths(mirroredEntityUrl, "sensors/current-state");
-
         final BrooklynEntityMirrorImpl self = this;
         mirror = HttpFeed.builder().entity(this)
-            .baseUri(sensorsUri)
+            .baseUri(mirroredEntityUrl)
             .credentialsIfNotNull(getConfig(BrooklynNode.MANAGEMENT_USER), getConfig(BrooklynNode.MANAGEMENT_PASSWORD))
             .period(getConfig(POLL_PERIOD))
             .poll(HttpPollConfig.forMultiple()
+                .suburl("/sensors/current-state")
                 .onSuccess(mirrorSensors)
                 .onFailureOrException(new Function<Object, Void>() {
                     @Override
@@ -130,7 +139,8 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
                         }
                         return null;
                     }
-                })).build();
+                }))
+            .poll(HttpPollConfig.forSensor(MIRROR_SUMMARY).onSuccess(new MirrorSummary())).build();
 
         populateEffectors();
     }
