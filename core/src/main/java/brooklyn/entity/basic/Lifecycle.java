@@ -158,14 +158,14 @@ public enum Lifecycle {
     }
     
     protected static class TransitionCoalesceFunction implements Function<String, Transition> {
-        private static final Pattern TRANSITION_PATTERN = Pattern.compile("^(\\w+)\\s+@\\s+(\\d+).*");
+        private static final Pattern TRANSITION_PATTERN = Pattern.compile("^([\\w-]+)\\s+@\\s+(\\d+).*");
 
         @Override
         public Transition apply(final String input) {
             if (input != null) {
                 Matcher m = TRANSITION_PATTERN.matcher(input);
                 if (m.matches()) {
-                    Lifecycle state = Lifecycle.valueOf(m.group(1).toUpperCase());
+                    Lifecycle state = Lifecycle.valueOf(m.group(1).toUpperCase().replace('-', '_'));
                     long time = Long.parseLong(m.group(2));
                     return new Transition(state, new Date(time));
                 } else {

@@ -22,15 +22,28 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Date;
 
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.entity.basic.Lifecycle.TransitionCoalesceFunction;
 
 public class LifecycleTransitionTest {
-    @Test
-    public void testTransitionCoalesce() {
-        Transition t = new Transition(Lifecycle.RUNNING, new Date());
+    @DataProvider(name = "states")
+    public Object[][] generateLifecycleStates() {
+        Object[][] states = new Object[Lifecycle.values().length][];
+        int i = 0;
+        for (Lifecycle state : Lifecycle.values()) {
+            System.out.println(":" + state);
+            states[i] = new Object[] {state};
+            i++;
+        }
+        return states;
+    }
+
+    @Test(dataProvider="states")
+    public void testTransitionCoalesce(Lifecycle state) {
+        Transition t = new Transition(state, new Date());
         String serialized = t.toString();
         Transition t2 = new TransitionCoalesceFunction().apply(serialized);
         assertTrue(t.equals(t2), "Deserialized Lifecycle.Transition not equal to original");
