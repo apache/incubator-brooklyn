@@ -1255,8 +1255,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.warn("Ignoring request to set template option {} because this is not supported by {}", new Object[] { option.getKey(), clazz.getCanonicalName() });
                         }
                     }
-                }
-              })
+                }})
             .build();
 
     /** hook whereby template customizations can be made for various clouds */
@@ -2018,7 +2017,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         try {
             // FIXME: Needs to release port forwarding for WinRmMachineLocations
-            if (machine.getMachineDetails().getOsDetails() != null && !machine.getMachineDetails().getOsDetails().isWindows()) {
+            if (machine.getMachineDetails() != null && machine.getMachineDetails().getOsDetails() != null && !machine.getMachineDetails().getOsDetails().isWindows()) {
                 releasePortForwarding((SshMachineLocation)machine);
             }
         } catch (Exception e) {

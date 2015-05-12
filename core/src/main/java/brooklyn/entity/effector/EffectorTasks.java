@@ -33,6 +33,7 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.EffectorUtils;
@@ -217,4 +218,13 @@ public class EffectorTasks {
         }
     }
 
+    /** Finds a unique {@link WinRmMachineLocation} attached to the supplied entity
+     * @throws IllegalStateException if there is not a unique such {@link WinRmMachineLocation} */
+    public static WinRmMachineLocation getWinRmMachine(Entity entity) {
+        try {
+            return Machines.findUniqueWinRmMachineLocation(entity.getLocations()).get();
+        } catch (Exception e) {
+            throw new IllegalStateException("Entity "+entity+" (in "+Tasks.current()+") requires a single WinRmMachineLocation, but has "+entity.getLocations(), e);
+        }
+    }
 }
