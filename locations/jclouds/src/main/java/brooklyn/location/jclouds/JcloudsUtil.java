@@ -250,7 +250,8 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         return ImmutableSet.<Module> of(
                 new SshjSshClientModule(),
                 new SLF4JLoggingModule(),
-                new BouncyCastleCryptoModule());
+                new BouncyCastleCryptoModule(),
+                new IOExceptionSafeRetryModule());
     }
 
     /**
