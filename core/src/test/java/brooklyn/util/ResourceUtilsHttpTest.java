@@ -20,11 +20,9 @@ package brooklyn.util;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
 
 import org.apache.http.Header;
 import org.apache.http.HttpException;
@@ -32,7 +30,8 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.localserver.LocalTestServer;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
 import org.apache.http.localserver.RequestBasicAuth;
 import org.apache.http.localserver.ResponseBasicUnauthorized;
 import org.apache.http.message.BasicHeader;
@@ -51,7 +50,7 @@ import brooklyn.util.text.Strings;
 
 public class ResourceUtilsHttpTest {
     private ResourceUtils utils;
-    private LocalTestServer server;
+    private HttpServer server;
     private String baseUrl;
 
     @BeforeClass(alwaysRun=true)
@@ -65,21 +64,22 @@ public class ResourceUtilsHttpTest {
         httpProcessor.addInterceptor(new RequestBasicAuth());
         httpProcessor.addInterceptor(new ResponseBasicUnauthorized());
 
-        server = new LocalTestServer(httpProcessor, null);
-        server.register("/simple", new SimpleResponseHandler("OK"));
-        server.register("/empty", new SimpleResponseHandler(HttpStatus.SC_NO_CONTENT, ""));
-        server.register("/missing", new SimpleResponseHandler(HttpStatus.SC_NOT_FOUND, "Missing"));
-        server.register("/redirect", new SimpleResponseHandler(HttpStatus.SC_MOVED_TEMPORARILY, "Redirect", new BasicHeader("Location", "/simple")));
-        server.register("/cycle", new SimpleResponseHandler(HttpStatus.SC_MOVED_TEMPORARILY, "Redirect", new BasicHeader("Location", "/cycle")));
-        server.register("/secure", new SimpleResponseHandler(HttpStatus.SC_MOVED_TEMPORARILY, "Redirect", new BasicHeader("Location", "https://0.0.0.0/")));
-        server.register("/auth", new AuthHandler("test", "test", "OK"));
-        server.register("/auth_escape", new AuthHandler("test@me:/", "test", "OK"));
-        server.register("/auth_escape2", new AuthHandler("test@me:test", "", "OK"));
-        server.register("/no_credentials", new CheckNoCredentials());
+        server = ServerBootstrap.bootstrap()
+                .setListenerPort(8080)
+                .setHttpProcessor(httpProcessor)
+                .registerHandler("/simple", new SimpleResponseHandler("OK"))
+                .registerHandler("/empty", new SimpleResponseHandler(HttpStatus.SC_NO_CONTENT, ""))
+                .registerHandler("/missing", new SimpleResponseHandler(HttpStatus.SC_NOT_FOUND, "Missing"))
+                .registerHandler("/redirect", new SimpleResponseHandler(HttpStatus.SC_MOVED_TEMPORARILY, "Redirect", new BasicHeader("Location", "/simple")))
+                .registerHandler("/cycle", new SimpleResponseHandler(HttpStatus.SC_MOVED_TEMPORARILY, "Redirect", new BasicHeader("Location", "/cycle")))
+                .registerHandler("/secure", new SimpleResponseHandler(HttpStatus.SC_MOVED_TEMPORARILY, "Redirect", new BasicHeader("Location", "https://0.0.0.0/")))
+                .registerHandler("/auth", new AuthHandler("test", "test", "OK"))
+                .registerHandler("/auth_escape", new AuthHandler("test@me:/", "test", "OK"))
+                .registerHandler("/auth_escape2", new AuthHandler("test@me:test", "", "OK"))
+                .registerHandler("/no_credentials", new CheckNoCredentials())
+                .create();
         server.start();
-
-        InetSocketAddress addr = server.getServiceAddress();
-        baseUrl = "http://" + addr.getHostName() + ":" + addr.getPort();
+        baseUrl = "http://" + server.getInetAddress().getHostName() + ":" + server.getLocalPort();
     }
 
     @AfterClass(alwaysRun=true)
@@ -149,13 +149,9 @@ public class ResourceUtilsHttpTest {
         utils.getResourceFromUrl(baseUrl + "/missing");
     }
 
-    @Test
+    @Test(expectedExceptions = RuntimeException.class)
     public void testFollowsProtoChange() throws Exception {
-        try {
-            utils.getResourceFromUrl(baseUrl + "/secure");
-        } catch (Exception e) {
-            assertTrue(e.getMessage().contains("Connection to https://0.0.0.0 refused"));
-        }
+        utils.getResourceFromUrl(baseUrl + "/secure");
     }
 
     // See https://github.com/brooklyncentral/brooklyn/issues/1338
