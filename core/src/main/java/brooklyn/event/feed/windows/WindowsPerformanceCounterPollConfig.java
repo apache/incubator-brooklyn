@@ -31,6 +31,7 @@ public class WindowsPerformanceCounterPollConfig<T> extends PollConfig<Object, T
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public WindowsPerformanceCounterPollConfig(AttributeSensor<T> sensor) {
         super(sensor);
+        description(sensor.getDescription());
         onSuccess((Function)Functions.identity());
     }
 

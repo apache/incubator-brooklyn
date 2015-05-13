@@ -19,7 +19,6 @@
 package brooklyn.entity.basic;
 
 import brooklyn.location.basic.WinRmMachineLocation;
-import brooklyn.util.time.Duration;
 
 public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWinRmDriver implements VanillaWindowsProcessDriver {
 
@@ -47,7 +46,7 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
     @Override
     public boolean isRunning() {
         return executeCommand(VanillaWindowsProcess.CHECK_RUNNING_COMMAND,
-                VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, false);
+                VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, false).getStatusCode() == 0;
     }
 
     @Override
