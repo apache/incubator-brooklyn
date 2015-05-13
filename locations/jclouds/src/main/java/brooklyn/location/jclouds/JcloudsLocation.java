@@ -709,16 +709,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (waitForSshable) {
 
                 String setupScript = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL);
-                if (Strings.isNonBlank(setupScript)) {
-                    customisationForLogging.add("custom setup script "+setupScript);
+                List<String> setupScripts = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_URL_LIST);
+                Collection<String> allScripts = new MutableList<String>().appendIfNotNull(setupScript).appendAll(setupScripts);
+                for (String setupScriptItem : allScripts) {
+                    if (Strings.isNonBlank(setupScriptItem)) {
+                        customisationForLogging.add("custom setup script "+setupScriptItem);
 
-                    String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
-                    Map<String, String> substitutions = (setupVarsString != null)
-                            ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
-                            : ImmutableMap.<String, String>of();
-                    String scriptContent =  ResourceUtils.create(this).getResourceAsString(setupScript);
-                    String script = TemplateProcessor.processTemplateContents(scriptContent, getManagementContext(), substitutions);
-                    sshMachineLocation.execCommands("Customizing node " + this, ImmutableList.of(script));
+                        String setupVarsString = setup.get(JcloudsLocationConfig.CUSTOM_MACHINE_SETUP_SCRIPT_VARS);
+                        Map<String, String> substitutions = (setupVarsString != null)
+                                ? Splitter.on(",").withKeyValueSeparator(":").split(setupVarsString)
+                                : ImmutableMap.<String, String>of();
+                        String scriptContent =  ResourceUtils.create(this).getResourceAsString(setupScriptItem);
+                        String script = TemplateProcessor.processTemplateContents(scriptContent, getManagementContext(), substitutions);
+                        sshMachineLocation.execCommands("Customizing node " + this + " with script " + setupScriptItem, ImmutableList.of(script));
+                    }
                 }
 
                 if (setup.get(JcloudsLocationConfig.MAP_DEV_RANDOM_TO_DEV_URANDOM)) {

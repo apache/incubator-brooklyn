@@ -199,6 +199,9 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> CUSTOM_MACHINE_SETUP_SCRIPT_URL = ConfigKeys.newStringConfigKey(
             "setup.script", "Custom script to customize a node");
     
+    public static final ConfigKey<List<String>> CUSTOM_MACHINE_SETUP_SCRIPT_URL_LIST = ConfigKeys.newConfigKey(new TypeToken<List<String>>() {},
+            "setup.scripts", "A list of scripts to customize a node");
+    
     public static final ConfigKey<String> CUSTOM_MACHINE_SETUP_SCRIPT_VARS = ConfigKeys.newStringConfigKey(
             "setup.script.vars", "vars to customize a setup.script i.e.: key1:value1,key2:value2");
     
