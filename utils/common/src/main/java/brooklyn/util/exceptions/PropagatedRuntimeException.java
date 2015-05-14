@@ -18,36 +18,53 @@
  */
 package brooklyn.util.exceptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /** Indicates a runtime exception which has been propagated via {@link Exceptions#propagate} */
 public class PropagatedRuntimeException extends RuntimeException {
 
     private static final long serialVersionUID = 3959054308510077172L;
+    private static final Logger LOG = LoggerFactory.getLogger(PropagatedRuntimeException.class);
 
-    final boolean causeEmbeddedInMessage;
+    private final boolean causeEmbeddedInMessage;
     
     /** Callers should typically *not* attempt to summarise the cause in the message here; use toString() to get extended information */
     public PropagatedRuntimeException(String message, Throwable cause) {
         super(message, cause);
+        warnIfWrapping(cause);
         causeEmbeddedInMessage = message.endsWith(Exceptions.collapseText(getCause()));
     }
 
     public PropagatedRuntimeException(String message, Throwable cause, boolean causeEmbeddedInMessage) {
         super(message, cause);
+        warnIfWrapping(cause);
         this.causeEmbeddedInMessage = causeEmbeddedInMessage;
     }
 
     public PropagatedRuntimeException(Throwable cause) {
         super("" /* do not use default message as that destroys the toString */, cause);
+        warnIfWrapping(cause);
         causeEmbeddedInMessage = false;
+    }
+
+    private void warnIfWrapping(Throwable cause) {
+        if (LOG.isTraceEnabled() && cause instanceof PropagatedRuntimeException) {
+            LOG.trace("Wrapping a PropagatedRuntimeException in another PropagatedRuntimeException. Call chain:", new Exception());
+        }
     }
 
     @Override
     public String toString() {
-        if (causeEmbeddedInMessage) return super.toString();
-        else return Exceptions.appendSeparator(super.toString(), Exceptions.collapseText(getCause()));
+        if (causeEmbeddedInMessage) {
+            return super.toString();
+        } else {
+            return Exceptions.appendSeparator(super.toString(), Exceptions.collapseText(getCause()));
+        }
     }
-    
+
     public boolean isCauseEmbeddedInMessage() {
         return causeEmbeddedInMessage;
     }
+
 }
