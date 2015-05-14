@@ -42,6 +42,7 @@ import brooklyn.entity.basic.EffectorStartableImpl.StartParameters;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
@@ -292,7 +293,7 @@ public abstract class MachineLifecycleEffectorTasks {
                         if (log.isDebugEnabled())
                             log.debug("While starting {}, obtained new location instance {}", entity(),
                                     (machine instanceof SshMachineLocation ?
-                                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Entities.sanitize(((SshMachineLocation)machine).config().getLocalBag())
+                                            machine+", details "+((SshMachineLocation)machine).getUser()+":"+Sanitizer.sanitize(((SshMachineLocation)machine).config().getLocalBag())
                                             : machine));
                         return machine;
                     }
@@ -664,6 +665,7 @@ public abstract class MachineLifecycleEffectorTasks {
                 stopMode == StopMode.IF_NOT_STOPPED && !isStopped;
     }
 
+    @SuppressWarnings("deprecation")
     private static void checkCompatibleMachineModes(Boolean isStopMachine, boolean hasStopMachineMode, StopMode stopMachineMode) {
         if (hasStopMachineMode &&
                 (isStopMachine && stopMachineMode != StopMode.IF_NOT_STOPPED ||
@@ -714,6 +716,13 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     /**
+     * Return string message of result.
+     * <p>
+     * Can run synchronously or not, caller will submit/queue as needed, and will block on any submitted tasks.
+     */
+    protected abstract String stopProcessesAtMachine();
+
+    /**
      * Stop the {@link MachineLocation} the entity is provisioned at.
      * <p>
      * Can run synchronously or not, caller will submit/queue as needed, and will block on any submitted tasks.
@@ -721,9 +730,6 @@ public abstract class MachineLifecycleEffectorTasks {
     protected StopMachineDetails<Integer> stopAnyProvisionedMachines() {
         @SuppressWarnings("unchecked")
         MachineProvisioningLocation<MachineLocation> provisioner = entity().getAttribute(SoftwareProcess.PROVISIONING_LOCATION);
-
-        // NB: previously has logic about "removeFirstMachine" but elsewhere had assumptions that there was only one,
-        // so i think that was an aborted bit of work (which has been removed here). Alex, Aug 2013
 
         if (Iterables.isEmpty(entity().getLocations())) {
             log.debug("No machine decommissioning necessary for "+entity()+" - no locations");
@@ -741,7 +747,7 @@ public abstract class MachineLifecycleEffectorTasks {
             log.debug("No decommissioning necessary for "+entity()+" - not a machine location ("+machine+")");
             return new StopMachineDetails<Integer>("No machine decommissioning necessary - not a machine ("+machine+")", 0);
         }
-
+        
         try {
             entity().removeLocations(ImmutableList.of(machine));
             entity().setAttribute(Attributes.HOSTNAME, null);
@@ -754,12 +760,5 @@ public abstract class MachineLifecycleEffectorTasks {
         }
         return new StopMachineDetails<Integer>("Decommissioned "+machine, 1);
     }
-
-    /**
-     * Return string message of result.
-     * <p>
-     * Can run synchronously or not, caller will submit/queue as needed, and will block on any submitted tasks.
-     */
-    protected abstract String stopProcessesAtMachine();
 
 }
