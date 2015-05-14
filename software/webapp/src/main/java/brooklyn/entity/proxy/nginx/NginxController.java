@@ -68,7 +68,7 @@ public interface NginxController extends AbstractController, HasShortName {
     
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
-            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.3.7");
+            ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "1.8.0");
 
     @SetFromFlag("stickyVersion")
     ConfigKey<String> STICKY_VERSION = ConfigKeys.newStringConfigKey(
