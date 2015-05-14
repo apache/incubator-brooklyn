@@ -183,7 +183,7 @@ public class ReflectiveEntityDriverFactory {
             return Strings.removeFromEnd(driverInterfaceName, "Driver") + ((PaasLocation) location).getPaasProviderName() + "Driver";
         }
     }
-    
+
     public static class DriverInferenceForWinRmLocation extends AbstractDriverInferenceRule {
 
         public static final String DEFAULT_IDENTIFIER = "winrm-location-driver-inference-rule";
