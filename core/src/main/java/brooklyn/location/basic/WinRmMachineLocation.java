@@ -48,6 +48,7 @@ import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -117,7 +118,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
                 exceptions.add(e);
             }
         }
-        throw Exceptions.propagate("failed to execute powershell script", exceptions);
+        throw Exceptions.propagate("failed to execute shell script", exceptions);
     }
 
     public WinRmToolResponse executePsScript(String psScript) {
@@ -128,9 +129,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         Collection<Throwable> exceptions = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
             try {
-                WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
-                WinRmToolResponse response = winRmTool.executePs(psScript);
-                return response;
+                return executePsScriptNoRetry(psScript);
             } catch (Exception e) {
                 LOG.warn("ignoring winrm exception and retrying after 5 seconds:", e);
                 Time.sleep(Duration.FIVE_SECONDS);
@@ -138,6 +137,12 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
             }
         }
         throw Exceptions.propagate("failed to execute powershell script", exceptions);
+    }
+
+    public WinRmToolResponse executePsScriptNoRetry(List<String> psScript) {
+        WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
+        WinRmToolResponse response = winRmTool.executePs(psScript);
+        return response;
     }
 
     public int copyTo(File source, File destination) {
@@ -184,16 +189,42 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
 
     public static String getDefaultUserMetadataString() {
         // Using an encoded command obviates the need to escape
-        String unencodePowershell =
-                "$RDP = Get-WmiObject -Class Win32_TerminalServiceSetting -ComputerName $env:computername -Namespace root\\CIMV2\\TerminalServices -Authentication PacketPrivacy\r\n" +
-                "$RDP.SetAllowTSConnections(1,1)\r\n" +
-                "Set-ExecutionPolicy Unrestricted -Force\r\n" +
-                "Set-Item WSMan:\\localhost\\Shell\\MaxConcurrentUsers 100\r\n" +
-                "Set-Item WSMan:\\localhost\\Shell\\MaxMemoryPerShellMB 0\r\n" +
-                "Set-Item WSMan:\\localhost\\Shell\\MaxProcessesPerShell 0\r\n" +
-                "Set-Item WSMan:\\localhost\\Shell\\MaxShellsPerUser 0\r\n" +
-                "New-ItemProperty \"HKLM:\\System\\CurrentControlSet\\Control\\LSA\" -Name \"SuppressExtendedProtection\" -Value 1 -PropertyType \"DWord\"";
-//                "New-ItemProperty \"HKLM:\\System\\CurrentControlSet\\Control\\LSA\" -Name \"LmCompatibilityLevel\" -Value 3 -PropertyType \"DWord\" \r\n";
+        String unencodePowershell = Joiner.on("\r\n").join(ImmutableList.of(
+                // Allow TS connections
+                "$RDP = Get-WmiObject -Class Win32_TerminalServiceSetting -ComputerName $env:computername -Namespace root\\CIMV2\\TerminalServices -Authentication PacketPrivacy",
+                "$RDP.SetAllowTSConnections(1,1)",
+                "Set-ExecutionPolicy Unrestricted -Force",
+                // Set unlimited values for remote execution limits
+                "Set-Item WSMan:\\localhost\\Shell\\MaxConcurrentUsers 100",
+                "Set-Item WSMan:\\localhost\\Shell\\MaxMemoryPerShellMB 0",
+                "Set-Item WSMan:\\localhost\\Shell\\MaxProcessesPerShell 0",
+                "Set-Item WSMan:\\localhost\\Shell\\MaxShellsPerUser 0",
+                "New-ItemProperty \"HKLM:\\System\\CurrentControlSet\\Control\\LSA\" -Name \"SuppressExtendedProtection\" -Value 1 -PropertyType \"DWord\"",
+                // The following allows scripts to re-authenticate with local credential - this is required
+                // as certain operations cannot be performed with remote credentials
+                "$allowed = @('WSMAN/*')",
+                "$key = 'hklm:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CredentialsDelegation'",
+                "if (!(Test-Path $key)) {",
+                "    md $key",
+                "}",
+                "New-ItemProperty -Path $key -Name AllowFreshCredentials -Value 1 -PropertyType Dword -Force",
+                "New-ItemProperty -Path $key -Name AllowFreshCredentialsWhenNTLMOnly -Value 1 -PropertyType Dword -Force",
+                "$credKey = Join-Path $key 'AllowFreshCredentials'",
+                "if (!(Test-Path $credKey)) {",
+                "    md $credkey",
+                "}",
+                "$ntlmKey = Join-Path $key 'AllowFreshCredentialsWhenNTLMOnly'",
+                "if (!(Test-Path $ntlmKey)) {",
+                "    md $ntlmKey",
+                "}",
+                "$i = 1",
+                "$allowed |% {",
+                "    # Script does not take into account existing entries in this key",
+                "    New-ItemProperty -Path $credKey -Name $i -Value $_ -PropertyType String -Force",
+                "    New-ItemProperty -Path $ntlmKey -Name $i -Value $_ -PropertyType String -Force",
+                "    $i++",
+                "}"
+        ));
 
         String encoded = new String(Base64.encodeBase64(unencodePowershell.getBytes(Charsets.UTF_16LE)));
         return "winrm quickconfig -q & " +

@@ -20,9 +20,18 @@ package brooklyn.entity.basic;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.util.time.Duration;
 
 @ImplementedBy(VanillaWindowsProcessImpl.class)
 public interface VanillaWindowsProcess extends AbstractVanillaProcess {
+    ConfigKey<String> PRE_INSTALL_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("pre.install.powershell.command",
+            "powershell command to run during the pre-install phase");
+    ConfigKey<Boolean> PRE_INSTALL_REBOOT_REQUIRED = ConfigKeys.newBooleanConfigKey("pre.install.reboot.required",
+            "indicates that a reboot should be performed after the pre-install command is run", false);
+    ConfigKey<Boolean> INSTALL_REBOOT_REQUIRED = ConfigKeys.newBooleanConfigKey("install.reboot.required",
+            "indicates that a reboot should be performed after the install command is run", false);
+    ConfigKey<Boolean> CUSTOMIZE_REBOOT_REQUIRED = ConfigKeys.newBooleanConfigKey("customize.reboot.required",
+            "indicates that a reboot should be performed after the customize command is run", false);
     ConfigKey<String> LAUNCH_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("launch.powershell.command",
             "command to run to launch the process");
     ConfigKey<String> CHECK_RUNNING_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("checkRunning.powershell.command",
@@ -37,4 +46,9 @@ public interface VanillaWindowsProcess extends AbstractVanillaProcess {
             "command to run during the install phase");
     ConfigKey<String> INSTALL_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("install.powershell.command",
             "powershell command to run during the install phase");
+    ConfigKey<Duration> REBOOT_UNAVAILABLE_TIMEOUT = ConfigKeys.newDurationConfigKey("reboot.unavailable.timeout",
+            "duration to wait whilst waiting for a machine to become unavailable after a reboot", Duration.TWO_MINUTES);
+    // If automatic updates are enabled and there are updates waiting to be installed, thirty minutes may not be sufficient...
+    ConfigKey<Duration> REBOOT_AVAILABLE_TIMEOUT = ConfigKeys.newDurationConfigKey("reboot.unavailable.timeout",
+            "duration to wait whilst waiting for a machine to become unavailable after a reboot", Duration.minutes(30));
 }

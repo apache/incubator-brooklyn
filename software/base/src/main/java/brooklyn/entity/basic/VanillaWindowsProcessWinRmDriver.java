@@ -27,15 +27,30 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
     }
 
     @Override
+    public void preInstall() {
+        super.preInstall();
+        executeCommand(VanillaWindowsProcess.PRE_INSTALL_COMMAND, VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND, true);
+        if (entity.getConfig(VanillaWindowsProcess.PRE_INSTALL_REBOOT_REQUIRED)) {
+            rebootAndWait();
+        }
+    }
+
+    @Override
     public void install() {
         // TODO: Follow install path of VanillaSoftwareProcessSshDriver
         executeCommand(VanillaWindowsProcess.INSTALL_COMMAND, VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND, true);
+        if (entity.getConfig(VanillaWindowsProcess.INSTALL_REBOOT_REQUIRED)) {
+            rebootAndWait();
+        }
     }
 
     @Override
     public void customize() {
         // TODO: Follow customize path of VanillaSoftwareProcessSshDriver
         executeCommand(VanillaWindowsProcess.CUSTOMIZE_COMMAND, VanillaWindowsProcess.CUSTOMIZE_POWERSHELL_COMMAND, true);
+        if (entity.getConfig(VanillaWindowsProcess.CUSTOMIZE_REBOOT_REQUIRED)) {
+            rebootAndWait();
+        }
     }
 
     @Override
@@ -51,7 +66,7 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
 
     @Override
     public void stop() {
-        executeCommand(VanillaWindowsProcess.STOP_POWERSHELL_COMMAND, VanillaWindowsProcess.STOP_COMMAND, true);
+        executeCommand(VanillaWindowsProcess.STOP_COMMAND, VanillaWindowsProcess.STOP_POWERSHELL_COMMAND, true);
     }
 
 }
