@@ -22,11 +22,18 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
+import org.python.core.PyException;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.WinRmMachineLocation;
+import brooklyn.util.exceptions.ReferenceWithError;
+import brooklyn.util.repeat.Repeater;
+import brooklyn.util.time.Duration;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import com.google.api.client.util.Strings;
@@ -132,6 +139,10 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         return getLocation().executeScript(script).getStatusCode();
     }
 
+    public int executePowerShellNoRetry(List<String> psScript) {
+        return getLocation().executePsScriptNoRetry(psScript).getStatusCode();
+    }
+
     public int executePowerShell(List<String> psScript) {
         return getLocation().executePsScript(psScript).getStatusCode();
     }
@@ -144,8 +155,38 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         return getLocation().copyTo(source, destination);
     }
 
+    public void rebootAndWait() {
+        try {
+            executePowerShellNoRetry(ImmutableList.of("Restart-Computer -Force"));
+        } catch (PyException e) {
+            // Restarting the computer will cause the command to fail; ignore the exception and continue
+        }
+        waitForWinRmStatus(false, entity.getConfig(VanillaWindowsProcess.REBOOT_UNAVAILABLE_TIMEOUT));
+        waitForWinRmStatus(true, entity.getConfig(VanillaWindowsProcess.REBOOT_AVAILABLE_TIMEOUT)).getWithError();
+    }
+
     private String getDirectory(String fileName) {
         return fileName.substring(0, fileName.lastIndexOf("\\"));
+    }
+
+    private ReferenceWithError<Boolean> waitForWinRmStatus(final boolean requiredStatus, Duration timeout) {
+        // TODO: Reduce / remove duplication between this and JcloudsLocation.waitForWinRmAvailable
+        Callable<Boolean> checker = new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                try {
+                    return (execute(ImmutableList.of("hostname")) == 0) == requiredStatus;
+                } catch (Exception e) {
+                    return !requiredStatus;
+                }
+            }
+        };
+
+        return new Repeater()
+                .every(1, TimeUnit.SECONDS)
+                .until(checker)
+                .limitTimeTo(timeout)
+                .runKeepingError();
     }
 
 }

@@ -114,6 +114,31 @@ public interface SoftwareProcess extends Entity, Startable {
     ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
 
     /**
+     * Files to be copied to the server before pre-install.
+     * <p>
+     * Map of {@code classpath://foo/file.txt} (or other url) source to destination path,
+     * as {@code subdir/file} relative to installation directory or {@code /absolute/path/to/file}.
+     *
+     * @see #PRE_INSTALL_TEMPLATES
+     */
+    @Beta
+    @SuppressWarnings("serial")
+    @SetFromFlag("preInstallFiles")
+    ConfigKey<Map<String, String>> PRE_INSTALL_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "files.preinstall", "Mapping of files, to be copied before install, to destination name relative to installDir");
+
+    /**
+     * Templates to be filled in and then copied to the server before install.
+     *
+     * @see #PRE_INSTALL_FILES
+     */
+    @Beta
+    @SuppressWarnings("serial")
+    @SetFromFlag("preInstallTemplates")
+    ConfigKey<Map<String, String>> PRE_INSTALL_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "templates.preinstall", "Mapping of templates, to be filled in and copied before pre-install, to destination name relative to installDir");
+
+    /**
      * Files to be copied to the server before install.
      * <p>
      * Map of {@code classpath://foo/file.txt} (or other url) source to destination path,

@@ -105,6 +105,11 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             skipStart = entityStarted.or(false);
         }
         if (!skipStart) {
+            DynamicTasks.queue("copy-pre-install-resources", new Runnable() { public void run() {
+                waitForConfigKey(BrooklynConfigKeys.PRE_INSTALL_RESOURCES_LATCH);
+                copyPreInstallResources();
+            }});
+
             DynamicTasks.queue("pre-install", new Runnable() { public void run() {
                 preInstall();
             }});
@@ -178,7 +183,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     public abstract void stop();
 
     /**
-     * Implement this method in child classes to add some post-launch behavior
+     * Implement this method in child classes to add some pre-install behavior
      */
     public void preInstall() {}
 
@@ -260,6 +265,20 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     }
 
     /**
+     * Files and templates to be copied to the server <em>before</em> pre-install. This allows the {@link #preInstall()}
+     * process to have access to all required resources.
+     * <p>
+     * Will be prefixed with the entity's {@link #getInstallDir() install directory} if relative.
+     *
+     * @see SoftwareProcess#PRE_INSTALL_FILES
+     * @see SoftwareProcess#PRE_INSTALL_TEMPLATES
+     * @see #copyRuntimeResources()
+     */
+    public void copyPreInstallResources() {
+        copyResources(entity.getConfig(SoftwareProcess.PRE_INSTALL_FILES), entity.getConfig(SoftwareProcess.PRE_INSTALL_TEMPLATES));
+    }
+
+    /**
      * Files and templates to be copied to the server <em>before</em> installation. This allows the {@link #install()}
      * process to have access to all required resources.
      * <p>
@@ -270,7 +289,10 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      * @see #copyRuntimeResources()
      */
     public void copyInstallResources() {
+        copyResources(entity.getConfig(SoftwareProcess.INSTALL_FILES), entity.getConfig(SoftwareProcess.INSTALL_TEMPLATES));
+    }
 
+    private void copyResources(Map<String, String> files, Map<String, String> templates) {
         // Ensure environment variables are not looked up here, otherwise sub-classes might
         // lookup port numbers and fail with ugly error if port is not set; better to wait
         // until in Entity's code (e.g. customize) where such checks are done explicitly.
@@ -279,19 +301,17 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         // TODO see comment in copyResource, that should be queued as a task like the above
         // (better reporting in activities console)
 
-        Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
-        if (installFiles != null && installFiles.size() > 0) {
-            for (String source : installFiles.keySet()) {
-                String target = installFiles.get(source);
+        if (files != null && files.size() > 0) {
+            for (String source : files.keySet()) {
+                String target = files.get(source);
                 String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
                 copyResource(source, destination, true);
             }
         }
 
-        Map<String, String> installTemplates = entity.getConfig(SoftwareProcess.INSTALL_TEMPLATES);
-        if (installTemplates != null && installTemplates.size() > 0) {
-            for (String source : installTemplates.keySet()) {
-                String target = installTemplates.get(source);
+        if (templates != null && templates.size() > 0) {
+            for (String source : templates.keySet()) {
+                String target = templates.get(source);
                 String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
                 copyTemplate(source, destination, true, MutableMap.<String, Object>of());
             }
