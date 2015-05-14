@@ -417,7 +417,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "- type: " + SIMPLE_ENTITY_TYPE);
             fail();
         } catch (NullPointerException e) {
-            Assert.assertEquals(e.getMessage(), "version");
+            Assert.assertEquals(e.getMessage(), "both name and version are required");
         }
         try {
             addCatalogItem(
@@ -431,7 +431,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "- type: " + SIMPLE_ENTITY_TYPE);
             fail();
         } catch (NullPointerException e) {
-            Assert.assertEquals(e.getMessage(), "name");
+            Assert.assertEquals(e.getMessage(), "both name and version are required");
         }
     }
 
