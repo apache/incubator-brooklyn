@@ -24,6 +24,7 @@ import static com.google.common.base.Throwables.getCausalChain;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -35,6 +36,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class Exceptions {
 
@@ -69,14 +71,16 @@ public class Exceptions {
     }
 
     private static String stripBoringPrefixes(String s) {
-        String was;
-        do {
-            was = s;
-            for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLE_EXACT_TYPES) {
-                s = Strings.removeAllFromStart(s, type.getCanonicalName(), type.getName(), type.getSimpleName(), ":", " ");
-            }
-        } while (!was.equals(s));
-        return s;
+        ArrayList<String> prefixes = Lists.newArrayListWithCapacity(2 + BORING_PREFIX_THROWABLE_EXACT_TYPES.size() * 3);
+        for (Class<? extends Throwable> type : BORING_PREFIX_THROWABLE_EXACT_TYPES) {
+            prefixes.add(type.getCanonicalName());
+            prefixes.add(type.getName());
+            prefixes.add(type.getSimpleName());
+        }
+        prefixes.add(":");
+        prefixes.add(" ");
+        String[] ps = prefixes.toArray(new String[prefixes.size()]);
+        return Strings.removeAllFromStart(s, ps);
     }
 
     /**

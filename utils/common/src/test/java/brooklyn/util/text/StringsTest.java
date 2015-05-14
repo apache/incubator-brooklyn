@@ -80,64 +80,70 @@ public class StringsTest extends FixedLocaleTest {
     }
 
     public void makeValidJavaName() {
-        assertEquals("__null", Strings.makeValidJavaName(null));
-        assertEquals("__empty", Strings.makeValidJavaName(""));
-        assertEquals("abcdef", Strings.makeValidJavaName("abcdef"));
-        assertEquals("abcdef", Strings.makeValidJavaName("a'b'c'd'e'f"));
-        assertEquals("_12345", Strings.makeValidJavaName("12345"));
+        assertEquals(Strings.makeValidJavaName(null), "__null");
+        assertEquals(Strings.makeValidJavaName(""), "__empty");
+        assertEquals(Strings.makeValidJavaName("abcdef"), "abcdef");
+        assertEquals(Strings.makeValidJavaName("a'b'c'd'e'f"), "abcdef");
+        assertEquals(Strings.makeValidJavaName("12345"), "_12345");
     }
 
     public void makeValidUniqueJavaName() {
-        assertEquals("__null", Strings.makeValidUniqueJavaName(null));
-        assertEquals("__empty", Strings.makeValidUniqueJavaName(""));
-        assertEquals("abcdef", Strings.makeValidUniqueJavaName("abcdef"));
-        assertEquals("_12345", Strings.makeValidUniqueJavaName("12345"));
+        assertEquals(Strings.makeValidUniqueJavaName(null), "__null");
+        assertEquals(Strings.makeValidUniqueJavaName(""), "__empty");
+        assertEquals(Strings.makeValidUniqueJavaName("abcdef"), "abcdef");
+        assertEquals(Strings.makeValidUniqueJavaName("12345"), "_12345");
     }
 
     public void testRemoveFromEnd() {
-        assertEquals("", Strings.removeFromEnd("", "bar"));
-        assertEquals(null, Strings.removeFromEnd(null, "bar"));
+        assertEquals(Strings.removeFromEnd("", "bar"), "");
+        assertEquals(Strings.removeFromEnd(null, "bar"), null);
 
-        assertEquals("foo", Strings.removeFromEnd("foobar", "bar"));
-        assertEquals("foo", Strings.removeFromEnd("foo", "bar"));
-        assertEquals("foo", Strings.removeFromEnd("foobar", "foo", "bar"));
+        assertEquals(Strings.removeFromEnd("foobar", "bar"), "foo");
+        assertEquals(Strings.removeFromEnd("foo", "bar"), "foo");
+        assertEquals(Strings.removeFromEnd("foobar", "foo", "bar"), "foo");
         // test they are applied in order
-        assertEquals("foob", Strings.removeFromEnd("foobar", "ar", "bar", "b"));
+        assertEquals(Strings.removeFromEnd("foobar", "ar", "bar", "b"), "foob");
     }
 
     public void testRemoveAllFromEnd() {
-        assertEquals("", Strings.removeAllFromEnd("", "bar"));
-        assertEquals(null, Strings.removeAllFromEnd(null, "bar"));
+        assertEquals(Strings.removeAllFromEnd("", "bar"), "");
+        assertEquals(Strings.removeAllFromEnd(null, "bar"), null);
+        assertEquals(Strings.removeAllFromEnd("foo", ""), "foo");
 
-        assertEquals("", Strings.removeAllFromEnd("foobar", "foo", "bar"));
-        assertEquals("f", Strings.removeAllFromEnd("foobar", "ar", "car", "b", "o"));
+        assertEquals(Strings.removeAllFromEnd("foobar", "foo", "bar"), "");
+        assertEquals(Strings.removeAllFromEnd("foobar", "ar", "car", "b", "o"), "f");
         // test they are applied in order
-        assertEquals("foo", Strings.removeAllFromEnd("foobar", "ar", "car", "b", "ob"));
-        assertEquals("foobar", Strings.removeAllFromEnd("foobar", "zz", "x"));
+        assertEquals(Strings.removeAllFromEnd("foobar", "ar", "car", "b", "ob"), "foo");
+        assertEquals(Strings.removeAllFromEnd("foobar", "zz", "x"), "foobar");
+        assertEquals(Strings.removeAllFromEnd("foobarbaz", "bar", "baz"), "foo");
+        assertEquals(Strings.removeAllFromEnd("foobarbaz", "baz", "", "foo", "bar", "baz"), "");
     }
 
     public void testRemoveFromStart() {
-        assertEquals("", Strings.removeFromStart("", "foo"));
-        assertEquals(null, Strings.removeFromStart(null, "foo"));
+        assertEquals(Strings.removeFromStart("", "foo"), "");
+        assertEquals(Strings.removeFromStart(null, "foo"), null);
 
-        assertEquals("bar", Strings.removeFromStart("foobar", "foo"));
-        assertEquals("foo", Strings.removeFromStart("foo", "bar"));
-        assertEquals("bar", Strings.removeFromStart("foobar", "foo", "bar"));
-        assertEquals("obar", Strings.removeFromStart("foobar", "ob", "fo", "foo", "o"));
+        assertEquals(Strings.removeFromStart("foobar", "foo"), "bar");
+        assertEquals(Strings.removeFromStart("foo", "bar"), "foo");
+        assertEquals(Strings.removeFromStart("foobar", "foo", "bar"), "bar");
+        assertEquals(Strings.removeFromStart("foobar", "ob", "fo", "foo", "o"), "obar");
     }
 
     public void testRemoveAllFromStart() {
-        assertEquals("", Strings.removeAllFromStart("", "foo"));
-        assertEquals(null, Strings.removeAllFromStart(null, "foo"));
+        assertEquals(Strings.removeAllFromStart("", "foo"), "");
+        assertEquals(Strings.removeAllFromStart(null, "foo"), null);
+        assertEquals(Strings.removeAllFromStart("foo", ""), "foo");
 
-        assertEquals("bar", Strings.removeAllFromStart("foobar", "foo"));
-        assertEquals("foo", Strings.removeAllFromStart("foo", "bar"));
-        assertEquals("", Strings.removeAllFromStart("foobar", "foo", "bar"));
+        assertEquals(Strings.removeAllFromStart("foobar", "foo"), "bar");
+        assertEquals(Strings.removeAllFromStart("foo", "bar"), "foo");
+        assertEquals(Strings.removeAllFromStart("foobar", "foo", "bar"), "");
 
-        assertEquals("ar", Strings.removeAllFromStart("foobar", "fo", "ob", "o"));
-        assertEquals("ar", Strings.removeAllFromStart("foobar", "ob", "fo", "o"));
+        assertEquals(Strings.removeAllFromStart("foobar", "fo", "ob", "o"), "ar");
+        assertEquals(Strings.removeAllFromStart("foobar", "ob", "fo", "o"), "ar");
         // test they are applied in order, "ob" doesn't match because "o" eats the o
-        assertEquals("bar", Strings.removeAllFromStart("foobar", "o", "fo", "ob"));
+        assertEquals(Strings.removeAllFromStart("foobar", "o", "fo", "ob"), "bar");
+        assertEquals(Strings.removeAllFromStart("foobarbaz", "bar", "foo"), "baz");
+        assertEquals(Strings.removeAllFromStart("foobarbaz", "baz", "bar", "foo"), "");
     }
 
     public void testRemoveFromStart2() {
