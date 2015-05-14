@@ -259,8 +259,16 @@ public class EffectorUtils {
     }
 
     public static void handleEffectorException(Entity entity, Effector<?> effector, Throwable throwable) {
-        log.warn("Error invoking "+effector.getName()+" at "+entity+": "+Exceptions.collapseText(throwable));
-        throw new PropagatedRuntimeException("Error invoking "+effector.getName()+" at "+entity, throwable);
+        String message = "Error invoking " + effector.getName() + " at " + entity;
+        // Avoid throwing a PropagatedRuntimeException that just repeats the last PropagatedRuntimeException.
+        if (throwable instanceof PropagatedRuntimeException &&
+                throwable.getMessage() != null &&
+                throwable.getMessage().startsWith(message)) {
+            throw PropagatedRuntimeException.class.cast(throwable);
+        } else {
+            log.warn(message + ": " + Exceptions.collapseText(throwable));
+            throw new PropagatedRuntimeException(message, throwable);
+        }
     }
 
     public static <T> Task<T> invokeEffectorAsync(Entity entity, Effector<T> eff, Map<String,?> parameters) {
