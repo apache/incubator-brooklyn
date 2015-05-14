@@ -5,8 +5,8 @@ children:
 - { section: General YAML Schema }
 - { section: Catalog Metadata }
 - { section: Catalog YAML Examples }
-- { section: Adding to the Catalog, title: Adding and Deleting } 
 - { section: Templates and the Add-Application Wizard, title: Templates }
+- { section: Adding to the Catalog, title: Adding and Deleting } 
 - { section: Versioning } 
 ---
 
@@ -25,19 +25,19 @@ specifying the catalog metadata for the items and the actual blueprint or resour
  
 A single catalog item can be defined following this general structure:
 
-```yaml
+~~~ yaml
 brooklyn.catalog:
   <catalog-metadata>
   item:
     <blueprint-or-resource-definition>
-```
+~~~ 
 
 
 To define multiple catalog items in a single YAML,
 where they may share some metadata,
 use the following structure:
 
-```yaml
+~~~ yaml
 brooklyn.catalog:
   <catalog-metadata>
   items:
@@ -47,7 +47,7 @@ brooklyn.catalog:
   - <additional-catalog-metadata>
     item:
       <blueprint-or-resource-definition>
-```
+~~~ 
 
 
 #### Catalog Metadata
@@ -70,10 +70,10 @@ To reference a catalog item in another blueprint, simply reference its ID and op
 For instance, if we've added an item with metadata `{ id: datastore, version: "1.0" }` (such as the example below),
 we could refer to it in another blueprint with: 
 
-```yaml
+~~~ yaml
 services:
 - type: datastore:1.0
-```
+~~~ 
 
 In addition to the above fields, exactly **one** of the following is also required:
 
@@ -128,7 +128,7 @@ with a nice display name, description, and icon.
 It can be referred in other blueprints to as `datastore:1.0`,
 and its implementation will be the Java class `brooklyn.entity.nosql.riak.RiakNode` included with Brooklyn.
 
-```yaml
+~~~ yaml
 brooklyn.catalog:
   id: datastore
   version: 1.0
@@ -139,14 +139,14 @@ brooklyn.catalog:
   item:
     type: brooklyn.entity.nosql.riak.RiakNode
     name: Riak Node
-```
+~~~ 
 
 
 ##### Multiple Items
 
 This YAML will install three items:
 
-```yaml
+~~~ yaml
 brooklyn.catalog:
   version: 1.1
   iconUrl: classpath://brooklyn/entity/nosql/riak/riak.png
@@ -178,7 +178,7 @@ brooklyn.catalog:
             provisioning.properties:
               # you can also define machine specs
               minRam: 8gb
-```
+~~~ 
 
 The items this will install are:
 
@@ -196,11 +196,11 @@ The items this will install are:
 
 The following legacy and experimental syntax is also supported:
 
-```yaml
+~~~ yaml
 <blueprint-definition>
 brooklyn.catalog:
   <catalog-metadata>
-```
+~~~ 
 
 In this format, the `brooklyn.catalog` block is optional;
 and an `id` in the `<blueprint-definition>` will be used to determine the catalog ID. 
@@ -236,9 +236,9 @@ In addition to the GUI, items can be added to the catalog via the REST API
 with a `POST` of the YAML file to `/v1/catalog` endpoint.
 To do this using `curl`:
 
-```bash
+~~~ bash
 curl http://127.0.0.1:8081/v1/catalog --data-binary @/path/to/riak.catalog.bom
-```
+~~~ 
 
 
 
@@ -247,9 +247,9 @@ curl http://127.0.0.1:8081/v1/catalog --data-binary @/path/to/riak.catalog.bom
 You can delete a versioned item from the catalog using the same endpoint as the REST API. 
 For example, to delete the item with id `datastore` and version `1.0` with `curl`:
 
-```bash
+~~~ bash
 curl -X DELETE http://127.0.0.1:8081/v1/catalog/entities/datastore/1.0
-```
+~~~ 
 
 **Note:** Catalog items should not be deleted if there are running apps which were created using the same item. 
 During rebinding the catalog item is used to reconstruct the entity.
@@ -262,9 +262,9 @@ in a future release.
 Deprecation applies to a specific version of a catalog item, so the full
 id including the version number is passed to the REST API as follows:
 
-```bash
+~~~ bash
 curl -X POST http://127.0.0.1:8081/v1/catalog/entities/MySQL:1.0/deprecated/true
-```
+~~~ 
 
 
 ### Versioning
