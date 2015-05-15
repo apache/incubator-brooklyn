@@ -48,14 +48,15 @@ public interface HazelcastNode extends SoftwareProcess, UsesJava, UsesJmx {
     ConfigKey<String> TEMPLATE_CONFIGURATION_URL = ConfigKeys.newStringConfigKey(
             "hazelcast.node.template.configuration.url", "Template file (in freemarker format) for the hazelcast.xml file", 
             JavaClassNames.resolveClasspathUrl(HazelcastNode.class, "hazelcast-brooklyn.xml"));
-
+    
     @SetFromFlag("nodeName")
     StringAttributeSensorAndConfigKey NODE_NAME = new StringAttributeSensorAndConfigKey("hazelcast.node.name", 
             "Node name (or randomly selected if not set", null);
     
-    @SetFromFlag("clusterName")
-    StringAttributeSensorAndConfigKey CLUSTER_NAME = new StringAttributeSensorAndConfigKey("hazelcast.node.cluster.name", 
-            "Cluster name", null);
-    
-    
+    /**
+     * Specifies the group name in the configuration file. Each Hazelcast cluster has a separate group.
+     */ 
+    @SetFromFlag("groupName")
+    StringAttributeSensorAndConfigKey GROUP_NAME = new StringAttributeSensorAndConfigKey("hazelcast.group.name", 
+            "Group name", null);
 }

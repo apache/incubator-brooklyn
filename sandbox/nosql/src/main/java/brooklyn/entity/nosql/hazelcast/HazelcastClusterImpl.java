@@ -31,7 +31,7 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
     protected EntitySpec<?> getMemberSpec() {
         EntitySpec<?> spec = EntitySpec.create(getConfig(MEMBER_SPEC, EntitySpec.create(HazelcastNode.class)));
         
-        spec.configure(HazelcastNode.CLUSTER_NAME, getConfig(HazelcastClusterImpl.CLUSTER_NAME))
+        spec.configure(HazelcastNode.GROUP_NAME, getConfig(HazelcastClusterImpl.CLUSTER_NAME))
             .configure(HazelcastNode.NODE_NAME, "hazelcast-" + nextMemberId.incrementAndGet());
         
         return spec;
