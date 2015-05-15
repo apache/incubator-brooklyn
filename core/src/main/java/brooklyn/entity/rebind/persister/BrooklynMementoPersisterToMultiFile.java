@@ -37,6 +37,7 @@ import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
+import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -596,6 +597,14 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     @Override
     public String getBackingStoreDescription() {
         return toString();
+    }
+
+    @Override
+    public BrooklynCatalogMementoManifest loadCatalogMementos(
+            BrooklynMementoRawData mementoData,
+            RebindExceptionHandler exceptionHandler) {
+        // TODO Auto-generated method stub
+        return null;
     }
     
 }

@@ -18,35 +18,12 @@
  */
 package brooklyn.mementos;
 
-import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.entity.trait.Identifiable;
-
-/**
- * Represents a manifest of the entities etc in the overall memento.
- * 
- * @author aled
- */
-public interface BrooklynMementoManifest extends BrooklynCatalogMementoManifest, Serializable {
-    public interface EntityMementoManifest extends Identifiable{
-        @Override
-        public String getId();
-        public String getType();
-        public String getParent();
-        public String getCatalogItemId();
-    }
-
-    public Map<String, EntityMementoManifest> getEntityIdToManifest();
-
-    public Map<String, String> getLocationIdToType();
-
-    public Map<String, String> getPolicyIdToType();
-
-    public Map<String, String> getEnricherIdToType();
-
-    public Map<String, String> getFeedIdToType();
-    
-    public boolean isEmpty();
-    
+public interface BrooklynCatalogMementoManifest {
+    CatalogItemMemento getCatalogItemMemento(String id);
+    Collection<String> getCatalogItemIds();
+    Map<String, CatalogItemMemento> getCatalogItemMementos();
+    boolean isEmpty();
 }

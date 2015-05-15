@@ -68,6 +68,7 @@ import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.ManagementTransitionMode;
+import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
@@ -108,6 +109,7 @@ Multi-phase deserialization:
 <ul>
 <li> 1. load the manifest files and populate the summaries (ID+type) in {@link BrooklynMementoManifest}
 <li> 2. instantiate and reconstruct catalog items
+<li> 2.5. load manifest
 <li> 3. instantiate entities+locations -- so that inter-entity references can subsequently 
        be set during deserialize (and entity config/state is set).
 <li> 4. deserialize the manifests to instantiate the mementos
@@ -175,6 +177,7 @@ public abstract class RebindIteration {
     // set in first phase
     
     protected BrooklynMementoRawData mementoRawData;
+    protected BrooklynCatalogMementoManifest mementoCatalogManifest;
     protected BrooklynMementoManifest mementoManifest;
     protected Boolean overwritingMaster;
     protected Boolean isEmpty;
@@ -227,8 +230,10 @@ public abstract class RebindIteration {
     }
     
     protected void doRun() throws Exception {
-        loadManifestFiles();
+        loadRawMementos();
+        instantiateCatalogMementos();
         rebuildCatalog();
+        loadMementoManifest();
         instantiateLocationsAndEntities();
         instantiateMementos();
         instantiateAdjuncts(instantiator); 
@@ -238,8 +243,12 @@ public abstract class RebindIteration {
         finishingUp();
     }
     
-    protected abstract void loadManifestFiles() throws Exception;
-    
+    protected abstract void loadRawMementos();
+
+    protected abstract void instantiateCatalogMementos();
+
+    protected abstract void loadMementoManifest() throws Exception;
+
     public void run() {
         if (iterationStarted.getAndSet(true)) {
             throw new IllegalStateException("Iteration "+this+" has already run; create a new instance for another rebind pass.");
@@ -285,7 +294,7 @@ public abstract class RebindIteration {
     }
     
     protected void preprocessManifestFiles() throws Exception {
-        checkContinuingPhase(1);
+        checkContinuingPhase(2);
 
         Preconditions.checkState(mementoRawData!=null, "Memento raw data should be set when calling this");
         Preconditions.checkState(mementoManifest==null, "Memento data should not yet be set when calling this");
@@ -302,12 +311,12 @@ public abstract class RebindIteration {
     protected void rebuildCatalog() {
         
         // Build catalog early so we can load other things
-        checkEnteringPhase(2);
+        checkContinuingPhase(2);
         
         // Instantiate catalog items
         if (rebindManager.persistCatalogItemsEnabled) {
-            logRebindingDebug("RebindManager instantiating catalog items: {}", mementoManifest.getCatalogItemIds());
-            for (CatalogItemMemento catalogItemMemento : mementoManifest.getCatalogItemMementos().values()) {
+            logRebindingDebug("RebindManager instantiating catalog items: {}", mementoCatalogManifest.getCatalogItemIds());
+            for (CatalogItemMemento catalogItemMemento : mementoCatalogManifest.getCatalogItemMementos().values()) {
                 logRebindingDebug("RebindManager instantiating catalog item {}", catalogItemMemento);
                 try {
                     CatalogItem<?, ?> catalogItem = instantiator.newCatalogItem(catalogItemMemento);
@@ -317,13 +326,13 @@ public abstract class RebindIteration {
                 }
             }
         } else {
-            logRebindingDebug("Not rebinding catalog; feature disabled: {}", mementoManifest.getCatalogItemIds());
+            logRebindingDebug("Not rebinding catalog; feature disabled: {}", mementoCatalogManifest.getCatalogItemIds());
         }
 
         // Reconstruct catalog entries
         if (rebindManager.persistCatalogItemsEnabled) {
             logRebindingDebug("RebindManager reconstructing catalog items");
-            for (CatalogItemMemento catalogItemMemento : mementoManifest.getCatalogItemMementos().values()) {
+            for (CatalogItemMemento catalogItemMemento : mementoCatalogManifest.getCatalogItemMementos().values()) {
                 CatalogItem<?, ?> item = rebindContext.getCatalogItem(catalogItemMemento.getId());
                 logRebindingDebug("RebindManager reconstructing catalog item {}", catalogItemMemento);
                 if (item == null) {
@@ -381,7 +390,7 @@ public abstract class RebindIteration {
                 needsInitialItemsLoaded = true;
                 needsAdditionalItemsLoaded = true;
             } else {
-                if (!isEmpty) {
+                if (!mementoRawData.isEmpty()) {
                     logRebindingDebug("RebindManager clearing local catalog and loading from persisted state");
                     itemsForResettingCatalog = rebindContext.getCatalogItems();
                     needsInitialItemsLoaded = false;
@@ -416,7 +425,6 @@ public abstract class RebindIteration {
     }
 
     protected void instantiateLocationsAndEntities() {
-
         checkEnteringPhase(3);
         
         // Instantiate locations

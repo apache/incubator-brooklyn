@@ -21,10 +21,12 @@ package brooklyn.entity.rebind.persister;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -49,11 +51,13 @@ import brooklyn.entity.rebind.PeriodicDeltaChangeListener;
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersisterDeltaImpl;
 import brooklyn.entity.rebind.RebindExceptionHandler;
+import brooklyn.entity.rebind.dto.BasicCatalogMementoManifest;
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import brooklyn.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
+import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -319,6 +323,26 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         }
 
         return result;
+    }
+
+    @Override
+    public BrooklynCatalogMementoManifest loadCatalogMementos(BrooklynMementoRawData mementoRawData, RebindExceptionHandler exceptionHandler) {
+        Map<String, CatalogItemMemento> mementos = new HashMap<String, CatalogItemMemento>();
+        for (Entry<String, String> catalogItem : mementoRawData.getCatalogItems().entrySet()) {
+            String id = catalogItem.getKey();
+            String contents = catalogItem.getValue();
+            try {
+                CatalogItemMemento memento = (CatalogItemMemento) getSerializerWithStandardClassLoader().fromString(contents);
+                if (memento == null) {
+                    LOG.warn("No " + BrooklynObjectType.CATALOG_ITEM.toCamelCase() + "-memento deserialized from " + id + "; ignoring and continuing");
+                } else {
+                    mementos.put(id, memento);
+                }
+            } catch (Exception e) {
+                exceptionHandler.onLoadMementoFailed(BrooklynObjectType.CATALOG_ITEM, "memento "+id+" early catalog deserialization error", e);
+            }
+        }
+        return new BasicCatalogMementoManifest(mementos);
     }
 
     @Override

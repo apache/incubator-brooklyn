@@ -42,8 +42,10 @@ import brooklyn.entity.rebind.RebindExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
@@ -207,5 +209,13 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    @Override
+    public BrooklynCatalogMementoManifest loadCatalogMementos(
+            BrooklynMementoRawData mementoData,
+            RebindExceptionHandler exceptionHandler) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

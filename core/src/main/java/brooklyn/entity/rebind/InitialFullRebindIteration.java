@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.rebind;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -70,11 +71,23 @@ public class InitialFullRebindIteration extends RebindIteration {
     }
 
     @Override
-    protected void loadManifestFiles() throws Exception {
+    protected void loadRawMementos() {
         checkEnteringPhase(1);
         Preconditions.checkState(mementoRawData==null, "Memento raw data should not yet be set when calling this");
         mementoRawData = persistenceStoreAccess.loadMementoRawData(exceptionHandler);
-        
+    }
+
+    @Override
+    protected void instantiateCatalogMementos() {
+        checkEnteringPhase(2);
+        Preconditions.checkState(mementoRawData!=null, "Memento raw data should be set when calling this");
+        Preconditions.checkState(mementoCatalogManifest==null, "Catalog mementos should not be loaded when calling this");
+
+        mementoCatalogManifest = persistenceStoreAccess.loadCatalogMementos(mementoRawData, exceptionHandler);
+    }
+
+    @Override
+    protected void loadMementoManifest() throws Exception {
         preprocessManifestFiles();
         
         if (!isEmpty) {

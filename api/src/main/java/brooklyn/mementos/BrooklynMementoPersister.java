@@ -73,6 +73,8 @@ public interface BrooklynMementoPersister {
      */
     BrooklynMementoRawData loadMementoRawData(RebindExceptionHandler exceptionHandler);
 
+    BrooklynCatalogMementoManifest loadCatalogMementos(BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler);
+
     /** @deprecated since 0.7.0 use {@link #loadMementoManifest(BrooklynMementoRawData, RebindExceptionHandler)} */
     BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) throws IOException;
     
