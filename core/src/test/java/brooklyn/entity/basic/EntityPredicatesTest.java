@@ -75,6 +75,18 @@ public class EntityPredicatesTest extends BrooklynAppUnitTestSupport {
     }
     
     @Test
+    public void testTypeNameEquals() throws Exception {
+        assertTrue(EntityPredicates.typeNameEquals("brooklyn.test.entity.TestEntity").apply(entity));
+        assertFalse(EntityPredicates.typeNameEquals("wrongname").apply(entity));
+    }
+    
+    @Test
+    public void testTypeNameSatisfies() throws Exception {
+        assertTrue(EntityPredicates.typeNameSatisfies(StringPredicates.matchesRegex(".*Test.*ty")).apply(entity));
+        assertFalse(EntityPredicates.typeNameSatisfies(StringPredicates.matchesRegex("wr.*me")).apply(entity));
+    }
+    
+    @Test
     public void testDisplayNameEqualTo() throws Exception {
         assertTrue(EntityPredicates.displayNameEqualTo("mydisplayname").apply(entity));
         assertFalse(EntityPredicates.displayNameEqualTo("wrongname").apply(entity));
@@ -83,7 +95,7 @@ public class EntityPredicatesTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testDisplayNameSatisfies() throws Exception {
         assertTrue(EntityPredicates.displayNameSatisfies(StringPredicates.matchesRegex("myd.*me")).apply(entity));
-        assertFalse(EntityPredicates.applicationIdEqualTo("wrongname").apply(entity));
+        assertFalse(EntityPredicates.displayNameSatisfies(StringPredicates.matchesRegex("wr.*me")).apply(entity));
     }
     
     @Test
