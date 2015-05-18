@@ -593,6 +593,9 @@ public class Osgis {
         }
         Manifest manifest = stream.getManifest();
         Streams.closeQuietly(stream);
+        if (manifest == null) {
+            throw new IllegalStateException("Missing manifest file in bundle or not a jar file.");
+        }
         String versionedId = getVersionedId(manifest);
         for (Bundle installedBundle : framework.getBundleContext().getBundles()) {
             if (versionedId.equals(getVersionedId(installedBundle))) {

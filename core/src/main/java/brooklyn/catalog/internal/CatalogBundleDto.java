@@ -32,10 +32,10 @@ public class CatalogBundleDto implements CatalogBundle {
 
     public CatalogBundleDto(String name, String version, String url) {
         if (name == null && version == null) {
-            Preconditions.checkNotNull(url, "url");
+            Preconditions.checkNotNull(url, "url to an OSGi bundle is required");
         } else {
-            Preconditions.checkNotNull(name, "name");
-            Preconditions.checkNotNull(version, "version");
+            Preconditions.checkNotNull(name, "both name and version are required");
+            Preconditions.checkNotNull(version, "both name and version are required");
         }
 
         this.symbolicName = name;
