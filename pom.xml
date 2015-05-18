@@ -152,7 +152,7 @@
         <sshj.version>0.8.1</sshj.version>
         <felix.framework.version>4.4.0</felix.framework.version>
         <reflections.version>0.9.9-RC1</reflections.version>
-        <jetty.version>8.1.4.v20120524</jetty.version>
+        <jetty.version>8.1.17.v20150415</jetty.version>
         <airline.version>0.6</airline.version>
         <mockwebserver.version>20121111</mockwebserver.version>
         <freemarker.version>2.3.19</freemarker.version>

@@ -19,6 +19,8 @@
 package brooklyn.launcher;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,6 +28,8 @@ import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
+
+import javax.net.ssl.SSLPeerUnverifiedException;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -43,6 +47,7 @@ import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 
@@ -131,6 +136,23 @@ public class BrooklynWebServerTest {
         brooklynProperties.put(BrooklynWebConfig.HTTPS_REQUIRED, true);
         brooklynProperties.put(BrooklynWebConfig.KEYSTORE_URL, getFile("server.ks"));
         brooklynProperties.put(BrooklynWebConfig.KEYSTORE_PASSWORD, "password");
+        verifyHttpsFromConfig(brooklynProperties);
+    }
+
+    @Test
+    public void verifyHttpsCiphers() throws Exception {
+        brooklynProperties.put(BrooklynWebConfig.HTTPS_REQUIRED, true);
+        brooklynProperties.put(BrooklynWebConfig.TRANSPORT_PROTOCOLS, "XXX");
+        brooklynProperties.put(BrooklynWebConfig.TRANSPORT_CIPHERS, "XXX");
+        try {
+            verifyHttpsFromConfig(brooklynProperties);
+            fail("Expected to fail due to unsupported ciphers during connection negotiation");
+        } catch (Exception e) {
+            assertTrue(Exceptions.getFirstThrowableOfType(e, SSLPeerUnverifiedException.class) != null, "Expected to fail due to inability to negotiate");
+        }
+    }
+
+    private void verifyHttpsFromConfig(BrooklynProperties brooklynProperties) throws Exception {
         webServer = new BrooklynWebServer(MutableMap.of(), newManagementContext(brooklynProperties));
         webServer.start();
         
