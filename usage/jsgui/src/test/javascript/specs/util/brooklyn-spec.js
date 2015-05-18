@@ -54,7 +54,6 @@ define([
                     template: formTemplate,
                     onSubmit: onSubmit
                 });
-                console.log(form.$(".submit"));
                 form.$("form").trigger("submit");
                 expect(wasCalled).toBe(true);
             });
