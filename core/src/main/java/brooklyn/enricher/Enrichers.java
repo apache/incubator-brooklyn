@@ -183,6 +183,8 @@ public class Enrichers {
         protected final AttributeSensor<S> aggregating;
         protected AttributeSensor<T> publishing;
         protected Entity fromEntity;
+        /** @deprecated since 0.7.0, kept for backwards compatibility for rebind, but not used otherwise */
+        @Deprecated protected Function<? super Collection<S>, ? extends T> computing;
         // use supplier so latest values of other fields can be used
         protected Supplier<Function<? super Collection<S>, ? extends T>> computingSupplier;
         protected Boolean fromMembers;
@@ -224,6 +226,26 @@ public class Enrichers {
             this.computingSupplier = (Supplier)Suppliers.ofInstance(checkNotNull(val));
             return self();
         }
+        @SuppressWarnings({ "unchecked", "rawtypes", "unused" })
+        private B computingSumLegacy() {
+            // since 0.7.0, kept in case we need to rebind to this
+            Function<Collection<S>, Number> function = new Function<Collection<S>, Number>()  {
+                @Override public Number apply(Collection<S> input) {
+                    return sum((Collection)input, (Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, (TypeToken) publishing.getTypeToken());
+                }};
+            this.computing((Function)function);
+            return self();
+        }
+        @SuppressWarnings({ "unchecked", "rawtypes", "unused" })
+        private B computingAverageLegacy() {
+            // since 0.7.0, kept in case we need to rebind to this
+            Function<Collection<S>, Number> function = new Function<Collection<S>, Number>() {
+                @Override public Number apply(Collection<S> input) {
+                    return average((Collection)input, (Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, (TypeToken) publishing.getTypeToken());
+                }};
+            this.computing((Function)function);
+            return self();
+        }
         public B computingSum() {
             this.computingSupplier = new Supplier<Function<? super Collection<S>, ? extends T>>() {
                 @Override
@@ -233,16 +255,6 @@ public class Enrichers {
                     return (Function)new ComputingSum((Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, publishing.getTypeToken());
                 }
             };
-            return self();
-        }
-        @SuppressWarnings({ "unchecked", "rawtypes", "unused" })
-        private B computingSumLegacy() {
-            // since 0.7.0, kept in case we need to rebind to this
-            Function<Collection<S>, Number> function = new Function<Collection<S>, Number>()  {
-                @Override public Number apply(Collection<S> input) {
-                    return sum((Collection)input, (Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, (TypeToken) publishing.getTypeToken());
-                }};
-            this.computing((Function)function);
             return self();
         }
 
@@ -257,17 +269,6 @@ public class Enrichers {
             };
             return self();
         }
-        @SuppressWarnings({ "unchecked", "rawtypes", "unused" })
-        private B computingAverageLegacy() {
-            // since 0.7.0, kept in case we need to rebind to this
-            Function<Collection<S>, Number> function = new Function<Collection<S>, Number>() {
-                @Override public Number apply(Collection<S> input) {
-                    return average((Collection)input, (Number)defaultValueForUnreportedSensors, (Number)valueToReportIfNoSensors, (TypeToken) publishing.getTypeToken());
-                }};
-            this.computing((Function)function);
-            return self();
-        }
-        
         public B defaultValueForUnreportedSensors(S val) {
             this.defaultValueForUnreportedSensors = val;
             return self();
