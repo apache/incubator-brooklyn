@@ -485,7 +485,11 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                     throw new IllegalStateException("Unexpected condition! cluster="+this+"; member="+member+"; actualMemberLocs="+actualMemberLocs);
                 }
             } else {
-                memberLoc = getLocation();
+                if (getMemberSpec() != null && getMemberSpec().getLocations().size() > 0) {
+                    memberLoc = getMemberSpec().getLocations().iterator().next();
+                } else {
+                    memberLoc = getLocation();
+                }
             }
 
             Entity replacement = replaceMember(member, memberLoc, ImmutableMap.of());
