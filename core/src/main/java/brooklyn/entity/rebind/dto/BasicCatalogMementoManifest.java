@@ -25,10 +25,26 @@ import java.util.Map;
 import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.CatalogItemMemento;
 
+import com.google.common.collect.Maps;
+
 public class BasicCatalogMementoManifest implements BrooklynCatalogMementoManifest {
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    public static class Builder {
+        protected final Map<String, CatalogItemMemento> catalogItems = Maps.newConcurrentMap();
+        public Builder catalogItem(CatalogItemMemento val) {
+            catalogItems.put(val.getId(), val); return this;
+        }
+        public BasicCatalogMementoManifest build() {
+            return new BasicCatalogMementoManifest(catalogItems);
+        }
+    }
+
     private Map<String, CatalogItemMemento> mementos;
 
-    public BasicCatalogMementoManifest(Map<String, CatalogItemMemento> mementos) {
+    private BasicCatalogMementoManifest(Map<String, CatalogItemMemento> mementos) {
         this.mementos = mementos;
     }
 

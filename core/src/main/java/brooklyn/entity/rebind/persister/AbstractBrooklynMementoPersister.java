@@ -25,8 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
+import brooklyn.entity.rebind.dto.BasicCatalogMementoManifest;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
+import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -68,6 +70,15 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         return loadMementoManifest(null, exceptionHandler);
     }
     
+    @Override
+    public BrooklynCatalogMementoManifest loadCatalogMementos(BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler) {
+        BasicCatalogMementoManifest.Builder builder = BasicCatalogMementoManifest.builder();
+        for (CatalogItemMemento entity : memento.getCatalogItemMementos().values()) {
+            builder.catalogItem(entity);
+        }
+        return builder.build();
+    }
+
     @Override
     public BrooklynMementoManifest loadMementoManifest(BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler) {
         BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();

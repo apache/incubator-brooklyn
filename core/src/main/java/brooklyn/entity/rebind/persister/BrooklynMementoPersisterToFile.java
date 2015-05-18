@@ -147,11 +147,4 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
         }
     }
 
-    @Override
-    public BrooklynCatalogMementoManifest loadCatalogMementos(
-            BrooklynMementoRawData mementoData,
-            RebindExceptionHandler exceptionHandler) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

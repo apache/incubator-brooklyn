@@ -327,7 +327,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     @Override
     public BrooklynCatalogMementoManifest loadCatalogMementos(BrooklynMementoRawData mementoRawData, RebindExceptionHandler exceptionHandler) {
-        Map<String, CatalogItemMemento> mementos = new HashMap<String, CatalogItemMemento>();
+        BasicCatalogMementoManifest.Builder builder = BasicCatalogMementoManifest.builder();
         for (Entry<String, String> catalogItem : mementoRawData.getCatalogItems().entrySet()) {
             String id = catalogItem.getKey();
             String contents = catalogItem.getValue();
@@ -336,13 +336,13 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                 if (memento == null) {
                     LOG.warn("No " + BrooklynObjectType.CATALOG_ITEM.toCamelCase() + "-memento deserialized from " + id + "; ignoring and continuing");
                 } else {
-                    mementos.put(id, memento);
+                    builder.catalogItem(memento);
                 }
             } catch (Exception e) {
                 exceptionHandler.onLoadMementoFailed(BrooklynObjectType.CATALOG_ITEM, "memento "+id+" early catalog deserialization error", e);
             }
         }
-        return new BasicCatalogMementoManifest(mementos);
+        return builder.build();
     }
 
     @Override
