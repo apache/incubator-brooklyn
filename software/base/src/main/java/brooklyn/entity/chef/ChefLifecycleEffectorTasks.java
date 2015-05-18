@@ -101,7 +101,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         // in addition to supporting hard-coded node names (which is all we support so far).
         
         String nodeName = entity().getConfig(ChefConfig.CHEF_NODE_NAME);
-        if (Strings.isNonBlank(nodeName)) return nodeName;
+        if (Strings.isNonBlank(nodeName)) return Strings.makeValidFilename(nodeName);
         // node name is taken from ID of this entity, if not specified
         return entity().getId();
     }
@@ -306,8 +306,8 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
                 // (ie allow us to actually decommission the machine)
                 TaskTags.markInessential(
                 new KnifeTaskFactory<String>("delete node and client registration at chef server")
-                    .add("knife node delete "+getNodeName())
-                    .add("knife client delete "+getNodeName())
+                    .add("knife node delete "+getNodeName()+" -y")
+                    .add("knife client delete "+getNodeName()+" -y")
                     .requiringZeroAndReturningStdout()
                     .newTask() ));
         }
