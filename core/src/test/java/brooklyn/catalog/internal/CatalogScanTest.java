@@ -169,6 +169,7 @@ public class CatalogScanTest {
         int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
         
         Assert.assertEquals(numInDefault, numFromAnnots);
+        Assert.assertTrue(numInDefault>0, "Expected more than 0 entries");
     }
 
     // a simple test asserting no errors when listing the real catalog, and listing them for reference

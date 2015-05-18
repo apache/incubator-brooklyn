@@ -621,9 +621,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         } else {
             // scan for annotations: if libraries here, scan them; if inherited libraries error; else scan classpath
             if (!libraryBundlesNew.isEmpty()) {
-                result.addAll(scanAnnotations(mgmt, libraryBundlesNew));
+                result.addAll(scanAnnotationsFromBundles(mgmt, libraryBundlesNew));
             } else if (libraryBundles.isEmpty()) {
-                result.addAll(scanAnnotations(mgmt, null));
+                result.addAll(scanAnnotationsFromLocal(mgmt));
             } else {
                 throw new IllegalStateException("Cannot scan catalog node no local bundles, and with inherited bundles we will not scan the classpath");
             }
@@ -780,25 +780,26 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return oldValue;
     }
 
-    /** scans the given libraries for annotated items, or if null scans the local classpath */ 
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotations(ManagementContext mgmt, Collection<CatalogBundle> libraries) {
-//        CatalogDto dto = CatalogDto.newDefaultLocalScanningDto(CatalogClasspathDo.CatalogScanningModes.ANNOTATIONS);
-        CatalogDto dto;
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromLocal(ManagementContext mgmt) {
+        CatalogDto dto = CatalogDto.newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-local-classpath");
+        return scanAnnotationsInternal(mgmt, new CatalogDo(dto));
+    }
+    
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromBundles(ManagementContext mgmt, Collection<CatalogBundle> libraries) {
         String[] urls = null;
-        if (libraries==null) {
-            dto = CatalogDto.newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-local-classpath");
-        } else {
-            dto = CatalogDto.newNamedInstance("Bundles Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-bundles-classpath-"+libraries.hashCode());
-            urls = new String[libraries.size()];
-            int i=0;
-            for (CatalogBundle b: libraries)
-                urls[i++] = b.getUrl();
-        }
+        CatalogDto dto = CatalogDto.newNamedInstance("Bundles Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-bundles-classpath-"+libraries.hashCode());
+        urls = new String[libraries.size()];
+        int i=0;
+        for (CatalogBundle b: libraries)
+            urls[i++] = b.getUrl();
+            
         CatalogDo subCatalog = new CatalogDo(dto);
+        subCatalog.addToClasspath(urls);
+        return scanAnnotationsInternal(mgmt, subCatalog);
+    }
+    
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsInternal(ManagementContext mgmt, CatalogDo subCatalog) {
         subCatalog.mgmt = mgmt;
-        if (urls!=null) {
-            subCatalog.addToClasspath(urls);
-        } // else use local classpath
         subCatalog.setClasspathScanForEntities(CatalogScanningModes.ANNOTATIONS);
         subCatalog.load();
         // TODO apply metadata?  (extract YAML from the items returned)
@@ -1045,7 +1046,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
     
     private CatalogItem<?,?> addItemDto(CatalogItemDtoAbstract<?, ?> itemDto, boolean forceUpdate) {
-        CatalogItem<?, ?> existingDto = checkItemIsDuplicateOrDisallowed(itemDto, true, forceUpdate);
+        CatalogItem<?, ?> existingDto = checkItemAllowedAndIfSoReturnAnyDuplicate(itemDto, true, forceUpdate);
         if (existingDto!=null) {
             // it's a duplicate, and not forced, just return it
             log.trace("Using existing duplicate for catalog item {}", itemDto.getId());
@@ -1072,9 +1073,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDto;
     }
 
-    /** returns item DTO if item is an allowed duplicate, null if it should be added, or false if the item is an allowed duplicate,
+    /** returns item DTO if item is an allowed duplicate, or null if it should be added (there is no duplicate), 
      * throwing if item cannot be added */
-    private CatalogItem<?, ?> checkItemIsDuplicateOrDisallowed(CatalogItem<?,?> itemDto, boolean allowDuplicates, boolean forceUpdate) {
+    private CatalogItem<?, ?> checkItemAllowedAndIfSoReturnAnyDuplicate(CatalogItem<?,?> itemDto, boolean allowDuplicates, boolean forceUpdate) {
         if (forceUpdate) return null;
         CatalogItemDo<?, ?> existingItem = getCatalogItemDo(itemDto.getSymbolicName(), itemDto.getVersion());
         if (existingItem == null) return null;

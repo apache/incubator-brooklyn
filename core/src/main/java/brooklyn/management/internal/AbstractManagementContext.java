@@ -82,6 +82,7 @@ import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
@@ -441,10 +442,10 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return uri;
     }
     
+    private Object catalogInitMutex = new Object();
     @Override
     public CatalogInitialization getCatalogInitialization() {
-        if (catalogInitialization!=null) return catalogInitialization;
-        synchronized (this) {
+        synchronized (catalogInitMutex) {
             if (catalogInitialization!=null) return catalogInitialization;
             CatalogInitialization ci = new CatalogInitialization();
             setCatalogInitialization(ci);
@@ -453,9 +454,14 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     }
     
     @Override
-    public synchronized void setCatalogInitialization(CatalogInitialization catalogInitialization) {
-        if (catalogInitialization!=null) catalogInitialization.injectManagementContext(this);
-        this.catalogInitialization = catalogInitialization;
+    public void setCatalogInitialization(CatalogInitialization catalogInitialization) {
+        synchronized (catalogInitMutex) {
+            Preconditions.checkNotNull(catalogInitialization, "initialization must not be null");
+            if (this.catalogInitialization!=null && this.catalogInitialization != catalogInitialization)
+                throw new IllegalStateException("Changing catalog init from "+this.catalogInitialization+" to "+catalogInitialization+"; changes not permitted");
+            catalogInitialization.injectManagementContext(this);
+            this.catalogInitialization = catalogInitialization;
+        }
     }
     
     public BrooklynObject lookup(String id) {

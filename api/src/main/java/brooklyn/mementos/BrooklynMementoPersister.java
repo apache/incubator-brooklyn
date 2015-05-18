@@ -103,6 +103,7 @@ public interface BrooklynMementoPersister {
     /** applies a partial write of state delta */  
     void delta(Delta delta, PersistenceExceptionHandler exceptionHandler);
     /** inserts an additional delta to be written on the next delta request */
+    @Beta
     void queueDelta(Delta delta);
 
     void enableWriteAccess();

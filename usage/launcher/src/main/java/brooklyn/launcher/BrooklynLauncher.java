@@ -676,7 +676,9 @@ public class BrooklynLauncher {
             brooklynProperties.addFromMap(brooklynAdditionalProperties);
         }
         
-        ((ManagementContextInternal)managementContext).setCatalogInitialization(catalogInitialization);
+        if (catalogInitialization!=null) {
+            ((ManagementContextInternal)managementContext).setCatalogInitialization(catalogInitialization);
+        }
         
         if (customizeManagement!=null) {
             customizeManagement.apply(managementContext);
@@ -1009,7 +1011,7 @@ public class BrooklynLauncher {
                 if (managementContext.getHighAvailabilityManager().getPersister() != null) {
                     managementContext.getHighAvailabilityManager().getPersister().waitForWritesCompleted(Duration.TEN_SECONDS);
                 }
-                managementContext.getRebindManager().waitForPendingComplete(Duration.TEN_SECONDS);
+                managementContext.getRebindManager().waitForPendingComplete(Duration.TEN_SECONDS, true);
                 LOG.info("Finished waiting for persist; took "+Time.makeTimeStringRounded(stopwatch));
             } catch (RuntimeInterruptedException e) {
                 Thread.currentThread().interrupt(); // keep going with shutdown

@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -177,6 +178,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     private final Semaphore persistingMutex = new Semaphore(1);
     private final Object startStopMutex = new Object();
+    private final AtomicInteger writeCount = new AtomicInteger(0);
 
     private PersistenceActivityMetrics metrics;
     
@@ -230,7 +232,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     CountdownTimer expiry = timeout.countdownTimer();
                     try {
                         scheduledTask.cancel(false);  
-                        waitForPendingComplete(expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+                        waitForPendingComplete(expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations), true);
                     } catch (Exception e) {
                         throw Exceptions.propagate(e);
                     }
@@ -243,7 +245,6 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     scheduledTask = null;
                 }
 
-
                 // Discard all state that was waiting to be persisted
                 synchronized (this) {
                     deltaCollector = new DeltaCollector();
@@ -255,29 +256,37 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         }
     }
     
-    /**
-     * @deprecated since 0.7.0, use {@link #waitForPendingComplete(Duration)}
-     */
-    @VisibleForTesting
-    public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
-        waitForPendingComplete(Duration.of(timeout, unit));
-    }
     /** Waits for any in-progress writes to be completed then for or any unwritten data to be written. */
     @VisibleForTesting
-    public void waitForPendingComplete(Duration timeout) throws InterruptedException, TimeoutException {
+    public void waitForPendingComplete(Duration timeout, boolean canTrigger) throws InterruptedException, TimeoutException {
         if (!isActive() && !stopping) return;
         
         CountdownTimer timer = timeout.isPositive() ? CountdownTimer.newInstanceStarted(timeout) : CountdownTimer.newInstancePaused(Duration.PRACTICALLY_FOREVER);
+        Integer targetWriteCount = null;
         // wait for mutex, so we aren't tricked by an in-progress who has already recycled the collector
         if (persistingMutex.tryAcquire(timer.getDurationRemaining().toMilliseconds(), TimeUnit.MILLISECONDS)) {
             try {
                 // now no one else is writing
                 if (!deltaCollector.isEmpty()) {
-                    // but there is data that needs to be written
-                    persistNowSafely(true);
+                    if (canTrigger) {
+                        // but there is data that needs to be written
+                        persistNowSafely(true);
+                    } else {
+                        targetWriteCount = writeCount.get()+1;
+                    }
                 }
             } finally {
                 persistingMutex.release();
+            }
+            if (targetWriteCount!=null) {
+                while (writeCount.get() <= targetWriteCount) {
+                    Duration left = timer.getDurationRemaining();
+                    if (left.isPositive()) {
+                        writeCount.wait(left.lowerBound(Duration.millis(10)).toMilliseconds());
+                    } else {
+                        throw new TimeoutException("Timeout waiting for independent write of rebind-periodic-delta, after "+timer.getDurationElapsed());
+                    }
+                }
             }
         } else {
             // someone else has been writing for the entire time 
@@ -425,6 +434,10 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 LOG.debug("Problem persisting, but no longer active (ignoring)", e);
             }
         } finally {
+            synchronized (writeCount) {
+                writeCount.incrementAndGet();
+                writeCount.notifyAll();
+            }
             if (!alreadyHasMutex) persistingMutex.release();
         }
     }

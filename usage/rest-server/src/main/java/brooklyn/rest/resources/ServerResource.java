@@ -176,11 +176,14 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                     if (!hasAppErrorsOrTimeout.get() || forceShutdownOnError) {
                         //give the http request a chance to complete gracefully
                         Time.sleep(delayForHttpReturn);
+                        
                         System.exit(0);
+                        
+                    } else {
+                        // There are app errors, don't exit the process, allowing any exception to continue throwing
+                        log.warn("Abandoning shutdown because there were errors and shutdown was not forced.");
+                        
                     }
-                    
-                    // There are app errors, don't exit the process, allowing any exception to continue throwing
-                    log.warn("Abandoning shutdown because there were errors and shutdown was not forced.");
                 }
             }
 

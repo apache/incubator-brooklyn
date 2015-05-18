@@ -345,7 +345,6 @@ public abstract class RebindIteration {
         
         Collection<CatalogItem<?, ?>> catalogItems = rebindContext.getCatalogItems();
         CatalogInitialization catInit = ((ManagementContextInternal)managementContext).getCatalogInitialization();
-        catInit.injectManagementContext(managementContext);
         catInit.applyCatalogLoadMode();
         Collection<CatalogItem<?,?>> itemsForResettingCatalog = null;
         boolean needsInitialCatalog;
@@ -365,9 +364,7 @@ public abstract class RebindIteration {
                 itemsForResettingCatalog = MutableList.<CatalogItem<?,?>>of();
                 
                 PersisterDeltaImpl delta = new PersisterDeltaImpl();
-                for (String catalogItemId: mementoRawData.getCatalogItems().keySet()) {
-                    delta.removedCatalogItemIds.add(catalogItemId);
-                }
+                delta.removedCatalogItemIds.addAll(mementoRawData.getCatalogItems().keySet());
                 getPersister().queueDelta(delta);
                 
                 mementoRawData.clearCatalogItems();

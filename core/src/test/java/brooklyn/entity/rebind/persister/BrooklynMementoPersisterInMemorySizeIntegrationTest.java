@@ -47,22 +47,29 @@ public class BrooklynMementoPersisterInMemorySizeIntegrationTest extends Brookly
     }
     
     public void testPersistenceVolumeFast() throws IOException, TimeoutException, InterruptedException {
-        doTestPersistenceVolume(50*1000, false);
+        doTestPersistenceVolume(50*1000, false, true);
     }
     @Test(groups="Integration",invocationCount=20)
     public void testPersistenceVolumeFastManyTimes() throws IOException, TimeoutException, InterruptedException {
-        doTestPersistenceVolume(50*1000, false);
+        doTestPersistenceVolume(50*1000, false, true);
     }
     @Test(groups="Integration")
     public void testPersistenceVolumeWaiting() throws IOException, TimeoutException, InterruptedException {
         // by waiting we ensure there aren't extra writes going on
-        doTestPersistenceVolume(50*1000, true);
+        doTestPersistenceVolume(50*1000, true, true);
+    }
+    public void testPersistenceVolumeFastNoTrigger() throws IOException, TimeoutException, InterruptedException {
+        doTestPersistenceVolume(50*1000, false, false);
+    }
+    @Test(groups="Integration",invocationCount=20)
+    public void testPersistenceVolumeFastNoTriggerManyTimes() throws IOException, TimeoutException, InterruptedException {
+        doTestPersistenceVolume(50*1000, false, false);
     }
     
-    protected void doTestPersistenceVolume(int bigBlockSize, boolean forceDelay) throws IOException, TimeoutException, InterruptedException {
+    protected void doTestPersistenceVolume(int bigBlockSize, boolean forceDelay, boolean canTrigger) throws IOException, TimeoutException, InterruptedException {
         if (forceDelay) Time.sleep(Duration.FIVE_SECONDS);
         else recorder.blockUntilDataWrittenExceeds(512, Duration.FIVE_SECONDS);
-        localManagementContext.getRebindManager().waitForPendingComplete(Duration.FIVE_SECONDS);
+        localManagementContext.getRebindManager().waitForPendingComplete(Duration.FIVE_SECONDS, canTrigger);
         
         long out1 = recorder.getBytesOut();
         int filesOut1 = recorder.getCountDataOut();
@@ -73,7 +80,7 @@ public class BrooklynMementoPersisterInMemorySizeIntegrationTest extends Brookly
         ((EntityInternal)app).setAttribute(TestEntity.NAME, "hello world");
         if (forceDelay) Time.sleep(Duration.FIVE_SECONDS);
         else recorder.blockUntilDataWrittenExceeds(out1+10, Duration.FIVE_SECONDS);
-        localManagementContext.getRebindManager().waitForPendingComplete(Duration.FIVE_SECONDS);
+        localManagementContext.getRebindManager().waitForPendingComplete(Duration.FIVE_SECONDS, canTrigger);
         
         long out2 = recorder.getBytesOut();
         Assert.assertTrue(out2-out1>10, "should have written more data");
@@ -86,7 +93,7 @@ public class BrooklynMementoPersisterInMemorySizeIntegrationTest extends Brookly
         ((EntityInternal)entity).setAttribute(TestEntity.NAME, Identifiers.makeRandomId(bigBlockSize));
         if (forceDelay) Time.sleep(Duration.FIVE_SECONDS);
         else recorder.blockUntilDataWrittenExceeds(out2+bigBlockSize, Duration.FIVE_SECONDS);
-        localManagementContext.getRebindManager().waitForPendingComplete(Duration.FIVE_SECONDS);
+        localManagementContext.getRebindManager().waitForPendingComplete(Duration.FIVE_SECONDS, canTrigger);
 
         long out3 = recorder.getBytesOut();
         Assert.assertTrue(out3-out2 > bigBlockSize, "should have written 50k more data, only wrote "+out3+" compared with "+out2);

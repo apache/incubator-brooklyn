@@ -565,7 +565,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
         while (!queuedDeltas.isEmpty()) {
             Delta extraDelta = queuedDeltas.remove(0);
-            doDelta(extraDelta, exceptionHandler, false);
+            doDelta(extraDelta, exceptionHandler, true);
         }
 
         doDelta(delta, exceptionHandler, false);
