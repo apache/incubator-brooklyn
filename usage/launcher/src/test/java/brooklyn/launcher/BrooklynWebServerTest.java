@@ -29,6 +29,7 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 import org.apache.http.client.methods.HttpGet;
@@ -148,7 +149,9 @@ public class BrooklynWebServerTest {
             verifyHttpsFromConfig(brooklynProperties);
             fail("Expected to fail due to unsupported ciphers during connection negotiation");
         } catch (Exception e) {
-            assertTrue(Exceptions.getFirstThrowableOfType(e, SSLPeerUnverifiedException.class) != null, "Expected to fail due to inability to negotiate");
+            assertTrue(Exceptions.getFirstThrowableOfType(e, SSLPeerUnverifiedException.class) != null ||
+                    Exceptions.getFirstThrowableOfType(e, SSLHandshakeException.class) != null,
+                    "Expected to fail due to inability to negotiate");
         }
     }
 
