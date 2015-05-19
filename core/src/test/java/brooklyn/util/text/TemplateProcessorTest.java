@@ -155,6 +155,15 @@ public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
         String result = TemplateProcessor.processTemplateContents(templateContents, entity, ImmutableMap.<String,Object>of());
         assertEquals(result, "myval");
     }
+
+    @Test
+    public void testApplyTemplatedAttribute() {
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        entity.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        String templateContents = "${attribute['" + TestApplication.MY_ATTRIBUTE.getName() +  "']}";
+        String result = TemplateProcessor.processTemplateContents(templateContents, entity, ImmutableMap.<String, Object>of());
+        assertEquals(result, "myval");
+    }
     
     @Test
     public void testDotSeparatedKey() {
