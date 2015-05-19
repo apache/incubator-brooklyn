@@ -1961,7 +1961,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         try {
             // FIXME: Needs to release port forwarding for WinRmMachineLocations
-            if (machine.getMachineDetails() != null && machine.getMachineDetails().getOsDetails() != null && !machine.getMachineDetails().getOsDetails().isWindows()) {
+            if (machine instanceof SshMachineLocation) {
                 releasePortForwarding((SshMachineLocation)machine);
             }
         } catch (Exception e) {
