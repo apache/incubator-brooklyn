@@ -47,6 +47,7 @@ import com.google.common.annotations.VisibleForTesting;
  * Controls the persisting and reading back of mementos. Used by {@link RebindManager} 
  * to support brooklyn restart.
  */
+//TODO should split into persistence data load/save; serializer/deserializer; persister daemon
 public interface BrooklynMementoPersister {
 
     public static interface LookupContext {

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -55,6 +56,7 @@ import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
+import brooklyn.entity.rebind.transformer.RawDataTransformer;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
@@ -233,6 +235,7 @@ public abstract class RebindIteration {
         loadRawMementos();
         instantiateCatalogMementos();
         rebuildCatalog();
+        applyGlobalTransformers();
         loadMementoManifest();
         instantiateLocationsAndEntities();
         instantiateMementos();
@@ -1161,6 +1164,27 @@ public abstract class RebindIteration {
     
     protected boolean shouldLogRebinding() {
         return (readOnlyRebindCount.get() < 5) || (readOnlyRebindCount.get()%1000==0);
+    }
+
+    private void applyGlobalTransformers() {
+        Iterable<RawDataTransformer> globalTransformers = new TransformerLoader(managementContext).findGlobalTransformers();
+        BrooklynMementoRawData.Builder rawBuilder = BrooklynMementoRawData.builder();
+        for (BrooklynObjectType type : BrooklynObjectType.values()) {
+            if (type == BrooklynObjectType.UNKNOWN) continue;
+            Map<String, String> objs = mementoRawData.getObjectsOfType(type);
+            for (Entry<String, String> entry: objs.entrySet()) {
+                String contents = entry.getValue();
+                for (RawDataTransformer transformer : globalTransformers) {
+                    try {
+                        contents = transformer.transform(contents);
+                    } catch (Exception e) {
+                        LOG.warn("Transformer " + transformer + " failed while working on " + entry.getKey(), e);
+                    }
+                }
+                rawBuilder.put(type, entry.getKey(), contents);
+            }
+        }
+        mementoRawData = rawBuilder.build();
     }
 
 }
