@@ -786,19 +786,30 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
     
     private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromBundles(ManagementContext mgmt, Collection<CatalogBundle> libraries) {
-        String[] urls = null;
         CatalogDto dto = CatalogDto.newNamedInstance("Bundles Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-bundles-classpath-"+libraries.hashCode());
-        urls = new String[libraries.size()];
-        int i=0;
-        for (CatalogBundle b: libraries)
-            urls[i++] = b.getUrl();
-            
+        List<String> urls = MutableList.of();
+        for (CatalogBundle b: libraries) {
+            // TODO currently does not support pre-installed bundles identified by name:version 
+            // (ie where URL not supplied)
+            if (Strings.isNonBlank(b.getUrl())) {
+                urls.add(b.getUrl());
+            }
+        }
+        
+        if (urls.isEmpty()) {
+            log.warn("No bundles to scan: scanJavaAnnotations currently only applies to OSGi bundles provided by URL"); 
+            return MutableList.of();
+        }
+        
         CatalogDo subCatalog = new CatalogDo(dto);
-        subCatalog.addToClasspath(urls);
+        subCatalog.addToClasspath(urls.toArray(new String[0]));
         return scanAnnotationsInternal(mgmt, subCatalog);
     }
     
     private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsInternal(ManagementContext mgmt, CatalogDo subCatalog) {
+        // TODO this does java-scanning only;
+        // the call when scanning bundles should use the CatalogItem instead and use OSGi when loading for scanning
+        // (or another scanning mechanism).  see comments on CatalogClasspathDo.load
         subCatalog.mgmt = mgmt;
         subCatalog.setClasspathScanForEntities(CatalogScanningModes.ANNOTATIONS);
         subCatalog.load();

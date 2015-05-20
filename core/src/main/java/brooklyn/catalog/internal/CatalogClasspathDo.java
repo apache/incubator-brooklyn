@@ -105,6 +105,7 @@ public class CatalogClasspathDo {
     
     /** causes all scanning-based classpaths to scan the classpaths
     * (but does _not_ load all JARs) */
+    // TODO this does a Java scan; we also need an OSGi scan which uses the OSGi classloaders when loading for scanning and resolving dependencies 
     synchronized void load() {
         if (classpath == null || isLoaded) return;
 
