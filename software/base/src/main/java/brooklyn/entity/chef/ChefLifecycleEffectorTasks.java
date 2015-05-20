@@ -304,6 +304,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
             DynamicTasks.queue(
                 // if this task fails show it as failed but don't block subsequent routines
                 // (ie allow us to actually decommission the machine)
+                // TODO args could be a List<String> config key ?
                 TaskTags.markInessential(
                 new KnifeTaskFactory<String>("delete node and client registration at chef server")
                     .add("knife node delete "+getNodeName()+" -y")

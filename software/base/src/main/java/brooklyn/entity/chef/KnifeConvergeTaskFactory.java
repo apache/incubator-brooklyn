@@ -92,6 +92,8 @@ public class KnifeConvergeTaskFactory<RET> extends KnifeTaskFactory<RET> {
         if (keyfile!=null) result.add("-i "+keyfile.getPath());
         else result.add("-P "+checkNotNull(machine.findPassword(), "No password or private key data for "+machine));
         
+        result.add("--no-host-key-verify");
+        
         if (sudo != Boolean.FALSE) result.add("--sudo");
 
         if (!Strings.isNullOrEmpty(nodeName)) {
