@@ -40,6 +40,7 @@ import com.google.common.base.Preconditions;
 public final class SshCommandEffector extends AddEffector {
     
     public static final ConfigKey<String> EFFECTOR_COMMAND = ConfigKeys.newStringConfigKey("command");
+    public static final ConfigKey<String> EFFECTOR_EXECUTION_DIR = SshCommandSensor.SENSOR_EXECUTION_DIR;
     
     public SshCommandEffector(ConfigBag params) {
         super(newEffectorBuilder(params).build());
@@ -59,10 +60,12 @@ public final class SshCommandEffector extends AddEffector {
     protected static class Body extends EffectorBody<String> {
         private final Effector<?> effector;
         private final String command;
+        private final String executionDir;
 
         public Body(Effector<?> eff, ConfigBag params) {
             this.effector = eff;
             this.command = Preconditions.checkNotNull(params.get(EFFECTOR_COMMAND), "command must be supplied when defining this effector");
+            this.executionDir = params.get(EFFECTOR_EXECUTION_DIR);
             // TODO could take a custom "env" aka effectorShellEnv
         }
 
@@ -70,8 +73,7 @@ public final class SshCommandEffector extends AddEffector {
         public String call(ConfigBag params) {
             String command = this.command;
             
-            String runDir = entity().getAttribute(SoftwareProcess.RUN_DIR);
-            if (runDir!=null) command = "cd '"+runDir+"'\n"+command;
+            command = SshCommandSensor.makeCommandExecutingInDirectory(command, executionDir, entity());
             
             MutableMap<String, String> env = MutableMap.of();
             // first set all declared parameters, including default values
