@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.basic;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import brooklyn.location.basic.SshMachineLocation;
@@ -43,25 +44,22 @@ public class EmptySoftwareProcessSshDriver extends AbstractSoftwareProcessSshDri
     public void customize() { }
 
     @Override
-    public void setup() { }
+    public void copyInstallResources() { 
+        Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
+        Map<String, String> installTemplates = entity.getConfig(SoftwareProcess.INSTALL_TEMPLATES);
+        if ((installFiles!=null && !installFiles.isEmpty()) || (installTemplates!=null && !installTemplates.isEmpty())) {
+            super.copyInstallResources();
+        }
+    }
 
     @Override
-    public void copyInstallResources() { }
-
-    @Override
-    public void copyRuntimeResources() { }
-
-    @Override
-    public void runPreInstallCommand(String command) { }
-
-    @Override
-    public void runPostInstallCommand(String command) { }
-
-    @Override
-    public void runPreLaunchCommand(String command) { }
-
-    @Override
-    public void runPostLaunchCommand(String command) { }
+    public void copyRuntimeResources() { 
+        Map<String, String> runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
+        Map<String, String> runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
+        if ((runtimeFiles!=null && !runtimeFiles.isEmpty()) || (runtimeTemplates!=null && !runtimeTemplates.isEmpty())) {
+            super.copyRuntimeResources();
+        }        
+    }
 
     @Override
     public void launch() {
