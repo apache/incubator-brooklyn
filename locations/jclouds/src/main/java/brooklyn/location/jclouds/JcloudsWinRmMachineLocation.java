@@ -16,8 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.basic;
+package brooklyn.location.jclouds;
 
-public interface VanillaSoftwareProcessDriver extends AbstractVanillaProcessDriver {
+import brooklyn.location.basic.WinRmMachineLocation;
+
+public class JcloudsWinRmMachineLocation extends WinRmMachineLocation {
 
 }

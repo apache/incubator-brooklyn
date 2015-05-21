@@ -45,6 +45,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.geo.HostGeoInfo;
@@ -545,7 +546,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             .configure(LocationConfigKeys.LONGITUDE, -20d)
             .configure(JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 1);
         FakeLocalhostWithParentJcloudsLocation ll = managementContext.getLocationManager().createLocation(LocationSpec.create(FakeLocalhostWithParentJcloudsLocation.class).configure(allConfig.getAllConfig()));
-        JcloudsSshMachineLocation l = ll.obtain();
+        MachineLocation l = ll.obtain();
         log.info("loc:" +l);
         HostGeoInfo geo = HostGeoInfo.fromLocation(l);
         log.info("geo: "+geo);
@@ -569,7 +570,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
         FakeLocalhostWithParentJcloudsLocation ll = managementContext.getLocationManager().createLocation(LocationSpec.create(FakeLocalhostWithParentJcloudsLocation.class)
             .configure(new JcloudsPropertiesFromBrooklynProperties().getJcloudsProperties("softlayer", "wdc01", null, managementContext.getBrooklynProperties()))
             .configure(allConfig.getAllConfig()));
-        JcloudsSshMachineLocation l = ll.obtain();
+        MachineLocation l = ll.obtain();
         log.info("loc:" +l);
         HostGeoInfo geo = HostGeoInfo.fromLocation(l);
         log.info("geo: "+geo);
@@ -588,7 +589,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             .configure(JcloudsLocationConfig.JCLOUDS_LOCATION_CUSTOMIZERS, ImmutableList.of(customizer))
             .configure(JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 1);
         FakeLocalhostWithParentJcloudsLocation ll = managementContext.getLocationManager().createLocation(LocationSpec.create(FakeLocalhostWithParentJcloudsLocation.class).configure(allConfig.getAllConfig()));
-        JcloudsSshMachineLocation l = ll.obtain();
+        JcloudsSshMachineLocation l = (JcloudsSshMachineLocation)ll.obtain();
         Mockito.verify(customizer, Mockito.times(1)).customize(ll, null, l);
         Mockito.verify(customizer, Mockito.never()).preRelease(l);
         Mockito.verify(customizer, Mockito.never()).postRelease(l);

@@ -153,7 +153,7 @@ public abstract class AbstractJcloudsLocationTest {
     // Use this utility method to ensure machines are released on tearDown
     protected SshMachineLocation obtainMachine(Map flags) {
         try {
-            SshMachineLocation result = loc.obtain(flags);
+            SshMachineLocation result = (SshMachineLocation)loc.obtain(flags);
             machines.add(result);
             return result;
         } catch (NoMachinesAvailableException nmae) {

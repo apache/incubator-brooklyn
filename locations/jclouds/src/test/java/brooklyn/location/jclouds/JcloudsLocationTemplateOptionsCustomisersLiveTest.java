@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
 import org.jclouds.compute.options.TemplateOptions;
+import org.jclouds.ec2.domain.BlockDeviceMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -44,6 +45,7 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class JcloudsLocationTemplateOptionsCustomisersLiveTest extends AbstractJcloudsLiveTest {
 
@@ -59,15 +61,36 @@ public class JcloudsLocationTemplateOptionsCustomisersLiveTest extends AbstractJ
     // Doesn't actually do much with the cloud, but jclouds requires identity and credential before it will work
     @Test(groups = "Live")
     public void testGeneralPurposeTemplateOptionCustomisation() throws Exception {
-        ConfigKey<Map<String, String>> key = JcloudsLocationConfig.TEMPLATE_OPTIONS;
+        ConfigKey<Map<String, Object>> key = JcloudsLocationConfig.TEMPLATE_OPTIONS;
 
         ConfigBag config = ConfigBag.newInstance()
-                .configure(key, ImmutableMap.of("iamInstanceProfileName", "helloworld"));
+                .configure(key, ImmutableMap.of("iamInstanceProfileName", (Object)"helloworld"));
         AWSEC2TemplateOptions templateOptions = jcloudsLocation.getComputeService().templateOptions().as(AWSEC2TemplateOptions.class);
 
         invokeCustomizeTemplateOptions(templateOptions, JcloudsLocationConfig.TEMPLATE_OPTIONS, config);
 
         assertEquals(templateOptions.getIAMInstanceProfileName(), "helloworld");
+    }
+
+    // Doesn't actually do much with the cloud, but jclouds requires identity and credential before it will work
+    @Test(groups = "Live")
+    public void testGeneralPurposeTemplateOptionCustomisationWithList() throws Exception {
+        ConfigKey<Map<String, Object>> key = JcloudsLocationConfig.TEMPLATE_OPTIONS;
+
+        ConfigBag config = ConfigBag.newInstance()
+                        .configure(key, ImmutableMap.of(
+                                "iamInstanceProfileName", (Object) "helloworld",
+                                "mapNewVolumeToDeviceName", (Object) ImmutableList.of("/dev/sda1/", 123, true)));
+        AWSEC2TemplateOptions templateOptions = jcloudsLocation.getComputeService().templateOptions().as(AWSEC2TemplateOptions.class);
+
+        invokeCustomizeTemplateOptions(templateOptions, JcloudsLocationConfig.TEMPLATE_OPTIONS, config);
+
+        assertEquals(templateOptions.getIAMInstanceProfileName(), "helloworld");
+        assertEquals(templateOptions.getBlockDeviceMappings().size(), 1);
+        BlockDeviceMapping blockDeviceMapping = templateOptions.getBlockDeviceMappings().iterator().next();
+        assertEquals(blockDeviceMapping.getDeviceName(), "/dev/sda1/");
+        assertEquals(blockDeviceMapping.getEbsVolumeSize(), (Integer)123);
+        assertTrue(blockDeviceMapping.getEbsDeleteOnTermination());
     }
 
     /**

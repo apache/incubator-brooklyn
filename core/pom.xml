@@ -65,7 +65,11 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>io.cloudsoft.windows</groupId>
+            <artifactId>winrm4j</artifactId>
+            <version>${winrm4j.version}</version>
+        </dependency>
         <dependency>
             <groupId>net.schmizz</groupId>
             <artifactId>sshj</artifactId>
