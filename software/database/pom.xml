@@ -51,6 +51,8 @@
                             <exclude>src/main/resources/brooklyn/entity/database/mysql/mysql.conf</exclude>
                             <exclude>src/main/resources/brooklyn/entity/database/postgresql/postgresql.conf</exclude>
                             <exclude>src/main/resources/brooklyn/entity/database/rubyrep/rubyrep.conf</exclude>
+                            <exclude>src/main/resources/brooklyn/entity/database/mssql/ConfigurationFile.ini</exclude>
+                            <exclude>src/main/resources/brooklyn/entity/database/mssql/mssql.yaml</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
