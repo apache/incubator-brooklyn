@@ -1,0 +1,31 @@
+name: imageId us-west-2/ami-07390a37
+
+location: AWS Oregon Win
+
+services:
+- type: brooklyn.entity.basic.VanillaWindowsProcess
+  brooklyn.config:
+    templates.install:
+      classpath://brooklyn/entity/database/mssql/ConfigurationFile.ini: "C:\\ConfigurationFile.ini"
+      classpath://brooklyn/entity/database/mssql/installmssql.ps1: "C:\\installmssql.ps1"
+      classpath://brooklyn/entity/database/mssql/configuremssql.ps1: "C:\\configuremssql.ps1"
+      classpath://brooklyn/entity/database/mssql/launchmssql.bat: "C:\\launchmssql.bat"
+      classpath://brooklyn/entity/database/mssql/stopmssql.bat: "C:\\stopmssql.bat"
+    install.command: powershell -command "C:\\installmssql.ps1"
+    customize.command: powershell -command "C:\\configuremssql.ps1"
+    launch.command: "C:\\launchmssql.bat"
+    stop.command: "C:\\stopmssql.bat"
+    checkRunning.command: echo true
+
+    ## NOTE: Values must be supplied for the following
+    mssql.download.url:
+    mssql.download.user:
+    mssql.download.password:
+    mssql.sa.password:
+    mssql.instance.name:
+
+    ## The following is a list of *all* MSSQL features. Installation time and footprint can be greatly
+    ## reduced by removing unnecessary features
+    mssql.features: "SQLENGINE,REPLICATION,FULLTEXT,DQ,AS,RS,RS_SHP,DQC,BIDS,CONN,IS,BC,SDK,BOL,SSMS,ADV_SSMS,DREPLAY_CTLR,DREPLAY_CLT,SNAC_SDK"
+  provisioning.properties:
+    required.ports: 1433
