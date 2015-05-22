@@ -49,7 +49,7 @@ public interface Jetty6Server extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
-            SoftwareProcess.DOWNLOAD_URL, "http://dist.codehaus.org/jetty/jetty-${version}/jetty-${version}.zip");
+            SoftwareProcess.DOWNLOAD_URL, "http://get.jenv.mvnsearch.org/download/jetty/jetty-${version}.zip");
 
     AttributeSensor<Integer> RESPONSES_4XX_COUNT =
             Sensors.newIntegerSensor("webapp.responses.4xx", "Responses in the 400's");
