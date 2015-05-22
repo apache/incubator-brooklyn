@@ -47,6 +47,22 @@ public class NetworkingUtilsTest {
 
     private static final Logger log = LoggerFactory.getLogger(NetworkingUtilsTest.class);
     
+//    @Test(invocationCount=1000)
+    @Test
+    public void testIsPortAvailableRepeatedly() throws Exception {
+        int preferredPort = 8080;
+        int port = Networking.nextAvailablePort(preferredPort);
+        if (port != preferredPort) {
+            log.warn(preferredPort + " not available, using " + port + " instead");
+        };
+        TimeUnit.SECONDS.sleep(1);
+    }
+
+    @Test(dependsOnMethods="testIsPortAvailableRepeatedly")
+    public void testNoPortsAvailable() {
+        throw new RuntimeException("All tests successfull so far, triggering failure to dump output for comparison. unable to find a free port");
+    }
+
     @Test
     public void testValidIp() throws Exception {
         assertTrue(Networking.isValidIp4("127.0.0.1"));

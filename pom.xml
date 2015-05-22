@@ -1481,7 +1481,7 @@
                             <properties>
                                 <property>
                                     <name>listener</name>
-                                    <value>brooklyn.test.LoggingVerboseReporter,brooklyn.test.BrooklynLeakListener,brooklyn.test.PlatformTestSelectorListener</value>
+                                    <value>brooklyn.test.LoggingVerboseReporter,brooklyn.test.BrooklynLeakListener,brooklyn.test.PlatformTestSelectorListener,brooklyn.test.NoPortsAvailableFailureListener</value>
                                 </property>
                             </properties>
                             <enableAssertions>true</enableAssertions>

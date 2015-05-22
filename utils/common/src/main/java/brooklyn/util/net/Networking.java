@@ -79,6 +79,8 @@ public class Networking {
             throw new IllegalArgumentException("Invalid start port: " + port);
         }
 
+        log.info("Trying available port " + localAddress + ":" + port);
+
         // For some operations it's not valid to pass ANY_NIC (0.0.0.0).
         // We substitute for the loopback address in those cases.
         InetAddress localAddressNotAny = (localAddress==null || ANY_NIC.equals(localAddress))
@@ -104,7 +106,10 @@ public class Networking {
                 ds.setSoTimeout(250);
                 ds.setReuseAddress(true);
                 ds.bind(new InetSocketAddress(localAddress, port));
+                
+                log.info("Can bind to " + localAddress + ":" + port);
             } catch (IOException e) {
+                log.warn("Failed to bind to port " + localAddress + ":" + port, e);
                 return false;
             } finally {
                 if (ds != null) {
@@ -123,6 +128,7 @@ public class Networking {
             if (localAddress==null || ANY_NIC.equals(localAddress)) {
                 // sometimes 0.0.0.0 can be bound to even if 127.0.0.1 has the port as in use;
                 // check all interfaces if 0.0.0.0 was requested
+                log.info("Checking all interfaces for " + localAddress + ":" + port);
                 Enumeration<NetworkInterface> nis = null;
                 try {
                     nis = NetworkInterface.getNetworkInterfaces();
@@ -134,6 +140,7 @@ public class Networking {
                     Enumeration<InetAddress> as = ni.getInetAddresses();
                     while (as.hasMoreElements()) {
                         InetAddress a = as.nextElement();
+                        log.info("Checking interface " + a + ":" + port);
                         if (!isPortAvailable(a, port))
                             return false;
                     }
@@ -143,7 +150,7 @@ public class Networking {
             return true;
         } finally {
             // Until timeout was added, was taking 1min5secs for /fe80:0:0:0:1cc5:1ff:fe81:a61d%8 : 8081
-            if (log.isTraceEnabled()) log.trace("Took {} to determine if port {} : {} was available", 
+            log.info("Took {} to determine if port {} : {} was available", 
                     new Object[] {Time.makeTimeString(watch.elapsed(TimeUnit.MILLISECONDS), true), localAddress, port});
         }
     }
