@@ -32,7 +32,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.trait.HasShortName;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.cloud.CloudMachineNamer;
+import brooklyn.location.cloud.names.AbstractCloudMachineNamer;
 import brooklyn.management.Task;
 import brooklyn.policy.Enricher;
 import brooklyn.util.ResourceUtils;
@@ -112,7 +112,7 @@ public class InitdServiceInstaller implements SystemServiceInstaller {
         } else {
             name = "brooklyn-service";
         }
-        return CloudMachineNamer.sanitize(name.toString()).toLowerCase();
+        return AbstractCloudMachineNamer.sanitize(name.toString()).toLowerCase();
     }
 
     private String getStartScriptName() {

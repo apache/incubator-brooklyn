@@ -57,9 +57,13 @@ public interface CloudLocationConfig {
     /** @deprecated since 0.6.0; included here so it gets picked up in auto-detect routines */ @Deprecated
     public static final ConfigKey<String> LEGACY_PRIVATE_KEY_PASSPHRASE = LocationConfigKeys.LEGACY_PRIVATE_KEY_PASSPHRASE;
 
-    // default is just shy of common 64-char boundary (could perhaps increase slightly...)
+    // default is just shy of common 64-char boundary, leaving 4 chars plus our salt allowance (default 4+1) which allows up to -12345678 by jclouds
     public static final ConfigKey<Integer> VM_NAME_MAX_LENGTH = ConfigKeys.newIntegerConfigKey(
-            "vmNameMaxLength", "Maximum length of VM name", 61);
+        "vmNameMaxLength", "Maximum length of VM name", 60);
+
+    public static final ConfigKey<Integer> VM_NAME_SALT_LENGTH = ConfigKeys.newIntegerConfigKey(
+        "vmNameSaltLength", "Number of characters to use for a random identifier inserted in hostname "
+            + "to uniquely identify machines", 4);
 
     public static final ConfigKey<String> WAIT_FOR_SSHABLE = ConfigKeys.newStringConfigKey("waitForSshable", 
             "Whether and how long to wait for a newly provisioned VM to be accessible via ssh; " +
@@ -93,5 +97,8 @@ public interface CloudLocationConfig {
     
     public static final ConfigKey<Object> MIN_DISK = new BasicConfigKey<Object>(Object.class, "minDisk",
         "Minimum size of disk, either as string (100gb) or number of GB (100), for use in selecting the machine/hardware profile", null);
+
+    public static final ConfigKey<String> DOMAIN_NAME = new BasicConfigKey<String>(String.class, "domainName",
+        "DNS domain where the host should be created, e.g. yourdomain.com (selected clouds only)", null);
 
 }

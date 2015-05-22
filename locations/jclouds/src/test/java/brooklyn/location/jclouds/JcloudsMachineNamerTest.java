@@ -36,15 +36,15 @@ public class JcloudsMachineNamerTest {
             .configure(JcloudsLocationConfig.CLOUD_PROVIDER, "vcloud")
             .configure(JcloudsLocationConfig.CALLER_CONTEXT, "!mycontext!");
         
-        String result = new JcloudsMachineNamer(cfg).generateNewGroupId();
+        String result = new JcloudsMachineNamer().generateNewGroupId(cfg);
         
         log.info("test mycontext vcloud group id gives: "+result);
-        // brooklyn-user-mycontext!-1234
-        // br-user-myco-1234
-        Assert.assertTrue(result.length() <= 15);
+        // brooklyn-user-!mycontext!-1234
+        // br-<code>-<user>-myco-1234
+        Assert.assertTrue(result.length() <= 24-4-1, "result: "+result);
         
         String user = Strings.maxlen(System.getProperty("user.name"), 2).toLowerCase();
-        // (length 2 will happen if user is brooklyn)
+        // (length 2 will happen if user is brooklyn, to avoid brooklyn-brooklyn at start!)
         Assert.assertTrue(result.indexOf(user) >= 0);
         Assert.assertTrue(result.indexOf("-myc") >= 0);
     }

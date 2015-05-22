@@ -170,7 +170,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
             // paths (ie non-protocol) and
             // NB, for security, file URL's are NOT served
             MediaType mime = WebResourceUtils.getImageMediaTypeFromExtension(Files.getFileExtension(url));
-            Object content = ResourceUtils.create(brooklyn().getCatalog().getRootClassLoader()).getResourceFromUrl(url);
+            Object content = ResourceUtils.create(brooklyn().getCatalogClassLoader()).getResourceFromUrl(url);
             return Response.ok(content, mime).build();
         }
 

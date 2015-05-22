@@ -25,7 +25,7 @@ import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 
-import java.io.FileNotFoundException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +46,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.catalog.CatalogPredicates;
+import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
@@ -75,12 +76,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Throwables;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+/* TODO the complex tree-structured catalogs are only useful when we are relying on those separate catalog classloaders
+ * to isolate classpaths. with osgi everything is just put into the "manual additions" catalog. */
 public class BasicBrooklynCatalog implements BrooklynCatalog {
     private static final String POLICIES_KEY = "brooklyn.policies";
     private static final String LOCATIONS_KEY = "brooklyn.locations";
@@ -109,6 +112,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private CatalogDo catalog;
     private volatile CatalogDo manualAdditionsCatalog;
     private volatile LoadedClassLoader manualAdditionsClasses;
+    private final AggregateClassLoader rootClassLoader = AggregateClassLoader.newInstanceWithNoLoaders();
 
     public BasicBrooklynCatalog(ManagementContext mgmt) {
         this(mgmt, CatalogDto.newNamedInstance("empty catalog", "empty catalog", "empty catalog, expected to be reset later"));
@@ -140,6 +144,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         catalog.load(mgmt, null);
         CatalogUtils.logDebugOrTraceIfRebinding(log, "Reloaded catalog for "+this+", now switching");
         this.catalog = catalog;
+        resetRootClassLoader();
+        this.manualAdditionsCatalog = null;
 
         // Inject management context into and persist all the new entries.
         for (CatalogItem<?, ?> entry : getCatalogItems()) {
@@ -186,12 +192,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             return null;
         }
 
-        String versionedId = CatalogUtils.getVersionedId(symbolicName, fixedVersionId);
-        CatalogItemDo<?, ?> item = null;
-        //TODO should remove "manual additions" bucket; just have one map a la osgi
-        if (manualAdditionsCatalog!=null) item = manualAdditionsCatalog.getIdCache().get(versionedId);
-        if (item == null) item = catalog.getIdCache().get(versionedId);
-        return item;
+        return catalog.getIdCache().get( CatalogUtils.getVersionedId(symbolicName, fixedVersionId) );
     }
     
     private String getFixedVersionId(String symbolicName, String version) {
@@ -296,7 +297,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     
     @Override
     public ClassLoader getRootClassLoader() {
-        return catalog.getRootClassLoader();
+        if (rootClassLoader.isEmpty() && catalog!=null) {
+            resetRootClassLoader();
+        }
+        return rootClassLoader;
+    }
+
+    private void resetRootClassLoader() {
+        rootClassLoader.reset(ImmutableList.of(catalog.getRootClassLoader()));
     }
 
     /**
@@ -348,14 +356,21 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         // revert to legacy mechanism
         SpecT spec = null;
+        Method method;
+        try {
+            method = Reflections.findMethod(specType, "create", Class.class);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            throw new IllegalStateException("Unsupported creation of spec type "+specType+"; it must have a public static create(Class) method", e);            
+        }
         try {
             if (loadedItem.getJavaType()!=null) {
-                SpecT specT = (SpecT) Reflections.findMethod(specType, "create", Class.class).invoke(null, loadedItem.loadJavaClass(mgmt));
+                SpecT specT = (SpecT) method.invoke(null, loadedItem.loadJavaClass(mgmt));
                 spec = specT;
             }
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            throw new IllegalStateException("Unsupported creation of spec type "+specType+"; it must have a public static create(Class) method", e);
+            throw new IllegalStateException("Error creating "+specType+" "+loadedItem.getJavaType()+": "+e, e);
         }
 
         if (spec==null) 
@@ -597,7 +612,22 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         Collection<CatalogBundle> libraryBundles = CatalogItemDtoAbstract.parseLibraries(librariesCombined);
 
         // TODO as this may take a while if downloading, the REST call should be async
+        // (this load is required for the scan below and I think also for yaml resolution)
         CatalogUtils.installLibraries(mgmt, libraryBundlesNew);
+
+        Boolean scanJavaAnnotations = getFirstAs(itemMetadata, Boolean.class, "scanJavaAnnotations", "scan_java_annotations").orNull();
+        if (scanJavaAnnotations==null || !scanJavaAnnotations) {
+            // don't scan
+        } else {
+            // scan for annotations: if libraries here, scan them; if inherited libraries error; else scan classpath
+            if (!libraryBundlesNew.isEmpty()) {
+                result.addAll(scanAnnotations(mgmt, libraryBundlesNew));
+            } else if (libraryBundles.isEmpty()) {
+                result.addAll(scanAnnotations(mgmt, null));
+            } else {
+                throw new IllegalStateException("Cannot scan catalog node no local bundles, and with inherited bundles we will not scan the classpath");
+            }
+        }
         
         Object items = catalogMetadata.remove("items");
         Object item = catalogMetadata.remove("item");
@@ -750,7 +780,36 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return oldValue;
     }
 
-    
+    /** scans the given libraries for annotated items, or if null scans the local classpath */ 
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotations(ManagementContext mgmt, Collection<CatalogBundle> libraries) {
+//        CatalogDto dto = CatalogDto.newDefaultLocalScanningDto(CatalogClasspathDo.CatalogScanningModes.ANNOTATIONS);
+        CatalogDto dto;
+        String[] urls = null;
+        if (libraries==null) {
+            dto = CatalogDto.newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-local-classpath");
+        } else {
+            dto = CatalogDto.newNamedInstance("Bundles Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-bundles-classpath-"+libraries.hashCode());
+            urls = new String[libraries.size()];
+            int i=0;
+            for (CatalogBundle b: libraries)
+                urls[i++] = b.getUrl();
+        }
+        CatalogDo subCatalog = new CatalogDo(dto);
+        subCatalog.mgmt = mgmt;
+        if (urls!=null) {
+            subCatalog.addToClasspath(urls);
+        } // else use local classpath
+        subCatalog.setClasspathScanForEntities(CatalogScanningModes.ANNOTATIONS);
+        subCatalog.load();
+        // TODO apply metadata?  (extract YAML from the items returned)
+        // also see doc .../catalog/index.md which says we might not apply metadata
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        Collection<CatalogItemDtoAbstract<?, ?>> result = (Collection<CatalogItemDtoAbstract<?, ?>>)(Collection)Collections2.transform(
+                (Collection<CatalogItemDo<Object,Object>>)(Collection)subCatalog.getIdCache().values(), 
+                itemDoToDto());
+        return result;
+    }
+
     private class PlanInterpreterGuessingType {
 
         final String id;
@@ -986,7 +1045,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
     
     private CatalogItem<?,?> addItemDto(CatalogItemDtoAbstract<?, ?> itemDto, boolean forceUpdate) {
-        checkItemNotExists(itemDto, forceUpdate);
+        CatalogItem<?, ?> existingDto = checkItemIsDuplicateOrDisallowed(itemDto, true, forceUpdate);
+        if (existingDto!=null) {
+            // it's a duplicate, and not forced, just return it
+            log.trace("Using existing duplicate for catalog item {}", itemDto.getId());
+            return existingDto;
+        }
 
         if (manualAdditionsCatalog==null) loadManualAdditionsCatalog();
         manualAdditionsCatalog.addEntry(itemDto);
@@ -1008,8 +1072,19 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDto;
     }
 
-    private void checkItemNotExists(CatalogItem<?,?> itemDto, boolean forceUpdate) {
-        if (!forceUpdate && getCatalogItemDo(itemDto.getSymbolicName(), itemDto.getVersion()) != null) {
+    /** returns item DTO if item is an allowed duplicate, null if it should be added, or false if the item is an allowed duplicate,
+     * throwing if item cannot be added */
+    private CatalogItem<?, ?> checkItemIsDuplicateOrDisallowed(CatalogItem<?,?> itemDto, boolean allowDuplicates, boolean forceUpdate) {
+        if (forceUpdate) return null;
+        CatalogItemDo<?, ?> existingItem = getCatalogItemDo(itemDto.getSymbolicName(), itemDto.getVersion());
+        if (existingItem == null) return null;
+        // check if they are equal
+        CatalogItem<?, ?> existingDto = existingItem.getDto();
+        if (existingDto.equals(itemDto)) {
+            if (allowDuplicates) return existingItem;
+            throw new IllegalStateException("Updating existing catalog entries, even with the same content, is forbidden: " +
+                    itemDto.getSymbolicName() + ":" + itemDto.getVersion() + ". Use forceUpdate argument to override.");
+        } else {
             throw new IllegalStateException("Updating existing catalog entries is forbidden: " +
                     itemDto.getSymbolicName() + ":" + itemDto.getVersion() + ". Use forceUpdate argument to override.");
         }
@@ -1085,6 +1160,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return new Function<CatalogItemDo<T,SpecT>, CatalogItem<T,SpecT>>() {
             @Override
             public CatalogItem<T,SpecT> apply(@Nullable CatalogItemDo<T,SpecT> item) {
+                if (item==null) return null;
                 return item.getDto();
             }
         };
@@ -1100,41 +1176,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private synchronized void loadSerializer() {
         if (serializer==null) 
             serializer = new CatalogXmlSerializer();
-    }
-
-    public void resetCatalogToContentsAtConfiguredUrl() {
-        CatalogDto dto = null;
-        String catalogUrl = mgmt.getConfig().getConfig(BrooklynServerConfig.BROOKLYN_CATALOG_URL);
-        try {
-            if (!Strings.isEmpty(catalogUrl)) {
-                dto = CatalogDto.newDtoFromUrl(catalogUrl);
-                if (log.isDebugEnabled()) {
-                    log.debug("Loading catalog from {}: {}", catalogUrl, catalog);
-                }
-            }
-        } catch (Exception e) {
-            if (Throwables.getRootCause(e) instanceof FileNotFoundException) {
-                Maybe<Object> nonDefaultUrl = mgmt.getConfig().getConfigRaw(BrooklynServerConfig.BROOKLYN_CATALOG_URL, true);
-                if (nonDefaultUrl.isPresentAndNonNull() && !"".equals(nonDefaultUrl.get())) {
-                    log.warn("Could not find catalog XML specified at {}; using default (local classpath) catalog. Error was: {}", nonDefaultUrl, e);
-                } else {
-                    if (log.isDebugEnabled()) {
-                        log.debug("No default catalog file available at {}; trying again using local classpath to populate catalog. Error was: {}", catalogUrl, e);
-                    }
-                }
-            } else {
-                log.warn("Error importing catalog XML at " + catalogUrl + "; using default (local classpath) catalog. Error was: " + e, e);
-            }
-        }
-        if (dto == null) {
-            // retry, either an error, or was blank
-            dto = CatalogDto.newDefaultLocalScanningDto(CatalogClasspathDo.CatalogScanningModes.ANNOTATIONS);
-            if (log.isDebugEnabled()) {
-                log.debug("Loaded default (local classpath) catalog: " + catalog);
-            }
-        }
-
-        reset(dto);
     }
 
     @Deprecated

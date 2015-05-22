@@ -38,11 +38,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -149,7 +148,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     protected BrooklynProperties configMap;
     protected BasicLocationRegistry locationRegistry;
-    protected volatile BasicBrooklynCatalog catalog;
+    protected final BasicBrooklynCatalog catalog;
     protected ClassLoader baseClassLoader;
     protected Iterable<URL> baseClassPathForScanning;
 
@@ -170,6 +169,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected final List<Throwable> errors = Collections.synchronizedList(MutableList.<Throwable>of()); 
 
     protected Maybe<URI> uri = Maybe.absent();
+    protected CatalogInitialization catalogInitialization;
 
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
         this(brooklynProperties, null);
@@ -183,7 +183,9 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             datagridFactory = loadDataGridFactory(brooklynProperties);
         }
         DataGrid datagrid = datagridFactory.newDataGrid(this);
-         
+
+        this.catalog = new BasicBrooklynCatalog(this);
+        
         this.storage = new BrooklynStorageImpl(datagrid);
         this.rebindManager = new RebindManagerImpl(this); // TODO leaking "this" reference; yuck
         this.highAvailabilityManager = new HighAvailabilityManagerImpl(this); // TODO leaking "this" reference; yuck
@@ -360,23 +362,19 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     @Override
     public BrooklynCatalog getCatalog() {
-        if (catalog==null) {
-            loadCatalog();
+        if (!getCatalogInitialization().hasRunIncludingBestEffort()) {
+            // catalog init is needed; normally this will be done from start sequence,
+            // but if accessed early -- and in tests -- we will load it here
+            getCatalogInitialization().injectManagementContext(this);
+            getCatalogInitialization().populateBestEffort(catalog);
         }
         return catalog;
     }
-
-    protected synchronized void loadCatalog() {
-        if (catalog != null) return;
-        BasicBrooklynCatalog catalog = new BasicBrooklynCatalog(this);
-        CatalogLoadMode loadMode = getConfig().getConfig(BrooklynServerConfig.CATALOG_LOAD_MODE);
-        if (CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL.equals(loadMode)) {
-            log.debug("Resetting catalog to configured URL. Catalog mode is: {}", loadMode.name());
-            catalog.resetCatalogToContentsAtConfiguredUrl();
-        } else if (log.isDebugEnabled()) {
-            log.debug("Deferring catalog load to rebind manager. Catalog mode is: {}", loadMode.name());
-        }
-        this.catalog = catalog;
+    
+    @Override
+    public ClassLoader getCatalogClassLoader() {
+        // catalog does not have to be initialized
+        return catalog.getRootClassLoader();
     }
 
     /**
@@ -443,6 +441,22 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return uri;
     }
     
+    @Override
+    public CatalogInitialization getCatalogInitialization() {
+        if (catalogInitialization!=null) return catalogInitialization;
+        synchronized (this) {
+            if (catalogInitialization!=null) return catalogInitialization;
+            CatalogInitialization ci = new CatalogInitialization();
+            setCatalogInitialization(ci);
+            return ci;
+        }
+    }
+    
+    @Override
+    public synchronized void setCatalogInitialization(CatalogInitialization catalogInitialization) {
+        if (catalogInitialization!=null) catalogInitialization.injectManagementContext(this);
+        this.catalogInitialization = catalogInitialization;
+    }
     
     public BrooklynObject lookup(String id) {
         return lookup(id, BrooklynObject.class);

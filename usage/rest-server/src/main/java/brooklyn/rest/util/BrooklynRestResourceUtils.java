@@ -95,6 +95,10 @@ public class BrooklynRestResourceUtils {
         return mgmt.getCatalog();
     }
     
+    public ClassLoader getCatalogClassLoader() {
+        return mgmt.getCatalogClassLoader();
+    }
+    
     public LocationRegistry getLocationRegistry() {
         return mgmt.getLocationRegistry();
     }

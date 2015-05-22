@@ -197,6 +197,11 @@ public interface ManagementContext {
     /** Record of configured Brooklyn entities (and templates and policies) which can be loaded */
     BrooklynCatalog getCatalog();
 
+    /** Returns the class loader to be used to load items. 
+     * Temporary routine while catalog supports classloader-based and OSGi-based classloading. */
+    @Beta
+    ClassLoader getCatalogClassLoader();
+
     LocationManager getLocationManager();
 
     /**

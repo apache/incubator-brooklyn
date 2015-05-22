@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
@@ -86,6 +87,7 @@ public class BrooklynRestApiLauncher {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynRestApiLauncher.class);
     final static int FAVOURITE_PORT = 8081;
+    public static final String SCANNING_CATALOG_BOM_URL = "classpath://brooklyn/scanning.catalog.bom";
 
     enum StartMode {
         FILTER, SERVLET, WEB_XML
@@ -199,10 +201,12 @@ public class BrooklynRestApiLauncher {
         }
 
         if (forceUseOfDefaultCatalogWithJavaClassPath) {
-            // don't use any catalog.xml which is set
-            ((BrooklynProperties) mgmt.getConfig()).put(ManagementContextInternal.BROOKLYN_CATALOG_URL, "");
             // sets URLs for a surefire
+            ((BrooklynProperties) mgmt.getConfig()).put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, SCANNING_CATALOG_BOM_URL);
             ((LocalManagementContext) mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+        } else {
+            // don't use any catalog.xml which is set
+            ((BrooklynProperties) mgmt.getConfig()).put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, ManagementContextInternal.EMPTY_CATALOG_URL);
         }
 
         return startServer(mgmt, context, summary, disableHighAvailability);

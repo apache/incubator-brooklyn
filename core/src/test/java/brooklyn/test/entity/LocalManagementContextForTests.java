@@ -22,6 +22,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 
 /** management context which allows disabling common time-consuming tasks.
  * most instances have:
@@ -55,7 +56,7 @@ public class LocalManagementContextForTests extends LocalManagementContext {
 
     public static BrooklynProperties setEmptyCatalogAsDefault(BrooklynProperties brooklynProperties) {
         if (brooklynProperties==null) return null;
-        brooklynProperties.putIfAbsent(BrooklynServerConfig.BROOKLYN_CATALOG_URL, "classpath://brooklyn-catalog-empty.xml");
+        brooklynProperties.putIfAbsent(BrooklynServerConfig.BROOKLYN_CATALOG_URL, ManagementContextInternal.EMPTY_CATALOG_URL);
         return brooklynProperties;
     }
     

@@ -371,7 +371,7 @@ public class RebindManagerImpl implements RebindManager {
         
     public void rebindPartialActive(CompoundTransformer transformer, Iterator<BrooklynObject> objectsToRebind) {
         final ClassLoader classLoader = 
-            managementContext.getCatalog().getRootClassLoader();
+            managementContext.getCatalogClassLoader();
         // TODO we might want different exception handling for partials;
         // failure at various points should leave proxies in a sensible state,
         // either pointing at old or at new, though this is relatively untested,
@@ -474,7 +474,7 @@ public class RebindManagerImpl implements RebindManager {
     @Override
     public List<Application> rebind(ClassLoader classLoaderO, RebindExceptionHandler exceptionHandlerO, ManagementNodeState modeO) {
         final ClassLoader classLoader = classLoaderO!=null ? classLoaderO :
-            managementContext.getCatalog().getRootClassLoader();
+            managementContext.getCatalogClassLoader();
         final RebindExceptionHandler exceptionHandler = exceptionHandlerO!=null ? exceptionHandlerO :
             RebindExceptionHandlerImpl.builder()
                 .danglingRefFailureMode(danglingRefFailureMode)

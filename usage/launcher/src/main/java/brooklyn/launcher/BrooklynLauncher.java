@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.CatalogLoadMode;
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
@@ -66,7 +66,6 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.entity.trait.Startable;
-import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
@@ -153,12 +152,13 @@ public class BrooklynLauncher {
     
     private boolean ignoreWebErrors = false;
     private boolean ignorePersistenceErrors = true;
+    private boolean ignoreCatalogErrors = true;
     private boolean ignoreAppErrors = true;
     
     private StopWhichAppsOnShutdown stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
     
     private Function<ManagementContext,Void> customizeManagement = null;
-    private Function<BrooklynLauncher,Void> customizeInitialCatalog = null;
+    private CatalogInitialization catalogInitialization = null;
     
     private PersistMode persistMode = PersistMode.DISABLED;
     private HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.DISABLED;
@@ -402,6 +402,11 @@ public class BrooklynLauncher {
         return this;
     }
 
+    public BrooklynLauncher ignoreCatalogErrors(boolean ignoreCatalogErrors) {
+        this.ignoreCatalogErrors = ignoreCatalogErrors;
+        return this;
+    }
+
     public BrooklynLauncher ignoreWebErrors(boolean ignoreWebErrors) {
         this.ignoreWebErrors = ignoreWebErrors;
         return this;
@@ -423,10 +428,10 @@ public class BrooklynLauncher {
     }
 
     @Beta
-    public BrooklynLauncher customizeInitialCatalog(Function<BrooklynLauncher, Void> customizeInitialCatalog) {
-        if (this.customizeInitialCatalog!=null)
+    public BrooklynLauncher catalogInitialization(CatalogInitialization catInit) {
+        if (this.catalogInitialization!=null)
             throw new IllegalStateException("Initial catalog customization already set.");
-        this.customizeInitialCatalog = customizeInitialCatalog;
+        this.catalogInitialization = catInit;
         return this;
     }
 
@@ -560,10 +565,12 @@ public class BrooklynLauncher {
         if (started) throw new IllegalStateException("Cannot start() or launch() multiple times");
         started = true;
 
-        setCatalogLoadMode();
-
         // Create the management context
         initManagementContext();
+
+        // Inform catalog initialization that it is starting up
+        CatalogInitialization catInit = ((ManagementContextInternal)managementContext).getCatalogInitialization();
+        catInit.setStartingUp(true);
 
         // Start webapps as soon as mgmt context available -- can use them to detect progress of other processes
         if (startWebApps) {
@@ -589,13 +596,16 @@ public class BrooklynLauncher {
         }
 
         try {
-            // TODO currently done *after* above to mirror existing usage, 
-            // but where this runs will likely change
-            if (customizeInitialCatalog!=null)
-                customizeInitialCatalog.apply(this);
+            // run cat init now if it hasn't yet been run; 
+            // will also run if there was an ignored error in catalog above, allowing it to fail startup here if requested
+            if (catInit!=null && !catInit.hasRunOfficial()) {
+                LOG.debug("Loading catalog as part of launcher (persistence did not run it)");
+                catInit.populateCatalog(true, null);
+            }
         } catch (Exception e) {
-            handleSubsystemStartupError(true, "initial catalog", e);
+            handleSubsystemStartupError(ignoreCatalogErrors, "initial catalog", e);
         }
+        catInit.setStartingUp(false);
 
         // Create the locations. Must happen after persistence is started in case the
         // management context's catalog is loaded from persisted state. (Location
@@ -613,29 +623,13 @@ public class BrooklynLauncher {
             try {
                 startBrooklynNode();
             } catch (Exception e) {
-                handleSubsystemStartupError(true, "brooklyn node / self entity", e);
+                handleSubsystemStartupError(ignoreAppErrors, "brooklyn node / self entity", e);
             }
         }
         
         ((LocalManagementContext)managementContext).noteStartupComplete();
 
         return this;
-    }
-
-    /**
-     * Sets {@link BrooklynServerConfig#CATALOG_LOAD_MODE} in {@link #brooklynAdditionalProperties}.
-     * <p>
-     * Checks {@link brooklyn.internal.BrooklynFeatureEnablement#FEATURE_CATALOG_PERSISTENCE_PROPERTY}
-     * and the {@link #persistMode persistence mode}.
-     */
-    private void setCatalogLoadMode() {
-        CatalogLoadMode catalogLoadMode;
-        if (!BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY)) {
-            catalogLoadMode = CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL;
-        } else {
-            catalogLoadMode = CatalogLoadMode.forPersistMode(persistMode);
-        }
-        brooklynProperties(BrooklynServerConfig.CATALOG_LOAD_MODE, catalogLoadMode);
     }
 
     private void initManagementContext() {
@@ -681,6 +675,8 @@ public class BrooklynLauncher {
             brooklynProperties = ((ManagementContextInternal)managementContext).getBrooklynProperties();
             brooklynProperties.addFromMap(brooklynAdditionalProperties);
         }
+        
+        ((ManagementContextInternal)managementContext).setCatalogInitialization(catalogInitialization);
         
         if (customizeManagement!=null) {
             customizeManagement.apply(managementContext);
@@ -796,7 +792,7 @@ public class BrooklynLauncher {
                 BrooklynMementoPersisterToObjectStore persister = new BrooklynMementoPersisterToObjectStore(
                     objectStore,
                     ((ManagementContextInternal)managementContext).getBrooklynProperties(),
-                    managementContext.getCatalog().getRootClassLoader());
+                    managementContext.getCatalogClassLoader());
                 PersistenceExceptionHandler persistenceExceptionHandler = PersistenceExceptionHandlerImpl.builder().build();
                 ((RebindManagerImpl) rebindManager).setPeriodicPersistPeriod(persistPeriod);
                 rebindManager.setPersister(persister, persistenceExceptionHandler);
@@ -820,7 +816,8 @@ public class BrooklynLauncher {
             HighAvailabilityManager haManager = managementContext.getHighAvailabilityManager();
             ManagementPlaneSyncRecordPersister persister =
                 new ManagementPlaneSyncRecordPersisterToObjectStore(managementContext,
-                    objectStore, managementContext.getCatalog().getRootClassLoader());
+                    objectStore,
+                    managementContext.getCatalogClassLoader());
             ((HighAvailabilityManagerImpl)haManager).setHeartbeatTimeout(haHeartbeatTimeoutOverride);
             ((HighAvailabilityManagerImpl)haManager).setPollPeriod(haHeartbeatPeriodOverride);
             haManager.setPersister(persister);
@@ -870,7 +867,7 @@ public class BrooklynLauncher {
         else
             LOG.info("Management node (no HA) rebinding to entities on file system in "+persistenceDir);
 
-        ClassLoader classLoader = managementContext.getCatalog().getRootClassLoader();
+        ClassLoader classLoader = managementContext.getCatalogClassLoader();
         try {
             rebindManager.rebind(classLoader, null, ManagementNodeState.MASTER);
         } catch (Exception e) {

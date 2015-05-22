@@ -38,12 +38,10 @@ import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogLoadMode;
-import brooklyn.catalog.internal.BasicBrooklynCatalog;
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.BrooklynLogging.LoggingLevel;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -300,6 +298,7 @@ public abstract class RebindIteration {
         isEmpty = mementoManifest.isEmpty();
     }
 
+    @SuppressWarnings("deprecation")
     protected void rebuildCatalog() {
         
         // build catalog early so we can load other things
@@ -341,38 +340,65 @@ public abstract class RebindIteration {
                 }
             }
         }
+
+        // see notes in CatalogInitialization
         
-        // Register catalogue items with the management context. Loads the bundles in the OSGi framework.
-        CatalogLoadMode catalogLoadMode = managementContext.getConfig().getConfig(BrooklynServerConfig.CATALOG_LOAD_MODE);
+        Collection<CatalogItem<?, ?>> catalogItems = rebindContext.getCatalogItems();
+        CatalogInitialization catInit = ((ManagementContextInternal)managementContext).getCatalogInitialization();
+        catInit.injectManagementContext(managementContext);
+        catInit.applyCatalogLoadMode();
+        Collection<CatalogItem<?,?>> itemsForResettingCatalog = null;
+        boolean needsInitialCatalog;
         if (rebindManager.persistCatalogItemsEnabled) {
-            boolean shouldResetCatalog = catalogLoadMode == CatalogLoadMode.LOAD_PERSISTED_STATE
-                    || (!isEmpty && catalogLoadMode == CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL_IF_NO_PERSISTED_STATE);
-            boolean shouldLoadDefaultCatalog = catalogLoadMode == CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL
-                    || (isEmpty && catalogLoadMode == CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL_IF_NO_PERSISTED_STATE);
-            if (shouldResetCatalog) {
-                // Reset catalog with previously persisted state
-                logRebindingDebug("RebindManager resetting management context catalog to previously persisted state");
-                managementContext.getCatalog().reset(rebindContext.getCatalogItems());
-            } else if (shouldLoadDefaultCatalog) {
-                // Load catalogue as normal
-                // TODO in read-only mode, should do this less frequently than entities etc
-                logRebindingDebug("RebindManager loading default catalog");
-                ((BasicBrooklynCatalog) managementContext.getCatalog()).resetCatalogToContentsAtConfiguredUrl();
+            if (!catInit.hasRunOfficial() && catInit.isInitialResetRequested()) {
+                String message = "RebindManager resetting catalog on first run (catalog persistence enabled, but reset explicitly specified). ";
+                if (catalogItems.isEmpty()) {
+                    message += "Catalog was empty anyway.";
+                } else {
+                    message += "Deleting "+catalogItems.size()+" persisted catalog item"+Strings.s(catalogItems)+": "+catalogItems;
+                    if (shouldLogRebinding()) {
+                        LOG.info(message);
+                    }
+                }
+                logRebindingDebug(message);
+
+                itemsForResettingCatalog = MutableList.<CatalogItem<?,?>>of();
+                
+                PersisterDeltaImpl delta = new PersisterDeltaImpl();
+                for (String catalogItemId: mementoRawData.getCatalogItems().keySet()) {
+                    delta.removedCatalogItemIds.add(catalogItemId);
+                }
+                getPersister().queueDelta(delta);
+                
+                mementoRawData.clearCatalogItems();
+                needsInitialCatalog = true;
             } else {
-                // Management context should have taken care of loading the catalogue
-                Collection<CatalogItem<?, ?>> catalogItems = rebindContext.getCatalogItems();
-                String message = "RebindManager not resetting catalog to persisted state. Catalog load mode is {}.";
-                if (!catalogItems.isEmpty() && shouldLogRebinding()) {
-                    LOG.info(message + " There {} {} item{} persisted.", new Object[]{
-                            catalogLoadMode, catalogItems.size() == 1 ? "was" : "were", catalogItems.size(), Strings.s(catalogItems)});
-                } else if (LOG.isDebugEnabled()) {
-                    logRebindingDebug(message, catalogLoadMode);
+                if (!isEmpty) {
+                    logRebindingDebug("RebindManager clearing local catalog and loading from persisted state");
+                    itemsForResettingCatalog = rebindContext.getCatalogItems();
+                    needsInitialCatalog = false;
+                } else {
+                    if (catInit.hasRunOfficial()) {
+                        logRebindingDebug("RebindManager will re-add any new items (persisted state empty)");
+                        needsInitialCatalog = false;
+                    } else {
+                        logRebindingDebug("RebindManager loading initial catalog locally because persisted state empty");
+                        needsInitialCatalog = true;
+                    }
                 }
             }
-            // TODO destroy old (as above)
         } else {
-            logRebindingDebug("RebindManager not resetting catalog because catalog persistence is disabled");
+            if (catInit.hasRunOfficial()) {
+                logRebindingDebug("RebindManager skipping catalog init because it has already run (catalog persistence disabled)");
+                needsInitialCatalog = false;
+            } else {
+                logRebindingDebug("RebindManager will initialize catalog locally because catalog persistence is disabled");
+                needsInitialCatalog = true;
+            }
         }
+
+        // TODO in read-only mode, perhaps do this less frequently than entities etc ?
+        catInit.populateCatalog(needsInitialCatalog, itemsForResettingCatalog);
     }
 
     protected void instantiateLocationsAndEntities() {

@@ -22,8 +22,10 @@ import io.airlift.command.Command;
 import io.airlift.command.Option;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -43,6 +45,7 @@ import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
@@ -54,7 +57,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -66,6 +68,9 @@ import com.google.common.io.Files;
 public class ItemLister {
     
     private static final Logger LOG = LoggerFactory.getLogger(ItemLister.class);
+    private static final String BASE = "brooklyn/item-lister";
+    private static final String BASE_TEMPLATES = BASE+"/"+"templates";
+    private static final String BASE_STATICS = BASE+"/"+"statics";
 
     @Command(name = "list-objects", description = "List Brooklyn objects (Entities, Policies, Enrichers and Locations)")
     public static class ListAllCommand extends AbstractMain.BrooklynCommandCollectingArgs {
@@ -91,8 +96,8 @@ public class ItemLister {
         @SuppressWarnings("unchecked")
         @Override
         public Void call() throws Exception {
-            LOG.info("Retrieving objects");
             List<URL> urls = getUrls();
+            LOG.info("Retrieving objects from "+urls);
 
             // TODO Remove duplication from separate ListPolicyCommand etc
             List<Class<? extends Entity>> entityTypes = getTypes(urls, Entity.class);
@@ -113,48 +118,63 @@ public class ItemLister {
             if (outputFolder == null) {
                 System.out.println(json);
             } else {
-                LOG.info("Outputting item list to " + outputFolder);
+                LOG.info("Outputting item list (size "+itemCount+") to " + outputFolder);
                 String outputPath = Os.mergePaths(outputFolder, "index.html");
                 String parentDir = (new File(outputPath).getParentFile()).getAbsolutePath();
                 mkdir(parentDir, "entities");
                 mkdir(parentDir, "policies");
                 mkdir(parentDir, "enrichers");
                 mkdir(parentDir, "locations");
-                mkdir(parentDir, "locationResolvers");
+                mkdir(parentDir, "locationResolvers"); //TODO nothing written here yet...
+                
+                mkdir(parentDir, "style");
+                mkdir(Os.mergePaths(parentDir, "style"), "js");
+                mkdir(Os.mergePaths(parentDir, "style", "js"), "catalog");
+                
                 Files.write("var items = " + json, new File(Os.mergePaths(outputFolder, "items.js")), Charsets.UTF_8);
                 ResourceUtils resourceUtils = ResourceUtils.create(this);
-                String js = resourceUtils.getResourceAsString("common.js");
-                Files.write(js, new File(Os.mergePaths(outputFolder, "common.js")), Charsets.UTF_8);
-                String css = resourceUtils.getResourceAsString("items.css");
-                Files.write(css, new File(Os.mergePaths(outputFolder, "items.css")), Charsets.UTF_8);
-                String mainHtml = resourceUtils.getResourceAsString("brooklyn-object-list.html");
-                Files.write(mainHtml, new File(Os.mergePaths(outputFolder, "index.html")), Charsets.UTF_8);
+                
+                // root - just loads the above JSON
+                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "brooklyn-object-list.html", "index.html");
+                
+                // statics - structure mirrors docs (not for any real reason however... the json is usually enough for our docs)
+                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "common.js");
+                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "items.css");
+                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/underscore-min.js");
+                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/underscore-min.map");
+                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/catalog/bloodhound.js");
+
+                // now make pages for each item
+                
                 List<Map<String, Object>> entities = (List<Map<String, Object>>) result.get("entities");
-                String entityTemplateHtml = resourceUtils.getResourceAsString("entity.html");
+                String entityTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "entity.html"));
                 for (Map<String, Object> entity : entities) {
                     String type = (String) entity.get("type");
                     String name = (String) entity.get("name");
                     String entityHtml = TemplateProcessor.processTemplateContents(entityTemplateHtml, ImmutableMap.of("type", type, "name", name));
                     Files.write(entityHtml, new File(Os.mergePaths(outputFolder, "entities", type + ".html")), Charsets.UTF_8);
                 }
+                
                 List<Map<String, Object>> policies = (List<Map<String, Object>>) result.get("policies");
-                String policyTemplateHtml = resourceUtils.getResourceAsString("policy.html");
+                String policyTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "policy.html"));
                 for (Map<String, Object> policy : policies) {
                     String type = (String) policy.get("type");
                     String name = (String) policy.get("name");
                     String policyHtml = TemplateProcessor.processTemplateContents(policyTemplateHtml, ImmutableMap.of("type", type, "name", name));
                     Files.write(policyHtml, new File(Os.mergePaths(outputFolder, "policies", type + ".html")), Charsets.UTF_8);
                 }
+                
                 List<Map<String, Object>> enrichers = (List<Map<String, Object>>) result.get("enrichers");
-                String enricherTemplateHtml = resourceUtils.getResourceAsString("enricher.html");
+                String enricherTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "enricher.html"));
                 for (Map<String, Object> enricher : enrichers) {
                     String type = (String) enricher.get("type");
                     String name = (String) enricher.get("name");
                     String enricherHtml = TemplateProcessor.processTemplateContents(enricherTemplateHtml, ImmutableMap.of("type", type, "name", name));
                     Files.write(enricherHtml, new File(Os.mergePaths(outputFolder, "enrichers", type + ".html")), Charsets.UTF_8);
                 }
+                
                 List<Map<String, Object>> locations = (List<Map<String, Object>>) result.get("locations");
-                String locationTemplateHtml = resourceUtils.getResourceAsString("location.html");
+                String locationTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "location.html"));
                 for (Map<String, Object> location : locations) {
                     String type = (String) location.get("type");
                     String locationHtml = TemplateProcessor.processTemplateContents(locationTemplateHtml, ImmutableMap.of("type", type));
@@ -163,6 +183,14 @@ public class ItemLister {
                 LOG.info("Finished outputting item list to " + outputFolder);
             }
             return null;
+        }
+
+        private void copyFromItemListerClasspathBaseStaticsToOutputDir(ResourceUtils resourceUtils, String item) throws IOException {
+            copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, item, item);
+        }
+        private void copyFromItemListerClasspathBaseStaticsToOutputDir(ResourceUtils resourceUtils, String item, String dest) throws IOException {
+            String js = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_STATICS, item));
+            Files.write(js, new File(Os.mergePaths(outputFolder, dest)), Charsets.UTF_8);
         }
 
         private void mkdir(String rootDir, String dirName) {
@@ -185,7 +213,10 @@ public class ItemLister {
                 }
             } else {
                 for (String jar : jars) {
-                    urls.addAll(ClassFinder.toJarUrls(jar));
+                    List<URL> expanded = ClassFinder.toJarUrls(jar);
+                    if (expanded.isEmpty())
+                        LOG.warn("No jars found at: "+jar);
+                    urls.addAll(expanded);
                 }
             }
             return urls;
@@ -194,6 +225,8 @@ public class ItemLister {
         private <T extends BrooklynObject> List<Class<? extends T>> getTypes(List<URL> urls, Class<T> type) {
             return getTypes(urls, type, null);
         }
+
+        int itemCount = 0;
         
         private <T extends BrooklynObject> List<Class<? extends T>> getTypes(List<URL> urls, Class<T> type, Boolean catalogOnlyOverride) {
             FluentIterable<Class<? extends T>> fluent = FluentIterable.from(ClassFinder.findClasses(urls, type));
@@ -203,19 +236,21 @@ public class ItemLister {
             if (catalogOnlyOverride == null ? catalogOnly : catalogOnlyOverride) {
                 fluent = fluent.filter(ClassFinder.withAnnotation(Catalog.class));
             }
-            ImmutableList<Class<? extends T>> result = fluent.toList();
+            List<Class<? extends T>> filtered = fluent.toList();
+            Collection<Class<? extends T>> result;
             if (ignoreImpls) {
-                MutableSet<Class<? extends T>> mutableResult = MutableSet.copyOf(result);
-                for (Class<? extends T> clazz : result) {
+                result = MutableSet.copyOf(filtered);
+                for (Class<? extends T> clazz : filtered) {
                     ImplementedBy implementedBy = clazz.getAnnotation(ImplementedBy.class);
                     if (implementedBy != null) {
-                        mutableResult.remove(implementedBy.value());
+                        result.remove(implementedBy.value());
                     }
                 }
-                return ImmutableList.copyOf(mutableResult);
             } else {
-                return result;
+                result = filtered;
             }
+            itemCount += result.size();
+            return ImmutableList.copyOf(result);
         }
         
         private String toJson(Object obj) throws JsonProcessingException {

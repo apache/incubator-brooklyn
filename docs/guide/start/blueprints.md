@@ -45,17 +45,14 @@ application. Your application will be shown as "Starting" on the web console's f
 
 Instead of pasting the YAML blueprint each time,
 this blueprint can be [added to the catalog](../ops/catalog/).
-Or, even easier, you can download a sample [catalog.xml](catalog.xml).
-Install this to your `~/.brooklyn/` folder and relaunch Brooklyn
-(navigating to the "Help" tab in order to shutdown Brooklyn *and* the application you launched in the previous step).
-
-Now when the web console is re-opened, the catalog contains our blueprints.
-Select the "Demo Web Cluster with DB" and click "Next".
+With this YAML blueprint added, including the location, the Add Application dialog will offer 
+the "Demo Web Cluster with DB" as a template.
 
 [![Viewing Catalog entries in Add Application dialog.](images/add-application-catalog-web-cluster-with-db.png)](images/add-application-catalog-web-cluster-with-db-large.png)
 
-Select the location to use, give your application a name, and then click "Finish".
-
+<!-- TODO: more detail for adding to catalog? but wait for persistence to be the default, 
+     rather than extensively document default.catalog.bom.
+     also need to include instructions on stopping (currently in help, including stopping apps) -->
 
 ## Next 
 

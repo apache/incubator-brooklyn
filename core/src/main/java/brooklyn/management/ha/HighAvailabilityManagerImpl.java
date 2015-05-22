@@ -814,7 +814,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         setInternalNodeState(ManagementNodeState.MASTER);
         publishPromotionToMaster();
         try {
-            managementContext.getRebindManager().rebind(managementContext.getCatalog().getRootClassLoader(), null, getInternalNodeState());
+            managementContext.getRebindManager().rebind(managementContext.getCatalogClassLoader(), null, getInternalNodeState());
         } catch (Exception e) {
             LOG.error("Management node "+managementContext.getManagementNodeId()+" enountered problem during rebind when promoting self to master; demoting to FAILED and rethrowing: "+e);
             demoteTo(ManagementNodeState.FAILED);

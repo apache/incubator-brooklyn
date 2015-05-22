@@ -28,7 +28,6 @@ import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -121,7 +120,7 @@ public class BrooklynComponentTemplateResolver {
             if (type.indexOf(':') != -1) {
                 String prefix = Splitter.on(":").splitToList(type).get(0);
                 ServiceLoader<ServiceTypeResolver> loader = ServiceLoader.load(ServiceTypeResolver.class,
-                        context.getManagementContext().getCatalog().getRootClassLoader());
+                        context.getManagementContext().getCatalogClassLoader());
                 for (ServiceTypeResolver resolver : loader) {
                    if (prefix.equals(resolver.getTypePrefix())) {
                        return resolver;
@@ -220,7 +219,7 @@ public class BrooklynComponentTemplateResolver {
         return spec;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     protected <T extends Entity> EntitySpec<T> createSpec(Set<String> encounteredCatalogTypes) {
         CatalogItem<Entity, EntitySpec<?>> item = getServiceTypeResolver().getCatalogItem(this, getDeclaredType());
         if (encounteredCatalogTypes==null) encounteredCatalogTypes = MutableSet.of();
@@ -258,6 +257,7 @@ public class BrooklynComponentTemplateResolver {
         }
     }
     
+    @SuppressWarnings("unchecked")
     protected <T extends Entity> EntitySpec<T> createSpecFromJavaType() {
         Class<T> type = (Class<T>) loadEntityClass();
         
@@ -267,6 +267,7 @@ public class BrooklynComponentTemplateResolver {
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
+            @SuppressWarnings("rawtypes")
             Class interfaceclazz = (Application.class.isAssignableFrom(type)) ? Application.class : Entity.class;
             List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
             spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);

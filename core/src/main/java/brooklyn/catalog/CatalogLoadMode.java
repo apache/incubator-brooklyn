@@ -20,8 +20,11 @@ package brooklyn.catalog;
 
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.entity.rebind.persister.PersistMode;
 
+/** @deprecated since 0.7.0 replaced by {@link CatalogInitialization} */
+@Deprecated
 public enum CatalogLoadMode {
     /**
      * The server will load its initial catalog from the URL configured in

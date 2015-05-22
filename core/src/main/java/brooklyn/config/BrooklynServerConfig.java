@@ -28,7 +28,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.CatalogLoadMode;
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.guava.Maybe;
@@ -98,14 +98,14 @@ public class BrooklynServerConfig {
             + "this key is DEPRECATED in favor of promotion and demotion specific flags now defaulting to true");
 
     public static final ConfigKey<String> BROOKLYN_CATALOG_URL = ConfigKeys.newStringConfigKey("brooklyn.catalog.url",
-        "The URL of a catalog.xml descriptor; absent for default (~/.brooklyn/catalog.xml), " +
-        "or empty for no URL (use default scanner)",
-        new File(Os.fromHome(".brooklyn/catalog.xml")).toURI().toString());
+        "The URL of a custom catalog.bom or catalog.xml descriptor to load");
 
-    public static final ConfigKey<CatalogLoadMode> CATALOG_LOAD_MODE = ConfigKeys.newConfigKey(CatalogLoadMode.class,
+    /** @deprecated since 0.7.0 replaced by {@link CatalogInitialization}; also note, default removed 
+     * (it was overridden anyway, and in almost all cases the new behaviour is still the default behaviour) */
+    @Deprecated
+    public static final ConfigKey<brooklyn.catalog.CatalogLoadMode> CATALOG_LOAD_MODE = ConfigKeys.newConfigKey(brooklyn.catalog.CatalogLoadMode.class,
             "brooklyn.catalog.mode",
-            "The mode the management context should use to load the catalog when first starting",
-            CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL);
+            "The mode the management context should use to load the catalog when first starting");
 
     /** string used in places where the management node ID is needed to resolve a path */
     public static final String MANAGEMENT_NODE_ID_PROPERTY = "brooklyn.mgmt.node.id";

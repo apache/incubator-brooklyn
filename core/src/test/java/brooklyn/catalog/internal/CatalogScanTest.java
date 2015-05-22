@@ -32,6 +32,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.MyCatalogItems.MySillyAppTemplate;
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
@@ -68,7 +69,7 @@ public class CatalogScanTest {
     private synchronized void loadFullCatalog() {
         if (fullCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
-        props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), 
+        props.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL.getName(), 
                 "data:,"+Urls.encode("<catalog><classpath scan=\"types\"/></catalog>"));
         fullCatalog = newManagementContext(props).getCatalog();        
         log.info("ENTITIES loaded for FULL: "+fullCatalog.getCatalogItems(Predicates.alwaysTrue()));
@@ -77,7 +78,7 @@ public class CatalogScanTest {
     private synchronized void loadTheDefaultCatalog() {
         if (defaultCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
-        props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(), "");
+        props.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL.getName(), "");
         LocalManagementContext managementContext = newManagementContext(props);
         defaultCatalog = managementContext.getCatalog();        
         log.info("ENTITIES loaded for DEFAULT: "+defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
@@ -87,7 +88,7 @@ public class CatalogScanTest {
     private synchronized void loadAnnotationsOnlyCatalog() {
         if (annotsCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
-        props.put(LocalManagementContext.BROOKLYN_CATALOG_URL.getName(),
+        props.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL.getName(),
                 "data:,"+URLEncoder.encode("<catalog><classpath scan=\"annotations\"/></catalog>"));
         LocalManagementContext managementContext = newManagementContext(props);
         annotsCatalog = managementContext.getCatalog();
@@ -126,14 +127,14 @@ public class CatalogScanTest {
     @Test
     public void testAnnotationLoadsSomeApps() {
         loadAnnotationsOnlyCatalog();
-        Iterable<CatalogItem<Object,Object>> silly1 = annotsCatalog.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppTemplate")));
+        Iterable<CatalogItem<Object,Object>> silly1 = annotsCatalog.getCatalogItems(CatalogPredicates.displayName(Predicates.equalTo("MySillyAppTemplate")));
         Assert.assertEquals(Iterables.getOnlyElement(silly1).getDescription(), "Some silly app test");
     }
     
     @Test
     public void testAnnotationLoadsSomeAppBuilders() {
         loadAnnotationsOnlyCatalog();
-        Iterable<CatalogItem<Object,Object>> silly1 = annotsCatalog.getCatalogItems(CatalogPredicates.name(Predicates.equalTo("MySillyAppBuilderTemplate")));
+        Iterable<CatalogItem<Object,Object>> silly1 = annotsCatalog.getCatalogItems(CatalogPredicates.displayName(Predicates.equalTo("MySillyAppBuilderTemplate")));
         Assert.assertEquals(Iterables.getOnlyElement(silly1).getDescription(), "Some silly app builder test");
     }
     
@@ -161,13 +162,13 @@ public class CatalogScanTest {
     
     @Test
     public void testAnnotationIsDefault() {
-        loadAnnotationsOnlyCatalog();
         loadTheDefaultCatalog();
-        
-        int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
         int numInDefault = Iterables.size(defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
         
-        Assert.assertEquals(numFromAnnots, numInDefault);
+        loadAnnotationsOnlyCatalog();
+        int numFromAnnots = Iterables.size(annotsCatalog.getCatalogItems(Predicates.alwaysTrue()));
+        
+        Assert.assertEquals(numInDefault, numFromAnnots);
     }
 
     // a simple test asserting no errors when listing the real catalog, and listing them for reference

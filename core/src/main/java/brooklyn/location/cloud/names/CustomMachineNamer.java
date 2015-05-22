@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.location.cloud;
+package brooklyn.location.cloud.names;
 
 import java.util.Map;
 
@@ -24,6 +24,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
+import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
 import brooklyn.util.text.TemplateProcessor;
@@ -31,7 +32,14 @@ import brooklyn.util.text.TemplateProcessor;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 
-public class CustomMachineNamer extends CloudMachineNamer {
+/** Provides a machine namer which looks at a location config key {@link #MACHINE_NAME_TEMPLATE}
+ * to construct the hostname.
+ * For instance, setting this to <code>${config.entity_hostname}</code>
+ * will take the hostname from an <code>entity_hostname</code> key passed as entity <code>brooklyn.config</code>.
+ * <p>
+ * Note that this is not jclouds aware, so jclouds-specific cloud max lengths are not observed with this class.
+ */
+public class CustomMachineNamer extends BasicCloudMachineNamer {
     
     public static final ConfigKey<String> MACHINE_NAME_TEMPLATE = ConfigKeys.newStringConfigKey("custom.machine.namer.machine", 
             "Freemarker template format for custom machine name", "${entity.displayName}");
@@ -39,25 +47,21 @@ public class CustomMachineNamer extends CloudMachineNamer {
     public static final ConfigKey<Map<String, ?>> EXTRA_SUBSTITUTIONS = ConfigKeys.newConfigKey(new TypeToken<Map<String, ?>>() {}, 
             "custom.machine.namer.substitutions", "Additional substitutions to be used in the template", ImmutableMap.<String, Object>of());
     
-    public CustomMachineNamer(ConfigBag setup) {
-        super(setup);
-    }
-    
     @Override
-    public String generateNewMachineUniqueName() {
+    protected String generateNewIdOfLength(ConfigBag setup, int len) {
         Object context = setup.peek(CloudLocationConfig.CALLER_CONTEXT);
         Entity entity = null;
         if (context instanceof Entity) {
             entity = (Entity) context;
         }
         
-        String template = this.setup.get(MACHINE_NAME_TEMPLATE);
+        String template = setup.get(MACHINE_NAME_TEMPLATE);
         
         String processed;
         if (entity == null) {
-            processed = TemplateProcessor.processTemplateContents(template, this.setup.get(EXTRA_SUBSTITUTIONS));
+            processed = TemplateProcessor.processTemplateContents(template, setup.get(EXTRA_SUBSTITUTIONS));
         } else {
-            processed = TemplateProcessor.processTemplateContents(template, (EntityInternal)entity, this.setup.get(EXTRA_SUBSTITUTIONS));
+            processed = TemplateProcessor.processTemplateContents(template, (EntityInternal)entity, setup.get(EXTRA_SUBSTITUTIONS));
         }
         
         processed = Strings.removeFromStart(processed, "#ftl\n");
@@ -65,8 +69,4 @@ public class CustomMachineNamer extends CloudMachineNamer {
         return sanitize(processed);
     }
     
-    @Override
-    public String generateNewMachineUniqueNameFromGroupId(String groupId) {
-        return generateNewMachineUniqueName();
-    }
 }

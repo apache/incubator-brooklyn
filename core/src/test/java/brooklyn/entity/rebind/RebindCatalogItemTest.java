@@ -37,7 +37,6 @@ import brooklyn.camp.lite.CampPlatformWithJustBrooklynMgmt;
 import brooklyn.camp.lite.TestAppAssemblyInstantiator;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogItemType;
-import brooklyn.catalog.CatalogLoadMode;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.config.BrooklynProperties;
@@ -85,7 +84,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
     protected LocalManagementContext createOrigManagementContext() {
         BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
         properties.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, "classpath://brooklyn/entity/rebind/rebind-catalog-item-test-catalog.xml");
-        properties.put(BrooklynServerConfig.CATALOG_LOAD_MODE, CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL);
+        properties.put(BrooklynServerConfig.CATALOG_LOAD_MODE, brooklyn.catalog.CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL);
         return RebindTestUtils.managementContextBuilder(mementoDir, classLoader)
                 .properties(properties)
                 .persistPeriodMillis(getPersistPeriodMillis())
@@ -97,7 +96,6 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
     protected LocalManagementContext createNewManagementContext(File mementoDir) {
         BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
         properties.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, "classpath://brooklyn/entity/rebind/rebind-catalog-item-test-catalog.xml");
-        properties.put(BrooklynServerConfig.CATALOG_LOAD_MODE, CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL_IF_NO_PERSISTED_STATE);
         return RebindTestUtils.managementContextBuilder(mementoDir, classLoader)
                 .properties(properties)
                 .forLive(useLiveManagementContext())

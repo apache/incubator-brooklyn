@@ -36,6 +36,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
@@ -313,15 +314,15 @@ public class BrooklynLauncherTest {
         }
     }
     
-    @Test  // takes a few seconds because starts webapp, but also tests rest api so useful
+    @Test  // takes a bit of time because starts webapp, but also tests rest api so useful
     public void testErrorsCaughtByApiAndRestApiWorks() throws Exception {
         launcher = newLauncherForTests(true)
-                .customizeInitialCatalog(new Function<BrooklynLauncher, Void>() {
+                .catalogInitialization(new CatalogInitialization(null, false, null, false).addPopulationCallback(new Function<CatalogInitialization, Void>() {
                     @Override
-                    public Void apply(BrooklynLauncher input) {
+                    public Void apply(CatalogInitialization input) {
                         throw new RuntimeException("deliberate-exception-for-testing");
                     }
-                })
+                }))
                 .start();
         // such an error should be thrown, then caught in this calling thread
         ManagementContext mgmt = launcher.getServerDetails().getManagementContext();

@@ -486,14 +486,23 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                     OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL + "}");
         }
     }
-    
-    @Test(expectedExceptions = IllegalStateException.class)
-    public void testUpdatingItemFails() {
+
+    @Test
+    public void testUpdatingItemAllowedIfSame() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String id = "my.catalog.app.id.duplicate";
         addCatalogOSGiEntity(id);
         addCatalogOSGiEntity(id);
+    }
+    
+    @Test(expectedExceptions = IllegalStateException.class)
+    public void testUpdatingItemFailsIfDifferent() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
+        String id = "my.catalog.app.id.duplicate";
+        addCatalogOSGiEntity(id);
+        addCatalogOSGiEntity(id, SIMPLE_ENTITY_TYPE, true);
     }
 
     @Test
@@ -620,6 +629,10 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     private void addCatalogOSGiEntity(String symbolicName, String serviceType) {
+        addCatalogOSGiEntity(symbolicName, serviceType, false);
+    }
+    
+    private void addCatalogOSGiEntity(String symbolicName, String serviceType, boolean extraLib) {
         addCatalogItem(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
@@ -628,7 +641,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  icon_url: classpath://path/to/myicon.jpg",
             "  version: " + TEST_VERSION,
             "  libraries:",
-            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
+            "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL +
+            (extraLib ? "\n"+"  - url: "+OsgiStandaloneTest.BROOKLYN_OSGI_TEST_A_0_1_0_URL : ""),
             "  item:",
             "    type: " + serviceType);
     }

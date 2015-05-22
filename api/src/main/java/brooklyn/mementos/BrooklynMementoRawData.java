@@ -160,6 +160,12 @@ public class BrooklynMementoRawData {
         return Collections.unmodifiableMap(catalogItems);
     }
     
+    // to handle reset catalog
+    @Beta
+    public void clearCatalogItems() {
+        catalogItems.clear();
+    }
+    
     public boolean isEmpty() {
         return entities.isEmpty() && locations.isEmpty() && policies.isEmpty() && enrichers.isEmpty() && feeds.isEmpty() && catalogItems.isEmpty();
     }

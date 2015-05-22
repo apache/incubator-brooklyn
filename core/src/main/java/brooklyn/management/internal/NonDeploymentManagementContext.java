@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.BrooklynCatalog;
+import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
@@ -321,6 +322,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
     
     @Override
+    public ClassLoader getCatalogClassLoader() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getCatalogClassLoader();
+    }
+    
+    @Override
     public EntitlementManager getEntitlementManager() {
         return entitlementManager;
     }
@@ -445,6 +452,18 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     public List<Throwable> errors() {
         checkInitialManagementContextReal();
         return initialManagementContext.errors();
+    }
+
+    @Override
+    public CatalogInitialization getCatalogInitialization() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getCatalogInitialization();
+    }
+    
+    @Override
+    public void setCatalogInitialization(CatalogInitialization catalogInitialization) {
+        checkInitialManagementContextReal();
+        initialManagementContext.setCatalogInitialization(catalogInitialization);
     }
 
     /**

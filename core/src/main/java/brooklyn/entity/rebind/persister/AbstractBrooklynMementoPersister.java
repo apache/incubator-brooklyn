@@ -19,6 +19,10 @@
 package brooklyn.entity.rebind.persister;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
@@ -39,6 +43,8 @@ import brooklyn.mementos.PolicyMemento;
 @Deprecated
 public abstract class AbstractBrooklynMementoPersister implements BrooklynMementoPersister {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractBrooklynMementoPersister.class);
+    
     protected volatile MutableBrooklynMemento memento = new MutableBrooklynMemento();
     
     @Override
@@ -96,7 +102,6 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         throw new IllegalStateException("Not supported; use "+BrooklynMementoPersisterToObjectStore.class);
     }
     
-
     @Override
     public void delta(Delta delta, PersistenceExceptionHandler exceptionHanlder) {
         memento.removeEntities(delta.removedEntityIds());
@@ -109,6 +114,11 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         memento.updatePolicyMementos(delta.policies());
         memento.updateEnricherMementos(delta.enrichers());
         memento.updateCatalogItemMementos(delta.catalogItems());
+    }
+
+    @Override
+    public void queueDelta(Delta delta) {
+        log.warn("Legacy persister ignoring queued delta: "+delta);
     }
     
     @Override

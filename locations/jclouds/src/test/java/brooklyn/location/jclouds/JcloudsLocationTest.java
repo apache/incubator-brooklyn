@@ -47,6 +47,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.cloud.names.CustomMachineNamer;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.location.jclouds.JcloudsLocation.UserCreation;
 import brooklyn.management.internal.LocalManagementContext;
@@ -436,10 +437,10 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     
     @Test
     public void testCreateWithCustomMachineNamer() {
-        final String machineNamerClass = "brooklyn.location.cloud.CustomMachineNamer";
+        final String machineNamerClass = CustomMachineNamer.class.getName();
         BailOutJcloudsLocation jcloudsLocation = newSampleBailOutJcloudsLocationForTesting(ImmutableMap.of(
                 LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS, machineNamerClass));
-        jcloudsLocation.tryObtainAndCheck(ImmutableMap.of(), new Predicate<ConfigBag>() {
+        jcloudsLocation.tryObtainAndCheck(ImmutableMap.of(CustomMachineNamer.MACHINE_NAME_TEMPLATE, "ignored"), new Predicate<ConfigBag>() {
             public boolean apply(ConfigBag input) {
                 Assert.assertEquals(input.get(LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS), machineNamerClass);
                 return true;
@@ -449,9 +450,10 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     
     @Test
     public void testCreateWithCustomMachineNamerOnObtain() {
-        final String machineNamerClass = "brooklyn.location.cloud.CustomMachineNamer";
+        final String machineNamerClass = CustomMachineNamer.class.getName();
         BailOutJcloudsLocation jcloudsLocation = newSampleBailOutJcloudsLocationForTesting();
         jcloudsLocation.tryObtainAndCheck(ImmutableMap.of(
+                CustomMachineNamer.MACHINE_NAME_TEMPLATE, "ignored",
                 LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS, machineNamerClass), new Predicate<ConfigBag>() {
             public boolean apply(ConfigBag input) {
                 Assert.assertEquals(input.get(LocationConfigKeys.CLOUD_MACHINE_NAMER_CLASS), machineNamerClass);

@@ -8,6 +8,8 @@ children:
 - { section: Templates and the Add-Application Wizard, title: Templates }
 - { section: Adding to the Catalog, title: Adding and Deleting } 
 - { section: Versioning } 
+- { section: CLI Options }
+ 
 ---
 
 Brooklyn provides a **catalog**, which is a persisted collection of versioned blueprints and other resources. 
@@ -103,6 +105,11 @@ The following optional catalog metadata is supported:
   (to prevent requiring all OSGi bundles to be loaded at launch).
   Icons are instead typically installed either at the server from which the OSGi bundles or catalog items are supplied 
   or in the `conf` folder of the Brooklyn distro.
+- `scanJavaAnnotations` [experimental]: if provided (as `true`), this will scan any locally provided
+  libraries for types annotated `@Catalog` and extract metadata to include them as catalog items.
+  If no libraries are specified this will scan the default classpath.
+  This feature is experimental and may change or be removed.
+  Also note that other metadata (such as versions, etc) may not be applied.
 - `brooklyn.libraries`: a list of pointers to OSGi bundles required for the catalog item.
   This can be omitted if blueprints are pure YAML and everything required is included in the classpath and catalog.
   Where custom Java code or bundled resources is needed, however, OSGi JARs supply
@@ -283,6 +290,19 @@ increment an internal version number for the catalog item.
 When referencing a blueprint, if a version number is not specified 
 the latest non-snapshot version will be loaded when an entity is instantiated.
 
+
+### CLI Options
+
+The `brooklyn` CLI includes several commands for working with the catalog.
+
+* `--catalogAdd <file.bom>` will add the catalog items in the `bom` file
+* `--catalogReset` will reset the catalog to the initial state 
+  (based on `brooklyn/default.catalog.bom` on the classpath, by default in a dist in the `conf/` directory)
+* `--catalogInitial <file.bom>` will set the catalog items to use on first run,
+  on a catalog reset, or if persistence is off
+
+If [persistence](../persistence/) is enabled, catalog additions will remain between runs.
+For more information on these commands, run `brooklyn help launch`.
 
 
 <!--
