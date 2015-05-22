@@ -79,6 +79,11 @@ public interface ChefConfig {
     public static final ConfigKey<String> KNIFE_CONFIG_FILE = ConfigKeys.newStringConfigKey("brooklyn.chef.knife.configFile",
             "Knife config file (typically knife.rb) to use, including full path; defaults to knife default/global config");
 
+    @SetFromFlag("chef_node_name")
+    public static final ConfigKey<String> CHEF_NODE_NAME = ConfigKeys.newStringConfigKey("brooklyn.chef.node.nodeName",
+        "Node name to register with the chef server for this entity, if using Chef server and a specific node name is desired; "
+        + "if supplied ,this must be unique across the nodes Chef Server manages; if not supplied, one will be created if needed");
+
     // for providing some simple (ssh-based) lifecycle operations and checks
     @SetFromFlag("pid_file")
     public static final ConfigKey<String> PID_FILE = ConfigKeys.newStringConfigKey("brooklyn.chef.lifecycle.pidFile",
