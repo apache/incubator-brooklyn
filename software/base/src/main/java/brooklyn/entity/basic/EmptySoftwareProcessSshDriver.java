@@ -48,6 +48,7 @@ public class EmptySoftwareProcessSshDriver extends AbstractSoftwareProcessSshDri
         Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
         Map<String, String> installTemplates = entity.getConfig(SoftwareProcess.INSTALL_TEMPLATES);
         if ((installFiles!=null && !installFiles.isEmpty()) || (installTemplates!=null && !installTemplates.isEmpty())) {
+            // only do this if there are files, to prevent unnecessary `mkdir`
             super.copyInstallResources();
         }
     }
@@ -57,6 +58,7 @@ public class EmptySoftwareProcessSshDriver extends AbstractSoftwareProcessSshDri
         Map<String, String> runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
         Map<String, String> runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
         if ((runtimeFiles!=null && !runtimeFiles.isEmpty()) || (runtimeTemplates!=null && !runtimeTemplates.isEmpty())) {
+            // only do this if there are files, to prevent unnecessary `mkdir`
             super.copyRuntimeResources();
         }        
     }
