@@ -37,6 +37,7 @@ import brooklyn.event.feed.ssh.SshValueFunctions;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
@@ -59,14 +60,20 @@ public final class SshCommandSensor<T> extends AddSensor<T> {
     private static final Logger LOG = LoggerFactory.getLogger(SshCommandSensor.class);
 
     public static final ConfigKey<String> SENSOR_COMMAND = ConfigKeys.newStringConfigKey("command", "SSH command to execute for sensor");
+    public static final ConfigKey<String> SENSOR_EXECUTION_DIR = ConfigKeys.newStringConfigKey("executionDir", "Directory where the command should run; "
+        + "if not supplied, executes in the entity's run dir (or home dir if no run dir is defined); "
+        + "use '~' to always execute in the home dir, or 'custom-feed/' to execute in a custom-feed dir relative to the run dir");
 
     protected final String command;
+    protected final String executionDir;
 
     public SshCommandSensor(final ConfigBag params) {
         super(params);
 
         // TODO create a supplier for the command string to support attribute embedding
         command = Preconditions.checkNotNull(params.get(SENSOR_COMMAND), "command");
+        
+        executionDir = params.get(SENSOR_EXECUTION_DIR);
     }
 
     @Override
@@ -87,12 +94,7 @@ public final class SshCommandSensor<T> extends AddSensor<T> {
         Supplier<String> commandSupplier = new Supplier<String>() {
             @Override
             public String get() {
-                String finalCommand = command;
-                String runDir = entity.getAttribute(SoftwareProcess.RUN_DIR);
-                if (runDir != null) {
-                    finalCommand = "cd '"+runDir+"' && "+finalCommand;
-                }
-                return finalCommand;
+                return makeCommandExecutingInDirectory(command, executionDir, entity);
             }
         };
 
@@ -113,6 +115,29 @@ public final class SshCommandSensor<T> extends AddSensor<T> {
                 .onlyIfServiceUp()
                 .poll(pollConfig)
                 .build();
+    }
+
+    static String makeCommandExecutingInDirectory(String command, String executionDir, EntityLocal entity) {
+        String finalCommand = command;
+        String execDir = executionDir;
+        if (Strings.isBlank(execDir)) {
+            // default to run dir
+            execDir = entity.getAttribute(SoftwareProcess.RUN_DIR);
+            // if no run dir, default to home
+            if (Strings.isBlank(execDir)) {
+                execDir = "~";
+            }
+        } else if (!Os.isAbsolutish(execDir)) {
+            // relative paths taken wrt run dir
+            String runDir = entity.getAttribute(SoftwareProcess.RUN_DIR);
+            if (!Strings.isBlank(runDir)) {
+                execDir = Os.mergePaths(runDir, execDir);
+            }
+        }
+        if (!"~".equals(execDir)) {
+            finalCommand = "mkdir -p '"+execDir+"' && cd '"+execDir+"' && "+finalCommand;
+        }
+        return finalCommand;
     }
 
 }
