@@ -50,7 +50,7 @@ public class JcloudsLocationResolver implements LocationResolver {
 
     public static final Logger log = LoggerFactory.getLogger(JcloudsLocationResolver.class);
     
-    public static final String JCLOUDS = "jclouds";
+    private static final String JCLOUDS = "jclouds";
     
     public static final Map<String,ProviderMetadata> PROVIDERS = getProvidersMap();
     public static final Map<String,ApiMetadata> APIS = getApisMap();
@@ -83,15 +83,15 @@ public class JcloudsLocationResolver implements LocationResolver {
         this.managementContext = checkNotNull(managementContext, "managementContext");
     }
     
-    protected static class JcloudsSpecParser {
+    protected class JcloudsSpecParser {
         String providerOrApi;
         String parameter;
         
-        public static JcloudsSpecParser parse(String spec, boolean dryrun) {
+        public JcloudsSpecParser parse(String spec, boolean dryrun) {
             JcloudsSpecParser result = new JcloudsSpecParser();
             int split = spec.indexOf(':');
             if (split<0) {
-                if (spec.equalsIgnoreCase(JCLOUDS)) {
+                if (spec.equalsIgnoreCase(getPrefix())) {
                     if (dryrun) return null;
                     throw new IllegalArgumentException("Cannot use '"+spec+"' as a location ID; it is insufficient. "+
                            "Try jclouds:aws-ec2 (for example).");
@@ -102,7 +102,7 @@ public class JcloudsLocationResolver implements LocationResolver {
                 result.providerOrApi = spec.substring(0, split);
                 result.parameter = spec.substring(split+1);
                 int numJcloudsPrefixes = 0;
-                while (result.providerOrApi.equalsIgnoreCase(JCLOUDS)) {
+                while (result.providerOrApi.equalsIgnoreCase(getPrefix())) {
                     //strip any number of jclouds: prefixes, for use by static "resolve" method
                     numJcloudsPrefixes++;
                     result.providerOrApi = result.parameter;
@@ -152,7 +152,7 @@ public class JcloudsLocationResolver implements LocationResolver {
     public JcloudsLocation newLocationFromString(Map locationFlags, String spec, brooklyn.location.LocationRegistry registry) {
         Map globalProperties = registry.getProperties();
 
-        JcloudsSpecParser details = JcloudsSpecParser.parse(spec, false);
+        JcloudsSpecParser details = new JcloudsSpecParser().parse(spec, false);
         String namedLocation = (String) locationFlags.get(LocationInternal.NAMED_SPEC_NAME.getName());
 
         boolean isProvider = details.isProvider();
@@ -193,7 +193,7 @@ public class JcloudsLocationResolver implements LocationResolver {
             }
         }
         
-        return managementContext.getLocationManager().createLocation(LocationSpec.create(JcloudsLocation.class)
+        return managementContext.getLocationManager().createLocation(LocationSpec.create(getLocationClass())
                 .configure(LocationConfigUtils.finalAndOriginalSpecs(spec, jcloudsProperties, globalProperties, namedLocation))
                 .configure(jcloudsProperties) );
     }
@@ -210,11 +210,15 @@ public class JcloudsLocationResolver implements LocationResolver {
     public String getPrefix() {
         return JCLOUDS;
     }
+
+    protected Class<? extends JcloudsLocation> getLocationClass() {
+        return JcloudsLocation.class;
+    }
     
     @Override
     public boolean accepts(String spec, LocationRegistry registry) {
         if (BasicLocationRegistry.isResolverPrefixForSpec(this, spec, true)) return true;
-        JcloudsSpecParser details = JcloudsSpecParser.parse(spec, true);
+        JcloudsSpecParser details = new JcloudsSpecParser().parse(spec, true);
         if (details==null) return false;
         if (details.isProvider() || details.isApi()) return true;
         return false;
