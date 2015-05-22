@@ -602,6 +602,10 @@ public class BrooklynLauncher {
         // resolution uses the catalog's classpath to scan for resolvers.)
         locations.addAll(managementContext.getLocationRegistry().resolve(locationSpecs));
 
+        // Already rebinded successfully, so previous apps are now available.
+        // Allow the startup to be visible in console for newly created apps.
+        ((LocalManagementContext)managementContext).noteStartupComplete();
+
         try {
             createApps();
             startApps();
@@ -617,8 +621,10 @@ public class BrooklynLauncher {
             }
         }
         
-        ((LocalManagementContext)managementContext).noteStartupComplete();
-
+        if (persistMode != PersistMode.DISABLED) {
+            // Make sure the new apps are persisted in case process exits immediately.
+            managementContext.getRebindManager().forcePersistNow(false, null);
+        }
         return this;
     }
 

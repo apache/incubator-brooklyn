@@ -287,6 +287,11 @@ public class Main extends AbstractMain {
                 "allIfNotPersisted: stop all apps IF persistence is not enabled, otherwise leave all running")
         public String stopWhichAppsOnShutdown = STOP_THESE_IF_NOT_PERSISTED;
 
+        @Option(name = { "--exitAndLeaveAppsRunningAfterStarting" },
+                description = "Once the application to start (from --app) is running exit the process, leaving any entities running. "
+                    + "Can be used in combination with --persist auto --persistenceDir <custom folder location> to attach to the running app at a later time.")
+        public boolean exitAndLeaveAppsRunningAfterStarting = false;
+
         /** @deprecated since 0.7.0 see {@link #stopWhichAppsOnShutdown} */
         @Deprecated
         @Option(name = { "-ns", "--noShutdownOnExit" },
@@ -438,8 +443,9 @@ public class Main extends AbstractMain {
                 Entities.dumpInfo(launcher.getApplications());
             }
             
-            waitAfterLaunch(ctx);
-
+            if (!exitAndLeaveAppsRunningAfterStarting) {
+                waitAfterLaunch(ctx);
+            }
             return null;
         }
 
@@ -511,18 +517,23 @@ public class Main extends AbstractMain {
         }
         
         protected StopWhichAppsOnShutdown computeStopWhichAppsOnShutdown() {
+            boolean isDefault = STOP_THESE_IF_NOT_PERSISTED.equals(stopWhichAppsOnShutdown);
             if (noShutdownOnExit) {
-                if (STOP_THESE_IF_NOT_PERSISTED.equals(stopWhichAppsOnShutdown)) {
+                if (isDefault) {
                     // the default; assume it was not explicitly specified so no error
                     stopWhichAppsOnShutdown = STOP_NONE;
                     // but warn of deprecation
                     log.warn("Deprecated paramater `--noShutdownOnExit` detected; this will likely be removed in a future version; "
                         + "replace with `"+STOP_WHICH_APPS_ON_SHUTDOWN+" "+stopWhichAppsOnShutdown+"`");
+                    return StopWhichAppsOnShutdown.NONE;
                 } else {
                     throw new FatalConfigurationRuntimeException("Cannot specify both `--noShutdownOnExit` and `"+STOP_WHICH_APPS_ON_SHUTDOWN+"`");
                 }
+            } else if (exitAndLeaveAppsRunningAfterStarting && isDefault) {
+                return StopWhichAppsOnShutdown.NONE;
+            } else {
+                return Enums.valueOfIgnoreCase(StopWhichAppsOnShutdown.class, stopWhichAppsOnShutdown).get();
             }
-            return Enums.valueOfIgnoreCase(StopWhichAppsOnShutdown.class, stopWhichAppsOnShutdown).get();
         }
         
         @VisibleForTesting
@@ -766,7 +777,8 @@ public class Main extends AbstractMain {
                     .add("persist", persist)
                     .add("persistenceLocation", persistenceLocation)
                     .add("persistenceDir", persistenceDir)
-                    .add("highAvailability", highAvailability);
+                    .add("highAvailability", highAvailability)
+                    .add("exitAndLeaveAppsRunningAfterStarting", exitAndLeaveAppsRunningAfterStarting);
         }
     }
 
