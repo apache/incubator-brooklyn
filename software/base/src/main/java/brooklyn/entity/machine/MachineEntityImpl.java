@@ -35,6 +35,7 @@ import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.DynamicTasks;
+import brooklyn.util.task.system.ProcessTaskStub.ScriptReturnType;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -157,25 +158,25 @@ public class MachineEntityImpl extends EmptySoftwareProcessImpl implements Machi
 
     @Override
     public String execCommandTimeout(String command, Duration timeout) {
+        ProcessTaskWrapper<String> task = SshEffectorTasks.ssh(command)
+                .environmentVariables(((AbstractSoftwareProcessSshDriver) getDriver()).getShellEnvironment())
+                .requiringZeroAndReturningStdout()
+                .machine(getMachine())
+                .summary(command)
+                .newTask();
+
         try {
-            ProcessTaskWrapper<Integer> task = SshEffectorTasks.ssh(command)
-                    .environmentVariables(((AbstractSoftwareProcessSshDriver) getDriver()).getShellEnvironment())
-                    .machine(getMachine())
-                    .summary(command)
-                    .newTask();
-            Integer result = DynamicTasks.queueIfPossible(task)
+            String result = DynamicTasks.queueIfPossible(task)
                     .executionContext(this)
                     .orSubmitAsync()
                     .asTask()
                     .get(timeout);
-            if (result != 0) {
-                LOG.warn("Command failed: {}", task.getStderr());
-                throw new IllegalStateException("Command failed, return code " + result);
-            }
-            return task.getStdout();
+            return result;
         } catch (TimeoutException te) {
             throw new IllegalStateException("Timed out running command: " + command);
         } catch (Exception e) {
+            Integer exitCode = task.getExitCode();
+            LOG.warn("Command failed, return code {}: {}", exitCode == null ? -1 : exitCode, task.getStderr());
             throw Exceptions.propagate(e);
         }
     }
