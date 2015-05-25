@@ -166,9 +166,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         
     private DeltaCollector deltaCollector = new DeltaCollector();
 
-    private volatile boolean running = false;
-
-    private volatile boolean stopping = false, stopCompleted = false;
+    private enum ListenerState { INIT, RUNNING, STOPPING, STOPPED } 
+    private volatile ListenerState state = ListenerState.INIT;
 
     private volatile ScheduledTask scheduledTask;
 
@@ -197,18 +196,17 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     @SuppressWarnings("unchecked")
     public void start() {
         synchronized (startStopMutex) {
-            if (running || (scheduledTask!=null && !scheduledTask.isDone())) {
+            if (state==ListenerState.RUNNING || (scheduledTask!=null && !scheduledTask.isDone())) {
                 LOG.warn("Request to start "+this+" when already running - "+scheduledTask+"; ignoring");
                 return;
             }
-            stopCompleted = false;
-            running = true;
+            state = ListenerState.RUNNING;
 
             Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
                 @Override public Task<Void> call() {
                     return Tasks.<Void>builder().dynamic(false).name("periodic-persister").body(new Callable<Void>() {
                         public Void call() {
-                            persistNowSafely(false);
+                            persistNowSafely();
                             return null;
                         }}).build();
                 }
@@ -224,9 +222,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     }
     void stop(Duration timeout, Duration graceTimeoutForSubsequentOperations) {
         synchronized (startStopMutex) {
-            running = false;
+            state = ListenerState.STOPPING;
             try {
-                stopping = true;
 
                 if (scheduledTask != null) {
                     CountdownTimer expiry = timeout.countdownTimer();
@@ -250,8 +247,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     deltaCollector = new DeltaCollector();
                 }
             } finally {
-                stopCompleted = true;
-                stopping = false;
+                state = ListenerState.STOPPED;
             }
         }
     }
@@ -259,7 +255,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     /** Waits for any in-progress writes to be completed then for or any unwritten data to be written. */
     @VisibleForTesting
     public void waitForPendingComplete(Duration timeout, boolean canTrigger) throws InterruptedException, TimeoutException {
-        if (!isActive() && !stopping) return;
+        if (!isActive() && state != ListenerState.STOPPING) return;
         
         CountdownTimer timer = timeout.isPositive() ? CountdownTimer.newInstanceStarted(timeout) : CountdownTimer.newInstancePaused(Duration.PRACTICALLY_FOREVER);
         Integer targetWriteCount = null;
@@ -299,14 +295,16 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
      * Even when not active, changes will still be tracked unless {@link #isStopped()}.
      */
     private boolean isActive() {
-        return running && persister != null && !isStopped();
+        return state == ListenerState.RUNNING && persister != null && !isStopped();
     }
 
     /**
-     * Whether we have been stopped, in which case will not persist or store anything.
+     * Whether we have been stopped, ie are stopping are or fully stopped,
+     * in which case will not persist or store anything
+     * (except for a final internal persistence called while STOPPING.) 
      */
     private boolean isStopped() {
-        return stopping || stopCompleted || executionContext.isShutdown();
+        return state == ListenerState.STOPPING || state == ListenerState.STOPPED || executionContext.isShutdown();
     }
     
     private void addReferencedObjects(DeltaCollector deltaCollector) {
@@ -336,7 +334,11 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     }
     
     @VisibleForTesting
-    public boolean persistNowSafely(boolean alreadyHasMutex) {
+    public boolean persistNowSafely() {
+        return persistNowSafely(false);
+    }
+    
+    private boolean persistNowSafely(boolean alreadyHasMutex) {
         Stopwatch timer = Stopwatch.createStarted();
         try {
             persistNowInternal(alreadyHasMutex);
@@ -364,12 +366,12 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     }
     
     protected void persistNowInternal(boolean alreadyHasMutex) {
-        if (!isActive() && !stopping) {
+        if (!isActive() && state != ListenerState.STOPPING) {
             return;
         }
         try {
             if (!alreadyHasMutex) persistingMutex.acquire();
-            if (!isActive() && !stopping) return;
+            if (!isActive() && state != ListenerState.STOPPING) return;
             
             // Atomically switch the delta, so subsequent modifications will be done in the
             // next scheduled persist

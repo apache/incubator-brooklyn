@@ -598,9 +598,16 @@ public class BrooklynLauncher {
         try {
             // run cat init now if it hasn't yet been run; 
             // will also run if there was an ignored error in catalog above, allowing it to fail startup here if requested
-            if (catInit!=null && !catInit.hasRunOfficial()) {
-                LOG.debug("Loading catalog as part of launcher (persistence did not run it)");
-                catInit.populateCatalog(true, null);
+            if (catInit!=null && !catInit.hasRunOfficialInitialization()) {
+                if (persistMode==PersistMode.DISABLED) {
+                    LOG.debug("Loading catalog as part of launch sequence (it was not loaded as part of any rebind sequence)");
+                    catInit.populateCatalog(ManagementNodeState.MASTER, true, true, null);
+                } else {
+                    // should have loaded during rebind
+                    ManagementNodeState state = managementContext.getHighAvailabilityManager().getNodeState();
+                    LOG.warn("Loading catalog for "+state+" as part of launch sequence (it was not loaded as part of the rebind sequence)");
+                    catInit.populateCatalog(state, true, true, null);
+                }
             }
         } catch (Exception e) {
             handleSubsystemStartupError(ignoreCatalogErrors, "initial catalog", e);

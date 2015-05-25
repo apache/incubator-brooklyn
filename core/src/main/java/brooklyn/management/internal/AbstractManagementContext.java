@@ -363,11 +363,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     @Override
     public BrooklynCatalog getCatalog() {
-        if (!getCatalogInitialization().hasRunIncludingBestEffort()) {
+        if (!getCatalogInitialization().hasRunAnyInitialization()) {
             // catalog init is needed; normally this will be done from start sequence,
             // but if accessed early -- and in tests -- we will load it here
             getCatalogInitialization().injectManagementContext(this);
-            getCatalogInitialization().populateBestEffort(catalog);
+            getCatalogInitialization().populateUnofficial(catalog);
         }
         return catalog;
     }

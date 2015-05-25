@@ -408,33 +408,40 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             throw new IllegalStateException("Unexpected high availability mode "+startMode+" requested for "+this);
         }
         
-        if ((startMode==HighAvailabilityMode.HOT_STANDBY || startMode==HighAvailabilityMode.HOT_BACKUP) && !ManagementNodeState.isHotProxy(oldState)) {
-            // now transition to hot proxy
-            nodeStateTransitionComplete = false;
-            if (startMode==HighAvailabilityMode.HOT_STANDBY) {
-                // if it should be hot standby, then we may need to promote
-                // inform the world that we are transitioning (but not eligible for promotion while going in to hot standby)
-                // (no harm in doing this twice)
-                publishHealth();
-            }
-            try {
-                activateHotProxy(ManagementNodeState.of(startMode).get()).get();
-                // error above now throws
-                nodeStateTransitionComplete = true;
-                publishHealth();
-                
-                if (getNodeState()==ManagementNodeState.HOT_STANDBY || getNodeState()==ManagementNodeState.HOT_BACKUP) {
-                    LOG.info("Management node "+ownNodeId+" now running as HA "+getNodeState()+"; "
-                        + managementContext.getApplications().size()+" application"+Strings.s(managementContext.getApplications().size())+" loaded");
-                } else {
-                    // shouldn't come here, we should have gotten an error above
-                    LOG.warn("Management node "+ownNodeId+" unable to promote to "+startMode+" (currently "+getNodeState()+"); "
-                        + "(see log for further details)");
+        if ((startMode==HighAvailabilityMode.HOT_STANDBY || startMode==HighAvailabilityMode.HOT_BACKUP)) {
+            if (!ManagementNodeState.isHotProxy(oldState)) {
+                // now transition to hot proxy
+                nodeStateTransitionComplete = false;
+                if (startMode==HighAvailabilityMode.HOT_STANDBY) {
+                    // if it should be hot standby, then we may need to promote
+                    // inform the world that we are transitioning (but not eligible for promotion while going in to hot standby)
+                    // (no harm in doing this twice)
+                    publishHealth();
                 }
-            } catch (Exception e) {
-                LOG.warn("Management node "+ownNodeId+" unable to promote to "+startMode+" (currently "+getNodeState()+"); rethrowing: "+Exceptions.collapseText(e));
+                try {
+                    activateHotProxy(ManagementNodeState.of(startMode).get()).get();
+                    // error above now throws
+                    nodeStateTransitionComplete = true;
+                    publishHealth();
+
+                    if (getNodeState()==ManagementNodeState.HOT_STANDBY || getNodeState()==ManagementNodeState.HOT_BACKUP) {
+                        LOG.info("Management node "+ownNodeId+" now running as HA "+getNodeState()+"; "
+                            + managementContext.getApplications().size()+" application"+Strings.s(managementContext.getApplications().size())+" loaded");
+                    } else {
+                        // shouldn't come here, we should have gotten an error above
+                        LOG.warn("Management node "+ownNodeId+" unable to promote to "+startMode+" (currently "+getNodeState()+"); "
+                            + "(see log for further details)");
+                    }
+                } catch (Exception e) {
+                    LOG.warn("Management node "+ownNodeId+" unable to promote to "+startMode+" (currently "+getNodeState()+"); rethrowing: "+Exceptions.collapseText(e));
+                    nodeStateTransitionComplete = true;
+                    throw Exceptions.propagate(e);
+                }
+            } else {
+                // transitioning among hot proxy states - tell the rebind manager
+                managementContext.getRebindManager().stopReadOnly();
+                managementContext.getRebindManager().startReadOnly(ManagementNodeState.of(startMode).get());
                 nodeStateTransitionComplete = true;
-                throw Exceptions.propagate(e);
             }
         } else {
             nodeStateTransitionComplete = true;

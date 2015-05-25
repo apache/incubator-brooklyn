@@ -115,7 +115,7 @@ public class AggregateClassLoader extends ClassLoader {
 
     public Iterator<ClassLoader> iterator() {
         synchronized (classLoaders) {
-            // provides iterator of snapshot
+            // CopyOnWriteList iterator is immutable view of snapshot
             return classLoaders.iterator();
         }
     }

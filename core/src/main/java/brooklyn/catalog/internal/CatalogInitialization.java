@@ -29,6 +29,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
+import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
@@ -37,6 +38,7 @@ import brooklyn.util.exceptions.FatalRuntimeException;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
@@ -78,7 +80,15 @@ public class CatalogInitialization implements ManagementContextInjectable {
 
     private boolean disallowLocal = false;
     private List<Function<CatalogInitialization, Void>> callbacks = MutableList.of();
-    private boolean hasRunBestEffort = false, hasRunOfficial = false, isPopulating = false;
+    private boolean 
+        /** has run an unofficial initialization (i.e. an early load, triggered by an early read of the catalog) */
+        hasRunUnofficialInitialization = false, 
+        /** has run an official initialization, but it is not a permanent one (e.g. during a hot standby mode, or a run failed) */
+        hasRunTransientOfficialInitialization = false, 
+        /** has run an official initialization which is permanent (node is master, and the new catalog is now set) */
+        hasRunFinalInitialization = false;
+    /** is running a populate method; used to prevent recursive loops */
+    private boolean isPopulating = false;
     
     private ManagementContext managementContext;
     private boolean isStartingUp = false;
@@ -97,6 +107,7 @@ public class CatalogInitialization implements ManagementContextInjectable {
         this(null, false, null, false);
     }
 
+    @Override
     public void injectManagementContext(ManagementContext managementContext) {
         Preconditions.checkNotNull(managementContext, "management context");
         if (this.managementContext!=null && managementContext!=this.managementContext)
@@ -127,56 +138,108 @@ public class CatalogInitialization implements ManagementContextInjectable {
         return reset;
     }
 
-    public boolean hasRunOfficial() { return hasRunOfficial; }
-    public boolean hasRunIncludingBestEffort() { return hasRunOfficial || hasRunBestEffort; }
+    /** Returns true if the canonical initialization has completed, 
+     * that is, an initialization which is done when a node is rebinded as master
+     * (or an initialization done by the startup routines when not running persistence);
+     * see also {@link #hasRunAnyInitialization()}. */
+    public boolean hasRunFinalInitialization() { return hasRunFinalInitialization; }
+    /** Returns true if an official initialization has run,
+     * even if it was a transient run, e.g. so that the launch sequence can tell whether rebind has triggered initialization */
+    public boolean hasRunOfficialInitialization() { return hasRunFinalInitialization || hasRunTransientOfficialInitialization; }
+    /** Returns true if the initializer has run at all,
+     * including transient initializations which might be needed before a canonical becoming-master rebind,
+     * for instance because the catalog is being accessed before loading rebind information
+     * (done by {@link #populateUnofficial(BasicBrooklynCatalog)}) */
+    public boolean hasRunAnyInitialization() { return hasRunFinalInitialization || hasRunTransientOfficialInitialization || hasRunUnofficialInitialization; }
 
-    /** makes or updates the mgmt catalog, based on the settings in this class */
-    public void populateCatalog(boolean needsInitial, Collection<CatalogItem<?, ?>> optionalItemsForResettingCatalog) {
+    /** makes or updates the mgmt catalog, based on the settings in this class 
+     * @param nodeState the management node for which this is being read; if master, then we expect this run to be the last one,
+     *   and so subsequent applications should ignore any initialization data (e.g. on a subsequent promotion to master, 
+     *   after a master -> standby -> master cycle)
+     * @param needsInitialItemsLoaded whether the catalog needs the initial items loaded
+     * @param needsInitialItemsLoaded whether the catalog needs the additiona items loaded
+     * @param optionalExcplicitItemsForResettingCatalog
+     *   if supplied, the catalog is reset to contain only these items, before calling any other initialization
+     *   for use primarily when rebinding
+     */
+    public void populateCatalog(ManagementNodeState nodeState, boolean needsInitialItemsLoaded, boolean needsAdditionsLoaded, Collection<CatalogItem<?, ?>> optionalExcplicitItemsForResettingCatalog) {
+        if (log.isDebugEnabled()) {
+            String message = "Populating catalog for "+nodeState+", needsInitial="+needsInitialItemsLoaded+", needsAdditional="+needsAdditionsLoaded+", explicitItems="+(optionalExcplicitItemsForResettingCatalog==null ? "null" : optionalExcplicitItemsForResettingCatalog.size())+"; from "+JavaClassNames.callerNiceClassAndMethod(1);
+            if (!ManagementNodeState.isHotProxy(nodeState)) {
+                log.debug(message);
+            } else {
+                // in hot modes, make this message trace so we don't get too much output then
+                log.trace(message);
+            }
+        }
         synchronized (populatingCatalogMutex) {
             try {
+                if (hasRunFinalInitialization() && (needsInitialItemsLoaded || needsAdditionsLoaded)) {
+                    // if we have already run "final" then we should only ever be used to reset the catalog, 
+                    // not to initialize or add; e.g. we are being given a fixed list on a subsequent master rebind after the initial master rebind 
+                    log.warn("Catalog initialization called to populate initial, even though it has already run the final official initialization");
+                }
                 isPopulating = true;
                 BasicBrooklynCatalog catalog = (BasicBrooklynCatalog) managementContext.getCatalog();
                 if (!catalog.getCatalog().isLoaded()) {
                     catalog.load();
                 } else {
-                    if (needsInitial && (hasRunOfficial || hasRunBestEffort)) {
+                    if (needsInitialItemsLoaded && hasRunAnyInitialization()) {
                         // an indication that something caused it to load early; not severe, but unusual
-                        log.warn("Catalog initialization has not properly run but management context has a catalog; re-populating, possibly overwriting items installed during earlier access (it may have been an early web request)");
+                        if (hasRunTransientOfficialInitialization) {
+                            log.debug("Catalog initialization now populating, but has noted a previous official run which was not final (probalby loaded while in a standby mode, or a previous run failed); overwriting any items installed earlier");
+                        } else {
+                            log.warn("Catalog initialization now populating, but has noted a previous unofficial run (it may have been an early web request); overwriting any items installed earlier");
+                        }
                         catalog.reset(ImmutableList.<CatalogItem<?,?>>of());
                     }
                 }
-                hasRunOfficial = true;
 
-                populateCatalogImpl(catalog, needsInitial, optionalItemsForResettingCatalog);
+                populateCatalogImpl(catalog, needsInitialItemsLoaded, needsAdditionsLoaded, optionalExcplicitItemsForResettingCatalog);
+                if (nodeState == ManagementNodeState.MASTER) {
+                    // TODO ideally this would remain false until it has *persisted* the changed catalog;
+                    // if there is a subsequent startup failure the forced additions will not be persisted,
+                    // but nor will they be loaded on a subsequent run.
+                    // callers will have to restart a brooklyn, or reach into this class to change this field,
+                    // or (recommended) manually adjust the catalog.
+                    // TODO also, if a node comes up in standby, the addition might not take effector for a while
+                    //
+                    // however since these options are mainly for use on the very first brooklyn run, it's not such a big deal; 
+                    // once up and running the typical way to add items is via the REST API
+                    hasRunFinalInitialization = true;
+                }
             } finally {
-                hasRunOfficial = true;
+                if (!hasRunFinalInitialization) {
+                    hasRunTransientOfficialInitialization = true;
+                }
                 isPopulating = false;
             }
         }
     }
 
-    private void populateCatalogImpl(BasicBrooklynCatalog catalog, boolean needsInitial, Collection<CatalogItem<?, ?>> optionalItemsForResettingCatalog) {
+    private void populateCatalogImpl(BasicBrooklynCatalog catalog, boolean needsInitialItemsLoaded, boolean needsAdditionsLoaded, Collection<CatalogItem<?, ?>> optionalItemsForResettingCatalog) {
         applyCatalogLoadMode();
         
         if (optionalItemsForResettingCatalog!=null) {
             catalog.reset(optionalItemsForResettingCatalog);
         }
         
-        if (needsInitial) {
+        if (needsInitialItemsLoaded) {
             populateInitial(catalog);
         }
-        
-        populateAdditions(catalog);
 
-        populateViaCallbacks(catalog);
+        if (needsAdditionsLoaded) {
+            populateAdditions(catalog);
+            populateViaCallbacks(catalog);
+        }
     }
 
     private enum PopulateMode { YAML, XML, AUTODETECT }
     
     protected void populateInitial(BasicBrooklynCatalog catalog) {
         if (disallowLocal) {
-            if (!hasRunOfficial()) {
-                log.debug("CLI initial catalog not being read with disallow-local mode set.");
+            if (!hasRunFinalInitialization()) {
+                log.debug("CLI initial catalog not being read when local catalog load mode is disallowed.");
             }
             return;
         }
@@ -201,13 +264,13 @@ public class CatalogInitialization implements ManagementContextInjectable {
         
         catalogUrl = Os.mergePaths(BrooklynServerConfig.getMgmtBaseDir( managementContext.getConfig() ), "catalog.bom");
         if (new File(catalogUrl).exists()) {
-            populateInitialFromUri(catalog, "file:"+catalogUrl, PopulateMode.YAML);
+            populateInitialFromUri(catalog, new File(catalogUrl).toURI().toString(), PopulateMode.YAML);
             return;
         }
         
         catalogUrl = Os.mergePaths(BrooklynServerConfig.getMgmtBaseDir( managementContext.getConfig() ), "catalog.xml");
         if (new File(catalogUrl).exists()) {
-            populateInitialFromUri(catalog, "file:"+catalogUrl, PopulateMode.XML);
+            populateInitialFromUri(catalog, new File(catalogUrl).toURI().toString(), PopulateMode.XML);
             return;
         }
 
@@ -287,7 +350,7 @@ public class CatalogInitialization implements ManagementContextInjectable {
         if (Strings.isNonBlank(additionsUri)) {
             if (disallowLocal) {
                 if (!hasRunAdditions) {
-                    log.warn("CLI additions supplied but not supported in disallow-local mode; ignoring.");
+                    log.warn("CLI additions supplied but not supported when catalog load mode disallows local loads; ignoring.");
                 }
                 return;
             }   
@@ -340,21 +403,27 @@ public class CatalogInitialization implements ManagementContextInjectable {
         }
     }
 
-    /** makes the catalog, warning if persistence is on and hasn't run yet 
-     * (as the catalog will be subsequently replaced) */
-    public void populateBestEffort(BasicBrooklynCatalog catalog) {
+    /** Creates the catalog based on parameters set here, if not yet loaded,
+     * but ignoring persisted state and warning if persistence is on and we are starting up
+     * (because the official persistence is preferred and the catalog will be subsequently replaced);
+     * for use when the catalog is accessed before persistence is completed. 
+     * <p>
+     * This method is primarily used during testing, which in many cases does not enforce the full startup order
+     * and which wants a local catalog in any case. It may also be invoked if a client requests the catalog
+     * while the server is starting up. */
+    public void populateUnofficial(BasicBrooklynCatalog catalog) {
         synchronized (populatingCatalogMutex) {
-            if (hasRunOfficial || hasRunBestEffort || isPopulating) return;
-            // if a thread calls back in to this, ie calling to it from a getCatalog() call while populating,
-            // it will own the mutex and observe isRunningBestEffort, returning quickly 
+            // check isPopulating in case this method gets called from inside another populate call
+            if (hasRunAnyInitialization() || isPopulating) return;
+            log.debug("Populating catalog unofficially ("+catalog+")");
             isPopulating = true;
             try {
                 if (isStartingUp) {
                     log.warn("Catalog access requested when not yet initialized; populating best effort rather than through recommended pathway. Catalog data may be replaced subsequently.");
                 }
-                populateCatalogImpl(catalog, true, null);
+                populateCatalogImpl(catalog, true, true, null);
             } finally {
-                hasRunBestEffort = true;
+                hasRunUnofficialInitialization = true;
                 isPopulating = false;
             }
         }
