@@ -30,6 +30,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import brooklyn.entity.Group;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -43,6 +46,7 @@ import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestJavaWebAppEntity;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSupport {
@@ -80,6 +84,26 @@ public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSuppo
         // Stopping cluster should not stop controller (because it didn't create it)
         cluster.stop();
         EntityTestUtils.assertAttributeEquals(controller, AbstractController.SERVICE_UP, true);
+    }
+    
+    @Test
+    public void testUsesCustomControlledGroup() {
+        TestJavaWebAppEntity webServer = app.createAndManageChild(EntitySpec.create(TestJavaWebAppEntity.class));
+        webServer.setAttribute(Attributes.SUBNET_HOSTNAME, "myhostname");
+        webServer.setAttribute(Attributes.HTTP_PORT, 1234);
+        
+        TrackingAbstractController controller = app.createAndManageChild(EntitySpec.create(TrackingAbstractController.class));
+        Group controlledGroup = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
+        controlledGroup.addMember(webServer);
+        
+        ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)
+                .configure("initialSize", 0)
+                .configure(ControlledDynamicWebAppCluster.CONTROLLER, controller)
+                .configure(ControlledDynamicWebAppCluster.CONTROLLED_GROUP, controlledGroup)
+                .configure("memberSpec", EntitySpec.create(JBoss7Server.class).configure("war", getTestWar())));
+        app.start(locs);
+
+        assertEquals(controller.getUpdates(), ImmutableList.of(ImmutableSet.of("myhostname:1234")));
     }
     
     @Test

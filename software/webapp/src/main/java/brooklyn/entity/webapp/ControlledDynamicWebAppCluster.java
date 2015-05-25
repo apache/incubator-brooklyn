@@ -69,6 +69,10 @@ public interface ControlledDynamicWebAppCluster extends DynamicGroup, Entity, St
     public static BasicAttributeSensorAndConfigKey<LoadBalancer> CONTROLLER = new BasicAttributeSensorAndConfigKey<LoadBalancer>(
         LoadBalancer.class, "controlleddynamicwebappcluster.controller", "Controller for the cluster; if null a default will created (using controllerSpec)");
 
+    @SetFromFlag("controlledGroup")
+    public static BasicAttributeSensorAndConfigKey<Group> CONTROLLED_GROUP = new BasicAttributeSensorAndConfigKey<Group>(
+        Group.class, "controlleddynamicwebappcluster.controlledgroup", "The group of web servers that the controller should point at; if null, will use the CLUSTER");
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @SetFromFlag("controllerSpec")
     public static BasicAttributeSensorAndConfigKey<EntitySpec<? extends LoadBalancer>> CONTROLLER_SPEC = new BasicAttributeSensorAndConfigKey(
@@ -105,4 +109,5 @@ public interface ControlledDynamicWebAppCluster extends DynamicGroup, Entity, St
     
     public DynamicWebAppCluster getCluster();
     
+    public Group getControlledGroup();
 }
