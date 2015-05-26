@@ -19,14 +19,28 @@
 package brooklyn;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import java.net.URL;
+import java.util.Iterator;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import brooklyn.catalog.internal.CatalogEntityItemDto;
+import brooklyn.catalog.internal.CatalogItemBuilder;
+import brooklyn.catalog.internal.CatalogItemDtoAbstract;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.management.osgi.OsgiTestResources;
+import brooklyn.test.TestResourceUnavailableException;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.text.Strings;
 
 public class BrooklynVersionTest {
@@ -42,19 +56,19 @@ public class BrooklynVersionTest {
     public void testGetHardcodedClasspathVersion() {
         @SuppressWarnings("deprecation")
         String v = BrooklynVersion.INSTANCE.getVersionFromClasspath();
-        Assert.assertTrue(BrooklynVersion.get().equals(v) || "0.0.0-SNAPSHOT".equals(v), v);
+        assertTrue(BrooklynVersion.get().equals(v) || "0.0.0-SNAPSHOT".equals(v), v);
     }
 
     @Test
     public void testGetFromMaven() {
         String v = BrooklynVersion.INSTANCE.getVersionFromMavenProperties();
-        Assert.assertTrue(v == null || BrooklynVersion.get().equals(v), v);
+        assertTrue(v == null || BrooklynVersion.get().equals(v), v);
     }
 
     @Test
     public void testGetFromOsgi() {
         String v = BrooklynVersion.INSTANCE.getVersionFromOsgiManifest();
-        Assert.assertTrue(v == null || BrooklynVersion.get().equals(v), v);
+        assertTrue(v == null || BrooklynVersion.get().equals(v), v);
     }
 
     @Test
@@ -77,6 +91,36 @@ public class BrooklynVersionTest {
         boolean testResourcePathInClasses = sp.getPath().endsWith("classes/brooklyn/config/sample.properties");
         Assert.assertEquals(testResourcePathInClasses, BrooklynVersion.isDevelopmentEnvironment(),
                 "Dev env? " + BrooklynVersion.isDevelopmentEnvironment() + "; but resource path: " + sp);
+    }
+
+    @Test
+    public void testGetFeatures() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+        LocalManagementContext mgmt = LocalManagementContextForTests.builder(true)
+                .disableOsgi(false)
+                .build();
+        String symName = "org.apache.brooklyn.test.resources.osgi.brooklyn-test-osgi-entities";
+        String version = "0.1.0";
+        String type = "brooklyn.osgi.tests.SimpleEntity";
+        List<String> libraries = Lists.newArrayList("classpath:" + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
+
+        CatalogEntityItemDto c1 = CatalogItemBuilder.newEntity(symName, version)
+                .javaType(type)
+                .libraries(CatalogItemDtoAbstract.parseLibraries(libraries))
+                .build();
+        mgmt.getCatalog().addItem(c1);
+
+        Iterable<BrooklynVersion.BrooklynFeature> features = BrooklynVersion.getFeatures(mgmt);
+        assertTrue(features.iterator().hasNext());
+        boolean found = false;
+        Iterator<BrooklynVersion.BrooklynFeature> iterator = features.iterator();
+        while (!found && iterator.hasNext()) {
+            BrooklynVersion.BrooklynFeature feature = iterator.next();
+            if (feature.getSymbolicName().equals(symName) && feature.getVersion().equals(version)) {
+                found = true;
+            }
+        }
+        assertTrue(found, "Expected to find " + symName + ":" + version + " in: " + Iterables.toString(features));
     }
 
 }

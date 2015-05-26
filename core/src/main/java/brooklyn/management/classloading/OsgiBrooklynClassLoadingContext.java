@@ -26,6 +26,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.entitlement.EntitlementClass;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;
@@ -56,6 +57,7 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         return _bundles;
     }
     
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Maybe<Class<?>> tryLoadClass(String className) {
         Maybe<Class<Object>> clazz = null;
@@ -107,8 +109,8 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
 
     @Override
     public URL getResource(String name) {
-        if (mgmt!=null) {
-            Maybe<OsgiManager> osgi = ((ManagementContextInternal)mgmt).getOsgiManager();
+        if (mgmt != null && isEntitledToSeeCatalogItem()) {
+            Maybe<OsgiManager> osgi = ((ManagementContextInternal) mgmt).getOsgiManager();
             if (osgi.isPresent() && hasBundles) {
                 return osgi.get().getResource(name, getBundles());
             }
@@ -118,7 +120,7 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
 
     @Override
     public Iterable<URL> getResources(String name) {
-        if (mgmt != null) {
+        if (mgmt != null && isEntitledToSeeCatalogItem()) {
             Maybe<OsgiManager> osgi = ((ManagementContextInternal) mgmt).getOsgiManager();
             if (osgi.isPresent() && hasBundles) {
                 return osgi.get().getResources(name, getBundles());
@@ -129,6 +131,16 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
 
     public String getCatalogItemId() {
         return catalogItemId;
+    }
+
+    /**
+     * @return true if the current entitlement context may {@link Entitlements#SEE_CATALOG_ITEM see}
+     * {@link #getCatalogItemId}.
+     */
+    private boolean isEntitledToSeeCatalogItem() {
+        return Entitlements.isEntitled(mgmt.getEntitlementManager(),
+                Entitlements.SEE_CATALOG_ITEM,
+                catalogItemId);
     }
 
 }

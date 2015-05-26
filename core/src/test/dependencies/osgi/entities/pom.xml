@@ -74,6 +74,8 @@
                 <configuration>
                     <instructions>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <Brooklyn-Feature-BuildId>${buildNumber}</Brooklyn-Feature-BuildId>
+                        <Brooklyn-Feature-BuildBranch>${scmBranch}</Brooklyn-Feature-BuildBranch>
                     </instructions>
                 </configuration>
             </plugin>
