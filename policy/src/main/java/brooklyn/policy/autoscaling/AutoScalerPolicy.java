@@ -90,6 +90,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
         private Number metricLowerBound;
         private int minPoolSize = 0;
         private int maxPoolSize = Integer.MAX_VALUE;
+        private Integer resizeDownIterationIncrement;
+        private Integer resizeDownIterationMax;
+        private Integer resizeUpIterationIncrement;
+        private Integer resizeUpIterationMax;
         private Duration minPeriodBetweenExecs;
         private Duration resizeUpStabilizationDelay;
         private Duration resizeDownStabilizationDelay;
@@ -135,6 +139,20 @@ public class AutoScalerPolicy extends AbstractPolicy {
             maxPoolSize = max;
             return this;
         }
+        
+        public Builder resizeUpIterationIncrement(Integer val) {
+            this.resizeUpIterationIncrement = val; return this;
+        }
+        public Builder resizeUpIterationMax(Integer val) {
+            this.resizeUpIterationMax = val; return this;
+        }
+        public Builder resizeDownIterationIncrement(Integer val) {
+            this.resizeUpIterationIncrement = val; return this;
+        }
+        public Builder resizeDownIterationMax(Integer val) {
+            this.resizeUpIterationMax = val; return this;
+        }
+
         /**
          * @deprecated since 0.7; use {@link #minPeriodBetweenExecs(Duration)}
          */
@@ -210,6 +228,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
                     .putIfNotNull("metricLowerBound", metricLowerBound)
                     .putIfNotNull("minPoolSize", minPoolSize)
                     .putIfNotNull("maxPoolSize", maxPoolSize)
+                    .putIfNotNull("resizeUpIterationMax", resizeUpIterationMax)
+                    .putIfNotNull("resizeUpIterationIncrement", resizeUpIterationIncrement)
+                    .putIfNotNull("resizeDownIterationMax", resizeDownIterationMax)
+                    .putIfNotNull("resizeDownIterationIncrement", resizeDownIterationIncrement)
                     .putIfNotNull("minPeriodBetweenExecs", minPeriodBetweenExecs)
                     .putIfNotNull("resizeUpStabilizationDelay", resizeUpStabilizationDelay)
                     .putIfNotNull("resizeDownStabilizationDelay", resizeDownStabilizationDelay)
@@ -260,6 +282,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     public static final String POOL_LOW_THRESHOLD_KEY = "pool.low.threshold";
     public static final String POOL_CURRENT_WORKRATE_KEY = "pool.current.workrate";
     
+    @SuppressWarnings("serial")
     @SetFromFlag("metric")
     public static final ConfigKey<AttributeSensor<? extends Number>> METRIC = BasicConfigKey.builder(new TypeToken<AttributeSensor<? extends Number>>() {})
             .name("autoscaler.metric")
@@ -282,6 +305,35 @@ public class AutoScalerPolicy extends AbstractPolicy {
             .reconfigurable(true)
             .build();
     
+    @SetFromFlag("resizeUpIterationIncrement")
+    public static final ConfigKey<Integer> RESIZE_UP_ITERATION_INCREMENT = BasicConfigKey.builder(Integer.class)
+            .name("autoscaler.resizeUpIterationIncrement")
+            .description("Batch size for resizing up; the size will be increased by a mulitiple of this value")
+            .defaultValue(1)
+            .reconfigurable(true)
+            .build();
+    @SetFromFlag("resizeUpIterationMax")
+    public static final ConfigKey<Integer> RESIZE_UP_ITERATION_MAX = BasicConfigKey.builder(Integer.class)
+            .name("autoscaler.resizeUpIterationMax")
+            .defaultValue(Integer.MAX_VALUE)
+            .description("Maximum change to the size on a single iteration when scaling up")
+            .reconfigurable(true)
+            .build();
+    @SetFromFlag("resizeDownIterationIncrement")
+    public static final ConfigKey<Integer> RESIZE_DOWN_ITERATION_INCREMENT = BasicConfigKey.builder(Integer.class)
+            .name("autoscaler.resizeDownIterationIncrement")
+            .description("Batch size for resizing down; the size will be decreased by a mulitiple of this value")
+            .defaultValue(1)
+            .reconfigurable(true)
+            .build();
+    @SetFromFlag("resizeDownIterationMax")
+    public static final ConfigKey<Integer> RESIZE_DOWN_ITERATION_MAX = BasicConfigKey.builder(Integer.class)
+            .name("autoscaler.resizeDownIterationMax")
+            .defaultValue(Integer.MAX_VALUE)
+            .description("Maximum change to the size on a single iteration when scaling down")
+            .reconfigurable(true)
+            .build();
+
     @SetFromFlag("minPeriodBetweenExecs")
     public static final ConfigKey<Duration> MIN_PERIOD_BETWEEN_EXECS = BasicConfigKey.builder(Duration.class)
             .name("autoscaler.minPeriodBetweenExecs")
@@ -325,6 +377,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
                     }})
             .build();
     
+    @SuppressWarnings("serial")
     @SetFromFlag("currentSizeOperator")
     public static final ConfigKey<Function<Entity,Integer>> CURRENT_SIZE_OPERATOR = BasicConfigKey.builder(new TypeToken<Function<Entity,Integer>>() {})
             .name("autoscaler.currentSizeOperator")
@@ -334,24 +387,28 @@ public class AutoScalerPolicy extends AbstractPolicy {
                     }})
             .build();
 
+    @SuppressWarnings("serial")
     @SetFromFlag("poolHotSensor")
     public static final ConfigKey<BasicNotificationSensor<? extends Map>> POOL_HOT_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? extends Map>>() {})
             .name("autoscaler.poolHotSensor")
             .defaultValue(DEFAULT_POOL_HOT_SENSOR)
             .build();
 
+    @SuppressWarnings("serial")
     @SetFromFlag("poolColdSensor")
     public static final ConfigKey<BasicNotificationSensor<? extends Map>> POOL_COLD_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? extends Map>>() {})
             .name("autoscaler.poolColdSensor")
             .defaultValue(DEFAULT_POOL_COLD_SENSOR)
             .build();
 
+    @SuppressWarnings("serial")
     @SetFromFlag("poolOkSensor")
     public static final ConfigKey<BasicNotificationSensor<? extends Map>> POOL_OK_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? extends Map>>() {})
             .name("autoscaler.poolOkSensor")
             .defaultValue(DEFAULT_POOL_OK_SENSOR)
             .build();
 
+    @SuppressWarnings("serial")
     @SetFromFlag("maxSizeReachedSensor")
     public static final ConfigKey<BasicNotificationSensor<? super MaxPoolSizeReachedEvent>> MAX_SIZE_REACHED_SENSOR = BasicConfigKey.builder(new TypeToken<BasicNotificationSensor<? super MaxPoolSizeReachedEvent>>() {})
             .name("autoscaler.maxSizeReachedSensor")
@@ -443,6 +500,31 @@ public class AutoScalerPolicy extends AbstractPolicy {
         config().set(METRIC_UPPER_BOUND, checkNotNull(val));
     }
     
+    private <T> void setOrDefault(ConfigKey<T> key, T val) {
+        if (val==null) val = key.getDefaultValue();
+        config().set(key, val);
+    }
+    public int getResizeUpIterationIncrement() { return getConfig(RESIZE_UP_ITERATION_INCREMENT); }
+    public void setResizeUpIterationIncrement(Integer val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeUpIterationIncrement from {} to {}", new Object[] {this, getResizeUpIterationIncrement(), val});
+        setOrDefault(RESIZE_UP_ITERATION_INCREMENT, val);
+    }
+    public int getResizeDownIterationIncrement() { return getConfig(RESIZE_DOWN_ITERATION_INCREMENT); }
+    public void setResizeDownIterationIncrement(Integer val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeDownIterationIncrement from {} to {}", new Object[] {this, getResizeDownIterationIncrement(), val});
+        setOrDefault(RESIZE_DOWN_ITERATION_INCREMENT, val);
+    }
+    public int getResizeUpIterationMax() { return getConfig(RESIZE_UP_ITERATION_MAX); }
+    public void setResizeUpIterationMax(Integer val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeUpIterationMax from {} to {}", new Object[] {this, getResizeUpIterationMax(), val});
+        setOrDefault(RESIZE_UP_ITERATION_MAX, val);
+    }
+    public int getResizeDownIterationMax() { return getConfig(RESIZE_DOWN_ITERATION_MAX); }
+    public void setResizeDownIterationMax(Integer val) {
+        if (LOG.isInfoEnabled()) LOG.info("{} changing resizeDownIterationMax from {} to {}", new Object[] {this, getResizeDownIterationMax(), val});
+        setOrDefault(RESIZE_DOWN_ITERATION_MAX, val);
+    }
+
     /**
      * @deprecated since 0.7.0; use {@link #setMinPeriodBetweenExecs(Duration)}
      */
@@ -566,7 +648,9 @@ public class AutoScalerPolicy extends AbstractPolicy {
             // Rely on next metric-change to trigger recalculation; 
             // and same for those below...
         } else if (key.equals(METRIC_UPPER_BOUND)) {
-
+            // see above
+        } else if (key.equals(RESIZE_UP_ITERATION_INCREMENT) || key.equals(RESIZE_UP_ITERATION_MAX) || key.equals(RESIZE_DOWN_ITERATION_INCREMENT) || key.equals(RESIZE_DOWN_ITERATION_MAX)) {
+            // no special actions needed
         } else if (key.equals(MIN_POOL_SIZE)) {
             int newMin = (Integer) val;
             if (newMin > getConfig(MAX_POOL_SIZE)) {
@@ -653,6 +737,29 @@ public class AutoScalerPolicy extends AbstractPolicy {
                 }});
         }
     }
+    
+    private enum ScalingType { HOT, COLD }
+    private static class ScalingData {
+        ScalingType scalingMode;
+        int currentSize;
+        double currentMetricValue;
+        Double metricUpperBound;
+        Double metricLowerBound;
+        
+        public double getCurrentTotalActivity() {
+            return currentMetricValue * currentSize;
+        }
+        
+        public boolean isHot() {
+            return ((scalingMode==null || scalingMode==ScalingType.HOT) && isValid(metricUpperBound) && currentMetricValue > metricUpperBound);
+        }
+        public boolean isCold() {
+            return ((scalingMode==null || scalingMode==ScalingType.COLD) && isValid(metricLowerBound) && currentMetricValue < metricLowerBound);
+        }
+        private boolean isValid(Double bound) {
+            return (bound!=null && bound>0);
+        }
+    }
 
     private void onMetricChanged(Number val) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-metric for {}: {}", new Object[] {this, poolEntity, val});
@@ -663,13 +770,38 @@ public class AutoScalerPolicy extends AbstractPolicy {
             return;
         }
         
-        double currentMetricD = val.doubleValue();
-        double metricUpperBoundD = getMetricUpperBound().doubleValue();
-        double metricLowerBoundD = getMetricLowerBound().doubleValue();
-        int currentSize = getCurrentSizeOperator().apply(entity);
-        double currentTotalActivity = currentSize * currentMetricD;
-        int unboundedSize;
-        int desiredSize;
+        ScalingData data = new ScalingData();
+        data.currentMetricValue = val.doubleValue();
+        data.currentSize = getCurrentSizeOperator().apply(entity);
+        data.metricUpperBound = getMetricUpperBound().doubleValue();
+        data.metricLowerBound = getMetricLowerBound().doubleValue();
+        
+        analyze(data, "pool");
+    }
+    
+    private void onPoolCold(Map<String, ?> properties) {
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-cold for {}: {}", new Object[] {this, poolEntity, properties});
+        analyzeOnHotOrColdSensor(ScalingType.COLD, "cold pool", properties);
+    }
+    
+    private void onPoolHot(Map<String, ?> properties) {
+        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-hot for {}: {}", new Object[] {this, poolEntity, properties});
+        analyzeOnHotOrColdSensor(ScalingType.HOT, "hot pool", properties);
+    }
+    
+    private void analyzeOnHotOrColdSensor(ScalingType scalingMode, String description, Map<String, ?> properties) {
+        ScalingData data = new ScalingData();
+        data.scalingMode = scalingMode;
+        data.currentMetricValue = (Double) properties.get(POOL_CURRENT_WORKRATE_KEY);
+        data.currentSize = (Integer) properties.get(POOL_CURRENT_SIZE_KEY);
+        data.metricUpperBound = (Double) properties.get(POOL_HIGH_THRESHOLD_KEY);
+        data.metricLowerBound = (Double) properties.get(POOL_LOW_THRESHOLD_KEY);
+        
+        analyze(data, description);   
+    }
+    
+    private void analyze(ScalingData data, String description) {
+        int desiredSizeUnconstrained;
         
         /* We always scale out (modulo stabilization delay) if:
          *   currentTotalActivity > currentSize*metricUpperBound
@@ -685,87 +817,86 @@ public class AutoScalerPolicy extends AbstractPolicy {
          *   n*metricUpperBound >= currentTotalActivity
          * thus n := Math.max ( floor(currentTotalActiviy/metricLowerBound), ceil(currentTotal/metricUpperBound) )
          */
-        if (currentMetricD > metricUpperBoundD) {
+        if (data.isHot()) {
             // scale out
-            unboundedSize = (int)Math.ceil(currentTotalActivity/metricUpperBoundD);
-            desiredSize = toBoundedDesiredPoolSize(unboundedSize);
-            if (desiredSize > currentSize) {
-                if (LOG.isDebugEnabled()) LOG.debug("{} provisionally resizing out pool {} from {} to {} ({} > {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricUpperBoundD});
-                scheduleResize(desiredSize);
-            } else {
-                if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} > {} > {}, but scale-out blocked eg by bounds/check)", new Object[] {this, poolEntity, currentSize, currentMetricD, metricUpperBoundD, metricLowerBoundD});
-            }
-            onNewUnboundedPoolSize(unboundedSize);
+            desiredSizeUnconstrained = (int)Math.ceil(data.getCurrentTotalActivity() / data.metricUpperBound);
+            data.scalingMode = ScalingType.HOT;
             
-        } else if (currentMetricD < metricLowerBoundD) {
+        } else if (data.isCold()) {
             // scale back
-            unboundedSize = (int)Math.floor(currentTotalActivity/metricLowerBoundD);
-            desiredSize = toBoundedDesiredPoolSize(unboundedSize);
-            if (desiredSize < currentTotalActivity/metricUpperBoundD) {
-                // this desired size would cause scale-out on next run, ie thrashing, so tweak
-                if (LOG.isTraceEnabled()) LOG.trace("{} resizing back pool {} from {}, tweaking from {} to prevent thrashing", new Object[] {this, poolEntity, currentSize, desiredSize });
-                desiredSize = (int)Math.ceil(currentTotalActivity/metricUpperBoundD);
-                desiredSize = toBoundedDesiredPoolSize(desiredSize);
-            }
-            if (desiredSize < currentSize) {
-                if (LOG.isDebugEnabled()) LOG.debug("{} provisionally resizing back pool {} from {} to {} ({} < {})", new Object[] {this, poolEntity, currentSize, desiredSize, currentMetricD, metricLowerBoundD});
-                scheduleResize(desiredSize);
-            } else {
-                if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} < {} < {}, but scale-back blocked eg by bounds/check)", new Object[] {this, poolEntity, currentSize, currentMetricD, metricLowerBoundD, metricUpperBoundD});
-            }
-            onNewUnboundedPoolSize(unboundedSize);
+            desiredSizeUnconstrained = (int)Math.floor(data.getCurrentTotalActivity() / data.metricLowerBound);
+            data.scalingMode = ScalingType.COLD;
             
         } else {
-            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} within range {}..{})", new Object[] {this, poolEntity, currentSize, currentMetricD, metricLowerBoundD, metricUpperBoundD});
-            abortResize(currentSize);
-            return; // within a health range; no-op
+            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} ({} within range {}..{})", new Object[] {this, poolEntity, data.currentSize, data.currentMetricValue, data.metricLowerBound, data.metricUpperBound});
+            abortResize(data.currentSize);
+            return; // within the healthy range; no-op
         }
-    }
-    
-    private void onPoolCold(Map<String, ?> properties) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-cold for {}: {}", new Object[] {this, poolEntity, properties});
         
-        int poolCurrentSize = (Integer) properties.get(POOL_CURRENT_SIZE_KEY);
-        double poolCurrentWorkrate = (Double) properties.get(POOL_CURRENT_WORKRATE_KEY);
-        double poolLowThreshold = (Double) properties.get(POOL_LOW_THRESHOLD_KEY);
-        
-        // Shrink the pool to force its low threshold to fall below the current workrate.
-        // NOTE: assumes the pool is homogeneous for now.
-        int unboundedPoolSize = (int) Math.ceil(poolCurrentWorkrate / (poolLowThreshold/poolCurrentSize));
-        int desiredPoolSize = toBoundedDesiredPoolSize(unboundedPoolSize);
-        
-        if (desiredPoolSize < poolCurrentSize) {
-            if (LOG.isTraceEnabled()) LOG.trace("{} resizing cold pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
-            scheduleResize(desiredPoolSize);
+        if (LOG.isTraceEnabled()) LOG.debug("{} detected unconstrained desired size {}", new Object[] {this, desiredSizeUnconstrained});
+        int desiredSize = applyMinMaxConstraints(desiredSizeUnconstrained);
+
+        if ((data.scalingMode==ScalingType.COLD) && (desiredSize < data.currentSize)) {
+
+            int delta = data.currentSize - desiredSize;
+            int scaleIncrement = getResizeDownIterationIncrement();
+            int scaleMax = getResizeDownIterationMax();
+            if (delta>scaleMax) {
+                delta=scaleMax;
+            } else if (delta % scaleIncrement != 0) {
+                // keep scaling to the increment
+                delta += scaleIncrement - (delta % scaleIncrement);
+            }
+            desiredSize = data.currentSize - delta;
+            
+            if (data.metricUpperBound!=null) {
+                // if upper bound supplied, check that this desired scale-back size 
+                // is not going to cause scale-out on next run; i.e. anti-thrashing
+                while (desiredSize < data.currentSize && data.getCurrentTotalActivity() > data.metricUpperBound * desiredSize) {
+                    if (LOG.isTraceEnabled()) LOG.trace("{} when resizing back pool {} from {}, tweaking from {} to prevent thrashing", new Object[] {this, poolEntity, data.currentSize, desiredSize });
+                    desiredSize += scaleIncrement;
+                }
+            }
+            desiredSize = applyMinMaxConstraints(desiredSize);
+            if (desiredSize >= data.currentSize) data.scalingMode = null;
+            
+        } else if ((data.scalingMode==ScalingType.HOT) && (desiredSize > data.currentSize)) {
+
+            int delta = desiredSize - data.currentSize;
+            int scaleIncrement = getResizeUpIterationIncrement();
+            int scaleMax = getResizeUpIterationMax();
+            if (delta>scaleMax) {
+                delta=scaleMax;
+            } else if (delta % scaleIncrement != 0) {
+                // keep scaling to the increment
+                delta += scaleIncrement - (delta % scaleIncrement);
+            }
+            desiredSize = data.currentSize + delta;
+            desiredSize = applyMinMaxConstraints(desiredSize);
+            if (desiredSize <= data.currentSize) data.scalingMode = null;
+
         } else {
-            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing cold pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
-            abortResize(poolCurrentSize);
+            data.scalingMode = null;
         }
-        
-        onNewUnboundedPoolSize(unboundedPoolSize);
-    }
     
-    private void onPoolHot(Map<String, ?> properties) {
-        if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-hot for {}: {}", new Object[] {this, poolEntity, properties});
-        
-        int poolCurrentSize = (Integer) properties.get(POOL_CURRENT_SIZE_KEY);
-        double poolCurrentWorkrate = (Double) properties.get(POOL_CURRENT_WORKRATE_KEY);
-        double poolHighThreshold = (Double) properties.get(POOL_HIGH_THRESHOLD_KEY);
-        
-        // Grow the pool to force its high threshold to rise above the current workrate.
-        // FIXME: assumes the pool is homogeneous for now.
-        int unboundedPoolSize = (int) Math.ceil(poolCurrentWorkrate / (poolHighThreshold/poolCurrentSize));
-        int desiredPoolSize = toBoundedDesiredPoolSize(unboundedPoolSize);
-        if (desiredPoolSize > poolCurrentSize) {
-            if (LOG.isTraceEnabled()) LOG.trace("{} resizing hot pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
-            scheduleResize(desiredPoolSize);
+        if (data.scalingMode!=null) {
+            if (LOG.isDebugEnabled()) LOG.debug("{} provisionally resizing {} {} from {} to {} ({} < {}; ideal size {})", new Object[] {this, description, poolEntity, data.currentSize, desiredSize, data.currentMetricValue, data.metricLowerBound, desiredSizeUnconstrained});
+            scheduleResize(desiredSize);
         } else {
-            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing hot pool {} from {} to {}", new Object[] {this, poolEntity, poolCurrentSize, desiredPoolSize});
-            abortResize(poolCurrentSize);
+            if (LOG.isTraceEnabled()) LOG.trace("{} not resizing {} {} from {} to {}, {} out of healthy range {}..{} but unconstrained size {} blocked by bounds/check", new Object[] {this, description, poolEntity, data.currentSize, desiredSize, data.currentMetricValue, data.metricLowerBound, data.metricUpperBound, desiredSizeUnconstrained});
+            abortResize(data.currentSize);
+            // but add to the unbounded record for future consideration
         }
-        onNewUnboundedPoolSize(unboundedPoolSize);
+        
+        onNewUnboundedPoolSize(desiredSizeUnconstrained);
     }
-    
+
+    private int applyMinMaxConstraints(int desiredSize) {
+        desiredSize = Math.max(getMinPoolSize(), desiredSize);
+        desiredSize = Math.min(getMaxPoolSize(), desiredSize);
+        return desiredSize;
+    }
+
     private void onPoolOk(Map<String, ?> properties) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording pool-ok for {}: {}", new Object[] {this, poolEntity, properties});
         
@@ -773,12 +904,6 @@ public class AutoScalerPolicy extends AbstractPolicy {
         
         if (LOG.isTraceEnabled()) LOG.trace("{} not resizing ok pool {} from {}", new Object[] {this, poolEntity, poolCurrentSize});
         abortResize(poolCurrentSize);
-    }
-    
-    private int toBoundedDesiredPoolSize(int size) {
-        int result = Math.max(getMinPoolSize(), size);
-        result = Math.min(getMaxPoolSize(), result);
-        return result;
     }
 
     /**
@@ -796,7 +921,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
      * If a listener is registered to be notified of the max-pool-size cap being reached, then record
      * what our unbounded size would be and schedule a check to see if this unbounded size is sustained.
      * 
-     * Piggie backs off the existing scheduleResize execution, which now also checks if the listener
+     * Piggy-backs off the existing scheduleResize execution, which now also checks if the listener
      * needs to be called.
      */
     private void onNewUnboundedPoolSize(final int val) {

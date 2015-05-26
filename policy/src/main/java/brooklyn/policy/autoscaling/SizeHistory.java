@@ -119,7 +119,7 @@ public class SizeHistory {
             T valAsNum = val.getValue();
             double valAsDouble = (valAsNum != null) ? valAsNum.doubleValue() : 0;
             if (result == null && val.getTimestamp() > epoch) {
-                result = (T) Integer.valueOf(Integer.MAX_VALUE);
+                result = withDefault(null, Integer.MAX_VALUE);
                 resultAsDouble = result.doubleValue();
             }
             if (result == null || (valAsNum != null && valAsDouble > resultAsDouble)) {
@@ -127,7 +127,7 @@ public class SizeHistory {
                 resultAsDouble = valAsDouble;
             }
         }
-        return (T) (result != null ? result : Integer.MAX_VALUE);
+        return withDefault(result, Integer.MAX_VALUE);
     }
     
     /**
@@ -142,7 +142,7 @@ public class SizeHistory {
             T valAsNum = val.getValue();
             double valAsDouble = (valAsNum != null) ? valAsNum.doubleValue() : 0;
             if (result == null && val.getTimestamp() > epoch) {
-                result = (T) Integer.valueOf(Integer.MIN_VALUE);
+                result = withDefault(null, Integer.MIN_VALUE);
                 resultAsDouble = result.doubleValue();
             }
             if (result == null || (val.getValue() != null && valAsDouble < resultAsDouble)) {
@@ -150,9 +150,13 @@ public class SizeHistory {
                 resultAsDouble = valAsDouble;
             }
         }
-        return (T) (result != null ? result : Integer.MIN_VALUE);
+        return withDefault(result, Integer.MIN_VALUE);
     }
 
+    @SuppressWarnings("unchecked")
+    private <T> T withDefault(T result, Integer defaultValue) {
+        return result!=null ? result : (T) defaultValue;
+    }
     /**
      * @return null if empty, or the most recent value
      */

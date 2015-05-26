@@ -41,6 +41,7 @@ public class LocallyResizableEntity extends AbstractEntity implements Resizable 
     public LocallyResizableEntity (TestCluster tc) {
         this(null, tc);
     }
+    @SuppressWarnings("deprecation")
     public LocallyResizableEntity (Entity parent, TestCluster tc) {
         super(parent);
         this.cluster = tc;
