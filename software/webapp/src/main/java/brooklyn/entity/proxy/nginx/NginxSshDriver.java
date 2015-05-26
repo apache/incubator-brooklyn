@@ -96,6 +96,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     }
 
     /** By default Nginx writes the pid of the master process to {@code logs/nginx.pid} */
+    @Override
     public String getPidFile() {
         return format("%s/%s", getRunDir(), NGINX_PID_FILE);
     }
@@ -205,10 +206,13 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         cmds.add(format("cd %s", getExpandedInstallDir()));
 
         if (sticky) {
-            cmds.add("cd src");
+            // Latest versions of sticky module expand to a different folder than the file name.
+            // Extract to folder set by us so we know where the sources are.
+            cmds.add(format("mkdir -p %s", stickyModuleExpandedInstallDir));
+            cmds.add(format("pushd %s", stickyModuleExpandedInstallDir));
             cmds.addAll(BashCommands.commandsToDownloadUrlsAs(stickyModuleUrls, stickyModuleSaveAs));
-            cmds.add(format("tar xvzf %s", stickyModuleSaveAs));
-            cmds.add("cd ..");
+            cmds.add(format("tar --strip-component=1 -xvzf %s", stickyModuleSaveAs));
+            cmds.add("popd");
         }
 
         // Note that for OS X, not including space after "-L" because broken in 10.6.8 (but fixed in 10.7.x)
@@ -216,6 +220,12 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
         String withLdOpt = entity.getConfig(NginxController.WITH_LD_OPT);
         if (isMac) withLdOpt = format("-L%s/pcre-dist/lib", getInstallDir()) + (Strings.isBlank(withLdOpt) ? "" : " " + withLdOpt);
         String withCcOpt = entity.getConfig(NginxController.WITH_CC_OPT);
+        
+        if (isMac) {
+            // TODO Upgrade sticky module as soon as a fix for https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/issue/16/can-not-compile-on-macosx-yosemite
+            // is released and remove this block.
+            withCcOpt = (Strings.isBlank(withCcOpt) ? "" : (withCcOpt + " ")) + "-Wno-error";
+        }
 
         StringBuilder configureCommand = new StringBuilder("./configure")
                 .append(format(" --prefix=%s/dist", getExpandedInstallDir()))
@@ -370,6 +380,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     private final ExecController reloadExecutor = new ExecController(
             entity+"->reload",
             new Runnable() {
+                @Override
                 public void run() {
                     reloadImpl();
                 }
