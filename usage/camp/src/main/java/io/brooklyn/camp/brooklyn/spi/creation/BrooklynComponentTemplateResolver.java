@@ -230,12 +230,12 @@ public class BrooklynComponentTemplateResolver {
         boolean firstOccurrence = (item == null || encounteredCatalogTypes.add(item.getSymbolicName()));
         boolean recursiveButTryJava = !firstOccurrence;
 
-        // - Load a java class from current loader (item == null || entityResolver.isJavaTypePrefix())
-        // - Load a java class specified in an old-style catalog item (item != null && item.getJavaType() != null)
-        //   Old-style catalog items (can be defined in catalog.xml only) don't have structure, only a single type, so
-        //   they are loaded as a simple java type, only taking the class name from the catalog item instead of the
-        //   type value in the YAML. Classpath entries in the item are also used (through the catalog root classloader).
-        if (item == null || item.getJavaType() != null || isJavaTypePrefix()) {
+        // Load a java class from current loader if explicit java prefix, or if no item, or if item is legacy / 
+        // old-style catalog item (item != null && item.getJavaType() != null).
+        // Old-style catalog items (can be defined in catalog.xml only) don't have structure, only a single type, so
+        // they are loaded as a simple java type, only taking the class name from the catalog item instead of the
+        // type value in the YAML. Classpath entries in the item are also used (through the catalog root classloader).
+        if (isJavaTypePrefix() || item == null || item.getJavaType() != null) {
             return createSpecFromJavaType();
 
         // Same as above case, but this time force java type loading (either as plain class or through an old-style

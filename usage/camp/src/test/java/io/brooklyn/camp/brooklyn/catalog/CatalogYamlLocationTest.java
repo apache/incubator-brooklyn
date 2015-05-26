@@ -216,7 +216,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
                 "      config2: config2");
         
         
-        addCatalogItem(yaml.build());
+        addCatalogItems(yaml.build());
     }
 
     private void addCatalogLocationTopLevelItemSyntax(String symbolicName, String locationType, List<String> libraries) {
@@ -239,7 +239,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
                 "    config2: config2");
         
         
-        addCatalogItem(yaml.build());
+        addCatalogItems(yaml.build());
     }
 
     private int countCatalogLocations() {

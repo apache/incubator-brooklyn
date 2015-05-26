@@ -66,7 +66,7 @@ public class CatalogYamlTemplateTest extends AbstractYamlTest {
     private CatalogItem<?, ?> makeItem() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: t1",
             "  item_type: template",

@@ -537,7 +537,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
     
     @SuppressWarnings("unchecked")
-    private <T> Maybe<T> getFirstAs(Map<?,?> map, Class<T> type, String firstKey, String ...otherKeys) {
+    private static <T> Maybe<T> getFirstAs(Map<?,?> map, Class<T> type, String firstKey, String ...otherKeys) {
         if (map==null) return Maybe.absent("No map available");
         String foundKey = null;
         Object value = null;
@@ -621,9 +621,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         } else {
             // scan for annotations: if libraries here, scan them; if inherited libraries error; else scan classpath
             if (!libraryBundlesNew.isEmpty()) {
-                result.addAll(scanAnnotationsFromBundles(mgmt, libraryBundlesNew));
+                result.addAll(scanAnnotationsFromBundles(mgmt, libraryBundlesNew, catalogMetadata));
             } else if (libraryBundles.isEmpty()) {
-                result.addAll(scanAnnotationsFromLocal(mgmt));
+                result.addAll(scanAnnotationsFromLocal(mgmt, catalogMetadata));
             } else {
                 throw new IllegalStateException("Cannot scan catalog node no local bundles, and with inherited bundles we will not scan the classpath");
             }
@@ -780,13 +780,13 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return oldValue;
     }
 
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromLocal(ManagementContext mgmt) {
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromLocal(ManagementContext mgmt, Map<Object, Object> catalogMetadata) {
         CatalogDto dto = CatalogDto.newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-local-classpath");
-        return scanAnnotationsInternal(mgmt, new CatalogDo(dto));
+        return scanAnnotationsInternal(mgmt, new CatalogDo(dto), catalogMetadata);
     }
     
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromBundles(ManagementContext mgmt, Collection<CatalogBundle> libraries) {
-        CatalogDto dto = CatalogDto.newNamedInstance("Bundles Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-bundles-classpath-"+libraries.hashCode());
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromBundles(ManagementContext mgmt, Collection<CatalogBundle> libraries, Map<Object, Object> catalogMetadata) {
+        CatalogDto dto = CatalogDto.newNamedInstance("Bundles Scanned Catalog", "All annotated Brooklyn entities detected in bundles", "scanning-bundles-classpath-"+libraries.hashCode());
         List<String> urls = MutableList.of();
         for (CatalogBundle b: libraries) {
             // TODO currently does not support pre-installed bundles identified by name:version 
@@ -803,10 +803,10 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         
         CatalogDo subCatalog = new CatalogDo(dto);
         subCatalog.addToClasspath(urls.toArray(new String[0]));
-        return scanAnnotationsInternal(mgmt, subCatalog);
+        return scanAnnotationsInternal(mgmt, subCatalog, catalogMetadata);
     }
     
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsInternal(ManagementContext mgmt, CatalogDo subCatalog) {
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsInternal(ManagementContext mgmt, CatalogDo subCatalog, Map<Object, Object> catalogMetadata) {
         // TODO this does java-scanning only;
         // the call when scanning bundles should use the CatalogItem instead and use OSGi when loading for scanning
         // (or another scanning mechanism).  see comments on CatalogClasspathDo.load
@@ -818,7 +818,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         @SuppressWarnings({ "unchecked", "rawtypes" })
         Collection<CatalogItemDtoAbstract<?, ?>> result = (Collection<CatalogItemDtoAbstract<?, ?>>)(Collection)Collections2.transform(
                 (Collection<CatalogItemDo<Object,Object>>)(Collection)subCatalog.getIdCache().values(), 
-                itemDoToDto());
+                itemDoToDtoAddingSelectedMetadataDuringScan(catalogMetadata));
         return result;
     }
 
@@ -1174,6 +1174,34 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             public CatalogItem<T,SpecT> apply(@Nullable CatalogItemDo<T,SpecT> item) {
                 if (item==null) return null;
                 return item.getDto();
+            }
+        };
+    }
+    
+    private static <T,SpecT> Function<CatalogItemDo<T, SpecT>, CatalogItem<T,SpecT>> itemDoToDtoAddingSelectedMetadataDuringScan(final Map<Object, Object> catalogMetadata) {
+        return new Function<CatalogItemDo<T,SpecT>, CatalogItem<T,SpecT>>() {
+            @Override
+            public CatalogItem<T,SpecT> apply(@Nullable CatalogItemDo<T,SpecT> item) {
+                if (item==null) return null;
+                CatalogItemDtoAbstract<T, SpecT> dto = (CatalogItemDtoAbstract<T, SpecT>) item.getDto();
+
+                // when scanning we only allow version and libraries to be overwritten
+                
+                String version = getFirstAs(catalogMetadata, String.class, "version").orNull();
+                if (Strings.isNonBlank(version)) dto.setVersion(version);
+                
+                Object librariesCombined = catalogMetadata.get("brooklyn.libraries");
+                if (librariesCombined instanceof Collection) {
+                    // will be set by scan -- slightly longwinded way to retrieve, but scanning for osgi needs an overhaul in any case
+                    Collection<CatalogBundle> libraryBundles = CatalogItemDtoAbstract.parseLibraries((Collection<?>) librariesCombined);
+                    dto.setLibraries(libraryBundles);
+                    // must replace java type with plan yaml here for libraries / catalog item to be picked up
+                    dto.setSymbolicName(dto.getJavaType());
+                    dto.setPlanYaml("services: [{ type: "+dto.getJavaType()+" }]");
+                    dto.setJavaType(null);
+                }
+
+                return dto;
             }
         };
     }

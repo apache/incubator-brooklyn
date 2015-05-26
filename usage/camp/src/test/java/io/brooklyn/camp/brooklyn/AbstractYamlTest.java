@@ -144,15 +144,15 @@ public abstract class AbstractYamlTest {
         return app;
     }
 
-    protected void addCatalogItem(Iterable<String> catalogYaml) {
-        addCatalogItem(joinLines(catalogYaml));
+    protected void addCatalogItems(Iterable<String> catalogYaml) {
+        addCatalogItems(joinLines(catalogYaml));
     }
 
-    protected void addCatalogItem(String... catalogYaml) {
-        addCatalogItem(joinLines(catalogYaml));
+    protected void addCatalogItems(String... catalogYaml) {
+        addCatalogItems(joinLines(catalogYaml));
     }
 
-    protected void addCatalogItem(String catalogYaml) {
+    protected void addCatalogItems(String catalogYaml) {
         mgmt().getCatalog().addItems(catalogYaml, forceUpdate);
     }
 

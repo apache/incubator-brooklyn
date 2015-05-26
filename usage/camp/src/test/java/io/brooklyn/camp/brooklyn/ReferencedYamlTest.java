@@ -93,7 +93,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
 
     @Test
     public void testCatalogReferencingYamlUrl() throws Exception {
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: yaml.reference",
             "  version: " + TEST_VERSION,
@@ -111,7 +111,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
 
     @Test
     public void testYamlUrlReferencingCatalog() throws Exception {
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: yaml.basic",
             "  version: " + TEST_VERSION,
@@ -136,7 +136,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String parentCatalogId = "my.catalog.app.id.url.parent";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + parentCatalogId,
             "  version: " + TEST_VERSION,
