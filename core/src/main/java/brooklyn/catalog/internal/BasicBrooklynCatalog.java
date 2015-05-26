@@ -128,6 +128,10 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
     
     public void reset(CatalogDto dto) {
+        reset(dto, true);
+    }
+
+    public void reset(CatalogDto dto, boolean failOnLoadError) {
         // Unregister all existing persisted items.
         for (CatalogItem<?, ?> toRemove : getCatalogItems()) {
             if (log.isTraceEnabled()) {
@@ -137,7 +141,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
         CatalogDo catalog = new CatalogDo(mgmt, dto);
         CatalogUtils.logDebugOrTraceIfRebinding(log, "Resetting "+this+" catalog to "+dto);
-        catalog.load(mgmt, null);
+        catalog.load(mgmt, null, failOnLoadError);
         CatalogUtils.logDebugOrTraceIfRebinding(log, "Reloaded catalog for "+this+", now switching");
         this.catalog = catalog;
 

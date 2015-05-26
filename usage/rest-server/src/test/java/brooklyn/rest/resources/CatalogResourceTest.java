@@ -33,6 +33,7 @@ import java.util.Set;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -385,6 +386,44 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
 
         assertEquals(applications, applicationsAfterUnDeprecation);
+    }
+
+    @Test
+    public void testAddUnreachableItem() {
+        addInvalidCatalogItem("http://0.0.0.0/can-not-connect");
+    }
+
+    @Test
+    public void testAddInvalidItem() {
+        //equivalent to HTTP response 200 text/html
+        addInvalidCatalogItem("classpath://not-a-jar-file.txt");
+    }
+
+    @Test
+    public void testAddMissingItem() {
+        //equivalent to HTTP response 404 text/html
+        addInvalidCatalogItem("classpath://missing-jar-file.txt");
+    }
+
+    private void addInvalidCatalogItem(String bundleUrl) {
+        String symbolicName = "my.catalog.entity.id";
+        String yaml =
+                "brooklyn.catalog:\n"+
+                "  id: " + symbolicName + "\n"+
+                "  name: My Catalog App\n"+
+                "  description: My description\n"+
+                "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n"+
+                "  version: " + TEST_VERSION + "\n"+
+                "  libraries:\n"+
+                "  - url: " + bundleUrl + "\n"+
+                "\n"+
+                "services:\n"+
+                "- type: brooklyn.test.entity.TestEntity\n";
+
+        ClientResponse response = client().resource("/v1/catalog")
+                .post(ClientResponse.class, yaml);
+
+        assertEquals(response.getStatus(), HttpStatus.INTERNAL_SERVER_ERROR_500);
     }
 
     private static String ver(String id) {

@@ -76,7 +76,10 @@ public interface CatalogApi {
     @ApiOperation(value = "Resets the catalog to the given (XML) format")
     public Response resetXml(
             @ApiParam(name = "xml", value = "XML descriptor of the entire catalog to install", required = true)
-            @Valid String xml);
+            @Valid String xml,
+            @ApiParam(name ="ignoreErrors", value ="Don't fail on invalid bundles, log the errors only")
+            @QueryParam("ignoreErrors")  @DefaultValue("false")
+            boolean ignoreErrors);
 
     /** @deprecated since 0.7.0 use {@link #deleteEntity(String, String)} */
     @Deprecated
