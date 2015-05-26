@@ -14,6 +14,7 @@ children:
 - tips/
 - tips/logging.md
 - tips/debugging-remote-brooklyn.md
+- rest/rest-api-doc.md
 ---
 
 {% comment %}
