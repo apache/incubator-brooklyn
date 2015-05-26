@@ -197,6 +197,13 @@ public class ResourceUtils {
     private BrooklynClassLoadingContext getLoader() {
         return (loader!=null ? loader : getClassLoadingContextInternal(null, contextObject!=null ? contextObject : this));
     }
+
+    /**
+     * @return all resources in Brooklyn's {@link BrooklynClassLoadingContext} with the given name.
+     */
+    public Iterable<URL> getResources(String name) {
+        return getLoader().getResources(name);
+    }
     
     /**
      * Takes a string which is treated as a URL (with some extended "schemes" also expected),
