@@ -36,7 +36,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.rest.domain.CatalogLocationSummary;
-import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
@@ -67,7 +66,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
                 "credential", "CR3dential");
         ClientResponse response = client().resource("/v1/locations")
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, new LocationSpec(legacyLocationName, "aws-ec2:us-east-1", expectedConfig));
+                .post(ClientResponse.class, new brooklyn.rest.domain.LocationSpec(legacyLocationName, "aws-ec2:us-east-1", expectedConfig));
 
         URI addedLegacyLocationUri = response.getLocation();
         log.info("added legacy, at: " + addedLegacyLocationUri);
@@ -83,6 +82,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         Assert.assertEquals(l.getCredential(), "CR3dential");
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testAddNewLocationDefinition() {
         String yaml = Joiner.on("\n").join(ImmutableList.of(
@@ -122,6 +122,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         Assert.assertEquals(l.getCredential(), "CR3dential");
     }
 
+    @SuppressWarnings("deprecation")
     @Test(dependsOnMethods = { "testAddNewLocationDefinition" })
     public void testListAllLocationDefinitions() {
         Set<LocationSummary> locations = client().resource("/v1/locations")
@@ -139,6 +140,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         Assert.assertEquals(location.getLinks().get("self"), expectedLocationUri);
     }
 
+    @SuppressWarnings("deprecation")
     @Test(dependsOnMethods = { "testListAllLocationDefinitions" })
     public void testGetSpecificLocation() {
         URI expectedLocationUri = URI.create("/v1/locations/"+locationName);

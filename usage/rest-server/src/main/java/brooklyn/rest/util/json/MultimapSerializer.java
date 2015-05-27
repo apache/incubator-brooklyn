@@ -23,12 +23,11 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.std.SerializerBase;
 
-import com.google.common.collect.Lists;
 import com.google.common.annotations.Beta;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 /**
@@ -41,6 +40,7 @@ import com.google.common.collect.Multimap;
 @Beta
 public class MultimapSerializer extends SerializerBase<Multimap<?, ?>> {
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected MultimapSerializer() {
         super((Class<Multimap<?, ?>>) (Class) Multimap.class);
     }

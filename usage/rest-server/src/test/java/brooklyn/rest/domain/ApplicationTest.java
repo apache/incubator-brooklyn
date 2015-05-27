@@ -21,7 +21,6 @@ package brooklyn.rest.domain;
 import static brooklyn.rest.util.RestApiTestUtils.asJson;
 import static brooklyn.rest.util.RestApiTestUtils.fromJson;
 import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
-
 import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;
@@ -53,6 +52,7 @@ public class ApplicationTest {
 
     final ApplicationSummary application = new ApplicationSummary(null, applicationSpec, Status.STARTING, null);
 
+    @SuppressWarnings("serial")
     @Test
     public void testSerializeToJSON() throws IOException {
         ApplicationSummary application1 = new ApplicationSummary("myapp_id", applicationSpec, Status.STARTING, null) {

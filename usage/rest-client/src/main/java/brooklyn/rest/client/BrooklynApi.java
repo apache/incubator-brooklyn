@@ -22,9 +22,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.codec.binary.Base64;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.jboss.resteasy.client.ClientExecutor;
 import org.jboss.resteasy.client.ClientRequest;
@@ -32,8 +36,6 @@ import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 import org.jboss.resteasy.util.GenericType;
-
-import com.google.common.base.Charsets;
 
 import brooklyn.rest.api.AccessApi;
 import brooklyn.rest.api.ActivityApi;
@@ -50,9 +52,6 @@ import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.api.ServerApi;
 import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
 
 /**
  * @author Adam Lowe
@@ -68,7 +67,8 @@ public class BrooklynApi {
     }
 
     public BrooklynApi(String endpoint) {
-        this(endpoint, null, null);
+        // username/password cannot be null, but credentials can
+        this(endpoint, null);
     }
 
     public BrooklynApi(URL endpoint, String username, String password) {
@@ -79,14 +79,13 @@ public class BrooklynApi {
         this(endpoint, new UsernamePasswordCredentials(username, password));
     }
 
-    public BrooklynApi(URL endpoint, Credentials credentials) {
+    public BrooklynApi(URL endpoint, @Nullable Credentials credentials) {
         this(endpoint.toString(), credentials);
     }
 
-    public BrooklynApi(String endpoint, Credentials credentials) {
-        URL target = null;
+    public BrooklynApi(String endpoint, @Nullable Credentials credentials) {
         try {
-            target = new URL(checkNotNull(endpoint, "endpoint"));
+            new URL(checkNotNull(endpoint, "endpoint"));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
@@ -170,7 +169,7 @@ public class BrooklynApi {
         return proxy(AccessApi.class);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> T getEntity(Response response, Class<T> type) {
         if (!(response instanceof ClientResponse)) {
             throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
@@ -179,7 +178,7 @@ public class BrooklynApi {
         return (T) clientResponse.getEntity(type);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> T getEntityGeneric(Response response, GenericType type) {
         if (!(response instanceof ClientResponse)) {
             throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());

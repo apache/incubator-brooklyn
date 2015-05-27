@@ -34,6 +34,7 @@ import brooklyn.rest.transform.LocationTransformer;
 
 public class LocationSummaryTest {
 
+    @SuppressWarnings("deprecation")
     final LocationSummary summary = LocationTransformer.newInstance("123", LocationSpec.localhost());
 
     @Test

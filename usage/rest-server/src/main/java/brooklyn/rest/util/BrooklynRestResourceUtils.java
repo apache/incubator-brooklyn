@@ -205,7 +205,7 @@ public class BrooklynRestResourceUtils {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "deprecation" })
     public Application create(ApplicationSpec spec) {
         log.debug("REST creating application instance for {}", spec);
         
@@ -332,7 +332,7 @@ public class BrooklynRestResourceUtils {
         return locations;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "deprecation" })
     private brooklyn.entity.proxying.EntitySpec<? extends Entity> toCoreEntitySpec(brooklyn.rest.domain.EntitySpec spec) {
         String type = spec.getType();
         String name = spec.getName();
@@ -466,6 +466,7 @@ public class BrooklynRestResourceUtils {
     @SuppressWarnings({ "rawtypes" })
     public Response createCatalogEntryFromGroovyCode(String groovyCode) {
         ClassLoader parent = getCatalog().getRootClassLoader();
+        @SuppressWarnings("resource")
         GroovyClassLoader loader = new GroovyClassLoader(parent);
 
         Class clazz = loader.parseClass(groovyCode);

@@ -19,6 +19,7 @@
 package brooklyn.rest.client;
 
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -37,9 +38,8 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncher;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
-import brooklyn.rest.domain.LocationSummary;
-import brooklyn.rest.security.provider.ExplicitUsersSecurityProvider;
-import brooklyn.rest.security.provider.SecurityProvider;
+import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.rest.security.provider.TestSecurityProvider;
 
 @Test
@@ -92,9 +92,20 @@ public class BrooklynApiRestClientTest {
         Entities.destroyAll(getManagementContext());
     }
 
-    public void testListLocations() throws Exception {
-        List<LocationSummary> locations = api.getLocationApi().list();
-        log.info("locations are: "+locations);
+    public void testLocationApi() throws Exception {
+        log.info("Testing location API");
+        Map<String, Map<String, Object>> locations = api.getLocationApi().getLocatedLocations();
+        log.info("locations located are: "+locations);
+    }
+
+    public void testCatalogApiLocations() throws Exception {
+        List<CatalogLocationSummary> locations = api.getCatalogApi().listLocations(".*", null, false);
+        log.info("locations from catalog are: "+locations);
+    }
+
+    public void testApplicationApiList() throws Exception {
+        List<ApplicationSummary> apps = api.getApplicationApi().list(null);
+        log.info("apps are: "+apps);
     }
 
 }

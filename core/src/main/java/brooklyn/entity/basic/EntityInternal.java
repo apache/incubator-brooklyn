@@ -66,7 +66,8 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     /**
      * @return a read-only copy of all the config key/value pairs on this entity.
      * 
-     * @deprecated since 0.7.0; instead just use methods on {@link ConfigurationSupportInternal} returned by {@link #config()}
+     * @deprecated since 0.7.0; instead just use methods on {@link ConfigurationSupportInternal} returned by {@link #config()},
+     * e.g. getBag().getAllConfigAsConfigKeyMap().
      */
     @Deprecated
     @Beta

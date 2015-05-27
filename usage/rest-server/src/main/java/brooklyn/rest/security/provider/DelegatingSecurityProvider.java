@@ -20,6 +20,7 @@ package brooklyn.rest.security.provider;
 
 import java.lang.reflect.Constructor;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
@@ -44,6 +45,8 @@ public class DelegatingSecurityProvider implements SecurityProvider {
     private final AtomicLong modCount = new AtomicLong();
 
     private class PropertiesListener implements ManagementContext.PropertiesReloadListener {
+        private static final long serialVersionUID = 8148722609022378917L;
+
         @Override
         public void reloaded() {
             log.debug("{} reloading security provider", DelegatingSecurityProvider.this);
@@ -94,10 +97,16 @@ public class DelegatingSecurityProvider implements SecurityProvider {
                 delegate = constructor.newInstance(mgmt);
             } catch (Exception e) {
                 constructor = clazz.getConstructor();
-                delegate = constructor.newInstance();
+                Object delegateO = constructor.newInstance();
+                if (!(delegateO instanceof SecurityProvider)) {
+                    // if classloaders get mangled it will be a different CL's SecurityProvider
+                    throw new ClassCastException("Delegate is either not a security provider or has an incompatible classloader: "+delegateO);
+                }
+                delegate = (SecurityProvider) delegateO;
             }
         } catch (Exception e) {
             log.warn("REST unable to instantiate security provider " + className + "; all logins are being disallowed", e);
+            e.printStackTrace();
             delegate = new BlackholeSecurityProvider();
         }
         return delegate;

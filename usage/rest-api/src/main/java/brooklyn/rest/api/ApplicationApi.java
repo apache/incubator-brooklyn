@@ -81,8 +81,11 @@ public interface ApplicationApi {
             @DefaultValue(".*")
             @QueryParam("typeRegex") String typeRegex);
 
-    /** As {@link #list(String)}, filtering for <code>.*</code>. */
-    public List<ApplicationSummary> list();
+    // would be nice to have this on the API so default type regex not needed, but
+    // not yet implemented, as per: https://issues.jboss.org/browse/RESTEASY-798
+    // (this method was added to this class, but it breaks the rest client)
+//    /** As {@link #list(String)}, filtering for <code>.*</code>. */
+//    public List<ApplicationSummary> list();
 
     @GET
     @Path("/{application}")
