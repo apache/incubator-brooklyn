@@ -79,17 +79,14 @@ public class Networking {
             throw new IllegalArgumentException("Invalid start port: " + port);
         }
 
-        // For some operations it's not valid to pass ANY_NIC (0.0.0.0).
-        // We substitute for the loopback address in those cases.
-        InetAddress localAddressNotAny = (localAddress==null || ANY_NIC.equals(localAddress))
-                ? LOOPBACK
-                : localAddress;
-
         Stopwatch watch = Stopwatch.createStarted();
         try {
             //despite http://stackoverflow.com/questions/434718/sockets-discover-port-availability-using-java
             //(recommending the following) it isn't 100% reliable (e.g. nginx will happily coexist with ss+ds)
-            //so we also do the above check
+            //
+            //Svet - SO_REUSEADDR (enabled below) will allow one socket to listen on 0.0.0.0:X and another on
+            //192.168.0.1:X which explains the above comment (nginx sets SO_REUSEADDR as well). Moreover there
+            //is no TIME_WAIT for listening sockets without any connections so why enable it at all.
             ServerSocket ss = null;
             DatagramSocket ds = null;
             try {
@@ -105,19 +102,11 @@ public class Networking {
                 ds.setReuseAddress(true);
                 ds.bind(new InetSocketAddress(localAddress, port));
             } catch (IOException e) {
+                if (log.isTraceEnabled()) log.trace("Failed binding to " + localAddress + " : " + port, e);
                 return false;
             } finally {
-                if (ds != null) {
-                    ds.close();
-                }
-    
-                if (ss != null) {
-                    try {
-                        ss.close();
-                    } catch (IOException e) {
-                        /* should not be thrown */
-                    }
-                }
+                closeQuietly(ds);
+                closeQuietly(ss);
             }
 
             if (localAddress==null || ANY_NIC.equals(localAddress)) {
@@ -129,24 +118,84 @@ public class Networking {
                 } catch (SocketException e) {
                     throw Exceptions.propagate(e);
                 }
+                // When using a specific interface saw failures not caused by port already bound:
+                //   * java.net.SocketException: No such device
+                //   * java.net.BindException: Cannot assign requested address
+                //   * probably many more
+                // Check if the address is still valid before marking the port as not available.
+                boolean foundAvailableInterface = false;
                 while (nis.hasMoreElements()) {
                     NetworkInterface ni = nis.nextElement();
                     Enumeration<InetAddress> as = ni.getInetAddresses();
                     while (as.hasMoreElements()) {
                         InetAddress a = as.nextElement();
-                        if (!isPortAvailable(a, port))
-                            return false;
+                        if (!isPortAvailable(a, port)) {
+                            if (isAddressValid(a)) {
+                                if (log.isTraceEnabled()) log.trace("Port {} : {} @ {} is taken and the address is valid", new Object[] {a, port, nis});
+                                return false;
+                            }
+                        } else {
+                            foundAvailableInterface = true;
+                        }
                     }
                 }
+                if (!foundAvailableInterface) {
+                    //Aborting with an error, even nextAvailablePort won't be able to find a free port.
+                    throw new RuntimeException("Unable to bind on any network interface, even when letting the OS pick a port. Possible causes include file handle exhaustion, port exhaustion. Failed on request for " + localAddress + ":" + port + ".");
+                }
             }
-            
+
             return true;
         } finally {
             // Until timeout was added, was taking 1min5secs for /fe80:0:0:0:1cc5:1ff:fe81:a61d%8 : 8081
-            if (log.isTraceEnabled()) log.trace("Took {} to determine if port {} : {} was available", 
-                    new Object[] {Time.makeTimeString(watch.elapsed(TimeUnit.MILLISECONDS), true), localAddress, port});
+            // Svet - Probably caused by the now gone new Socket().connect() call, SO_TIMEOUT doesn't
+            // influence bind(). Doesn't hurt having it though.
+            long elapsed = watch.elapsed(TimeUnit.SECONDS);
+            boolean isDelayed = (elapsed >= 1);
+            boolean isDelayedByMuch = (elapsed >= 30);
+            if (isDelayed || log.isTraceEnabled()) {
+                String msg = "Took {} to determine if port was available for {} : {}";
+                Object[] args = new Object[] {Time.makeTimeString(watch.elapsed(TimeUnit.MILLISECONDS), true), localAddress, port};
+                if (isDelayedByMuch) {
+                    log.warn(msg, args);
+                } else if (isDelayed) {
+                    log.debug(msg, args);
+                } else {
+                    log.trace(msg, args);
+                }
+            }
         }
     }
+
+    /**
+     * Bind to the specified IP, but let the OS pick a port.
+     * If the operation fails we know it's not because of
+     * non-available port, the interface could be down.
+     * 
+     * If there's port exhaustion on a single interface we won't catch it
+     * and declare the port is free. Doesn't matter really because the
+     * subsequent bind of the caller will fail anyway and nextAvailablePort
+     * wouldn't be able to find a free one either.
+     */
+    private static boolean isAddressValid(InetAddress addr) {
+        ServerSocket ss;
+        try {
+            ss = new ServerSocket();
+            ss.setSoTimeout(250);
+        } catch (IOException e) {
+            throw Exceptions.propagate(e);
+        }
+        try {
+            ss.bind(new InetSocketAddress(addr, 0));
+            return true;
+        } catch (IOException e) {
+            if (log.isTraceEnabled()) log.trace("Binding on {} failed, interface could be down, being reconfigured, file handle exhaustion, port exhaustion, etc.", addr);
+            return false;
+        } finally {
+            closeQuietly(ss);
+        }
+    }
+
     /** returns the first port available on the local machine >= the port supplied */
     public static int nextAvailablePort(int port) {
         checkArgument(port >= MIN_PORT_NUMBER && port <= MAX_PORT_NUMBER, "requested port %s is outside the valid range of %s to %s", port, MIN_PORT_NUMBER, MAX_PORT_NUMBER);
@@ -440,17 +489,40 @@ public class Networking {
     public static boolean isReachable(HostAndPort endpoint) {
         try {
             Socket s = new Socket(endpoint.getHostText(), endpoint.getPort());
-            try {
-                s.close();
-            } catch (Exception e) {
-                log.debug("Error closing socket, opened temporarily to check reachability to "+endpoint+" (continuing)", e);
-            }
+            closeQuietly(s);
             return true;
         } catch (Exception e) {
             if (log.isTraceEnabled()) log.trace("Error reaching "+endpoint+" during reachability check (return false)", e);
             return false;
         }
     }
+
+    public static void closeQuietly(Socket s) {
+        if (s != null) {
+            try {
+                s.close();
+            } catch (IOException e) {
+                /* should not be thrown */
+            }
+        }
+    }
+
+    public static void closeQuietly(ServerSocket s) {
+        if (s != null) {
+            try {
+                s.close();
+            } catch (IOException e) {
+                /* should not be thrown */
+            }
+        }
+    }
+
+    public static void closeQuietly(DatagramSocket s) {
+        if (s != null) {
+            s.close();
+        }
+    }
+
 
     // TODO go through nic's, looking for public, private, etc, on localhost
 
