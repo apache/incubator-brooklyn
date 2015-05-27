@@ -60,8 +60,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-public class
-        ByonLocationResolverTest {
+public class ByonLocationResolverTest {
 
     private static final Logger log = LoggerFactory.getLogger(ByonLocationResolverTest.class);
     
@@ -316,19 +315,19 @@ public class
 
     @Test
     public void testWindowsMachines() throws Exception {
-        brooklynProperties.put("brooklyn.location.byon.windows.username", "myuser");
-        brooklynProperties.put("brooklyn.location.byon.windows.password", "mypassword");
+        brooklynProperties.put("brooklyn.location.byon.user", "myuser");
+        brooklynProperties.put("brooklyn.location.byon.password", "mypassword");
         String spec = "byon";
         Map<String, ?> flags = ImmutableMap.of(
                 "hosts", ImmutableList.of("1.1.1.1", "2.2.2.2"),
                 "osfamily", "windows"
         );
         MachineProvisioningLocation<MachineLocation> provisioner = resolve(spec, flags);
-        MachineLocation location = provisioner.obtain(ImmutableMap.of());
+        WinRmMachineLocation location = (WinRmMachineLocation) provisioner.obtain(ImmutableMap.of());
 
-        assertEquals(location.config().get(WinRmMachineLocation.WINDOWS_USERNAME), "myuser");
-        assertEquals(location.config().get(WinRmMachineLocation.WINDOWS_PASSWORD), "mypassword");
-        Assert.assertNotNull(provisioner);
+        assertEquals(location.config().get(WinRmMachineLocation.USER), "myuser");
+        assertEquals(location.config().get(WinRmMachineLocation.PASSWORD), "mypassword");
+        assertEquals(location.config().get(WinRmMachineLocation.ADDRESS).getHostAddress(), "1.1.1.1");
     }
 
     @Test

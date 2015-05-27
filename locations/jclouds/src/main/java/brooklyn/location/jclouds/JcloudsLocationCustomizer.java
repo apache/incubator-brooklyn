@@ -63,17 +63,43 @@ public interface JcloudsLocationCustomizer {
      * <p/>
      * If {@link brooklyn.location.jclouds.JcloudsLocationConfig#WAIT_FOR_SSHABLE} is true the
      * machine is guaranteed to be SSHable when this method is called.
+     * 
+     * @since 0.7.0; use {@link #customize(JcloudsLocation, ComputeService, JcloudsMachineLocation)}
      */
+    @Deprecated
     void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine);
     
     /**
      * Override to handle machine-related cleanup before Jclouds is called to release (destroy) the machine.
+     * 
+     * @since 0.7.0; use {@link #preRelease(JcloudsMachineLocation)}
      */
+    @Deprecated
     void preRelease(JcloudsSshMachineLocation machine);
 
     /**
      * Override to handle machine-related cleanup after Jclouds is called to release (destroy) the machine.
+     * 
+     * @since 0.7.0; use {@link #postRelesae(JcloudsMachineLocation)}
      */
+    @Deprecated
     void postRelease(JcloudsSshMachineLocation machine);
 
+    /**
+     * Override to configure the given machine once it has been created and started by Jclouds.
+     * <p/>
+     * If {@link brooklyn.location.jclouds.JcloudsLocationConfig#WAIT_FOR_SSHABLE} is true the
+     * machine is guaranteed to be SSHable when this method is called.
+     */
+    void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine);
+    
+    /**
+     * Override to handle machine-related cleanup before Jclouds is called to release (destroy) the machine.
+     */
+    void preRelease(JcloudsMachineLocation machine);
+
+    /**
+     * Override to handle machine-related cleanup after Jclouds is called to release (destroy) the machine.
+     */
+    void postRelease(JcloudsMachineLocation machine);
 }

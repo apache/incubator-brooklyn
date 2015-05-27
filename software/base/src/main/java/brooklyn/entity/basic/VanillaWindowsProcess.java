@@ -18,12 +18,20 @@
  */
 package brooklyn.entity.basic;
 
+import java.util.Collection;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.util.time.Duration;
 
+import com.google.common.collect.ImmutableSet;
+
 @ImplementedBy(VanillaWindowsProcessImpl.class)
 public interface VanillaWindowsProcess extends AbstractVanillaProcess {
+    // 3389 is RDP; 5985 is WinRM (3389 isn't used by Brooklyn, but useful for the end-user subsequently)
+    ConfigKey<Collection<Integer>> REQUIRED_OPEN_LOGIN_PORTS = ConfigKeys.newConfigKeyWithDefault(
+            SoftwareProcess.REQUIRED_OPEN_LOGIN_PORTS,
+            ImmutableSet.of(5985, 3389));
     ConfigKey<String> PRE_INSTALL_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("pre.install.powershell.command",
             "powershell command to run during the pre-install phase");
     ConfigKey<Boolean> PRE_INSTALL_REBOOT_REQUIRED = ConfigKeys.newBooleanConfigKey("pre.install.reboot.required",
@@ -46,9 +54,9 @@ public interface VanillaWindowsProcess extends AbstractVanillaProcess {
             "command to run during the install phase");
     ConfigKey<String> INSTALL_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("install.powershell.command",
             "powershell command to run during the install phase");
-    ConfigKey<Duration> REBOOT_UNAVAILABLE_TIMEOUT = ConfigKeys.newDurationConfigKey("reboot.unavailable.timeout",
-            "duration to wait whilst waiting for a machine to become unavailable after a reboot", Duration.TWO_MINUTES);
-    // If automatic updates are enabled and there are updates waiting to be installed, thirty minutes may not be sufficient...
-    ConfigKey<Duration> REBOOT_AVAILABLE_TIMEOUT = ConfigKeys.newDurationConfigKey("reboot.unavailable.timeout",
-            "duration to wait whilst waiting for a machine to become unavailable after a reboot", Duration.minutes(30));
+    ConfigKey<Duration> REBOOT_BEGUN_TIMEOUT = ConfigKeys.newDurationConfigKey("reboot.begun.timeout",
+            "duration to wait whilst waiting for a machine to begin rebooting, and thus become unavailable", Duration.TWO_MINUTES);
+    // TODO If automatic updates are enabled and there are updates waiting to be installed, thirty minutes may not be sufficient...
+    ConfigKey<Duration> REBOOT_COMPLETED_TIMEOUT = ConfigKeys.newDurationConfigKey("reboot.completed.timeout",
+            "duration to wait whilst waiting for a machine to finish rebooting, and thus to become available again", Duration.minutes(30));
 }

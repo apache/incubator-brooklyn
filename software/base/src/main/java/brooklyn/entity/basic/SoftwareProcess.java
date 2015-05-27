@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.basic;
 
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
@@ -34,6 +35,7 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 
 public interface SoftwareProcess extends Entity, Startable {
@@ -42,6 +44,13 @@ public interface SoftwareProcess extends Entity, Startable {
     AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
     AttributeSensor<String> SUBNET_HOSTNAME = Attributes.SUBNET_HOSTNAME;
     AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
+
+    @SuppressWarnings("serial")
+    ConfigKey<Collection<Integer>> REQUIRED_OPEN_LOGIN_PORTS = ConfigKeys.newConfigKey(
+            new TypeToken<Collection<Integer>>() {},
+            "requiredOpenLoginPorts",
+            "The port(s) to be opened, to allow login",
+            ImmutableSet.of(22));
 
     @SetFromFlag("startTimeout")
     ConfigKey<Duration> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;

@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.basic;
 
+
 public class VanillaWindowsProcessImpl extends SoftwareProcessImpl implements VanillaWindowsProcess {
     @Override
     public Class getDriverInterface() {

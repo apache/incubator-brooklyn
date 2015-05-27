@@ -18,8 +18,133 @@
  */
 package brooklyn.location.jclouds;
 
+import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Iterator;
+import java.util.Set;
+
+import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.Template;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.location.basic.WinRmMachineLocation;
+import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.net.Networking;
 
-public class JcloudsWinRmMachineLocation extends WinRmMachineLocation {
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.net.HostAndPort;
 
+public class JcloudsWinRmMachineLocation extends WinRmMachineLocation implements JcloudsMachineLocation {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JcloudsWinRmMachineLocation.class);
+
+    @SetFromFlag
+    JcloudsLocation jcloudsParent;
+    
+    @SetFromFlag
+    NodeMetadata node;
+    
+    @SetFromFlag
+    Template template;
+
+    public JcloudsWinRmMachineLocation() {
+    }
+
+    @Override
+    public String toVerboseString() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("id", getId()).add("name", getDisplayName())
+                .add("user", getUser())
+                .add("address", getAddress())
+                .add("port", getPort())
+                .add("node", getNode())
+                .add("jcloudsId", getJcloudsId())
+                .add("privateAddresses", node.getPrivateAddresses())
+                .add("publicAddresses", node.getPublicAddresses())
+                .add("parentLocation", getParent())
+                .add("osDetails", getOsDetails())
+                .toString();
+    }
+
+    @Override
+    public int getPort() {
+        return getConfig(WINRM_PORT);
+    }
+    
+    @Override
+    public NodeMetadata getNode() {
+        return node;
+    }
+    
+    @Override
+    public Template getTemplate() {
+        return template;
+    }
+    
+    @Override
+    public JcloudsLocation getParent() {
+        return jcloudsParent;
+    }
+    
+    @Override
+    public String getHostname() {
+        return node.getHostname();
+    }
+    
+    @Override
+    public Set<String> getPublicAddresses() {
+        return node.getPublicAddresses();
+    }
+    
+    @Override
+    public Set<String> getPrivateAddresses() {
+        return node.getPrivateAddresses();
+    }
+
+    @Override
+    public String getSubnetHostname() {
+        String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), config().getBag());
+        return publicHostname;
+    }
+
+    @Override
+    public String getSubnetIp() {
+        Optional<String> privateAddress = getPrivateAddress();
+        if (privateAddress.isPresent()) {
+            return privateAddress.get();
+        }
+
+        String hostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), config().getBag());
+        if (hostname != null && !Networking.isValidIp4(hostname)) {
+            try {
+                return InetAddress.getByName(hostname).getHostAddress();
+            } catch (UnknownHostException e) {
+                LOG.debug("Cannot resolve IP for hostname {} of machine {} (so returning hostname): {}", new Object[] {hostname, this, e});
+            }
+        }
+        return hostname;
+    }
+
+    protected Optional<String> getPrivateAddress() {
+        if (groovyTruth(node.getPrivateAddresses())) {
+            Iterator<String> pi = node.getPrivateAddresses().iterator();
+            while (pi.hasNext()) {
+                String p = pi.next();
+                // disallow local only addresses
+                if (Networking.isLocalOnly(p)) continue;
+                // other things may be public or private, but either way, return it
+                return Optional.of(p);
+            }
+        }
+        return Optional.absent();
+    }
+    
+    @Override
+    public String getJcloudsId() {
+        return node.getId();
+    }
 }

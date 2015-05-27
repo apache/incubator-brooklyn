@@ -16,7 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.basic;
+package brooklyn.location.jclouds;
 
-public interface AbstractVanillaProcessDriver extends SoftwareProcessDriver {
+import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.Template;
+
+import brooklyn.location.MachineLocation;
+import brooklyn.location.basic.HasSubnetHostname;
+
+public interface JcloudsMachineLocation extends MachineLocation, HasSubnetHostname {
+    
+    @Override
+    public JcloudsLocation getParent();
+    
+    public NodeMetadata getNode();
+    
+    public Template getTemplate();
+
+    public String getJcloudsId();
+
+    /** In most clouds, the public hostname is the only way to ensure VMs in different zones can access each other. */
+    @Override
+    public String getSubnetHostname();
+
+    String getUser();
+
+    int getPort();
 }

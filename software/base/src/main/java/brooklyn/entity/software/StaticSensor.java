@@ -22,14 +22,14 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.AddSensor;
-import brooklyn.event.basic.Sensors;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.flags.TypeCoercions;
 
-public class StaticSensor<T> extends AddSensor<Integer> {
+public class StaticSensor<T> extends AddSensor<T> {
 
-    public static final ConfigKey<Integer> STATIC_VALUE = ConfigKeys.newConfigKey(Integer.class, "static.value");
+    public static final ConfigKey<Object> STATIC_VALUE = ConfigKeys.newConfigKey(Object.class, "static.value");
 
-    private final Integer value;
+    private final Object value;
 
     public StaticSensor(ConfigBag params) {
         super(params);
@@ -39,6 +39,6 @@ public class StaticSensor<T> extends AddSensor<Integer> {
     @Override
     public void apply(EntityLocal entity) {
         super.apply(entity);
-        entity.setAttribute(Sensors.newIntegerSensor(name), value);
+        entity.setAttribute(sensor, (T) TypeCoercions.coerce(value, sensor.getType()));
     }
 }
