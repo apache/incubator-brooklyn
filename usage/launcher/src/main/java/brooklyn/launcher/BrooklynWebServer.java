@@ -34,6 +34,7 @@ import java.util.Map;
 
 import javax.servlet.DispatcherType;
 
+import brooklyn.rest.filter.*;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
@@ -57,10 +58,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.BrooklynRestApi;
 import brooklyn.rest.BrooklynWebConfig;
-import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
-import brooklyn.rest.filter.HaMasterCheckFilter;
-import brooklyn.rest.filter.LoggingFilter;
-import brooklyn.rest.filter.RequestTaggingFilter;
 import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.ResourceUtils;
@@ -311,7 +308,9 @@ public class BrooklynWebServer {
 
         // Accept gzipped requests and responses
         config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS, GZIPContentEncodingFilter.class.getName());
-        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, GZIPContentEncodingFilter.class.getName());
+        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS,
+                GZIPContentEncodingFilter.class.getName() + ";" + CorsFilter.class.getName()
+        );
         // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
         // and treat that as static content
         config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");

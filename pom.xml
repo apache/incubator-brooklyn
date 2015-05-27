@@ -1132,69 +1132,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Needed for command-line access, e.g mvn apache-rat:rat and mvn apache-rat:check -->
-            <plugin>
-              <groupId>org.apache.rat</groupId>
-              <artifactId>apache-rat-plugin</artifactId>
-              <version>0.10</version>
-              <executions>
-                <execution>
-                  <phase>verify</phase>
-                  <goals>
-                    <goal>check</goal>
-                  </goals>
-                </execution> 
-              </executions>
-              <configuration>
-                <!--
-                     If you wish to override this list in the component (child) pom, ensure you use
-                         <excludes combine.children="merge">
-                     so that the child pom entries replace the parent entries
-                 -->
-                <excludes combine.children="append">
-                  <!-- git and IDE project files -->
-                  <!-- see https://issues.apache.org/jira/browse/RAT-107 -->
-                  <exclude>**/.git/**</exclude>
-                  <exclude>**/.gitignore</exclude>
-                  <exclude>**/.repository/**</exclude>
-                  <exclude>**/.idea/**</exclude>
-                  <exclude>**/*.iml</exclude>
-                  <exclude>**/.classpath/**</exclude>
-                  <exclude>**/.project</exclude>
-                  <exclude>**/.settings/**</exclude>
-                  <exclude>**/*.log</exclude>
-                  <exclude>**/brooklyn*.log.*</exclude>
-                  <exclude>**/target/**</exclude>
-                  <!-- files not requiring licence -->
-                  <exclude>ignored/**</exclude>
-                  <exclude>LICENSE.md</exclude>
-                  <exclude>**/MANIFEST.MF</exclude>
-                  <exclude>**/test-output/**</exclude>
-                  <exclude>**/*.pem.pub</exclude>
-                  <exclude>**/*.svg</exclude>
-                  <exclude>**/*.crt</exclude>
-                  <exclude>**/*.csr</exclude>
-                  <exclude>**/*.key</exclude>
-                  <exclude>**/*.key.org</exclude>
-                  <exclude>**/*.psd</exclude>
-                  <exclude>**/*.json</exclude>
-                  <exclude>**/*.plxarc</exclude>
-                  <exclude>**/services/brooklyn.location.LocationResolver</exclude>
-                  <exclude>**/src/test/resources/brooklyn/entity/basic/template_with_extra_substitutions.txt</exclude>
-                  <exclude>**/src/main/resources/banner.txt</exclude>
-                  <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>
-                  <exclude>**/sandbox/examples/src/main/scripts/amis.txt</exclude>
-                  <!-- see notes in https://issues.apache.org/jira/browse/BROOKLYN-18 -->
-                  
-                  <!--
-                      docs are not part of the distribution: they are just used to populate 
-                      https://brooklyn.incubator.apache.org
-                  -->
-                  <exclude>docs/**</exclude>
-
-                </excludes>
-              </configuration>
-            </plugin>
         </plugins>
         <extensions>
             <extension>
