@@ -127,14 +127,14 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public Response resetXml(String xml) {
+    public Response resetXml(String xml, boolean ignoreErrors) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, null) ||
             !Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.ADD_CATALOG_ITEM, null)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
                 Entitlements.getEntitlementContext().user());
         }
 
-        ((BasicBrooklynCatalog)mgmt().getCatalog()).reset(CatalogDto.newDtoFromXmlContents(xml, "REST reset"));
+        ((BasicBrooklynCatalog)mgmt().getCatalog()).reset(CatalogDto.newDtoFromXmlContents(xml, "REST reset"), !ignoreErrors);
         return Response.ok().build();
     }
     

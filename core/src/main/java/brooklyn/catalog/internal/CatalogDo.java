@@ -79,11 +79,16 @@ public class CatalogDo {
         return load(mgmt, parent);
     }
 
+    /** Calls {@link #load(ManagementContext, CatalogDo, boolean)} failing on load errors. */
+    public synchronized CatalogDo load(ManagementContext mgmt, CatalogDo parent) {
+        return load(mgmt, parent, true);
+    }
+
     /** causes all URL-based catalogs to have their manifests loaded,
      * and all scanning-based classpaths to scan the classpaths
      * (but does not load all JARs)
      */
-    public synchronized CatalogDo load(ManagementContext mgmt, CatalogDo parent) {
+    public synchronized CatalogDo load(ManagementContext mgmt, CatalogDo parent, boolean failOnLoadError) {
         if (isLoaded()) {
             if (mgmt!=null && !Objects.equal(mgmt, this.mgmt)) {
                 throw new IllegalStateException("Cannot set mgmt "+mgmt+" on "+this+" after catalog is loaded");
@@ -91,13 +96,13 @@ public class CatalogDo {
             log.debug("Catalog "+this+" is already loaded");
             return this;
         }
-        loadThisCatalog(mgmt, parent);
-        loadChildrenCatalogs();
+        loadThisCatalog(mgmt, parent, failOnLoadError);
+        loadChildrenCatalogs(failOnLoadError);
         buildCaches();
         return this;
     }
 
-    protected synchronized void loadThisCatalog(ManagementContext mgmt, CatalogDo parent) {
+    protected synchronized void loadThisCatalog(ManagementContext mgmt, CatalogDo parent, boolean failOnLoadError) {
         if (isLoaded()) return;
         CatalogUtils.logDebugOrTraceIfRebinding(log, "Loading catalog {} into {}", this, parent);
         if (this.parent!=null && !this.parent.equals(parent))
@@ -108,7 +113,7 @@ public class CatalogDo {
         this.mgmt = mgmt;
         dto.populate();
         loadCatalogClasspath();
-        loadCatalogItems();
+        loadCatalogItems(failOnLoadError);
         isLoaded = true;
         synchronized (this) {
             notifyAll();
@@ -126,11 +131,20 @@ public class CatalogDo {
         }
     }
 
-    private void loadCatalogItems() {
+    private void loadCatalogItems(boolean failOnLoadError) {
         Iterable<CatalogItemDtoAbstract<?, ?>> entries = dto.getUniqueEntries();
         if (entries!=null) {
             for (CatalogItemDtoAbstract<?,?> entry : entries) {
-                CatalogUtils.installLibraries(mgmt, entry.getLibraries());
+                try {
+                    CatalogUtils.installLibraries(mgmt, entry.getLibraries());
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    if (failOnLoadError) {
+                        Exceptions.propagate(e);
+                    } else {
+                        log.error("Loading bundles for catalog item " + entry + " failed: " + e.getMessage(), e);
+                    }
+                }
             }
         }
     }
@@ -147,18 +161,18 @@ public class CatalogDo {
         }
     }
     
-    protected void loadChildrenCatalogs() {
+    protected void loadChildrenCatalogs(boolean failOnLoadError) {
         if (dto.catalogs!=null) {
             for (CatalogDto child: dto.catalogs) {
-                loadCatalog(child);
+                loadCatalog(child, failOnLoadError);
             }
         }
     }
     
-    CatalogDo loadCatalog(CatalogDto child) {
+    CatalogDo loadCatalog(CatalogDto child, boolean failOnLoadError) {
         CatalogDo childL = new CatalogDo(child);
         childrenCatalogs.add(childL);
-        childL.load(mgmt, this);
+        childL.load(mgmt, this, failOnLoadError);
         childrenClassLoader.addFirst(childL.getRecursiveClassLoader());
         clearCache(false);
         return childL;
@@ -264,7 +278,7 @@ public class CatalogDo {
         dto.catalogs.add(child);
         if (!isLoaded())
             return null;
-        return loadCatalog(child);
+        return loadCatalog(child, true);
     }
     
     public synchronized void addToClasspath(String ...urls) {
