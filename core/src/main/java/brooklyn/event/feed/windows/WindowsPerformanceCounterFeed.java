@@ -20,14 +20,13 @@ package brooklyn.event.feed.windows;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
-import java.math.BigInteger;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -49,23 +48,16 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
-import brooklyn.event.feed.ssh.SshPollValue;
-import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.management.ExecutionContext;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.task.ssh.SshTasks;
-import brooklyn.util.task.system.ProcessTaskFactory;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.Duration;
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -107,8 +99,8 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
     private static final Joiner JOINER_ON_COMMA = Joiner.on(',');
 
     @SuppressWarnings("serial")
-    public static final ConfigKey<List<WindowsPerformanceCounterPollConfig<?>>> POLLS = ConfigKeys.newConfigKey(
-            new TypeToken<List<WindowsPerformanceCounterPollConfig<?>>>() {},
+    public static final ConfigKey<Collection<WindowsPerformanceCounterPollConfig<?>>> POLLS = ConfigKeys.newConfigKey(
+            new TypeToken<Collection<WindowsPerformanceCounterPollConfig<?>>>() {},
             "polls");
 
     public static Builder builder() {
@@ -180,13 +172,13 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period);
             polls.add(configCopy);
         }
-        setConfig(POLLS, polls);
+        config().set(POLLS, polls);
         initUniqueTag(builder.uniqueTag, polls);
     }
 
     @Override
     protected void preStart() {
-        List<WindowsPerformanceCounterPollConfig<?>> polls = getConfig(POLLS);
+        Collection<WindowsPerformanceCounterPollConfig<?>> polls = getConfig(POLLS);
         
         long minPeriod = Integer.MAX_VALUE;
         List<String> performanceCounterNames = Lists.newArrayList();
@@ -200,13 +192,16 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
                 .add("-Counter")
                 .add(JOINER_ON_COMMA.join(Iterables.transform(performanceCounterNames, QuoteStringFunction.INSTANCE)))
                 .add("-SampleInterval")
-                .add("2") // TODO: This should be a config key
+                .add("2") // TODO: extract SampleInterval as a config key
                 .build();
         String command = String.format("(%s).CounterSamples.CookedValue", JOINER_ON_SPACE.join(allParams));
-        log.debug("Windows performance counter poll command will be: {}", command);
+        log.debug("Windows performance counter poll command for {} will be: {}", entity, command);
 
-        getPoller().scheduleAtFixedRate(new GetPerformanceCountersJob<WinRmToolResponse>(getEntity(), command),
-                new SendPerfCountersToSensors(getEntity(), getConfig(POLLS)), 100L);
+        GetPerformanceCountersJob<WinRmToolResponse> job = new GetPerformanceCountersJob<WinRmToolResponse>(getEntity(), command);
+        getPoller().scheduleAtFixedRate(
+                new CallInEntityExecutionContext<WinRmToolResponse>(entity, job),
+                new SendPerfCountersToSensors(getEntity(), getConfig(POLLS)), 
+                minPeriod);
     }
 
     private static class GetPerformanceCountersJob<T> implements Callable<T> {
@@ -240,7 +235,6 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
      * @param <T> The type of the {@link java.util.concurrent.Callable}.
      */
     private static class CallInEntityExecutionContext<T> implements Callable<T> {
-
         private final Callable<T> job;
         private EntityLocal entity;
 
@@ -251,25 +245,26 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
 
         @Override
         public T call() throws Exception {
-            final ExecutionContext executionContext
-
-                    = ((EntityInternal) entity).getManagementSupport().getExecutionContext();
+            ExecutionContext executionContext = ((EntityInternal) entity).getManagementSupport().getExecutionContext();
             return executionContext.submit(Maps.newHashMap(), job).get();
         }
     }
 
     private static class SendPerfCountersToSensors implements PollHandler<WinRmToolResponse> {
-
         private final EntityLocal entity;
         private final List<WindowsPerformanceCounterPollConfig<?>> polls;
-
-        public SendPerfCountersToSensors(EntityLocal entity, List<WindowsPerformanceCounterPollConfig<?>> polls) {
+        private final Set<AttributeSensor<?>> failedAttributes = Sets.newLinkedHashSet();
+        
+        public SendPerfCountersToSensors(EntityLocal entity, Collection<WindowsPerformanceCounterPollConfig<?>> polls) {
             this.entity = entity;
-            this.polls = polls;
+            this.polls = ImmutableList.copyOf(polls);
         }
 
         @Override
         public boolean checkSuccess(WinRmToolResponse val) {
+            // TODO not just using statucCode; also looking at absence of stderr.
+            // Status code is (empirically) unreliable: it returns 0 sometimes even when failed 
+            // (but never returns non-zero on success).
             if (val.getStatusCode() != 0) return false;
             String stderr = val.getStdErr();
             if (stderr == null || stderr.length() != 0) return false;
@@ -282,11 +277,20 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         public void onSuccess(WinRmToolResponse val) {
             String[] values = val.getStdOut().split("\r\n");
             for (int i = 0; i < polls.size(); i++) {
-                Class<?> clazz = polls.get(i).getSensor().getType();
-                Maybe<? extends Object> maybeValue = TypeCoercions.tryCoerce(values[i], TypeToken.of(clazz));
-                Object value = maybeValue.isAbsent() ? null : maybeValue.get();
-                AttributeSensor<Object> attribute = (AttributeSensor<Object>) Sensors.newSensor(clazz, polls.get(i).getSensor().getName(), polls.get(i).getDescription());
-                entity.setAttribute(attribute, value);
+                WindowsPerformanceCounterPollConfig<?> config = polls.get(i);
+                Class<?> clazz = config.getSensor().getType();
+                AttributeSensor<Object> attribute = (AttributeSensor<Object>) Sensors.newSensor(clazz, config.getSensor().getName(), config.getDescription());
+                try {
+                    Object value = TypeCoercions.coerce(values[i], TypeToken.of(clazz));
+                    entity.setAttribute(attribute, value);
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    if (failedAttributes.add(attribute)) {
+                        log.warn("Failed to coerce value '{}' to {} for {} -> {}", new Object[] {values[i], clazz, entity, attribute});
+                    } else {
+                        if (log.isTraceEnabled()) log.trace("Failed (repeatedly) to coerce value '{}' to {} for {} -> {}", new Object[] {values[i], clazz, entity, attribute});
+                    }
+                }
             }
         }
 
@@ -295,7 +299,9 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
             log.error("Windows Performance Counter query did not respond as expected. exitcode={} stdout={} stderr={}",
                     new Object[]{val.getStatusCode(), val.getStdOut(), val.getStdErr()});
             for (WindowsPerformanceCounterPollConfig<?> config : polls) {
-                entity.setAttribute(Sensors.newSensor(config.getSensor().getClass(), config.getPerformanceCounterName(), config.getDescription()), null);
+                Class<?> clazz = config.getSensor().getType();
+                AttributeSensor<?> attribute = Sensors.newSensor(clazz, config.getSensor().getName(), config.getDescription());
+                entity.setAttribute(attribute, null);
             }
         }
 
@@ -316,103 +322,6 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         @Override
         public String toString() {
             return super.toString()+"["+getDescription()+"]";
-        }
-    }
-
-    /**
-     * A poll handler that takes the result of the <tt>typeperf</tt> invocation and sets the appropriate sensors.
-     */
-    private static class SendPerfCountersToSensors2 implements PollHandler<SshPollValue> {
-
-        private static final Set<? extends Class<? extends Number>> INTEGER_TYPES
-                = ImmutableSet.of(Integer.class, Long.class, Byte.class, Short.class, BigInteger.class);
-
-        private final EntityLocal entity;
-        private final SortedMap<String, AttributeSensor> sensorMap;
-
-        public SendPerfCountersToSensors2(EntityLocal entity, List<WindowsPerformanceCounterPollConfig<?>> polls) {
-            this.entity = entity;
-            
-            sensorMap = Maps.newTreeMap();
-            for (WindowsPerformanceCounterPollConfig<?> config : polls) {
-                sensorMap.put(config.getPerformanceCounterName(), config.getSensor());
-            }
-        }
-
-        @Override
-        public boolean checkSuccess(SshPollValue val) {
-            if (val.getExitStatus() != 0) return false;
-            String stderr = val.getStderr();
-            if (stderr == null || stderr.length() != 0) return false;
-            String out = val.getStdout();
-            if (out == null || out.length() == 0) return false;
-            return true;
-        }
-
-        @Override
-        public void onSuccess(SshPollValue val) {
-            String stdout = val.getStdout();
-            Matcher matcher = lineWithPerfData.matcher(stdout);
-            if (!matcher.find()) {
-                onFailure(val);
-                return;
-            }
-
-            String group = matcher.group(0);
-            Iterator<String> values = new PerfCounterValueIterator(group);
-            for (AttributeSensor sensor : sensorMap.values()) {
-                if (!values.hasNext()) {
-                    // The perf counter response has fewer elements than expected
-                    onFailure(val);
-                    return;
-                }
-                String value = values.next();
-
-                Class sensorType = sensor.getType();
-                if (INTEGER_TYPES.contains(sensorType)) {
-                    // Windows always returns decimal-formatted numbers (e.g. 1234.00000), even for integer counters.
-                    // Integer.valueOf() throws a NumberFormatException if it sees something in that format. So for
-                    // pure integer sensors, we truncate the decimal part.
-                    int decimalAt = value.indexOf('.');
-                    if (decimalAt >= 0)
-                        value = value.substring(0, decimalAt);
-                }
-                entity.setAttribute(sensor, TypeCoercions.coerce(value, sensorType));
-            }
-
-            if (values.hasNext()) {
-                // The perf counter response has more elements than expected
-                onFailure(val);
-                return;
-            }
-        }
-
-        @Override
-        public void onFailure(SshPollValue val) {
-            log.error("Windows Performance Counter query did not respond as expected. exitcode={} stdout={} stderr={}",
-                    new Object[]{val.getExitStatus(), val.getStdout(), val.getStderr()});
-            for (AttributeSensor attribute : sensorMap.values()) {
-                entity.setAttribute(attribute, null);
-            }
-        }
-
-        @Override
-        public void onException(Exception exception) {
-            log.error("Detected exception while retrieving Windows Performance Counters from entity " +
-                    entity.getDisplayName(), exception);
-            for (AttributeSensor attribute : sensorMap.values()) {
-                entity.setAttribute(attribute, null);
-            }
-        }
-        
-        @Override
-        public String toString() {
-            return super.toString()+"["+getDescription()+"]";
-        }
-        
-        @Override
-        public String getDescription() {
-            return ""+sensorMap;
         }
     }
 

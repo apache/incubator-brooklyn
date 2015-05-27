@@ -68,7 +68,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.ListenableFuture;
 
-public class JcloudsSshMachineLocation extends SshMachineLocation implements HasSubnetHostname {
+public class JcloudsSshMachineLocation extends SshMachineLocation implements JcloudsMachineLocation {
     
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsSshMachineLocation.class);
     private static final long serialVersionUID = -443866395634771659L;
@@ -133,14 +133,17 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
                 .toString();
     }
 
+    @Override
     public NodeMetadata getNode() {
         return node;
     }
     
+    @Override
     public Template getTemplate() {
         return template;
     }
     
+    @Override
     public JcloudsLocation getParent() {
         return jcloudsParent;
     }
@@ -199,6 +202,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Has
         return Optional.absent();
     }
     
+    @Override
     public String getJcloudsId() {
         return node.getId();
     }

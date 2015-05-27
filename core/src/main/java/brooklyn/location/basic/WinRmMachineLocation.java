@@ -18,6 +18,10 @@
  */
 package brooklyn.location.basic;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import io.cloudsoft.winrm4j.winrm.WinRmTool;
+import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,7 +35,6 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import org.apache.commons.codec.binary.Base64;
-import org.python.core.PyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,39 +44,56 @@ import brooklyn.location.MachineDetails;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
-import io.cloudsoft.winrm4j.winrm.WinRmTool;
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
 
     private static final Logger LOG = LoggerFactory.getLogger(WinRmMachineLocation.class);
 
-    public static final ConfigKey<String> WINDOWS_USERNAME = ConfigKeys.newStringConfigKey("windows.username",
+    // FIXME Respect `port` config when using {@link WinRmTool}
+    public static final ConfigKey<Integer> WINRM_PORT = ConfigKeys.newIntegerConfigKey(
+            "port",
+            "WinRM port to use when connecting to the remote machine",
+            5985);
+    
+    // TODO merge with {link SshTool#PROP_USER} and {@link SshMachineLocation#user}
+    public static final ConfigKey<String> USER = ConfigKeys.newStringConfigKey("user",
             "Username to use when connecting to the remote machine");
 
-    public static final ConfigKey<String> WINDOWS_PASSWORD = ConfigKeys.newStringConfigKey("windows.password",
+    // TODO merge with {link SshTool#PROP_PASSWORD}
+    public static final ConfigKey<String> PASSWORD = ConfigKeys.newStringConfigKey("password",
             "Password to use when connecting to the remote machine");
 
     public static final ConfigKey<Integer> COPY_FILE_CHUNK_SIZE_BYTES = ConfigKeys.newIntegerConfigKey("windows.copy.file.size.bytes",
             "Size of file chunks (in bytes) to be used when copying a file to the remote server", 1024);
 
-    @SetFromFlag
-    protected String user;
+     public static final ConfigKey<InetAddress> ADDRESS = ConfigKeys.newConfigKey(
+            InetAddress.class,
+            "address",
+            "Address of the remote machine");
 
-    @SetFromFlag(nullable = false)
-    protected InetAddress address;
+    public static final ConfigKey<Integer> EXECUTION_ATTEMPTS = ConfigKeys.newIntegerConfigKey(
+            "windows.exec.attempts",
+            "Number of attempts to execute a remote command",
+            1);
+    
+    // TODO See SshTool#PROP_SSH_TRIES, where it was called "sshTries"; remove duplication? Merge into one well-named thing?
+    public static final ConfigKey<Integer> EXEC_TRIES = ConfigKeys.newIntegerConfigKey(
+            "execTries", 
+            "Max number of times to attempt WinRM operations", 
+            10);
 
     @Override
     public InetAddress getAddress() {
-        return address;
+        return getConfig(ADDRESS);
     }
 
     @Override
@@ -89,17 +109,19 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     @Nullable
     @Override
     public String getHostname() {
-        return address.getHostAddress();
+        InetAddress address = getAddress();
+        return (address != null) ? address.getHostAddress() : null;
     }
 
     @Override
     public Set<String> getPublicAddresses() {
-        return null;
+        InetAddress address = getAddress();
+        return (address == null) ? ImmutableSet.<String>of() : ImmutableSet.of(address.getHostAddress());
     }
-
+    
     @Override
     public Set<String> getPrivateAddresses() {
-        return null;
+        return ImmutableSet.of();
     }
 
     public WinRmToolResponse executeScript(String script) {
@@ -107,18 +129,30 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public WinRmToolResponse executeScript(List<String> script) {
+        int execTries = getRequiredConfig(EXEC_TRIES);
         Collection<Throwable> exceptions = Lists.newArrayList();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < execTries; i++) {
             try {
-                WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
-                WinRmToolResponse response = winRmTool.executeScript(script);
-                return response;
+                return executeScriptNoRetry(script);
             } catch (Exception e) {
-                LOG.warn("ignoring winrm exception and retrying:", e);
+                Exceptions.propagateIfFatal(e);
+                if (i == (execTries+1)) {
+                    LOG.info("Propagating WinRM exception (attempt "+(i+1)+" of "+execTries+")", e);
+                } else if (i == 0) {
+                    LOG.warn("Ignoring WinRM exception and retrying (attempt "+(i+1)+" of "+execTries+")", e);
+                } else {
+                    LOG.debug("Ignoring WinRM exception and retrying (attempt "+(i+1)+" of "+execTries+")", e);
+                }
                 exceptions.add(e);
             }
         }
         throw Exceptions.propagate("failed to execute shell script", exceptions);
+    }
+
+    protected WinRmToolResponse executeScriptNoRetry(List<String> script) {
+        WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUser(), getPassword());
+        WinRmToolResponse response = winRmTool.executeScript(script);
+        return response;
     }
 
     public WinRmToolResponse executePsScript(String psScript) {
@@ -126,13 +160,22 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public WinRmToolResponse executePsScript(List<String> psScript) {
+        int execTries = getRequiredConfig(EXEC_TRIES);
         Collection<Throwable> exceptions = Lists.newArrayList();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < execTries; i++) {
             try {
                 return executePsScriptNoRetry(psScript);
             } catch (Exception e) {
-                LOG.warn("ignoring winrm exception and retrying after 5 seconds:", e);
-                Time.sleep(Duration.FIVE_SECONDS);
+                Exceptions.propagateIfFatal(e);
+                if (i == (execTries+1)) {
+                    LOG.info("Propagating WinRM exception (attempt "+(i+1)+" of "+execTries+")", e);
+                } else if (i == 0) {
+                    LOG.warn("Ignoring WinRM exception and retrying after 5 seconds (attempt "+(i+1)+" of "+execTries+")", e);
+                    Time.sleep(Duration.FIVE_SECONDS);
+                } else {
+                    LOG.debug("Ignoring WinRM exception and retrying after 5 seconds (attempt "+(i+1)+" of "+execTries+")", e);
+                    Time.sleep(Duration.FIVE_SECONDS);
+                }
                 exceptions.add(e);
             }
         }
@@ -140,21 +183,27 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public WinRmToolResponse executePsScriptNoRetry(List<String> psScript) {
-        WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUsername(), getPassword());
+        WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUser(), getPassword());
         WinRmToolResponse response = winRmTool.executePs(psScript);
         return response;
     }
 
-    public int copyTo(File source, File destination) {
+    public int copyTo(File source, String destination) {
+        FileInputStream sourceStream = null;
         try {
-            return copyTo(new FileInputStream(source), destination);
+            sourceStream = new FileInputStream(source);
+            return copyTo(sourceStream, destination);
         } catch (FileNotFoundException e) {
             throw Exceptions.propagate(e);
+        } finally {
+            if (sourceStream != null) {
+                Streams.closeQuietly(sourceStream);
+            }
         }
     }
 
-    public int copyTo(InputStream source, File destination) {
-        executePsScript(ImmutableList.of("rm -ErrorAction SilentlyContinue " + destination.getPath()));
+    public int copyTo(InputStream source, String destination) {
+        executePsScript(ImmutableList.of("rm -ErrorAction SilentlyContinue " + destination));
         try {
             int chunkSize = getConfig(COPY_FILE_CHUNK_SIZE_BYTES);
             byte[] inputData = new byte[chunkSize];
@@ -167,8 +216,8 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
                 } else {
                     chunk = Arrays.copyOf(inputData, bytesRead);
                 }
-                executePsScript(ImmutableList.of("If ((!(Test-Path " + destination.getPath() + ")) -or ((Get-Item '" + destination.getPath() + "').length -eq " +
-                        expectedFileSize + ")) {Add-Content -Encoding Byte -path " + destination.getPath() +
+                executePsScript(ImmutableList.of("If ((!(Test-Path " + destination + ")) -or ((Get-Item '" + destination + "').length -eq " +
+                        expectedFileSize + ")) {Add-Content -Encoding Byte -path " + destination +
                         " -value ([System.Convert]::FromBase64String(\"" + new String(Base64.encodeBase64(chunk)) + "\"))}"));
                 expectedFileSize += bytesRead;
             }
@@ -179,14 +228,18 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         }
     }
 
-    public String getUsername() {
-        return config().get(WINDOWS_USERNAME);
+    public String getUser() {
+        return config().get(USER);
     }
 
     private String getPassword() {
-        return config().get(WINDOWS_PASSWORD);
+        return config().get(PASSWORD);
     }
 
+    private <T> T getRequiredConfig(ConfigKey<T> key) {
+        return checkNotNull(getConfig(key), "key %s must be set", key);
+    }
+    
     public static String getDefaultUserMetadataString() {
         // Using an encoded command obviates the need to escape
         String unencodePowershell = Joiner.on("\r\n").join(ImmutableList.of(

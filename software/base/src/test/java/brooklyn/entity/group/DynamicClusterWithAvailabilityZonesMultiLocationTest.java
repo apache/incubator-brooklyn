@@ -53,7 +53,7 @@ import com.google.common.collect.Lists;
  * 
  * Different from {@link DynamicClusterWithAvailabilityZonesTest} in the use of {@link MultiLocation}.
  * However, the difference is important: the {@link SoftwareProcess} entity has two locations
- * (the {@link MachineProvisioningLocation} and the {@link MachineLocation}, which was perviously
+ * (the {@link MachineProvisioningLocation} and the {@link MachineLocation}, which was previously
  * causing a failure - now fixed and tested here.
  */
 public class DynamicClusterWithAvailabilityZonesMultiLocationTest extends BrooklynAppUnitTestSupport {

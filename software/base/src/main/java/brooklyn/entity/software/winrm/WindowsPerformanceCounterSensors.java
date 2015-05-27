@@ -57,18 +57,18 @@ public class WindowsPerformanceCounterSensors implements EntityInitializer {
         WindowsPerformanceCounterFeed.Builder builder = WindowsPerformanceCounterFeed.builder()
                 .entity(entity);
         for (Map<String, String> sensorConfig : sensors) {
+            String name = sensorConfig.get("name");
             String sensorType = sensorConfig.get("sensorType");
             Class<?> clazz;
             try {
-                clazz = Strings.isNonEmpty(sensorType) ?
-                ((EntityInternal)entity).getManagementContext().getCatalog().getRootClassLoader().loadClass(sensorType) : String.class;
+                clazz = Strings.isNonEmpty(sensorType)
+                        ? ((EntityInternal)entity).getManagementContext().getCatalog().getRootClassLoader().loadClass(sensorType) 
+                        : String.class;
             } catch (ClassNotFoundException e) {
-                LOG.warn("Could not load type {} for sensor {}", sensorType, sensorConfig.get("name"));
-                clazz = String.class;
+                throw new IllegalStateException("Could not load type "+sensorType+" for sensor "+name, e);
             }
-            builder.addSensor(sensorConfig.get("counter"), Sensors.newSensor(clazz, sensorConfig.get("name"), sensorConfig.get("description")));
+            builder.addSensor(sensorConfig.get("counter"), Sensors.newSensor(clazz, name, sensorConfig.get("description")));
         }
         builder.build();
     }
-
 }

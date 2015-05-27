@@ -524,7 +524,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             
             // explicitly invoke this customizer, to comply with tests
             for (JcloudsLocationCustomizer customizer : getCustomizers(config().getBag())) {
-                customizer.customize(this, null, result);
+                customizer.customize(this, null, (JcloudsMachineLocation)result);
             }
 
             return result;
@@ -591,7 +591,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             .configure(JcloudsLocationConfig.JCLOUDS_LOCATION_CUSTOMIZERS, ImmutableList.of(customizer))
             .configure(JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 1);
         FakeLocalhostWithParentJcloudsLocation ll = managementContext.getLocationManager().createLocation(LocationSpec.create(FakeLocalhostWithParentJcloudsLocation.class).configure(allConfig.getAllConfig()));
-        JcloudsSshMachineLocation l = (JcloudsSshMachineLocation)ll.obtain();
+        JcloudsMachineLocation l = (JcloudsMachineLocation)ll.obtain();
         Mockito.verify(customizer, Mockito.times(1)).customize(ll, null, l);
         Mockito.verify(customizer, Mockito.never()).preRelease(l);
         Mockito.verify(customizer, Mockito.never()).postRelease(l);

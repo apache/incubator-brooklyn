@@ -38,7 +38,7 @@ import brooklyn.entity.Entity;
 import brooklyn.location.geo.LocalhostExternalIpLoader;
 import brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import brooklyn.location.jclouds.JcloudsMachineLocation;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
@@ -112,8 +112,8 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
         return getInstance(entity.getApplicationId());
     }
 
-    /** @see #addPermissionsToLocation(brooklyn.location.jclouds.JcloudsSshMachineLocation, java.util.Collection)  */
-    public void addPermissionsToLocation(final JcloudsSshMachineLocation location, IpPermission... permissions) {
+    /** @see #addPermissionsToLocation(brooklyn.location.jclouds.JcloudsMachineLocation, java.util.Collection)  */
+    public void addPermissionsToLocation(final JcloudsMachineLocation location, IpPermission... permissions) {
         addPermissionsToLocation(location, ImmutableList.copyOf(permissions));
     }
 
@@ -124,7 +124,7 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
      * @param permissions The set of permissions to be applied to the location
      * @param location Location to gain permissions
      */
-    public void addPermissionsToLocation(final JcloudsSshMachineLocation location, final Collection<IpPermission> permissions) {
+    public void addPermissionsToLocation(final JcloudsMachineLocation location, final Collection<IpPermission> permissions) {
         ComputeService computeService = location.getParent().getComputeService();
         String nodeId = location.getNode().getId();
         addPermissionsToLocation(permissions, nodeId, computeService);

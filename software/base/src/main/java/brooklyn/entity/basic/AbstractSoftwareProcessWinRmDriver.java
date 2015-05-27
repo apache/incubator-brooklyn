@@ -48,8 +48,8 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
 
     public AbstractSoftwareProcessWinRmDriver(EntityLocal entity, WinRmMachineLocation location) {
         super(entity, location);
-        entity.setAttribute(WINDOWS_USERNAME, location.config().get(WinRmMachineLocation.WINDOWS_USERNAME));
-        entity.setAttribute(WINDOWS_PASSWORD, location.config().get(WinRmMachineLocation.WINDOWS_PASSWORD));
+        entity.setAttribute(WINDOWS_USERNAME, location.config().get(WinRmMachineLocation.USER));
+        entity.setAttribute(WINDOWS_PASSWORD, location.config().get(WinRmMachineLocation.PASSWORD));
     }
 
     @Override
@@ -99,7 +99,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         if (createParentDir) {
             createDirectory(getDirectory(target), "Creating resource directory");
         }
-        return copyTo(new File(source), new File(target));
+        return copyTo(new File(source), target);
     }
 
     @Override
@@ -107,7 +107,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         if (createParentDir) {
             createDirectory(getDirectory(target), "Creating resource directory");
         }
-        return copyTo(source, new File(target));
+        return copyTo(source, target);
     }
 
     @Override
@@ -139,30 +139,30 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         return getLocation().executeScript(script).getStatusCode();
     }
 
-    public int executePowerShellNoRetry(List<String> psScript) {
+    public int executePsScriptNoRetry(List<String> psScript) {
         return getLocation().executePsScriptNoRetry(psScript).getStatusCode();
     }
 
-    public int executePowerShell(List<String> psScript) {
+    public int executePsScript(List<String> psScript) {
         return getLocation().executePsScript(psScript).getStatusCode();
     }
 
-    public int copyTo(File source, File destination) {
+    public int copyTo(File source, String destination) {
         return getLocation().copyTo(source, destination);
     }
 
-    public int copyTo(InputStream source, File destination) {
+    public int copyTo(InputStream source, String destination) {
         return getLocation().copyTo(source, destination);
     }
 
     public void rebootAndWait() {
         try {
-            executePowerShellNoRetry(ImmutableList.of("Restart-Computer -Force"));
+            executePsScriptNoRetry(ImmutableList.of("Restart-Computer -Force"));
         } catch (PyException e) {
             // Restarting the computer will cause the command to fail; ignore the exception and continue
         }
-        waitForWinRmStatus(false, entity.getConfig(VanillaWindowsProcess.REBOOT_UNAVAILABLE_TIMEOUT));
-        waitForWinRmStatus(true, entity.getConfig(VanillaWindowsProcess.REBOOT_AVAILABLE_TIMEOUT)).getWithError();
+        waitForWinRmStatus(false, entity.getConfig(VanillaWindowsProcess.REBOOT_BEGUN_TIMEOUT));
+        waitForWinRmStatus(true, entity.getConfig(VanillaWindowsProcess.REBOOT_COMPLETED_TIMEOUT)).getWithError();
     }
 
     private String getDirectory(String fileName) {

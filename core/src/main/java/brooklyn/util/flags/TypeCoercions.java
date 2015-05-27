@@ -31,7 +31,6 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +72,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -710,11 +710,43 @@ public class TypeCoercions {
                 return QuorumChecks.of(input);
             }
         });
-        registerAdapter(ArrayList.class, String[].class, new Function<ArrayList, String[]>() {
+        registerAdapter(Iterable.class, String[].class, new Function<Iterable, String[]>() {
             @Nullable
             @Override
-            public String[] apply(@Nullable ArrayList arrayList) {
-                return (String[]) arrayList.toArray(new String[]{});
+            public String[] apply(@Nullable Iterable list) {
+                if (list == null) return null;
+                String[] result = new String[Iterables.size(list)];
+                int count = 0;
+                for (Object element : list) {
+                    result[count++] = coerce(element, String.class);
+                }
+                return result;
+            }
+        });
+        registerAdapter(Iterable.class, Integer[].class, new Function<Iterable, Integer[]>() {
+            @Nullable
+            @Override
+            public Integer[] apply(@Nullable Iterable list) {
+                if (list == null) return null;
+                Integer[] result = new Integer[Iterables.size(list)];
+                int count = 0;
+                for (Object element : list) {
+                    result[count++] = coerce(element, Integer.class);
+                }
+                return result;
+            }
+        });
+        registerAdapter(Iterable.class, int[].class, new Function<Iterable, int[]>() {
+            @Nullable
+            @Override
+            public int[] apply(@Nullable Iterable list) {
+                if (list == null) return null;
+                int[] result = new int[Iterables.size(list)];
+                int count = 0;
+                for (Object element : list) {
+                    result[count++] = coerce(element, int.class);
+                }
+                return result;
             }
         });
         registerAdapter(String.class, Map.class, new Function<String,Map>() {
