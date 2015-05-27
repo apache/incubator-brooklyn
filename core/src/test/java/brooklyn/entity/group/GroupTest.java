@@ -20,47 +20,41 @@ package brooklyn.entity.group;
 
 import static org.testng.Assert.assertEquals;
 
-import org.testng.annotations.AfterMethod;
+import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
+import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+public class GroupTest extends BrooklynAppUnitTestSupport {
 
-public class GroupTest {
-
-    private static final int TIMEOUT_MS = 2000;
-
-    private TestApplication app;
     private BasicGroup group;
     private TestEntity entity1;
     private TestEntity entity2;
     
     SimulatedLocation loc;
 
-
-    @BeforeMethod
-    public void setUp() {
-        app = TestApplication.Factory.newManagedInstanceForTests();
+    @BeforeMethod(alwaysRun=true)
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
         loc = app.getManagementContext().getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         entity1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void tearDown(){
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test
@@ -113,6 +107,34 @@ public class GroupTest {
         Entities.unmanage(group);
         entity1.addGroup(group);
         Entities.unmanage(entity1);
+    }
+    
+    @Test
+    public void testAddingAndRemovingGroupEmitsNotification() throws Exception {
+        final RecordingSensorEventListener<Group> groupAddedListener = new RecordingSensorEventListener<>();
+        final RecordingSensorEventListener<Group> groupRemovedListener = new RecordingSensorEventListener<>();
+        mgmt.getSubscriptionManager().subscribe(entity1, AbstractEntity.GROUP_ADDED, groupAddedListener);
+        mgmt.getSubscriptionManager().subscribe(entity1, AbstractEntity.GROUP_REMOVED, groupRemovedListener);
+        
+        entity1.addGroup(group);
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                String msg = "events="+groupAddedListener.getEvents();
+                assertEquals(groupAddedListener.getEvents().size(), 1, msg);
+                assertEquals(groupAddedListener.getEvents().get(0).getSource(), entity1, msg);
+                assertEquals(groupAddedListener.getEvents().get(0).getSensor(), AbstractEntity.GROUP_ADDED, msg);
+            }});
+        assertEquals(groupRemovedListener.getEvents().size(), 0, "events="+groupRemovedListener.getEvents());
+        
+        entity1.removeGroup(group);
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                String msg = "events="+groupRemovedListener.getEvents();
+                assertEquals(groupRemovedListener.getEvents().size(), 1, msg);
+                assertEquals(groupRemovedListener.getEvents().get(0).getSource(), entity1, msg);
+                assertEquals(groupRemovedListener.getEvents().get(0).getSensor(), AbstractEntity.GROUP_REMOVED, msg);
+            }});
+        assertEquals(groupAddedListener.getEvents().size(), 1, "events="+groupAddedListener.getEvents());
     }
     
     private void assertGroupMembers(Entity... expectedMembers) {

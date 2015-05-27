@@ -23,6 +23,8 @@ import static brooklyn.entity.basic.AbstractEntity.CHILD_REMOVED;
 import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_ADDED;
 import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_CHANGED;
 import static brooklyn.entity.basic.AbstractEntity.EFFECTOR_REMOVED;
+import static brooklyn.entity.basic.AbstractEntity.GROUP_ADDED;
+import static brooklyn.entity.basic.AbstractEntity.GROUP_REMOVED;
 import static brooklyn.entity.basic.AbstractEntity.LOCATION_ADDED;
 import static brooklyn.entity.basic.AbstractEntity.LOCATION_REMOVED;
 import static brooklyn.entity.basic.AbstractEntity.POLICY_ADDED;
@@ -72,7 +74,8 @@ public class EntityTypeTest extends BrooklynAppUnitTestSupport {
             EFFECTOR_ADDED, EFFECTOR_REMOVED, EFFECTOR_CHANGED,
             POLICY_ADDED, POLICY_REMOVED,
             CHILD_ADDED, CHILD_REMOVED,
-            LOCATION_ADDED, LOCATION_REMOVED); 
+            LOCATION_ADDED, LOCATION_REMOVED,
+            GROUP_ADDED, GROUP_REMOVED); 
 
     public static class EmptyEntityForTesting extends AbstractEntity {}
     

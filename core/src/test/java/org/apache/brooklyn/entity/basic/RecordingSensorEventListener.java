@@ -63,7 +63,7 @@ public class RecordingSensorEventListener<T> implements SensorEventListener<T>, 
     /**
      * @return An immutable iterable of the recorded events.
      */
-    public Iterable<SensorEvent<T>> getEvents() {
+    public List<SensorEvent<T>> getEvents() {
         return ImmutableList.copyOf(events);
     }
 
