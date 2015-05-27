@@ -72,11 +72,11 @@ public interface NginxController extends AbstractController, HasShortName {
 
     @SetFromFlag("stickyVersion")
     ConfigKey<String> STICKY_VERSION = ConfigKeys.newStringConfigKey(
-            "nginx.sticky.version", "Version of ngnix-sticky-module to be installed, if required", "1.0");
+            "nginx.sticky.version", "Version of ngnix-sticky-module to be installed, if required", "1.2.5");
 
     @SetFromFlag("pcreVersion")
     ConfigKey<String> PCRE_VERSION = ConfigKeys.newStringConfigKey(
-            "pcre.version", "Version of PCRE to be installed, if required", "8.33");
+            "pcre.version", "Version of PCRE to be installed, if required", "8.37");
 
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
@@ -85,7 +85,7 @@ public interface NginxController extends AbstractController, HasShortName {
     @SetFromFlag("downloadAddonUrls")
     BasicAttributeSensorAndConfigKey<Map<String,String>> DOWNLOAD_ADDON_URLS = new BasicAttributeSensorAndConfigKey<Map<String,String>>(
             SoftwareProcess.DOWNLOAD_ADDON_URLS, ImmutableMap.of(
-                    "stickymodule", "http://nginx-sticky-module.googlecode.com/files/nginx-sticky-module-${addonversion}.tar.gz",
+                    "stickymodule", "https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/get/${addonversion}.tar.gz",
                     "pcre", "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${addonversion}.tar.gz"));
 
     @SetFromFlag("sticky")
