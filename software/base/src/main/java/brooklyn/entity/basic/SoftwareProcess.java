@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.basic;
 
+import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
@@ -34,6 +35,7 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 
 public interface SoftwareProcess extends Entity, Startable {
@@ -42,6 +44,13 @@ public interface SoftwareProcess extends Entity, Startable {
     AttributeSensor<String> ADDRESS = Attributes.ADDRESS;
     AttributeSensor<String> SUBNET_HOSTNAME = Attributes.SUBNET_HOSTNAME;
     AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
+
+    @SuppressWarnings("serial")
+    ConfigKey<Collection<Integer>> REQUIRED_OPEN_LOGIN_PORTS = ConfigKeys.newConfigKey(
+            new TypeToken<Collection<Integer>>() {},
+            "requiredOpenLoginPorts",
+            "The port(s) to be opened, to allow login",
+            ImmutableSet.of(22));
 
     @SetFromFlag("startTimeout")
     ConfigKey<Duration> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
@@ -112,6 +121,31 @@ public interface SoftwareProcess extends Entity, Startable {
     AttributeSensorAndConfigKey<String,String> RUN_DIR = BrooklynConfigKeys.RUN_DIR;
     @Deprecated
     ConfigKey<String> SUGGESTED_RUN_DIR = BrooklynConfigKeys.SUGGESTED_RUN_DIR;
+
+    /**
+     * Files to be copied to the server before pre-install.
+     * <p>
+     * Map of {@code classpath://foo/file.txt} (or other url) source to destination path,
+     * as {@code subdir/file} relative to installation directory or {@code /absolute/path/to/file}.
+     *
+     * @see #PRE_INSTALL_TEMPLATES
+     */
+    @Beta
+    @SuppressWarnings("serial")
+    @SetFromFlag("preInstallFiles")
+    ConfigKey<Map<String, String>> PRE_INSTALL_FILES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "files.preinstall", "Mapping of files, to be copied before install, to destination name relative to installDir");
+
+    /**
+     * Templates to be filled in and then copied to the server before install.
+     *
+     * @see #PRE_INSTALL_FILES
+     */
+    @Beta
+    @SuppressWarnings("serial")
+    @SetFromFlag("preInstallTemplates")
+    ConfigKey<Map<String, String>> PRE_INSTALL_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
+            "templates.preinstall", "Mapping of templates, to be filled in and copied before pre-install, to destination name relative to installDir");
 
     /**
      * Files to be copied to the server before install.

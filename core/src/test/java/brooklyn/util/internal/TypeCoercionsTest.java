@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.ClassCoercionException;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.StringPredicates;
@@ -186,6 +188,21 @@ public class TypeCoercionsTest {
     }
     
     @Test
+    public void testIterableToArrayCoercion() {
+        String[] s = TypeCoercions.coerce(ImmutableList.of("a", "b"), String[].class);
+        Assert.assertTrue(Arrays.equals(s, new String[] {"a", "b"}), "result="+Arrays.toString(s));
+        
+        Integer[] i = TypeCoercions.coerce(ImmutableList.of(1, 2), Integer[].class);
+        Assert.assertTrue(Arrays.equals(i, new Integer[] {1, 2}), "result="+Arrays.toString(i));
+        
+        int[] i2 = TypeCoercions.coerce(ImmutableList.of(1, 2), int[].class);
+        Assert.assertTrue(Arrays.equals(i2, new int[] {1, 2}), "result="+Arrays.toString(i2));
+        
+        int[] i3 = TypeCoercions.coerce(MutableSet.of("1", 2), int[].class);
+        Assert.assertTrue(Arrays.equals(i3, new int[] {1, 2}), "result="+Arrays.toString(i3));
+    }
+
+    @Test
     public void testListEntryCoercion() {
         List<?> s = TypeCoercions.coerce(ImmutableList.of("java.lang.Integer", "java.lang.Double"), new TypeToken<List<Class<?>>>() { });
         Assert.assertEquals(s, ImmutableList.of(Integer.class, Double.class));
@@ -202,7 +219,7 @@ public class TypeCoercionsTest {
         Collection<?> s = TypeCoercions.coerce(ImmutableList.of("java.lang.Integer", "java.lang.Double"), new TypeToken<Collection<Class<?>>>() { });
         Assert.assertEquals(s, ImmutableList.of(Integer.class, Double.class));
     }
-    
+
     @Test
     public void testMapValueCoercion() {
         Map<?,?> s = TypeCoercions.coerce(ImmutableMap.of("int", "java.lang.Integer", "double", "java.lang.Double"), new TypeToken<Map<String, Class<?>>>() { });

@@ -22,10 +22,7 @@ import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,7 +39,6 @@ import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;
@@ -50,7 +46,6 @@ import brooklyn.util.internal.ssh.sshj.SshjTool;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.stream.KnownSizeInputStream;
-import brooklyn.util.stream.ReaderInputStream;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
@@ -61,7 +56,6 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -112,10 +106,6 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return (SshMachineLocation) super.getLocation();
     }
 
-    public String getVersion() {
-        return getEntity().getConfig(SoftwareProcess.SUGGESTED_VERSION);
-    }
-
     /**
      * Name to be used in the local repo, when looking for the download file.
      */
@@ -129,28 +119,6 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      */
     public String getDownloadFileSuffix() {
         return "tar.gz";
-    }
-    
-    /**
-     * @deprecated since 0.5.0; instead rely on {@link DownloadResolverManager} to include local-repo, such as:
-     * 
-     * <pre>
-     * {@code
-     * DownloadResolver resolver = Entities.newDownloader(this);
-     * List<String> urls = resolver.getTargets();
-     * }
-     * </pre>
-     */
-    protected String getEntityVersionLabel() {
-        return getEntityVersionLabel("_");
-    }
-    
-    /**
-     * @deprecated since 0.5.0; instead rely on {@link DownloadResolverManager} to include local-repo
-     */
-    protected String getEntityVersionLabel(String separator) {
-        return elvis(entity.getEntityType().getSimpleName(),  
-                entity.getClass().getName())+(getVersion() != null ? separator+getVersion() : "");
     }
     
     protected void setInstallDir(String installDir) {
@@ -324,94 +292,16 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return getMachine().execScript(flags, summaryForLogging, script, environment);
     }
 
-    /**
-     * Files and templates to be copied to the server <em>before</em> installation. This allows the {@link #install()}
-     * process to have access to all required resources. 
-     * <p>
-     * Will be prefixed with the entity's {@link #getInstallDir() install directory} if relative.
-     *
-     * @see SoftwareProcess#INSTALL_FILES
-     * @see SoftwareProcess#INSTALL_TEMPLATES
-     * @see #copyRuntimeResources()
-     */
     @Override
     public void copyInstallResources() {
-        getLocation().acquireMutex("installing "+elvis(entity,this),  "installation lock at host for files and templates");
+        getLocation().acquireMutex("installing " + elvis(entity, this), "installation lock at host for files and templates");
         try {
-            // Ensure environment variables are not looked up here, otherwise sub-classes might
-            // lookup port numbers and fail with ugly error if port is not set; better to wait
-            // until in Entity's code (e.g. customize) where such checks are done explicitly.
-            DynamicTasks.queue(SshEffectorTasks.ssh("mkdir -p " + getInstallDir()).summary("create install directory")
-                .requiringExitCodeZero()).get();
-
-            // TODO see comment in copyResource, that should be queued as a task like the above
-            // (better reporting in activities console)
-            
-            Map<String, String> installFiles = entity.getConfig(SoftwareProcess.INSTALL_FILES);
-            if (installFiles != null && installFiles.size() > 0) {
-                for (String source : installFiles.keySet()) {
-                    String target = installFiles.get(source);
-                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
-                    copyResource(source, destination, true);
-                }
-            }
-
-            Map<String, String> installTemplates = entity.getConfig(SoftwareProcess.INSTALL_TEMPLATES);
-            if (installTemplates != null && installTemplates.size() > 0) {
-                for (String source : installTemplates.keySet()) {
-                    String target = installTemplates.get(source);
-                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
-                    copyTemplate(source, destination, true, MutableMap.<String, Object>of());
-                }
-            }
+            super.copyInstallResources();
         } catch (Exception e) {
             log.warn("Error copying install resources", e);
             throw Exceptions.propagate(e);
         } finally {
-            getLocation().releaseMutex("installing "+elvis(entity,this));
-        }
-    }
-
-    /**
-     * Files and templates to be copied to the server <em>after</em> customisation. This allows overwriting of
-     * existing files such as entity configuration which may be copied from the installation directory
-     * during the {@link #customize()} process.
-     * <p>
-     * Will be prefixed with the entity's {@link #getRunDir() run directory} if relative.
-     *
-     * @see SoftwareProcess#RUNTIME_FILES
-     * @see SoftwareProcess#RUNTIME_TEMPLATES
-     * @see #copyInstallResources()
-     */
-    @Override
-    public void copyRuntimeResources() {
-        try {
-            // Ensure environment variables are not looked up here, otherwise sub-classes might
-            // lookup port numbers and fail with ugly error if port is not set. It could also
-            // cause us to block for attribute ready earlier than we need.
-            DynamicTasks.queue(SshEffectorTasks.ssh("mkdir -p " + getRunDir()).summary("create run directory")
-                .requiringExitCodeZero()).get();
-
-            Map<String, String> runtimeFiles = entity.getConfig(SoftwareProcess.RUNTIME_FILES);
-            if (runtimeFiles != null && runtimeFiles.size() > 0) {
-                for (String source : runtimeFiles.keySet()) {
-                    String target = runtimeFiles.get(source);
-                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getRunDir(), target);
-                    copyResource(source, destination, true);
-                }
-            }
-
-            Map<String, String> runtimeTemplates = entity.getConfig(SoftwareProcess.RUNTIME_TEMPLATES);
-            if (runtimeTemplates != null && runtimeTemplates.size() > 0) {
-                for (String source : runtimeTemplates.keySet()) {
-                    String target = runtimeTemplates.get(source);
-                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getRunDir(), target);
-                    copyTemplate(source, destination, true, MutableMap.<String, Object>of());
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Error copying runtime resources", e);
-            throw Exceptions.propagate(e);
+            getLocation().releaseMutex("installing " + elvis(entity, this));
         }
     }
 
@@ -443,62 +333,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return Strings.toStringMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT));
     }
 
-    /**
-     * @param template File to template and copy.
-     * @param target Destination on server.
-     * @return The exit code the SSH command run.
-     */
-    public int copyTemplate(File template, String target) {
-        return copyTemplate(template.toURI().toASCIIString(), target);
-    }
 
-    /**
-     * @param template URI of file to template and copy, e.g. file://.., http://.., classpath://..
-     * @param target Destination on server.
-     * @return The exit code of the SSH command run.
-     */
-    public int copyTemplate(String template, String target) {
-        return copyTemplate(template, target, false, ImmutableMap.<String, String>of());
-    }
-
-    /**
-     * @param template URI of file to template and copy, e.g. file://.., http://.., classpath://..
-     * @param target Destination on server.
-     * @param extraSubstitutions Extra substitutions for the templater to use, for example
-     *               "foo" -> "bar", and in a template ${foo}.
-     * @return The exit code of the SSH command run.
-     */
-    public int copyTemplate(String template, String target, boolean createParent, Map<String, ?> extraSubstitutions) {
-        String data = processTemplate(template, extraSubstitutions);
-        return copyResource(MutableMap.<Object,Object>of(), new StringReader(data), target, createParent);
-    }
-
-    /**
-     * @param file File to copy.
-     * @param target Destination on server.
-     * @return The exit code the SSH command run.
-     */
-    public int copyResource(File file, String target) {
-        return copyResource(file.toURI().toASCIIString(), target);
-    }
-
-    /**
-     * @param resource URI of file to copy, e.g. file://.., http://.., classpath://..
-     * @param target Destination on server.
-     * @return The exit code of the SSH command run
-     */
-    public int copyResource(String resource, String target) {
-        return copyResource(MutableMap.of(), resource, target);
-    }
-
-    public int copyResource(String resource, String target, boolean createParentDir) {
-        return copyResource(MutableMap.of(), resource, target, createParentDir);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public int copyResource(Map sshFlags, String source, String target) {
-        return copyResource(sshFlags, source, target, false);
-    }
     
     /**
      * @param sshFlags Extra flags to be used when making an SSH connection to the entity's machine.
@@ -539,26 +374,6 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         return result;
     }
 
-    /**
-     * @see #copyResource(Map, InputStream, String)
-     */
-    public int copyResource(Reader source, String target) {
-        return copyResource(MutableMap.of(), source, target, false);
-    }
-
-    /**
-     * @see #copyResource(Map, InputStream, String)
-     */
-    public int copyResource(Map<Object,Object> sshFlags, Reader source, String target, boolean createParent) {
-        return copyResource(sshFlags, new ReaderInputStream(source), target, createParent);
-    }
-
-    /**
-     * @see #copyResource(Map, InputStream, String)
-     */
-    public int copyResource(InputStream source, String target) {
-        return copyResource(MutableMap.of(), source, target, false);
-    }
     
     /**
      * Input stream will be closed automatically.
@@ -835,6 +650,12 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
 
         return s;
+    }
+
+    @Override
+    protected void createDirectory(String directoryName, String summaryForLogging) {
+        DynamicTasks.queue(SshEffectorTasks.ssh("mkdir -p " + directoryName).summary(summaryForLogging)
+                .requiringExitCodeZero()).get();
     }
 
     public Set<Integer> getPortsUsed() {

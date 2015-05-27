@@ -438,15 +438,16 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     /** returns the ports that this entity wants to use;
-     * default implementation returns 22 plus first value for each PortAttributeSensorAndConfigKey config key PortRange
-     * plus any ports defined with a config keys ending in .port 
+     * default implementation returns {@link SoftwareProcess#REQUIRED_OPEN_LOGIN_PORTS} plus first value 
+     * for each {@link PortAttributeSensorAndConfigKey} config key {@link PortRange}
+     * plus any ports defined with a config keys ending in {@code .port}.
      */
     protected Collection<Integer> getRequiredOpenPorts() {
-        Set<Integer> ports = MutableSet.of(22);
+        Set<Integer> ports = MutableSet.copyOf(getConfig(REQUIRED_OPEN_LOGIN_PORTS));
         Map<ConfigKey<?>, ?> allConfig = config().getBag().getAllConfigAsConfigKeyMap();
         Set<ConfigKey<?>> configKeys = Sets.newHashSet(allConfig.keySet());
         configKeys.addAll(getEntityType().getConfigKeys());
-        
+
         for (ConfigKey<?> k: configKeys) {
             if (PortRange.class.isAssignableFrom(k.getType())) {
                 PortRange p = (PortRange)getConfig(k);

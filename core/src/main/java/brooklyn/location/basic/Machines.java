@@ -95,6 +95,10 @@ public class Machines {
         return findUniqueElement(locations, SshMachineLocation.class);
     }
 
+    public static Maybe<WinRmMachineLocation> findUniqueWinRmMachineLocation(Iterable<? extends Location> locations) {
+        return findUniqueElement(locations, WinRmMachineLocation.class);
+    }
+
     public static Maybe<String> findSubnetHostname(Iterable<? extends Location> ll) {
         Maybe<MachineLocation> l = findUniqueMachineLocation(ll);
         if (!l.isPresent()) {
@@ -169,5 +173,5 @@ public class Machines {
         }
         return false;
     }
-    
+
 }
