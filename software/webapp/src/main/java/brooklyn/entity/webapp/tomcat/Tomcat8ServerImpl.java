@@ -18,12 +18,9 @@
  */
 package brooklyn.entity.webapp.tomcat;
 
-import brooklyn.location.basic.SshMachineLocation;
-
-@Deprecated
-public class Tomcat7SshDriver extends TomcatSshDriver implements Tomcat7Driver {
-
-   public Tomcat7SshDriver(TomcatServerImpl entity, SshMachineLocation machine) {
-       super(entity, machine);
-   }
+/**
+ * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
+ */
+public class Tomcat8ServerImpl extends TomcatServerImpl implements Tomcat8Server {
 }
+
