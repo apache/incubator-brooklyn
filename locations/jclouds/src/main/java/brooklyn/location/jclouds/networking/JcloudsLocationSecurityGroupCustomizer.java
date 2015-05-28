@@ -18,12 +18,14 @@
  */
 package brooklyn.location.jclouds.networking;
 
-import java.util.Collection;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import org.jclouds.aws.AWSResponseException;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.SecurityGroup;
 import org.jclouds.compute.domain.Template;
@@ -39,6 +41,8 @@ import brooklyn.location.geo.LocalhostExternalIpLoader;
 import brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import brooklyn.management.ManagementContext;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
@@ -47,22 +51,25 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 /**
  * Configures custom security groups on Jclouds locations.
- * 
- * TODO this should allow {@link SecurityGroupDefinition} instances to be applied
+ *
+ * @since 0.7.0
  */
 @Beta
-public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLocationCustomizer {
+public class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLocationCustomizer {
 
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationSecurityGroupCustomizer.class);
 
@@ -77,19 +84,31 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
 
     /** Caches the base security group that should be shared between all instances in the same Jclouds location */
     private final Cache<Location, SecurityGroup> sharedGroupCache = CacheBuilder.newBuilder().build();
+
     /** Caches security groups unique to instances */
     private final Cache<String, SecurityGroup> uniqueGroupCache = CacheBuilder.newBuilder().build();
 
+    /** The context for this location customizer. */
     private final String applicationId;
-    private final Supplier<Cidr> brooklynCidrSupplier;
 
-    JcloudsLocationSecurityGroupCustomizer(String applicationId) {
-        this(applicationId, new LocalhostExternalIpCidrSupplier());
+    /** The CIDR for addresses that may SSH to machines. */
+    private Supplier<Cidr> sshCidrSupplier;
+
+    /**
+     * A predicate indicating whether the customiser can retry a request to add a security group
+     * or a rule after an throwable is thrown.
+     */
+    private Predicate<Exception> isExceptionRetryable = Predicates.alwaysFalse();
+
+    protected JcloudsLocationSecurityGroupCustomizer(String applicationId) {
+        // Would be better to restrict with something like LocalhostExternalIpCidrSupplier, but
+        // we risk making machines inaccessible from Brooklyn when HA fails over.
+        this(applicationId, Suppliers.ofInstance(new Cidr("0.0.0.0/0")));
     }
 
-    JcloudsLocationSecurityGroupCustomizer(String applicationId, Supplier<Cidr> cidrSupplier) {
+    protected JcloudsLocationSecurityGroupCustomizer(String applicationId, Supplier<Cidr> sshCidrSupplier) {
         this.applicationId = applicationId;
-        this.brooklynCidrSupplier = cidrSupplier;
+        this.sshCidrSupplier = sshCidrSupplier;
     }
 
     /**
@@ -112,34 +131,61 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
         return getInstance(entity.getApplicationId());
     }
 
-    /** @see #addPermissionsToLocation(brooklyn.location.jclouds.JcloudsSshMachineLocation, java.util.Collection)  */
-    public void addPermissionsToLocation(final JcloudsSshMachineLocation location, IpPermission... permissions) {
-        addPermissionsToLocation(location, ImmutableList.copyOf(permissions));
+    /**
+     * @param predicate
+     *          A predicate whose return value indicates whether a request to add a security group
+     *          or permission may be retried after its input {@link Exception} was thrown.
+     * @return this
+     */
+    public JcloudsLocationSecurityGroupCustomizer setRetryExceptionPredicate(Predicate<Exception> predicate) {
+        this.isExceptionRetryable = checkNotNull(predicate, "predicate");
+        return this;
     }
 
     /**
+     * @param cidrSupplier A supplier returning a CIDR for hosts that are allowed to SSH to locations.
+     */
+    public JcloudsLocationSecurityGroupCustomizer setSshCidrSupplier(Supplier<Cidr> cidrSupplier) {
+        this.sshCidrSupplier = checkNotNull(cidrSupplier, "cidrSupplier");
+        return this;
+    }
+
+    /** @see #addPermissionsToLocation(brooklyn.location.jclouds.JcloudsSshMachineLocation, java.lang.Iterable) */
+    public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsSshMachineLocation location, IpPermission... permissions) {
+        addPermissionsToLocation(location, ImmutableList.copyOf(permissions));
+        return this;
+    }
+
+    /** @see #addPermissionsToLocation(brooklyn.location.jclouds.JcloudsSshMachineLocation, java.lang.Iterable) */
+    public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsSshMachineLocation location, SecurityGroupDefinition securityGroupDefinition) {
+        addPermissionsToLocation(location, securityGroupDefinition.getPermissions());
+        return this;
+    }
+    
+    /**
      * Applies the given security group permissions to the given location.
-     * <p/>
+     * <p>
      * Takes no action if the location's compute service does not have a security group extension.
      * @param permissions The set of permissions to be applied to the location
      * @param location Location to gain permissions
      */
-    public void addPermissionsToLocation(final JcloudsSshMachineLocation location, final Collection<IpPermission> permissions) {
+    public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsSshMachineLocation location, final Iterable<IpPermission> permissions) {
         ComputeService computeService = location.getParent().getComputeService();
         String nodeId = location.getNode().getId();
         addPermissionsToLocation(permissions, nodeId, computeService);
+        return this;
     }
 
     /**
      * Applies the given security group permissions to the given node with the given compute service.
-     * <p/>
+     * <p>
      * Takes no action if the compute service does not have a security group extension.
      * @param permissions The set of permissions to be applied to the node
      * @param nodeId The id of the node to update
      * @param computeService The compute service to use to apply the changes
      */
     @VisibleForTesting
-    void addPermissionsToLocation(Collection<IpPermission> permissions, final String nodeId, ComputeService computeService) {
+    void addPermissionsToLocation(Iterable<IpPermission> permissions, final String nodeId, ComputeService computeService) {
         if (!computeService.getSecurityGroupExtension().isPresent()) {
             LOG.warn("Security group extension for {} absent; cannot update node {} with {}",
                     new Object[] {computeService, nodeId, permissions});
@@ -221,7 +267,7 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
      * SSH access on port 22 and allows communication on all ports between machines in
      * the same group. Security groups are reused when templates have equal
      * {@link org.jclouds.compute.domain.Template#getLocation locations}.
-     * <p/>
+     * <p>
      * This method is called by Brooklyn when obtaining machines, as part of the
      * {@link brooklyn.location.jclouds.JcloudsLocationCustomizer} contract. It
      * should not be called from anywhere else.
@@ -279,7 +325,8 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
         final String groupName = getNameForSharedSecurityGroup();
         // Could sort-and-search if straight search is too expensive
         Optional<SecurityGroup> shared = Iterables.tryFind(securityApi.listSecurityGroupsInLocation(location), new Predicate<SecurityGroup>() {
-            @Override public boolean apply(final SecurityGroup input) {
+            @Override
+            public boolean apply(final SecurityGroup input) {
                 // endsWith because Jclouds prepends 'jclouds#' to security group names.
                 return input.getName().endsWith(groupName);
             }
@@ -299,7 +346,7 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
      * Creates a security group with rules to:
      * <ul>
      *     <li>Allow SSH access on port 22 from the world</li>
-     *     <li>Allow all communication between machines in the same group</li>
+     *     <li>Allow TCP, UDP and ICMP communication between machines in the same group</li>
      * </ul>
      * @param groupName The name of the security group to create
      * @param location The location in which the security group will be created
@@ -318,31 +365,44 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
                 .toPort(65535);
         addPermission(allWithinGroup.ipProtocol(IpProtocol.TCP).build(), group, securityApi);
         addPermission(allWithinGroup.ipProtocol(IpProtocol.UDP).build(), group, securityApi);
+        addPermission(allWithinGroup.ipProtocol(IpProtocol.ICMP).fromPort(-1).toPort(-1).build(), group, securityApi);
 
         IpPermission sshPermission = IpPermission.builder()
                 .fromPort(22)
                 .toPort(22)
                 .ipProtocol(IpProtocol.TCP)
-                .cidrBlock(brooklynCidrSupplier.get().toString())
+                .cidrBlock(getBrooklynCidrBlock())
                 .build();
         addPermission(sshPermission, group, securityApi);
 
         return group;
     }
 
-    private SecurityGroup addSecurityGroupInLocation(String groupName, Location location, SecurityGroupExtension securityApi) {
+    protected SecurityGroup addSecurityGroupInLocation(final String groupName, final Location location, final SecurityGroupExtension securityApi) {
         LOG.debug("Creating security group {} in {}", groupName, location);
-        return securityApi.createSecurityGroup(groupName, location);
+        Callable<SecurityGroup> callable = new Callable<SecurityGroup>() {
+            @Override
+            public SecurityGroup call() throws Exception {
+                return securityApi.createSecurityGroup(groupName, location);
+            }
+        };
+        return runOperationWithRetry(callable);
     }
 
-    private SecurityGroup addPermission(IpPermission permission, SecurityGroup group, SecurityGroupExtension securityApi) {
+    protected SecurityGroup addPermission(final IpPermission permission, final SecurityGroup group, final SecurityGroupExtension securityApi) {
         LOG.debug("Adding permission to security group {}: {}", group.getName(), permission);
-        return securityApi.addIpPermission(permission, group);
+        Callable<SecurityGroup> callable = new Callable<SecurityGroup>() {
+            @Override
+            public SecurityGroup call() throws Exception {
+                return securityApi.addIpPermission(permission, group);
+            }
+        };
+        return runOperationWithRetry(callable);
     }
 
     /** @return the CIDR block used to configure Brooklyn's in security groups */
     public String getBrooklynCidrBlock() {
-        return brooklynCidrSupplier.get().toString();
+        return sshCidrSupplier.get().toString();
     }
 
     /**
@@ -363,6 +423,62 @@ public final class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLo
         LOG.info("Clearing security group caches");
         sharedGroupCache.invalidateAll();
         uniqueGroupCache.invalidateAll();
+    }
+
+    /**
+     * Runs the given callable. Repeats until the operation succeeds or {@link #isExceptionRetryable} indicates
+     * that the request cannot be retried.
+     */
+    protected <T> T runOperationWithRetry(Callable<T> operation) {
+        int backoff = 64;
+        Exception lastException = null;
+        for (int retries = 0; retries < 100; retries++) {
+            try {
+                return operation.call();
+            } catch (Exception e) {
+                lastException = e;
+                if (isExceptionRetryable.apply(e)) {
+                    LOG.debug("Attempt #{} failed to add security group: {}", retries + 1, e.getMessage());
+                    try {
+                        Thread.sleep(backoff);
+                    } catch (InterruptedException e1) {
+                        throw Exceptions.propagate(e1);
+                    }
+                    backoff = backoff << 1;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        throw new RuntimeException("Unable to add security group rule; repeated errors from provider", lastException);
+    }
+
+    /**
+     * @return
+     *      A predicate that is true if an exception contains an {@link org.jclouds.aws.AWSResponseException}
+     *      whose error code is either <code>InvalidGroup.InUse</code>, <code>DependencyViolation</code> or
+     *      <code>RequestLimitExceeded</code>.
+     */
+    public static Predicate<Exception> newAwsExceptionRetryPredicate() {
+        return new AwsExceptionRetryPredicate();
+    }
+
+    private static class AwsExceptionRetryPredicate implements Predicate<Exception> {
+        // Error reference: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html
+        private static final Set<String> AWS_ERRORS_TO_RETRY = ImmutableSet.of(
+                "InvalidGroup.InUse", "DependencyViolation", "RequestLimitExceeded");
+
+        @Override
+        public boolean apply(Exception input) {
+            @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+            AWSResponseException exception = Exceptions.getFirstThrowableOfType(input, AWSResponseException.class);
+            if (exception != null) {
+                String code = exception.getError().getCode();
+                return AWS_ERRORS_TO_RETRY.contains(code);
+            }
+            return false;
+        }
     }
 
     /**

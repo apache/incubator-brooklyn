@@ -29,10 +29,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.Collections;
 
+import org.jclouds.aws.AWSResponseException;
+import org.jclouds.aws.domain.AWSError;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.SecurityGroup;
 import org.jclouds.compute.domain.Template;
@@ -44,14 +47,15 @@ import org.jclouds.net.domain.IpProtocol;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Cidr;
-
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
+import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Cidr;
 
 public class JcloudsLocationSecurityGroupCustomizerTest {
 
@@ -100,9 +104,9 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
         customizer.customize(jcloudsLocationB, computeService, template);
 
         // One group with three permissions shared by both locations.
-        // Expect TCP+UDP between members of group and SSH to Brooklyn
+        // Expect TCP, UDP and ICMP between members of group and SSH to Brooklyn
         verify(securityApi).createSecurityGroup(anyString(), eq(location));
-        verify(securityApi, times(3)).addIpPermission(any(IpPermission.class), eq(group));
+        verify(securityApi, times(4)).addIpPermission(any(IpPermission.class), eq(group));
         // New groups set on options
         verify(templateOptions, times(2)).securityGroups(anyString());
     }
@@ -183,6 +187,86 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
         verify(securityApi, never()).addIpPermission(any(IpPermission.class), eq(sharedGroup));
     }
 
+    @Test
+    public void testAddRuleNotRetriedByDefault() {
+        IpPermission ssh = newPermission(22);
+        String nodeId = "node";
+        SecurityGroup sharedGroup = newGroup(customizer.getNameForSharedSecurityGroup());
+        SecurityGroup uniqueGroup = newGroup("unique");
+        when(securityApi.listSecurityGroupsForNode(nodeId)).thenReturn(ImmutableSet.of(sharedGroup, uniqueGroup));
+        when(securityApi.addIpPermission(eq(ssh), eq(uniqueGroup)))
+                .thenThrow(new RuntimeException("exception creating " + ssh));
+
+        try {
+            customizer.addPermissionsToLocation(ImmutableList.of(ssh), nodeId, computeService);
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("repeated errors from provider"), "message=" + e.getMessage());
+        }
+        verify(securityApi, never()).createSecurityGroup(anyString(), any(Location.class));
+        verify(securityApi, times(1)).addIpPermission(ssh, uniqueGroup);
+    }
+
+    @Test
+    public void testCustomExceptionRetryablePredicate() {
+        final String message = "testCustomExceptionRetryablePredicate";
+        Predicate<Exception> messageChecker = new Predicate<Exception>() {
+            @Override
+            public boolean apply(Exception input) {
+                Throwable t = input;
+                while (t != null) {
+                    if (t.getMessage().contains(message)) {
+                        return true;
+                    } else {
+                        t = t.getCause();
+                    }
+                }
+                return false;
+            }
+        };
+        customizer.setRetryExceptionPredicate(messageChecker);
+
+        IpPermission ssh = newPermission(22);
+        String nodeId = "node";
+        SecurityGroup sharedGroup = newGroup(customizer.getNameForSharedSecurityGroup());
+        SecurityGroup uniqueGroup = newGroup("unique");
+        when(securityApi.listSecurityGroupsForNode(nodeId)).thenReturn(ImmutableSet.of(sharedGroup, uniqueGroup));
+        when(securityApi.addIpPermission(eq(ssh), eq(uniqueGroup)))
+                .thenThrow(new RuntimeException(new Exception(message)))
+                .thenThrow(new RuntimeException(new Exception(message)))
+                .thenReturn(sharedGroup);
+
+        customizer.addPermissionsToLocation(ImmutableList.of(ssh), nodeId, computeService);
+
+        verify(securityApi, never()).createSecurityGroup(anyString(), any(Location.class));
+        verify(securityApi, times(3)).addIpPermission(ssh, uniqueGroup);
+    }
+
+    @Test
+    public void testAddRuleRetriedOnAwsFailure() {
+        IpPermission ssh = newPermission(22);
+        String nodeId = "nodeId";
+        SecurityGroup sharedGroup = newGroup(customizer.getNameForSharedSecurityGroup());
+        SecurityGroup uniqueGroup = newGroup("unique");
+        customizer.setRetryExceptionPredicate(JcloudsLocationSecurityGroupCustomizer.newAwsExceptionRetryPredicate());
+        when(securityApi.listSecurityGroupsForNode(nodeId)).thenReturn(ImmutableSet.of(sharedGroup, uniqueGroup));
+        when(securityApi.addIpPermission(any(IpPermission.class), eq(uniqueGroup)))
+                .thenThrow(newAwsResponseExceptionWithCode("InvalidGroup.InUse"))
+                .thenThrow(newAwsResponseExceptionWithCode("DependencyViolation"))
+                .thenThrow(newAwsResponseExceptionWithCode("RequestLimitExceeded"))
+                .thenThrow(newAwsResponseExceptionWithCode("Blocked"))
+                .thenReturn(sharedGroup);
+
+        try {
+            customizer.addPermissionsToLocation(ImmutableList.of(ssh), nodeId, computeService);
+        } catch (Exception e) {
+            String expected = "repeated errors from provider";
+            assertTrue(e.getMessage().contains(expected), "expected exception message to contain " + expected + ", was: " + e.getMessage());
+        }
+
+        verify(securityApi, never()).createSecurityGroup(anyString(), any(Location.class));
+        verify(securityApi, times(4)).addIpPermission(ssh, uniqueGroup);
+    }
+
     private SecurityGroup newGroup(String id) {
         URI uri = null;
         String ownerId = null;
@@ -205,5 +289,16 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
                 .toPort(port)
                 .cidrBlock("0.0.0.0/0")
                 .build();
+    }
+
+    private AWSError newAwsErrorWithCode(String code) {
+        AWSError e = new AWSError();
+        e.setCode(code);
+        return e;
+    }
+
+    private Exception newAwsResponseExceptionWithCode(String code) {
+        AWSResponseException e = new AWSResponseException("irrelevant message", null, null, newAwsErrorWithCode(code));
+        return new RuntimeException(e);
     }
 }
