@@ -27,7 +27,6 @@ import java.util.Collection;
 import javax.ws.rs.core.Response;
 
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -35,7 +34,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.StartableApplication;
@@ -87,16 +85,8 @@ public class ApplicationResourceIntegrationTest {
 
     @BeforeClass(groups = "Integration")
     public void setUp() throws Exception {
-        WebAppContext context;
-
-        // running in source mode; need to use special classpath        
-        context = new WebAppContext("src/test/webapp", "/");
-        context.setExtraClasspath("./target/test-rest-server/");
-        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, getManagementContext());
-
         Server server = BrooklynRestApiLauncher.launcher()
-                .managementContext(manager)
-                .customContext(context)
+                .managementContext(getManagementContext())
                 .start();
 
         api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/");
@@ -179,13 +169,12 @@ public class ApplicationResourceIntegrationTest {
                     } catch (Exception failure) {
                         // expected -- it will be a ClientResponseFailure but that class is deprecated so catching all
                         // and asserting contains the word 404
-                        Assert.assertTrue(failure.toString().indexOf("404") >= 0);
+                        Assert.assertTrue(failure.toString().indexOf("404") >= 0, "wrong failure, got: "+failure);
                     }
                 }});
         } catch (Exception failure) {
-            // expected -- it will be a ClientResponseFailure but that class is deprecated so catching all
-            // and asserting contains the word 404
-            Assert.assertTrue(failure.toString().indexOf("404") >= 0);
+            // expected -- as above
+            Assert.assertTrue(failure.toString().indexOf("404") >= 0, "wrong failure, got: "+failure);
         }
 
         assertEquals(getManagementContext().getApplications().size(), size - 1);

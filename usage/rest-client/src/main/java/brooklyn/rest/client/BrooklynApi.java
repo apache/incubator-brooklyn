@@ -20,6 +20,10 @@ package brooklyn.rest.client;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -52,6 +56,8 @@ import brooklyn.rest.api.SensorApi;
 import brooklyn.rest.api.ServerApi;
 import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.http.BuiltResponsePreservingError;
 
 /**
  * @author Adam Lowe
@@ -105,8 +111,29 @@ public class BrooklynApi {
         this.clientExecutor = checkNotNull(clientExecutor, "clientExecutor");
     }
 
+    @SuppressWarnings("unchecked")
     private <T> T proxy(Class<T> clazz) {
-        return ProxyFactory.create(clazz, target, clientExecutor);
+        final T result0 = ProxyFactory.create(clazz, target, clientExecutor);
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                Object result1;
+                try {
+                    result1 = method.invoke(result0, args);
+                } catch (Throwable e) {
+                    if (e instanceof InvocationTargetException) {
+                        // throw the original exception
+                        e = ((InvocationTargetException)e).getTargetException();
+                    }
+                    throw Exceptions.propagate(e);
+                }
+                if (result1 instanceof Response) {
+                    // wrap the original response so it self-closes
+                    result1 = BuiltResponsePreservingError.copyResponseAndClose((Response) result1);
+                }
+                return result1;
+            }
+        });
     }
 
     public ActivityApi getActivityApi() {
@@ -169,21 +196,19 @@ public class BrooklynApi {
         return proxy(AccessApi.class);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> T getEntity(Response response, Class<T> type) {
         if (!(response instanceof ClientResponse)) {
             throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
         }
-        ClientResponse clientResponse = (ClientResponse) response;
+        ClientResponse<?> clientResponse = (ClientResponse<?>) response;
         return (T) clientResponse.getEntity(type);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static <T> T getEntityGeneric(Response response, GenericType type) {
+    public static <T> T getEntityGeneric(Response response, GenericType<T> type) {
         if (!(response instanceof ClientResponse)) {
             throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
         }
-        ClientResponse clientResponse = (ClientResponse) response;
+        ClientResponse<?> clientResponse = (ClientResponse<?>) response;
         return (T) clientResponse.getEntity(type);
     }
 

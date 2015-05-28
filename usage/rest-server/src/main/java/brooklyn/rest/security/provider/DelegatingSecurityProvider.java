@@ -106,7 +106,6 @@ public class DelegatingSecurityProvider implements SecurityProvider {
             }
         } catch (Exception e) {
             log.warn("REST unable to instantiate security provider " + className + "; all logins are being disallowed", e);
-            e.printStackTrace();
             delegate = new BlackholeSecurityProvider();
         }
         return delegate;
