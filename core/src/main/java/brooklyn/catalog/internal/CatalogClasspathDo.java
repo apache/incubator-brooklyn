@@ -128,16 +128,18 @@ public class CatalogClasspathDo {
                         InputStream uin = ResourceUtils.create(this).getResourceFromUrl(u);
                         File f = Os.newTempFile("brooklyn-catalog-"+u, null);
                         FileOutputStream fout = new FileOutputStream(f);
-                        Streams.copy(uin, fout);
-                        fout.close();
-                        uin.close();
+                        try {
+                            Streams.copy(uin, fout);
+                        } finally {
+                            Streams.closeQuietly(fout);
+                            Streams.closeQuietly(uin);
+                        }
                         u = f.toURI().toString();
                     }
                     urls[i] = new URL(u);
                     
                     // TODO potential disk leak above as we have no way to know when the temp file can be removed earlier than server shutdown;
-                    // a better way to handle this is to supply a stream handler:
-//                    urls[i] = new URL(classpath.getEntries().get(i));
+                    // a better way to handle this is to supply a stream handler (but URLConnection is a little bit hard to work with):
 //                    URI uri = URI.create(classpath.getEntries().get(i));
 //                    urls[i] = new URL(uri.getScheme(), uri.getHost(), uri.getPort(), uri.getPath()  // TODO query fragment?
 //                        , new URLStreamHandler() {

@@ -1195,11 +1195,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     // will be set by scan -- slightly longwinded way to retrieve, but scanning for osgi needs an overhaul in any case
                     Collection<CatalogBundle> libraryBundles = CatalogItemDtoAbstract.parseLibraries((Collection<?>) librariesCombined);
                     dto.setLibraries(libraryBundles);
-                    // must replace java type with plan yaml here for libraries / catalog item to be picked up
-                    dto.setSymbolicName(dto.getJavaType());
-                    dto.setPlanYaml("services: [{ type: "+dto.getJavaType()+" }]");
-                    dto.setJavaType(null);
                 }
+                // replace java type with plan yaml -- needed for libraries / catalog item to be picked up,
+                // but probably useful to transition away from javaType altogether
+                dto.setSymbolicName(dto.getJavaType());
+                dto.setPlanYaml("services: [{ type: "+dto.getJavaType()+" }]");
+                dto.setJavaType(null);
 
                 return dto;
             }

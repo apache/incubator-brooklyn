@@ -157,7 +157,7 @@ public class CatalogInitialization implements ManagementContextInjectable {
      *   and so subsequent applications should ignore any initialization data (e.g. on a subsequent promotion to master, 
      *   after a master -> standby -> master cycle)
      * @param needsInitialItemsLoaded whether the catalog needs the initial items loaded
-     * @param needsInitialItemsLoaded whether the catalog needs the additiona items loaded
+     * @param needsAdditionalItemsLoaded whether the catalog needs the additions loaded
      * @param optionalExcplicitItemsForResettingCatalog
      *   if supplied, the catalog is reset to contain only these items, before calling any other initialization
      *   for use primarily when rebinding

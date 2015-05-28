@@ -37,6 +37,7 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 
@@ -75,10 +76,14 @@ public class CatalogScanTest {
         log.info("ENTITIES loaded for FULL: "+fullCatalog.getCatalogItems(Predicates.alwaysTrue()));
     }
     
-    private synchronized void loadTheDefaultCatalog() {
+    private synchronized void loadTheDefaultCatalog(boolean lookOnDiskForDefaultCatalog) {
         if (defaultCatalog!=null) return;
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
-        props.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL.getName(), "");
+        props.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL.getName(),
+            // if default catalog is picked up from the system, we might get random stuff from ~/.brooklyn/ instead of the default;
+            // useful as an integration check that we default correctly, but irritating for people to use if they have such a catalog installed
+            (lookOnDiskForDefaultCatalog ? "" :
+                "data:,"+Urls.encode(new ResourceUtils(this).getResourceAsString("classpath:/brooklyn/default.catalog.bom"))));
         LocalManagementContext managementContext = newManagementContext(props);
         defaultCatalog = managementContext.getCatalog();        
         log.info("ENTITIES loaded for DEFAULT: "+defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
@@ -162,7 +167,17 @@ public class CatalogScanTest {
     
     @Test
     public void testAnnotationIsDefault() {
-        loadTheDefaultCatalog();
+        doTestAnnotationIsDefault(false);
+    }
+    
+    // see comment in load method; likely fails if a custom catalog is installed in ~/.brooklyn/
+    @Test(groups="Integration", enabled=false)
+    public void testAnnotationIsDefaultOnDisk() {
+        doTestAnnotationIsDefault(true);
+    }
+
+    private void doTestAnnotationIsDefault(boolean lookOnDiskForDefaultCatalog) {
+        loadTheDefaultCatalog(false);
         int numInDefault = Iterables.size(defaultCatalog.getCatalogItems(Predicates.alwaysTrue()));
         
         loadAnnotationsOnlyCatalog();
