@@ -20,12 +20,14 @@ package brooklyn.util.net;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
@@ -96,7 +98,7 @@ public class NetworkingUtilsTest {
         }
     }
     
-    @Test(groups="Integration")
+    @Test
     public void testIsPortAvailableReportsTrueWhenPortIsFree() throws Exception {
         int port = 58769;
         int numFree = 0;
@@ -108,10 +110,7 @@ public class NetworkingUtilsTest {
             fail("This test requires that at least some ports near 58769+ not be in use.");
     }
 
-    // Integration because fails in apache jenkins sometimes with "could not get a port".
-    // Could all the ports between 58767 and 60000 be in use (!) or is there a restriction in
-    // the environment?
-    @Test(groups="Integration")
+    @Test
     public void testIsPortAvailableReportsFalseWhenPortIsInUse() throws Exception {
         int port = 58767;
         ServerSocket ss = null;
@@ -139,8 +138,7 @@ public class NetworkingUtilsTest {
             }});
     }
 
-    // See comment on {@link #testIsPortAvailableReportsFalseWhenPortIsInUse()} for why this is integration.
-    @Test(groups="Integration")
+    @Test
     public void testIsPortAvailableReportsPromptly() throws Exception {
         // repeat until we can get an available port
         int port = 58767;
@@ -156,6 +154,18 @@ public class NetworkingUtilsTest {
         } while (!available && port < 60000);
 
         Assert.assertTrue(available);
+    }
+
+    @Test
+    public void testIsPortAvailableValidatesAddress() throws Exception {
+        ServerSocket ss = new ServerSocket();
+        ss.bind(new InetSocketAddress(InetAddress.getLocalHost(), 0));
+        int boundPort = ss.getLocalPort();
+        assertTrue(ss.isBound());
+        assertNotEquals(boundPort, 0);
+        //will run isAddressValid before returning
+        assertFalse(Networking.isPortAvailable(boundPort));
+        ss.close();
     }
     
     //just some system health-checks... localhost may not resolve properly elsewhere
