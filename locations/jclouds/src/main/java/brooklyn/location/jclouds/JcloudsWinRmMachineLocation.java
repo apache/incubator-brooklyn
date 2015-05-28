@@ -92,7 +92,8 @@ public class JcloudsWinRmMachineLocation extends WinRmMachineLocation implements
     
     @Override
     public String getHostname() {
-        return node.getHostname();
+        InetAddress address = getAddress();
+        return (address != null) ? address.getHostAddress() : null;
     }
     
     @Override
@@ -107,8 +108,11 @@ public class JcloudsWinRmMachineLocation extends WinRmMachineLocation implements
 
     @Override
     public String getSubnetHostname() {
-        String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), config().getBag());
-        return publicHostname;
+        // TODO: TEMP FIX: WAS:
+        // String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), config().getBag());
+        // but this causes a call to JcloudsUtil.getFirstReachableAddress, which searches for accessible SSH service.
+        // This workaround is good for public nodes but not private-subnet ones.
+        return getHostname();
     }
 
     @Override
