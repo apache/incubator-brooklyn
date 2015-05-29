@@ -23,6 +23,7 @@ import static org.testng.Assert.fail;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,14 +33,17 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.event.basic.MapConfigKey;
+import brooklyn.event.basic.SetConfigKey;
+import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
 
 public class JcloudsLocationResolverTest {
 
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(JcloudsLocationResolverTest.class);
     
     private LocalManagementContext managementContext;
@@ -240,13 +244,14 @@ public class JcloudsLocationResolverTest {
         brooklynProperties.put("brooklyn.location.named.softlayer-was", "jclouds:softlayer:was01");
         brooklynProperties.put("brooklyn.location.named.softlayer-was2", "jclouds:softlayer:was01");
         brooklynProperties.put("brooklyn.location.named.softlayer-was2.region", "was02");
-        conf = resolve("named:softlayer-was").getAllConfig(true);
+        conf = resolve("named:softlayer-was").config().getBag().getAllConfig();
         assertEquals(conf.get("region"), "was01");
         
-        conf = resolve("named:softlayer-was2").getAllConfig(true);
+        conf = resolve("named:softlayer-was2").config().getBag().getAllConfig();
         assertEquals(conf.get("region"), "was02");
         
-        conf = managementContext.getLocationRegistry().resolve("named:softlayer-was2", MutableMap.of("region", "was03")).getAllConfig(true);
+        conf = ((LocationInternal) managementContext.getLocationRegistry().resolve("named:softlayer-was2", MutableMap.of("region", "was03")))
+            .config().getBag().getAllConfig();;
         assertEquals(conf.get("region"), "was03");
     }
     
@@ -280,6 +285,50 @@ public class JcloudsLocationResolverTest {
         assertEquals(l.config().getLocalBag().getStringKey("prop1"), "1");
     }
 
+    @Test
+    public void testResolvesListAndMapProperties() throws Exception {
+        brooklynProperties.put("brooklyn.location.jclouds.softlayer.prop1", "[ a, b ]");
+        brooklynProperties.put("brooklyn.location.jclouds.softlayer.prop2", "{ a: 1, b: 2 }");
+        brooklynProperties.put("brooklyn.location.named.foo", "jclouds:softlayer:ams01");
+        
+        JcloudsLocation l = resolve("named:foo");
+        assertJcloudsEquals(l, "softlayer", "ams01");
+        assertEquals(l.config().get(new SetConfigKey<String>(String.class, "prop1")), MutableSet.of("a", "b"));
+        assertEquals(l.config().get(new MapConfigKey<String>(String.class, "prop2")), MutableMap.of("a", 1, "b", 2));
+    }
+    
+    @Test
+    public void testResolvesListAndMapPropertiesWithoutMergeOnInheritance() throws Exception {
+        // when we have a yaml way to specify config we may wish to have different semantics;
+        // it could depend on the collection config key whether to merge on inheritance
+        brooklynProperties.put("brooklyn.location.jclouds.softlayer.prop1", "[ a, b ]");
+        brooklynProperties.put("brooklyn.location.jclouds.softlayer.prop2", "{ a: 1, b: 2 }");
+        brooklynProperties.put("brooklyn.location.named.foo", "jclouds:softlayer:ams01");
+        
+        brooklynProperties.put("brooklyn.location.named.foo.prop1", "[ a: 1, c: 3 ]");
+        brooklynProperties.put("brooklyn.location.named.foo.prop2", "{ b: 3, c: 3 }");
+        brooklynProperties.put("brooklyn.location.named.bar", "named:foo");
+        brooklynProperties.put("brooklyn.location.named.bar.prop2", "{ c: 4, d: 4 }");
+        
+        // these do NOT affect the maps
+        brooklynProperties.put("brooklyn.location.named.foo.prop2.z", "9");
+        brooklynProperties.put("brooklyn.location.named.foo.prop3.z", "9");
+        
+        JcloudsLocation l = resolve("named:bar");
+        assertJcloudsEquals(l, "softlayer", "ams01");
+        
+        Set<? extends String> prop1 = l.config().get(new SetConfigKey<String>(String.class, "prop1"));
+        log.info("prop1: "+prop1);
+        assertEquals(prop1, MutableSet.of("a: 1", "c: 3"));
+        
+        Map<String, String> prop2 = l.config().get(new MapConfigKey<String>(String.class, "prop2"));
+        log.info("prop2: "+prop2);
+        assertEquals(prop2, MutableMap.of("c", 4, "d", 4));
+        
+        Map<String, String> prop3 = l.config().get(new MapConfigKey<String>(String.class, "prop3"));
+        log.info("prop3: "+prop3);
+        assertEquals(prop3, null);
+    }
 
     private void assertJcloudsEquals(JcloudsLocation loc, String expectedProvider, String expectedRegion) {
         assertEquals(loc.getProvider(), expectedProvider);
