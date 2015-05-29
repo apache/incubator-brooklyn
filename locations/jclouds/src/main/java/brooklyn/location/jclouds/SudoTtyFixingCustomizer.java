@@ -21,7 +21,9 @@ package brooklyn.location.jclouds;
 import org.jclouds.compute.ComputeService;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Preconditions;
 
+import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.ssh.SshTasks.OnFailingTask;
@@ -48,9 +50,9 @@ import brooklyn.util.task.ssh.SshTasks.OnFailingTask;
 public class SudoTtyFixingCustomizer extends BasicJcloudsLocationCustomizer {
 
     @Override
-    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
-        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo(machine, OnFailingTask.FAIL)).orSubmitAndBlock();
+    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine) {
+        Preconditions.checkArgument(machine instanceof SshMachineLocation, "machine must be SshMachineLocation, but is %s", machine.getClass());
+        DynamicTasks.queueIfPossible(SshTasks.dontRequireTtyForSudo((SshMachineLocation)machine, OnFailingTask.FAIL)).orSubmitAndBlock();
         DynamicTasks.waitForLast();
     }
-
 }

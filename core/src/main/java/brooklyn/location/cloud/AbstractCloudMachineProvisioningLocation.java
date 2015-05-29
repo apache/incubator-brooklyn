@@ -21,8 +21,8 @@ package brooklyn.location.cloud;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.SshMachineLocation;
@@ -30,8 +30,8 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
 
-public abstract class AbstractCloudMachineProvisioningLocation extends AbstractLocation 
-implements MachineProvisioningLocation<SshMachineLocation>, CloudLocationConfig 
+public abstract class AbstractCloudMachineProvisioningLocation extends AbstractLocation
+implements MachineProvisioningLocation<MachineLocation>, CloudLocationConfig
 {
    public AbstractCloudMachineProvisioningLocation() {
       super();

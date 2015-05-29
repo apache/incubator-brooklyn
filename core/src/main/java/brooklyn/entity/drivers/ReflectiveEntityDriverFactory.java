@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.paas.PaasLocation;
+import brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -56,6 +57,7 @@ public class ReflectiveEntityDriverFactory {
     public ReflectiveEntityDriverFactory() {
         addRule(DriverInferenceForSshLocation.DEFAULT_IDENTIFIER, new DriverInferenceForSshLocation());
         addRule(DriverInferenceForPaasLocation.DEFAULT_IDENTIFIER, new DriverInferenceForPaasLocation());
+        addRule(DriverInferenceForWinRmLocation.DEFAULT_IDENTIFIER, new DriverInferenceForWinRmLocation());
     }
     
     public interface DriverInferenceRule {
@@ -169,17 +171,32 @@ public class ReflectiveEntityDriverFactory {
 
     public static class DriverInferenceForPaasLocation extends AbstractDriverInferenceRule {
 
-            public static final String DEFAULT_IDENTIFIER = "paas-location-driver-inference-rule";
+        public static final String DEFAULT_IDENTIFIER = "paas-location-driver-inference-rule";
 
-            @Override
-            public <D extends EntityDriver> String inferDriverClassName(DriverDependentEntity<D> entity, Class<D> driverInterface, Location location) {
-                String driverInterfaceName = driverInterface.getName();
-                if (!(location instanceof PaasLocation)) return null;
-                if (!driverInterfaceName.endsWith("Driver")) {
-                    throw new IllegalArgumentException(String.format("Driver name [%s] doesn't end with 'Driver'; cannot auto-detect PaasDriver class name", driverInterfaceName));
-                }
-                return Strings.removeFromEnd(driverInterfaceName, "Driver")+ ((PaasLocation) location).getPaasProviderName() + "Driver";
+        @Override
+        public <D extends EntityDriver> String inferDriverClassName(DriverDependentEntity<D> entity, Class<D> driverInterface, Location location) {
+            String driverInterfaceName = driverInterface.getName();
+            if (!(location instanceof PaasLocation)) return null;
+            if (!driverInterfaceName.endsWith("Driver")) {
+                throw new IllegalArgumentException(String.format("Driver name [%s] doesn't end with 'Driver'; cannot auto-detect PaasDriver class name", driverInterfaceName));
             }
+            return Strings.removeFromEnd(driverInterfaceName, "Driver") + ((PaasLocation) location).getPaasProviderName() + "Driver";
+        }
+    }
+
+    public static class DriverInferenceForWinRmLocation extends AbstractDriverInferenceRule {
+
+        public static final String DEFAULT_IDENTIFIER = "winrm-location-driver-inference-rule";
+
+        @Override
+        public <D extends EntityDriver> String inferDriverClassName(DriverDependentEntity<D> entity, Class<D> driverInterface, Location location) {
+            String driverInterfaceName = driverInterface.getName();
+            if (!(location instanceof WinRmMachineLocation)) return null;
+            if (!driverInterfaceName.endsWith("Driver")) {
+                throw new IllegalArgumentException(String.format("Driver name [%s] doesn't end with 'Driver'; cannot auto-detect WinRmDriver class name", driverInterfaceName));
+            }
+            return Strings.removeFromEnd(driverInterfaceName, "Driver")+"WinRmDriver";
+        }
     }
 
     /** adds a rule; possibly replacing an old one if one exists with the given identifier. the new rule is added after all previous ones.
@@ -190,17 +207,17 @@ public class ReflectiveEntityDriverFactory {
         LOG.debug("Added driver mapping rule "+rule);
         return oldRule;
     }
-    
+
     public DriverInferenceRule addClassFullNameMapping(String expectedClassFullName, String newClassFullName) {
         DriverInferenceByRenamingClassFullName rule = new DriverInferenceByRenamingClassFullName(expectedClassFullName, newClassFullName);
         return addRule(rule.getIdentifier(), rule);
     }
-    
+
     public DriverInferenceRule addClassSimpleNameMapping(String expectedClassSimpleName, String newClassSimpleName) {
         DriverInferenceByRenamingClassSimpleName rule = new DriverInferenceByRenamingClassSimpleName(expectedClassSimpleName, newClassSimpleName);
         return addRule(rule.getIdentifier(), rule);
     }
-    
+
     public <D extends EntityDriver> D build(DriverDependentEntity<D> entity, Location location){
         Class<D> driverInterface = entity.getDriverInterface();
         Class<? extends D> driverClass = null;
@@ -227,7 +244,7 @@ public class ReflectiveEntityDriverFactory {
             driverClass = driverInterface;
         }
         LOG.debug("Driver for "+driverInterface.getName()+" in "+location+" is: "+driverClass);
-        
+
         if (driverClass==null) {
             if (exceptions.isEmpty())
                 throw new RuntimeException("No drivers could be found for "+driverInterface.getName()+"; "
@@ -244,7 +261,7 @@ public class ReflectiveEntityDriverFactory {
             throw Exceptions.propagate(e);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     private <D extends EntityDriver> Constructor<D> getConstructor(Class<D> driverClass) {
         for (Constructor<?> constructor : driverClass.getConstructors()) {
@@ -255,5 +272,5 @@ public class ReflectiveEntityDriverFactory {
 
         throw new RuntimeException(String.format("Class [%s] has no constructor with 2 arguments", driverClass.getName()));
     }
-    
+
 }

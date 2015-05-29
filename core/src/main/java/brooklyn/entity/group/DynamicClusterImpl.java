@@ -438,7 +438,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     /**
      * {@inheritDoc}
      *
-     * <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}.
+     * <strong>Note</strong> for sub-classes; this method can be called while synchronized on {@link #mutex}.
      */
     @Override
     public String replaceMember(String memberId) {
@@ -485,11 +485,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                     throw new IllegalStateException("Unexpected condition! cluster="+this+"; member="+member+"; actualMemberLocs="+actualMemberLocs);
                 }
             } else {
-                if (getMemberSpec() != null && getMemberSpec().getLocations().size() > 0) {
-                    memberLoc = getMemberSpec().getLocations().iterator().next();
-                } else {
-                    memberLoc = getLocation();
-                }
+                // Replacing member, so new member should be in the same location as that being replaced.
+                // Expect this to agree with `getMemberSpec().getLocations()` (if set). If not, then 
+                // presumably there was a reason this specific member was started somewhere else!
+                memberLoc = getLocation();
             }
 
             Entity replacement = replaceMember(member, memberLoc, ImmutableMap.of());
@@ -588,7 +587,16 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         // choose locations to be deployed to
         List<Location> chosenLocations;
-        if (isAvailabilityZoneEnabled()) {
+        List<Location> memberLocations = getMemberSpec() == null ? null : getMemberSpec().getLocations();
+        if (memberLocations != null && memberLocations.size() > 0) {
+            // The memberSpec overrides the location passed to cluster.start(); use
+            // the location defined on the member.
+            if (isAvailabilityZoneEnabled()) {
+                LOG.warn("Cluster {} has availability-zone enabled, but memberSpec overrides location with {}; using "
+                        + "memberSpec's location; availability-zone behaviour will not apply", this, memberLocations);
+            }
+            chosenLocations = Collections.nCopies(delta, memberLocations.get(0));
+        } else if (isAvailabilityZoneEnabled()) {
             List<Location> subLocations = getNonFailedSubLocations();
             Multimap<Location, Entity> membersByLocation = getMembersByLocation();
             chosenLocations = getZonePlacementStrategy().locationsForAdditions(membersByLocation, subLocations, delta);

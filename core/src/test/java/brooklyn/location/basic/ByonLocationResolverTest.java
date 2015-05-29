@@ -101,14 +101,14 @@ public class ByonLocationResolverTest {
     public void testNamedByonLocation() throws Exception {
         brooklynProperties.put("brooklyn.location.named.mynamed", "byon(hosts=\"1.1.1.1\")");
         
-        FixedListMachineProvisioningLocation<SshMachineLocation> loc = resolve("named:mynamed");
+        FixedListMachineProvisioningLocation<MachineLocation> loc = resolve("named:mynamed");
         assertEquals(loc.obtain().getAddress(), InetAddress.getByName("1.1.1.1"));
     }
 
     @Test
     public void testPropertiesInSpec() throws Exception {
-        FixedListMachineProvisioningLocation<SshMachineLocation> loc = resolve("byon(privateKeyFile=myprivatekeyfile,hosts=\"1.1.1.1\")");
-        SshMachineLocation machine = loc.obtain();
+        FixedListMachineProvisioningLocation<MachineLocation> loc = resolve("byon(privateKeyFile=myprivatekeyfile,hosts=\"1.1.1.1\")");
+        SshMachineLocation machine = (SshMachineLocation)loc.obtain();
         
         assertEquals(machine.config().getBag().getStringKey("privateKeyFile"), "myprivatekeyfile");
         assertEquals(machine.getAddress(), Networking.getInetAddressWithFixedName("1.1.1.1"));
@@ -188,7 +188,7 @@ public class ByonLocationResolverTest {
     public void testNiceError() throws Exception {
         Asserts.assertFailsWith(new Runnable() {
             @Override public void run() {
-                FixedListMachineProvisioningLocation<SshMachineLocation> x = 
+                FixedListMachineProvisioningLocation<MachineLocation> x =
                         resolve("byon(hosts=\"1.1.1.{1,2}}\")");
                 log.error("got "+x+" but should have failed (your DNS is giving an IP for hostname '1.1.1.1}' (with the extra '}')");
             }
@@ -224,8 +224,8 @@ public class ByonLocationResolverTest {
     @Test
     public void testResolvesUserArg2() throws Exception {
         String spec = "byon(hosts=\"1.1.1.1\",user=bob)";
-        FixedListMachineProvisioningLocation<SshMachineLocation> ll = resolve(spec);
-        SshMachineLocation l = ll.obtain();
+        FixedListMachineProvisioningLocation<MachineLocation> ll = resolve(spec);
+        SshMachineLocation l = (SshMachineLocation)ll.obtain();
         Assert.assertEquals("bob", l.getUser());
     }
 
@@ -281,8 +281,8 @@ public class ByonLocationResolverTest {
         String localTempDir = Os.mergePaths(Os.tmp(), "testResolvesUsernameAtHost");
         brooklynProperties.put("brooklyn.location.byon.localTempDir", localTempDir);
 
-        FixedListMachineProvisioningLocation<SshMachineLocation> byon = resolve("byon(hosts=\"1.1.1.1\")");
-        SshMachineLocation machine = byon.obtain();
+        FixedListMachineProvisioningLocation<MachineLocation> byon = resolve("byon(hosts=\"1.1.1.1\",osFamily=\"windows\")");
+        MachineLocation machine = byon.obtain();
         assertEquals(machine.getConfig(SshMachineLocation.LOCAL_TEMP_DIR), localTempDir);
     }
 
@@ -291,10 +291,10 @@ public class ByonLocationResolverTest {
         List<String> ips = ImmutableList.of("1.1.1.1", "1.1.1.6", "1.1.1.3", "1.1.1.4", "1.1.1.5");
         String spec = "byon(hosts=\""+Joiner.on(",").join(ips)+"\")";
         
-        MachineProvisioningLocation<SshMachineLocation> ll = resolve(spec);
+        MachineProvisioningLocation<MachineLocation> ll = resolve(spec);
 
         for (String expected : ips) {
-            SshMachineLocation obtained = ll.obtain(ImmutableMap.of());
+            MachineLocation obtained = ll.obtain(ImmutableMap.of());
             assertEquals(obtained.getAddress().getHostAddress(), expected);
         }
     }
@@ -307,10 +307,39 @@ public class ByonLocationResolverTest {
                 "name", "foo",
                 "user", "myuser"
         );
-        MachineProvisioningLocation<SshMachineLocation> provisioner = resolve(spec, flags);
-        SshMachineLocation location1 = provisioner.obtain(ImmutableMap.of());
+        MachineProvisioningLocation<MachineLocation> provisioner = resolve(spec, flags);
+        SshMachineLocation location1 = (SshMachineLocation)provisioner.obtain(ImmutableMap.of());
         Assert.assertEquals("myuser", location1.getUser());
         Assert.assertEquals("1.1.1.1", location1.getAddress().getHostAddress());
+    }
+
+    @Test
+    public void testWindowsMachines() throws Exception {
+        brooklynProperties.put("brooklyn.location.byon.user", "myuser");
+        brooklynProperties.put("brooklyn.location.byon.password", "mypassword");
+        String spec = "byon";
+        Map<String, ?> flags = ImmutableMap.of(
+                "hosts", ImmutableList.of("1.1.1.1", "2.2.2.2"),
+                "osfamily", "windows"
+        );
+        MachineProvisioningLocation<MachineLocation> provisioner = resolve(spec, flags);
+        WinRmMachineLocation location = (WinRmMachineLocation) provisioner.obtain(ImmutableMap.of());
+
+        assertEquals(location.config().get(WinRmMachineLocation.USER), "myuser");
+        assertEquals(location.config().get(WinRmMachineLocation.PASSWORD), "mypassword");
+        assertEquals(location.config().get(WinRmMachineLocation.ADDRESS).getHostAddress(), "1.1.1.1");
+    }
+
+    @Test
+    public void testNoneWindowsMachines() throws Exception {
+        String spec = "byon";
+        Map<String, ?> flags = ImmutableMap.of(
+                "hosts", ImmutableList.of("1.1.1.1", "2.2.2.2"),
+                "osfamily", "linux"
+        );
+        MachineProvisioningLocation<MachineLocation> provisioner = resolve(spec, flags);
+        MachineLocation location = provisioner.obtain(ImmutableMap.of());
+        assertTrue(location instanceof SshMachineLocation, "Expected location to be SshMachineLocation, found " + location);
     }
 
     private void assertByonClusterEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<String> expectedHosts) {
@@ -362,15 +391,15 @@ public class ByonLocationResolverTest {
     }
     
     @SuppressWarnings("unchecked")
-    private FixedListMachineProvisioningLocation<SshMachineLocation> resolve(String val) {
-        return (FixedListMachineProvisioningLocation<SshMachineLocation>) managementContext.getLocationRegistry().resolve(val);
+    private FixedListMachineProvisioningLocation<MachineLocation> resolve(String val) {
+        return (FixedListMachineProvisioningLocation<MachineLocation>) managementContext.getLocationRegistry().resolve(val);
     }
     
     @SuppressWarnings("unchecked")
-    private FixedListMachineProvisioningLocation<SshMachineLocation> resolve(String val, Map<?, ?> locationFlags) {
-        return (FixedListMachineProvisioningLocation<SshMachineLocation>) managementContext.getLocationRegistry().resolve(val, locationFlags);
+    private FixedListMachineProvisioningLocation<MachineLocation> resolve(String val, Map<?, ?> locationFlags) {
+        return (FixedListMachineProvisioningLocation<MachineLocation>) managementContext.getLocationRegistry().resolve(val, locationFlags);
     }
-    
+
     private static class UserHostTuple {
         final String username;
         final String hostname;

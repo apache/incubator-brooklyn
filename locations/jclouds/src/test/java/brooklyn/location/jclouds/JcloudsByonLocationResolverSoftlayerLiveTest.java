@@ -52,7 +52,7 @@ public class JcloudsByonLocationResolverSoftlayerLiveTest extends AbstractJcloud
     public void setUpClass() throws Exception {
         classManagementContext = newManagementContext();
         classEc2Loc = (JcloudsLocation) classManagementContext.getLocationRegistry().resolve(SOFTLAYER_LOCATION_SPEC);
-        classVm = classEc2Loc.obtain(MutableMap.<String,Object>builder()
+        classVm = (JcloudsSshMachineLocation)classEc2Loc.obtain(MutableMap.<String,Object>builder()
                 .put("inboundPorts", ImmutableList.of(22))
                 .build());
         slVmUser = classVm.getUser();

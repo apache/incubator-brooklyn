@@ -40,7 +40,7 @@ import brooklyn.entity.Entity;
 import brooklyn.location.geo.LocalhostExternalIpLoader;
 import brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import brooklyn.location.jclouds.JcloudsMachineLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Cidr;
@@ -151,13 +151,13 @@ public class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLocation
     }
 
     /** @see #addPermissionsToLocation(brooklyn.location.jclouds.JcloudsSshMachineLocation, java.lang.Iterable) */
-    public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsSshMachineLocation location, IpPermission... permissions) {
+    public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsMachineLocation location, IpPermission... permissions) {
         addPermissionsToLocation(location, ImmutableList.copyOf(permissions));
         return this;
     }
 
     /** @see #addPermissionsToLocation(brooklyn.location.jclouds.JcloudsSshMachineLocation, java.lang.Iterable) */
-    public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsSshMachineLocation location, SecurityGroupDefinition securityGroupDefinition) {
+    public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsMachineLocation location, SecurityGroupDefinition securityGroupDefinition) {
         addPermissionsToLocation(location, securityGroupDefinition.getPermissions());
         return this;
     }
@@ -169,7 +169,7 @@ public class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLocation
      * @param permissions The set of permissions to be applied to the location
      * @param location Location to gain permissions
      */
-    public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsSshMachineLocation location, final Iterable<IpPermission> permissions) {
+    public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsMachineLocation location, final Iterable<IpPermission> permissions) {
         ComputeService computeService = location.getParent().getComputeService();
         String nodeId = location.getNode().getId();
         addPermissionsToLocation(permissions, nodeId, computeService);

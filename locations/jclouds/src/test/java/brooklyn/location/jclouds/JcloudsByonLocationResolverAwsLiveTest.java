@@ -54,7 +54,7 @@ public class JcloudsByonLocationResolverAwsLiveTest extends AbstractJcloudsLiveT
     public void setUpClass() throws Exception {
         classManagementContext = newManagementContext();
         classEc2Loc = (JcloudsLocation) classManagementContext.getLocationRegistry().resolve(AWS_LOCATION_SPEC);
-        classEc2Vm = classEc2Loc.obtain(MutableMap.<String,Object>builder()
+        classEc2Vm = (JcloudsSshMachineLocation)classEc2Loc.obtain(MutableMap.<String,Object>builder()
                 .put("hardwareId", AWS_EC2_SMALL_HARDWARE_ID)
                 .put("inboundPorts", ImmutableList.of(22))
                 .build());

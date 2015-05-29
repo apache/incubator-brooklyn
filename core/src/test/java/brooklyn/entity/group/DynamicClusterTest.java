@@ -936,6 +936,21 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         assertFirstAndNonFirstCounts(cluster.getMembers(), 1, 2);
     }
 
+    @Test
+    public void testPrefersMemberSpecLocation() throws Exception {
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class)
+                        .location(loc2))
+                .configure(DynamicCluster.INITIAL_SIZE, 1));
+        
+        cluster.start(ImmutableList.of(loc));
+        assertEquals(ImmutableList.copyOf(cluster.getLocations()), ImmutableList.of(loc));
+        
+        Entity member = Iterables.getOnlyElement(cluster.getMembers());
+        assertEquals(ImmutableList.copyOf(member.getLocations()), ImmutableList.of(loc2));
+    }
+
+
     private void assertFirstAndNonFirstCounts(Collection<Entity> members, int expectedFirstCount, int expectedNonFirstCount) {
         Set<Entity> found = MutableSet.of();
         for (Entity e: members) {

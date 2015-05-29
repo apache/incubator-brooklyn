@@ -44,6 +44,7 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
+import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;
@@ -202,10 +203,20 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
                 addChild(getController());
             }
 
-            // And only start controller if we are parent
-            if (this.equals(getController().getParent())) childrenToStart.add(getController());
+            // And only start controller if we are parent. Favour locations defined on controller, if present
+            Task<List<Void>> startControllerTask = null;
+            if (this.equals(getController().getParent())) {
+                if (getController().getLocations().size() == 0) {
+                    childrenToStart.add(getController());
+                } else {
+                     startControllerTask = Entities.invokeEffectorList(this, MutableList.<Entity>of(getController()), Startable.START, ImmutableMap.of("locations", getController().getLocations()));
+                }
+            }
 
             Entities.invokeEffectorList(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).get();
+            if (startControllerTask != null) {
+                startControllerTask.get();
+            }
 
             // wait for everything to start, then update controller, to ensure it is up to date
             // (will happen asynchronously as members come online, but we want to force it to happen)

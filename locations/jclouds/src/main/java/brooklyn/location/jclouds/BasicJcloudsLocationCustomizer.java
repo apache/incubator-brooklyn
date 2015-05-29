@@ -52,16 +52,46 @@ public class BasicJcloudsLocationCustomizer implements JcloudsLocationCustomizer
     }
 
     @Override
+    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine) {
+        if (machine instanceof JcloudsSshMachineLocation) {
+            customize(location, computeService, (JcloudsSshMachineLocation)machine);
+        } else {
+            // no-op
+        }
+    }
+    
+    @Override
+    public void preRelease(JcloudsMachineLocation machine) {
+        if (machine instanceof JcloudsSshMachineLocation) {
+            preRelease((JcloudsSshMachineLocation)machine);
+        } else {
+            // no-op
+        }
+    }
+
+    @Override
+    public void postRelease(JcloudsMachineLocation machine) {
+        if (machine instanceof JcloudsSshMachineLocation) {
+            postRelease((JcloudsSshMachineLocation)machine);
+        } else {
+            // no-op
+        }
+    }
+    
+    @Override
+    @Deprecated
     public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
         // no-op
     }
 
     @Override
+    @Deprecated
     public void preRelease(JcloudsSshMachineLocation machine) {
         // no-op
     }
 
     @Override
+    @Deprecated
     public void postRelease(JcloudsSshMachineLocation machine) {
         // no-op
     }
