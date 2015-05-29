@@ -24,6 +24,8 @@ import static org.testng.Assert.fail;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.List;
@@ -183,9 +185,24 @@ public class BrooklynWebServerTest {
         keystore.load(instream, password.toCharArray());
         return keystore;
     }
+    
+    @Test
+    public void testGetFileFromUrl() throws Exception {
+        String url = "file:///tmp/special%40file%20with%20spaces";
+        String file = "/tmp/special@file with spaces";
+        assertEquals(getFile(new URL(url)), file);
+    }
 
-    private String getFile(String file) {
+    private String getFile(String classpathResource) {
         // this works because both IDE and Maven run tests with classes/resources on the file system
-        return new File(getClass().getResource("/" + file).getFile()).getAbsolutePath();
+        return getFile(getClass().getResource("/" + classpathResource));
+    }
+
+    private String getFile(URL url) {
+        try {
+            return new File(url.toURI()).getAbsolutePath();
+        } catch (URISyntaxException e) {
+            throw Exceptions.propagate(e);
+        }
     }
 }
