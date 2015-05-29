@@ -46,6 +46,7 @@ import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;
 import brooklyn.util.net.Urls;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Preconditions;
@@ -320,8 +321,13 @@ public class JmxSupport implements UsesJmx {
     /** installs files needed for JMX, to the runDir given in constructor, assuming the runDir has been created */
     public void install() {
         if (EnumSet.of(JmxAgentModes.JMXMP_AND_RMI, JmxAgentModes.JMXMP, JmxAgentModes.JMX_RMI_CUSTOM_AGENT).contains(getJmxAgentMode())) {
-            getMachine().get().copyTo(ResourceUtils.create(this).getResourceFromUrl(
-                getJmxAgentJarUrl()), getJmxAgentJarDestinationFilePath());
+            Tasks.setBlockingDetails("Copying JMX agent jar to server.");
+            try {
+                getMachine().get().copyTo(ResourceUtils.create(this).getResourceFromUrl(
+                        getJmxAgentJarUrl()), getJmxAgentJarDestinationFilePath());
+            } finally {
+                Tasks.resetBlockingDetails();
+            }
         }
         if (isSecure()) {
             getJmxSslSupport().install();

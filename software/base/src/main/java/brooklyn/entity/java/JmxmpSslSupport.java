@@ -32,6 +32,7 @@ import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import brooklyn.util.net.Urls;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Preconditions;
 
@@ -96,11 +97,15 @@ public class JmxmpSslSupport {
             ByteArrayOutputStream agentTrustStoreBytes = new ByteArrayOutputStream();
             agentTrustStore.store(agentTrustStoreBytes, "".toCharArray());
             
-            // install the truststore and keystore
-            jmxSupport.getMachine().get().copyTo(new ByteArrayInputStream(agentKeyStoreBytes.toByteArray()), getJmxSslKeyStoreFilePath());
-            jmxSupport.getMachine().get().copyTo(new ByteArrayInputStream(agentTrustStoreBytes.toByteArray()), getJmxSslTrustStoreFilePath());
-            
-            // and rely on JmxSupport to install the agent
+            // install the truststore and keystore and rely on JmxSupport to install the agent
+            Tasks.setBlockingDetails("Copying keystore and truststore to the server.");
+            try {
+                jmxSupport.getMachine().get().copyTo(new ByteArrayInputStream(agentKeyStoreBytes.toByteArray()), getJmxSslKeyStoreFilePath());
+                jmxSupport.getMachine().get().copyTo(new ByteArrayInputStream(agentTrustStoreBytes.toByteArray()), getJmxSslTrustStoreFilePath());
+            } finally {
+                Tasks.resetBlockingDetails();
+            }
+
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
