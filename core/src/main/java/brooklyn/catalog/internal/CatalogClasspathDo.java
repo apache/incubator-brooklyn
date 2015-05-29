@@ -18,8 +18,10 @@
  */
 package brooklyn.catalog.internal;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.lang.reflect.Modifier;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Set;
@@ -39,10 +41,13 @@ import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Policy;
+import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
 import brooklyn.util.javalang.ReflectionScanner;
 import brooklyn.util.javalang.UrlClassLoader;
+import brooklyn.util.os.Os;
+import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
@@ -105,6 +110,7 @@ public class CatalogClasspathDo {
     
     /** causes all scanning-based classpaths to scan the classpaths
     * (but does _not_ load all JARs) */
+    // TODO this does a Java scan; we also need an OSGi scan which uses the OSGi classloaders when loading for scanning and resolving dependencies 
     synchronized void load() {
         if (classpath == null || isLoaded) return;
 
@@ -114,9 +120,36 @@ public class CatalogClasspathDo {
             urls = new URL[classpath.getEntries().size()];
             for (int i=0; i<urls.length; i++) {
                 try {
-                    urls[i] = new URL(classpath.getEntries().get(i));
-                } catch (MalformedURLException e) {
-                    log.error("Invalid URL "+classpath.getEntries().get(i)+" in definition of catalog "+catalog+"; skipping catalog");
+                    String u = classpath.getEntries().get(i);
+                    if (u.startsWith("classpath:")) {
+                        // special support for classpath: url's
+                        // TODO put convenience in ResourceUtils for extracting to a normal url
+                        // (or see below)
+                        InputStream uin = ResourceUtils.create(this).getResourceFromUrl(u);
+                        File f = Os.newTempFile("brooklyn-catalog-"+u, null);
+                        FileOutputStream fout = new FileOutputStream(f);
+                        try {
+                            Streams.copy(uin, fout);
+                        } finally {
+                            Streams.closeQuietly(fout);
+                            Streams.closeQuietly(uin);
+                        }
+                        u = f.toURI().toString();
+                    }
+                    urls[i] = new URL(u);
+                    
+                    // TODO potential disk leak above as we have no way to know when the temp file can be removed earlier than server shutdown;
+                    // a better way to handle this is to supply a stream handler (but URLConnection is a little bit hard to work with):
+//                    urls[i] = new URL(null, classpath.getEntries().get(i)   // (handy construtor for reparsing urls, without splitting into uri first)
+//                        , new URLStreamHandler() {
+//                            @Override
+//                            protected URLConnection openConnection(URL u) throws IOException {
+//                                new ResourceUtils(null). ???
+//                            }
+//                        });
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    log.error("Error loading URL "+classpath.getEntries().get(i)+" in definition of catalog "+catalog+"; skipping definition");
                     throw Exceptions.propagate(e);
                 }
             }

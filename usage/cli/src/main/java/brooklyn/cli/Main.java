@@ -286,8 +286,7 @@ public class Main extends AbstractMain {
         public boolean startBrooklynNode = false;
 
         // Note in some cases, you can get java.util.concurrent.RejectedExecutionException
-        // if shutdown is not co-ordinated, e.g. with Whirr:
-        // looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
+        // if shutdown is not co-ordinated, looks like: {@linktourl https://gist.github.com/47066f72d6f6f79b953e}
         @Beta
         @Option(name = { "-sk", "--stopOnKeyPress" },
                 description = "Shutdown immediately on user text entry after startup (useful for debugging and demos)")
@@ -786,6 +785,10 @@ public class Main extends AbstractMain {
                     .add("startupFailsOnCatalogErrors", startupFailOnCatalogErrors)
                     .add("startupContinueOnWebErrors", startupContinueOnWebErrors)
                     .add("startupFailOnManagedAppsErrors", startupFailOnManagedAppsErrors)
+                    .add("catalogInitial", catalogInitial)
+                    .add("catalogAdd", catalogAdd)
+                    .add("catalogReset", catalogReset)
+                    .add("catalogForce", catalogForce)
                     .add("stopWhichAppsOnShutdown", stopWhichAppsOnShutdown)
                     .add("noShutdownOnExit", noShutdownOnExit)
                     .add("stopOnKeyPress", stopOnKeyPress)

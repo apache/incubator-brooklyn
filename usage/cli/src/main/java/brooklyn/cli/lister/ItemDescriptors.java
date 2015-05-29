@@ -45,7 +45,6 @@ import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.transform.EffectorTransformer;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.transform.SensorTransformer;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 
 import com.google.common.base.Strings;

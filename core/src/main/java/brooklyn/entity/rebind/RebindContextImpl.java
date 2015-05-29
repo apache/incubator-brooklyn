@@ -100,6 +100,10 @@ public class RebindContextImpl implements RebindContext {
         catalogItems.remove(item.getId());
     }
 
+    public void clearCatalogItems() {
+        catalogItems.clear();
+    }
+    
     public Entity getEntity(String id) {
         return entities.get(id);
     }
@@ -180,5 +184,5 @@ public class RebindContextImpl implements RebindContext {
     public LookupContext lookup() {
         return lookupContext;
     }
-    
+
 }

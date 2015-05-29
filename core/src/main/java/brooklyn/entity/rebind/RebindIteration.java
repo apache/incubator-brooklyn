@@ -301,14 +301,14 @@ public abstract class RebindIteration {
     @SuppressWarnings("deprecation")
     protected void rebuildCatalog() {
         
-        // build catalog early so we can load other things
+        // Build catalog early so we can load other things
         checkEnteringPhase(2);
         
         // Instantiate catalog items
         if (rebindManager.persistCatalogItemsEnabled) {
             logRebindingDebug("RebindManager instantiating catalog items: {}", mementoManifest.getCatalogItemIds());
             for (CatalogItemMemento catalogItemMemento : mementoManifest.getCatalogItemMementos().values()) {
-                if (LOG.isDebugEnabled()) LOG.debug("RebindManager instantiating catalog item {}", catalogItemMemento);
+                logRebindingDebug("RebindManager instantiating catalog item {}", catalogItemMemento);
                 try {
                     CatalogItem<?, ?> catalogItem = instantiator.newCatalogItem(catalogItemMemento);
                     rebindContext.registerCatalogItem(catalogItemMemento.getId(), catalogItem);
@@ -341,16 +341,15 @@ public abstract class RebindIteration {
             }
         }
 
-        // see notes in CatalogInitialization
+        // See notes in CatalogInitialization
         
         Collection<CatalogItem<?, ?>> catalogItems = rebindContext.getCatalogItems();
         CatalogInitialization catInit = ((ManagementContextInternal)managementContext).getCatalogInitialization();
-        catInit.injectManagementContext(managementContext);
         catInit.applyCatalogLoadMode();
         Collection<CatalogItem<?,?>> itemsForResettingCatalog = null;
-        boolean needsInitialCatalog;
+        boolean needsInitialItemsLoaded, needsAdditionalItemsLoaded;
         if (rebindManager.persistCatalogItemsEnabled) {
-            if (!catInit.hasRunOfficial() && catInit.isInitialResetRequested()) {
+            if (!catInit.hasRunFinalInitialization() && catInit.isInitialResetRequested()) {
                 String message = "RebindManager resetting catalog on first run (catalog persistence enabled, but reset explicitly specified). ";
                 if (catalogItems.isEmpty()) {
                     message += "Catalog was empty anyway.";
@@ -362,43 +361,58 @@ public abstract class RebindIteration {
                 }
                 logRebindingDebug(message);
 
+                // we will have unnecessarily tried to load the catalog item manifests earlier in this iteration,
+                // and problems there could fail a rebind even when we are resetting;
+                // it might be cleaner to check earlier whether a reset is happening and not load those items at all,
+                // but that would be a significant new code path (to remove a directory in the persistent store, essentially),
+                // and as it stands we don't do much with those manifests (e.g. we won't register them or fail on missing types)
+                // so we think it's only really corrupted XML or CatalogItem schema changes which would cause such problems.
+                // in extremis someone might need to wipe their store but for most purposes i don't think there will be any issue
+                // with loading the catalog item manifests before wiping all those files.
+                
                 itemsForResettingCatalog = MutableList.<CatalogItem<?,?>>of();
                 
                 PersisterDeltaImpl delta = new PersisterDeltaImpl();
-                for (String catalogItemId: mementoRawData.getCatalogItems().keySet()) {
-                    delta.removedCatalogItemIds.add(catalogItemId);
-                }
+                delta.removedCatalogItemIds.addAll(mementoRawData.getCatalogItems().keySet());
                 getPersister().queueDelta(delta);
                 
                 mementoRawData.clearCatalogItems();
-                needsInitialCatalog = true;
+                rebindContext.clearCatalogItems();
+                needsInitialItemsLoaded = true;
+                needsAdditionalItemsLoaded = true;
             } else {
                 if (!isEmpty) {
                     logRebindingDebug("RebindManager clearing local catalog and loading from persisted state");
                     itemsForResettingCatalog = rebindContext.getCatalogItems();
-                    needsInitialCatalog = false;
+                    needsInitialItemsLoaded = false;
+                    // only apply "add" if we haven't yet done so while in MASTER mode
+                    needsAdditionalItemsLoaded = !catInit.hasRunFinalInitialization();
                 } else {
-                    if (catInit.hasRunOfficial()) {
-                        logRebindingDebug("RebindManager will re-add any new items (persisted state empty)");
-                        needsInitialCatalog = false;
+                    if (catInit.hasRunFinalInitialization()) {
+                        logRebindingDebug("RebindManager has already done the final official run, not doing anything (even though persisted state empty)");
+                        needsInitialItemsLoaded = false;
+                        needsAdditionalItemsLoaded = false;
                     } else {
-                        logRebindingDebug("RebindManager loading initial catalog locally because persisted state empty");
-                        needsInitialCatalog = true;
+                        logRebindingDebug("RebindManager loading initial catalog locally because persisted state empty and the final official run has not yet been performed");
+                        needsInitialItemsLoaded = true;
+                        needsAdditionalItemsLoaded = true;
                     }
                 }
             }
         } else {
-            if (catInit.hasRunOfficial()) {
+            if (catInit.hasRunFinalInitialization()) {
                 logRebindingDebug("RebindManager skipping catalog init because it has already run (catalog persistence disabled)");
-                needsInitialCatalog = false;
+                needsInitialItemsLoaded = false;
+                needsAdditionalItemsLoaded = false;
             } else {
-                logRebindingDebug("RebindManager will initialize catalog locally because catalog persistence is disabled");
-                needsInitialCatalog = true;
+                logRebindingDebug("RebindManager will initialize catalog locally because catalog persistence is disabled and the final official run has not yet been performed");
+                needsInitialItemsLoaded = true;
+                needsAdditionalItemsLoaded = true;
             }
         }
 
-        // TODO in read-only mode, perhaps do this less frequently than entities etc ?
-        catInit.populateCatalog(needsInitialCatalog, itemsForResettingCatalog);
+        // TODO in read-only mode, perhaps do this less frequently than entities etc, maybe only if things change?
+        catInit.populateCatalog(mode, needsInitialItemsLoaded, needsAdditionalItemsLoaded, itemsForResettingCatalog);
     }
 
     protected void instantiateLocationsAndEntities() {

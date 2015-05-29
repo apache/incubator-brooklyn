@@ -179,7 +179,7 @@ public class HotStandbyTest {
 //        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).impl(TestApplicationNoEnrichersImpl.class), n1.mgmt);
         app.setDisplayName("First App");
         app.start(MutableList.<Location>of());
-        app.setConfig(TestEntity.CONF_NAME, "first-app");
+        app.config().set(TestEntity.CONF_NAME, "first-app");
         app.setAttribute(TestEntity.SEQUENCE, 3);
         
         forcePersistNow(n1);
@@ -251,7 +251,7 @@ public class HotStandbyTest {
         // test changes
 
         app.setDisplayName("First App Renamed");
-        app.setConfig(TestEntity.CONF_NAME, "first-app-renamed");
+        app.config().set(TestEntity.CONF_NAME, "first-app-renamed");
         app.setAttribute(TestEntity.SEQUENCE, 4);
 
         appRO = expectRebindSequenceNumber(n1, n2, app, 4, true);
@@ -262,7 +262,7 @@ public class HotStandbyTest {
         // and change again for good measure!
 
         app.setDisplayName("First App");
-        app.setConfig(TestEntity.CONF_NAME, "first-app-restored");
+        app.config().set(TestEntity.CONF_NAME, "first-app-restored");
         app.setAttribute(TestEntity.SEQUENCE, 5);
         
         appRO = expectRebindSequenceNumber(n1, n2, app, 5, true);
@@ -296,7 +296,7 @@ public class HotStandbyTest {
         TestEntity child = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
         Entities.manage(child);
         TestApplication app2 = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
-        app2.setConfig(TestEntity.CONF_NAME, "second-app");
+        app2.config().set(TestEntity.CONF_NAME, "second-app");
         
         app.setAttribute(TestEntity.SEQUENCE, 4);
         appRO = expectRebindSequenceNumber(n1, n2, app, 4, immediate);
@@ -425,7 +425,7 @@ public class HotStandbyTest {
         TestApplication app = createFirstAppAndPersist(n1);        
         noteUsedMemory("Finished seeding");
         Long initialUsed = usedMemory.peekLast();
-        app.setConfig(TestEntity.CONF_OBJECT, new BigObject(SIZE*1000*1000));
+        app.config().set(TestEntity.CONF_OBJECT, new BigObject(SIZE*1000*1000));
         assertUsedMemoryMaxDelta("Set a big config object", SIZE_UP_BOUND);
         forcePersistNow(n1);
         assertUsedMemoryMaxDelta("Persisted a big config object", SIZE_IN_XML);
@@ -443,7 +443,7 @@ public class HotStandbyTest {
         }
         assertUsedMemoryMaxDelta("And more rebinds and more persists", GRACE);
         
-        app.setConfig(TestEntity.CONF_OBJECT, "big is now small");
+        app.config().set(TestEntity.CONF_OBJECT, "big is now small");
         assertUsedMemoryMaxDelta("Big made small at primary", -SIZE_DOWN_BOUND);
         forcePersistNow(n1);
         assertUsedMemoryMaxDelta("And persisted", -SIZE_IN_XML_DOWN);
@@ -521,7 +521,7 @@ public class HotStandbyTest {
         TestEntity child = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
         Entities.manage(child);
         TestApplication app2 = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
-        app2.setConfig(TestEntity.CONF_NAME, "second-app");
+        app2.config().set(TestEntity.CONF_NAME, "second-app");
 
         forcePersistNow(n1);
         n2.ha.setPriority(1);

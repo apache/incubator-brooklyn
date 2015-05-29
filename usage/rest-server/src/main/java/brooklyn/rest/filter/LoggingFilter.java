@@ -67,7 +67,6 @@ public class LoggingFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        String uri = httpRequest.getRequestURI();
         String rid = RequestTaggingFilter.getTag();
         boolean isInteresting = INTERESTING_METHODS.contains(httpRequest.getMethod()),
                 shouldLog = (isInteresting && LOG.isDebugEnabled()) || LOG.isTraceEnabled(),
@@ -75,8 +74,8 @@ public class LoggingFilter implements Filter {
         Stopwatch timer = Stopwatch.createUnstarted();
         try {
             if (shouldLog) {
-                String message = "{} starting request {} {}";
-                Object[] args = new Object[]{rid, httpRequest.getMethod(), uri};
+                String message = "Request {} starting: {} {} from {}";
+                Object[] args = new Object[]{rid, httpRequest.getMethod(), httpRequest.getRequestURI(), httpRequest.getRemoteAddr()};
                 if (isInteresting) {
                     LOG.debug(message, args);
                 } else {
@@ -89,7 +88,7 @@ public class LoggingFilter implements Filter {
 
         } catch (Throwable e) {
             requestErrored = true;
-            LOG.warn("REST API request " + rid + " failed: " + e, e);
+            LOG.warn("Request " + rid + " ("+httpRequest.getMethod()+" "+httpRequest.getRequestURI()+" from "+httpRequest.getRemoteAddr()+") failed: " + e, e);
             // Propagate for handling by other filter
             throw Exceptions.propagate(e);
         } finally {
@@ -111,10 +110,11 @@ public class LoggingFilter implements Filter {
 
     private String getRequestCompletedMessage(boolean includeHeaders, Duration elapsed,
             String id, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        StringBuilder message = new StringBuilder(id)
-                .append(" complete in roughly ")
+        StringBuilder message = new StringBuilder("Request ")
+                .append(id)
+                .append(" completed in ")
                 .append(elapsed)
-                .append(". Responding ")
+                .append(": response ")
                 .append(httpResponse.getStatus())
                 .append(" for ")
                 .append(httpRequest.getMethod())

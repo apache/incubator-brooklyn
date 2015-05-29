@@ -56,6 +56,7 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 import brooklyn.util.osgi.Osgis;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -142,7 +143,8 @@ public class OsgiVersionMoreEntityTest {
     static CatalogItem<?, ?> addCatalogItemWithNameAndType(ManagementContext mgmt, String symName, String version, String type, String ...libraries) {
         CatalogEntityItemDto c1 = newCatalogItemWithNameAndType(symName, version, type, libraries);
         mgmt.getCatalog().addItem(c1);
-        CatalogItem<?, ?> c2 = mgmt.getCatalog().getCatalogItem(type, version);
+        CatalogItem<?, ?> c2 = mgmt.getCatalog().getCatalogItem(symName, version);
+        Preconditions.checkNotNull(c2, "Item "+type+":"+version+" was not found after adding it");
         return c2;
     }
 

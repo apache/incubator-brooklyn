@@ -44,7 +44,7 @@ public class CatalogYamlCombiTest extends AbstractYamlTest {
     
     @Test
     public void testBRefEntityA() throws Exception {
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  version: "+TEST_VERSION,
             "  items:",
@@ -86,7 +86,7 @@ public class CatalogYamlCombiTest extends AbstractYamlTest {
 
     @Test
     public void testBRefPolicyALocationZ() throws Exception {
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  version: "+TEST_VERSION,
             "  id: Z",
@@ -94,7 +94,7 @@ public class CatalogYamlCombiTest extends AbstractYamlTest {
             "  - item: ",
             "      type: localhost",
             "      brooklyn.config: { z: 9 }");
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  version: "+TEST_VERSION,
             "  items:",

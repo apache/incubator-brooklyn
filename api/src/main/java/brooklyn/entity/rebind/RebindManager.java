@@ -20,7 +20,6 @@ package brooklyn.entity.rebind;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
@@ -105,13 +104,9 @@ public interface RebindManager {
      * waiting for activity there to cease (interrupting in the case of {@link #stopReadOnly()}). */
     public void stop();
     
-    /** @deprecated since 0.7.0; use {@link #waitForPendingComplete(Duration)} */
     @VisibleForTesting
-    @Deprecated
-    public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
     /** waits for any needed or pending writes to complete */
-    @VisibleForTesting
-    public void waitForPendingComplete(Duration duration) throws InterruptedException, TimeoutException;
+    public void waitForPendingComplete(Duration duration, boolean canTrigger) throws InterruptedException, TimeoutException;
     /** Forcibly performs persistence, in the foreground 
      * @deprecated since 0.7.0; use {@link #forcePersistNow(boolean, PersistenceExceptionHandler)}, 
      * default parameter here is false to mean incremental, with null/default exception handler */

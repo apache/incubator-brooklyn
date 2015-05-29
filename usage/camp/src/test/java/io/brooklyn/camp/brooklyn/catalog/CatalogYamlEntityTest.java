@@ -52,7 +52,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     @Test
     public void testAddCatalogItemVerySimple() throws Exception {
         String symbolicName = "my.catalog.app.id.load";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  version: " + TEST_VERSION,
@@ -81,7 +81,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String symbolicName = "my.catalog.app.id.load";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog App",
@@ -103,7 +103,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String symbolicName = "my.catalog.app.id.load";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog App",
@@ -126,7 +126,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String symbolicName = "my.catalog.app.id.load";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog App",
@@ -150,7 +150,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String id = "unversioned.app";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  name: " + id,
             "  libraries:",
@@ -167,7 +167,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String id = "inline_version.app";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  name: " + id+":"+TEST_VERSION,
             "  libraries:",
@@ -357,7 +357,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
         String firstItemId = "my.catalog.app.id.register_bundle";
         String secondItemId = "my.catalog.app.id.reference_bundle";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + firstItemId,
             "  version: " + TEST_VERSION,
@@ -368,7 +368,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "- type: " + SIMPLE_ENTITY_TYPE);
         deleteCatalogEntity(firstItemId);
 
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + secondItemId,
             "  version: " + TEST_VERSION,
@@ -387,7 +387,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         String nonExistentId = "none-existent-id";
         String nonExistentVersion = "9.9.9";
         try {
-            addCatalogItem(
+            addCatalogItems(
                 "brooklyn.catalog:",
                 "  id: my.catalog.app.id.non_existing.ref",
                 "  version: " + TEST_VERSION,
@@ -406,7 +406,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     @Test
     public void testPartialBundleReferenceFails() {
         try {
-            addCatalogItem(
+            addCatalogItems(
                 "brooklyn.catalog:",
                 "  id: my.catalog.app.id.non_existing.ref",
                 "  version: " + TEST_VERSION,
@@ -420,7 +420,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             Assert.assertEquals(e.getMessage(), "both name and version are required");
         }
         try {
-            addCatalogItem(
+            addCatalogItems(
                 "brooklyn.catalog:",
                 "  id: my.catalog.app.id.non_existing.ref",
                 "  version: " + TEST_VERSION,
@@ -440,7 +440,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String itemId = "my.catalog.app.id.full_ref";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + itemId,
             "  version: " + TEST_VERSION,
@@ -466,7 +466,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         String nonExistentId = "non_existent_id";
         String nonExistentVersion = "9.9.9";
         try {
-            addCatalogItem(
+            addCatalogItems(
                 "brooklyn.catalog:",
                 "  id: " + firstItemId,
                 "  version: " + TEST_VERSION,
@@ -545,7 +545,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     @Test
     public void testMissingTypeDoesNotRecurse() {
         String symbolicName = "my.catalog.app.id.basic";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  version: " + TEST_VERSION,
@@ -554,7 +554,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "- type: brooklyn.entity.basic.BasicEntity");
 
         try {
-            addCatalogItem(
+            addCatalogItems(
                     "brooklyn.catalog:",
                     "  id: " + symbolicName,
                     "  version: " + TEST_VERSION + "-update",
@@ -570,7 +570,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     @Test
     public void testVersionedTypeDoesNotRecurse() {
         String symbolicName = "my.catalog.app.id.basic";
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  version: " + TEST_VERSION,
@@ -580,7 +580,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
         String versionedId = CatalogUtils.getVersionedId(symbolicName, TEST_VERSION);
         try {
-            addCatalogItem(
+            addCatalogItems(
                 "brooklyn.catalog:",
                 "  id: " + symbolicName,
                 "  version: " + TEST_VERSION + "-update",
@@ -597,7 +597,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     public void testOsgiNotLeakingToParent() {
         addCatalogOSGiEntity(SIMPLE_ENTITY_TYPE);
         try {
-            addCatalogItem(
+            addCatalogItems(
                     "brooklyn.catalog:",
                     "  id: " + SIMPLE_ENTITY_TYPE,
                     "  version: " + TEST_VERSION + "-update",
@@ -633,7 +633,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
     
     private void addCatalogOSGiEntity(String symbolicName, String serviceType, boolean extraLib) {
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog App",
@@ -665,10 +665,10 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "      type: " + namesAndTypes[i+1]));
         }
             
-        addCatalogItem(lines);
+        addCatalogItems(lines);
     }
     private void addCatalogChildOSGiEntityWithServicesBlock(String symbolicName, String serviceType) {
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog App",
@@ -684,7 +684,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "      - type: " + serviceType);
     }
     private void addCatalogChildOSGiEntity(String symbolicName, String serviceType) {
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog App",

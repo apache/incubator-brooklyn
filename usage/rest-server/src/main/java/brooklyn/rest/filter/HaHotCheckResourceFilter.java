@@ -112,7 +112,7 @@ public class HaHotCheckResourceFilter implements ResourceFilterFactory {
         public ContainerRequest filter(ContainerRequest request) {
             String problem = lookForProblem(request);
             if (Strings.isNonBlank(problem)) {
-                log.warn("Disallowing request as "+problem+": "+request+"/"+am+" (caller should set '"+HaMasterCheckFilter.SKIP_CHECK_HEADER+"' to force)");
+                log.warn("Disallowing web request as "+problem+": "+request+"/"+am+" (caller should set '"+HaMasterCheckFilter.SKIP_CHECK_HEADER+"' to force)");
                 throw new WebApplicationException(ApiError.builder()
                     .message("This request is only permitted against an active hot Brooklyn server")
                     .errorCode(Response.Status.FORBIDDEN).build().asJsonResponse());

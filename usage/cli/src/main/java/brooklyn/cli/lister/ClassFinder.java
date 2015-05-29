@@ -130,7 +130,7 @@ public class ClassFinder {
                     }
                 }
             } else {
-                result.add(new URL("file://"+tidiedFile));
+                result.add(tidiedFile.toURI().toURL());
             }
         }
         

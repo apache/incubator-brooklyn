@@ -25,7 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,12 +54,11 @@ import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
-import com.google.common.collect.Lists;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -164,14 +163,11 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     private final PersistenceExceptionHandler exceptionHandler;
     
     private final Duration period;
-    
-    private final AtomicLong writeCount = new AtomicLong();
-    
+        
     private DeltaCollector deltaCollector = new DeltaCollector();
 
-    private volatile boolean running = false;
-
-    private volatile boolean stopped = false;
+    private enum ListenerState { INIT, RUNNING, STOPPING, STOPPED } 
+    private volatile ListenerState state = ListenerState.INIT;
 
     private volatile ScheduledTask scheduledTask;
 
@@ -180,7 +176,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     private final boolean persistFeedsEnabled;
     
     private final Semaphore persistingMutex = new Semaphore(1);
-    private final Object startMutex = new Object();
+    private final Object startStopMutex = new Object();
+    private final AtomicInteger writeCount = new AtomicInteger(0);
 
     private PersistenceActivityMetrics metrics;
     
@@ -198,42 +195,19 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     
     @SuppressWarnings("unchecked")
     public void start() {
-        synchronized (startMutex) {
-            if (running || (scheduledTask!=null && !scheduledTask.isDone())) {
+        synchronized (startStopMutex) {
+            if (state==ListenerState.RUNNING || (scheduledTask!=null && !scheduledTask.isDone())) {
                 LOG.warn("Request to start "+this+" when already running - "+scheduledTask+"; ignoring");
                 return;
             }
-            stopped = false;
-            running = true;
+            state = ListenerState.RUNNING;
 
             Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
                 @Override public Task<Void> call() {
                     return Tasks.<Void>builder().dynamic(false).name("periodic-persister").body(new Callable<Void>() {
                         public Void call() {
-                            Stopwatch timer = Stopwatch.createStarted();
-                            try {
-                                persistNow();
-                                metrics.noteSuccess(Duration.of(timer));
-                                return null;
-                            } catch (RuntimeInterruptedException e) {
-                                LOG.debug("Interrupted persisting change-delta (rethrowing)", e);
-                                metrics.noteFailure(Duration.of(timer));
-                                metrics.noteError(e.toString());
-                                Thread.currentThread().interrupt();
-                                return null;
-                            } catch (Exception e) {
-                                // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
-                                // if we throw an exception, then our task will never get executed again
-                                LOG.error("Problem persisting change-delta", e);
-                                metrics.noteFailure(Duration.of(timer));
-                                metrics.noteError(e.toString());
-                                return null;
-                            } catch (Throwable t) {
-                                LOG.warn("Problem persisting change-delta (rethrowing)", t);
-                                metrics.noteFailure(Duration.of(timer));
-                                metrics.noteError(t.toString());
-                                throw Exceptions.propagate(t);
-                            }
+                            persistNowSafely();
+                            return null;
                         }}).build();
                 }
             };
@@ -247,78 +221,90 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
         stop(Duration.TEN_SECONDS, Duration.ONE_SECOND);
     }
     void stop(Duration timeout, Duration graceTimeoutForSubsequentOperations) {
-        stopped = true;
-        running = false;
-        
-        if (scheduledTask != null) {
-            CountdownTimer expiry = timeout.countdownTimer();
-            scheduledTask.cancel(false);
+        synchronized (startStopMutex) {
+            state = ListenerState.STOPPING;
             try {
-                waitForPendingComplete(expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
-            }
-            scheduledTask.blockUntilEnded(expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
-            scheduledTask.cancel(true);
-            boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(scheduledTask, expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
-            if (!reallyEnded) {
-                LOG.warn("Persistence tasks took too long to complete when stopping persistence (ignoring): "+scheduledTask);
-            }
-            scheduledTask = null;
-        }
 
+                if (scheduledTask != null) {
+                    CountdownTimer expiry = timeout.countdownTimer();
+                    try {
+                        scheduledTask.cancel(false);  
+                        waitForPendingComplete(expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations), true);
+                    } catch (Exception e) {
+                        throw Exceptions.propagate(e);
+                    }
+                    scheduledTask.blockUntilEnded(expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+                    scheduledTask.cancel(true);
+                    boolean reallyEnded = Tasks.blockUntilInternalTasksEnded(scheduledTask, expiry.getDurationRemaining().lowerBound(Duration.ZERO).add(graceTimeoutForSubsequentOperations));
+                    if (!reallyEnded) {
+                        LOG.warn("Persistence tasks took too long to terminate, when stopping persistence, although pending changes were persisted (ignoring): "+scheduledTask);
+                    }
+                    scheduledTask = null;
+                }
 
-        // Discard all state that was waiting to be persisted
-        synchronized (this) {
-            deltaCollector = new DeltaCollector();
+                // Discard all state that was waiting to be persisted
+                synchronized (this) {
+                    deltaCollector = new DeltaCollector();
+                }
+            } finally {
+                state = ListenerState.STOPPED;
+            }
         }
     }
     
-    /**
-     * This method must only be used for testing. If required in production, then revisit implementation!
-     * @deprecated since 0.7.0, use {@link #waitForPendingComplete(Duration)}
-     */
+    /** Waits for any in-progress writes to be completed then for or any unwritten data to be written. */
     @VisibleForTesting
-    public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
-        waitForPendingComplete(Duration.of(timeout, unit));
-    }
-    @VisibleForTesting
-    public void waitForPendingComplete(Duration timeout) throws InterruptedException, TimeoutException {
-        // Every time we finish writing, we increment a counter. We note the current val, and then
-        // wait until we can guarantee that a complete additional write has been done. Not sufficient
-        // to wait for `writeCount > origWriteCount` because we might have read the value when almost 
-        // finished a write.
+    public void waitForPendingComplete(Duration timeout, boolean canTrigger) throws InterruptedException, TimeoutException {
+        if (!isActive() && state != ListenerState.STOPPING) return;
         
-        long startTime = System.currentTimeMillis();
-        long maxEndtime = timeout.isPositive() ? startTime + timeout.toMillisecondsRoundingUp() : Long.MAX_VALUE;
-        long origWriteCount = writeCount.get();
-        while (true) {
-            if (!isActive()) {
-                return; // no pending activity;
-            } else if (writeCount.get() > (origWriteCount+1)) {
-                return;
+        CountdownTimer timer = timeout.isPositive() ? CountdownTimer.newInstanceStarted(timeout) : CountdownTimer.newInstancePaused(Duration.PRACTICALLY_FOREVER);
+        Integer targetWriteCount = null;
+        // wait for mutex, so we aren't tricked by an in-progress who has already recycled the collector
+        if (persistingMutex.tryAcquire(timer.getDurationRemaining().toMilliseconds(), TimeUnit.MILLISECONDS)) {
+            try {
+                // now no one else is writing
+                if (!deltaCollector.isEmpty()) {
+                    if (canTrigger) {
+                        // but there is data that needs to be written
+                        persistNowSafely(true);
+                    } else {
+                        targetWriteCount = writeCount.get()+1;
+                    }
+                }
+            } finally {
+                persistingMutex.release();
             }
-            
-            if (System.currentTimeMillis() > maxEndtime) {
-                throw new TimeoutException("Timeout waiting for pending complete of rebind-periodic-delta, after "+Time.makeTimeStringRounded(timeout));
+            if (targetWriteCount!=null) {
+                while (writeCount.get() <= targetWriteCount) {
+                    Duration left = timer.getDurationRemaining();
+                    if (left.isPositive()) {
+                        writeCount.wait(left.lowerBound(Duration.millis(10)).toMilliseconds());
+                    } else {
+                        throw new TimeoutException("Timeout waiting for independent write of rebind-periodic-delta, after "+timer.getDurationElapsed());
+                    }
+                }
             }
-            Thread.sleep(1);
+        } else {
+            // someone else has been writing for the entire time 
+            throw new TimeoutException("Timeout waiting for completion of in-progress write of rebind-periodic-delta, after "+timer.getDurationElapsed());
         }
     }
 
     /**
-     * Indicates whether to persist things now. Even when not active, we will still store what needs
-     * to be persisted unless {@link #isStopped()}.
+     * Indicates whether persistence is active. 
+     * Even when not active, changes will still be tracked unless {@link #isStopped()}.
      */
     private boolean isActive() {
-        return running && persister != null && !isStopped();
+        return state == ListenerState.RUNNING && persister != null && !isStopped();
     }
 
     /**
-     * Whether we have been stopped, in which case will not persist or store anything.
+     * Whether we have been stopped, ie are stopping are or fully stopped,
+     * in which case will not persist or store anything
+     * (except for a final internal persistence called while STOPPING.) 
      */
     private boolean isStopped() {
-        return stopped || executionContext.isShutdown();
+        return state == ListenerState.STOPPING || state == ListenerState.STOPPED || executionContext.isShutdown();
     }
     
     private void addReferencedObjects(DeltaCollector deltaCollector) {
@@ -348,13 +334,44 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     }
     
     @VisibleForTesting
-    public void persistNow() {
-        if (!isActive()) {
+    public boolean persistNowSafely() {
+        return persistNowSafely(false);
+    }
+    
+    private boolean persistNowSafely(boolean alreadyHasMutex) {
+        Stopwatch timer = Stopwatch.createStarted();
+        try {
+            persistNowInternal(alreadyHasMutex);
+            metrics.noteSuccess(Duration.of(timer));
+            return true;
+        } catch (RuntimeInterruptedException e) {
+            LOG.debug("Interrupted persisting change-delta (rethrowing)", e);
+            metrics.noteFailure(Duration.of(timer));
+            metrics.noteError(e.toString());
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (Exception e) {
+            // Don't rethrow: the behaviour of executionManager is different from a scheduledExecutorService,
+            // if we throw an exception, then our task will never get executed again
+            LOG.error("Problem persisting change-delta", e);
+            metrics.noteFailure(Duration.of(timer));
+            metrics.noteError(e.toString());
+            return false;
+        } catch (Throwable t) {
+            LOG.warn("Problem persisting change-delta (rethrowing)", t);
+            metrics.noteFailure(Duration.of(timer));
+            metrics.noteError(t.toString());
+            throw Exceptions.propagate(t);
+        }
+    }
+    
+    protected void persistNowInternal(boolean alreadyHasMutex) {
+        if (!isActive() && state != ListenerState.STOPPING) {
             return;
         }
         try {
-            persistingMutex.acquire();
-            if (!isActive()) return;
+            if (!alreadyHasMutex) persistingMutex.acquire();
+            if (!isActive() && state != ListenerState.STOPPING) return;
             
             // Atomically switch the delta, so subsequent modifications will be done in the
             // next scheduled persist
@@ -419,8 +436,11 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 LOG.debug("Problem persisting, but no longer active (ignoring)", e);
             }
         } finally {
-            writeCount.incrementAndGet();
-            persistingMutex.release();
+            synchronized (writeCount) {
+                writeCount.incrementAndGet();
+                writeCount.notifyAll();
+            }
+            if (!alreadyHasMutex) persistingMutex.release();
         }
     }
     

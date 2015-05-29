@@ -126,45 +126,65 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
         new Thread("shutdown") {
             public void run() {
-                if (stopAppsFirst) {
-                    CountdownTimer shutdownTimeoutTimer = null;
-                    if (!shutdownTimeout.equals(Duration.ZERO)) {
-                        shutdownTimeoutTimer = shutdownTimeout.countdownTimer();
-                    }
+                boolean terminateTried = false;
+                try {
+                    if (stopAppsFirst) {
+                        CountdownTimer shutdownTimeoutTimer = null;
+                        if (!shutdownTimeout.equals(Duration.ZERO)) {
+                            shutdownTimeoutTimer = shutdownTimeout.countdownTimer();
+                        }
 
-                    List<Task<?>> stoppers = new ArrayList<Task<?>>();
-                    for (Application app: mgmt().getApplications()) {
-                        if (app instanceof StartableApplication)
-                            stoppers.add(Entities.invokeEffector((EntityLocal)app, app, StartableApplication.STOP));
-                    }
+                        List<Task<?>> stoppers = new ArrayList<Task<?>>();
+                        for (Application app: mgmt().getApplications()) {
+                            if (app instanceof StartableApplication)
+                                stoppers.add(Entities.invokeEffector((EntityLocal)app, app, StartableApplication.STOP));
+                        }
 
-                    try {
                         for (Task<?> t: stoppers) {
                             if (!waitAppShutdown(shutdownTimeoutTimer, t)) {
                                 //app stop error
                                 hasAppErrorsOrTimeout.set(true);
                             }
                         }
-                    } catch (TimeoutException e) {
-                        //timeout while waiting for apps to stop
-                        hasAppErrorsOrTimeout.set(true);
                     }
 
-                    if (hasAppErrorsOrTimeout.get() && !forceShutdownOnError) {
-                        complete();
-                        //There are app errors, don't exit the process.
-                        return;
+                    terminateTried = true;
+                    ((ManagementContextInternal)mgmt()).terminate(); 
+
+                } catch (Throwable e) {
+                    Throwable interesting = Exceptions.getFirstInteresting(e);
+                    if (interesting instanceof TimeoutException) {
+                        //timeout while waiting for apps to stop
+                        log.warn("Timeout shutting down: "+Exceptions.collapseText(e));
+                        log.debug("Timeout shutting down: "+e, e);
+                        hasAppErrorsOrTimeout.set(true);
+                        
+                    } else {
+                        // swallow fatal, so we notify the outer loop to continue with shutdown
+                        log.error("Unexpected error shutting down: "+Exceptions.collapseText(e), e);
+                        
+                    }
+                    hasAppErrorsOrTimeout.set(true);
+                    
+                    if (!terminateTried) {
+                        ((ManagementContextInternal)mgmt()).terminate(); 
+                    }
+                } finally {
+
+                    complete();
+                
+                    if (!hasAppErrorsOrTimeout.get() || forceShutdownOnError) {
+                        //give the http request a chance to complete gracefully
+                        Time.sleep(delayForHttpReturn);
+                        
+                        System.exit(0);
+                        
+                    } else {
+                        // There are app errors, don't exit the process, allowing any exception to continue throwing
+                        log.warn("Abandoning shutdown because there were errors and shutdown was not forced.");
+                        
                     }
                 }
-
-                ((ManagementContextInternal)mgmt()).terminate(); 
-
-                complete();
-
-                //give the http request a chance to complete gracefully
-                Time.sleep(delayForHttpReturn);
-
-                System.exit(0);
             }
 
             private void complete() {

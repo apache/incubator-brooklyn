@@ -19,11 +19,13 @@
 package brooklyn.osgi.tests.more;
 
 
+import brooklyn.catalog.Catalog;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.ImplementedBy;
 
+@Catalog(name="More Entity v2")
 @ImplementedBy(MoreEntityImpl.class)
 public interface MoreEntity extends Entity {
 

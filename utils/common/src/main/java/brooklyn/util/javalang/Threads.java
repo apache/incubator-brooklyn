@@ -21,6 +21,8 @@ package brooklyn.util.javalang;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.util.exceptions.Exceptions;
+
 public class Threads {
 
     private static final Logger log = LoggerFactory.getLogger(Threads.class);
@@ -44,7 +46,15 @@ public class Threads {
             return Runtime.getRuntime().removeShutdownHook(hook);
         } catch (IllegalStateException e) {
             // probably shutdown in progress
-            log.debug("cannot remove shutdown hook "+hook+": "+e);
+            String text = Exceptions.collapseText(e);
+            if (text.contains("Shutdown in progress")) {
+                if (log.isTraceEnabled()) {
+                    log.trace("Could not remove shutdown hook "+hook+": "+text);
+                }
+            } else {
+                log.warn("Could not remove shutdown hook "+hook+": "+text);
+                log.debug("Shutdown hook removal details: "+e, e);
+            }
             return false;
         }
     }

@@ -152,7 +152,7 @@ System.err.println("TEAR DOWN");
 
         writeMgmt = createManagementContext(mementoDir, writeMode);
         appId = createApp(writeMgmt);
-        writeMgmt.getRebindManager().waitForPendingComplete(TIMEOUT);
+        writeMgmt.getRebindManager().waitForPendingComplete(TIMEOUT, true);
 
         if (readMode == HighAvailabilityMode.DISABLED) {
             //no HA, one node only

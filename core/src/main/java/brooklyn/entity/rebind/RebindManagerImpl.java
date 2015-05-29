@@ -421,15 +421,9 @@ public class RebindManagerImpl implements RebindManager {
     
     @Override
     @VisibleForTesting
-    @Deprecated /** @deprecated since 0.7.0 use Duration as argument */
-    public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
-        waitForPendingComplete(Duration.of(timeout, unit));
-    }
-    @Override
-    @VisibleForTesting
-    public void waitForPendingComplete(Duration timeout) throws InterruptedException, TimeoutException {
+    public void waitForPendingComplete(Duration timeout, boolean canTrigger) throws InterruptedException, TimeoutException {
         if (persistenceStoreAccess == null || !persistenceRunning) return;
-        persistenceRealChangeListener.waitForPendingComplete(timeout);
+        persistenceRealChangeListener.waitForPendingComplete(timeout, canTrigger);
         persistenceStoreAccess.waitForWritesCompleted(timeout);
     }
     @Override
@@ -447,7 +441,9 @@ public class RebindManagerImpl implements RebindManager {
             }
             persistenceStoreAccess.checkpoint(memento, exceptionHandler);
         } else {
-            persistenceRealChangeListener.persistNow();
+            if (!persistenceRealChangeListener.persistNowSafely()) {
+                throw new IllegalStateException("Forced persistence failed; see logs fore more detail");
+            }
         }
     }
     

@@ -182,7 +182,7 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
     }
 
     private void doTestVersionedReferenceJustAdded(boolean isVersionImplicitSyntax) throws Exception {
-        addCatalogItem(            "brooklyn.catalog:",
+        addCatalogItems(            "brooklyn.catalog:",
             "  version: 0.9",
             "  items:",
             "  - id: referrent",
@@ -243,7 +243,7 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
     }
     
     private void addCatalogEntity(String symbolicName, String version, String type, String iconUrl) {
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog App",

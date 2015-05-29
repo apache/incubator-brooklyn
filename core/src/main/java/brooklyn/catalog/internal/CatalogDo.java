@@ -281,6 +281,7 @@ public class CatalogDo {
         return loadCatalog(child, true);
     }
     
+    /** adds the given urls; filters out any nulls supplied */
     public synchronized void addToClasspath(String ...urls) {
         if (dto.classpath == null)
             dto.classpath = new CatalogClasspathDto();

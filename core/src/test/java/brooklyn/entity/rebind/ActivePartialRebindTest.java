@@ -83,7 +83,7 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
     public void testRebindCheckingMemoryLeak() throws Exception {
         TestEntity c1 = origApp.addChild(EntitySpec.create(TestEntity.class));
         Entities.manage(c1);
-        c1.setConfig(TestEntity.CONF_NAME, Strings.makeRandomId(1000000));
+        c1.config().set(TestEntity.CONF_NAME, Strings.makeRandomId(1000000));
         
         gcAndLog("before");
         long used0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();

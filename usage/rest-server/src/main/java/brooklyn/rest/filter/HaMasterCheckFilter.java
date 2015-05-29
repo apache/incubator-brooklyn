@@ -94,7 +94,7 @@ public class HaMasterCheckFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         String problem = lookForProblem(request);
         if (problem!=null) {
-            log.warn("Disallowing request as "+problem+": "+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
+            log.warn("Disallowing web request as "+problem+": "+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
             WebResourceUtils.applyJsonResponse(servletContext, ApiError.builder()
                 .message("This request is only permitted against an active master Brooklyn server")
                 .errorCode(Response.Status.FORBIDDEN).build().asJsonResponse(), (HttpServletResponse)response);

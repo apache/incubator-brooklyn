@@ -121,7 +121,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         String referrerSymbolicName = "my.catalog.policy.id.referring";
         addCatalogOsgiPolicy(referencedSymbolicName, SIMPLE_POLICY_TYPE);
 
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + referrerSymbolicName,
             "  name: My Catalog App",
@@ -153,7 +153,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
     private void addCatalogOsgiPolicy(String symbolicName, String policyType) {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog Policy",
@@ -172,7 +172,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
     private void addCatalogOsgiPolicyTopLevelSyntax(String symbolicName, String policyType) {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
-        addCatalogItem(
+        addCatalogItems(
             "brooklyn.catalog:",
             "  id: " + symbolicName,
             "  name: My Catalog Policy",

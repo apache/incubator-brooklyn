@@ -523,10 +523,10 @@ public class Os {
      * either prefix or ext may be null; 
      * if ext is non-empty and not > 4 chars and not starting with a ., then a dot will be inserted */
     public static File newTempFile(String prefix, String ext) {
-        String sanitizedPrefix = (prefix!=null ? prefix + "-" : "");
-        String sanitizedExt = (ext!=null ? ext.startsWith(".") || ext.length()>4 ? ext : "."+ext : "");
+        String sanitizedPrefix = (Strings.isNonEmpty(prefix) ? Strings.makeValidFilename(prefix) + "-" : "");
+        String extWithPrecedingSeparator = (Strings.isNonEmpty(ext) ? ext.startsWith(".") || ext.length()>4 ? ext : "."+ext : "");
         try {
-            File tempFile = File.createTempFile(sanitizedPrefix, sanitizedExt, new File(tmp()));
+            File tempFile = File.createTempFile(sanitizedPrefix, extWithPrecedingSeparator, new File(tmp()));
             tempFile.deleteOnExit();
             return tempFile;
         } catch (IOException e) {

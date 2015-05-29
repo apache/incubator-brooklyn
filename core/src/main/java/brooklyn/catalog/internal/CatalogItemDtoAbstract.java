@@ -184,7 +184,9 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         if (!Objects.equal(displayName, other.displayName)) return false;
         if (!Objects.equal(iconUrl, other.iconUrl)) return false;
         if (!Objects.equal(tags, other.tags)) return false;
-        // 'type' not checked, because deprecated, we might want to allow removal in future
+        // 'type' not checked, because deprecated, 
+        // and in future we might want to allow it to be removed/blanked in some impls without affecting equality
+        // (in most cases it is the same as symbolicName so doesn't matter)
         return true;
     }
 

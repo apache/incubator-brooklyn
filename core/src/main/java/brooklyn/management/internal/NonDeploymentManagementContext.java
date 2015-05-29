@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
@@ -544,11 +543,7 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         }
 
         @Override
-        public void waitForPendingComplete(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
-            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
-        }
-        @Override
-        public void waitForPendingComplete(Duration timeout) throws InterruptedException, TimeoutException {
+        public void waitForPendingComplete(Duration timeout, boolean canTrigger) throws InterruptedException, TimeoutException {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
