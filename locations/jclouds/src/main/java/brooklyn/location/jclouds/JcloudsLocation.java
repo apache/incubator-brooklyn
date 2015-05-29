@@ -1608,50 +1608,25 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      */
     public JcloudsSshMachineLocation rebindMachine(ConfigBag setup) throws NoMachinesAvailableException {
         try {
-            if (setup.getDescription()==null) setCreationString(setup);
-
-            final String rawId = (String) setup.getStringKey("id");
-            final String rawHostname = (String) setup.getStringKey("hostname");
+            if (setup.getDescription() == null) setCreationString(setup);
             String user = checkNotNull(getUser(setup), "user");
-            final String rawRegion = (String) setup.getStringKey("region");
-
-            LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {}",
-                    new Object[] {rawId!=null ? rawId : "<lookup>",
-                        user,
-                        (rawHostname != null ? rawHostname : "<unspecified>"),
-                        getProvider()});
-
+            String rawId = (String) setup.getStringKey("id");
+            String rawHostname = (String) setup.getStringKey("hostname");
+            Predicate<ComputeMetadata> predicate = getRebindToMachinePredicate(setup);
+            LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {} matching {}", new Object[]{
+                    rawId != null ? rawId : "<lookup>",
+                    user,
+                    rawHostname != null ? rawHostname : "<unspecified>",
+                    getProvider(),
+                    predicate
+                    });
             ComputeService computeService = getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(setup, true);
-
-            Set<? extends NodeMetadata> candidateNodes = computeService.listNodesDetailsMatching(new Predicate<ComputeMetadata>() {
-                @Override
-                public boolean apply(ComputeMetadata input) {
-                    // ID exact match
-                    if (rawId!=null) {
-                        if (rawId.equals(input.getId())) return true;
-                        // AWS format
-                        if (rawRegion!=null && (rawRegion+"/"+rawId).equals(input.getId())) return true;
-                    }
-                    // else do node metadata lookup
-                    if (!(input instanceof NodeMetadata)) return false;
-                    if (rawHostname!=null && rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
-                    if (rawHostname!=null && ((NodeMetadata)input).getPublicAddresses().contains(rawHostname)) return true;
-
-                    if (rawId!=null && rawId.equalsIgnoreCase( ((NodeMetadata)input).getHostname() )) return true;
-                    if (rawId!=null && ((NodeMetadata)input).getPublicAddresses().contains(rawId)) return true;
-                    // don't do private IP's because those might be repeated
-
-                    if (rawId!=null && rawId.equalsIgnoreCase( ((NodeMetadata)input).getProviderId() )) return true;
-                    if (rawHostname!=null && rawHostname.equalsIgnoreCase( ((NodeMetadata)input).getProviderId() )) return true;
-
-                    return false;
-                }
-            });
-
-            if (candidateNodes.isEmpty())
-                throw new IllegalArgumentException("Jclouds node not found for rebind, looking for id="+rawId+" and hostname="+rawHostname);
-            if (candidateNodes.size()>1)
-                throw new IllegalArgumentException("Jclouds node for rebind matching multiple, looking for id="+rawId+" and hostname="+rawHostname+": "+candidateNodes);
+            Set<? extends NodeMetadata> candidateNodes = computeService.listNodesDetailsMatching(predicate);
+            if (candidateNodes.isEmpty()) {
+                throw new IllegalArgumentException("Jclouds node not found for rebind with predicate " + predicate);
+            } else if (candidateNodes.size() > 1) {
+                throw new IllegalArgumentException("Jclouds node for rebind matched multiple with " + predicate + ": " + candidateNodes);
+            }
 
             NodeMetadata node = Iterables.getOnlyElement(candidateNodes);
             String pkd = LocationConfigUtils.getOsCredential(setup).checkNoErrors().logAnyWarnings().getPrivateKeyData();
@@ -1674,6 +1649,72 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     public JcloudsSshMachineLocation rebindMachine(Map<?,?> flags) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(config().getBag(), flags);
         return rebindMachine(setup);
+    }
+
+    /**
+     * @return a predicate that returns true if a {@link ComputeMetadata} instance is suitable for
+     *      rebinding to given the configuration in {@link ConfigBag config}.
+     */
+    protected Predicate<ComputeMetadata> getRebindToMachinePredicate(ConfigBag config) {
+        return new RebindToMachinePredicate(config);
+    }
+
+    /**
+     * Determines whether a machine may be rebinded to by comparing the given id, hostname and region
+     * against the node's id, hostname, provider id and public addresses.
+     */
+    private static class RebindToMachinePredicate implements Predicate<ComputeMetadata> {
+
+        final String rawId;
+        final String rawHostname;
+        final String rawRegion;
+
+        public RebindToMachinePredicate(ConfigBag config) {
+            rawId = (String) config.getStringKey("id");
+            rawHostname = (String) config.getStringKey("hostname");
+            rawRegion = (String) config.getStringKey("region");
+        }
+
+        @Override
+        public boolean apply(ComputeMetadata input) {
+            // ID exact match
+            if (rawId != null) {
+                // Second is AWS format
+                if (rawId.equals(input.getId()) || rawRegion != null && (rawRegion + "/" + rawId).equals(input.getId())) {
+                    return true;
+                }
+            }
+
+            // else do node metadata lookup
+            if (input instanceof NodeMetadata) {
+                NodeMetadata node = NodeMetadata.class.cast(input);
+                if (rawHostname != null && rawHostname.equalsIgnoreCase(node.getHostname()))
+                    return true;
+                if (rawHostname != null && node.getPublicAddresses().contains(rawHostname))
+                    return true;
+                if (rawId != null && rawId.equalsIgnoreCase(node.getHostname()))
+                    return true;
+                if (rawId != null && node.getPublicAddresses().contains(rawId))
+                    return true;
+                // don't do private IPs because they might be repeated
+                if (rawId != null && rawId.equalsIgnoreCase(node.getProviderId()))
+                    return true;
+                if (rawHostname != null && rawHostname.equalsIgnoreCase(node.getProviderId()))
+                    return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .omitNullValues()
+                    .add("id", rawId)
+                    .add("hostname", rawHostname)
+                    .add("region", rawRegion)
+                    .toString();
+        }
     }
 
     // -------------- create the SshMachineLocation instance, and connect to it etc ------------------------
