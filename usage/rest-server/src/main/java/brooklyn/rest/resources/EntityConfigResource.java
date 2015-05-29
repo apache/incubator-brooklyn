@@ -72,9 +72,9 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     public Map<String, Object> batchConfigRead(String application, String entityToken, Boolean raw) {
         // TODO: add test
         EntityLocal entity = brooklyn().getEntity(application, entityToken);
-        Map<ConfigKey<?>, Object> source = ((EntityInternal) entity).getAllConfig();
+        Map<ConfigKey<?>, ?> source = ((EntityInternal) entity).config().getBag().getAllConfigAsConfigKeyMap();
         Map<String, Object> result = Maps.newLinkedHashMap();
-        for (Map.Entry<ConfigKey<?>, Object> ek : source.entrySet()) {
+        for (Map.Entry<ConfigKey<?>, ?> ek : source.entrySet()) {
             Object value = ek.getValue();
             if (Boolean.FALSE.equals(raw)) {
                 value = RendererHints.applyDisplayValueHint(ek.getKey(), value);
@@ -97,7 +97,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     public Object get(boolean preferJson, String application, String entityToken, String configKeyName, Boolean raw) {
         EntityLocal entity = brooklyn().getEntity(application, entityToken);
         ConfigKey<?> ck = findConfig(entity, configKeyName);
-        Object value = entity.getConfigRaw(ck, true).orNull();
+        Object value = ((EntityInternal)entity).config().getRaw(ck).orNull();
         if (Boolean.FALSE.equals(raw)) {
             value = RendererHints.applyDisplayValueHint(ck, value);
         }
@@ -127,10 +127,10 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
             Object newValue = ((Map.Entry) entry).getValue();
 
             ConfigKey ck = findConfig(entity, configName);
-            ((EntityInternal) entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
+            ((EntityInternal) entity).config().set(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
             if (Boolean.TRUE.equals(recurse)) {
                 for (Entity e2 : Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
-                    ((EntityInternal) e2).setConfig(ck, newValue);
+                    ((EntityInternal) e2).config().set(ck, newValue);
                 }
             }
         }
@@ -147,10 +147,10 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
 
         ConfigKey ck = findConfig(entity, configName);
         LOG.debug("REST setting config " + configName + " on " + entity + " to " + newValue);
-        ((EntityInternal) entity).setConfig(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
+        ((EntityInternal) entity).config().set(ck, TypeCoercions.coerce(newValue, ck.getTypeToken()));
         if (Boolean.TRUE.equals(recurse)) {
             for (Entity e2 : Entities.descendants(entity, Predicates.alwaysTrue(), false)) {
-                ((EntityInternal) e2).setConfig(ck, newValue);
+                ((EntityInternal) e2).config().set(ck, newValue);
             }
         }
     }

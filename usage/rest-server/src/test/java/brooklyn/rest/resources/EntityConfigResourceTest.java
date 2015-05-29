@@ -149,7 +149,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
             String value = client().resource(uri).accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
             assertEquals(value, "\"hello world\"");
 
-        } finally { entity.setConfig(RestMockSimpleEntity.SAMPLE_CONFIG, RestMockSimpleEntity.SAMPLE_CONFIG.getDefaultValue()); }
+        } finally { entity.config().set(RestMockSimpleEntity.SAMPLE_CONFIG, RestMockSimpleEntity.SAMPLE_CONFIG.getDefaultValue()); }
     }
 
     @Test
@@ -167,7 +167,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
             String value = client().resource(uri+"/"+RestMockSimpleEntity.SAMPLE_CONFIG.getName()).accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
             assertEquals(value, "\"hello world\"");
 
-        } finally { entity.setConfig(RestMockSimpleEntity.SAMPLE_CONFIG, RestMockSimpleEntity.SAMPLE_CONFIG.getDefaultValue()); }
+        } finally { entity.config().set(RestMockSimpleEntity.SAMPLE_CONFIG, RestMockSimpleEntity.SAMPLE_CONFIG.getDefaultValue()); }
     }
 
 }

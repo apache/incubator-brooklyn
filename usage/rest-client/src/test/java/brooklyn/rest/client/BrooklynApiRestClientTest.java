@@ -19,16 +19,18 @@
 package brooklyn.rest.client;
 
 import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.core.Response;
 
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
@@ -37,10 +39,11 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncher;
 import brooklyn.rest.BrooklynRestApiLauncherTest;
-import brooklyn.rest.domain.LocationSummary;
-import brooklyn.rest.security.provider.ExplicitUsersSecurityProvider;
-import brooklyn.rest.security.provider.SecurityProvider;
+import brooklyn.rest.domain.ApplicationSummary;
+import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.rest.security.provider.TestSecurityProvider;
+import brooklyn.test.HttpTestUtils;
+import brooklyn.test.entity.TestEntity;
 
 @Test
 public class BrooklynApiRestClientTest {
@@ -63,17 +66,9 @@ public class BrooklynApiRestClientTest {
 
     @BeforeClass
     public void setUp() throws Exception {
-        WebAppContext context;
-
-        // running in source mode; need to use special classpath        
-        context = new WebAppContext("src/test/webapp", "/");
-        context.setExtraClasspath("./target/test-rest-server/");
-        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, getManagementContext());
-
         Server server = BrooklynRestApiLauncher.launcher()
                 .managementContext(manager)
                 .securityProvider(TestSecurityProvider.class)
-                .customContext(context)
                 .start();
 
         api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/",
@@ -92,9 +87,48 @@ public class BrooklynApiRestClientTest {
         Entities.destroyAll(getManagementContext());
     }
 
-    public void testListLocations() throws Exception {
-        List<LocationSummary> locations = api.getLocationApi().list();
-        log.info("locations are: "+locations);
+    public void testLocationApi() throws Exception {
+        log.info("Testing location API");
+        Map<String, Map<String, Object>> locations = api.getLocationApi().getLocatedLocations();
+        log.info("locations located are: "+locations);
     }
 
+    public void testCatalogApiLocations() throws Exception {
+        List<CatalogLocationSummary> locations = api.getCatalogApi().listLocations(".*", null, false);
+        log.info("locations from catalog are: "+locations);
+    }
+
+    public void testApplicationApiList() throws Exception {
+        List<ApplicationSummary> apps = api.getApplicationApi().list(null);
+        log.info("apps are: "+apps);
+    }
+    
+    public void testApplicationApiCreate() throws Exception {
+        Response r1 = api.getApplicationApi().createFromYaml("name: test-1234\n"
+            + "services: [ { type: "+TestEntity.class.getName()+" } ]");
+        HttpTestUtils.assertHealthyStatusCode(r1.getStatus());
+        log.info("creation result: "+r1.getEntity());
+        List<ApplicationSummary> apps = api.getApplicationApi().list(null);
+        log.info("apps with test: "+apps);
+        Assert.assertTrue(apps.toString().contains("test-1234"), "should have had test-1234 as an app; instead: "+apps);
+    }
+    
+    public void testApplicationApiHandledError() throws Exception {
+        Response r1 = api.getApplicationApi().createFromYaml("name: test");
+        Assert.assertTrue(r1.getStatus()/100 != 2, "needed an unhealthy status, not "+r1.getStatus());
+        Object entity = r1.getEntity();
+        Assert.assertTrue(entity.toString().indexOf("Unrecognized application blueprint format: no services defined")>=0,
+            "Missing expected text in response: "+entity.toString());
+    }
+
+    public void testApplicationApiThrownError() throws Exception {
+        try {
+            ApplicationSummary summary = api.getApplicationApi().get("test-5678");
+            Assert.fail("Should have thrown, not given: "+summary);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.assertTrue(e.toString().toLowerCase().contains("not found"),
+                "Missing expected text in response: "+e.toString());
+        }
+    }
 }

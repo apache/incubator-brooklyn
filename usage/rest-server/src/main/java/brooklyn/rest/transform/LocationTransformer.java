@@ -24,14 +24,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.basic.BasicLocationDefinition;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
-import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -43,16 +42,18 @@ import com.google.common.collect.ImmutableMap;
 
 public class LocationTransformer {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(LocationTransformer.LocationDetailLevel.class);
     
     public static enum LocationDetailLevel { NONE, LOCAL_EXCLUDING_SECRET, FULL_EXCLUDING_SECRET, FULL_INCLUDING_SECRET }
     
     /** @deprecated since 0.7.0 use method taking management context and detail specifier */
     @Deprecated
-    public static LocationSummary newInstance(String id, LocationSpec locationSpec) {
+    public static LocationSummary newInstance(String id, brooklyn.rest.domain.LocationSpec locationSpec) {
         return newInstance(null, id, locationSpec, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
     }
-    public static LocationSummary newInstance(ManagementContext mgmt, String id, LocationSpec locationSpec, LocationDetailLevel level) {
+    @SuppressWarnings("deprecation")
+    public static LocationSummary newInstance(ManagementContext mgmt, String id, brooklyn.rest.domain.LocationSpec locationSpec, LocationDetailLevel level) {
         // TODO: Remove null checks on mgmt when newInstance(String, LocationSpec) is deleted
         Map<String, ?> config = locationSpec.getConfig();
         if (mgmt != null && (level==LocationDetailLevel.FULL_EXCLUDING_SECRET || level==LocationDetailLevel.FULL_INCLUDING_SECRET)) {
@@ -123,7 +124,7 @@ public class LocationTransformer {
         ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
         if (level!=LocationDetailLevel.NONE) {
             for (Map.Entry<String,?> entry : entries.entrySet()) {
-                if (level==LocationDetailLevel.FULL_INCLUDING_SECRET || !Entities.isSecret(entry.getKey())) {
+                if (level==LocationDetailLevel.FULL_INCLUDING_SECRET || !Sanitizer.IS_SECRET_PREDICATE.apply(entry.getKey())) {
                     builder.put(entry.getKey(), WebResourceUtils.getValueForDisplay(entry.getValue(), true, false));
                 }
             }

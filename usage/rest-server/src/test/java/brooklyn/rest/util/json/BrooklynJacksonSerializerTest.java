@@ -299,7 +299,7 @@ public class BrooklynJacksonSerializerTest {
                     .build();
 
             // assert config here is just mgmt.toString()
-            app.setConfig(TestEntity.CONF_OBJECT, mgmt);
+            app.config().set(TestEntity.CONF_OBJECT, mgmt);
             String content = get(client, configUri, ImmutableMap.of("Accept", MediaType.TEXT_PLAIN));
             log.info("CONFIG MGMT is:\n"+content);
             Assert.assertEquals(content, mgmt.toString(), "content="+content);
@@ -332,7 +332,7 @@ public class BrooklynJacksonSerializerTest {
                     .build();
 
             // assert config here is just mgmt
-            app.setConfig(TestEntity.CONF_OBJECT, mgmt);
+            app.config().set(TestEntity.CONF_OBJECT, mgmt);
             String content = get(client, configUri, ImmutableMap.of("Accept", MediaType.APPLICATION_JSON));
             log.info("CONFIG MGMT is:\n"+content);
             @SuppressWarnings("rawtypes")
@@ -349,7 +349,7 @@ public class BrooklynJacksonSerializerTest {
             Assert.assertNotNull(values.get("links"), "Map should have contained links: values="+values);
 
             // but config etc returns our nicely json serialized
-            app.setConfig(TestEntity.CONF_OBJECT, app);
+            app.config().set(TestEntity.CONF_OBJECT, app);
             content = get(client, configUri, ImmutableMap.of("Accept", MediaType.APPLICATION_JSON));
             log.info("CONFIG ENTITY is:\n"+content);
             values = new Gson().fromJson(content, Map.class);
@@ -357,13 +357,13 @@ public class BrooklynJacksonSerializerTest {
 
             // and self-ref gives error + toString
             SelfRefNonSerializableClass angry = new SelfRefNonSerializableClass();
-            app.setConfig(TestEntity.CONF_OBJECT, angry);
+            app.config().set(TestEntity.CONF_OBJECT, angry);
             content = get(client, configUri, ImmutableMap.of("Accept", MediaType.APPLICATION_JSON));
             log.info("CONFIG ANGRY is:\n"+content);
             assertErrorObjectMatchingToString(content, angry);
             
             // as does Server
-            app.setConfig(TestEntity.CONF_OBJECT, server);
+            app.config().set(TestEntity.CONF_OBJECT, server);
             content = get(client, configUri, ImmutableMap.of("Accept", MediaType.APPLICATION_JSON));
             // NOTE, if using the default visibility / object mapper, the getters of the object are invoked
             // resulting in an object which is huge, 7+MB -- and it wreaks havoc w eclipse console regex parsing!

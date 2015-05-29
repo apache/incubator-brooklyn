@@ -23,7 +23,6 @@ import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;

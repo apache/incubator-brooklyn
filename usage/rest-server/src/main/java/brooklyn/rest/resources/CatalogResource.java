@@ -126,6 +126,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         return Response.status(Status.CREATED).entity(result).build();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Response resetXml(String xml, boolean ignoreErrors) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, null) ||

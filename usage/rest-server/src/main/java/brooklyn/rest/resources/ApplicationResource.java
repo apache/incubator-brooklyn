@@ -218,11 +218,6 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     @Override
-    public List<ApplicationSummary> list() {
-        return list(".*");
-    }
-
-    @Override
     public List<ApplicationSummary> list(String typeRegex) {
         if (Strings.isBlank(typeRegex)) {
             typeRegex = ".*";

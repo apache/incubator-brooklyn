@@ -26,7 +26,7 @@ public class EverythingGroupImpl extends DynamicGroupImpl implements EverythingG
 
     public EverythingGroupImpl() {
         super();
-        setConfig(ENTITY_FILTER, Predicates.alwaysTrue());
+        config().set(ENTITY_FILTER, Predicates.alwaysTrue());
     }
 
 }

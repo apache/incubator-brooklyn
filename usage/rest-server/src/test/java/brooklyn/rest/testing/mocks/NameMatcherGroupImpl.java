@@ -27,7 +27,7 @@ public class NameMatcherGroupImpl extends DynamicGroupImpl implements NameMatche
     @Override
     public void init() {
         super.init();
-        setConfig(ENTITY_FILTER, EntityPredicates.displayNameSatisfies(StringPredicates.matchesRegex(getConfig(NAME_REGEX))));
+        config().set(ENTITY_FILTER, EntityPredicates.displayNameSatisfies(StringPredicates.matchesRegex(getConfig(NAME_REGEX))));
         rescanEntities();
     }
 }

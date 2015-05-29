@@ -21,28 +21,25 @@ package brooklyn.rest.resources;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.management.internal.ManagementContextInternal;
-import com.google.common.collect.ImmutableMap;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
+import brooklyn.config.BrooklynProperties;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableSet;
+import com.sun.jersey.api.client.UniformInterfaceException;
 
 @Test(singleThreaded = true)
 public class ServerResourceTest extends BrooklynRestResourceTest {
@@ -80,6 +77,7 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
         assertEquals(summary.getNodes().get(ownNodeId).getLocalTimestamp(), summary.getNodes().get(ownNodeId).getRemoteTimestamp());
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void testReloadsBrooklynProperties() throws Exception {
         final AtomicInteger reloadCount = new AtomicInteger();
