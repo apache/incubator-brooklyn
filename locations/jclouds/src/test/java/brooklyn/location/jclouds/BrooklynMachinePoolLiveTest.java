@@ -98,6 +98,6 @@ public class BrooklynMachinePoolLiveTest {
     
 
     private JcloudsLocation resolve(String spec) {
-        return (JcloudsLocation) managementContext.getLocationRegistry().resolve(JcloudsLocationResolver.JCLOUDS+":"+spec);
+        return (JcloudsLocation) managementContext.getLocationRegistry().resolve(new JcloudsLocationResolver().getPrefix() + ":" + spec);
     }
 }

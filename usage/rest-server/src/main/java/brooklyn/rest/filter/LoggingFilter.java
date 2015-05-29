@@ -21,6 +21,7 @@ package brooklyn.rest.filter;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -48,13 +49,15 @@ public class LoggingFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynLogging.REST);
 
-    /** Methods logged at debug rather than trace. */
-    private static final Set<String> INTERESTING_METHODS = Sets.newHashSet("POST", "PUT", "DELETE");
+    /** Methods logged at trace. */
+    private static final Set<String> UNINTERESTING_METHODS = Sets.newHashSet("GET", "HEAD");
 
     /** Headers whose values will not be logged. */
     private static final Set<String> CENSORED_HEADERS = Sets.newHashSet("Authorization");
 
-    @Override
+    /** Log all requests that take this time or longer to complete. */
+    private static final Duration REQUEST_DURATION_LOG_POINT = Duration.FIVE_SECONDS;
+
     public void init(FilterConfig config) throws ServletException {
     }
 
@@ -68,26 +71,25 @@ public class LoggingFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         String rid = RequestTaggingFilter.getTag();
-        boolean isInteresting = INTERESTING_METHODS.contains(httpRequest.getMethod()),
-                shouldLog = (isInteresting && LOG.isDebugEnabled()) || LOG.isTraceEnabled(),
-                requestErrored = false;
-        Stopwatch timer = Stopwatch.createUnstarted();
-        try {
-            if (shouldLog) {
-                String message = "Request {} starting: {} {} from {}";
-                Object[] args = new Object[]{rid, httpRequest.getMethod(), httpRequest.getRequestURI(), httpRequest.getRemoteAddr()};
-                if (isInteresting) {
-                    LOG.debug(message, args);
-                } else {
-                    LOG.trace(message, args);
-                }
+        boolean isInteresting = !UNINTERESTING_METHODS.contains(httpRequest.getMethod().toUpperCase());
+        boolean shouldLog = (isInteresting && LOG.isDebugEnabled()) || LOG.isTraceEnabled();
+        boolean requestErrored = false;
+        if (shouldLog) {
+            String message = "Request {} starting: {} {} from {}";
+            Object[] args = new Object[]{rid, httpRequest.getMethod(), httpRequest.getRequestURI(), httpRequest.getRemoteAddr()};
+            if (isInteresting) {
+                LOG.debug(message, args);
+            } else {
+                LOG.trace(message, args);
             }
+        }
 
-            timer.start();
+        Stopwatch timer = Stopwatch.createStarted();
+        try {
             chain.doFilter(request, response);
-
         } catch (Throwable e) {
             requestErrored = true;
+            isInteresting = true;
             LOG.warn("Request " + rid + " ("+httpRequest.getMethod()+" "+httpRequest.getRequestURI()+" from "+httpRequest.getRemoteAddr()+") failed: " + e, e);
             // Propagate for handling by other filter
             throw Exceptions.propagate(e);
@@ -96,7 +98,8 @@ public class LoggingFilter implements Filter {
             // This logging must not happen before chain.doFilter, or FormMapProvider will not work as expected.
             // Getting the parameter map consumes the request body and only resource methods using @FormParam
             // will work as expected.
-            if (requestErrored || shouldLog) {
+            isInteresting |= (timer.elapsed(TimeUnit.SECONDS) - REQUEST_DURATION_LOG_POINT.toSeconds()) > 0;
+            if (shouldLog) {
                 boolean includeHeaders = requestErrored || httpResponse.getStatus() / 100 == 5 || LOG.isTraceEnabled();
                 String message = getRequestCompletedMessage(includeHeaders, Duration.of(timer), rid, httpRequest, httpResponse);
                 if (requestErrored || isInteresting) {

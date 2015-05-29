@@ -17,8 +17,8 @@
  * under the License.
 */
 define([
-    "brooklyn", "router", "model/ha"
-], function (Brooklyn, Router, ha) {
+    "brooklyn", "router"
+], function (Brooklyn, Router) {
 
     var View = Backbone.View.extend({
         render:function () {

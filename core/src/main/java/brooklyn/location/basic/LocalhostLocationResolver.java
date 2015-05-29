@@ -58,7 +58,8 @@ public class LocalhostLocationResolver extends AbstractLocationResolver implemen
     protected SpecParser getSpecParser() {
         return new AbstractLocationResolver.SpecParser(getPrefix()).setExampleUsage("\"localhost\" or \"localhost(displayName=abc)\"");
     }
-    
+
+    @Override
     protected Map<String, Object> getFilteredLocationProperties(String provider, String namedLocation, Map<String, ?> globalProperties) {
         return new LocalhostPropertiesFromBrooklynProperties().getLocationProperties("localhost", namedLocation, globalProperties);
     }
