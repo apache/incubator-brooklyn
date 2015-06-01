@@ -51,6 +51,7 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.internal.BrooklynInitialization;
 import brooklyn.util.JavaGroovyEquivalents;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.Exceptions;
@@ -702,6 +703,12 @@ public class TypeCoercions {
             @Override
             public List<String> apply(final String input) {
                 return JavaStringEscapes.unwrapJsonishListIfPossible(input);
+            }
+        });
+        registerAdapter(String.class, Set.class, new Function<String,Set>() {
+            @Override
+            public Set<String> apply(final String input) {
+                return MutableSet.copyOf(JavaStringEscapes.unwrapJsonishListIfPossible(input)).asUnmodifiable();
             }
         });
         registerAdapter(String.class, QuorumCheck.class, new Function<String,QuorumCheck>() {
