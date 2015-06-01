@@ -101,7 +101,7 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     @SuppressWarnings("rawtypes")
     @Override
     public Class getDriverInterface() {
-        return Tomcat7Driver.class;
+        return TomcatDriver.class;
     }
     
     @Override

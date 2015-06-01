@@ -44,19 +44,19 @@ import brooklyn.util.time.Duration;
 import com.google.common.collect.ImmutableList;
 
 /**
- * This tests the operation of the {@link TomcatServer} entity.
+ * This tests the operation of the {@link Tomcat8Server} entity.
  * 
  * FIXME this test is largely superseded by WebApp*IntegrationTest which tests inter alia Tomcat
  */
-public class TomcatServerSimpleIntegrationTest {
+public class Tomcat8ServerSimpleIntegrationTest {
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(TomcatServerSimpleIntegrationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Tomcat8ServerSimpleIntegrationTest.class);
     
     /** don't use 8080 since that is commonly used by testing software; use different from other tests. */
     static PortRange DEFAULT_HTTP_PORT_RANGE = PortRanges.fromString("7880-7980");
     
     private TestApplication app;
-    private TomcatServer tc;
+    private Tomcat8Server tc;
     private int httpPort;
     
     @BeforeMethod(alwaysRun=true)
@@ -84,12 +84,12 @@ public class TomcatServerSimpleIntegrationTest {
 	 */
     @Test(groups="Integration")
     public void detectFailureIfTomcatCantBindToPort() throws Exception {
-        ServerSocket listener = new ServerSocket(httpPort);
+    	ServerSocket listener = new ServerSocket(httpPort);
         try {
             app = ApplicationBuilder.newManagedApp(TestApplication.class);
-            tc = app.createAndManageChild(EntitySpec.create(TomcatServer.class)
-            	.configure("httpPort", httpPort)
-            	.configure(TomcatServer.START_TIMEOUT, Duration.ONE_MINUTE));
+            tc = app.createAndManageChild(EntitySpec.create(Tomcat8Server.class)
+    			.configure("httpPort", httpPort)
+    			.configure(TomcatServer.START_TIMEOUT, Duration.ONE_MINUTE));
             try {
                 tc.start(ImmutableList.of(app.getManagementContext().getLocationManager().manage(new LocalhostMachineProvisioningLocation())));
                 fail("Should have thrown start-exception");
@@ -100,7 +100,7 @@ public class TomcatServerSimpleIntegrationTest {
             } finally {
                 tc.stop();
             }
-            assertFalse(tc.getAttribute(TomcatServerImpl.SERVICE_UP));
+            assertFalse(tc.getAttribute(Tomcat8ServerImpl.SERVICE_UP));
         } finally {
             listener.close();
         }
