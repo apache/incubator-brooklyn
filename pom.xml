@@ -155,7 +155,7 @@
         <jetty.version>8.1.17.v20150415</jetty.version>
         <airline.version>0.6</airline.version>
         <mockwebserver.version>20121111</mockwebserver.version>
-        <freemarker.version>2.3.19</freemarker.version>
+        <freemarker.version>2.3.22</freemarker.version>
         <commons-io.version>2.4</commons-io.version>
         <hazelcast.version>3.0</hazelcast.version>
         <jsonPath.version>0.9.1</jsonPath.version>
