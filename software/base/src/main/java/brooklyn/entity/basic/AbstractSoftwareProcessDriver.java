@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -296,27 +295,30 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
         // Ensure environment variables are not looked up here, otherwise sub-classes might
         // lookup port numbers and fail with ugly error if port is not set; better to wait
         // until in Entity's code (e.g. customize) where such checks are done explicitly.
-        createDirectory(getInstallDir(), "create install directory");
 
-        // TODO see comment in copyResource, that should be queued as a task like the above
-        // (better reporting in activities console)
-
-        if (files != null && files.size() > 0) {
-            for (String source : files.keySet()) {
-                String target = files.get(source);
-                String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
-                copyResource(source, destination, true);
+        boolean hasAnythingToCopy = ((files != null && files.size() > 0) || (templates != null && templates.size() > 0));
+        if (hasAnythingToCopy) {
+            createDirectory(getInstallDir(), "create install directory");
+    
+            // TODO see comment in copyResource, that should be queued as a task like the above
+            // (better reporting in activities console)
+    
+            if (files != null && files.size() > 0) {
+                for (String source : files.keySet()) {
+                    String target = files.get(source);
+                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
+                    copyResource(source, destination, true);
+                }
+            }
+    
+            if (templates != null && templates.size() > 0) {
+                for (String source : templates.keySet()) {
+                    String target = templates.get(source);
+                    String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
+                    copyTemplate(source, destination, true, MutableMap.<String, Object>of());
+                }
             }
         }
-
-        if (templates != null && templates.size() > 0) {
-            for (String source : templates.keySet()) {
-                String target = templates.get(source);
-                String destination = Os.isAbsolutish(target) ? target : Os.mergePathsUnix(getInstallDir(), target);
-                copyTemplate(source, destination, true, MutableMap.<String, Object>of());
-            }
-        }
-
     }
 
     protected abstract void createDirectory(String directoryName, String summaryForLogging);
