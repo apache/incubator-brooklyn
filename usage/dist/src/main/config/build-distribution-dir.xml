@@ -80,6 +80,7 @@
     <!-- TODO include examples -->
     <dependencySets>
         <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>/lib/brooklyn</outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>

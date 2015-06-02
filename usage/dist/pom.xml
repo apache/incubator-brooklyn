@@ -87,7 +87,6 @@
                                 <descriptor>src/main/config/build-distribution-dir.xml</descriptor>
                             </descriptors>
                             <finalName>brooklyn</finalName>
-                            <useProjectArtifact>false</useProjectArtifact>
                         </configuration>
                     </execution>
                     <execution>
@@ -102,7 +101,6 @@
                                 <descriptor>src/main/config/build-distribution-archive.xml</descriptor>
                             </descriptors>
                             <finalName>brooklyn-${project.version}</finalName>
-                            <useProjectArtifact>false</useProjectArtifact>
                         </configuration>
                     </execution>
                 </executions>
