@@ -85,14 +85,14 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         for (EntityMemento entity : memento.getEntityMementos().values()) {
             builder.entity(entity.getId(), entity.getType(), entity.getParent(), entity.getCatalogItemId());
         }
-        for (LocationMemento entity : memento.getLocationMementos().values()) {
-            builder.location(entity.getId(), entity.getType());
+        for (LocationMemento location : memento.getLocationMementos().values()) {
+            builder.location(location.getId(), location.getType(), location.getCatalogItemId());
         }
-        for (PolicyMemento entity : memento.getPolicyMementos().values()) {
-            builder.policy(entity.getId(), entity.getType());
+        for (PolicyMemento policy : memento.getPolicyMementos().values()) {
+            builder.policy(policy.getId(), policy.getType(), policy.getCatalogItemId());
         }
-        for (EnricherMemento entity : memento.getEnricherMementos().values()) {
-            builder.enricher(entity.getId(), entity.getType());
+        for (EnricherMemento enricher : memento.getEnricherMementos().values()) {
+            builder.enricher(enricher.getId(), enricher.getType(), enricher.getCatalogItemId());
         }
         for (CatalogItemMemento entity : memento.getCatalogItemMementos().values()) {
             builder.catalogItem(entity);
@@ -109,6 +109,7 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         memento.reset(checkNotNull(newMemento, "memento"));
     }
     
+    @Override
     public void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler) {
         throw new IllegalStateException("Not supported; use "+BrooklynMementoPersisterToObjectStore.class);
     }

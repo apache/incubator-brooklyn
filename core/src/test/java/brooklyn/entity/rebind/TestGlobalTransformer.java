@@ -23,7 +23,7 @@ import brooklyn.entity.rebind.transformer.RawDataTransformer;
 public class TestGlobalTransformer implements RawDataTransformer {
 
     @Override
-    public String transform(String input) throws Exception {
+    public String transform(String input) {
         if ("test".equals(input)) {
             return TestGlobalTransformer.class.getSimpleName();
         } else {

@@ -18,15 +18,15 @@
  */
 package brooklyn.entity.rebind.dto;
 
-import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
+import brooklyn.mementos.BrooklynMementoManifest.MementoManifest;
 
-public class EntityMementoManifestImpl implements EntityMementoManifest {
+public class MementoManifestImpl implements MementoManifest {
     private String id;
     private String type;
     private String parentId;
     private String catalogItemId;
 
-    public EntityMementoManifestImpl(String id, String type, String parentId, String catalogItemId) {
+    public MementoManifestImpl(String id, String type, String parentId, String catalogItemId) {
         this.id = id;
         this.type = type;
         this.parentId = parentId;

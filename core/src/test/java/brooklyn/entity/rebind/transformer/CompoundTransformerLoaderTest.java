@@ -70,7 +70,7 @@ public class CompoundTransformerLoaderTest {
     
     public static class MyRawDataTransformer implements RawDataTransformer {
         @Override
-        public String transform(String input) throws Exception {
+        public String transform(String input) {
             return input; // no-op
         }
     }

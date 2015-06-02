@@ -93,6 +93,7 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         return basedir;
     }
     
+    @Override
     public void prepareForMasterUse() {
         if (doneFirstContentiousWrite.get())
             return;

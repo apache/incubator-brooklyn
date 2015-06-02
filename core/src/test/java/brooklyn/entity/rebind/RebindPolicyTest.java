@@ -142,9 +142,9 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         
         BrooklynMementoManifest manifest = loadMementoManifest();
         assertFalse(manifest.getEntityIdToManifest().containsKey(entity.getId()));
-        assertFalse(manifest.getPolicyIdToType().containsKey(policy.getId()));
-        assertFalse(manifest.getEnricherIdToType().containsKey(enricher.getId()));
-        assertFalse(manifest.getLocationIdToType().containsKey(loc.getId()));
+        assertFalse(manifest.getPolicyIdToManifest().containsKey(policy.getId()));
+        assertFalse(manifest.getEnricherIdToManifest().containsKey(enricher.getId()));
+        assertFalse(manifest.getLocationIdToManifest().containsKey(loc.getId()));
     }
 
     @Test
@@ -160,8 +160,8 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         RebindTestUtils.waitForPersisted(origApp);
         
         BrooklynMementoManifest manifest = loadMementoManifest();
-        assertFalse(manifest.getPolicyIdToType().containsKey(policy.getId()));
-        assertFalse(manifest.getEnricherIdToType().containsKey(enricher.getId()));
+        assertFalse(manifest.getPolicyIdToManifest().containsKey(policy.getId()));
+        assertFalse(manifest.getEnricherIdToManifest().containsKey(enricher.getId()));
     }
 
     @Test

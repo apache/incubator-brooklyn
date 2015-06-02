@@ -39,42 +39,42 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     
     public static class Builder {
         protected String brooklynVersion;
-        protected final Map<String, EntityMementoManifest> entityIdToManifest = Maps.newConcurrentMap();
-        protected final Map<String, String> locationIdToType = Maps.newConcurrentMap();
-        protected final Map<String, String> policyIdToType = Maps.newConcurrentMap();
-        protected final Map<String, String> enricherIdToType = Maps.newConcurrentMap();
-        protected final Map<String, String> feedIdToType = Maps.newConcurrentMap();
+        protected final Map<String, MementoManifest> entityIdToManifest = Maps.newConcurrentMap();
+        protected final Map<String, MementoManifest> locationIdToType = Maps.newConcurrentMap();
+        protected final Map<String, MementoManifest> policyIdToType = Maps.newConcurrentMap();
+        protected final Map<String, MementoManifest> enricherIdToType = Maps.newConcurrentMap();
+        protected final Map<String, MementoManifest> feedIdToType = Maps.newConcurrentMap();
         protected final Map<String, CatalogItemMemento> catalogItems = Maps.newConcurrentMap();
         
         public Builder brooklynVersion(String val) {
             brooklynVersion = val; return this;
         }
         public Builder entity(String id, String type, String parent, String catalogItemId) {
-            entityIdToManifest.put(id, new EntityMementoManifestImpl(id, type, parent, catalogItemId));
+            entityIdToManifest.put(id, new MementoManifestImpl(id, type, parent, catalogItemId));
             return this;
         }
-        public Builder location(String id, String type) {
-            locationIdToType.put(id, type); return this;
+        public Builder location(String id, String type, String catalogItemId) {
+            locationIdToType.put(id, new MementoManifestImpl(id, type, null, catalogItemId)); return this;
         }
-        public Builder locations(Map<String, String> vals) {
+        public Builder locations(Map<String, MementoManifest> vals) {
             locationIdToType.putAll(vals); return this;
         }
-        public Builder policy(String id, String type) {
-            policyIdToType.put(id, type); return this;
+        public Builder policy(String id, String type, String catalogItemId) {
+            policyIdToType.put(id, new MementoManifestImpl(id, type, null, catalogItemId)); return this;
         }
-        public Builder policies(Map<String, String> vals) {
+        public Builder policies(Map<String, MementoManifest> vals) {
             policyIdToType.putAll(vals); return this;
         }
-        public Builder enricher(String id, String type) {
-            enricherIdToType.put(id, type); return this;
+        public Builder enricher(String id, String type, String catalogItemId) {
+            enricherIdToType.put(id, new MementoManifestImpl(id, type, null, catalogItemId)); return this;
         }
-        public Builder enrichers(Map<String, String> vals) {
+        public Builder enrichers(Map<String, MementoManifest> vals) {
             enricherIdToType.putAll(vals); return this;
         }
-        public Builder feed(String id, String type) {
-            feedIdToType.put(id, type); return this;
+        public Builder feed(String id, String type, String catalogItemId) {
+            feedIdToType.put(id, new MementoManifestImpl(id, type, null, catalogItemId)); return this;
         }
-        public Builder feed(Map<String, String> vals) {
+        public Builder feed(Map<String, MementoManifest> vals) {
             feedIdToType.putAll(vals); return this;
         }
         public Builder catalogItems(Map<String, CatalogItemMemento> vals) {
@@ -84,13 +84,13 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
             catalogItems.put(val.getId(), val); return this;
         }
 
-        public Builder putType(BrooklynObjectType type, String id, String javaType) {
+        public Builder putType(BrooklynObjectType type, String id, String javaType, String catalogItemId) {
             switch (type) {
             case ENTITY: throw new IllegalArgumentException(type.toCamelCase()+" requires additional parameters");
-            case LOCATION: return location(id, javaType);
-            case POLICY: return policy(id, javaType);
-            case ENRICHER: return enricher(id, javaType);
-            case FEED: return feed(id, javaType);
+            case LOCATION: return location(id, javaType, catalogItemId);
+            case POLICY: return policy(id, javaType, catalogItemId);
+            case ENRICHER: return enricher(id, javaType, catalogItemId);
+            case FEED: return feed(id, javaType, catalogItemId);
             case CATALOG_ITEM: throw new IllegalArgumentException(type.toCamelCase()+" requires different parameters");
             case UNKNOWN: 
             default: 
@@ -103,45 +103,45 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
         }
     }
 
-    private final Map<String, EntityMementoManifest> entityIdToManifest;
-    private final Map<String, String> locationIdToType;
-    private final Map<String, String> policyIdToType;
-    private final Map<String, String> enricherIdToType;
-    private final Map<String, String> feedIdToType;
+    private final Map<String, MementoManifest> entityIdToManifest;
+    private final Map<String, MementoManifest> locationIdToManifest;
+    private final Map<String, MementoManifest> policyIdToManifest;
+    private final Map<String, MementoManifest> enricherIdToManifest;
+    private final Map<String, MementoManifest> feedIdToManifest;
     private Map<String, CatalogItemMemento> catalogItems;
     
     private BrooklynMementoManifestImpl(Builder builder) {
         entityIdToManifest = builder.entityIdToManifest;
-        locationIdToType = builder.locationIdToType;
-        policyIdToType = builder.policyIdToType;
-        enricherIdToType = builder.enricherIdToType;
-        feedIdToType = builder.feedIdToType;
+        locationIdToManifest = builder.locationIdToType;
+        policyIdToManifest = builder.policyIdToType;
+        enricherIdToManifest = builder.enricherIdToType;
+        feedIdToManifest = builder.feedIdToType;
         catalogItems = builder.catalogItems;
     }
 
     @Override
-    public Map<String, EntityMementoManifest> getEntityIdToManifest() {
+    public Map<String, MementoManifest> getEntityIdToManifest() {
         return Collections.unmodifiableMap(entityIdToManifest);
     }
 
     @Override
-    public Map<String, String> getLocationIdToType() {
-        return Collections.unmodifiableMap(locationIdToType);
+    public Map<String, MementoManifest> getLocationIdToManifest() {
+        return Collections.unmodifiableMap(locationIdToManifest);
     }
 
     @Override
-    public Map<String, String> getPolicyIdToType() {
-        return Collections.unmodifiableMap(policyIdToType);
+    public Map<String, MementoManifest> getPolicyIdToManifest() {
+        return Collections.unmodifiableMap(policyIdToManifest);
     }
 
     @Override
-    public Map<String, String> getEnricherIdToType() {
-        return Collections.unmodifiableMap(enricherIdToType);
+    public Map<String, MementoManifest> getEnricherIdToManifest() {
+        return Collections.unmodifiableMap(enricherIdToManifest);
     }
 
     @Override
-    public Map<String, String> getFeedIdToType() {
-        return Collections.unmodifiableMap(feedIdToType);
+    public Map<String, MementoManifest> getFeedIdToManifest() {
+        return Collections.unmodifiableMap(feedIdToManifest);
     }
     
     @Override
@@ -162,10 +162,10 @@ public class BrooklynMementoManifestImpl implements BrooklynMementoManifest, Ser
     @Override
     public boolean isEmpty() {
         return entityIdToManifest.isEmpty() &&
-                locationIdToType.isEmpty() &&
-                policyIdToType.isEmpty() &&
-                enricherIdToType.isEmpty() &&
-                feedIdToType.isEmpty() &&
+                locationIdToManifest.isEmpty() &&
+                policyIdToManifest.isEmpty() &&
+                enricherIdToManifest.isEmpty() &&
+                feedIdToManifest.isEmpty() &&
                 catalogItems.isEmpty();
     }
     

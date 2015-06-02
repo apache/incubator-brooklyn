@@ -29,7 +29,7 @@ import brooklyn.entity.trait.Identifiable;
  * @author aled
  */
 public interface BrooklynMementoManifest extends BrooklynCatalogMementoManifest, Serializable {
-    public interface EntityMementoManifest extends Identifiable{
+    public interface MementoManifest extends Identifiable {
         @Override
         public String getId();
         public String getType();
@@ -37,16 +37,17 @@ public interface BrooklynMementoManifest extends BrooklynCatalogMementoManifest,
         public String getCatalogItemId();
     }
 
-    public Map<String, EntityMementoManifest> getEntityIdToManifest();
+    public Map<String, MementoManifest> getEntityIdToManifest();
 
-    public Map<String, String> getLocationIdToType();
+    public Map<String, MementoManifest> getLocationIdToManifest();
 
-    public Map<String, String> getPolicyIdToType();
+    public Map<String, MementoManifest> getPolicyIdToManifest();
 
-    public Map<String, String> getEnricherIdToType();
+    public Map<String, MementoManifest> getEnricherIdToManifest();
 
-    public Map<String, String> getFeedIdToType();
+    public Map<String, MementoManifest> getFeedIdToManifest();
     
+    @Override
     public boolean isEmpty();
     
 }

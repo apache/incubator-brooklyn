@@ -21,7 +21,6 @@ package brooklyn.entity.rebind.persister;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -283,6 +282,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         return subPathData;
     }
     
+    @Override
     public BrooklynMementoRawData loadMementoRawData(final RebindExceptionHandler exceptionHandler) {
         BrooklynMementoRawData subPathData = listMementoSubPathsAsData(exceptionHandler);
         
@@ -378,7 +378,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                     case POLICY:
                     case ENRICHER:
                     case FEED:
-                        builder.putType(type, x.get("id"), x.get("type"));
+                        builder.putType(type, x.get("id"), x.get("type"), Strings.emptyToNull(x.get("catalogItemId")));
                         break;
                     case CATALOG_ITEM:
                         try {
@@ -407,8 +407,8 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         if (LOG.isDebugEnabled()) {
             LOG.debug("Loaded rebind manifests; took {}: {} entities, {} locations, {} policies, {} enrichers, {} feeds, {} catalog items; from {}", new Object[]{
                      Time.makeTimeStringRounded(stopwatch), 
-                     result.getEntityIdToManifest().size(), result.getLocationIdToType().size(), 
-                     result.getPolicyIdToType().size(), result.getEnricherIdToType().size(), result.getFeedIdToType().size(), 
+                     result.getEntityIdToManifest().size(), result.getLocationIdToManifest().size(),
+                     result.getPolicyIdToManifest().size(), result.getEnricherIdToManifest().size(), result.getFeedIdToManifest().size(),
                      result.getCatalogItemMementos().size(),
                      objectStore.getSummaryName() });
         }
@@ -482,6 +482,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
                 this.type = type;
                 this.objectIdAndData = objectIdAndData;
             }
+            @Override
             public void run() {
                 try {
                     visitor.visit(type, objectIdAndData.getKey(), objectIdAndData.getValue());
@@ -726,6 +727,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     private ListenableFuture<?> asyncPersist(final String subPath, final Memento memento, final PersistenceExceptionHandler exceptionHandler) {
         return executor.submit(new Runnable() {
+            @Override
             public void run() {
                 persist(subPath, memento, exceptionHandler);
             }});
@@ -733,6 +735,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     private ListenableFuture<?> asyncPersist(final String subPath, final BrooklynObjectType type, final String id, final String content, final PersistenceExceptionHandler exceptionHandler) {
         return executor.submit(new Runnable() {
+            @Override
             public void run() {
                 persist(subPath, type, id, content, exceptionHandler);
             }});
@@ -740,6 +743,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
 
     private ListenableFuture<?> asyncDelete(final String subPath, final String id, final PersistenceExceptionHandler exceptionHandler) {
         return executor.submit(new Runnable() {
+            @Override
             public void run() {
                 delete(subPath, id, exceptionHandler);
             }});

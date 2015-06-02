@@ -28,9 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
-import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;

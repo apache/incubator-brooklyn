@@ -25,12 +25,19 @@ import java.util.ServiceLoader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
 
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.rebind.transformer.RawDataTransformer;
+import brooklyn.entity.rebind.transformer.TransformedBy;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.mementos.BrooklynMementoManifest.MementoManifest;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class TransformerLoader {
@@ -60,6 +67,63 @@ public class TransformerLoader {
             }
         }
         return allTransformers;
+    }
+
+    public Collection<RawDataTransformer> findBlueprintTransformers(MementoManifest manifest) {
+        BrooklynClassLoadingContext loader = getLoader(manifest);
+        RawDataTransformer transformer = getTransformerInstance(manifest.getType(), loader);
+        if (transformer != null) {
+            return ImmutableList.of(transformer);
+        } else {
+            return ImmutableList.of();
+        }
+    }
+
+    private RawDataTransformer getTransformerInstance(String type, BrooklynClassLoadingContext loader) {
+        Class<? extends RawDataTransformer> transformerType = getTransformerType(type, loader);
+        if (transformerType != null) {
+            try {
+                return transformerType.newInstance();
+            } catch (Exception e) {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private Class<? extends RawDataTransformer> getTransformerType(String type, BrooklynClassLoadingContext loader) {
+        Class<?> cls;
+        try {
+            cls = loader.loadClass(type);
+        } catch (Throwable e) {
+            Exceptions.propagateIfFatal(e);
+            return null;
+        }
+        TransformedBy transformedBy = cls.getAnnotation(TransformedBy.class);
+        if (transformedBy != null) {
+            return transformedBy.value();
+        } else {
+            try {
+                @SuppressWarnings("unchecked")
+                Class<? extends RawDataTransformer> transformerClass = (Class<? extends RawDataTransformer>) loader.loadClass(type + "Transformer");
+                return transformerClass;
+            } catch (Throwable e) {
+                Exceptions.propagateIfFatal(e);
+                return null;
+            }
+        }
+    }
+
+    private BrooklynClassLoadingContext getLoader(MementoManifest manifest) {
+        String catalogItemId = manifest.getCatalogItemId();
+        if (catalogItemId != null) {
+            CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(managementContext, catalogItemId);
+            if (item != null) {
+                return CatalogUtils.newClassLoadingContext(managementContext, item);
+            }
+        }
+        return JavaBrooklynClassLoadingContext.create(managementContext);
     }
 
 }

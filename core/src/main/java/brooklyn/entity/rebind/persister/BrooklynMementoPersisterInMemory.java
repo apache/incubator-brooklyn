@@ -141,19 +141,19 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                                 });
                     }
                     @Override public Location lookupLocation(String id) {
-                        Class<?> clazz = loadClass(manifest.getLocationIdToType().get(id));
+                        Class<?> clazz = loadClass(manifest.getLocationIdToManifest().get(id).getType());
                         return (Location) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
                     @Override public Policy lookupPolicy(String id) {
-                        Class<?> clazz = loadClass(manifest.getPolicyIdToType().get(id));
+                        Class<?> clazz = loadClass(manifest.getPolicyIdToManifest().get(id).getType());
                         return (Policy) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
                     @Override public Enricher lookupEnricher(String id) {
-                        Class<?> clazz = loadClass(manifest.getEnricherIdToType().get(id));
+                        Class<?> clazz = loadClass(manifest.getEnricherIdToManifest().get(id).getType());
                         return (Enricher) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
                     @Override public Feed lookupFeed(String id) {
-                        Class<?> clazz = loadClass(manifest.getFeedIdToType().get(id));
+                        Class<?> clazz = loadClass(manifest.getFeedIdToManifest().get(id).getType());
                         return (Feed) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
                     @Override public CatalogItem<?, ?> lookupCatalogItem(String id) {
