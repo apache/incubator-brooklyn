@@ -23,16 +23,42 @@ import java.util.Map;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Range;
+
 /**
  * Helpful methods for making HTTP requests to {@link BrooklynNode} entities.
  */
 public interface EntityHttpClient {
+    public static class ResponseCodePredicates {
+        private static class ResponseCodeHealthyPredicate implements Predicate<Integer> {
+            @Override
+            public boolean apply(Integer input) {
+                return HttpTool.isStatusCodeHealthy(input);
+            }
+        }
+        public static Predicate<Integer> informational() {return Range.closed(100, 199);}
+        public static Predicate<Integer> success() {return new ResponseCodeHealthyPredicate();}
+        public static Predicate<Integer> redirect() {return Range.closed(300, 399);}
+        public static Predicate<Integer> clientError() {return Range.closed(400, 499);}
+        public static Predicate<Integer> serverError() {return Range.closed(500, 599);}
+        public static Predicate<Integer> invalid() {return Predicates.or(Range.atMost(99), Range.atLeast(600));}
+    }
+
     /**
      * @return An HTTP client builder configured to access the {@link
      *         BrooklynNode#WEB_CONSOLE_URI web console URI} at the
      *         given entity, or null if the entity has no URI.
      */
     public HttpTool.HttpClientBuilder getHttpClientForBrooklynNode();
+
+    /**
+     * Configure which response codes are treated as successful
+     * @param successPredicate A predicate which returns true is the response code is acceptable
+     * @return this
+     */
+    public EntityHttpClient responseSuccess(Predicate<Integer> responseSuccess);
 
     /**
      * Makes an HTTP GET to a Brooklyn node entity.

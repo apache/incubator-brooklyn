@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.brooklynnode;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.URI;
 import java.util.Map;
 
@@ -27,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
@@ -50,6 +53,7 @@ public class EntityHttpClientImpl implements EntityHttpClient {
     protected Entity entity;
     protected AttributeSensor<?> urlSensor;
     protected ConfigKey<?> urlConfig;
+    protected Predicate<Integer> responseSuccess = ResponseCodePredicates.success();
 
     protected EntityHttpClientImpl(Entity entity, AttributeSensor<?> urlSensor) {
         this.entity = entity;
@@ -77,6 +81,12 @@ public class EntityHttpClientImpl implements EntityHttpClient {
         return builder;
     }
 
+    @Override
+    public EntityHttpClient responseSuccess(Predicate<Integer> responseSuccess) {
+        this.responseSuccess = checkNotNull(responseSuccess, "responseSuccess");
+        return this;
+    }
+
     protected HttpToolResponse exec(String path, HttpCall httpCall) {
         HttpClient client = Preconditions.checkNotNull(getHttpClientForBrooklynNode(), "No address info for "+entity)
                 .build();
@@ -91,7 +101,7 @@ public class EntityHttpClientImpl implements EntityHttpClient {
             throw new IllegalStateException("Invalid response invoking " + uri + ": " + e, e);
         }
         Tasks.addTagDynamically(BrooklynTaskTags.tagForStream("http_response", Streams.byteArray(result.getContent())));
-        if (!HttpTool.isStatusCodeHealthy(result.getResponseCode())) {
+        if (!responseSuccess.apply(result.getResponseCode())) {
             LOG.warn("Invalid response invoking {}: response code {}\n{}: {}",
                     new Object[]{uri, result.getResponseCode(), result, new String(result.getContent())});
             throw new IllegalStateException("Invalid response invoking " + uri + ": response code " + result.getResponseCode());

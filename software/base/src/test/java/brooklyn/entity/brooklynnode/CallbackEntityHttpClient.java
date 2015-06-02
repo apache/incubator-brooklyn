@@ -32,6 +32,7 @@ import brooklyn.util.http.HttpTool.HttpClientBuilder;
 import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 
 public class CallbackEntityHttpClient implements EntityHttpClient {
     public static class Request {
@@ -90,6 +91,11 @@ public class CallbackEntityHttpClient implements EntityHttpClient {
     
     @Override
     public HttpToolResponse delete(String path, Map<String, String> headers) {
+        throw new IllegalStateException("Method call not expected");
+    }
+
+    @Override
+    public EntityHttpClient responseSuccess(Predicate<Integer> successPredicate) {
         throw new IllegalStateException("Method call not expected");
     }
 }
