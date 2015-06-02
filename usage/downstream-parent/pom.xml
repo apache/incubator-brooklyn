@@ -571,6 +571,8 @@
                     what is really needed.
                 -->
                 <Export-Package>brooklyn.*</Export-Package>
+                <!-- Brooklyn-Feature prefix triggers inclusion of the project's metadata in the server's features list. -->
+                <Brooklyn-Feature-Name>${project.name}</Brooklyn-Feature-Name>
               </instructions>
             </configuration>
           </plugin>
