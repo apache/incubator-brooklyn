@@ -289,11 +289,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
             throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
 
         Maybe<ManagementContext> mm = mgmtMaybe();
-        if (mm.isAbsent()) return false;
-        ManagementContext m = mm.get();
-        if (!m.isStartupComplete()) return false;
-        if (!m.isRunning()) return false;
-        return true;
+        return !mm.isAbsent() && mm.get().isStartupComplete() && mm.get().isRunning();
     }
     
     @Override
@@ -301,16 +297,12 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
             throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
         Maybe<ManagementContext> mm = mgmtMaybe();
-        if (mm.isAbsent()) return false;
-        ManagementContext m = mm.get();
-        return (m.isStartupComplete() && !m.isRunning());
+        return !mm.isAbsent() && mm.get().isStartupComplete() && !mm.get().isRunning();
     }
     
     @Override
     public boolean isHealthy() {
-        if (!isUp()) return false;
-        if (!((ManagementContextInternal)mgmt()).errors().isEmpty()) return false;
-        return true;
+        return isUp() && ((ManagementContextInternal) mgmt()).errors().isEmpty();
     }
     
     @Override
