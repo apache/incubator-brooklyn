@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
      http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -24,7 +24,13 @@
   <artifactId>brooklyn-downstream-parent</artifactId>
   <version>0.7.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
   <packaging>pom</packaging>
-  
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>9</version>
+  </parent>
+
   <name>Brooklyn Downstream Project Parent</name>
   <description>
       Parent pom that can be used by downstream projects that use Brooklyn,
@@ -42,7 +48,7 @@
     <surefire.version>2.18</surefire.version>
     <includedTestGroups />
     <excludedTestGroups>Integration,Acceptance,Live,Live-sanity,WIP</excludedTestGroups>
-    
+
     <!-- Dependencies -->
     <brooklyn.version>0.7.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
     <!-- versions should match those used by Brooklyn, to avoid conflicts -->
@@ -64,7 +70,7 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <!-- this would pull in all brooklyn entities and clouds; 
+        <!-- this would pull in all brooklyn entities and clouds;
              you can cherry pick selected ones instead (for a smaller build) -->
         <groupId>org.apache.brooklyn</groupId>
         <artifactId>brooklyn-all</artifactId>
@@ -72,15 +78,15 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
   <dependencies>
     <dependency>
       <!-- this gives us flexible and easy-to-use logging; just edit logback-custom.xml! -->
       <groupId>org.apache.brooklyn</groupId>
       <artifactId>brooklyn-logback-xml</artifactId>
       <version>${brooklyn.version}</version>
-      <!-- optional so that this project has logging; dependencies may redeclare or supply their own; 
-           provided so that it isn't put into the assembly (as it supplies its own explicit logback.xml); 
+      <!-- optional so that this project has logging; dependencies may redeclare or supply their own;
+           provided so that it isn't put into the assembly (as it supplies its own explicit logback.xml);
            see Logging in the Brooklyn website/userguide for more info -->
       <optional>true</optional>
       <scope>provided</scope>
@@ -139,8 +145,19 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.5.4</version>
+          <configuration>
+            <tarLongFileMode>gnu</tarLongFileMode>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>2.6.1</version>
+        </plugin>
+        <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.1</version>
+          <version>3.3</version>
           <configuration>
             <source>${java.version}</source>
             <target>${java.version}</target>
@@ -151,57 +168,49 @@
           <version>2.8.2</version>
         </plugin>
         <plugin>
+          <artifactId>maven-eclipse-plugin</artifactId>
+          <version>2.10</version>
+        </plugin>
+        <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>1.3.1</version>
+          <version>1.4</version>
         </plugin>
         <plugin>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>2.17</version>
+          <version>2.18.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>1.6</version>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>2.5</version>
+          <version>2.6</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.10.3</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.5.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.7</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.4</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.18.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
           <version>2.3.4</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>2.6</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>2.3</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.4.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>2.5</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-eclipse-plugin</artifactId>
-          <version>2.9</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${surefire.version}</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.9.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-gpg-plugin</artifactId>
-          <version>1.5</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-release-plugin</artifactId>
-          <version>2.5</version>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
@@ -332,7 +341,7 @@
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
       </plugin>
-      
+
       <plugin>
         <artifactId>maven-eclipse-plugin</artifactId>
         <configuration>
@@ -341,7 +350,7 @@
           </additionalProjectnatures>
         </configuration>
       </plugin>
-        
+
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
@@ -378,7 +387,7 @@
   </build>
 
   <profiles>
-  
+
     <profile>
       <id>Tests</id>
       <activation>
@@ -405,7 +414,7 @@
         </plugins>
       </build>
     </profile>
-  
+
     <!-- run Integration tests with -PIntegration -->
     <profile>
       <id>Integration</id>
@@ -423,7 +432,7 @@
         <excludedTestGroups>Acceptance,WIP</excludedTestGroups>
       </properties>
     </profile>
-    
+
     <!-- run Live-sanity tests with -PLive-sanity -->
     <profile>
       <id>Live-sanity</id>
@@ -450,10 +459,10 @@
 
     <!--
       Make release build (e.g. for Sonatype) with -PRelease
-      Note that a sonatype release requires signed artifacts, javadoc and source jars; 
+      Note that a sonatype release requires signed artifacts, javadoc and source jars;
       this snippet doesn't do everything, as you need to set up a key etc,
       but it should get you a long way there (and prevent maven faffing).
-      If you don't deploy you can delete or ignore this (it has no effect unless you 
+      If you don't deploy you can delete or ignore this (it has no effect unless you
       enter -PRelease).
     -->
     <profile>
@@ -485,8 +494,8 @@
             <artifactId>maven-javadoc-plugin</artifactId>
             <inherited>true</inherited>
             <configuration>
-              <!-- disable 'use' reporting because of NPE deploying to sonatype: 
-                   http://stackoverflow.com/questions/888199/why-does-maven-install-fail-during-javadoc-generation 
+              <!-- disable 'use' reporting because of NPE deploying to sonatype:
+                   http://stackoverflow.com/questions/888199/why-does-maven-install-fail-during-javadoc-generation
                    http://bugs.sun.com/bugdatabase/view_bug.do;jsessionid=ac084ab7f47c4e7f1df2117cecd?bug_id=5101868 -->
               <use>false</use>
               <links>
@@ -579,7 +588,7 @@
             <artifactId>maven-jar-plugin</artifactId>
             <configuration>
               <archive>
-                <manifestFile> ${project.build.outputDirectory}/META-INF/MANIFEST.MF </manifestFile>
+                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
               </archive>
             </configuration>
           </plugin>
@@ -589,25 +598,30 @@
 
     <!-- different properties used to deploy to different locations depending on profiles;
          default is cloudsoft filesystem repo, but some sources still use cloudsoft artifactory as source
-         (and soon we will support artifactory)
+         and soon we will support artifactory. use this profile for the ASF repositories and
+         sonatype-oss-release profile for the Sonatype OSS repositories.
     -->
     <profile>
-      <id>sonatype-nexus-repo</id>
-      <activation> <property><name>brooklyn.deployTo</name><value>sonatype</value></property> </activation>
+      <id>apache-release</id>
+      <activation>
+        <property>
+          <name>brooklyn.deployTo</name>
+          <value>apache</value>
+        </property>
+      </activation>
       <distributionManagement>
         <repository>
-          <id>sonatype-nexus-staging</id>
-          <name>Nexus Release Repository</name>
-          <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+          <id>apache.releases.https</id>
+          <name>Apache Release Distribution Repository</name>
+          <url>https://repository.apache.org/service/local/staging/deploy/maven2</url>
         </repository>
         <snapshotRepository>
-          <id>sonatype-nexus-snapshots</id>
-          <name>Sonatype Nexus Snapshots</name>
-          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+          <id>apache.snapshots.https</id>
+          <name>Apache Development Snapshot Repository</name>
+          <url>https://repository.apache.org/content/repositories/snapshots</url>
         </snapshotRepository>
       </distributionManagement>
     </profile>
-
   </profiles>
 
 </project>

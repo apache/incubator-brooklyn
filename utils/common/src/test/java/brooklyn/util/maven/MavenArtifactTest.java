@@ -38,7 +38,7 @@ public class MavenArtifactTest {
     
     // only *integration* tests require these to be *installed*;
     // note this may vary from machine to machine so version should be aligned with that in parent pom
-    final static String MAVEN_JAR_PLUGIN_COORDINATE = "org.apache.maven.plugins:maven-jar-plugin:jar:2.3.2";
+    final static String MAVEN_JAR_PLUGIN_COORDINATE = "org.apache.maven.plugins:maven-jar-plugin:jar:2.6";
     final static String THIS_PROJECT_COORDINATE = "org.apache.brooklyn:brooklyn-utils-common:jar:0.7.0-SNAPSHOT";  // BROOKLYN_VERSION
 
     // Don't need to be installed, only used as examples
@@ -51,13 +51,13 @@ public class MavenArtifactTest {
         
         Assert.assertEquals(m.getGroupId(), "org.apache.maven.plugins");
         Assert.assertEquals(m.getArtifactId(), "maven-jar-plugin");
-        Assert.assertEquals(m.getVersion(), "2.3.2");
+        Assert.assertEquals(m.getVersion(), "2.6");
         Assert.assertEquals(m.getPackaging(), "jar");
         Assert.assertEquals(m.getClassifier(), null);
         
         Assert.assertEquals(m.getCoordinate(), MAVEN_JAR_PLUGIN_COORDINATE);
         
-        Assert.assertEquals(m.getFilename(), "maven-jar-plugin-2.3.2.jar");
+        Assert.assertEquals(m.getFilename(), "maven-jar-plugin-2.6.jar");
         Assert.assertEquals(m.isSnapshot(), false);
     }
 
@@ -84,7 +84,7 @@ public class MavenArtifactTest {
         
         String localPath = new MavenRetriever().getLocalPath(m);
         Assert.assertTrue(localPath.endsWith(
-                "/repository/org/apache/maven/plugins/maven-jar-plugin/2.3.2/maven-jar-plugin-2.3.2.jar"), 
+                "/repository/org/apache/maven/plugins/maven-jar-plugin/2.6/maven-jar-plugin-2.6.jar"), 
                 localPath);
     }
 
