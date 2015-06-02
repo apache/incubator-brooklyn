@@ -18,6 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn.catalog;
 
+import static org.testng.Assert.assertTrue;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 
@@ -26,12 +27,17 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import brooklyn.basic.BrooklynTypes;
+import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.LocationSpec;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
 import brooklyn.policy.Policy;
+import brooklyn.policy.PolicySpec;
 import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.text.Strings;
@@ -190,5 +196,66 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         OsgiVersionMoreEntityTest.assertV2MethodCall(moreEntity);
     }
 
+    @Test
+    public void testMorePolicyV2AutoscanWithClasspath() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-more-entities_0.2.0.jar");
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-entities.jar");
+        
+        addCatalogItems(getLocalResource("more-policies-osgi-catalog-scan.yaml"));
+        
+        log.info("autoscan for osgi found catalog items: "+Strings.join(mgmt().getCatalog().getCatalogItems(), ", "));
+
+        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "more-policy");
+        Assert.assertNotNull(item);
+        Assert.assertEquals(item.getVersion(), "2.0.test");
+        Assert.assertEquals(item.getCatalogItemType(), CatalogItemType.POLICY);
+        
+        // this refers to the java item, where the libraries are defined
+        item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "brooklyn.osgi.tests.more.MorePolicy");
+        Assert.assertEquals(item.getVersion(), "2.0.test_java");
+        Assert.assertEquals(item.getLibraries().size(), 2);
+        
+        Entity app = createAndStartApplication(
+                "services: ",
+                "- type: brooklyn.entity.basic.BasicEntity",
+                "  brooklyn.policies:",
+                "  - type: more-policy:2.0.test");
+        Entity basicEntity = Iterables.getOnlyElement(app.getChildren());
+        Policy morePolicy = Iterables.getOnlyElement(basicEntity.getPolicies());
+        
+        Assert.assertEquals(morePolicy.getCatalogItemId(), "more-policy:2.0.test");
+        OsgiVersionMoreEntityTest.assertV2MethodCall(morePolicy);
+    }
+
+    @Test
+    public void testAutoscanWithClasspathCanCreateSpecs() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-more-entities_0.2.0.jar");
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-entities.jar");
+
+        addCatalogItems(getLocalResource("more-entities-osgi-catalog-scan.yaml"));
+
+        log.info("autoscan for osgi found catalog items: "+Strings.join(mgmt().getCatalog().getCatalogItems(), ", "));
+
+        BrooklynCatalog catalog = mgmt().getCatalog();
+        Iterable<CatalogItem<Object, Object>> items = catalog.getCatalogItems();
+        for (CatalogItem<Object, Object> item: items) {
+            Object spec = catalog.createSpec(item);
+            switch (item.getCatalogItemType()) {
+                case TEMPLATE:
+                case ENTITY:
+                    assertTrue(spec instanceof EntitySpec, "Not an EntitySpec: " + spec);
+                    BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
+                    break;
+                case POLICY:
+                    assertTrue(spec instanceof PolicySpec, "Not a PolicySpec: " + spec);
+                    BrooklynTypes.getDefinedBrooklynType(((PolicySpec<?>)spec).getType());
+                    break;
+                case LOCATION:
+                    assertTrue(spec instanceof LocationSpec, "Not a LocationSpec: " + spec);
+                    BrooklynTypes.getDefinedBrooklynType(((LocationSpec<?>)spec).getType());
+                    break;
+            }
+        }
+    }
 
 }
