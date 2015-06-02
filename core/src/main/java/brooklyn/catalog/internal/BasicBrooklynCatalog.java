@@ -347,7 +347,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     spec = createEntitySpec(loadedItem.getSymbolicName(), plan, loader);
                     break;
                 case POLICY:
-                    spec = createPolicySpec(plan, loader);
+                    spec = createPolicySpec(loadedItem.getSymbolicName(), plan, loader);
                     break;
                 case LOCATION:
                     spec = createLocationSpec(plan, loader);
@@ -390,7 +390,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         case ENTITY: 
             return createEntitySpec(optionalId, plan, loader);
         case LOCATION: return createLocationSpec(plan, loader);
-        case POLICY: return createPolicySpec(plan, loader);
+        case POLICY: return createPolicySpec(optionalId, plan, loader);
         }
         throw new IllegalStateException("Unknown CI Type "+ciType+" for "+plan);
     }
@@ -412,7 +412,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
             if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
                 return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createNestedSpec(at, camp, loader, 
-                    symbolicName==null ? MutableSet.<String>of() : MutableSet.of(symbolicName));
+                    getInitialEncounteredSymbol(symbolicName));
             }
             throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
         } catch (Exception e) {
@@ -420,7 +420,15 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
     }
 
-    private <T, SpecT> SpecT createPolicySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+    private MutableSet<String> getInitialEncounteredSymbol(String symbolicName) {
+        return symbolicName==null ? MutableSet.<String>of() : MutableSet.of(symbolicName);
+    }
+
+    private <T, SpecT> SpecT createPolicySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+        return createPolicySpec(plan, loader, getInitialEncounteredSymbol(symbolicName));
+    }
+
+    private <T, SpecT> SpecT createPolicySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes) {
         //Would ideally re-use io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver.PolicySpecResolver
         //but it is CAMP specific and there is no easy way to get hold of it.
         Object policies = checkNotNull(plan.getCustomAttributes().get(POLICIES_KEY), "policy config");
@@ -430,12 +438,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         Object policy = Iterables.getOnlyElement((Iterable<?>)policies);
 
-        return createPolicySpec(loader, policy);
+        return createPolicySpec(loader, policy, encounteredCatalogTypes);
     }
 
     @SuppressWarnings("unchecked")
-    private <T, SpecT> SpecT createPolicySpec(BrooklynClassLoadingContext loader, Object policy) {
-        // TODO this (and LocationSpec) lack the loop-prevention which createEntitySpec has (hence different signature)
+    private <T, SpecT> SpecT createPolicySpec(BrooklynClassLoadingContext loader, Object policy, Set<String> encounteredCatalogTypes) {
         Map<String, Object> itemMap;
         if (policy instanceof String) {
             itemMap = ImmutableMap.<String, Object>of("type", policy);
@@ -445,9 +452,28 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             throw new IllegalStateException("Policy expected to be string or map. Unsupported object type " + policy.getClass().getName() + " (" + policy.toString() + ")");
         }
 
-        String type = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "policy_type", "policyType", "type"), "policy type");
+        String versionedId = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "policy_type", "policyType", "type"), "policy type");
+        PolicySpec<? extends Policy> spec;
+        CatalogItem<?, ?> policyItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt, versionedId);
+        if (policyItem != null && !encounteredCatalogTypes.contains(policyItem.getSymbolicName())) {
+            if (policyItem.getCatalogItemType() != CatalogItemType.POLICY) {
+                throw new IllegalStateException("Non-policy catalog item in policy context: " + policyItem);
+            }
+            //TODO re-use createSpec
+            BrooklynClassLoadingContext itemLoader = CatalogUtils.newClassLoadingContext(mgmt, policyItem);
+            if (policyItem.getPlanYaml() != null) {
+                DeploymentPlan plan = makePlanFromYaml(policyItem.getPlanYaml());
+                encounteredCatalogTypes.add(policyItem.getSymbolicName());
+                return createPolicySpec(plan, itemLoader, encounteredCatalogTypes);
+            } else if (policyItem.getJavaType() != null) {
+                spec = PolicySpec.create((Class<Policy>)itemLoader.loadClass(policyItem.getJavaType()));
+            } else {
+                throw new IllegalStateException("Invalid policy item - neither yaml nor javaType: " + policyItem);
+            }
+        } else {
+            spec = PolicySpec.create(loader.loadClass(versionedId, Policy.class));
+        }
         Map<String, Object> brooklynConfig = (Map<String, Object>) itemMap.get("brooklyn.config");
-        PolicySpec<? extends Policy> spec = PolicySpec.create(loader.loadClass(type, Policy.class));
         if (brooklynConfig != null) {
             spec.configure(brooklynConfig);
         }
@@ -919,7 +945,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             }
             if (type!=null && key!=null) {
                 for (CatalogItemDtoAbstract<?,?> candidate: itemsDefinedSoFar) {
-                    if (type.equals(candidate.getSymbolicName()) || type.equals(candidate.getId())) {
+                    if (candidateCiType == candidate.getCatalogItemType() &&
+                            (type.equals(candidate.getSymbolicName()) || type.equals(candidate.getId()))) {
                         if (version==null || version.equals(candidate.getVersion())) {
                             // matched - exit
                             catalogItemType = candidateCiType;
@@ -1203,7 +1230,18 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                 // replace java type with plan yaml -- needed for libraries / catalog item to be picked up,
                 // but probably useful to transition away from javaType altogether
                 dto.setSymbolicName(dto.getJavaType());
-                dto.setPlanYaml("services: [{ type: "+dto.getJavaType()+" }]");
+                switch (dto.getCatalogItemType()) {
+                    case TEMPLATE:
+                    case ENTITY:
+                        dto.setPlanYaml("services: [{ type: "+dto.getJavaType()+" }]");
+                        break;
+                    case POLICY:
+                        dto.setPlanYaml(POLICIES_KEY + ": [{ type: "+dto.getJavaType()+" }]");
+                        break;
+                    case LOCATION:
+                        dto.setPlanYaml(LOCATIONS_KEY + ": [{ type: "+dto.getJavaType()+" }]");
+                        break;
+                }
                 dto.setJavaType(null);
 
                 return dto;

@@ -32,6 +32,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.basic.BrooklynObject;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogEntityItemDto;
 import brooklyn.catalog.internal.CatalogItemBuilder;
@@ -171,14 +172,14 @@ public class OsgiVersionMoreEntityTest {
     public static void assertV1MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Assert.assertEquals(doMethodCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V1);
     }
-    public static void assertV2MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    public static void assertV2MethodCall(BrooklynObject me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Assert.assertEquals(doMethodCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2);
     }
     public static void assertV2EvilTwinMethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Assert.assertEquals(doMethodCallBrooklyn(me), EXPECTED_SAY_HI_BROOKLYN_RESPONSE_FROM_V2_EVIL_TWIN);
     }
 
-    public static Object doMethodCallBrooklyn(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    public static Object doMethodCallBrooklyn(BrooklynObject me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         return me.getClass().getMethod("sayHI", String.class).invoke(me, "Brooklyn");
     }
 
