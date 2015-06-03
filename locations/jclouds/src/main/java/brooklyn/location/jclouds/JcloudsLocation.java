@@ -1290,11 +1290,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         // Finally try to build the template
         Template template;
+        Image image;
         try {
             template = templateBuilder.build();
             if (template==null) throw new NullPointerException("No template found (templateBuilder.build returned null)");
-            LOG.debug("jclouds found template "+template+" (image "+template.getImage()+") for provisioning in "+this+" for "+config.getDescription());
-            if (template.getImage()==null) throw new NullPointerException("Template does not contain an image (templateBuilder.build returned invalid template)");
+            image = template.getImage();
+            LOG.debug("jclouds found template "+template+" (image "+image+") for provisioning in "+this+" for "+config.getDescription());
+            if (image==null) throw new NullPointerException("Template does not contain an image (templateBuilder.build returned invalid template)");
         } catch (AuthorizationException e) {
             LOG.warn("Error resolving template: not authorized (rethrowing: "+e+")");
             throw new IllegalStateException("Not authorized to access cloud "+this+" to resolve "+templateBuilder, e);
@@ -1319,7 +1321,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         TemplateOptions options = template.getOptions();
 
-        if (template.getImage().getOperatingSystem().getFamily().equals(OsFamily.WINDOWS)) {
+        OsFamily osFamily = (image.getOperatingSystem() != null) ? image.getOperatingSystem().getFamily() : null;
+        if (OsFamily.WINDOWS == osFamily) {
             if (!(config.containsKey(JcloudsLocationConfig.USER_METADATA_STRING) || config.containsKey(JcloudsLocationConfig.USER_METADATA_MAP))) {
                 config.put(JcloudsLocationConfig.USER_METADATA_STRING, WinRmMachineLocation.getDefaultUserMetadataString());
             }
