@@ -679,14 +679,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
             }
 
-            if (waitForSshable && skipJcloudsSshing && !windows) {
-                // once that host:port is definitely reachable, we can create the user
-                waitForReachable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
-                userCredentials = createUser(computeService, node, sshHostAndPortOverride, setup);
-            } else if (windows) {
-                waitForWinRmAvailable(node, node.getCredentials(), setup);
-            }
-
             // Figure out which login-credentials to use
             LoginCredentials customCredentials = setup.get(CUSTOM_CREDENTIALS);
             if (customCredentials != null) {
