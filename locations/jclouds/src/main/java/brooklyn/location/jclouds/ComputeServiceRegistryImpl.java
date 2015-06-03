@@ -37,7 +37,6 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

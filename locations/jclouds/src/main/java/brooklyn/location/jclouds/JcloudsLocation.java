@@ -47,6 +47,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -206,7 +207,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     private static final Pattern LIST_PATTERN = Pattern.compile("^\\[(.*)\\]$");
     private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d*$");
 
-    private static boolean loggedSshKeysHint = false;
+    private final AtomicBoolean loggedSshKeysHint = new AtomicBoolean(false);
+    private final AtomicBoolean listedAvailableTemplatesOnNoSuchTemplate = new AtomicBoolean(false);
 
     private final Map<String,Map<String, ? extends Object>> tagMapping = Maps.newLinkedHashMap();
 
@@ -1232,8 +1234,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // TODO put user metadata and tags into notes, when jclouds exposes notes, because metadata not exposed via web portal 
         }
     }
-    
-    private static boolean listedAvailableTemplatesOnNoSuchTemplate = false;
 
     /** returns the jclouds Template which describes the image to be built, for the given config and compute service */
     public Template buildTemplate(ComputeService computeService, ConfigBag config) {
@@ -1300,13 +1300,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             throw new IllegalStateException("Not authorized to access cloud "+this+" to resolve "+templateBuilder, e);
         } catch (Exception e) {
             try {
-                synchronized (this) {
+                IOException ioe = Exceptions.getFirstThrowableOfType(e, IOException.class);
+                if (ioe != null) {
+                    LOG.warn("IOException found...", ioe);
+                    throw ioe;
+                }
+                if (listedAvailableTemplatesOnNoSuchTemplate.compareAndSet(false, true)) {
                     // delay subsequent log.warns (put in synch block) so the "Loading..." message is obvious
                     LOG.warn("Unable to match required VM template constraints "+templateBuilder+" when trying to provision VM in "+this+" (rethrowing): "+e);
-                    if (!listedAvailableTemplatesOnNoSuchTemplate) {
-                        listedAvailableTemplatesOnNoSuchTemplate = true;
-                        logAvailableTemplates(config);
-                    }
+                    logAvailableTemplates(config);
                 }
             } catch (Exception e2) {
                 LOG.warn("Error loading available images to report (following original error matching template which will be rethrown): "+e2, e2);
@@ -1595,8 +1597,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                  * if this config key is not set, use a key `brooklyn_id_rsa` and `.pub` in `MGMT_BASE_DIR`,
                  * with permission 0600, creating it if necessary, and logging the fact that this was created.
                  */
-                if (!loggedSshKeysHint && !config.containsKey(PRIVATE_KEY_FILE)) {
-                    loggedSshKeysHint = true;
+                if (!config.containsKey(PRIVATE_KEY_FILE) && loggedSshKeysHint.compareAndSet(false, true)) {
                     LOG.info("Default SSH keys not found or not usable; will create new keys for each machine. "
                         + "Create ~/.ssh/id_rsa or "
                         + "set "+PRIVATE_KEY_FILE.getName()+" / "+PRIVATE_KEY_PASSPHRASE.getName()+" / "+PASSWORD.getName()+" "
