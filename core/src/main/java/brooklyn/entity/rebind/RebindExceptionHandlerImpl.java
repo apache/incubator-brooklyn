@@ -360,7 +360,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             if (Thread.currentThread().isInterrupted()) {
                 if (LOG.isDebugEnabled())
                     LOG.debug("Rebind: while interrupted, received "+errmsg+"/"+e+"; throwing interruption", e);
-                throw Exceptions.propagate(new InterruptedException("Detected interruptiong while not sleeping, due to secondary error rebinding: "+errmsg+"/"+e));
+                throw Exceptions.propagate(new InterruptedException("Detected interruption while not sleeping, due to secondary error rebinding: "+errmsg+"/"+e));
             }
             warn("Rebind: continuing after "+errmsg, e);
         }
