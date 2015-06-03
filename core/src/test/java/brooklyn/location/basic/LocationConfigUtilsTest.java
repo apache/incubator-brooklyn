@@ -21,6 +21,8 @@ package brooklyn.location.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.io.File;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -120,7 +122,7 @@ public class LocationConfigUtilsTest {
     
     public void testReadsPrivateKeyFileWithMultipleColonSeparatedFilesWithGoodLast() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
-        config.put(LocationConfigKeys.PRIVATE_KEY_FILE, "/path/does/not/exist:"+SSH_PRIVATE_KEY_FILE);
+        config.put(LocationConfigKeys.PRIVATE_KEY_FILE, "/path/does/not/exist"+File.pathSeparator+SSH_PRIVATE_KEY_FILE);
         
         String data = LocationConfigUtils.getOsCredential(config).getPreferredCredential();
         assertTrue(data != null && data.length() > 0);
@@ -128,7 +130,7 @@ public class LocationConfigUtilsTest {
     
     public void testReadsPrivateKeyFileWithMultipleColonSeparatedFilesWithGoodFirst() throws Exception {
         ConfigBag config = ConfigBag.newInstance();
-        config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE+":/path/does/not/exist");
+        config.put(LocationConfigKeys.PRIVATE_KEY_FILE, SSH_PRIVATE_KEY_FILE+File.pathSeparator+"/path/does/not/exist");
 
         String data = LocationConfigUtils.getOsCredential(config).getPreferredCredential();
         assertTrue(data != null && data.length() > 0);

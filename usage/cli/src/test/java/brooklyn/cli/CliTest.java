@@ -40,6 +40,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -525,7 +526,7 @@ public class CliTest {
                 throw new ExecutionException(exception.get());
             }
             
-            return ImmutableList.copyOf(Splitter.on("\n").split(new String(stdoutBytes.toByteArray())));
+            return ImmutableList.copyOf(Splitter.on(Pattern.compile("\r?\n")).split(new String(stdoutBytes.toByteArray())));
         } finally {
             System.setIn(origIn);
             System.setOut(origOut);
