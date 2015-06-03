@@ -188,9 +188,10 @@ public class BrooklynWebServerTest {
     
     @Test
     public void testGetFileFromUrl() throws Exception {
+        // On Windows will treat as relative paths
         String url = "file:///tmp/special%40file%20with%20spaces";
         String file = "/tmp/special@file with spaces";
-        assertEquals(getFile(new URL(url)), file);
+        assertEquals(getFile(new URL(url)), new File(file).getAbsolutePath());
     }
 
     private String getFile(String classpathResource) {

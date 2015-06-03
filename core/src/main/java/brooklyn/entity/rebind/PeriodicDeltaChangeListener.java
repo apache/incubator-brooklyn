@@ -278,7 +278,9 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 while (writeCount.get() <= targetWriteCount) {
                     Duration left = timer.getDurationRemaining();
                     if (left.isPositive()) {
-                        writeCount.wait(left.lowerBound(Duration.millis(10)).toMilliseconds());
+                        synchronized(writeCount) {
+                            writeCount.wait(left.lowerBound(Duration.millis(10)).toMilliseconds());
+                        }
                     } else {
                         throw new TimeoutException("Timeout waiting for independent write of rebind-periodic-delta, after "+timer.getDurationElapsed());
                     }
