@@ -902,45 +902,53 @@ public abstract class RebindIteration {
         protected <T extends BrooklynObject> Class<? extends T> load(Class<T> bType, Memento memento) {
             return load(bType, memento.getType(), memento.getCatalogItemId(), memento.getId());
         }
+        
         @SuppressWarnings("unchecked")
         protected <T extends BrooklynObject> Class<? extends T> load(Class<T> bType, String jType, String catalogItemId, String contextSuchAsId) {
             checkNotNull(jType, "Type of %s (%s) must not be null", contextSuchAsId, bType.getSimpleName());
+            
             if (catalogItemId != null) {
-                BrooklynClassLoadingContext loader = getLoadingContextFromCatalogItemId(catalogItemId, classLoader, rebindContext);
-                return loader.loadClass(jType, bType);
-            } else {
-                // we have previously used reflections; not sure if that's needed?
-                try {
-                    return (Class<T>)reflections.loadClass(jType);
-                } catch (Exception e) {
-                    LOG.warn("Unable to load "+jType+" using reflections; will try standard context");
-                }
-
-                if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_INFER_CATALOG_ITEM_ON_REBIND)) {
-                    //Try loading from whichever catalog bundle succeeds.
-                    BrooklynCatalog catalog = managementContext.getCatalog();
-                    for (CatalogItem<?, ?> item : catalog.getCatalogItems()) {
-                        BrooklynClassLoadingContext catalogLoader = CatalogUtils.newClassLoadingContext(managementContext, item);
-                        Maybe<Class<?>> catalogClass = catalogLoader.tryLoadClass(jType);
-                        if (catalogClass.isPresent()) {
-                            return (Class<? extends T>) catalogClass.get();
-                        }
+                CatalogItem<?, ?> catalogItem = rebindContext.lookup().lookupCatalogItem(catalogItemId);
+                if (catalogItem == null && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_INFER_CATALOG_ITEM_ON_REBIND)) {
+                    // See https://issues.apache.org/jira/browse/BROOKLYN-149
+                    // This is a dangling reference to the catalog item (which will have been logged by lookupCatalogItem).
+                    // Try loading as any version.
+                    if (CatalogUtils.looksLikeVersionedId(catalogItemId)) {
+                        String symbolicName = CatalogUtils.getIdFromVersionedId(catalogItemId);
+                        catalogItem = rebindContext.lookup().lookupCatalogItem(symbolicName);
                     }
-                    throw new IllegalStateException("No catalogItemId specified and can't load class from either classpath of catalog items");
-                } else {
-                    throw new IllegalStateException("No catalogItemId specified and can't load class from classpath");
                 }
-
+                if (catalogItem != null) {
+                    BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(managementContext, catalogItem);
+                    return loader.loadClass(jType, bType);
+                } else {
+                    LOG.warn("Unable to load catalog item "+catalogItemId+" for "+contextSuchAsId
+                            +" ("+bType.getSimpleName()+"); will try default class loader");
+                }
             }
-        }
+            
+            try {
+                return (Class<T>)reflections.loadClass(jType);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                LOG.warn("Unable to load "+jType+" using reflections; will try standard context");
+            }
 
-        protected BrooklynClassLoadingContext getLoadingContextFromCatalogItemId(String catalogItemId, ClassLoader classLoader, RebindContext rebindContext) {
-            Preconditions.checkNotNull(catalogItemId, "catalogItemId required (should not be null)");
-            CatalogItem<?, ?> catalogItem = rebindContext.lookup().lookupCatalogItem(catalogItemId);
-            if (catalogItem != null) {
-                return CatalogUtils.newClassLoadingContext(managementContext, catalogItem);
+            if (catalogItemId != null) {
+                throw new IllegalStateException("Unable to load catalog item "+catalogItemId+" for "+contextSuchAsId+", or load class from classpath");
+            } else if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_INFER_CATALOG_ITEM_ON_REBIND)) {
+                //Try loading from whichever catalog bundle succeeds.
+                BrooklynCatalog catalog = managementContext.getCatalog();
+                for (CatalogItem<?, ?> item : catalog.getCatalogItems()) {
+                    BrooklynClassLoadingContext catalogLoader = CatalogUtils.newClassLoadingContext(managementContext, item);
+                    Maybe<Class<?>> catalogClass = catalogLoader.tryLoadClass(jType);
+                    if (catalogClass.isPresent()) {
+                        return (Class<? extends T>) catalogClass.get();
+                    }
+                }
+                throw new IllegalStateException("No catalogItemId specified for "+contextSuchAsId+" and can't load class from either classpath or catalog items");
             } else {
-                throw new IllegalStateException("Failed to load catalog item " + catalogItemId + " required for rebinding.");
+                throw new IllegalStateException("No catalogItemId specified for "+contextSuchAsId+" and can't load class from classpath");
             }
         }
 

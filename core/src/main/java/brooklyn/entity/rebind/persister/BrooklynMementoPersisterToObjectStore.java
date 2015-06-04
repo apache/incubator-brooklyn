@@ -53,6 +53,8 @@ import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
+import brooklyn.internal.BrooklynFeatureEnablement;
+import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
@@ -174,11 +176,23 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         if (item==null || item.getCatalogItemId()==null) {
             return null;
         }
-        CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), item.getCatalogItemId());
-        if (catalogItem == null) {
-            throw new IllegalStateException("Catalog item " + item.getCatalogItemId() + " not found. Can't deserialize object " + objectId + " of type " + type);
+        // See RebindIteration.BrooklynObjectInstantiator.load(), for handling where catalog item is missing;
+        // similar logic here.
+        String catalogItemId = item.getCatalogItemId();
+        CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), catalogItemId);
+        if (catalogItem == null && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_INFER_CATALOG_ITEM_ON_REBIND)) {
+            if (CatalogUtils.looksLikeVersionedId(catalogItemId)) {
+                String symbolicName = CatalogUtils.getIdFromVersionedId(catalogItemId);
+                catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), symbolicName);
+            }
         }
-        return ClassLoaderFromBrooklynClassLoadingContext.of(CatalogUtils.newClassLoadingContext(lookupContext.lookupManagementContext(), catalogItem));
+        if (catalogItem == null) {
+            // TODO do we need to only log once, rather than risk log.warn too often? I think this only happens on rebind, so ok.
+            LOG.warn("Unable to load catalog item "+catalogItemId+" for custom class loader of "+type+" "+objectId+"; will use default class loader");
+            return null;
+        } else {
+            return ClassLoaderFromBrooklynClassLoadingContext.of(CatalogUtils.newClassLoadingContext(lookupContext.lookupManagementContext(), catalogItem));
+        }
     }
     
     @Override public void enableWriteAccess() {
