@@ -113,13 +113,15 @@ public class RendererHints {
     }
 
     /** Applies the (first) display value hint registered against the given target to the given initialValue */  
-    public static Object applyDisplayValueHint(AttributeSensor<?> target, Object initialValue) { return _applyDisplayValueHint(target, initialValue); }
+    public static Object applyDisplayValueHint(AttributeSensor<?> target, Object initialValue) { return applyDisplayValueHintUnchecked(target, initialValue); }
     /** as {@link #applyDisplayValueHint(AttributeSensor, Object)} */
-    public static Object applyDisplayValueHint(ConfigKey<?> target, Object initialValue) { return _applyDisplayValueHint(target, initialValue); }
+    public static Object applyDisplayValueHint(ConfigKey<?> target, Object initialValue) { return applyDisplayValueHintUnchecked(target, initialValue); }
     /** as {@link #applyDisplayValueHint(AttributeSensor, Object)} */
-    public static Object applyDisplayValueHint(Class<?> target, Object initialValue) { return _applyDisplayValueHint(target, initialValue); }
+    public static Object applyDisplayValueHint(Class<?> target, Object initialValue) { return applyDisplayValueHintUnchecked(target, initialValue); }
     
-    private static Object _applyDisplayValueHint(Object target, Object initialValue) { return _applyDisplayValueHint(target, initialValue, true); }
+    /** as {@link #applyDisplayValueHint(AttributeSensor, Object)}, but without type checking; public for those few cases where we may have lost the type */
+    @Beta
+    public static Object applyDisplayValueHintUnchecked(Object target, Object initialValue) { return _applyDisplayValueHint(target, initialValue, true); }
     @SuppressWarnings("rawtypes")
     private static Object _applyDisplayValueHint(Object target, Object initialValue, boolean includeClass) {
         Iterable<RendererHints.DisplayValue> hints = RendererHints._getHintsFor(target, RendererHints.DisplayValue.class);

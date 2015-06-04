@@ -76,7 +76,7 @@ public class EffectorTransformer {
     protected static EffectorSummary.ParameterSummary<?> parameterSummary(Entity entity, ParameterType<?> parameterType) {
         try {
             Maybe<?> defaultValue = Tasks.resolving(parameterType.getDefaultValue()).as(parameterType.getParameterClass())
-                .context(entity!=null ? ((EntityInternal)entity).getExecutionContext() : null).timeout(Duration.millis(50)).getMaybe();
+                .context(entity).timeout(Duration.millis(50)).getMaybe();
             return new ParameterSummary(parameterType.getName(), parameterType.getParameterClassName(), 
                 parameterType.getDescription(), 
                 WebResourceUtils.getValueForDisplay(defaultValue.orNull(), true, false));

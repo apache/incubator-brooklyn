@@ -256,7 +256,7 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
     }
 
     private Date parseDate(String toParse, Date def) {
-        return (toParse == null) ? def : Time.parseDateString(toParse, DATE_FORMATTER.get());
+        return (toParse == null) ? def : Time.parseDate(toParse, DATE_FORMATTER.get());
     }
     
     private String format(Date date) {

@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -41,6 +40,7 @@ import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -55,7 +55,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     @Override
     public List<EntityConfigSummary> list(final String application, final String entityToken) {
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
-
+        // TODO merge with keys which have values
         return Lists.newArrayList(transform(
                 entity.getEntityType().getConfigKeys(),
                 new Function<ConfigKey<?>, EntityConfigSummary>() {
@@ -76,10 +76,8 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
         Map<String, Object> result = Maps.newLinkedHashMap();
         for (Map.Entry<ConfigKey<?>, ?> ek : source.entrySet()) {
             Object value = ek.getValue();
-            if (Boolean.FALSE.equals(raw)) {
-                value = RendererHints.applyDisplayValueHint(ek.getKey(), value);
-            }
-            result.put(ek.getKey().getName(), getValueForDisplay(value, true, false));
+            result.put(ek.getKey().getName(), 
+                resolving(value).preferJson(true).asJerseyOutermostReturnValue(false).raw(raw).context(entity).timeout(Duration.ZERO).renderAs(ek.getKey()).resolve());
         }
         return result;
     }
@@ -98,10 +96,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
         EntityLocal entity = brooklyn().getEntity(application, entityToken);
         ConfigKey<?> ck = findConfig(entity, configKeyName);
         Object value = ((EntityInternal)entity).config().getRaw(ck).orNull();
-        if (Boolean.FALSE.equals(raw)) {
-            value = RendererHints.applyDisplayValueHint(ck, value);
-        }
-        return getValueForDisplay(value, preferJson, true);
+        return resolving(value).preferJson(preferJson).asJerseyOutermostReturnValue(true).raw(raw).context(entity).timeout(Duration.millis(100)).renderAs(ck).resolve();
     }
 
     private ConfigKey<?> findConfig(EntityLocal entity, String configKeyName) {

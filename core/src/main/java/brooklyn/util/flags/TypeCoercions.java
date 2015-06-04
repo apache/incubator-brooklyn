@@ -32,6 +32,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,6 +64,7 @@ import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
 import brooklyn.util.yaml.Yamls;
 
 import com.google.common.base.CaseFormat;
@@ -693,6 +695,12 @@ public class TypeCoercions {
             @Override
             public BigInteger apply(Integer input) {
                 return BigInteger.valueOf(input);
+            }
+        });
+        registerAdapter(String.class, Date.class, new Function<String,Date>() {
+            @Override
+            public Date apply(final String input) {
+                return Time.parseDate(input);
             }
         });
         registerAdapter(String.class, Class.class, new Function<String,Class>() {
