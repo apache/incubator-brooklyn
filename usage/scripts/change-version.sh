@@ -63,7 +63,7 @@ FILES_COUNT=`echo $FILES | wc | awk '{print $2}'`
 if [ ${FILES_COUNT} -ne 0 ]; then
     # search for files containing version markers
     sed -i.bak -e "/${VERSION_MARKER}/s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
-    sed -i.bak -e "/${VERSION_MARKER_NL}/n;s/${CURRENT_VERSION}/${NEW_VERSION}/g" $FILES
+    sed -i.bak -e "/${VERSION_MARKER_NL}/{n;s/${CURRENT_VERSION}/${NEW_VERSION}/g;}" $FILES
 fi
 
 echo "Changed ${CURRENT_VERSION} to ${NEW_VERSION} for "${FILES_COUNT}" files"
