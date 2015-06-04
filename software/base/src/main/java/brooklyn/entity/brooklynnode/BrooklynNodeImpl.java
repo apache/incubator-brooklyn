@@ -43,6 +43,7 @@ import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+import brooklyn.entity.brooklynnode.EntityHttpClient.ResponseCodePredicates;
 import brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
@@ -79,7 +80,9 @@ import brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Range;
 import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.Runnables;
 import com.google.gson.Gson;
@@ -324,15 +327,18 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 .backoffTo(Duration.FIVE_SECONDS)
                 .limitTimeTo(Duration.minutes(5))
                 .repeat(Runnables.doNothing())
+                .rethrowExceptionImmediately()
                 .until(new Callable<Boolean>() {
+                    @Override
                     public Boolean call() {
                         HttpToolResponse result = ((BrooklynNode)entity()).http()
+                                //will throw on non-{2xx, 403} response
+                                .responseSuccess(Predicates.<Integer>or(ResponseCodePredicates.success(), Predicates.equalTo(HttpStatus.SC_FORBIDDEN)))
                                 .post("/v1/applications", headers, plan.getBytes());
                         if (result.getResponseCode() == HttpStatus.SC_FORBIDDEN) {
                             log.debug("Remote is not ready to accept requests, response is " + result.getResponseCode());
                             return false;
                         } else {
-                            //will fail on non-2xx response
                             byte[] content = result.getContent();
                             response.set(content);
                             return true;
