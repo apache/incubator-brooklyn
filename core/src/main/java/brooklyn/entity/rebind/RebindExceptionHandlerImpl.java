@@ -173,7 +173,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No entity found with id "+id);
         } else {
-            warn("No entity found with id "+id+"; returning null");
+            warn("No entity found with id "+id+"; dangling reference on rebind");
             return null;
         }
     }
@@ -184,7 +184,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No location found with id "+id);
         } else {
-            warn("No location found with id "+id+"; returning null");
+            warn("No location found with id "+id+"; dangling reference on rebind");
             return null;
         }
     }
@@ -195,7 +195,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No policy found with id "+id);
         } else {
-            warn("No policy found with id "+id+"; returning null");
+            warn("No policy found with id "+id+"; dangling reference on rebind");
             return null;
         }
     }
@@ -206,7 +206,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No enricher found with id "+id);
         } else {
-            warn("No enricher found with id "+id+"; returning null");
+            warn("No enricher found with id "+id+"; dangling reference on rebind");
             return null;
         }
     }
@@ -217,7 +217,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No feed found with id "+id);
         } else {
-            warn("No feed found with id "+id+"; returning null");
+            warn("No feed found with id "+id+"; dangling reference on rebind");
             return null;
         }
     }
@@ -228,7 +228,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
             throw new IllegalStateException("No catalog item found with id "+id);
         } else {
-            warn("No catalog item found with id "+id+"; returning null");
+            warn("No catalog item found with id "+id+"; dangling reference on rebind");
             return null;
         }
     }
