@@ -19,6 +19,8 @@
 package brooklyn.entity.nosql.hazelcast;
 
 import brooklyn.catalog.Catalog;
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -31,9 +33,17 @@ import brooklyn.util.flags.SetFromFlag;
 		
 @ImplementedBy(HazelcastClusterImpl.class)
 public interface HazelcastCluster extends DynamicCluster {
+	
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, 
             "hazelcast.cluster.name", "Name of the Hazelcast cluster", "HazelcastCluster");
     
+    @SetFromFlag("clusterPassword")
+    ConfigKey<String> CLUSTER_PASSWORD =
+            ConfigKeys.newStringConfigKey("hazelcast.cluster.password", "Hazelcast cluster password.");
+    
     String getClusterName();
+    
+    String getClusterPassword();
+    
 }

@@ -27,6 +27,8 @@ import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.javalang.JavaClassNames;
 
@@ -44,19 +46,40 @@ public interface HazelcastNode extends SoftwareProcess, UsesJava, UsesJmx {
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
             SoftwareProcess.DOWNLOAD_URL, "https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${version}/hazelcast-${version}.jar");
     
-    @SetFromFlag("configFileUrl")
-    ConfigKey<String> TEMPLATE_CONFIGURATION_URL = ConfigKeys.newStringConfigKey(
-            "hazelcast.node.template.configuration.url", "Template file (in freemarker format) for the hazelcast.xml file", 
+    @SetFromFlag("configTemplateUrl")
+    ConfigKey<String> CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
+            "hazelcast.node.config.templateUrl", "Template file (in freemarker format) for the Hazelcat config file", 
             JavaClassNames.resolveClasspathUrl(HazelcastNode.class, "hazelcast-brooklyn.xml"));
+    
+    @SetFromFlag("configFileName")
+    ConfigKey<String> CONFIG_FILE_NAME = ConfigKeys.newStringConfigKey(
+            "hazelcast.node.config.fileName", "Name of the Hazelcast config file", "hazelcast.xml");    
     
     @SetFromFlag("nodeName")
     StringAttributeSensorAndConfigKey NODE_NAME = new StringAttributeSensorAndConfigKey("hazelcast.node.name", 
             "Node name (or randomly selected if not set", null);
-    
+
+    @SetFromFlag("nodePort")
+    PortAttributeSensorAndConfigKey NODE_PORT = new PortAttributeSensorAndConfigKey("hazelcast.node.port", "Hazelcast communication port", PortRanges.fromString("5701+"));
+
     /**
      * Specifies the group name in the configuration file. Each Hazelcast cluster has a separate group.
      */ 
     @SetFromFlag("groupName")
-    StringAttributeSensorAndConfigKey GROUP_NAME = new StringAttributeSensorAndConfigKey("hazelcast.group.name", 
-            "Group name", null);
+    ConfigKey<String> GROUP_NAME = ConfigKeys.newStringConfigKey("hazelcast.group.name", 
+            "Group name", "brooklyn");
+  
+    @SetFromFlag("groupPassword")
+    ConfigKey<String> GROUP_PASSWORD = ConfigKeys.newStringConfigKey("hazelcast.group.password", 
+            "Group password", "brooklyn");
+    
+    String getNodeName();
+    
+    Integer getNodePort();
+    
+    String getGroupName();
+    
+    String getGroupPassword();
+    
+    String getHostname();
 }

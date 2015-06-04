@@ -18,12 +18,19 @@
  */
 package brooklyn.entity.nosql.hazelcast;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.util.text.Strings;
 
 public class HazelcastClusterImpl extends DynamicClusterImpl implements HazelcastCluster {
+	private static final Logger LOG = LoggerFactory.getLogger(HazelcastClusterImpl.class);
     
     private AtomicInteger nextMemberId = new AtomicInteger(0);
 
@@ -31,8 +38,16 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
     protected EntitySpec<?> getMemberSpec() {
         EntitySpec<?> spec = EntitySpec.create(getConfig(MEMBER_SPEC, EntitySpec.create(HazelcastNode.class)));
         
-        spec.configure(HazelcastNode.GROUP_NAME, getConfig(HazelcastClusterImpl.CLUSTER_NAME))
-            .configure(HazelcastNode.NODE_NAME, "hazelcast-" + nextMemberId.incrementAndGet());
+        spec.configure(HazelcastNode.GROUP_NAME, getConfig(HazelcastClusterImpl.CLUSTER_NAME));
+        
+        String clusterPassword = getClusterPassword();
+        if (Strings.isBlank(clusterPassword)) {
+            LOG.debug(this + "Cluster password not provided for " + CLUSTER_PASSWORD.getName() + ":  generating random password");
+            setConfig(CLUSTER_PASSWORD, Strings.makeRandomId(12));
+        }
+        
+        spec.configure(HazelcastNode.GROUP_PASSWORD, getClusterPassword());
+        spec .configure(HazelcastNode.NODE_NAME, "hazelcast-" + nextMemberId.incrementAndGet());
         
         return spec;
     }
@@ -41,5 +56,11 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
     public String getClusterName() {
         return getConfig(CLUSTER_NAME);
     }
+
+	@Override
+	public String getClusterPassword() {
+		 return getConfig(CLUSTER_PASSWORD);
+	}
+
     
 }

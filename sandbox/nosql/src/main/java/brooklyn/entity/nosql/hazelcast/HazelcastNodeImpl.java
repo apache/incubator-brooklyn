@@ -45,7 +45,7 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
     protected void connectSensors() {
         super.connectSensors();
 
-        HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, 5701);
+        HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getNodePort());
 
         String nodeUri = String.format("http://%s:%d/hazelcast/rest/cluster", hp.getHostText(), hp.getPort());
         setAttribute(Attributes.MAIN_URI, URI.create(nodeUri));
@@ -65,5 +65,31 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
         if (httpFeed != null) {
             httpFeed.stop();
         }
+    }
+
+
+	@Override
+	public String getGroupName() {
+		return getConfig(HazelcastNode.GROUP_NAME);
+	}
+
+	@Override
+	public String getGroupPassword() {
+		return getConfig(HazelcastNode.GROUP_PASSWORD);
+	}
+
+	@Override
+	public String getNodeName() {
+		return getAttribute(HazelcastNode.NODE_NAME);
+	}
+
+	@Override
+	public Integer getNodePort() {
+		return getAttribute(HazelcastNode.NODE_PORT);
+	}
+	
+    @Override
+    public String getHostname() { 
+    	return getAttribute(HOSTNAME); 
     }
 }

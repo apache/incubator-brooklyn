@@ -66,7 +66,7 @@ public class HazelcastNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 .failOnNonZeroResultCode()
                 .execute();
         
-        copyTemplate(entity.getConfig(HazelcastNode.TEMPLATE_CONFIGURATION_URL), getConfigFile());
+        copyTemplate(entity.getConfig(HazelcastNode.CONFIG_TEMPLATE_URL), Os.mergePathsUnix(getRunDir(), "conf", getConfigFileName()));
         
     }
 
@@ -77,7 +77,7 @@ public class HazelcastNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         
         StringBuilder commandBuilder = new StringBuilder()
             .append(format("nohup java -cp ./lib/%s", resolver.getFilename()))
-            .append(" -Dhazelcast.config=" + getConfigFile())
+            .append(format(" -Dhazelcast.config=./conf/%s", getConfigFileName()))
             .append(" com.hazelcast.core.server.StartServer >> ./log/out.log 2>&1 </dev/null &");
         
         newScript(MutableMap.of(USE_PID_FILE, true), LAUNCHING)
@@ -86,8 +86,8 @@ public class HazelcastNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
             .execute();
     }
        
-    public String getConfigFile() {
-        return Os.mergePathsUnix(getRunDir(), "conf/hazelcast.xml");
+    public String getConfigFileName() {
+        return entity.getConfig(HazelcastNode.CONFIG_FILE_NAME);
     }
     
     @Override
