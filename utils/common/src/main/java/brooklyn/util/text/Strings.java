@@ -246,7 +246,7 @@ public class Strings {
         return Joiner.on("\n").join(Arrays.asList(lines));
     }
 
-    /** replaces all key->value entries from the replacement map in source (non-regex) */
+    /** NON-REGEX - replaces all key->value entries from the replacement map in source (non-regex) */
     @SuppressWarnings("rawtypes")
     public static String replaceAll(String source, Map replacements) {
         for (Object rr: replacements.entrySet()) {
@@ -256,11 +256,20 @@ public class Strings {
         return source;
     }
 
-    /** NON-REGEX replaceAll -
-     * replaces all instances in source, of the given pattern, with the given replacement
-     * (not  interpreting any arguments as regular expressions)
-     */
+    /** NON-REGEX replaceAll - see the better, explicitly named {@link #replaceAllNonRegex(String, String, String)}. */
     public static String replaceAll(String source, String pattern, String replacement) {
+        return replaceAllNonRegex(source, pattern, replacement);
+    }
+
+    /** 
+     * Replaces all instances in source, of the given pattern, with the given replacement
+     * (not interpreting any arguments as regular expressions).
+     * <p>
+     * This is actually the same as the very ambiguous {@link String#replace(CharSequence, CharSequence)},
+     * which does replace all, but not using regex like the similarly ambiguous {@link String#replaceAll(String, String)} as.
+     * Alternatively see {@link #replaceAllRegex(String, String, String)}.
+     */
+    public static String replaceAllNonRegex(String source, String pattern, String replacement) {
         if (source==null) return source;
         StringBuilder result = new StringBuilder(source.length());
         for (int i=0; i<source.length(); ) {
@@ -275,12 +284,7 @@ public class Strings {
         return result.toString();
     }
 
-    /** NON-REGEX replacement -- explicit method name for reabaility, doing same as Strings.replaceAll */
-    public static String replaceAllNonRegex(String source, String pattern, String replacement) {
-        return replaceAll(source, pattern, replacement);
-    }
-
-    /** REGEX replacement -- explicit method name for reabaility, doing same as String.replaceAll */
+    /** REGEX replacement -- explicit method name for reabaility, doing same as {@link String#replaceAll(String, String)}. */
     public static String replaceAllRegex(String source, String pattern, String replacement) {
         return source.replaceAll(pattern, replacement);
     }
