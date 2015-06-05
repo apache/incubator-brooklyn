@@ -151,6 +151,12 @@ public class TypeCoercionsTest {
     }
 
     @Test
+    public void testCoerceStringToBigNumber() {
+    	assertEquals(TypeCoercions.coerce("0.5", BigDecimal.class), BigDecimal.valueOf(0.5));
+    	assertEquals(TypeCoercions.coerce("1", BigInteger.class), BigInteger.valueOf(1));
+    }
+
+    @Test
     public void testCoerceStringToEnum() {
         assertEquals(TypeCoercions.coerce("STARTING", Lifecycle.class), Lifecycle.STARTING);
         assertEquals(TypeCoercions.coerce("Starting", Lifecycle.class), Lifecycle.STARTING);

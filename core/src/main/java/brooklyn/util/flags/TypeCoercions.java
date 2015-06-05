@@ -665,10 +665,22 @@ public class TypeCoercions {
                 return input.intValue();
             }
         });
+        registerAdapter(String.class, BigDecimal.class, new Function<String,BigDecimal>() {
+            @Override
+            public BigDecimal apply(String input) {
+                return new BigDecimal(input);
+            }
+        });
         registerAdapter(Double.class, BigDecimal.class, new Function<Double,BigDecimal>() {
             @Override
             public BigDecimal apply(Double input) {
                 return BigDecimal.valueOf(input);
+            }
+        });
+        registerAdapter(String.class, BigInteger.class, new Function<String,BigInteger>() {
+            @Override
+            public BigInteger apply(String input) {
+                return new BigInteger(input);
             }
         });
         registerAdapter(Long.class, BigInteger.class, new Function<Long,BigInteger>() {
