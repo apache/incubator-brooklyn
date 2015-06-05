@@ -52,8 +52,6 @@ public class BrooklynMavenArtifactsTest {
     @Test(groups="Integration")
     // runs without internet but doesn't assert what it should, and can take a long time, so integration
     public void testBadExampleWar() {
-        Time.sleep(Duration.FIVE_SECONDS);
-        log.info("boo!");
         String url = BrooklynMavenArtifacts.localUrl("example", "brooklyn-example-GOODBYE-world-sql-webapp", "war");
         Assert.assertFalse(ResourceUtils.create(this).doesUrlExist(url), "should not exist: "+url);
     }
