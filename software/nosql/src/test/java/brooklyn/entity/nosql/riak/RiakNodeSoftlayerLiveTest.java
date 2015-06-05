@@ -18,12 +18,14 @@
  */
 package brooklyn.entity.nosql.riak;
 
+import org.testng.annotations.BeforeMethod;
+
+import com.google.common.collect.ImmutableList;
+
 import brooklyn.entity.AbstractSoftlayerLiveTest;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
-import com.google.common.collect.ImmutableList;
-import org.testng.annotations.BeforeMethod;
 
 public class RiakNodeSoftlayerLiveTest extends AbstractSoftlayerLiveTest {
 
@@ -34,7 +36,8 @@ public class RiakNodeSoftlayerLiveTest extends AbstractSoftlayerLiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        RiakNode entity = app.createAndManageChild(EntitySpec.create(RiakNode.class));
+        RiakNode entity = app.createAndManageChild(EntitySpec.create(RiakNode.class)
+                .configure(RiakNode.SUGGESTED_VERSION, "2.1.1"));
         app.start(ImmutableList.of(loc));
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, RiakNode.SERVICE_UP, true);
