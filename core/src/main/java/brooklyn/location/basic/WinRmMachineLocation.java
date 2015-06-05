@@ -228,6 +228,15 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         }
     }
 
+    @Override
+    public void init() {
+        super.init();
+        
+        getRequiredConfig(ADDRESS);
+        getRequiredConfig(USER);
+        getRequiredConfig(PASSWORD);
+    }
+
     public String getUser() {
         return config().get(USER);
     }
