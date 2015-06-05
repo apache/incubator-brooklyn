@@ -16,19 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.osgi.tests;
+package brooklyn.osgi.tests.transforms;
 
 import brooklyn.entity.rebind.transformer.RawDataTransformer;
 
-public class TestGlobalOsgiTransformer implements RawDataTransformer {
+public class TransformOsgiEntityNamedTransformer implements RawDataTransformer {
 
     @Override
     public String transform(String input) {
-        if ("test".equals(input)) {
-            return TestGlobalOsgiTransformer.class.getSimpleName();
-        } else {
-            return input;
-        }
+        return TransformOsgiEntityNamedTransformer.class.getName();
     }
 
 }

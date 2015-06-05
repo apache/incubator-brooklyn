@@ -16,19 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.osgi.tests;
+package brooklyn.osgi.tests.more;
 
-import brooklyn.entity.rebind.transformer.RawDataTransformer;
+import java.util.concurrent.Callable;
 
-public class TestGlobalOsgiTransformer implements RawDataTransformer {
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.rebind.transformer.TransformedBy;
+import brooklyn.osgi.tests.more.transforms.TransformEntityTransformer;
+
+@TransformedBy(TransformEntityTransformer.class)
+public class TransformEntityImpl extends AbstractEntity implements TransformEntity {
+
+    public static class StaticGenerator implements Callable<Object> {
+
+        @Override
+        public Object call() throws Exception {
+            return System.currentTimeMillis();
+        }
+
+    }
 
     @Override
-    public String transform(String input) {
-        if ("test".equals(input)) {
-            return TestGlobalOsgiTransformer.class.getSimpleName();
-        } else {
-            return input;
-        }
+    public void init() {
+        super.init();
+        setAttribute(GENERATOR, new StaticGenerator());
     }
 
 }

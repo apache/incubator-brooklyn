@@ -61,7 +61,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     private @Deprecated @SetFromFlag String type;
     private @SetFromFlag String planYaml;
 
-    private @SetFromFlag Collection<CatalogBundle> libraries;
+    private @SetFromFlag Collection<? extends CatalogBundle> libraries;
     private @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
     private @SetFromFlag boolean deprecated;
 
@@ -337,7 +337,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         this.planYaml = planYaml;
     }
 
-    protected void setLibraries(Collection<CatalogBundle> libraries) {
+    protected void setLibraries(Collection<? extends CatalogBundle> libraries) {
         this.libraries = libraries;
     }
 

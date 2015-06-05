@@ -99,7 +99,7 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> libraries(Collection<CatalogBundle> libraries) {
+    public CatalogItemBuilder<CatalogItemType> libraries(Collection<? extends CatalogBundle> libraries) {
         dto.setLibraries(libraries);
         return this;
     }

@@ -16,19 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.osgi.tests;
+package brooklyn.osgi.tests.more;
 
-import brooklyn.entity.rebind.transformer.RawDataTransformer;
+import java.util.concurrent.Callable;
 
-public class TestGlobalOsgiTransformer implements RawDataTransformer {
+import brooklyn.entity.Entity;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 
-    @Override
-    public String transform(String input) {
-        if ("test".equals(input)) {
-            return TestGlobalOsgiTransformer.class.getSimpleName();
-        } else {
-            return input;
-        }
-    }
+import com.google.common.reflect.TypeToken;
 
+public interface TransformEntity extends Entity {
+    @SuppressWarnings("serial")
+    public static final AttributeSensor<Callable<Object>> GENERATOR = Sensors.newSensor(new TypeToken<Callable<Object>>() {}, "identity", "identity");
 }

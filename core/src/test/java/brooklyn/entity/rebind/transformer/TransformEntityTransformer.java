@@ -16,19 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.osgi.tests;
+package brooklyn.entity.rebind.transformer;
 
-import brooklyn.entity.rebind.transformer.RawDataTransformer;
-
-public class TestGlobalOsgiTransformer implements RawDataTransformer {
+public class TransformEntityTransformer implements RawDataTransformer {
 
     @Override
     public String transform(String input) {
-        if ("test".equals(input)) {
-            return TestGlobalOsgiTransformer.class.getSimpleName();
-        } else {
-            return input;
-        }
+        return input.replace("MemoryGenerator", "StaticGenerator").replace("<value class=\"double\">3.141592653589793</value>", "");
     }
 
 }

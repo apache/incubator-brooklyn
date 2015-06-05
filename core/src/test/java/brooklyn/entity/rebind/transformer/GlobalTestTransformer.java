@@ -16,28 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind;
-
-import static org.testng.Assert.assertEquals;
-
-import java.util.Collection;
-
-import org.testng.annotations.Test;
+package brooklyn.entity.rebind.transformer;
 
 import brooklyn.entity.rebind.transformer.RawDataTransformer;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 
-public class TransformerLoaderTest {
+public class GlobalTestTransformer implements RawDataTransformer {
 
-    @Test
-    public void testLoadsFromAppClassLoader() throws Exception {
-        LocalManagementContext mgmt = LocalManagementContextForTests.builder(true).disableOsgi(false).build();
-        Collection<RawDataTransformer> transformers = new TransformerLoader(mgmt).findGlobalTransformers();
-        assertEquals(transformers.size(), 2, "One transformer in core, one in osgi bundle");
-        for (RawDataTransformer t : transformers) {
-            assertEquals(t.transform("test"), t.getClass().getSimpleName());
+    @Override
+    public String transform(String input) {
+        if ("test".equals(input)) {
+            return GlobalTestTransformer.class.getSimpleName();
+        } else {
+            return input.replace("TransformEntityImplV1", "TransformEntityImplV2");
         }
     }
-    
+
 }

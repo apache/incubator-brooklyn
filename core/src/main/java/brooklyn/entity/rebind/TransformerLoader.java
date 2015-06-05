@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.ServiceLoader;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.launch.Framework;
 import org.osgi.framework.wiring.BundleWiring;
 
 import brooklyn.catalog.CatalogItem;
@@ -36,11 +37,14 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoManifest.MementoManifest;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.osgi.Osgis;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class TransformerLoader {
+    private static final String TRANSFORMER_SUFFIX = "Transformer";
+
     private ManagementContextInternal managementContext;
 
     public TransformerLoader(ManagementContextInternal managementContext) {
@@ -52,15 +56,23 @@ public class TransformerLoader {
         Iterables.addAll(allTransformers, ServiceLoader.load(RawDataTransformer.class, managementContext.getCatalog().getRootClassLoader()));
         Maybe<OsgiManager> osgiManager = managementContext.getOsgiManager();
         if (osgiManager.isPresent()) {
-            Bundle[] bundles = osgiManager.get().getFramework().getBundleContext().getBundles();
+            Framework framework = osgiManager.get().getFramework();
+            Bundle[] bundles = framework.getBundleContext().getBundles();
             for (Bundle bundle : bundles) {
+                if (bundle == framework) continue;
+                if (Osgis.isExtensionBundle(bundle)) continue;
+
+                try {
+                    //TODO better .start the bundle on install
+                    bundle.loadClass("Some.None.Existent.Class.To.Force.BundleWiring.Initialization");
+                } catch (ClassNotFoundException e1) {}
                 BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
                 if (bundleWiring == null) continue; //bundle not resolved
                 ClassLoader bundleClassLoader = bundleWiring.getClassLoader();
                 try {
                     ServiceLoader<RawDataTransformer> bundleTransformers = ServiceLoader.load(RawDataTransformer.class, bundleClassLoader);
                     Iterables.addAll(allTransformers, bundleTransformers);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Exceptions.propagateIfFatal(e);
                     //LOG.debug(e);
                 }
@@ -106,7 +118,7 @@ public class TransformerLoader {
         } else {
             try {
                 @SuppressWarnings("unchecked")
-                Class<? extends RawDataTransformer> transformerClass = (Class<? extends RawDataTransformer>) loader.loadClass(type + "Transformer");
+                Class<? extends RawDataTransformer> transformerClass = (Class<? extends RawDataTransformer>) loader.loadClass(type + TRANSFORMER_SUFFIX);
                 return transformerClass;
             } catch (Throwable e) {
                 Exceptions.propagateIfFatal(e);
