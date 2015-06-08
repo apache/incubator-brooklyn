@@ -19,7 +19,11 @@
 package brooklyn.entity.nosql.hazelcast;
 
 import static java.lang.String.format;
+
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
@@ -29,6 +33,7 @@ import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public class HazelcastNodeSshDriver extends AbstractSoftwareProcessSshDriver implements HazelcastNodeDriver {
 
@@ -105,4 +110,20 @@ public class HazelcastNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         newScript(MutableMap.of(USE_PID_FILE, true), KILLING).execute();
     }
 
+    public List<String> getHazelcastNodesList() throws ExecutionException, InterruptedException {
+    	HazelcastCluster cluster = (HazelcastCluster) entity.getParent();
+        List<String> result = Lists.newArrayList();
+
+        for (Entity member : cluster.getMembers()) {
+        	String hostname = Entities.attributeSupplierWhenReady(member, HazelcastNode.HOSTNAME).get();
+        	Integer port = Entities.attributeSupplierWhenReady(member, HazelcastNode.NODE_PORT).get();
+        	
+        	String hostAndPort = String.format("%s:%d", hostname, port);
+        	
+        	result.add(hostAndPort);
+        }
+        
+        return result;
+    }
+    
 }

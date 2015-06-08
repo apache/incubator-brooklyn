@@ -18,11 +18,18 @@
             -->
             <ports>0</ports>
         </outbound-ports>
+        
+        <interfaces enabled="true">
+            <interface>${entity.hostAddress}</interface> 
+        </interfaces> 
+        
         <join>
             <multicast enabled="false" />
 
             <tcp-ip enabled="true">
-                <member>${entity.hostname}:${entity.nodePort?c}</member>
+            [#list driver.hazelcastNodesList as member]
+                <member>${member}</member>
+            [/#list]
             </tcp-ip>
             
             <aws enabled="false" />

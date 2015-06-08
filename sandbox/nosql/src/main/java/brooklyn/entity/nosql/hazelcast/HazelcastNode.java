@@ -82,4 +82,6 @@ public interface HazelcastNode extends SoftwareProcess, UsesJava, UsesJmx {
     String getGroupPassword();
     
     String getHostname();
+    
+    String getHostAddress();
 }

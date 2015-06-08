@@ -18,12 +18,18 @@
  */
 package brooklyn.entity.nosql.hazelcast;
 
+import java.util.List;
+
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -41,6 +47,10 @@ public interface HazelcastCluster extends DynamicCluster {
     @SetFromFlag("clusterPassword")
     ConfigKey<String> CLUSTER_PASSWORD =
             ConfigKeys.newStringConfigKey("hazelcast.cluster.password", "Hazelcast cluster password.");
+    
+    @SuppressWarnings("serial")
+    AttributeSensor<List<String>> CLUSTER_NODES = Sensors.newSensor(new TypeToken<List<String>>() {},
+        "hazelcast.cluster.nodes", "List of host:port of all nodes in the cluster");
     
     String getClusterName();
     

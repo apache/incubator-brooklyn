@@ -18,22 +18,30 @@
  */
 package brooklyn.entity.nosql.hazelcast;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.AbstractBrooklynObject;
+import com.google.common.collect.Lists;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.Location;
+import brooklyn.policy.PolicySpec;
 import brooklyn.util.text.Strings;
 
 public class HazelcastClusterImpl extends DynamicClusterImpl implements HazelcastCluster {
 	private static final Logger LOG = LoggerFactory.getLogger(HazelcastClusterImpl.class);
     
-    private AtomicInteger nextMemberId = new AtomicInteger(0);
-
+    private static final AtomicInteger nextMemberId = new AtomicInteger(0);
+    
     @Override
     protected EntitySpec<?> getMemberSpec() {
         EntitySpec<?> spec = EntitySpec.create(getConfig(MEMBER_SPEC, EntitySpec.create(HazelcastNode.class)));
@@ -47,10 +55,35 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
         }
         
         spec.configure(HazelcastNode.GROUP_PASSWORD, getClusterPassword());
-        spec .configure(HazelcastNode.NODE_NAME, "hazelcast-" + nextMemberId.incrementAndGet());
         
         return spec;
     }
+  
+    @Override
+    public void init() {
+        super.init();
+
+        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+                .displayName("Hazelcast members tracker")
+                .configure("group", this));
+    }
+    
+    public static class MemberTrackingPolicy extends AbstractMembershipTrackingPolicy {
+        @Override
+        protected void onEntityChange(Entity member) {
+        }
+
+        @Override
+        protected void onEntityAdded(Entity member) {
+            if (member.getAttribute(HazelcastNode.NODE_NAME) == null) {
+            	((EntityInternal) member).setAttribute(HazelcastNode.NODE_NAME, "hazelcast-" + nextMemberId.incrementAndGet());
+            }
+        }
+
+        @Override
+        protected void onEntityRemoved(Entity member) {
+        }
+    };
     
     @Override
     public String getClusterName() {
@@ -62,5 +95,20 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
 		 return getConfig(CLUSTER_PASSWORD);
 	}
 
+    @Override
+    protected void initEnrichers() {
+        super.initEnrichers();
+        
+    }
     
+    @Override
+    public void start(Collection<? extends Location> locations) {
+        super.start(locations);
+        
+        List<String> clusterNodes = Lists.newArrayList();
+        for (Entity member : getMembers()) {
+        	clusterNodes.add(member.getAttribute(Attributes.HOSTNAME));
+        }
+        setAttribute(CLUSTER_NODES, clusterNodes);
+    }
 }

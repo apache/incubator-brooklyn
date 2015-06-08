@@ -52,7 +52,7 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
 
         httpFeed = HttpFeed.builder()
                 .entity(this)
-                .period(1000, TimeUnit.MILLISECONDS)
+                .period(3000, TimeUnit.MILLISECONDS)
                 .baseUri(nodeUri)
                 .poll(new HttpPollConfig<Boolean>(SERVICE_UP)
                         .onSuccess(HttpValueFunctions.responseCodeEquals(200))
@@ -65,6 +65,9 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
         if (httpFeed != null) {
             httpFeed.stop();
         }
+
+        super.disconnectSensors();
+        disconnectServiceUpIsRunning();
     }
 
 
@@ -91,5 +94,10 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
     @Override
     public String getHostname() { 
     	return getAttribute(HOSTNAME); 
+    }
+    
+    @Override
+    public String getHostAddress() { 
+    	return getAttribute(ADDRESS); 
     }
 }
