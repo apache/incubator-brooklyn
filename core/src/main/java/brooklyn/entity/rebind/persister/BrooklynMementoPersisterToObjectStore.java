@@ -53,8 +53,6 @@ import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
-import brooklyn.internal.BrooklynFeatureEnablement;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
@@ -172,20 +170,14 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     
     @Nullable protected ClassLoader getCustomClassLoaderForBrooklynObject(LookupContext lookupContext, BrooklynObjectType type, String objectId) {
         BrooklynObject item = lookupContext.peek(type, objectId);
+        String catalogItemId = (item == null) ? null : item.getCatalogItemId();
         // TODO enrichers etc aren't yet known -- would need to backtrack to the entity to get them from bundles
-        if (item==null || item.getCatalogItemId()==null) {
+        if (catalogItemId == null) {
             return null;
         }
         // See RebindIteration.BrooklynObjectInstantiator.load(), for handling where catalog item is missing;
         // similar logic here.
-        String catalogItemId = item.getCatalogItemId();
         CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), catalogItemId);
-        if (catalogItem == null && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_INFER_CATALOG_ITEM_ON_REBIND)) {
-            if (CatalogUtils.looksLikeVersionedId(catalogItemId)) {
-                String symbolicName = CatalogUtils.getIdFromVersionedId(catalogItemId);
-                catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), symbolicName);
-            }
-        }
         if (catalogItem == null) {
             // TODO do we need to only log once, rather than risk log.warn too often? I think this only happens on rebind, so ok.
             LOG.warn("Unable to load catalog item "+catalogItemId+" for custom class loader of "+type+" "+objectId+"; will use default class loader");
