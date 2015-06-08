@@ -244,6 +244,7 @@ public class TimeTest {
         
         assertDatesParseToEqual("20150604T080012.345", "2015-06-04-080012.345");
         assertDatesParseToEqual("20150604T080012.345Z", "2015-06-04-080012.345+0000");
+        assertDatesParseToEqual("20150604t080012.345 Z", "2015-06-04-080012.345+0000");
         
         // accept am and pm
         assertDatesParseToEqual("20150604 08:00:12.345a", "2015-06-04-080012.345");

@@ -472,7 +472,10 @@ public class Time {
         }
     }
 
-    /** parses dates from string, accepting many formats including 'YYYY-MM-DD', 'YYYY-MM-DD HH:mm:SS', or millis since UTC epoch */
+    /** Parses dates from string, accepting many formats including ISO-8601 and http://yaml.org/type/timestamp.html, 
+     * e.g. 2015-06-15 16:00:00 +0000. Millis since eopch UTC is also supported.
+     * Other formats including locale-specific variants, e.g. recognising month names,
+     * are supported but this may vary from platform to platform and may change between versions. */
     public static Date parseDate(String input) {
         if (input==null) return null;
         return parseDateMaybe(input).get();
@@ -639,12 +642,12 @@ public class Time {
         // patterns with date first
         String[] DATE_PATTERNS_UNCLOSED = new String[] {
             // separator before time *required* if date had separators
-            DATE_ONLY_WITH_INNER_SEPARATORS + "("+getDateTimeSeparatorPattern("T"),
+            DATE_ONLY_WITH_INNER_SEPARATORS + "("+getDateTimeSeparatorPattern("Tt"),
             // separator before time optional if date did not have separators
-            DATE_ONLY_NO_SEPARATORS + "("+optionally(getDateTimeSeparatorPattern("T")),
+            DATE_ONLY_NO_SEPARATORS + "("+optionally(getDateTimeSeparatorPattern("Tt")),
             // separator before time required if date has words
-            DATE_WORDS_2 + "("+getDateTimeSeparatorPattern("T"),
-            DATE_WORDS_3 + "("+getDateTimeSeparatorPattern("T"),
+            DATE_WORDS_2 + "("+getDateTimeSeparatorPattern("Tt"),
+            DATE_WORDS_3 + "("+getDateTimeSeparatorPattern("Tt"),
         };
         for (String tzP: TZ_PATTERNS)
             for (String dateP: DATE_PATTERNS_UNCLOSED)
@@ -684,7 +687,7 @@ public class Time {
                 try {
                     month = new SimpleDateFormat("yyyy-MMM-dd").parse("2015-"+monthS+"-15").getMonth();
                 } catch (ParseException e) {
-                    return Maybe.absent("Unknown date format '"+input+"': invalid month '"+monthS+"'; try 'yyyy-MM-dd HH:mm:ss.SSS +0000'");
+                    return Maybe.absent("Unknown date format '"+input+"': invalid month '"+monthS+"'; try http://yaml.org/type/timestamp.html format e.g. 2015-06-15 16:00:00 +0000");
                 }
             }
             
@@ -703,7 +706,7 @@ public class Time {
                 if (tzz==null) {
                     Maybe<Matcher> tmm = match("^ ?(?<tzH>(\\+|\\-||)"+DIGIT+optionally(DIGIT)+")"+optionally(optionally(":")+namedGroup("tzM", DIGIT+DIGIT))+"$", tz);
                     if (tmm.isAbsent()) {
-                        return Maybe.absent("Unknown date format '"+input+"': invalid timezone '"+tz+"'; try 'yyyy-MM-dd HH:mm:ss.SSS +0000'");
+                        return Maybe.absent("Unknown date format '"+input+"': invalid timezone '"+tz+"'; try http://yaml.org/type/timestamp.html format e.g. 2015-06-15 16:00:00 +0000");
                     }
                     Matcher tm = tmm.get();
                     String tzM = tm.group("tzM");
@@ -725,7 +728,7 @@ public class Time {
                 String meridian = m.group("meridian");
                 if (Strings.isNonBlank(meridian) && meridian.toLowerCase().startsWith("p")) {
                     if (hours>12) {
-                        return Maybe.absent("Unknown date format '"+input+"': can't be "+hours+" PM; try 'yyyy-MM-dd HH:mm:ss.SSS +0000'");
+                        return Maybe.absent("Unknown date format '"+input+"': can't be "+hours+" PM; try http://yaml.org/type/timestamp.html format e.g. 2015-06-15 16:00:00 +0000");
                     }
                     hours += 12;
                 }
@@ -747,7 +750,7 @@ public class Time {
                         // allow ssSSS with no punctuation
                         s = s/=1000;
                     } else {
-                        return Maybe.absent("Unknown date format '"+input+"': invalid seconds '"+secsS+"'; try 'YYYY-MM-DD HH:mm:ss.SSS +0000'");
+                        return Maybe.absent("Unknown date format '"+input+"': invalid seconds '"+secsS+"'; try http://yaml.org/type/timestamp.html format e.g. 2015-06-15 16:00:00 +0000");
                     }
                     result.set(Calendar.SECOND, (int)s);
                     result.set(Calendar.MILLISECOND, (int)((s*1000) % 1000));
@@ -756,7 +759,7 @@ public class Time {
             
             return Maybe.of(result.getTime());
         }
-        return Maybe.absent("Unknown date format '"+input+"'; try ISO-8601, or 'yyyy-MM-dd' or 'yyyy-MM-dd HH:mm:ss +0000'");
+        return Maybe.absent("Unknown date format '"+input+"'; try http://yaml.org/type/timestamp.html format e.g. 2015-06-15 16:00:00 +0000");
     }
     
     public static TimeZone getTimeZone(String code) {

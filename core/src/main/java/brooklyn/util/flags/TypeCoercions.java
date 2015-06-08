@@ -106,13 +106,20 @@ public class TypeCoercions {
      * <li>{@code value.targetTypeValue()} (handy for primitives)
      * <li>{@code TargetType.valueOf(value)} (for enums)
      * </ul>
-     *
-     * @see #coerce(Object, TypeToken)
+     * <p>
+     * A default set of adapters will handle most common Java-type coercions
+     * as well as <code>String</code> coercion to:
+     * <ul>
+     * <li> {@link Set}, {@link List}, {@link Map} and similar -- parses as YAML
+     * <li> {@link Date} -- parses using {@link Time#parseDate(String)}
+     * <li> {@link Duration} -- parses using {@link Duration#parse(String)}
+     * </ul>
      */
     public static <T> T coerce(Object value, Class<T> targetType) {
         return coerce(value, TypeToken.of(targetType));
     }
 
+    /** @see #coerce(Object, Class) */
     public static <T> Maybe<T> tryCoerce(Object value, TypeToken<T> targetTypeToken) {
         try {
             return Maybe.of( coerce(value, targetTypeToken) );
