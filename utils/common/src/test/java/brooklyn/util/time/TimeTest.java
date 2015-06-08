@@ -213,6 +213,9 @@ public class TimeTest {
         }
         assertDatesParseToEqual("2015.6.4+0100", "2015-06-04-0000+0100");
         assertDatesParseToEqual("20150604-+0100", "2015-06-04 +0100");
+        assertDatesParseToEqual("20150604, +0100", "2015-06-04 +0100");
+        assertDatesParseToEqual("201506040000, 0100", "2015-06-04 +0100");
+        assertDatesParseToEqual("20150604  , 0000  , 0100", "2015-06-04 +0100");
         assertDatesParseToEqual("2015-6-4 +0100", "2015-06-04-0000 +0100");
         assertDatesParseToEqual("2015-6-4 -0100", "2015-06-04-0000 -0100");
         assertDatesParseToEqual("20150604-0000//-0100", "2015-06-04 -0100");
@@ -239,8 +242,8 @@ public class TimeTest {
         // perverse, but accepted for the time being:
         Assert.assertEquals(Time.parseDate("2013-2-29").getTime(), Time.parseDate("2013-3-1").getTime());
         
-        assertDatesParseToEqual("20150604T080012.345", "2015-06-04-080012.345+0000");
-        assertDatesParseToEqual("20150604080012.345Z", "2015-06-04-080012.345+0000");
+        assertDatesParseToEqual("20150604T080012.345", "2015-06-04-080012.345");
+        assertDatesParseToEqual("20150604T080012.345Z", "2015-06-04-080012.345+0000");
         
         // accept am and pm
         assertDatesParseToEqual("20150604 08:00:12.345a", "2015-06-04-080012.345");
@@ -284,7 +287,7 @@ public class TimeTest {
         if (integration) assertDatesParseToEqual("16 Dec 1 2015", "2015-12-01-1600");
         if (integration) assertDatesParseToEqual("16:30 1067 Dec 1 1066", "1067-12-01-1630 +1066");
         assertDatesParseToEqual("1040 1045 12 1", "1045-12-01-1040");
-        assertDatesParseToEqual("1040 1045 12 1 +0h", "1045-12-01-1040Z");
+        assertDatesParseToEqual("1040 1045 12 1 +0", "1045-12-01-1040Z");
         if (integration) assertDatesParseToEqual("1045 Dec 1 1040", "1045-12-01-1040");
         if (integration) assertDatesParseToEqual("10:40 Dec 1 1045", "1045-12-01-1040");
         assertDatesParseToEqual("10.11-2020-12.01", "2020-12-01-1011");

@@ -28,11 +28,8 @@ Brooklyn has also been tested on Ubuntu 12.04 and OS X.
 
 ## Software Requirements
 
-Brooklyn requires Java (JRE or JDK) minimum version 6. The latest release of version 7 or 8 is recommended.
+Brooklyn requires Java (JRE or JDK) minimum version 7. 
 OpenJDK is recommended. Brooklyn has also been tested on IBM J9 and Oracle's JVM.
-
-* check your `iptables` or other firewall service, making sure that incoming connections on port 8443 is not blocked
-* check that the [linux kernel entropy](increase-entropy.html) is sufficient
 
 
 ## Configuration Requirements

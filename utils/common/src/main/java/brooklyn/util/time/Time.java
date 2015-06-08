@@ -540,8 +540,7 @@ public class Time {
     private final static String COMMON_SEPARATORS = "-\\.";
     private final static String TIME_SEPARATOR = COMMON_SEPARATORS+":";
     private final static String DATE_SEPARATOR = COMMON_SEPARATORS+"/ ";
-    private final static String TIME_ZONE_SEPARATOR = COMMON_SEPARATORS+":/ ,";
-    private final static String DATE_TIME_SEPARATOR = TIME_ZONE_SEPARATOR+"T'";
+    private final static String DATE_TIME_ANY_ORDER_GROUP_SEPARATOR = COMMON_SEPARATORS+":/ ";
 
     private final static String DATE_ONLY_WITH_INNER_SEPARATORS = 
             namedGroup("year", DIGIT+DIGIT+DIGIT+DIGIT)
@@ -589,12 +588,20 @@ public class Time {
         notMatching(MERIDIAN+options("$", anyChar("^"+LETTER))) // not AM or PM
         + anyChar(LETTER)+"+"+anyChar(LETTER+DIGIT+"\\/\\-\\' _")+"*");
     private final static String TIME_ZONE_SIGNED_OFFSET = namedGroup("tz", options(namedGroup("tzOffset", options("\\+", "-")+
-            DIGIT+optionally(DIGIT)+options("h", "H", "", optionally(":")+DIGIT+DIGIT)), 
+            DIGIT+optionally(DIGIT)+optionally(optionally(":")+DIGIT+DIGIT)), 
         optionally("\\+")+TZ_CODE));
-    private final static String TIME_ZONE_OPTIONALLY_SIGNED_OFFSET = namedGroup("tz", options(namedGroup("tzOffset", options("\\+", "-", " ")+
-            options(optionally(DIGIT)+DIGIT+options("h", "H"), options("0"+DIGIT, "10", "11", "12")+optionally(":")+DIGIT+DIGIT)), 
-        TZ_CODE));
+    private final static String TIME_ZONE_OPTIONALLY_SIGNED_OFFSET = namedGroup("tz", 
+        options(
+            namedGroup("tzOffset", options("\\+", "-", " ")+
+                options("0"+DIGIT, "10", "11", "12")+optionally(optionally(":")+DIGIT+DIGIT)), 
+            TZ_CODE));
 
+    private static String getDateTimeSeparatorPattern(String extraChars) {
+        return options(" +"+optionally(anyChar(DATE_TIME_ANY_ORDER_GROUP_SEPARATOR+extraChars+",")),
+                anyChar(DATE_TIME_ANY_ORDER_GROUP_SEPARATOR+extraChars+","))
+            + anyChar(DATE_TIME_ANY_ORDER_GROUP_SEPARATOR+extraChars)+"*";
+    }
+    
     @SuppressWarnings("deprecation")
     private static Maybe<Date> parseDateSimpleFlexibleFormatParser(String input) {
         input = input.trim();
@@ -611,11 +618,11 @@ public class Time {
         };
         String[] TZ_PATTERNS = new String[] {
             // space then time zone with sign (+-) or code is preferred
-            " " + TIME_ZONE_SIGNED_OFFSET,
+            optionally(getDateTimeSeparatorPattern("")) + " " + TIME_ZONE_SIGNED_OFFSET,
             // then no TZ - but declare the named groups
             namedGroup("tz", namedGroup("tzOffset", "")+namedGroup("tzCode", "")),
             // then any separator then offset with sign
-            anyChar(TIME_ZONE_SEPARATOR)+"+" + TIME_ZONE_SIGNED_OFFSET,
+            getDateTimeSeparatorPattern("") + TIME_ZONE_SIGNED_OFFSET,
             
             // try parsing with enforced separators before TZ first 
             // (so e.g. in the case of DATE-0100, the -0100 is the time, not the timezone)
@@ -623,8 +630,8 @@ public class Time {
             
             // finally match DATE-TIME-1000 as time zone -1000
             // or DATE-TIME 1000 as TZ +1000 in case a + was supplied but converted to ' ' by web
-            // (but be stricter about the format, 2h or 0200 required, and hours <= 12 so as not to confuse with a year)
-            anyChar(TIME_ZONE_SEPARATOR)+"*" + TIME_ZONE_OPTIONALLY_SIGNED_OFFSET
+            // (but be stricter about the format, two or four digits required, and hours <= 12 so as not to confuse with a year)
+            optionally(getDateTimeSeparatorPattern("")) + TIME_ZONE_OPTIONALLY_SIGNED_OFFSET
         };
         
         List<String> basePatterns = MutableList.of();
@@ -632,28 +639,28 @@ public class Time {
         // patterns with date first
         String[] DATE_PATTERNS_UNCLOSED = new String[] {
             // separator before time *required* if date had separators
-            DATE_ONLY_WITH_INNER_SEPARATORS + "(,?"+(namedGroup("sep", anyChar(DATE_TIME_SEPARATOR)+"+")),
+            DATE_ONLY_WITH_INNER_SEPARATORS + "("+getDateTimeSeparatorPattern("T"),
             // separator before time optional if date did not have separators
-            DATE_ONLY_NO_SEPARATORS + "("+(namedGroup("sep", anyChar(DATE_TIME_SEPARATOR)+"*")),
-            // separator before time required if date had words, comma allowed but needs something else (e.g. space), 'T' for UTC not supported
-            DATE_WORDS_2 + "(,?"+anyChar(DATE_TIME_SEPARATOR)+"+"+namedGroup("sep",""),
-            DATE_WORDS_3 + "(,?"+anyChar(DATE_TIME_SEPARATOR)+"+"+namedGroup("sep",""),
+            DATE_ONLY_NO_SEPARATORS + "("+optionally(getDateTimeSeparatorPattern("T")),
+            // separator before time required if date has words
+            DATE_WORDS_2 + "("+getDateTimeSeparatorPattern("T"),
+            DATE_WORDS_3 + "("+getDateTimeSeparatorPattern("T"),
         };
         for (String tzP: TZ_PATTERNS)
             for (String dateP: DATE_PATTERNS_UNCLOSED)
                 for (String timeP: TIME_PATTERNS)
                     basePatterns.add("^" + dateP + timeP+")?" + tzP + "$");
         
-        // also allow time first, with TZ after, then before; separator needed but sep T for UTC not supported
+        // also allow time first, with TZ after, then before
         for (String tzP: TZ_PATTERNS)
             for (String dateP: DATE_PATTERNS)
                 for (String timeP: TIME_PATTERNS)
-                    basePatterns.add("^" + timeP + ",?"+anyChar(DATE_TIME_SEPARATOR)+"+" +namedGroup("sep","") + dateP + tzP + "$");
-        // also allow time first, with TZ after, then before; separator needed but sep T for UTC not supported
+                    basePatterns.add("^" + timeP + getDateTimeSeparatorPattern("") + dateP + tzP + "$");
+        // also allow time first, with TZ after, then before
         for (String tzP: TZ_PATTERNS)
             for (String dateP: DATE_PATTERNS)
                 for (String timeP: TIME_PATTERNS)
-                    basePatterns.add("^" + timeP + tzP + ",?"+anyChar(DATE_TIME_SEPARATOR)+"+" +namedGroup("sep","") + dateP + "$");
+                    basePatterns.add("^" + timeP + tzP + getDateTimeSeparatorPattern("") + dateP + "$");
 
         Maybe<Matcher> mm = Maybe.absent();
         for (String p: basePatterns) {
@@ -665,13 +672,6 @@ public class Time {
             Calendar result;
 
             String tz = m.group("tz");
-            String sep = m.group("sep");
-            if (sep!=null && sep.trim().equals("T")) {
-                if (Strings.isNonBlank(tz)) {
-                    return Maybe.absent("Cannot use 'T' separator and specify time zone ("+tz+")");
-                }
-                tz = "UTC";
-            }
             
             int year = Integer.parseInt(m.group("year"));
             int day = Integer.parseInt(m.group("day"));
@@ -701,7 +701,7 @@ public class Time {
                     tzz = getTimeZone(tz);
                 }
                 if (tzz==null) {
-                    Maybe<Matcher> tmm = match("^ ?(?<tzH>(\\+|\\-||)"+DIGIT+optionally(DIGIT)+")(h|H||"+optionally(":")+"(?<tzM>"+DIGIT+DIGIT+"))$", tz);
+                    Maybe<Matcher> tmm = match("^ ?(?<tzH>(\\+|\\-||)"+DIGIT+optionally(DIGIT)+")"+optionally(optionally(":")+namedGroup("tzM", DIGIT+DIGIT))+"$", tz);
                     if (tmm.isAbsent()) {
                         return Maybe.absent("Unknown date format '"+input+"': invalid timezone '"+tz+"'; try 'yyyy-MM-dd HH:mm:ss.SSS +0000'");
                     }
