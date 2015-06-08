@@ -27,6 +27,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
@@ -35,7 +36,7 @@ import brooklyn.util.ssh.BashCommands;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class HazelcastNodeSshDriver extends AbstractSoftwareProcessSshDriver implements HazelcastNodeDriver {
+public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver implements HazelcastNodeDriver {
 
     public HazelcastNodeSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -62,7 +63,7 @@ public class HazelcastNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     @Override
     public void customize() {
 
-    	ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
+        ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
                 .add("mkdir -p lib conf log")
                 .add(String.format("cp %s/%s %s/lib/", getInstallDir(), resolver.getFilename(), getRunDir()));
 
@@ -83,7 +84,7 @@ public class HazelcastNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         StringBuilder commandBuilder = new StringBuilder()
             .append(format("nohup java -cp ./lib/%s", resolver.getFilename()))
             .append(format(" -Dhazelcast.config=./conf/%s", getConfigFileName()))
-            .append(" com.hazelcast.core.server.StartServer >> ./log/out.log 2>&1 </dev/null &");
+            .append(format(" com.hazelcast.core.server.StartServer >> %s 2>&1 </dev/null &", getLogFileLocation()));
         
         newScript(MutableMap.of(USE_PID_FILE, true), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
@@ -111,19 +112,24 @@ public class HazelcastNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
     }
 
     public List<String> getHazelcastNodesList() throws ExecutionException, InterruptedException {
-    	HazelcastCluster cluster = (HazelcastCluster) entity.getParent();
+        HazelcastCluster cluster = (HazelcastCluster) entity.getParent();
         List<String> result = Lists.newArrayList();
 
         for (Entity member : cluster.getMembers()) {
-        	String hostname = Entities.attributeSupplierWhenReady(member, HazelcastNode.HOSTNAME).get();
-        	Integer port = Entities.attributeSupplierWhenReady(member, HazelcastNode.NODE_PORT).get();
-        	
-        	String hostAndPort = String.format("%s:%d", hostname, port);
-        	
-        	result.add(hostAndPort);
+            String hostname = Entities.attributeSupplierWhenReady(member, HazelcastNode.HOSTNAME).get();
+            Integer port = Entities.attributeSupplierWhenReady(member, HazelcastNode.NODE_PORT).get();
+            
+            String hostAndPort = String.format("%s:%d", hostname, port);
+            
+            result.add(hostAndPort);
         }
         
         return result;
+    }
+
+    @Override
+    protected String getLogFileLocation() {
+        return Os.mergePathsUnix(getRunDir(),"/log/out.log");
     }
     
 }

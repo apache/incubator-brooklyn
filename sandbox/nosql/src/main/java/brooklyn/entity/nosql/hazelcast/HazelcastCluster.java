@@ -36,10 +36,10 @@ import brooklyn.util.flags.SetFromFlag;
  * A cluster of {@link HazelcastNode}s based on {@link DynamicCluster}.
  */
 @Catalog(name="Hazelcast Cluster", description="Hazelcast is a clustering and highly scalable data distribution platform for Java.")
-		
+
 @ImplementedBy(HazelcastClusterImpl.class)
 public interface HazelcastCluster extends DynamicCluster {
-	
+
     @SetFromFlag("clusterName")
     BasicAttributeSensorAndConfigKey<String> CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, 
             "hazelcast.cluster.name", "Name of the Hazelcast cluster", "HazelcastCluster");

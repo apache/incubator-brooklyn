@@ -71,33 +71,33 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
     }
 
 
-	@Override
-	public String getGroupName() {
-		return getConfig(HazelcastNode.GROUP_NAME);
-	}
+    @Override
+    public String getGroupName() {
+        return getConfig(HazelcastNode.GROUP_NAME);
+    }
 
-	@Override
-	public String getGroupPassword() {
-		return getConfig(HazelcastNode.GROUP_PASSWORD);
-	}
+    @Override
+    public String getGroupPassword() {
+        return getConfig(HazelcastNode.GROUP_PASSWORD);
+    }
 
-	@Override
-	public String getNodeName() {
-		return getAttribute(HazelcastNode.NODE_NAME);
-	}
+    @Override
+    public String getNodeName() {
+        return getAttribute(HazelcastNode.NODE_NAME);
+    }
 
-	@Override
-	public Integer getNodePort() {
-		return getAttribute(HazelcastNode.NODE_PORT);
-	}
-	
+    @Override
+    public Integer getNodePort() {
+        return getAttribute(HazelcastNode.NODE_PORT);
+    }
+
     @Override
     public String getHostname() { 
-    	return getAttribute(HOSTNAME); 
+        return getAttribute(HOSTNAME); 
     }
     
     @Override
     public String getHostAddress() { 
-    	return getAttribute(ADDRESS); 
+        return getAttribute(ADDRESS); 
     }
 }
