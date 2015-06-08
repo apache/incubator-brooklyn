@@ -924,18 +924,20 @@ public abstract class RebindIteration {
             
             if (catalogItemId != null) {
                 CatalogItem<?, ?> catalogItem = rebindContext.lookup().lookupCatalogItem(catalogItemId);
-                if (catalogItem == null && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_AUTO_FIX_CATALOG_REF_ON_REBIND)) {
-                    // See https://issues.apache.org/jira/browse/BROOKLYN-149
-                    // This is a dangling reference to the catalog item (which will have been logged by lookupCatalogItem).
-                    // Try loading as any version.
-                    if (CatalogUtils.looksLikeVersionedId(catalogItemId)) {
-                        String symbolicName = CatalogUtils.getIdFromVersionedId(catalogItemId);
-                        catalogItem = rebindContext.lookup().lookupCatalogItem(symbolicName);
-                        
-                        if (catalogItem != null) {
-                            LOG.warn("Unable to load catalog item "+catalogItemId+" for "+contextSuchAsId
-                                    +" ("+bType.getSimpleName()+"); will auto-upgrade to "+catalogItem.getCatalogItemId());
-                            catalogItemId = catalogItem.getCatalogItemId();
+                if (catalogItem == null) {
+                    if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_AUTO_FIX_CATALOG_REF_ON_REBIND)) {
+                        // See https://issues.apache.org/jira/browse/BROOKLYN-149
+                        // This is a dangling reference to the catalog item (which will have been logged by lookupCatalogItem).
+                        // Try loading as any version.
+                        if (CatalogUtils.looksLikeVersionedId(catalogItemId)) {
+                            String symbolicName = CatalogUtils.getIdFromVersionedId(catalogItemId);
+                            catalogItem = rebindContext.lookup().lookupCatalogItem(symbolicName);
+                            
+                            if (catalogItem != null) {
+                                LOG.warn("Unable to load catalog item "+catalogItemId+" for "+contextSuchAsId
+                                        +" ("+bType.getSimpleName()+"); will auto-upgrade to "+catalogItem.getCatalogItemId());
+                                catalogItemId = catalogItem.getCatalogItemId();
+                            }
                         }
                     }
                 }
@@ -971,33 +973,6 @@ public abstract class RebindIteration {
             } else {
                 throw new IllegalStateException("No catalogItemId specified for "+contextSuchAsId+" and can't load class from classpath");
             }
-        }
-
-        @SuppressWarnings("unchecked")
-        protected String transformCatalogId(Class<?> bType, String jType, String catalogItemId, String contextSuchAsId) {
-            if (catalogItemId != null) {
-                CatalogItem<?, ?> catalogItem = rebindContext.lookup().lookupCatalogItem(catalogItemId);
-                if (catalogItem == null && BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_AUTO_FIX_CATALOG_REF_ON_REBIND)) {
-                    // See https://issues.apache.org/jira/browse/BROOKLYN-149
-                    // This is a dangling reference to the catalog item (which will have been logged by lookupCatalogItem).
-                    // Try loading as any version.
-                    if (CatalogUtils.looksLikeVersionedId(catalogItemId)) {
-                        String symbolicName = CatalogUtils.getIdFromVersionedId(catalogItemId);
-                        catalogItem = rebindContext.lookup().lookupCatalogItem(symbolicName);
-                        
-                        if (catalogItem != null) {
-                            LOG.warn("Unable to load catalog item "+catalogItemId+" for "+contextSuchAsId
-                                    +" ("+bType.getSimpleName()+"); will auto-upgrade to "+catalogItem.getCatalogItemId());
-                            catalogItemId = catalogItem.getCatalogItemId();
-                        } else {
-                            LOG.warn("Unable to load catalog item "+catalogItemId+" for "+contextSuchAsId
-                                    +" ("+bType.getSimpleName()+"); no alternative version available");
-                        }
-                    }
-                }
-            }
-            
-            return catalogItemId;
         }
 
         /**
