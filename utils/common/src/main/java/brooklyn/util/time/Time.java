@@ -55,6 +55,8 @@ public class Time {
     public static final String DATE_FORMAT_STAMP = "yyyyMMdd-HHmmssSSS";
     public static final String DATE_FORMAT_SIMPLE_STAMP = "yyyy-MM-dd-HHmm";
     public static final String DATE_FORMAT_OF_DATE_TOSTRING = "EEE MMM dd HH:mm:ss zzz yyyy";
+    public static final String DATE_FORMAT_ISO8601 = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    public static final String DATE_FORMAT_ISO8601_NO_MILLIS = "yyyy-MM-dd'T'HH:mm:ssZ";
 
     public static final long MILLIS_IN_SECOND = 1000;
     public static final long MILLIS_IN_MINUTE = 60*MILLIS_IN_SECOND;
@@ -62,15 +64,41 @@ public class Time {
     public static final long MILLIS_IN_DAY = 24*MILLIS_IN_HOUR;
     public static final long MILLIS_IN_YEAR = 365*MILLIS_IN_DAY;
     
-    /** returns the current time in {@value #DATE_FORMAT_PREFERRED} format,
-     * numeric big-endian but otherwise optimized for people to read, with spaces and colons and dots */
+    /** GMT/UTC/Z time zone constant */
+    public static final TimeZone TIME_ZONE_UTC = TimeZone.getTimeZone("");
+    
+    /** as {@link #makeDateString(Date)} for current date/time */
     public static String makeDateString() {
         return makeDateString(System.currentTimeMillis());
     }
 
-    /** returns the time in {@value #DATE_FORMAT_PREFERRED} format, given a long (e.g. returned by System.currentTimeMillis) */
+    /** as {@link #makeDateString(Date)} for long millis since UTC epock */
     public static String makeDateString(long date) {
-        return new SimpleDateFormat(DATE_FORMAT_PREFERRED).format(new Date(date));
+        return makeDateString(new Date(date), DATE_FORMAT_PREFERRED);
+    }
+    /** returns the time in {@value #DATE_FORMAT_PREFERRED} format for the given date;
+     * this format is numeric big-endian but otherwise optimized for people to read, with spaces and colons and dots;
+     * time is local to the server and time zone is <i>not</i> included */
+    public static String makeDateString(Date date) {
+        return makeDateString(date, DATE_FORMAT_PREFERRED);
+    }
+    /** as {@link #makeDateString(Date, String, TimeZone)} for the local time zone */
+    public static String makeDateString(Date date, String format) {
+        return makeDateString(date, format, null);
+    }
+    /** as {@link #makeDateString(Date, String, TimeZone)} for the given time zone; consider {@link TimeZone#GMT} */
+    public static String makeDateString(Date date, String format, TimeZone tz) {
+        SimpleDateFormat fmt = new SimpleDateFormat(format);
+        if (tz!=null) fmt.setTimeZone(tz);
+        return fmt.format(date);
+    }
+    /** as {@link #makeDateString(Date, String)} using {@link #DATE_FORMAT_PREFERRED_W_TZ} */
+    public static String makeDateString(Calendar date) {
+        return makeDateString(date.getTime(), DATE_FORMAT_PREFERRED_W_TZ);
+    }
+    /** as {@link #makeDateString(Date, String, TimeZone)} for the time zone of the given calendar object */
+    public static String makeDateString(Calendar date, String format) {
+        return makeDateString(date.getTime(), format, date.getTimeZone());
     }
 
     public static Function<Long, String> toDateString() { return dateString; }
@@ -472,48 +500,72 @@ public class Time {
         }
     }
 
-    /** Parses dates from string, accepting many formats including ISO-8601 and http://yaml.org/type/timestamp.html, 
-     * e.g. 2015-06-15 16:00:00 +0000. Millis since eopch UTC is also supported.
-     * Other formats including locale-specific variants, e.g. recognising month names,
-     * are supported but this may vary from platform to platform and may change between versions. */
-    public static Date parseDate(String input) {
-        if (input==null) return null;
-        return parseDateMaybe(input).get();
+    public static Calendar newCalendarFromMillisSinceEpochUtc(long timestamp) {
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTimeInMillis(timestamp);
+        return cal;
+    }
+
+    public static Calendar newCalendarFromDate(Date date) {
+        return newCalendarFromMillisSinceEpochUtc(date.getTime());
     }
     
-    /** as {@link #parseDate(String)} but returning a {@link Maybe} rather than throwing or returning null */
-    public static Maybe<Date> parseDateMaybe(String input) {
+    /** As {@link #parseCalendar(String)} but returning a {@link Date},
+     * (i.e. a record where the time zone has been applied and forgotten). */
+    public static Date parseDate(String input) {
+        if (input==null) return null;
+        return parseCalendarMaybe(input).get().getTime();
+    }
+
+    /** Parses dates from string, accepting many formats including ISO-8601 and http://yaml.org/type/timestamp.html, 
+     * e.g. 2015-06-15 16:00:00 +0000.
+     * <p>
+     * Millis since epoch (1970) is also supported to represent the epoch (0) or dates in this millenium,
+     * but to prevent ambiguity of e.g. "20150615", any other dates prior to the year 2001 are not accepted.
+     * (However if a type Long is supplied, e.g. from a YAML parse, it will always be treated as millis since epoch.) 
+     * <p>
+     * Other formats including locale-specific variants, e.g. recognising month names,
+     * are supported but this may vary from platform to platform and may change between versions. */
+    public static Calendar parseCalendar(String input) {
+        if (input==null) return null;
+        return parseCalendarMaybe(input).get();
+    }
+    
+    /** as {@link #parseCalendar(String)} but returning a {@link Maybe} rather than throwing or returning null */
+    public static Maybe<Calendar> parseCalendarMaybe(String input) {
         if (input==null) return Maybe.absent("value is null");
         input = input.trim();
-        Maybe<Date> result;
+        Maybe<Calendar> result;
 
-        result = parseDateUtc(input);
+        result = parseCalendarUtc(input);
         if (result.isPresent()) return result;
 
-        result = parseDateSimpleFlexibleFormatParser(input);
+        result = parseCalendarSimpleFlexibleFormatParser(input);
         if (result.isPresent()) return result;
         // return the error from this method
-        Maybe<Date> returnResult = result;
+        Maybe<Calendar> returnResult = result;
 
 //        // see natty method comments below
 //        Maybe<Date> result = parseDateNatty(input);
 //        if (result.isPresent()) return result;
 
-        result = parseDateFormat(input, new SimpleDateFormat(DATE_FORMAT_OF_DATE_TOSTRING));
+        result = parseCalendarFormat(input, new SimpleDateFormat(DATE_FORMAT_OF_DATE_TOSTRING));
         if (result.isPresent()) return result;
-        result = parseDateDefaultParse(input);
+        result = parseCalendarDefaultParse(input);
         if (result.isPresent()) return result;
 
         return returnResult;
     }
 
     @SuppressWarnings("deprecation")
-    private static Maybe<Date> parseDateDefaultParse(String input) {
+    private static Maybe<Calendar> parseCalendarDefaultParse(String input) {
         try {
             long ms = Date.parse(input);
             if (ms>=new Date(1999, 12, 25).getTime() && ms <= new Date(2200, 1, 2).getTime()) {
                 // accept default date parse for this century and next
-                return Maybe.of(new Date(ms));
+                GregorianCalendar c = new GregorianCalendar();
+                c.setTimeInMillis(ms);
+                return Maybe.of((Calendar)c);
             }
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
@@ -521,12 +573,16 @@ public class Time {
         return Maybe.absent();
     }
 
-    private static Maybe<Date> parseDateUtc(String input) {
+    private static Maybe<Calendar> parseCalendarUtc(String input) {
+        input = input.trim();
         if (input.matches("\\d+")) {
-            Maybe<Date> result = Maybe.of(new Date(Long.parseLong(input)));
+            if ("0".equals(input)) {
+                // accept 0 as epoch UTC
+                return Maybe.of(newCalendarFromMillisSinceEpochUtc(0));
+            }
+            Maybe<Calendar> result = Maybe.of(newCalendarFromMillisSinceEpochUtc(Long.parseLong(input)));
             if (result.isPresent()) {
-                @SuppressWarnings("deprecation")
-                int year = result.get().getYear();
+                int year = result.get().get(Calendar.YEAR);
                 if (year >= 2000 && year < 2200) {
                     // only applicable for dates in this century
                     return result;
@@ -606,7 +662,7 @@ public class Time {
     }
     
     @SuppressWarnings("deprecation")
-    private static Maybe<Date> parseDateSimpleFlexibleFormatParser(String input) {
+    private static Maybe<Calendar> parseCalendarSimpleFlexibleFormatParser(String input) {
         input = input.trim();
 
         String[] DATE_PATTERNS = new String[] {
@@ -757,14 +813,16 @@ public class Time {
                 }
             }
             
-            return Maybe.of(result.getTime());
+            return Maybe.of(result);
         }
         return Maybe.absent("Unknown date format '"+input+"'; try http://yaml.org/type/timestamp.html format e.g. 2015-06-15 16:00:00 +0000");
     }
     
     public static TimeZone getTimeZone(String code) {
         if (code.indexOf('/')==-1) {
-            if ("Z".equals(code)) return getTimeZone("UTC");
+            if ("Z".equals(code)) return TIME_ZONE_UTC;
+            if ("UTC".equals(code)) return TIME_ZONE_UTC;
+            if ("GMT".equals(code)) return TIME_ZONE_UTC;
             
             // get the time zone -- most short codes aren't accepted, so accept (and prefer) certain common codes
             if ("EST".equals(code)) return getTimeZone("America/New_York");
@@ -872,22 +930,22 @@ public class Time {
      * <p>
      * If no time zone supplied, this defaults to the TZ configured at the brooklyn server.
      * 
-     * @deprecated since 0.7.0 use {@link #parseDate(String)} for general or {@link #parseDateFormat(String, DateFormat)} for a format,
-     * plus {@link #parseDateUtc(String)} if you want to accept UTC
+     * @deprecated since 0.7.0 use {@link #parseCalendar(String)} for general or {@link #parseCalendarFormat(String, DateFormat)} for a format,
+     * plus {@link #parseCalendarUtc(String)} if you want to accept UTC
      */
     public static Date parseDateString(String dateString, DateFormat format) {
-        Maybe<Date> r = parseDateFormat(dateString, format);
-        if (r.isPresent()) return r.get();
+        Maybe<Calendar> r = parseCalendarFormat(dateString, format);
+        if (r.isPresent()) return r.get().getTime();
         
-        r = parseDateUtc(dateString);
-        if (r.isPresent()) return r.get();
+        r = parseCalendarUtc(dateString);
+        if (r.isPresent()) return r.get().getTime();
 
         throw new IllegalArgumentException("Date " + dateString + " cannot be parsed as UTC millis or using format " + format);
     }
-    public static Maybe<Date> parseDateFormat(String dateString, String format) {
-        return parseDateFormat(dateString, new SimpleDateFormat(format));
+    public static Maybe<Calendar> parseCalendarFormat(String dateString, String format) {
+        return parseCalendarFormat(dateString, new SimpleDateFormat(format));
     }
-    public static Maybe<Date> parseDateFormat(String dateString, DateFormat format) {
+    public static Maybe<Calendar> parseCalendarFormat(String dateString, DateFormat format) {
         if (dateString == null) { 
             throw new NumberFormatException("GeneralHelper.parseDateString cannot parse a null string");
         }
@@ -898,7 +956,7 @@ public class Time {
         Date result = format.parse(dateString, p);
         if (result!=null) {
             // accept results even if the entire thing wasn't parsed, as enough was to match the requested format
-            return Maybe.of(result);
+            return Maybe.of(newCalendarFromDate(result));
         }
         if (log.isTraceEnabled()) log.trace("Could not parse date "+dateString+" using format "+format+": "+p);
         return Maybe.absent();

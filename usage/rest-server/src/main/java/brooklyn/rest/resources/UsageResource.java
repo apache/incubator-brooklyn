@@ -21,7 +21,6 @@ package brooklyn.rest.resources;
 import static brooklyn.rest.util.WebResourceUtils.notFound;
 
 import java.net.URI;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +40,7 @@ import brooklyn.rest.domain.UsageStatistic;
 import brooklyn.rest.domain.UsageStatistics;
 import brooklyn.rest.transform.ApplicationTransformer;
 import brooklyn.util.exceptions.UserFacingException;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
@@ -57,14 +57,6 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
 
     private static final Set<Lifecycle> WORKING_LIFECYCLES = ImmutableSet.of(Lifecycle.RUNNING, Lifecycle.CREATED, Lifecycle.STARTING);
 
-    // SimpleDateFormat is not thread-safe, so give one to each thread
-    private static final ThreadLocal<SimpleDateFormat> DATE_FORMATTER = new ThreadLocal<SimpleDateFormat>(){
-        @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat(DATE_FORMAT);
-        }
-    };
-    
     @Override
     public List<UsageStatistics> listApplicationsUsage(@Nullable String start, @Nullable String end) {
         log.debug("REST call to get application usage for all applications: dates {} -> {}", new Object[] {start, end});
@@ -256,10 +248,10 @@ public class UsageResource extends AbstractBrooklynRestResource implements Usage
     }
 
     private Date parseDate(String toParse, Date def) {
-        return (toParse == null) ? def : Time.parseDate(toParse, DATE_FORMATTER.get());
+        return Strings.isBlank(toParse) ? def : Time.parseDate(toParse);
     }
     
     private String format(Date date) {
-        return DATE_FORMATTER.get().format(date);
+        return Time.makeDateString(date, Time.DATE_FORMAT_ISO8601_NO_MILLIS, Time.TIME_ZONE_UTC);
     }
 }

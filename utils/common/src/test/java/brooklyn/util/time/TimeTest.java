@@ -150,6 +150,17 @@ public class TimeTest {
         Assert.assertFalse(Time.hasElapsedSince(aFewSecondsAgo, Duration.TEN_SECONDS));
         Assert.assertTrue(Time.hasElapsedSince(-1, Duration.TEN_SECONDS));
     }
+    
+    @Test
+    public void testMakeDateString() {
+        String in1 = "2015-06-15T12:34:56";
+        Date d1 = Time.parseDate(in1);
+        Assert.assertEquals(Time.makeDateString(d1), in1.replace('T', ' ')+".000");
+        
+        String in2 = "2015-06-15T12:34:56Z";
+        Date d2 = Time.parseDate(in2);
+        Assert.assertEquals(Time.makeDateString(d2, Time.DATE_FORMAT_ISO8601, Time.getTimeZone("UTC")), in1+".000+0000");
+    }
 
     @Test(groups="Integration")  //because it depends on TZ's set up and parsing months
     public void testTimeZones() {
@@ -238,18 +249,33 @@ public class TimeTest {
         assertDatesParseToEqual("20150604-080012.345", "2015-06-04-080012.345");
         assertDatesParseToEqual("2015-12-1", "2015-12-01-0000");
         assertDatesParseToEqual("1066-12-1", "1066-12-01-0000");
-        Assert.assertEquals(Time.parseDate("2012-2-29").getTime(), Time.parseDate("2012-3-1").getTime() - 24*60*60*1000);
-        // perverse, but accepted for the time being:
-        Assert.assertEquals(Time.parseDate("2013-2-29").getTime(), Time.parseDate("2013-3-1").getTime());
         
         assertDatesParseToEqual("20150604T080012.345", "2015-06-04-080012.345");
         assertDatesParseToEqual("20150604T080012.345Z", "2015-06-04-080012.345+0000");
         assertDatesParseToEqual("20150604t080012.345 Z", "2015-06-04-080012.345+0000");
-        
+
+        // millis parse, and zero is epoch, but numbers which look like a date or datetime take priority
+        assertDatesParseToEqual("0", "1970-1-1 UTC");
+        assertDatesParseToEqual("20150604", "2015-06-04");
+        assertDatesParseToEqual(""+Time.parseDate("20150604").getTime(), "2015-06-04");
+        assertDatesParseToEqual("20150604080012", "2015-06-04-080012");
+        assertDatesParseToEqual("0", "1970-1-1 UTC");
+
+        // leap year
+        Assert.assertEquals(Time.parseDate("2012-2-29").getTime(), Time.parseDate("2012-3-1").getTime() - 24*60*60*1000);
+        // perverse, but accepted for the time being:
+        Assert.assertEquals(Time.parseDate("2013-2-29").getTime(), Time.parseDate("2013-3-1").getTime());
+
         // accept am and pm
         assertDatesParseToEqual("20150604 08:00:12.345a", "2015-06-04-080012.345");
         assertDatesParseToEqual("20150604 08:00:12.345 PM", "2015-06-04-200012.345");
         if (integration) assertDatesParseToEqual("20150604 08:00:12.345 am BST", "2015-06-04-080012.345 +0100");
+        
+        // *calendar* parse includes time zone
+        Assert.assertEquals(Time.makeDateString(Time.parseCalendar("20150604 08:00:12.345a +0100"),
+            Time.DATE_FORMAT_ISO8601), "2015-06-04T08:00:12.345+0100");
+        Assert.assertEquals(Time.makeDateString(Time.parseCalendar("20150604 08:00:12.345a "+Time.TIME_ZONE_UTC.getID()),
+            Time.DATE_FORMAT_ISO8601), "2015-06-04T08:00:12.345+0000");
         
         // accept month in words
         if (integration) {
