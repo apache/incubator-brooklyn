@@ -78,7 +78,7 @@ public class BrooklynFeatureEnablement {
     public static final String FEATURE_RENAME_THREADS = "brooklyn.executionManager.renameThreads";
 
     /**
-     * When rebinding to store created from a previous version the catalogItemId properties will be missing which
+     * When rebinding to state created from very old versions, the catalogItemId properties will be missing which
      * results in errors when OSGi bundles are used. When enabled the code tries to infer the catalogItemId from
      * <ul>
      *   <li> parent entities
@@ -86,7 +86,14 @@ public class BrooklynFeatureEnablement {
      *   <li> iterating through all catalog items and checking if they can provide the needed type
      * </ul>
      */
-    public static final String FEATURE_INFER_CATALOG_ITEM_ON_REBIND = "brooklyn.backwardCompatibility.feature.inferCatalogItemOnRebind";
+    public static final String FEATURE_BACKWARDS_COMPATIBILITY_INFER_CATALOG_ITEM_ON_REBIND = "brooklyn.backwardCompatibility.feature.inferCatalogItemOnRebind";
+    
+    /**
+     * When rebinding, an entity could reference a catalog item that no longer exists. This option 
+     * will automatically update the catalog item reference to what is inferred as the most 
+     * suitable catalog symbolicName:version.
+     */
+    public static final String FEATURE_AUTO_FIX_CATALOG_REF_ON_REBIND = "brooklyn.quickfix.fixDanglingCatalogItemOnRebind";
     
     /**
      * When executing over ssh, whether to support the "async exec" approach, or only the classic approach.
@@ -115,7 +122,8 @@ public class BrooklynFeatureEnablement {
         setDefault(FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY, false);
         setDefault(FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, false);
         setDefault(FEATURE_RENAME_THREADS, false);
-        setDefault(FEATURE_INFER_CATALOG_ITEM_ON_REBIND, true);
+        setDefault(FEATURE_BACKWARDS_COMPATIBILITY_INFER_CATALOG_ITEM_ON_REBIND, true);
+        setDefault(FEATURE_AUTO_FIX_CATALOG_REF_ON_REBIND, false);
         setDefault(FEATURE_SSH_ASYNC_EXEC, false);
         setDefault(FEATURE_VALIDATE_LOCATION_SSH_KEYS, true);
     }

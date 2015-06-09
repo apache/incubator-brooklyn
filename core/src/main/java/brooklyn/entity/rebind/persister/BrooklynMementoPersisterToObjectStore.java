@@ -170,15 +170,21 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     
     @Nullable protected ClassLoader getCustomClassLoaderForBrooklynObject(LookupContext lookupContext, BrooklynObjectType type, String objectId) {
         BrooklynObject item = lookupContext.peek(type, objectId);
+        String catalogItemId = (item == null) ? null : item.getCatalogItemId();
         // TODO enrichers etc aren't yet known -- would need to backtrack to the entity to get them from bundles
-        if (item==null || item.getCatalogItemId()==null) {
+        if (catalogItemId == null) {
             return null;
         }
-        CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), item.getCatalogItemId());
+        // See RebindIteration.BrooklynObjectInstantiator.load(), for handling where catalog item is missing;
+        // similar logic here.
+        CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), catalogItemId);
         if (catalogItem == null) {
-            throw new IllegalStateException("Catalog item " + item.getCatalogItemId() + " not found. Can't deserialize object " + objectId + " of type " + type);
+            // TODO do we need to only log once, rather than risk log.warn too often? I think this only happens on rebind, so ok.
+            LOG.warn("Unable to load catalog item "+catalogItemId+" for custom class loader of "+type+" "+objectId+"; will use default class loader");
+            return null;
+        } else {
+            return ClassLoaderFromBrooklynClassLoadingContext.of(CatalogUtils.newClassLoadingContext(lookupContext.lookupManagementContext(), catalogItem));
         }
-        return ClassLoaderFromBrooklynClassLoadingContext.of(CatalogUtils.newClassLoadingContext(lookupContext.lookupManagementContext(), catalogItem));
     }
     
     @Override public void enableWriteAccess() {
