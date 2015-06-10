@@ -49,8 +49,8 @@ public interface HazelcastCluster extends DynamicCluster {
             ConfigKeys.newStringConfigKey("hazelcast.cluster.password", "Hazelcast cluster password.");
     
     @SuppressWarnings("serial")
-    AttributeSensor<List<String>> CLUSTER_NODES = Sensors.newSensor(new TypeToken<List<String>>() {},
-        "hazelcast.cluster.nodes", "List of host:port of all nodes in the cluster");
+    AttributeSensor<List<String>> PUBLIC_CLUSTER_NODES = Sensors.newSensor(new TypeToken<List<String>>() {},
+        "hazelcast.cluster.public.nodes", "List of public addresses of all nodes in the cluster");
     
     String getClusterName();
     

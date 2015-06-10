@@ -20,7 +20,6 @@ package brooklyn.entity.nosql.hazelcast;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -107,8 +106,8 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
         
         List<String> clusterNodes = Lists.newArrayList();
         for (Entity member : getMembers()) {
-            clusterNodes.add(member.getAttribute(Attributes.HOSTNAME));
+            clusterNodes.add(member.getAttribute(Attributes.ADDRESS));
         }
-        setAttribute(CLUSTER_NODES, clusterNodes);
+        setAttribute(PUBLIC_CLUSTER_NODES, clusterNodes);
     }
 }

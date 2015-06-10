@@ -20,7 +20,7 @@
         </outbound-ports>
         
         <interfaces enabled="true">
-            <interface>${entity.hostAddress}</interface> 
+            <interface>${entity.listenAddress}</interface> 
         </interfaces> 
         
         <join>

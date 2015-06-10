@@ -27,6 +27,7 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Functions;
 import com.google.common.net.HostAndPort;
@@ -99,5 +100,16 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
     @Override
     public String getHostAddress() { 
         return getAttribute(ADDRESS); 
+    }
+    
+    @Override
+    public String getPrivateIpAddress() {
+        return getAttribute(SUBNET_ADDRESS);
+    }
+    
+    @Override
+    public String getListenAddress() {
+        String listenAddress = getPrivateIpAddress();
+        return Strings.isNonBlank(listenAddress) ? listenAddress : getAttribute(ADDRESS);
     }
 }

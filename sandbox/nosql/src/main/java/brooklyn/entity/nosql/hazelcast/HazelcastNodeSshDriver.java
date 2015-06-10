@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
@@ -116,12 +115,12 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         List<String> result = Lists.newArrayList();
 
         for (Entity member : cluster.getMembers()) {
-            String hostname = Entities.attributeSupplierWhenReady(member, HazelcastNode.HOSTNAME).get();
+            String address = Entities.attributeSupplierWhenReady(member, HazelcastNode.SUBNET_ADDRESS).get();
             Integer port = Entities.attributeSupplierWhenReady(member, HazelcastNode.NODE_PORT).get();
             
-            String hostAndPort = String.format("%s:%d", hostname, port);
+            String addressAndPort = String.format("%s:%d", address, port);
             
-            result.add(hostAndPort);
+            result.add(addressAndPort);
         }
         
         return result;
