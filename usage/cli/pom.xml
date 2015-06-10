@@ -165,6 +165,7 @@
                                 i.e. by brooklyn.cli.itemlister.ItemLister
                             -->
                             <exclude>**/src/main/resources/brooklyn/item-lister/statics/style/js/**</exclude>
+                            <exclude>**/*.bom</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
