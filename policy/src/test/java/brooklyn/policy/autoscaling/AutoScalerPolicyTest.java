@@ -27,10 +27,13 @@ import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -41,9 +44,11 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.event.basic.BasicNotificationSensor;
+import brooklyn.policy.PolicySpec;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestCluster;
+import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 
@@ -53,24 +58,38 @@ import com.google.common.collect.ImmutableMap;
 
 public class AutoScalerPolicyTest {
 
+    private static final Logger log = LoggerFactory.getLogger(AutoScalerPolicyTest.class);
+    
     private static long TIMEOUT_MS = 10*1000;
     private static long SHORT_WAIT_MS = 250;
     private static long OVERHEAD_DURATION_MS = 500;
     private static long EARLY_RETURN_MS = 10;
+
+    private static final int MANY_TIMES_INVOCATION_COUNT = 10;
     
     AutoScalerPolicy policy;
     TestCluster cluster;
     LocallyResizableEntity resizable;
     TestApplication app;
+    List<Integer> policyResizes = MutableList.of();
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        log.info("resetting "+getClass().getSimpleName());
         app = TestApplication.Factory.newManagedInstanceForTests();
         cluster = app.createAndManageChild(EntitySpec.create(TestCluster.class).configure(TestCluster.INITIAL_SIZE, 1));
         resizable = new LocallyResizableEntity(cluster, cluster);
         Entities.manage(resizable);
-        policy = new AutoScalerPolicy();
-        resizable.addPolicy(policy);
+        PolicySpec<AutoScalerPolicy> policySpec = PolicySpec.create(AutoScalerPolicy.class).configure(AutoScalerPolicy.RESIZE_OPERATOR, new ResizeOperator() {
+            @Override
+            public Integer resize(Entity entity, Integer desiredSize) {
+                log.info("resizing to "+desiredSize);
+                policyResizes.add(desiredSize);
+                return ((Resizable)entity).resize(desiredSize);
+            }
+        });
+        policy = resizable.addPolicy(policySpec);
+        policyResizes.clear();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -82,19 +101,35 @@ public class AutoScalerPolicyTest {
         policy = null;
     }
 
+    public void assertSizeEventually(Integer targetSize) {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, targetSize));
+        assertEquals(policyResizes.get(policyResizes.size()-1), targetSize);
+    }
+    
     @Test
     public void testShrinkColdPool() throws Exception {
         resizable.resize(4);
-        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 30L, 4*10L, 4*20L));
+        // all metrics as per-node here
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(30d/4, 10, 20));
         
-        // expect pool to shrink to 3 (i.e. maximum to have >= 40 per container)
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 3));
+        // expect pool to shrink to 3 (i.e. maximum to have >= 10 per container)
+        assertSizeEventually(3);
+    }
+    
+    @Test
+    public void testShrinkColdPoolTotals() throws Exception {
+        resizable.resize(4);
+        // all metrics as totals here
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(30L, 4*10L, 4*20L));
+        
+        // expect pool to shrink to 3 (i.e. maximum to have >= 10 per container)
+        assertSizeEventually(3);
     }
     
     @Test
     public void testShrinkColdPoolRoundsUpDesiredNumberOfContainers() throws Exception {
         resizable.resize(4);
-        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(4, 1L, 4*10L, 4*20L));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(1L, 4*10L, 4*20L));
         
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 1));
     }
@@ -102,10 +137,53 @@ public class AutoScalerPolicyTest {
     @Test
     public void testGrowHotPool() throws Exception {
         resizable.resize(2);
-        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(2, 41L, 2*10L, 2*20L));
+        // all metrics as per-node here
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(21L, 10L, 20L));
         
-        // expect pool to grow to 3 (i.e. minimum to have <= 80 per container)
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(resizable, 3));
+        // expect pool to grow to 3 (i.e. minimum to have <= 20 per container)
+        assertSizeEventually(3);
+    }
+
+    @Test
+    public void testGrowHotPoolTotals() throws Exception {
+        resizable.resize(2);
+        // all metrics as totals here
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(41L, 2*10L, 2*20L));
+        
+        // expect pool to grow to 3 (i.e. minimum to have <= 20 per container)
+        assertSizeEventually(3);
+    }
+
+    @Test
+    public void testGrowShrinkRespectsResizeIterationIncrementAndResizeIterationMax() throws Exception {
+        resizable.resize(2);
+        policy.config().set(AutoScalerPolicy.RESIZE_UP_ITERATION_INCREMENT, 2);
+        policy.config().set(AutoScalerPolicy.RESIZE_UP_ITERATION_MAX, 4);
+        policy.config().set(AutoScalerPolicy.RESIZE_DOWN_ITERATION_INCREMENT, 3);
+        policy.config().set(AutoScalerPolicy.RESIZE_DOWN_ITERATION_MAX, 3);
+        
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(42/2, 10, 20));
+        // expect pool to grow to 4 (i.e. to have <= 20 per container we need 3, but increment is 2)
+        assertSizeEventually(4);
+        
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(200/4, 10, 20));
+        // a single hot message can only make it go to 8
+        assertSizeEventually(8);
+        assertEquals(policyResizes, MutableList.of(4, 8));
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, message(200/8, 10, 20));
+        assertSizeEventually(10);
+        assertEquals(policyResizes, MutableList.of(4, 8, 10));
+        
+        // now shrink
+        policyResizes.clear();
+        policy.config().set(AutoScalerPolicy.MIN_POOL_SIZE, 2);
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(1, 10, 20));
+        assertSizeEventually(7);
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(1, 10, 20));
+        assertSizeEventually(4);
+        resizable.emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, message(1, 10, 20));
+        assertSizeEventually(2);
+        assertEquals(policyResizes, MutableList.of(7, 4, 2));
     }
 
     @Test
@@ -262,8 +340,11 @@ public class AutoScalerPolicyTest {
     public void testUsesCustomSensorOverride() throws Exception {
         resizable.removePolicy(policy);
         
+        @SuppressWarnings("rawtypes")
         BasicNotificationSensor<Map> customPoolHotSensor = new BasicNotificationSensor<Map>(Map.class, "custom.hot", "");
+        @SuppressWarnings("rawtypes")
         BasicNotificationSensor<Map> customPoolColdSensor = new BasicNotificationSensor<Map>(Map.class, "custom.cold", "");
+        @SuppressWarnings("rawtypes")
         BasicNotificationSensor<Map> customPoolOkSensor = new BasicNotificationSensor<Map>(Map.class, "custom.ok", "");
         policy = AutoScalerPolicy.builder()
                 .poolHotSensor(customPoolHotSensor) 
@@ -304,15 +385,16 @@ public class AutoScalerPolicyTest {
                 }});
     }
 
-    // FIXME decreased invocationCount from 100, because was failing in jenkins occassionally.
+    // FIXME failing in jenkins occassionally - have put it in the "Acceptance" group for now
+    //
     // Error was things like it taking a couple of seconds too long to scale-up. This is *not*
     // just caused by a slow GC (running with -verbose:gc shows during a failure several 
     // incremental GCs that usually don't amount to more than 0.2 of a second at most, often less).
     // Doing a thread-dump etc immediately after the too-long delay shows no strange thread usage,
     // and shows releng3 system load averages of numbers like 1.73, 2.87 and 1.22.
     // 
-    // Have put it in the "Acceptance" group for now.
-    @Test(groups={"Integration", "Acceptance"}, invocationCount=100)
+    // Is healthy on normal machines.
+    @Test(groups={"Integration", "Acceptance"}, invocationCount=MANY_TIMES_INVOCATION_COUNT)
     public void testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired() throws Throwable {
         try {
             testResizeUpStabilizationDelayTakesMaxSustainedDesired();
@@ -429,9 +511,8 @@ public class AutoScalerPolicyTest {
                 }});
     }
 
-    // FIXME decreased invocationCount from 100; see comment against testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired
-    // Have put it in the "Acceptance" group for now.
-    @Test(groups={"Integration", "Acceptance"}, invocationCount=100)
+    // FIXME Acceptance -- see comment against testRepeatedResizeUpStabilizationDelayTakesMaxSustainedDesired
+    @Test(groups={"Integration", "Acceptance"}, invocationCount=MANY_TIMES_INVOCATION_COUNT)
     public void testRepeatedResizeDownStabilizationDelayTakesMinSustainedDesired() throws Throwable {
         try {
             testResizeDownStabilizationDelayTakesMinSustainedDesired();
@@ -525,6 +606,9 @@ public class AutoScalerPolicyTest {
         assertTrue(resizeDelay >= (resizeDownStabilizationDelay-EARLY_RETURN_MS), "resizeDelay="+resizeDelay);
     }
 
+    Map<String, Object> message(double currentWorkrate, double lowThreshold, double highThreshold) {
+        return message(resizable.getCurrentSize(), currentWorkrate, lowThreshold, highThreshold);
+    }
     static Map<String, Object> message(int currentSize, double currentWorkrate, double lowThreshold, double highThreshold) {
         return ImmutableMap.<String,Object>of(
             AutoScalerPolicy.POOL_CURRENT_SIZE_KEY, currentSize,

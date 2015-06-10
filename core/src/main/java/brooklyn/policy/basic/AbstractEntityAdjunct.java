@@ -19,7 +19,6 @@
 package brooklyn.policy.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
@@ -326,6 +325,11 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return configsInternal;
     }
     
+    /**
+     * Invoked whenever a config change is applied after management is started.
+     * Default implementation throws an exception to disallow the change. 
+     * Can be overridden to return (allowing the change) or to make other changes 
+     * (if necessary), and of course it can do this selectively and call the super to disallow any others. */
     protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
         throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
     }
