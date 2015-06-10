@@ -158,7 +158,9 @@ public class BasicTaskExecutionPerformanceTest {
     // (e.g. 9s for first 1000; 26s for next 1000; 42s for next 1000).
     @Test
     public void testExecutionManagerPerformance() throws Exception {
-        final int NUM_TASKS = 1000;
+        // Was fixed at 1000 tasks, but was running out of virtual memory due to excessive thread creation
+        // on machines which were not able to execute the threads quickly.
+        final int NUM_TASKS = Math.min(500 * Runtime.getRuntime().availableProcessors(), 1000);
         final int NUM_TIMES = 10;
         final int MAX_ACCEPTABLE_TIME = 7500; // saw 5601ms on buildhive
         
