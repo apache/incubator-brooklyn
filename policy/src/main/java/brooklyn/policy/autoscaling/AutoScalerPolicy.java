@@ -308,7 +308,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @SetFromFlag("resizeUpIterationIncrement")
     public static final ConfigKey<Integer> RESIZE_UP_ITERATION_INCREMENT = BasicConfigKey.builder(Integer.class)
             .name("autoscaler.resizeUpIterationIncrement")
-            .description("Batch size for resizing up; the size will be increased by a mulitiple of this value")
+            .description("Batch size for resizing up; the size will be increased by a multiple of this value")
             .defaultValue(1)
             .reconfigurable(true)
             .build();
@@ -322,7 +322,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @SetFromFlag("resizeDownIterationIncrement")
     public static final ConfigKey<Integer> RESIZE_DOWN_ITERATION_INCREMENT = BasicConfigKey.builder(Integer.class)
             .name("autoscaler.resizeDownIterationIncrement")
-            .description("Batch size for resizing down; the size will be decreased by a mulitiple of this value")
+            .description("Batch size for resizing down; the size will be decreased by a multiple of this value")
             .defaultValue(1)
             .reconfigurable(true)
             .build();
