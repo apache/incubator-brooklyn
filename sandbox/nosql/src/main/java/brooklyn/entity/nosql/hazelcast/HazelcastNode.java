@@ -59,6 +59,10 @@ public interface HazelcastNode extends SoftwareProcess, UsesJava, UsesJmx {
     StringAttributeSensorAndConfigKey NODE_NAME = new StringAttributeSensorAndConfigKey("hazelcast.node.name", 
             "Node name (or randomly selected if not set", null);
 
+    @SetFromFlag("nodeHeapMemorySize")
+    ConfigKey<String> NODE_HEAP_MEMORY_SIZE = ConfigKeys.newStringConfigKey(
+            "hazelcast.node.heap.memory.size", "Node's heap memory size (-Xmx and -Xms) in megabytes. Default: 256m", "256m");
+    
     @SetFromFlag("nodePort")
     PortAttributeSensorAndConfigKey NODE_PORT = new PortAttributeSensorAndConfigKey("hazelcast.node.port", "Hazelcast communication port", PortRanges.fromString("5701+"));
 
@@ -88,4 +92,6 @@ public interface HazelcastNode extends SoftwareProcess, UsesJava, UsesJmx {
     String getPrivateIpAddress();
 
     String getListenAddress();
+    
+    String getHeapMemorySize();
 }

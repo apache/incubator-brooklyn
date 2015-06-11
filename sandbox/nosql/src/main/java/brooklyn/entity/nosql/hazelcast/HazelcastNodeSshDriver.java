@@ -80,8 +80,14 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         
         entity.setAttribute(HazelcastNode.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
         
+        String maxHeapMemorySize = getHeapMemorySize();
+        
+        // Setting initial heap size (Xms) size to match max heap size (Xms) at first
+        String initialHeapMemorySize = maxHeapMemorySize;
+        
         StringBuilder commandBuilder = new StringBuilder()
             .append(format("nohup java -cp ./lib/%s", resolver.getFilename()))
+            .append(format(" -Xmx%s -Xms%s", maxHeapMemorySize, initialHeapMemorySize))
             .append(format(" -Dhazelcast.config=./conf/%s", getConfigFileName()))
             .append(format(" com.hazelcast.core.server.StartServer >> %s 2>&1 </dev/null &", getLogFileLocation()));
         
@@ -93,6 +99,10 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
        
     public String getConfigFileName() {
         return entity.getConfig(HazelcastNode.CONFIG_FILE_NAME);
+    }
+    
+    public String getHeapMemorySize() {
+        return entity.getConfig(HazelcastNode.NODE_HEAP_MEMORY_SIZE);
     }
     
     @Override

@@ -112,4 +112,11 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
         String listenAddress = getPrivateIpAddress();
         return Strings.isNonBlank(listenAddress) ? listenAddress : getAttribute(ADDRESS);
     }
+
+
+    @Override
+    public String getHeapMemorySize() {
+        return getConfig(HazelcastNode.NODE_HEAP_MEMORY_SIZE);
+    }
+
 }
