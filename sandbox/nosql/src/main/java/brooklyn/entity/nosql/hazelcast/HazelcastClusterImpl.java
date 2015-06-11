@@ -47,10 +47,8 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
         
         spec.configure(HazelcastNode.GROUP_NAME, getConfig(HazelcastClusterImpl.CLUSTER_NAME));
         
-        String clusterPassword = getClusterPassword();
-        if (Strings.isBlank(clusterPassword)) {
-            LOG.debug(this + "Cluster password not provided for " + CLUSTER_PASSWORD.getName() + ":  generating random password");
-            setConfig(CLUSTER_PASSWORD, Strings.makeRandomId(12));
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Cluster name : {} : used as a group name", getConfig(HazelcastNode.GROUP_NAME));
         }
         
         spec.configure(HazelcastNode.GROUP_PASSWORD, getClusterPassword());
@@ -62,6 +60,15 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
     public void init() {
         super.init();
 
+        String clusterPassword = getClusterPassword();
+        
+        if (Strings.isBlank(clusterPassword)) {
+            if (LOG.isInfoEnabled()) {
+                LOG.info(this + " cluster password not provided for " + CLUSTER_PASSWORD.getName() + " : generating random password");
+            }
+            setConfig(CLUSTER_PASSWORD, Strings.makeRandomId(12));
+        }
+        
         addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Hazelcast members tracker")
                 .configure("group", this));
@@ -76,6 +83,9 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
         protected void onEntityAdded(Entity member) {
             if (member.getAttribute(HazelcastNode.NODE_NAME) == null) {
                 ((EntityInternal) member).setAttribute(HazelcastNode.NODE_NAME, "hazelcast-" + nextMemberId.incrementAndGet());
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("Node {} added to the cluster", member);
+                }
             }
         }
 
@@ -103,6 +113,7 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
     @Override
     public void start(Collection<? extends Location> locations) {
         super.start(locations);
+        
         
         List<String> clusterNodes = Lists.newArrayList();
         for (Entity member : getMembers()) {

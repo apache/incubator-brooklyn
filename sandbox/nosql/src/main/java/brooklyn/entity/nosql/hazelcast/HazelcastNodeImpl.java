@@ -21,6 +21,9 @@ package brooklyn.entity.nosql.hazelcast;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
@@ -34,6 +37,8 @@ import com.google.common.net.HostAndPort;
 
 public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastNode {
     
+    private static final Logger LOG = LoggerFactory.getLogger(HazelcastNodeImpl.class);
+    
     HttpFeed httpFeed;
 
     @Override
@@ -41,16 +46,23 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
         return HazelcastNodeDriver.class;
     }
     
-    
     @Override
     protected void connectSensors() {
         super.connectSensors();
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Connecting sensors for node: {} ", getAttribute(Attributes.HOSTNAME));
+        }
+        
         HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getNodePort());
 
         String nodeUri = String.format("http://%s:%d/hazelcast/rest/cluster", hp.getHostText(), hp.getPort());
         setAttribute(Attributes.MAIN_URI, URI.create(nodeUri));
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Node {} is using {} as a main URI", this, nodeUri);
+        }
+        
         httpFeed = HttpFeed.builder()
                 .entity(this)
                 .period(3000, TimeUnit.MILLISECONDS)
@@ -67,6 +79,10 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
             httpFeed.stop();
         }
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Disconnecting sensors for node: {} ", getAttribute(Attributes.HOSTNAME));
+        }
+        
         super.disconnectSensors();
         disconnectServiceUpIsRunning();
     }
@@ -110,7 +126,17 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
     @Override
     public String getListenAddress() {
         String listenAddress = getPrivateIpAddress();
-        return Strings.isNonBlank(listenAddress) ? listenAddress : getAttribute(ADDRESS);
+        
+        if (Strings.isBlank(listenAddress)) {
+            listenAddress = getAttribute(ADDRESS);
+        }
+        
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Node {} is listening on {}", this, listenAddress);
+        }
+
+         
+        return listenAddress;
     }
 
 

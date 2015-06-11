@@ -23,6 +23,9 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
@@ -36,6 +39,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver implements HazelcastNodeDriver {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(HazelcastNodeSshDriver.class);
 
     public HazelcastNodeSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
@@ -61,7 +66,10 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
 
     @Override
     public void customize() {
-
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Customizing {}", entity.getAttribute(HazelcastNode.NODE_NAME));
+        }
+        
         ImmutableList.Builder<String> commands = new ImmutableList.Builder<String>()
                 .add("mkdir -p lib conf log")
                 .add(String.format("cp %s/%s %s/lib/", getInstallDir(), resolver.getFilename(), getRunDir()));
@@ -81,6 +89,10 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         entity.setAttribute(HazelcastNode.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
         
         String maxHeapMemorySize = getHeapMemorySize();
+        
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Launching {} with heap memory of {}", entity, maxHeapMemorySize);
+        }
         
         // Setting initial heap size (Xms) size to match max heap size (Xms) at first
         String initialHeapMemorySize = maxHeapMemorySize;
@@ -130,6 +142,9 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
             
             String addressAndPort = String.format("%s:%d", address, port);
             
+            if (LOG.isInfoEnabled()) {
+                LOG.info("Adding {} to the members' list of {}", addressAndPort, entity.getAttribute(HazelcastNode.NODE_NAME));
+            }
             result.add(addressAndPort);
         }
         

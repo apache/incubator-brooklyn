@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.AbstractSoftlayerLiveTest;
+import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
@@ -31,9 +31,9 @@ import brooklyn.test.EntityTestUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class HazelcastClusterSoftlayerLiveTest extends AbstractSoftlayerLiveTest {
+public class HazelcastClusterEc2LiveTest extends AbstractEc2LiveTest {
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(HazelcastClusterSoftlayerLiveTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HazelcastClusterEc2LiveTest.class);
 
     @Override
     protected void doTest(Location loc) throws Exception {
@@ -65,7 +65,7 @@ public class HazelcastClusterSoftlayerLiveTest extends AbstractSoftlayerLiveTest
     
     @Test(groups = {"Live", "Live-sanity"})
     @Override
-    public void test_Ubuntu_12_0_4() throws Exception {
-        super.test_Ubuntu_12_0_4();
+    public void test_CentOS_6_3() throws Exception {
+        super.test_CentOS_6_3();
     }
 }
