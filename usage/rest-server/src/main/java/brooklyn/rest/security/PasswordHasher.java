@@ -24,8 +24,9 @@ import com.google.common.hash.Hashing;
 
 public class PasswordHasher {
     public static String sha256(String salt, String password) {
-        byte[] salted = Charsets.UTF_8.encode((salt == null ? "" : salt) + password).array();
-        HashCode hash = Hashing.sha256().hashBytes(salted);
+        if (salt == null) salt = "";
+        byte[] bytes = (salt + password).getBytes(Charsets.UTF_8);
+        HashCode hash = Hashing.sha256().hashBytes(bytes);
         return hash.toString();
     }
 }

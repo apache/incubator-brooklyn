@@ -26,6 +26,6 @@ public class PasswordHasherTest {
 
     @Test
     public void testHashSha256() throws Exception {
-        assertEquals(PasswordHasher.sha256("mysalt", "mypassword"), "e1c2390613b1beff83420c15d6ceca3b2e77e66e3f4be4e45186032120a30f22");
+        assertEquals(PasswordHasher.sha256("mysalt", "mypassword"), "d02878b06efa88579cd84d9e50b211c0a7caa92cf243bad1622c66081f7e2692");
     }
 }
