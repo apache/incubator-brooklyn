@@ -141,6 +141,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-locations-jclouds</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>mx4j</groupId>
             <artifactId>mx4j-tools</artifactId>
             <scope>test</scope>

@@ -143,6 +143,7 @@ public class BrooklynConfigKeys {
      * component is up, but this entity does not care about the dependent component's actual config values.
      */
 
+    public static final ConfigKey<Boolean> PROVISION_LATCH = newBooleanConfigKey("provision.latch", "Latch for blocking location provision until ready");
     public static final ConfigKey<Boolean> START_LATCH = newBooleanConfigKey("start.latch", "Latch for blocking start until ready");
     public static final ConfigKey<Boolean> SETUP_LATCH = newBooleanConfigKey("setup.latch", "Latch for blocking setup until ready");
     public static final ConfigKey<Boolean> PRE_INSTALL_RESOURCES_LATCH = newBooleanConfigKey("resources.preInstall.latch", "Latch for blocking pre-install resources until ready");
