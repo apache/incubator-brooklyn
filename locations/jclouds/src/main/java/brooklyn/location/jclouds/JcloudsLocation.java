@@ -1057,7 +1057,33 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         } else if (t instanceof SoftLayerTemplateOptions) {
                             ((SoftLayerTemplateOptions)t).userData(Strings.toString(v));
                         } else {
-                            LOG.info("ignoring userDataString({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
+                            // Try reflection: userData(String), or guestCustomizationScript(String);
+                            // the latter is used by vCloud Director.
+                            Class<? extends TemplateOptions> clazz = t.getClass();
+                            Method userDataMethod = null;
+                            try {
+                                userDataMethod = clazz.getMethod("userData", String.class);
+                            } catch (SecurityException e) {
+                                LOG.info("Problem reflectively inspecting methods of "+t.getClass()+" for setting userData", e);
+                            } catch (NoSuchMethodException e) {
+                                try {
+                                    // For vCloud Director
+                                    userDataMethod = clazz.getMethod("guestCustomizationScript", String.class);
+                                } catch (NoSuchMethodException e2) {
+                                    // expected on various other clouds
+                                }
+                            }
+                            if (userDataMethod != null) {
+                                try {
+                                    userDataMethod.invoke(Strings.toString(v));
+                                } catch (InvocationTargetException e) {
+                                    LOG.info("Problem invoking "+userDataMethod.getName()+" of "+t.getClass()+", for setting userData", e);
+                                } catch (IllegalAccessException e) {
+                                    LOG.info("Unable to reflectively invoke "+userDataMethod.getName()+" of "+t.getClass()+", for setting userData", e);
+                                }
+                            } else {
+                                LOG.info("ignoring userDataString({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
+                            }
                         }
                     }})
             .put(USER_DATA_UUENCODED, new CustomizeTemplateOptions() {
