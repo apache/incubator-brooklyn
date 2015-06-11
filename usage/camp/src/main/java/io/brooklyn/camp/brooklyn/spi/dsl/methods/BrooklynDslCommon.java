@@ -46,6 +46,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DeferredSupplier;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -204,7 +205,7 @@ public class BrooklynDslCommon {
 
         @Override
         public String toString() {
-            return "$brooklyn:formatString("+pattern+")";
+            return "$brooklyn:formatString("+pattern+(args==null || args.length==0 ? "" : ","+Strings.join(args, ","))+")";
         }
     }
 
