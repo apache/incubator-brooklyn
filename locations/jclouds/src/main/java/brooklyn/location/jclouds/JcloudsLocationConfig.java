@@ -251,6 +251,9 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> OS_VERSION_REGEX = ConfigKeys.newStringConfigKey("osVersionRegex", 
         "Regular expression for the OS version to load");
 
+    public static final ConfigKey<OsFamily> OS_FAMILY_OVERRIDE = ConfigKeys.newConfigKey(OsFamily.class, "osFamilyOverride", 
+            "OS family of VMs (ignores VM metadata from jclouds, and assumes this value)");
+
     public static final ConfigKey<ComputeServiceRegistry> COMPUTE_SERVICE_REGISTRY = ConfigKeys.newConfigKey(
             ComputeServiceRegistry.class,
             "jclouds.computeServiceRegistry",

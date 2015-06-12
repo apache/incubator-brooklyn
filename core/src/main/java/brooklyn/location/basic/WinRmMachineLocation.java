@@ -53,6 +53,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.net.HostAndPort;
 
 public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
 
@@ -113,6 +114,12 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         return (address != null) ? address.getHostAddress() : null;
     }
 
+    @Nullable
+    protected String getHostAndPort() {
+        String host = getHostname();
+        return (host == null) ? null : host + ":" + config().get(WINRM_PORT);
+    }
+
     @Override
     public Set<String> getPublicAddresses() {
         InetAddress address = getAddress();
@@ -150,7 +157,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     protected WinRmToolResponse executeScriptNoRetry(List<String> script) {
-        WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUser(), getPassword());
+        WinRmTool winRmTool = WinRmTool.connect(getHostAndPort(), getUser(), getPassword());
         WinRmToolResponse response = winRmTool.executeScript(script);
         return response;
     }
@@ -183,7 +190,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public WinRmToolResponse executePsScriptNoRetry(List<String> psScript) {
-        WinRmTool winRmTool = WinRmTool.connect(getHostname(), getUser(), getPassword());
+        WinRmTool winRmTool = WinRmTool.connect(getHostAndPort(), getUser(), getPassword());
         WinRmToolResponse response = winRmTool.executePs(psScript);
         return response;
     }
@@ -231,10 +238,6 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     @Override
     public void init() {
         super.init();
-        
-        getRequiredConfig(ADDRESS);
-        getRequiredConfig(USER);
-        getRequiredConfig(PASSWORD);
     }
 
     public String getUser() {
