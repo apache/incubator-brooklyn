@@ -545,10 +545,6 @@ public class Time {
         // return the error from this method
         Maybe<Calendar> returnResult = result;
 
-//        // see natty method comments below
-//        Maybe<Date> result = parseDateNatty(input);
-//        if (result.isPresent()) return result;
-
         result = parseCalendarFormat(input, new SimpleDateFormat(DATE_FORMAT_OF_DATE_TOSTRING));
         if (result.isPresent()) return result;
         result = parseCalendarDefaultParse(input);
@@ -602,66 +598,79 @@ public class Time {
     private final static String DATE_TIME_ANY_ORDER_GROUP_SEPARATOR = COMMON_SEPARATORS+":/ ";
 
     private final static String DATE_ONLY_WITH_INNER_SEPARATORS = 
-            namedGroup("year", DIGIT+DIGIT+DIGIT+DIGIT)
-            + anyChar(DATE_SEPARATOR)
-            + namedGroup("month", options(optionally(DIGIT)+DIGIT, anyChar(LETTER)+"+"))
-            + anyChar(DATE_SEPARATOR)
-            + namedGroup("day", optionally(DIGIT)+DIGIT);
+            namedGroup("year", DIGIT+DIGIT+DIGIT+DIGIT) +
+            anyChar(DATE_SEPARATOR) +
+            namedGroup("month", options(optionally(DIGIT)+DIGIT, anyChar(LETTER)+"+")) +
+            anyChar(DATE_SEPARATOR) +
+            namedGroup("day", optionally(DIGIT)+DIGIT);
     private final static String DATE_WORDS_2 = 
-        namedGroup("month", anyChar(LETTER)+"+")
-        + anyChar(DATE_SEPARATOR)
-        + namedGroup("day", optionally(DIGIT)+DIGIT)
-        + ",?"+anyChar(DATE_SEPARATOR)+"+"
-        + namedGroup("year", DIGIT+DIGIT+DIGIT+DIGIT);
+            namedGroup("month", anyChar(LETTER)+"+") +
+            anyChar(DATE_SEPARATOR) +
+            namedGroup("day", optionally(DIGIT)+DIGIT) +
+            ",?"+anyChar(DATE_SEPARATOR)+"+" +
+            namedGroup("year", DIGIT+DIGIT+DIGIT+DIGIT);
     // we could parse NN-NN-NNNN as DD-MM-YYYY always, but could be confusing for MM-DD-YYYY oriented people, so require month named
     private final static String DATE_WORDS_3 = 
-        namedGroup("day", optionally(DIGIT)+DIGIT)
-        + anyChar(DATE_SEPARATOR)
-        + namedGroup("month", anyChar(LETTER)+"+")
-        + ",?"+anyChar(DATE_SEPARATOR)+"+"
-        + namedGroup("year", DIGIT+DIGIT+DIGIT+DIGIT);
+            namedGroup("day", optionally(DIGIT)+DIGIT) +
+            anyChar(DATE_SEPARATOR) +
+            namedGroup("month", anyChar(LETTER)+"+") +
+            ",?"+anyChar(DATE_SEPARATOR)+"+" +
+            namedGroup("year", DIGIT+DIGIT+DIGIT+DIGIT);
 
     private final static String DATE_ONLY_NO_SEPARATORS = 
-            namedGroup("year", DIGIT+DIGIT+DIGIT+DIGIT)
-            + namedGroup("month", DIGIT+DIGIT)
-            + namedGroup("day", DIGIT+DIGIT);
+            namedGroup("year", DIGIT+DIGIT+DIGIT+DIGIT) +
+            namedGroup("month", DIGIT+DIGIT) +
+            namedGroup("day", DIGIT+DIGIT);
 
     private final static String MERIDIAN = anyChar("aApP")+optionally(anyChar("mM"));
     private final static String TIME_ONLY_WITH_INNER_SEPARATORS = 
-        namedGroup("hours", optionally(DIGIT)+DIGIT)+
-        optionally(
-            anyChar(TIME_SEPARATOR)+
-            namedGroup("mins", DIGIT+DIGIT)+
+            namedGroup("hours", optionally(DIGIT)+DIGIT)+
             optionally(
                 anyChar(TIME_SEPARATOR)+
-                namedGroup("secs", DIGIT+DIGIT+optionally( optionally("\\.")+DIGIT+"+"))))+
-        optionally(" *" + namedGroup("meridian", notMatching(LETTER+LETTER+LETTER)+MERIDIAN));
+                namedGroup("mins", DIGIT+DIGIT)+
+                optionally(
+                    anyChar(TIME_SEPARATOR)+
+                    namedGroup("secs", DIGIT+DIGIT+optionally( optionally("\\.")+DIGIT+"+"))))+
+            optionally(" *" + namedGroup("meridian", notMatching(LETTER+LETTER+LETTER)+MERIDIAN));
     private final static String TIME_ONLY_NO_SEPARATORS = 
-        namedGroup("hours", DIGIT+DIGIT)+
-        namedGroup("mins", DIGIT+DIGIT)+
-        optionally(
-            namedGroup("secs", DIGIT+DIGIT+optionally( optionally("\\.")+DIGIT+"+")))+
-        namedGroup("meridian", "");
+            namedGroup("hours", DIGIT+DIGIT)+
+            namedGroup("mins", DIGIT+DIGIT)+
+            optionally(
+                namedGroup("secs", DIGIT+DIGIT+optionally( optionally("\\.")+DIGIT+"+")))+
+                namedGroup("meridian", "");
 
-    private final static String TZ_CODE = namedGroup("tzCode",
-        notMatching(MERIDIAN+options("$", anyChar("^"+LETTER))) // not AM or PM
-        + anyChar(LETTER)+"+"+anyChar(LETTER+DIGIT+"\\/\\-\\' _")+"*");
-    private final static String TIME_ZONE_SIGNED_OFFSET = namedGroup("tz", options(namedGroup("tzOffset", options("\\+", "-")+
-            DIGIT+optionally(DIGIT)+optionally(optionally(":")+DIGIT+DIGIT)), 
-        optionally("\\+")+TZ_CODE));
-    private final static String TIME_ZONE_OPTIONALLY_SIGNED_OFFSET = namedGroup("tz", 
-        options(
-            namedGroup("tzOffset", options("\\+", "-", " ")+
-                options("0"+DIGIT, "10", "11", "12")+optionally(optionally(":")+DIGIT+DIGIT)), 
-            TZ_CODE));
+    private final static String TZ_CODE = 
+            namedGroup("tzCode",
+                notMatching(MERIDIAN+options("$", anyChar("^"+LETTER))) + // not AM or PM
+                anyChar(LETTER)+"+"+anyChar(LETTER+DIGIT+"\\/\\-\\' _")+"*");
+    private final static String TIME_ZONE_SIGNED_OFFSET = 
+            namedGroup("tz", 
+                options(
+                    namedGroup("tzOffset", options("\\+", "-")+
+                        DIGIT+optionally(DIGIT)+optionally(optionally(":")+DIGIT+DIGIT)), 
+                    optionally("\\+")+TZ_CODE));
+    private final static String TIME_ZONE_OPTIONALLY_SIGNED_OFFSET = 
+            namedGroup("tz", 
+                options(
+                    namedGroup("tzOffset", options("\\+", "-", " ")+
+                        options("0"+DIGIT, "10", "11", "12")+optionally(optionally(":")+DIGIT+DIGIT)), 
+                    TZ_CODE));
 
     private static String getDateTimeSeparatorPattern(String extraChars) {
-        return options(" +"+optionally(anyChar(DATE_TIME_ANY_ORDER_GROUP_SEPARATOR+extraChars+",")),
-                anyChar(DATE_TIME_ANY_ORDER_GROUP_SEPARATOR+extraChars+","))
-            + anyChar(DATE_TIME_ANY_ORDER_GROUP_SEPARATOR+extraChars)+"*";
+        return 
+            options(
+                " +"+optionally(anyChar(DATE_TIME_ANY_ORDER_GROUP_SEPARATOR+extraChars+",")),
+                anyChar(DATE_TIME_ANY_ORDER_GROUP_SEPARATOR+extraChars+",")) +
+            anyChar(DATE_TIME_ANY_ORDER_GROUP_SEPARATOR+extraChars)+"*";
     }
     
     @SuppressWarnings("deprecation")
+    // we have written our own parsing because the alternatives were either too specific or too general
+    // java and apache and even joda-time are too specific, and would require explosion of patterns to be flexible;
+    // Natty - https://github.com/joestelmach/natty - is very cool, but it drags in ANTLR,
+    // it doesn't support dashes between date and time, and 
+    // it encourages relative time which would be awesome but only if we resolved it on read
+    // (however there is natty code to parseDateNatty in the git history if we did want to use it)
     private static Maybe<Calendar> parseCalendarSimpleFlexibleFormatParser(String input) {
         input = input.trim();
 
@@ -708,18 +717,18 @@ public class Time {
         for (String tzP: TZ_PATTERNS)
             for (String dateP: DATE_PATTERNS_UNCLOSED)
                 for (String timeP: TIME_PATTERNS)
-                    basePatterns.add("^" + dateP + timeP+")?" + tzP + "$");
+                    basePatterns.add(dateP + timeP+")?" + tzP);
         
         // also allow time first, with TZ after, then before
         for (String tzP: TZ_PATTERNS)
             for (String dateP: DATE_PATTERNS)
                 for (String timeP: TIME_PATTERNS)
-                    basePatterns.add("^" + timeP + getDateTimeSeparatorPattern("") + dateP + tzP + "$");
+                    basePatterns.add(timeP + getDateTimeSeparatorPattern("") + dateP + tzP);
         // also allow time first, with TZ after, then before
         for (String tzP: TZ_PATTERNS)
             for (String dateP: DATE_PATTERNS)
                 for (String timeP: TIME_PATTERNS)
-                    basePatterns.add("^" + timeP + tzP + getDateTimeSeparatorPattern("") + dateP + "$");
+                    basePatterns.add(timeP + tzP + getDateTimeSeparatorPattern("") + dateP);
 
         Maybe<Matcher> mm = Maybe.absent();
         for (String p: basePatterns) {
@@ -760,7 +769,7 @@ public class Time {
                     tzz = getTimeZone(tz);
                 }
                 if (tzz==null) {
-                    Maybe<Matcher> tmm = match("^ ?(?<tzH>(\\+|\\-||)"+DIGIT+optionally(DIGIT)+")"+optionally(optionally(":")+namedGroup("tzM", DIGIT+DIGIT))+"$", tz);
+                    Maybe<Matcher> tmm = match(" ?(?<tzH>(\\+|\\-||)"+DIGIT+optionally(DIGIT)+")"+optionally(optionally(":")+namedGroup("tzM", DIGIT+DIGIT)), tz);
                     if (tmm.isAbsent()) {
                         return Maybe.absent("Unknown date format '"+input+"': invalid timezone '"+tz+"'; try http://yaml.org/type/timestamp.html format e.g. 2015-06-15 16:00:00 +0000");
                     }
@@ -886,44 +895,10 @@ public class Time {
     }
     
     private static Maybe<Matcher> match(String pattern, String input) {
-        Matcher m = Pattern.compile(pattern).matcher(input);
-        if (m.find() && m.start()==0 && m.end()==input.length())
-            return Maybe.of(m);
+        Matcher m = Pattern.compile("^"+pattern+"$").matcher(input);
+        if (m.find()) return Maybe.of(m);
         return Maybe.absent();
     }
-
-//    // TODO https://github.com/joestelmach/natty is cool, but it drags in ANTLR,
-//    // it doesn't support dashes between date and time, and 
-//    // it encourages relative time which would be awesome but only if we resolved it on read 
-//    private static Maybe<Date> parseDateNatty(String input) {
-//        Parser parser = new Parser();
-//        List<DateGroup> groups = parser.parse(input);
-//        if (groups.size()!=1) {
-//            return Maybe.absent("Invalid date format (multiple dates): "+input);
-//        }
-//        DateGroup group = Iterables.getOnlyElement(groups);
-//        if (!group.getText().equals(input)) {
-//            return Maybe.absent("Invalid date format (incomplete parse): "+input+" -> "+group.getText());
-//        }
-//        if (group.isRecurring()) {
-//            return Maybe.absent("Invalid date format (recurring): "+input);
-//        }
-//        
-//        List<Date> dates = group.getDates();
-//        if (dates.size()!=1) {
-//            return Maybe.absent("Invalid date format (multiple dates): "+input);
-//        }
-//        Date d = Iterables.getOnlyElement(dates);
-//        
-//        if (group.isTimeInferred()) {
-//            GregorianCalendar c1 = new GregorianCalendar();
-//            c1.setTime(d);
-//            c1 = new GregorianCalendar(c1.get(Calendar.YEAR), c1.get(Calendar.MONTH), c1.get(Calendar.DAY_OF_MONTH));
-//            d = c1.getTime();
-//        }
-//        
-//        return Maybe.of(d);
-//    }
 
     /**
      * Parses the given date, accepting either a UTC timestamp (i.e. a long), or a formatted date.
