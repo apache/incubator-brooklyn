@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
@@ -275,6 +274,8 @@ public abstract class MachineLifecycleEffectorTasks {
         return DynamicTasks.queue(Tasks.<MachineLocation>builder().name("provisioning ("+location.getDisplayName()+")").body(
                 new Callable<MachineLocation>() {
                     public MachineLocation call() throws Exception {
+                        // Blocks if a latch was configured.
+                        entity().getConfig(BrooklynConfigKeys.PROVISION_LATCH);
                         final Map<String,Object> flags = obtainProvisioningFlags(location);
                         if (!(location instanceof LocalhostMachineProvisioningLocation))
                             log.info("Starting {}, obtaining a new location instance in {} with ports {}", new Object[] {entity(), location, flags.get("inboundPorts")});
