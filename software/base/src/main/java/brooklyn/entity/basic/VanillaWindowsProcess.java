@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.proxying.ImplementedBy;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableSet;
@@ -59,4 +61,6 @@ public interface VanillaWindowsProcess extends AbstractVanillaProcess {
     // TODO If automatic updates are enabled and there are updates waiting to be installed, thirty minutes may not be sufficient...
     ConfigKey<Duration> REBOOT_COMPLETED_TIMEOUT = ConfigKeys.newDurationConfigKey("reboot.completed.timeout",
             "duration to wait whilst waiting for a machine to finish rebooting, and thus to become available again", Duration.minutes(30));
+    
+    AttributeSensor<Integer> RDP_PORT = Sensors.newIntegerSensor("rdpPort");
 }
