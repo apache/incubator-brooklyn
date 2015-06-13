@@ -44,9 +44,29 @@ public final class Sanitizer {
             "private",
             "access.cert", 
             "access.key");
-    
-    public static final Predicate<Object> IS_SECRET_PREDICATE = new Predicate<Object>() {
 
+    public static final Predicate<Object> IS_SECRET_PREDICATE = new IsSecretPredicate();
+
+    private static class IsSecretPredicate implements Predicate<Object> {
+        @Override
+        public boolean apply(Object name) {
+            String lowerName = name.toString().toLowerCase();
+            for (String secretName : SECRET_NAMES) {
+                if (lowerName.contains(secretName))
+                    return true;
+            }
+            return false;
+        }
+    };
+
+    /**
+     * Kept only in case this anonymous inner class has made it into any persisted state.
+     * 
+     * @deprecated since 0.7.0
+     */
+    @Deprecated
+    @SuppressWarnings("unused")
+    private static final Predicate<Object> IS_SECRET_PREDICATE_DEPRECATED = new Predicate<Object>() {
         @Override
         public boolean apply(Object name) {
             String lowerName = name.toString().toLowerCase();
