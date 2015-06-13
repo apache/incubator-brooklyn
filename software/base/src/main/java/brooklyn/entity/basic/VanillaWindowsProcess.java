@@ -63,4 +63,5 @@ public interface VanillaWindowsProcess extends AbstractVanillaProcess {
             "duration to wait whilst waiting for a machine to finish rebooting, and thus to become available again", Duration.minutes(30));
     
     AttributeSensor<Integer> RDP_PORT = Sensors.newIntegerSensor("rdpPort");
+    AttributeSensor<Integer> WINRM_PORT = Sensors.newIntegerSensor("winrmPort");
 }

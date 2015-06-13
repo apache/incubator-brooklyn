@@ -29,6 +29,7 @@ public class VanillaWindowsProcessImpl extends SoftwareProcessImpl implements Va
     protected void preStart() {
         super.preStart();
         setAttribute(RDP_PORT, 3389);
+        setAttribute(WINRM_PORT, 5985);
     }
     
     @Override
