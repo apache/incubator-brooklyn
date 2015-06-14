@@ -18,30 +18,21 @@
  */
 package brooklyn.entity.basic;
 
+import static org.testng.Assert.assertEquals;
 
-public class VanillaWindowsProcessImpl extends SoftwareProcessImpl implements VanillaWindowsProcess {
-    @Override
-    public Class getDriverInterface() {
-        return VanillaWindowsProcessDriver.class;
-    }
+import java.util.Map;
 
-    @Override
-    protected void preStart() {
-        super.preStart();
-        setAttribute(RDP_PORT, 3389);
-        setAttribute(WINRM_PORT, 5985);
-    }
-    
-    @Override
-    protected void connectSensors() {
-        super.connectSensors();
-        connectServiceUpIsRunning();
-    }
+import org.testng.annotations.Test;
 
-    @Override
-    protected void disconnectSensors() {
-        disconnectServiceUpIsRunning();
-        super.disconnectSensors();
-    }
+import brooklyn.util.config.ConfigBag;
 
+import com.google.common.collect.ImmutableMap;
+
+public class SanitizerTest {
+
+    @Test
+    public void testSanitize() throws Exception {
+        Map<String, Object> sanitized = Sanitizer.sanitize(ConfigBag.newInstance(ImmutableMap.of("password", "pa55w0rd", "mykey", "myval")));
+        assertEquals(sanitized, ImmutableMap.of("password", "xxxxxxxx", "mykey", "myval"));
+    }
 }

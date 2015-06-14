@@ -64,6 +64,7 @@ import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadata.Status;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
+import org.jclouds.compute.domain.OperatingSystem;
 import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
@@ -321,6 +322,49 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return (String) config.getWithDeprecation(USER, JCLOUDS_KEY_USERNAME);
     }
 
+    public boolean isWindows(Template template, ConfigBag config) {
+        return isWindows(template.getImage(), config);
+    }
+    
+    /**
+     * Whether VMs provisioned from this image will be Windows. Assume windows if the image
+     * explicitly says so, or if image does not tell us then fall back to whether the config 
+     * explicitly says windows in {@link JcloudsLocationConfig#OS_FAMILY}.
+     * 
+     * Will first look at {@link JcloudsLocationConfig#OS_FAMILY_OVERRIDE}, to check if that 
+     * is set. If so, no further checks are done: the value is compared against {@link OsFamily#WINDOWS}.
+     * 
+     * We believe the config (e.g. from brooklyn.properties) because for some clouds there is 
+     * insufficient meta-data so the Image might not tell us. Thus a user can work around it
+     * by explicitly supplying configuration. 
+     */
+    public boolean isWindows(Image image, ConfigBag config) {
+        OsFamily override = config.get(OS_FAMILY_OVERRIDE);
+        if (override != null) return override == OsFamily.WINDOWS;
+        
+        OsFamily confFamily = config.get(OS_FAMILY);
+        OperatingSystem os = (image != null) ? image.getOperatingSystem() : null;
+        return (os != null && os.getFamily() != OsFamily.UNRECOGNIZED) 
+                ? (OsFamily.WINDOWS == os.getFamily()) 
+                : (OsFamily.WINDOWS == confFamily);
+    }
+
+    /**
+     * Whether the given VM is Windows.
+     * 
+     * @see {@link #isWindows(Image, ConfigBag)}
+     */
+    public boolean isWindows(NodeMetadata node, ConfigBag config) {
+        OsFamily override = config.get(OS_FAMILY_OVERRIDE);
+        if (override != null) return override == OsFamily.WINDOWS;
+        
+        OsFamily confFamily = config.get(OS_FAMILY);
+        OperatingSystem os = (node != null) ? node.getOperatingSystem() : null;
+        return (os != null && os.getFamily() != OsFamily.UNRECOGNIZED) 
+                ? (OsFamily.WINDOWS == os.getFamily()) 
+                : (OsFamily.WINDOWS == confFamily);
+    }
+
     protected Semaphore getMachineCreationSemaphore() {
         return checkNotNull(getConfig(MACHINE_CREATION_SEMAPHORE), MACHINE_CREATION_SEMAPHORE.getName());
     }
@@ -564,6 +608,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         setCreationString(setup);
         boolean waitForSshable = !"false".equalsIgnoreCase(setup.get(WAIT_FOR_SSHABLE));
+        boolean waitForWinRmable = !"false".equalsIgnoreCase(setup.get(WAIT_FOR_WINRM_AVAILABLE));
         boolean usePortForwarding = setup.get(USE_PORT_FORWARDING);
         boolean skipJcloudsSshing = Boolean.FALSE.equals(setup.get(USE_JCLOUDS_SSH_INIT)) || usePortForwarding;
         JcloudsPortForwarderExtension portForwarder = setup.get(PORT_FORWARDER);
@@ -598,8 +643,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             try {
                 // Setup the template
                 template = buildTemplate(computeService, setup);
-                if (waitForSshable && !skipJcloudsSshing) {
-                    userCredentials = initTemplateForCreateUser(template, setup);
+                boolean expectWindows = isWindows(template, setup);
+                if (!skipJcloudsSshing) {
+                    if (expectWindows) {
+                        // TODO Was this too early to look at template.getImage? e.g. customizeTemplate could subsequently modify it.
+                        LOG.warn("Ignoring invalid configuration for Windows provisioning of "+template.getImage()+": "+USE_JCLOUDS_SSH_INIT.getName()+" should be false");
+                        skipJcloudsSshing = true;
+                    } else if (waitForSshable) {
+                        userCredentials = initTemplateForCreateUser(template, setup);
+                    }
                 }
 
                 templateTimestamp = Duration.of(provisioningStopwatch);
@@ -642,18 +694,19 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (node == null)
                 throw new IllegalStateException("No nodes returned by jclouds create-nodes in " + setup.getDescription());
 
-            boolean windows = node.getOperatingSystem().getFamily().equals(OsFamily.WINDOWS);
-
+            boolean windows = isWindows(node, setup);
             if (windows) {
-                // FIXME Allow for user-specified credentials:
-                //  - want to support setting up a given user on the VM (or resetting the Administrator password)
-                //  - and support vCloudDirector use-case where template contains username/password, so don't just use
-                //    what is returned by jclouds.
-                setup.put(USER, node.getCredentials().getUser());
-                setup.put(PASSWORD, node.getCredentials().getOptionalPassword().orNull());
+                int newLoginPort = node.getLoginPort() == 22 ? 5985 : node.getLoginPort();
+                String newLoginUser = "root".equals(node.getCredentials().getUser()) ? "Administrator" : node.getCredentials().getUser();
+                LOG.debug("jclouds created Windows VM {}; transforming connection details: loginPort from {} to {}; loginUser from {} to {}", 
+                        new Object[] {node, node.getLoginPort(), newLoginPort, node.getCredentials().getUser(), newLoginUser});
+                
+                node = NodeMetadataBuilder.fromNodeMetadata(node)
+                        .loginPort(newLoginPort)
+                        .credentials(LoginCredentials.builder(node.getCredentials()).user(newLoginUser).build())
+                        .build();
             }
-
-            // TODO How do we influence the node.getLoginPort, so it is set correctly for Windows?
+            // FIXME How do we influence the node.getLoginPort, so it is set correctly for Windows?
             // Setup port-forwarding, if required
             Optional<HostAndPort> sshHostAndPortOverride;
             if (usePortForwarding) {
@@ -667,14 +720,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 sshHostAndPortOverride = Optional.absent();
             }
 
-            if (waitForSshable) {
-                if (windows) {
-                    // TODO Should we generalise `waitForSshable` to a `waitForReachable`?
-                    // TODO Does jclouds support any windows user setup?
-                    waitForWinRmAvailable(node, node.getCredentials(), setup);
-                } else if (skipJcloudsSshing) {
-                    // once that host:port is definitely reachable, we can create the user
-                    waitForReachable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
+            if (skipJcloudsSshing) {
+                boolean waitForConnectable = (windows) ? waitForWinRmable : waitForSshable;
+                if (waitForConnectable) {
+                    if (windows) {
+                        // TODO Does jclouds support any windows user setup?
+                        waitForWinRmAvailable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
+                    } else {
+                        waitForSshable(computeService, node, sshHostAndPortOverride, node.getCredentials(), setup);
+                    }
                     userCredentials = createUser(computeService, node, sshHostAndPortOverride, setup);
                 }
             }
@@ -704,7 +758,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
             // Wait for the VM to be reachable over SSH
             if (waitForSshable && !windows) {
-                waitForReachable(computeService, node, sshHostAndPortOverride, userCredentials, setup);
+                waitForSshable(computeService, node, sshHostAndPortOverride, userCredentials, setup);
             } else {
                 LOG.debug("Skipping ssh check for {} ({}) due to config waitForSshable=false", node, setup.getDescription());
             }
@@ -714,7 +768,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 //            WinRmMachineLocation winRmMachineLocation = null;
             // Create a JcloudsSshMachineLocation, and register it
             if (windows) {
-                machineLocation = registerWinRmMachineLocation(computeService, node, setup);
+                machineLocation = registerWinRmMachineLocation(computeService, node, userCredentials, sshHostAndPortOverride, setup);
             } else {
                 machineLocation = registerJcloudsSshMachineLocation(computeService, node, userCredentials, sshHostAndPortOverride, setup);
                 if (template!=null && machineLocation.getTemplate()==null) {
@@ -1026,7 +1080,35 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         } else if (t instanceof SoftLayerTemplateOptions) {
                             ((SoftLayerTemplateOptions)t).userData(Strings.toString(v));
                         } else {
-                            LOG.info("ignoring userDataString({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
+                            // Try reflection: userData(String), or guestCustomizationScript(String);
+                            // the latter is used by vCloud Director.
+                            Class<? extends TemplateOptions> clazz = t.getClass();
+                            Method userDataMethod = null;
+                            try {
+                                userDataMethod = clazz.getMethod("userData", String.class);
+                            } catch (SecurityException e) {
+                                LOG.info("Problem reflectively inspecting methods of "+t.getClass()+" for setting userData", e);
+                            } catch (NoSuchMethodException e) {
+                                try {
+                                    // For vCloud Director
+                                    userDataMethod = clazz.getMethod("guestCustomizationScript", String.class);
+                                } catch (NoSuchMethodException e2) {
+                                    // expected on various other clouds
+                                }
+                            }
+                            if (userDataMethod != null) {
+                                try {
+                                    userDataMethod.invoke(t, Strings.toString(v));
+                                } catch (InvocationTargetException e) {
+                                    LOG.info("Problem invoking "+userDataMethod.getName()+" of "+t.getClass()+", for setting userData (rethrowing)", e);
+                                    throw Exceptions.propagate(e);
+                                } catch (IllegalAccessException e) {
+                                    LOG.debug("Unable to reflectively invoke "+userDataMethod.getName()+" of "+t.getClass()+", for setting userData (rethrowing)", e);
+                                    throw Exceptions.propagate(e);
+                                }
+                            } else {
+                                LOG.info("ignoring userDataString({}) in VM creation because not supported for cloud/type ({})", v, t.getClass());
+                            }
                         }
                     }})
             .put(USER_DATA_UUENCODED, new CustomizeTemplateOptions() {
@@ -1313,8 +1395,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
         TemplateOptions options = template.getOptions();
 
-        OsFamily osFamily = (image.getOperatingSystem() != null) ? image.getOperatingSystem().getFamily() : null;
-        if (OsFamily.WINDOWS == osFamily) {
+        boolean windows = isWindows(template, config);
+        if (windows) {
             if (!(config.containsKey(JcloudsLocationConfig.USER_METADATA_STRING) || config.containsKey(JcloudsLocationConfig.USER_METADATA_MAP))) {
                 config.put(JcloudsLocationConfig.USER_METADATA_STRING, WinRmMachineLocation.getDefaultUserMetadataString());
             }
@@ -1389,62 +1471,67 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (!userCreation.statements.isEmpty()) {
             // If unsure of OS family, default to unix for rendering statements.
             org.jclouds.scriptbuilder.domain.OsFamily scriptOsFamily;
-            if (node.getOperatingSystem() == null) {
-                scriptOsFamily = org.jclouds.scriptbuilder.domain.OsFamily.UNIX;
+            if (isWindows(node, config)) {
+                scriptOsFamily = org.jclouds.scriptbuilder.domain.OsFamily.WINDOWS;
             } else {
-                scriptOsFamily = (node.getOperatingSystem().getFamily() == org.jclouds.compute.domain.OsFamily.WINDOWS)
-                        ? org.jclouds.scriptbuilder.domain.OsFamily.WINDOWS
-                        : org.jclouds.scriptbuilder.domain.OsFamily.UNIX;
+                scriptOsFamily = org.jclouds.scriptbuilder.domain.OsFamily.UNIX;
             }
 
-            List<String> commands = Lists.newArrayList();
-            for (Statement statement : userCreation.statements) {
-                InitAdminAccess initAdminAccess = new InitAdminAccess(new AdminAccessConfiguration.Default());
-                initAdminAccess.visit(statement);
-                commands.add(statement.render(scriptOsFamily));
-            }
+            boolean windows = isWindows(node, config);
 
-            LoginCredentials initialCredentials = node.getCredentials();
-            Optional<String> initialPassword = initialCredentials.getOptionalPassword();
-            Optional<String> initialPrivateKey = initialCredentials.getOptionalPrivateKey();
-            String initialUser = initialCredentials.getUser();
-            String address = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
-            int port = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getPort() : node.getLoginPort();
-
-            Map<String,Object> sshProps = Maps.newLinkedHashMap(config.getAllConfig());
-            sshProps.put("user", initialUser);
-            sshProps.put("address", address);
-            sshProps.put("port", port);
-            if (initialPassword.isPresent()) sshProps.put("password", initialPassword.get());
-            if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
-
-            // TODO Retrying lots of times as workaround for vcloud-director. There the guest customizations
-            // can cause the VM to reboot shortly after it was ssh'able.
-            Map<String,Object> execProps = Maps.newLinkedHashMap();
-            execProps.put(ShellTool.PROP_RUN_AS_ROOT.getName(), true);
-            execProps.put(SshTool.PROP_SSH_TRIES.getName(), 50);
-            execProps.put(SshTool.PROP_SSH_TRIES_TIMEOUT.getName(), 10*60*1000);
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("VM {}: executing user creation/setup via {}@{}:{}; commands: {}", new Object[] {
-                        config.getDescription(), initialUser, address, port, commands});
-            }
-
-            SshMachineLocation sshLoc = null;
-            try {
-                if (isManaged()) {
-                    sshLoc = getManagementContext().getLocationManager().createLocation(sshProps, SshMachineLocation.class);
-                } else {
-                    sshLoc = new SshMachineLocation(sshProps);
+            if (windows) {
+                LOG.warn("Unable to execute statements on WinRM in JcloudsLocation; skipping for "+node+": "+userCreation.statements);
+                
+            } else {
+                List<String> commands = Lists.newArrayList();
+                for (Statement statement : userCreation.statements) {
+                    InitAdminAccess initAdminAccess = new InitAdminAccess(new AdminAccessConfiguration.Default());
+                    initAdminAccess.visit(statement);
+                    commands.add(statement.render(scriptOsFamily));
                 }
 
-                int exitcode = sshLoc.execScript(execProps, "create-user", commands);
-                if (exitcode != 0) {
-                    LOG.warn("exit code {} when creating user for {}; usage may subsequently fail", exitcode, node);
+                LoginCredentials initialCredentials = node.getCredentials();
+                Optional<String> initialPassword = initialCredentials.getOptionalPassword();
+                Optional<String> initialPrivateKey = initialCredentials.getOptionalPrivateKey();
+                String initialUser = initialCredentials.getUser();
+                String address = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
+                int port = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getPort() : node.getLoginPort();
+                
+                Map<String,Object> sshProps = Maps.newLinkedHashMap(config.getAllConfig());
+                sshProps.put("user", initialUser);
+                sshProps.put("address", address);
+                sshProps.put("port", port);
+                if (initialPassword.isPresent()) sshProps.put("password", initialPassword.get());
+                if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
+    
+                // TODO Retrying lots of times as workaround for vcloud-director. There the guest customizations
+                // can cause the VM to reboot shortly after it was ssh'able.
+                Map<String,Object> execProps = Maps.newLinkedHashMap();
+                execProps.put(ShellTool.PROP_RUN_AS_ROOT.getName(), true);
+                execProps.put(SshTool.PROP_SSH_TRIES.getName(), 50);
+                execProps.put(SshTool.PROP_SSH_TRIES_TIMEOUT.getName(), 10*60*1000);
+    
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("VM {}: executing user creation/setup via {}@{}:{}; commands: {}", new Object[] {
+                            config.getDescription(), initialUser, address, port, commands});
                 }
-            } finally {
-                getManagementContext().getLocationManager().unmanage(sshLoc);
-                Streams.closeQuietly(sshLoc);
+    
+                SshMachineLocation sshLoc = null;
+                try {
+                    if (isManaged()) {
+                        sshLoc = getManagementContext().getLocationManager().createLocation(sshProps, SshMachineLocation.class);
+                    } else {
+                        sshLoc = new SshMachineLocation(sshProps);
+                    }
+    
+                    int exitcode = sshLoc.execScript(execProps, "create-user", commands);
+                    if (exitcode != 0) {
+                        LOG.warn("exit code {} when creating user for {}; usage may subsequently fail", exitcode, node);
+                    }
+                } finally {
+                    getManagementContext().getLocationManager().unmanage(sshLoc);
+                    Streams.closeQuietly(sshLoc);
+                }
             }
         }
 
@@ -1527,7 +1614,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     protected UserCreation createUserStatements(@Nullable Image image, ConfigBag config) {
         //NB: private key is not installed remotely, just used to get/validate the public key
 
-        LoginCredentials createdUserCreds = null;
+        boolean windows = isWindows(image, config);
         String user = getUser(config);
         String explicitLoginUser = config.get(LOGIN_USER);
         String loginUser = groovyTruth(explicitLoginUser) ? explicitLoginUser : (image != null && image.getDefaultCredentials() != null) ? image.getDefaultCredentials().identity : null;
@@ -1537,6 +1624,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         credential.checkNoErrors().logAnyWarnings();
         String passwordToSet = Strings.isNonBlank(credential.getPassword()) ? credential.getPassword() : Identifiers.makeRandomId(12);
         List<Statement> statements = Lists.newArrayList();
+        LoginCredentials createdUserCreds = null;
 
         if (dontCreateUser) {
             // dontCreateUser:
@@ -1558,6 +1646,22 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     createdUserCreds = LoginCredentials.builder().user(user).privateKey(credential.getPrivateKeyData()).build();
                 }
             }
+
+        } else if (windows) {
+            // TODO Generate statements to create the user.
+            // createdUserCreds returned from this method will be null;
+            // we will use the creds returned by jclouds on the node
+            LOG.warn("Not creating or configuring user on Windows VM, despite "+DONT_CREATE_USER.getName()+" set to false");
+
+            // TODO extractVmCredentials() will use user:publicKeyData defaults, if we don't override this.
+            // For linux, how would we configure Brooklyn to use the node.getCredentials() - i.e. the version
+            // that the cloud automatically generated?
+            if (config.get(USER) != null) config.put(USER, "");
+            if (config.get(PASSWORD) != null) config.put(PASSWORD, "");
+            if (config.get(PRIVATE_KEY_DATA) != null) config.put(PRIVATE_KEY_DATA, "");
+            if (config.get(PRIVATE_KEY_FILE) != null) config.put(PRIVATE_KEY_FILE, "");
+            if (config.get(PUBLIC_KEY_DATA) != null) config.put(PUBLIC_KEY_DATA, "");
+            if (config.get(PUBLIC_KEY_FILE) != null) config.put(PUBLIC_KEY_FILE, "");
 
         } else if (Strings.isBlank(user) || user.equals(loginUser) || user.equals(ROOT_USERNAME)) {
             // For subsequent ssh'ing, we'll be using the loginUser
@@ -1822,16 +1926,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         String vmHostname = getPublicHostname(node, sshHostAndPort, setup);
 
         JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(computeService, node, vmHostname, sshHostAndPort, setup);
-        registerJcloudsSshMachineLocation(node.getId(), machine);
+        registerJcloudsMachineLocation(node.getId(), machine);
         return machine;
     }
 
     @VisibleForTesting
-    protected void registerJcloudsSshMachineLocation(String nodeId, JcloudsSshMachineLocation machine) {
+    protected void registerJcloudsMachineLocation(String nodeId, JcloudsMachineLocation machine) {
         machine.setParent(this);
         vmInstanceIds.put(machine, nodeId);
     }
-
+    
     /** @deprecated since 0.7.0 use variant which takes compute service; no longer called internally,
      * so marked final to force any overrides to switch to new syntax */
     @Deprecated
@@ -1916,17 +2020,18 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    protected JcloudsWinRmMachineLocation registerWinRmMachineLocation(ComputeService computeService, NodeMetadata node, ConfigBag setup) {
-        // FIMXE: Need to write WinRM equivalent of getPublicHostname
-        String vmHostname = node.getPublicAddresses().iterator().next();
-        
-        JcloudsWinRmMachineLocation winRmMachineLocation = createWinRmMachineLocation(computeService, node, vmHostname, setup);
-        winRmMachineLocation.setParent(this);
-        vmInstanceIds.put(winRmMachineLocation, node.getId());
-        return winRmMachineLocation;
+    protected JcloudsWinRmMachineLocation registerWinRmMachineLocation(ComputeService computeService, NodeMetadata node, LoginCredentials initialCredentials, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) {
+        if (initialCredentials==null)
+            initialCredentials = node.getCredentials();
+
+        String vmHostname = getPublicHostname(node, sshHostAndPort, setup);
+
+        JcloudsWinRmMachineLocation machine = createWinRmMachineLocation(computeService, node, vmHostname, sshHostAndPort, setup);
+        registerJcloudsMachineLocation(node.getId(), machine);
+        return machine;
     }
 
-    protected JcloudsWinRmMachineLocation createWinRmMachineLocation(ComputeService computeService, NodeMetadata node, String vmHostname, ConfigBag setup) {
+    protected JcloudsWinRmMachineLocation createWinRmMachineLocation(ComputeService computeService, NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) {
         String nodeAvailabilityZone = extractAvailabilityZone(setup, node);
         String nodeRegion = extractRegion(setup, node);
         if (nodeRegion == null) {
@@ -1934,11 +2039,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             nodeRegion = extractProvider(setup, node);
         }
         
+        String address = sshHostAndPort.isPresent() ? sshHostAndPort.get().getHostText() : vmHostname;
+
         if (isManaged()) {
             return getManagementContext().getLocationManager().createLocation(LocationSpec.create(JcloudsWinRmMachineLocation.class)
                     .configure("jcloudsParent", this)
                     .configure("displayName", vmHostname)
-                    .configure("address", vmHostname)
+                    .configure("address", address)
+                    .configure(WinRmMachineLocation.WINRM_PORT, sshHostAndPort.isPresent() ? sshHostAndPort.get().getPort() : node.getLoginPort())
                     .configure("user", getUser(setup))
                     .configure(WinRmMachineLocation.USER, setup.get(USER))
                     .configure(WinRmMachineLocation.PASSWORD, setup.get(PASSWORD))
@@ -2186,7 +2294,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return null;
     }
 
-    private void waitForWinRmAvailable(final NodeMetadata node, final LoginCredentials expectedCredentials, ConfigBag setup) {
+    protected void waitForWinRmAvailable(final ComputeService computeService, final NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, final LoginCredentials expectedCredentials, ConfigBag setup) {
         String waitForWinrmAvailable = setup.get(WAIT_FOR_WINRM_AVAILABLE);
         checkArgument(!"false".equalsIgnoreCase(waitForWinrmAvailable), "waitForWinRmAvailable called despite waitForWinRmAvailable=%s", waitForWinrmAvailable);
         Duration timeout = null;
@@ -2195,27 +2303,37 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         } catch (Exception e) {
             // TODO will this just be a NumberFormatException? If so, catch that specificially
             // normal if 'true'; just fall back to default
+            Exceptions.propagateIfFatal(e);
         }
         if (timeout == null) {
             timeout = Duration.parse(WAIT_FOR_WINRM_AVAILABLE.getDefaultValue());
         }
         
-        // TODO Use getFirstReachableAddress, when have getLoginPort set correctly
         String user = expectedCredentials.getUser();
         String password = expectedCredentials.getOptionalPassword().orNull();
-        String vmIp = node.getPublicAddresses().iterator().next();
-        final Session session = WinRMFactory.INSTANCE.createSession(vmIp, user, password);
+        int vmPort = hostAndPortOverride.isPresent() 
+                ? hostAndPortOverride.get().getPortOrDefault(5985) 
+                : 5985; // WinRM port
+        String vmIp = hostAndPortOverride.isPresent() 
+                ? hostAndPortOverride.get().getHostText() 
+                : JcloudsUtil.getFirstReachableAddress(
+                        computeService.getContext(), 
+                        NodeMetadataBuilder.fromNodeMetadata(node).loginPort(vmPort).build());
+
+        final Session session = WinRMFactory.INSTANCE.createSession(vmIp+":"+vmPort, user, password);
+
+        if (vmIp==null) LOG.warn("Unable to extract IP for "+node+" ("+setup.getDescription()+"): subsequent connection attempt will likely fail");
 
         Callable<Boolean> checker = new Callable<Boolean>() {
             public Boolean call() {
                 return session.run_cmd("hostname").getStatusCode() == 0;
             }};
-        String connectionDetails = user+"@"+vmIp;
+        String connectionDetails = user + "@" + vmIp + ":" + vmPort;
 
         waitForReachable(checker, connectionDetails, expectedCredentials, setup, timeout);
     }
 
-    protected void waitForReachable(final ComputeService computeService, final NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, final LoginCredentials expectedCredentials, ConfigBag setup) {
+    protected void waitForSshable(final ComputeService computeService, final NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, final LoginCredentials expectedCredentials, ConfigBag setup) {
         String waitForSshable = setup.get(WAIT_FOR_SSHABLE);
         checkArgument(!"false".equalsIgnoreCase(waitForSshable), "waitForReachable called despite waitForSshable=%s", waitForSshable);
 
@@ -2372,13 +2490,24 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
             }
             if (sshHostAndPort.isPresent() || inferredHostAndPort != null) {
-                HostAndPort hostAndPortToUse = sshHostAndPort.isPresent() ? sshHostAndPort.get() : inferredHostAndPort;
-                try {
-                    return getPublicHostnameAws(hostAndPortToUse, setup);
-                } catch (Exception e) {
-                    LOG.warn("Error querying aws-ec2 instance instance "+node.getId()+"@"+node.getLocation()+" over ssh for its hostname; falling back to first reachable IP", e);
-                    // We've already found a reachable address so settle for that, rather than doing it again
-                    if (inferredHostAndPort != null) return inferredHostAndPort.getHostText();
+                if (isWindows(node, setup)) {
+                    if (inferredHostAndPort != null) {
+                        LOG.warn("Cannot querying aws-ec2 Windows instance "+node.getId()+"@"+node.getLocation()+" over ssh for its hostname; falling back to first reachable IP");
+                        return inferredHostAndPort.getHostText();
+                    }
+                } else {
+                    HostAndPort hostAndPortToUse = sshHostAndPort.isPresent() ? sshHostAndPort.get() : inferredHostAndPort;
+                    try {
+                        return getPublicHostnameAws(hostAndPortToUse, setup);
+                    } catch (Exception e) {
+                        if (inferredHostAndPort != null) { 
+                            LOG.warn("Error querying aws-ec2 instance "+node.getId()+"@"+node.getLocation()+" over ssh for its hostname; falling back to first reachable IP", e);
+                            // We've already found a reachable address so settle for that, rather than doing it again
+                            return inferredHostAndPort.getHostText();
+                        } else {
+                            LOG.warn("Error querying aws-ec2 instance "+node.getId()+"@"+node.getLocation()+" over ssh for its hostname; falling back to jclouds metadata for address", e);
+                        }                            
+                    }
                 }
             }
         }

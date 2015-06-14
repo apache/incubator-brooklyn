@@ -19,6 +19,7 @@
 package brooklyn.entity.basic;
 
 import brooklyn.location.basic.WinRmMachineLocation;
+import brooklyn.util.net.UserAndHostAndPort;
 
 public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWinRmDriver implements VanillaWindowsProcessDriver {
 
@@ -26,6 +27,15 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
         super(entity, location);
     }
 
+    @Override
+    public void start() {
+        WinRmMachineLocation machine = (WinRmMachineLocation) location;
+        UserAndHostAndPort winrmAddress = UserAndHostAndPort.fromParts(machine.getUser(), machine.getAddress().getHostName(), machine.config().get(WinRmMachineLocation.WINRM_PORT));
+        getEntity().setAttribute(Attributes.WINRM_ADDRESS, winrmAddress);
+
+        super.start();
+    }
+    
     @Override
     public void preInstall() {
         super.preInstall();

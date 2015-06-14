@@ -377,7 +377,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
                 .configure("port", 22) 
                 .configure("user", "bob")
                 .configure("jcloudsParent", this));
-            registerJcloudsSshMachineLocation("bogus", result);
+            registerJcloudsMachineLocation("bogus", result);
             
             // explicitly invoke this customizer, to comply with tests
             for (JcloudsLocationCustomizer customizer : getCustomizers(config().getBag())) {

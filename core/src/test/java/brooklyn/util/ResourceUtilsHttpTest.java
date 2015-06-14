@@ -65,7 +65,7 @@ public class ResourceUtilsHttpTest {
         httpProcessor.addInterceptor(new ResponseBasicUnauthorized());
 
         server = ServerBootstrap.bootstrap()
-                .setListenerPort(8080)
+                .setListenerPort(24266)
                 .setHttpProcessor(httpProcessor)
                 .registerHandler("/simple", new SimpleResponseHandler("OK"))
                 .registerHandler("/empty", new SimpleResponseHandler(HttpStatus.SC_NO_CONTENT, ""))
