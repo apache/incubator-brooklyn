@@ -55,6 +55,15 @@
             </excludes>
         </fileSet>
         <fileSet>
+            <directory>${project.basedir}/target</directory>
+            <outputDirectory>conf/brooklyn</outputDirectory>
+            <fileMode>0644</fileMode>
+            <directoryMode>0755</directoryMode>
+            <includes>
+                <include>default.catalog.bom</include>
+            </includes>
+        </fileSet>
+        <fileSet>
             <!-- Add an empty patch folder (so need to reference an existing dir, and exclude everything) -->
             <directory>${project.basedir}/src/main/dist</directory>
             <outputDirectory>lib/patch</outputDirectory>

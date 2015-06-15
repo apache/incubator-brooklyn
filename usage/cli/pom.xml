@@ -133,6 +133,29 @@
                     </execution>
                 </executions>
             </plugin>
+            
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-catalog</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/classes/brooklyn/default.catalog.bom</file>
+                                    <type>bom</type>
+                                    <classifier>dist</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <!-- Disable the automatic LICENSE/NOTICE placement from the upstream pom, because we need to include
                  bloodhound.js. See "resources" section below for where we include the new LICENSE/NOTICE -->
