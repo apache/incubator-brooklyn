@@ -91,6 +91,7 @@
                             <formats>
                                 <format>dir</format>
                             </formats>
+                            <attach>false</attach>
                         </configuration>
                     </execution>
                     <execution>
@@ -109,6 +110,7 @@
                                 <format>tar.gz</format>
                                 <format>zip</format>
                             </formats>
+                            <attach>false</attach>
                         </configuration>
                     </execution>
                 </executions>

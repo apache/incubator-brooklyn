@@ -25,7 +25,7 @@
     <fileSets>
         <fileSet>
             <directory>${project.basedir}/../..</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory></outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
             <includes>
@@ -35,20 +35,20 @@
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/license</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory></outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/dist/bin</directory>
-            <outputDirectory>/bin</outputDirectory>
+            <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
             <!-- Add an empty dropins folder (so need to reference an existing dir, and exclude everything) -->
             <directory>${project.basedir}/src/main/dist</directory>
-            <outputDirectory>/lib/dropins</outputDirectory>
+            <outputDirectory>lib/dropins</outputDirectory>
             <directoryMode>0755</directoryMode>
             <excludes>
                 <exclude>**/*</exclude>
@@ -57,7 +57,7 @@
         <fileSet>
             <!-- Add an empty patch folder (so need to reference an existing dir, and exclude everything) -->
             <directory>${project.basedir}/src/main/dist</directory>
-            <outputDirectory>/lib/patch</outputDirectory>
+            <outputDirectory>lib/patch</outputDirectory>
             <directoryMode>0755</directoryMode>
             <excludes>
                 <exclude>**/*</exclude>
@@ -65,7 +65,7 @@
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/dist</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory></outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
             <excludes>
@@ -78,7 +78,7 @@
     <dependencySets>
         <dependencySet>
             <useProjectArtifact>false</useProjectArtifact>
-            <outputDirectory>/lib/brooklyn</outputDirectory>
+            <outputDirectory>lib/brooklyn</outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
             <outputFileNameMapping>${artifact.groupId}-${artifact.artifactId}-${artifact.version}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
