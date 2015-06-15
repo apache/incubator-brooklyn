@@ -84,9 +84,13 @@
                         <configuration>
                             <appendAssemblyId>true</appendAssemblyId>
                             <descriptors>
-                                <descriptor>src/main/config/build-distribution-dir.xml</descriptor>
+                                <descriptor>src/main/config/build-distribution.xml</descriptor>
                             </descriptors>
                             <finalName>brooklyn</finalName>
+                            <includeBaseDirectory>false</includeBaseDirectory>
+                            <formats>
+                                <format>dir</format>
+                            </formats>
                         </configuration>
                     </execution>
                     <execution>
@@ -98,9 +102,13 @@
                         <configuration>
                             <appendAssemblyId>true</appendAssemblyId>
                             <descriptors>
-                                <descriptor>src/main/config/build-distribution-archive.xml</descriptor>
+                                <descriptor>src/main/config/build-distribution.xml</descriptor>
                             </descriptors>
                             <finalName>brooklyn-${project.version}</finalName>
+                            <formats>
+                                <format>tar.gz</format>
+                                <format>zip</format>
+                            </formats>
                         </configuration>
                     </execution>
                 </executions>
