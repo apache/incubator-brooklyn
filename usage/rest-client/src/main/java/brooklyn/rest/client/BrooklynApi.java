@@ -39,6 +39,7 @@ import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.jboss.resteasy.specimpl.BuiltResponse;
 import org.jboss.resteasy.util.GenericType;
 
 import brooklyn.rest.api.AccessApi;
@@ -58,6 +59,8 @@ import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.http.BuiltResponsePreservingError;
+
+import com.wordnik.swagger.core.ApiOperation;
 
 /**
  * @author Adam Lowe
@@ -116,22 +119,23 @@ public class BrooklynApi {
         final T result0 = ProxyFactory.create(clazz, target, clientExecutor);
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new InvocationHandler() {
             @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                Object result1;
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {                 
                 try {
-                    result1 = method.invoke(result0, args);
+                    Object result1 = method.invoke(result0, args);
+                    if (result1 instanceof Response) {
+                        String responseClass = method.getAnnotation(ApiOperation.class).responseClass();
+                        Class<?> type = Class.forName(responseClass);
+                        // wrap the original response so it self-closes
+                        result1 = BuiltResponsePreservingError.copyResponseAndClose((Response) result1, type);
+                    }
+                    return result1;
                 } catch (Throwable e) {
                     if (e instanceof InvocationTargetException) {
                         // throw the original exception
                         e = ((InvocationTargetException)e).getTargetException();
                     }
                     throw Exceptions.propagate(e);
-                }
-                if (result1 instanceof Response) {
-                    // wrap the original response so it self-closes
-                    result1 = BuiltResponsePreservingError.copyResponseAndClose((Response) result1);
-                }
-                return result1;
+                }  
             }
         });
     }
@@ -197,6 +201,11 @@ public class BrooklynApi {
     }
 
     public static <T> T getEntity(Response response, Class<T> type) {
+        if (response instanceof BuiltResponse) {
+            Object entity = response.getEntity();
+            return type.cast(entity);
+        }
+        
         if (!(response instanceof ClientResponse)) {
             throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
         }

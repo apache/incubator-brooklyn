@@ -45,7 +45,7 @@ public class BuiltResponsePreservingError extends BuiltResponse {
     }
     
     @SuppressWarnings("deprecation")
-    public static Response copyResponseAndClose(Response source) {
+    public static <T> Response copyResponseAndClose(Response source, Class<T> type) {
         int status = -1;
         Headers<Object> headers = new Headers<Object>();
         Object entity = null;
@@ -54,7 +54,7 @@ public class BuiltResponsePreservingError extends BuiltResponse {
             headers.putAll(source.getHeaders());
             if (source instanceof org.jboss.resteasy.client.ClientResponse) {
                 // ClientResponse requires strong type info, which we don't yet have
-                entity = ((org.jboss.resteasy.client.ClientResponse<?>)source).getEntity(String.class);
+                entity = ((org.jboss.resteasy.client.ClientResponse<?>)source).getEntity(type);
             } else {
                 entity = source.getEntity();
             }
