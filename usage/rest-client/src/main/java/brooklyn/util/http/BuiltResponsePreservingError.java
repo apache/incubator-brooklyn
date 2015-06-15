@@ -53,7 +53,6 @@ public class BuiltResponsePreservingError extends BuiltResponse {
             status = source.getStatus();
             headers.putAll(source.getHeaders());
             if (source instanceof org.jboss.resteasy.client.ClientResponse) {
-                // ClientResponse requires strong type info, which we don't yet have
                 entity = ((org.jboss.resteasy.client.ClientResponse<?>)source).getEntity(type);
             } else {
                 entity = source.getEntity();

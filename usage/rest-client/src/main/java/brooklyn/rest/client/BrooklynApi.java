@@ -122,9 +122,12 @@ public class BrooklynApi {
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {                 
                 try {
                     Object result1 = method.invoke(result0, args);
+                    Class<?> type = String.class;
                     if (result1 instanceof Response) {
-                        String responseClass = method.getAnnotation(ApiOperation.class).responseClass();
-                        Class<?> type = Class.forName(responseClass);
+                        if(((Response)result1).getStatus()/100 == 2) {
+                           String responseClass = method.getAnnotation(ApiOperation.class).responseClass();
+                           type = Class.forName(responseClass);
+                        }
                         // wrap the original response so it self-closes
                         result1 = BuiltResponsePreservingError.copyResponseAndClose((Response) result1, type);
                     }
