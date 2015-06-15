@@ -72,7 +72,12 @@ public interface RiakNode extends SoftwareProcess {
 
     ConfigKey<String> RIAK_CONF_ADDITIONAL_CONTENT = ConfigKeys.newStringConfigKey(
             "riak.riakConf.additionalContent", "Template file (in freemarker format) for setting up additional settings in the riak.conf file", "");
-
+    
+    // maxOpenFiles' default value (65536) is based on the Basho's recommendation - http://docs.basho.com/riak/latest/ops/tuning/open-files-limit/ 
+    @SetFromFlag("maxOpenFiles")
+    ConfigKey<Integer> RIAK_MAX_OPEN_FILES = ConfigKeys.newIntegerConfigKey(
+            "riak.max.open.files", "Number of the open files required by Riak", 65536);
+    
     @SetFromFlag("downloadUrlRhelCentos")
     AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL_RHEL_CENTOS = ConfigKeys.newTemplateSensorAndConfigKey("download.url.rhelcentos",
             "URL pattern for downloading the linux RPM installer (will substitute things like ${version} automatically)",
