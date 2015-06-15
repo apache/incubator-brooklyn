@@ -133,7 +133,10 @@ public class Duration implements Comparable<Duration>, Serializable {
         return nanos;
     }
 
-    /** see {@link #of(Object)} and {@link Time#parseTimeString(String)} */
+    /** 
+     * See {@link Time#parseElapsedTime(String)}; 
+     * also accepts "forever" (and for those who prefer things exceedingly accurate, "practically_forever"). 
+     * Also see {@link #of(Object)}. */
     public static Duration parse(String textualDescription) {
         if (textualDescription==null) return null;
         if ("null".equalsIgnoreCase(textualDescription)) return null;
@@ -142,7 +145,7 @@ public class Duration implements Comparable<Duration>, Serializable {
         if ("practicallyforever".equalsIgnoreCase(textualDescription)) return Duration.PRACTICALLY_FOREVER;
         if ("practically_forever".equalsIgnoreCase(textualDescription)) return Duration.PRACTICALLY_FOREVER;
         
-        return new Duration(Time.parseTimeString(textualDescription), TimeUnit.MILLISECONDS);
+        return new Duration((long) Time.parseElapsedTimeAsDouble(textualDescription), TimeUnit.MILLISECONDS);
     }
 
     /** creates new {@link Duration} instance of the given length of time */

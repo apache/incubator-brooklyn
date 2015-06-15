@@ -6,7 +6,7 @@ toc: /guide/toc.json
 
 ## The Basics
 
-To build the code, you need Maven (v3) installed and Java (1.6).
+To build the code, you need Maven (v3) installed and Java (v1.7+).
 With that in place, you should be able to build everything with a:
 
 {% highlight bash %}

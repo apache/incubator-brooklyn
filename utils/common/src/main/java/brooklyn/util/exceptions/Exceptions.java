@@ -162,7 +162,7 @@ public class Exceptions {
                 message = collapsed.getMessage();
                 messageIsFinal = true;
             } else if (Strings.isNonBlank(collapsedS)) {
-                collapsedS = Strings.removeFromEnd(collapsedS, cause.toString(), stripBoringPrefixes(cause.toString()), cause.getMessage());
+                collapsedS = Strings.removeAllFromEnd(collapsedS, cause.toString(), stripBoringPrefixes(cause.toString()), cause.getMessage());
                 collapsedS = stripBoringPrefixes(collapsedS);
                 if (Strings.isNonBlank(collapsedS))
                     message = appendSeparator(message, collapsedS);

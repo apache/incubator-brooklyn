@@ -28,11 +28,8 @@ Brooklyn has also been tested on Ubuntu 12.04 and OS X.
 
 ## Software Requirements
 
-Brooklyn requires Java (JRE or JDK), version 6 or version 7. The most recent version 7 is recommended.
+Brooklyn requires Java (JRE or JDK) minimum version 1.7. 
 OpenJDK is recommended. Brooklyn has also been tested on IBM J9 and Oracle's JVM.
-
-* check your `iptables` or other firewall service, making sure that incoming connections on port 8443 is not blocked
-* check that the [linux kernel entropy](increase-entropy.html) is sufficient
 
 
 ## Configuration Requirements
@@ -52,6 +49,21 @@ To enable remote Brooklyn access, ensure these ports are open in the firewall.
 For example, to open port 8443 in iptables, ues the command:
 
     /sbin/iptables -I INPUT -p TCP --dport 8443 -j ACCEPT
+
+
+### Locale
+
+Brooklyn expects a sensible set of locale information and time zones to be available;
+without this, some time-and-date handling may be surprising.
+
+Brooklyn parses and reports times according to the time zone set at the server.
+If Brooklyn is targetting geographically distributed users, 
+it is normally recommended that the server's time zone be set to UTC.
+
+
+### User Setup
+
+It is normally recommended that Brooklyn run as a non-root user with keys installed to `~/.ssh/id_rsa{,.pub}`. 
 
 
 ### Linux Kernel Entropy

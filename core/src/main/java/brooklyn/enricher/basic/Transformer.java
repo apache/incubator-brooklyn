@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -135,7 +134,7 @@ public class Transformer<T,U> extends AbstractEnricher implements SensorEventLis
                 // external events; they can submit tasks and block on them (or even better, have a callback architecture);
                 // however that is a non-trivial refactoring
                 return (U) Tasks.resolving(targetValueRaw).as(targetSensor.getType())
-                    .context( ((EntityInternal)entity).getExecutionContext() )
+                    .context(entity)
                     .description("Computing sensor "+targetSensor+" from "+targetValueRaw)
                     .timeout(Duration.millis(200))
                     .getMaybe().orNull();

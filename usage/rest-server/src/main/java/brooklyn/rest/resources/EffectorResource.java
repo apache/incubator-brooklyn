@@ -98,7 +98,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
             if (timeout == null || timeout.isEmpty() || "never".equalsIgnoreCase(timeout)) {
                 result = t.get();
             } else {
-                long timeoutMillis = "always".equalsIgnoreCase(timeout) ? 0 : Time.parseTimeString(timeout);
+                long timeoutMillis = "always".equalsIgnoreCase(timeout) ? 0 : Time.parseElapsedTime(timeout);
                 try {
                     if (timeoutMillis == 0) throw new TimeoutException();
                     result = t.get(timeoutMillis, TimeUnit.MILLISECONDS);

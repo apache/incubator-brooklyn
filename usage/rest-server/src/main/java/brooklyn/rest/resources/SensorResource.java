@@ -27,7 +27,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
@@ -40,6 +39,7 @@ import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.SensorTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.text.Strings;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -73,10 +73,8 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
 
         for (AttributeSensor<?> sensor : sensors) {
             Object value = entity.getAttribute(findSensor(entity, sensor.getName()));
-            if (Boolean.FALSE.equals(raw)) {
-                value = RendererHints.applyDisplayValueHint(sensor, value);
-            }
-            sensorMap.put(sensor.getName(), getValueForDisplay(value, true, false));
+            sensorMap.put(sensor.getName(), 
+                resolving(value).preferJson(true).asJerseyOutermostReturnValue(false).raw(raw).context(entity).timeout(Duration.ZERO).renderAs(sensor).resolve());
         }
         return sensorMap;
     }
@@ -85,10 +83,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
         AttributeSensor<?> sensor = findSensor(entity, sensorName);
         Object value = entity.getAttribute(sensor);
-        if (Boolean.FALSE.equals(raw)) {
-            value = RendererHints.applyDisplayValueHint(sensor, value);
-        }
-        return getValueForDisplay(value, preferJson, true);
+        return resolving(value).preferJson(preferJson).asJerseyOutermostReturnValue(true).raw(raw).context(entity).timeout(Duration.millis(100)).renderAs(sensor).resolve();
     }
 
     @Override

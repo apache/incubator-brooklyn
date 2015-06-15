@@ -87,14 +87,11 @@ To develop or debug Brooklyn in IntelliJ, you will need to ensure that the Groov
 via the IntelliJ IDEA | Preferences | Plugins menu. Once installed, you can open Brooklyn from the root folder, 
 (e.g. ``~/myfiles/brooklyn``) which will automatically open the subprojects.
 
+You will need the java compiler 1.7 or higher.
 There have previously been issues where the java 6 compiler incorrectly identified the return type of functions that use
-generics. These issues have been refactored away, however may return in future. If so, you can either set the java compiler
-level to 1.7, or setup IntelliJ to use the Eclipse compiler as per the instructions provided by JetBeans:
-
-> The problem seems to be caused by bug in java compiler from JDK 1.6, it is known to sometimes produce compilation 
-> errors for complicated code involving generic types. Java compiler from JDK 1.7 compiles your code successfully so I would 
-> recommend you to consider upgrading to JDK 1.7. If it isn't possible you can switch to Eclipse Compiler (Settings | 
-> Compiler | Java Compiler | "Use Compiler" combobox).
+generics. These issues have been refactored away, however may return in future. 
+If you encounter these problems, ensure that your java compiler is set to level 1.7 or higher, 
+or setup IntelliJ to use the Eclipse compiler (Settings | Compiler | Java Compiler | "Use Compiler" combobox).
 
 
 ## Netbeans

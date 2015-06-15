@@ -19,6 +19,7 @@
 package brooklyn.util.time;
 
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -148,5 +149,191 @@ public class TimeTest {
         Assert.assertTrue(Time.hasElapsedSince(aFewSecondsAgo, Duration.FIVE_SECONDS));
         Assert.assertFalse(Time.hasElapsedSince(aFewSecondsAgo, Duration.TEN_SECONDS));
         Assert.assertTrue(Time.hasElapsedSince(-1, Duration.TEN_SECONDS));
+    }
+    
+    @Test
+    public void testMakeDateString() {
+        String in1 = "2015-06-15T12:34:56";
+        Date d1 = Time.parseDate(in1);
+        Assert.assertEquals(Time.makeDateString(d1), in1.replace('T', ' ')+".000");
+        
+        String in2 = "2015-06-15T12:34:56Z";
+        Date d2 = Time.parseDate(in2);
+        Assert.assertEquals(Time.makeDateString(d2, Time.DATE_FORMAT_ISO8601, Time.getTimeZone("UTC")), in1+".000+0000");
+    }
+
+    @Test(groups="Integration")  //because it depends on TZ's set up and parsing months
+    public void testTimeZones() {
+        // useful to debug, if new special time zones needed
+//        for (String id: TimeZone.getAvailableIDs()) {
+//            TimeZone tz = TimeZone.getTimeZone(id);
+//            System.out.println(id+": "+tz.getDisplayName()+" "+tz.getDisplayName(true, TimeZone.SHORT)+" "+tz);
+//        }
+        
+        Assert.assertEquals("+0100", Time.getTimeZoneOffsetString("Europe/London", 2015, 6, 4).get());
+        
+        Assert.assertEquals("-0500", Time.getTimeZoneOffsetString("EST", 2015, 1, 4).get());
+        Assert.assertEquals("-0400", Time.getTimeZoneOffsetString("America/New_York", 2015, 6, 4).get());
+        Assert.assertEquals("-0500", Time.getTimeZoneOffsetString("America/New_York", 2015, 1, 4).get());
+        
+        // BST treated as British Time (not Bangladesh)
+        Assert.assertEquals("+0000", Time.getTimeZoneOffsetString("BST", 2015, 1, 4).get());
+        Assert.assertEquals("+0100", Time.getTimeZoneOffsetString("BST", 2015, 6, 4).get());
+        
+        // EST treated as EDT not fixed -0500
+        Assert.assertEquals("-0400", Time.getTimeZoneOffsetString("EST", 2015, 6, 4).get());
+        
+        // these normally not recognized
+        Assert.assertEquals("-0400", Time.getTimeZoneOffsetString("EDT", 2015, 6, 4).get());
+        Assert.assertEquals("-0500", Time.getTimeZoneOffsetString("EDT", 2015, 1, 4).get());
+        
+        Assert.assertEquals("-0600", Time.getTimeZoneOffsetString("CST", 2015, 1, 4).get());
+        Assert.assertEquals("-0700", Time.getTimeZoneOffsetString("MST", 2015, 1, 4).get());
+        Assert.assertEquals("-0800", Time.getTimeZoneOffsetString("PST", 2015, 1, 4).get());
+        
+        Assert.assertEquals("+0530", Time.getTimeZoneOffsetString("IST", 2015, 1, 4).get());
+    }
+        
+    @Test
+    public void testParseDate() {
+        doTestParseDate(false);
+    }
+    
+    @Test(groups="Integration")  //because it depends on TZ's set up and parsing months
+    public void testParseDateIntegration() {
+        doTestParseDate(true);
+    }
+    
+    private void doTestParseDate(boolean integration) {
+        // explicit TZ inclusion 
+        assertDatesParseToEqual("2015.6.4.0000 +0100", "2015-06-04-0000 +0100");
+        assertDatesParseToEqual("2015.6.4.0100 +0100", "2015-06-04-0000 +0000");
+        assertDatesParseToEqual("2015.6.4.0100 -0100", "2015-06-04-0200 +0000");
+        if (integration) assertDatesParseToEqual("20150604 BST", "2015-06-04 +0100");
+        
+        // no TZ uses server default
+        assertDatesParseToEqual("2015.6.4.0000", "2015-06-04-0000 "+Time.getTimeZoneOffsetString(TimeZone.getDefault(), 2015, 6, 4));
+        assertDatesParseToEqual("20150604", "2015-06-04-0000");
+
+        // parse TZ
+        if (integration) {
+            assertDatesParseToEqual("20150604 +BST", "2015-06-04 +0100");
+            assertDatesParseToEqual("20150604 - - - BST", "2015-06-04 +0100");
+            assertDatesParseToEqual("20150604--BST", "2015-06-04 +0100");
+            assertDatesParseToEqual("20150604-//-BST", "2015-06-04 +0100");
+        }
+        assertDatesParseToEqual("2015.6.4+0100", "2015-06-04-0000+0100");
+        assertDatesParseToEqual("20150604-+0100", "2015-06-04 +0100");
+        assertDatesParseToEqual("20150604, +0100", "2015-06-04 +0100");
+        assertDatesParseToEqual("201506040000, 0100", "2015-06-04 +0100");
+        assertDatesParseToEqual("20150604  , 0000  , 0100", "2015-06-04 +0100");
+        assertDatesParseToEqual("2015-6-4 +0100", "2015-06-04-0000 +0100");
+        assertDatesParseToEqual("2015-6-4 -0100", "2015-06-04-0000 -0100");
+        assertDatesParseToEqual("20150604-0000//-0100", "2015-06-04 -0100");
+        // ambiguous TZ/hours parse prefers hours
+        assertDatesParseToEqual("2015-6-4-0100", "2015-06-04-0100");
+        assertDatesParseToEqual("2015-6-4--0100", "2015-06-04-0100");
+
+        // formats without spaces
+        assertDatesParseToEqual("20150604080012", "2015-06-04-080012");
+        assertDatesParseToEqual("20150604080012 +1000", "2015-06-03-220012 +0000");
+        assertDatesParseToEqual("20150604080012 -1000", "2015-06-04-180012 +0000");
+        assertDatesParseToEqual("20150604080012.345 +1000", "2015-06-03-220012.345 +0000");
+        if (integration) {
+            assertDatesParseToEqual("20150604 BST", "2015-06-04 +0100");
+            assertDatesParseToEqual("20150604 Europe/London", "2015-06-04 +0100");
+        }
+
+        // more misc tests
+        assertDatesParseToEqual("20150604 08:00:12.345", "2015-06-04-080012.345");
+        assertDatesParseToEqual("20150604-080012.345", "2015-06-04-080012.345");
+        assertDatesParseToEqual("2015-12-1", "2015-12-01-0000");
+        assertDatesParseToEqual("1066-12-1", "1066-12-01-0000");
+        
+        assertDatesParseToEqual("20150604T080012.345", "2015-06-04-080012.345");
+        assertDatesParseToEqual("20150604T080012.345Z", "2015-06-04-080012.345+0000");
+        assertDatesParseToEqual("20150604t080012.345 Z", "2015-06-04-080012.345+0000");
+
+        // millis parse, and zero is epoch, but numbers which look like a date or datetime take priority
+        assertDatesParseToEqual("0", "1970-1-1 UTC");
+        assertDatesParseToEqual("20150604", "2015-06-04");
+        assertDatesParseToEqual(""+Time.parseDate("20150604").getTime(), "2015-06-04");
+        assertDatesParseToEqual("20150604080012", "2015-06-04-080012");
+        assertDatesParseToEqual("0", "1970-1-1 UTC");
+
+        // leap year
+        Assert.assertEquals(Time.parseDate("2012-2-29").getTime(), Time.parseDate("2012-3-1").getTime() - 24*60*60*1000);
+        // perverse, but accepted for the time being:
+        Assert.assertEquals(Time.parseDate("2013-2-29").getTime(), Time.parseDate("2013-3-1").getTime());
+
+        // accept am and pm
+        assertDatesParseToEqual("20150604 08:00:12.345a", "2015-06-04-080012.345");
+        assertDatesParseToEqual("20150604 08:00:12.345 PM", "2015-06-04-200012.345");
+        if (integration) assertDatesParseToEqual("20150604 08:00:12.345 am BST", "2015-06-04-080012.345 +0100");
+        
+        // *calendar* parse includes time zone
+        Assert.assertEquals(Time.makeDateString(Time.parseCalendar("20150604 08:00:12.345a +0100"),
+            Time.DATE_FORMAT_ISO8601), "2015-06-04T08:00:12.345+0100");
+        Assert.assertEquals(Time.makeDateString(Time.parseCalendar("20150604 08:00:12.345a "+Time.TIME_ZONE_UTC.getID()),
+            Time.DATE_FORMAT_ISO8601), "2015-06-04T08:00:12.345+0000");
+        
+        // accept month in words
+        if (integration) {
+            assertDatesParseToEqual("2015-Dec-1", "2015-12-01-0000");
+            assertDatesParseToEqual("2015 Dec 1", "2015-12-01-0000");
+            assertDatesParseToEqual("2015-DEC-1", "2015-12-01-0000");
+            assertDatesParseToEqual("2015 December 1", "2015-12-01-0000");
+            assertDatesParseToEqual("2015 December 1", "2015-12-01-0000");
+            assertDatesParseToEqual("2015-Mar-1", "2015-03-01-0000");
+            assertDatesParseToEqual("2015 Mar 1", "2015-03-01-0000");
+            assertDatesParseToEqual("2015-MAR-1", "2015-03-01-0000");
+            assertDatesParseToEqual("2015 March 1", "2015-03-01-0000");
+            assertDatesParseToEqual("2015 March 1", "2015-03-01-0000");
+        }
+        
+        // for month in words, allow selected other orders also
+        if (integration) {
+            assertDatesParseToEqual("1-Jun-2015", "2015-06-01-0000");
+            assertDatesParseToEqual("Jun 1, 2015", "2015-06-01-0000");
+            assertDatesParseToEqual("June 1, 2015, 4pm", "2015-06-01-1600");
+        }
+    
+        // also allow time first if separators are used
+        assertDatesParseToEqual("16:00, 2015-12-30", "2015-12-30-1600");
+        if (integration) {
+            assertDatesParseToEqual("4pm, Dec 1, 2015", "2015-12-01-1600");
+            assertDatesParseToEqual("16:00 30-Dec-2015", "2015-12-30-1600");
+        }
+        
+        // and if time comes first, TZ can be before or after date
+        assertDatesParseToEqual("4pm +0100, 2015-12-30", "2015-12-30-1600 +0100");
+        assertDatesParseToEqual("4pm, 2015-12-30, +0100", "2015-12-30-1600 +0100");
+        
+        // these ambiguous ones are accepted (maybe we'd rather not), 
+        // but they are interpreted sensibly, preferring the more sensible interpretation 
+        if (integration) assertDatesParseToEqual("16 Dec 1 2015", "2015-12-01-1600");
+        if (integration) assertDatesParseToEqual("16:30 1067 Dec 1 1066", "1067-12-01-1630 +1066");
+        assertDatesParseToEqual("1040 1045 12 1", "1045-12-01-1040");
+        assertDatesParseToEqual("1040 1045 12 1 +0", "1045-12-01-1040Z");
+        if (integration) assertDatesParseToEqual("1045 Dec 1 1040", "1045-12-01-1040");
+        if (integration) assertDatesParseToEqual("10:40 Dec 1 1045", "1045-12-01-1040");
+        assertDatesParseToEqual("10.11-2020-12.01", "2020-12-01-1011");
+        if (integration) assertDatesParseToEqual("Oct.11 1045 12.01", "1045-10-11-1201");
+        if (integration) assertDatesParseToEqual("1040 1045 Dec 1 1030", "1045-12-01-1040 +1030");
+        assertDatesParseToEqual("1040 +02 2015 12 1", "2015-12-01-1040 +0200");
+        assertDatesParseToEqual("10:40:+02 2015 12 1", "2015-12-01-1040 +0200");
+    }
+    
+    @SuppressWarnings("deprecation")
+    @Test
+    public void testParseDateToString() {
+        // java.lang.AssertionError: for: Sun Jun 07 21:21:00 BST 2015 (20150607-212100073) expected [Sun Jun 07 21:22:13 BST 2015] but found [Sun Jun 07 21:21:00 BST 2015]
+        Date d = new Date();
+        d.setSeconds(0);
+        assertDatesParseToEqual(d.toString(), Time.makeDateStampString(d.getTime()));
+    }
+
+    private void assertDatesParseToEqual(String input, String expected) {
+        Assert.assertEquals(Time.parseDate(input).toString(), Time.parseDate(expected).toString(), "for: "+input+" ("+expected+")");
     }
 }

@@ -75,6 +75,7 @@ public interface BrooklynCatalog {
     public ClassLoader getRootClassLoader();
 
     /** creates a spec for the given catalog item, throwing exceptions if any problems */
+    // TODO this should be cached on the item and renamed getSpec(...), else we re-create it too often (every time catalog is listed)
     <T,SpecT> SpecT createSpec(CatalogItem<T,SpecT> item);
     
     /** throws exceptions if any problems 

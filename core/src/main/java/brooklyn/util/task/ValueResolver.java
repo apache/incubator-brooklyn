@@ -28,6 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
@@ -129,6 +131,10 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
     public ValueResolver<T> context(ExecutionContext exec) {
         this.exec = exec;
         return this;
+    }
+    /** as {@link #context(ExecutionContext)} for use from an entity */
+    public ValueResolver<T> context(Entity entity) {
+        return context(entity!=null ? ((EntityInternal)entity).getExecutionContext() : null);
     }
     
     /** sets a message which will be displayed in status reports while it waits (e.g. the name of the config key being looked up) */
@@ -279,6 +285,11 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
                         
                     String description = getDescription();
                     Task<Object> vt = exec.submit(Tasks.<Object>builder().body(callable).name("Resolving dependent value").description(description).build());
+                    // TODO to handle immediate resolution, it would be nice to be able to submit 
+                    // so it executes in the current thread,
+                    // or put a marker in the target thread or task while it is running that the task 
+                    // should never wait on anything other than another value being resolved 
+                    // (though either could recurse infinitely) 
                     Maybe<Object> vm = Durations.get(vt, timer);
                     vt.cancel(true);
                     if (vm.isAbsent()) return (Maybe<T>)vm;

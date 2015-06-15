@@ -20,6 +20,7 @@ package brooklyn.rest.resources;
 
 import io.brooklyn.camp.CampPlatform;
 
+import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 
@@ -27,6 +28,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
+import brooklyn.config.render.RendererHints;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
@@ -36,13 +40,8 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
-import com.google.common.annotations.VisibleForTesting;
-
 public abstract class AbstractBrooklynRestResource implements ManagementContextInjectable {
 
-    @VisibleForTesting
-    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
-    
     // can be injected by jersey when ManagementContext in not injected manually
     // (seems there is no way to make this optional so note it _must_ be injected;
     // most of the time that happens for free, but with test framework it doesn't,
@@ -85,15 +84,66 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
         return mapper;
     }
 
-    /** returns an object which jersey will handle nicely, converting to json,
-     * sometimes wrapping in quotes if needed (for outermost json return types) */ 
+    /** @deprecated since 0.7.0 use {@link #getValueForDisplay(Object, boolean, boolean, Boolean, EntityLocal, Duration)} */ @Deprecated
     protected Object getValueForDisplay(Object value, boolean preferJson, boolean isJerseyReturnValue) {
-        Object immediate = getImmediateValue(value);
-        return WebResourceUtils.getValueForDisplay(mapper(), immediate, preferJson, isJerseyReturnValue);
+        return resolving(value).preferJson(preferJson).asJerseyOutermostReturnValue(isJerseyReturnValue).resolve();
     }
 
-    private Object getImmediateValue(Object value) {
-        return Tasks.resolving(value).as(Object.class).defaultValue(null).timeout(Duration.ZERO).swallowExceptions().get();
+    protected RestValueResolver resolving(Object v) {
+        return new RestValueResolver(v).mapper(mapper());
+    }
+
+    public static class RestValueResolver {
+        final private Object valueToResolve;
+        private @Nullable ObjectMapper mapper;
+        private boolean preferJson;
+        private boolean isJerseyReturnValue;
+        private @Nullable Boolean raw; 
+        private @Nullable Entity entity;
+        private @Nullable Duration timeout;
+        private @Nullable Object rendererHintSource;
+        
+        public static RestValueResolver resolving(Object v) { return new RestValueResolver(v); }
+        
+        private RestValueResolver(Object v) { valueToResolve = v; }
+        
+        public RestValueResolver mapper(ObjectMapper mapper) { this.mapper = mapper; return this; }
+        
+        /** whether JSON is the ultimate product; 
+         * main effect here is to give null for null if true, else to give empty string 
+         * <p>
+         * conversion to JSON for complex types is done subsequently (often by the framework)
+         * <p>
+         * default is true */
+        public RestValueResolver preferJson(boolean preferJson) { this.preferJson = preferJson; return this; }
+        /** whether an outermost string must be wrapped in quotes, because a String return object is treated as
+         * already JSON-encoded
+         * <p>
+         * default is false */
+        public RestValueResolver asJerseyOutermostReturnValue(boolean asJerseyReturnJson) {
+            isJerseyReturnValue = asJerseyReturnJson;
+            return this;
+        }
+        public RestValueResolver raw(Boolean raw) { this.raw = raw; return this; }
+        public RestValueResolver context(Entity entity) { this.entity = entity; return this; }
+        public RestValueResolver timeout(Duration timeout) { this.timeout = timeout; return this; }
+        public RestValueResolver renderAs(Object rendererHintSource) { this.rendererHintSource = rendererHintSource; return this; }
+
+        public Object resolve() {
+            Object valueResult = getImmediateValue(valueToResolve, entity);
+            if (valueResult==UNRESOLVED) valueResult = valueToResolve;
+            if (rendererHintSource!=null && Boolean.FALSE.equals(raw)) {
+                valueResult = RendererHints.applyDisplayValueHintUnchecked(rendererHintSource, valueResult);
+            }
+            return WebResourceUtils.getValueForDisplay(mapper, valueResult, preferJson, isJerseyReturnValue);
+        }
+        
+        private static Object UNRESOLVED = "UNRESOLVED".toCharArray();
+        
+        private static Object getImmediateValue(Object value, @Nullable Entity context) {
+            return Tasks.resolving(value).as(Object.class).defaultValue(UNRESOLVED).timeout(Duration.ZERO).context(context).swallowExceptions().get();
+        }
+
     }
 
     protected CampPlatform camp() {

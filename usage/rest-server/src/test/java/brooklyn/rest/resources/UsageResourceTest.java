@@ -21,10 +21,9 @@ package brooklyn.rest.resources;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -56,6 +55,7 @@ import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.repeat.Repeater;
+import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -70,8 +70,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
 
     private static final long TIMEOUT_MS = 10*1000;
     
-    private Date testStartTime;
-    private DateFormat format = new SimpleDateFormat(AbstractBrooklynRestResource.DATE_FORMAT);
+    private Calendar testStartTime;
     
     private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
             entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
@@ -82,20 +81,20 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     public void setUpMethod() {
         ((ManagementContextInternal)getManagementContext()).getStorage().remove(LocalUsageManager.APPLICATION_USAGE_KEY);
         ((ManagementContextInternal)getManagementContext()).getStorage().remove(LocalUsageManager.LOCATION_USAGE_KEY);
-        testStartTime = new Date();
+        testStartTime = new GregorianCalendar();
     }
 
     @Test
     public void testListApplicationUsages() throws Exception {
         // Create an app
-        Date preStart = new Date();
+        Calendar preStart = new GregorianCalendar();
         String appId = createApp(simpleSpec);
-        Date postStart = new Date();
+        Calendar postStart = new GregorianCalendar();
         
         // We will retrieve usage from one millisecond after start; this guarantees to not be  
         // told about both STARTING+RUNNING, which could otherwise happen if they are in the 
         // same milliscond.
-        Date afterPostStart = new Date(postStart.getTime()+1);
+        Calendar afterPostStart = Time.newCalendarFromMillisSinceEpochUtc(postStart.getTime().getTime()+1);
         
         // Check that app's usage is returned
         ClientResponse response = client().resource("/v1/usage/applications").get(ClientResponse.class);
@@ -104,15 +103,15 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         UsageStatistics usage = Iterables.getOnlyElement(usages);
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
 
-        // check app ignored if endDate before app started
-        response = client().resource("/v1/usage/applications?start="+0+"&end="+(preStart.getTime()-1)).get(ClientResponse.class);
+        // check app ignored if endCalendar before app started
+        response = client().resource("/v1/usage/applications?start="+0+"&end="+(preStart.getTime().getTime()-1)).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
         
         // Wait, so that definitely asking about things that have happened (not things in the future, 
         // or events that are happening this exact same millisecond)
-        waitForFuture(afterPostStart.getTime());
+        waitForFuture(afterPostStart.getTime().getTime());
 
         // Check app start + end date truncated, even if running for longer (i.e. only tell us about this time window).
         // Note that start==end means we get a snapshot of the apps in use at that exact time.
@@ -121,7 +120,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         // The comparison does use the milliseconds passed in the REST call though.
         // The rounding down result should be the same as roundDown(afterPostStart), because that is the time-window
         // we asked for.
-        response = client().resource("/v1/usage/applications?start="+afterPostStart.getTime()+"&end="+afterPostStart.getTime()).get(ClientResponse.class);
+        response = client().resource("/v1/usage/applications?start="+afterPostStart.getTime().getTime()+"&end="+afterPostStart.getTime().getTime()).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         usage = Iterables.getOnlyElement(usages);
@@ -129,9 +128,9 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertAppUsageTimesTruncated(usage, roundDown(afterPostStart), roundDown(afterPostStart));
 
         // Delete the app
-        Date preDelete = new Date();
+        Calendar preDelete = new GregorianCalendar();
         deleteApp(appId);
-        Date postDelete = new Date();
+        Calendar postDelete = new GregorianCalendar();
 
         // Deleted app still returned, if in time range
         response = client().resource("/v1/usage/applications").get(ClientResponse.class);
@@ -141,7 +140,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING, Status.DESTROYED), roundDown(preStart), postDelete);
         assertAppUsage(ImmutableList.copyOf(usage.getStatistics()).subList(2, 3), appId, ImmutableList.of(Status.DESTROYED), roundDown(preDelete), postDelete);
 
-        long afterPostDelete = postDelete.getTime()+1;
+        long afterPostDelete = postDelete.getTime().getTime()+1;
         waitForFuture(afterPostDelete);
         
         response = client().resource("/v1/usage/applications?start=" + afterPostDelete).get(ClientResponse.class);
@@ -159,9 +158,9 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testGetApplicationUsage() throws Exception {
         // Create an app
-        Date preStart = new Date();
+        Calendar preStart = new GregorianCalendar();
         String appId = createApp(simpleSpec);
-        Date postStart = new Date();
+        Calendar postStart = new GregorianCalendar();
         
         // Normal request returns all
         ClientResponse response = client().resource("/v1/usage/applications/" + appId).get(ClientResponse.class);
@@ -198,9 +197,9 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertTrue(usage.getStatistics().isEmpty());
         
         // Delete the app
-        Date preDelete = new Date();
+        Calendar preDelete = new GregorianCalendar();
         deleteApp(appId);
-        Date postDelete = new Date();
+        Calendar postDelete = new GregorianCalendar();
 
         // Deleted app still returned, if in time range
         response = client().resource("/v1/usage/applications/" + appId).get(ClientResponse.class);
@@ -210,7 +209,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertAppUsage(ImmutableList.copyOf(usage.getStatistics()).subList(2, 3), appId, ImmutableList.of(Status.DESTROYED), roundDown(preDelete), postDelete);
 
         // Deleted app not returned if terminated before time range begins
-        long afterPostDelete = postDelete.getTime()+1;
+        long afterPostDelete = postDelete.getTime().getTime()+1;
         waitForFuture(afterPostDelete);
         response = client().resource("/v1/usage/applications/" + appId +"?start=" + afterPostDelete).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
@@ -243,9 +242,9 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, getManagementContext());
         SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(brooklyn.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
         
-        Date preStart = new Date();
+        Calendar preStart = new GregorianCalendar();
         app.start(ImmutableList.of(location));
-        Date postStart = new Date();
+        Calendar postStart = new GregorianCalendar();
         Location machine = Iterables.getOnlyElement(entity.getLocations());
 
         // All machines
@@ -270,9 +269,9 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(brooklyn.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
         String appId = app.getId();
         
-        Date preStart = new Date();
+        Calendar preStart = new GregorianCalendar();
         app.start(ImmutableList.of(location));
-        Date postStart = new Date();
+        Calendar postStart = new GregorianCalendar();
         Location machine = Iterables.getOnlyElement(entity.getLocations());
 
         // For running machine
@@ -283,9 +282,9 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertMachineUsage(usage, app.getId(), machine.getId(), ImmutableList.of(Status.ACCEPTED), roundDown(preStart), postStart);
         
         // Stop the machine
-        Date preStop = new Date();
+        Calendar preStop = new GregorianCalendar();
         app.stop();
-        Date postStop = new Date();
+        Calendar postStop = new GregorianCalendar();
         
         // Deleted machine still returned, if in time range
         response = client().resource("/v1/usage/machines?application=" + appId).get(ClientResponse.class);
@@ -296,7 +295,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertMachineUsage(ImmutableList.copyOf(usage.getStatistics()).subList(1,2), appId, machine.getId(), ImmutableList.of(Status.DESTROYED), roundDown(preStop), postStop);
 
         // Terminated machines ignored if terminated since start-time
-        long futureTime = postStop.getTime()+1;
+        long futureTime = postStop.getTime().getTime()+1;
         waitForFuture(futureTime);
         response = client().resource("/v1/usage/applications?start=" + futureTime).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
@@ -320,18 +319,18 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         waitForTask(deletionTask.getId());
     }
     
-    private void assertDateOrders(Object context, Date... dates) {
-        if (dates.length <= 1) return;
+    private void assertCalendarOrders(Object context, Calendar... Calendars) {
+        if (Calendars.length <= 1) return;
         
-        long[] times = new long[dates.length];
+        long[] times = new long[Calendars.length];
         for (int i = 0; i < times.length; i++) {
-            times[i] = millisSinceStart(dates[i]);
+            times[i] = millisSinceStart(Calendars[i]);
         }
-        String err = "context="+context+"; dates="+Arrays.toString(dates) + "; datesSanitized="+Arrays.toString(times);
+        String err = "context="+context+"; Calendars="+Arrays.toString(Calendars) + "; CalendarsSanitized="+Arrays.toString(times);
         
-        Date date = dates[0];
-        for (int i = 1; i < dates.length; i++) {
-            assertTrue(date.getTime() <= dates[i].getTime(), err);
+        Calendar Calendar = Calendars[0];
+        for (int i = 1; i < Calendars.length; i++) {
+            assertTrue(Calendar.getTime().getTime() <= Calendars[i].getTime().getTime(), err);
         }
     }
     
@@ -353,56 +352,56 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertTrue(success, "task "+taskId+" not finished");
     }
 
-    private long millisSinceStart(Date time) {
-        return time.getTime() - testStartTime.getTime();
+    private long millisSinceStart(Calendar time) {
+        return time.getTime().getTime() - testStartTime.getTime().getTime();
     }
     
-    private Date roundDown(Date date) {
-        long time = date.getTime();
+    private Calendar roundDown(Calendar calendar) {
+        long time = calendar.getTime().getTime();
         long timeDown = ((long)(time / 1000)) * 1000;
-        return new Date(timeDown);
+        return Time.newCalendarFromMillisSinceEpochUtc(timeDown);
     }
     
     @SuppressWarnings("unused")
-    private Date roundUp(Date date) {
-        long time = date.getTime();
+    private Calendar roundUp(Calendar calendar) {
+        long time = calendar.getTime().getTime();
         long timeDown = ((long)(time / 1000)) * 1000;
         long timeUp = (time == timeDown) ? time : timeDown + 1000;
-        return new Date(timeUp);
+        return Time.newCalendarFromMillisSinceEpochUtc(timeUp);
     }
 
-    private void assertMachineUsage(UsageStatistics usage, String appId, String machineId, List<Status> states, Date pre, Date post) throws Exception {
+    private void assertMachineUsage(UsageStatistics usage, String appId, String machineId, List<Status> states, Calendar pre, Calendar post) throws Exception {
         assertUsage(usage.getStatistics(), appId, machineId, states, pre, post, false);
     }
     
-    private void assertMachineUsage(Iterable<UsageStatistic> usages, String appId, String machineId, List<Status> states, Date pre, Date post) throws Exception {
+    private void assertMachineUsage(Iterable<UsageStatistic> usages, String appId, String machineId, List<Status> states, Calendar pre, Calendar post) throws Exception {
         assertUsage(usages, appId, machineId, states, pre, post, false);
     }
     
-    private void assertAppUsage(UsageStatistics usage, String appId, List<Status> states, Date pre, Date post) throws Exception {
+    private void assertAppUsage(UsageStatistics usage, String appId, List<Status> states, Calendar pre, Calendar post) throws Exception {
         assertUsage(usage.getStatistics(), appId, appId, states, pre, post, false);
     }
     
-    private void assertAppUsage(Iterable<UsageStatistic> usages, String appId, List<Status> states, Date pre, Date post) throws Exception {
+    private void assertAppUsage(Iterable<UsageStatistic> usages, String appId, List<Status> states, Calendar pre, Calendar post) throws Exception {
         assertUsage(usages, appId, appId, states, pre, post, false);
     }
 
-    private void assertUsage(Iterable<UsageStatistic> usages, String appId, String id, List<Status> states, Date pre, Date post, boolean allowGaps) throws Exception {
+    private void assertUsage(Iterable<UsageStatistic> usages, String appId, String id, List<Status> states, Calendar pre, Calendar post, boolean allowGaps) throws Exception {
         String errMsg = "usages="+usages;
-        Date now = new Date();
-        Date lowerBound = pre;
-        Date strictStart = null;
+        Calendar now = new GregorianCalendar();
+        Calendar lowerBound = pre;
+        Calendar strictStart = null;
         
         assertEquals(Iterables.size(usages), states.size(), errMsg);
         for (int i = 0; i < Iterables.size(usages); i++) {
             UsageStatistic usage = Iterables.get(usages, i);
-            Date usageStart = format.parse(usage.getStart());
-            Date usageEnd = format.parse(usage.getEnd());
+            Calendar usageStart = Time.parseCalendar(usage.getStart());
+            Calendar usageEnd = Time.parseCalendar(usage.getEnd());
             assertEquals(usage.getId(), id, errMsg);
             assertEquals(usage.getApplicationId(), appId, errMsg);
             assertEquals(usage.getStatus(), states.get(i), errMsg);
-            assertDateOrders(usages, lowerBound, usageStart, post);
-            assertDateOrders(usages, usageEnd, now);
+            assertCalendarOrders(usages, lowerBound, usageStart, post);
+            assertCalendarOrders(usages, usageEnd, now);
             if (strictStart != null) {
                 assertEquals(usageStart, strictStart, errMsg);
             }
@@ -413,12 +412,13 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         }
     }
 
-    private void assertAppUsageTimesTruncated(UsageStatistics usages, Date strictStart, Date strictEnd) throws Exception {
-        String errMsg = "usages="+usages+"; strictStart="+strictStart+"; strictEnd="+strictEnd;
-        Date usageStart = format.parse(Iterables.getFirst(usages.getStatistics(), null).getStart());
-        Date usageEnd = format.parse(Iterables.getLast(usages.getStatistics()).getStart());
-        assertEquals(usageStart, strictStart, errMsg);
-        assertEquals(usageEnd, strictEnd, errMsg);
+    private void assertAppUsageTimesTruncated(UsageStatistics usages, Calendar strictStart, Calendar strictEnd) throws Exception {
+        String errMsg = "strictStart="+Time.makeDateString(strictStart)+"; strictEnd="+Time.makeDateString(strictEnd)+";usages="+usages;
+        Calendar usageStart = Time.parseCalendar(Iterables.getFirst(usages.getStatistics(), null).getStart());
+        Calendar usageEnd = Time.parseCalendar(Iterables.getLast(usages.getStatistics()).getStart());
+        // time zones might be different - so must convert to date
+        assertEquals(usageStart.getTime(), strictStart.getTime(), "usageStart="+Time.makeDateString(usageStart)+";"+errMsg);
+        assertEquals(usageEnd.getTime(), strictEnd.getTime(), errMsg);
     }
     
     public static class DynamicLocalhostMachineProvisioningLocation extends LocalhostMachineProvisioningLocation {
