@@ -23,10 +23,10 @@
   <packaging>maven-archetype</packaging>
   <name>Brooklyn Quick-Start Project Archetype</name>
   <description>
-        This project defines an archetype for creating new projects which consume brooklyn, 
-        including an example application and an example new entity type, 
-        able to build an OSGi JAR and a binary assembly, with logging and READMEs.
-    </description>
+    This project defines an archetype for creating new projects which consume brooklyn,
+    including an example application and an example new entity type,
+    able to build an OSGi JAR and a binary assembly, with logging and READMEs.
+  </description>
 
   <parent>
     <groupId>org.apache.brooklyn</groupId>

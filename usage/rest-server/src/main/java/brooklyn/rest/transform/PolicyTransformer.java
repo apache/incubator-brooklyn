@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableMap;
  * Converts from Brooklyn entities to restful API summary objects
  */
 public class PolicyTransformer {
-//    private static final org.slf4j.Logger log = LoggerFactory.getLogger(PolicyTransformer.class);
 
     public static PolicySummary policySummary(Entity entity, Policy policy) {
         String applicationUri = "/v1/applications/" + entity.getApplicationId();

@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -57,8 +58,10 @@ import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.MementoCopyMode;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.api.ServerApi;
+import brooklyn.rest.domain.BrooklynFeatureSummary;
 import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
+import brooklyn.rest.transform.BrooklynFeatureTransformer;
 import brooklyn.rest.transform.HighAvailabilityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
@@ -75,6 +78,7 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 
 public class ServerResource extends AbstractBrooklynRestResource implements ServerApi {
 
@@ -255,21 +259,10 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
             throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
         
-        // TODO reconcile this with BrooklynVersion reading from the OSGi manifest
-        // @ahgittin / @sjcorbett to decide, is there need for this in addition to the OSGi manifest?
-        // TODO as part of this call should we have a strategy for reporting downstream builds in this call?
-        // for instance, we could look for
-        // * ALL "brooklyn-build-metadata.properties" files on the classpath
-        // * and/or ALL items on classpath with a custom header (eg "Brooklyn-OSGi-Feature-Name: My Project") in MANIFEST.MF
-        // i tend to favour the latter as MANIFEST.MF is already recognised; is there a reason to introduce a new file?
-        // whichever we do, i think:
+        // TODO
         // * "build-metadata.properties" is probably the wrong name
         // * we should include brooklyn.version and a build timestamp in this file
         // * the authority for brooklyn should probably be core rather than brooklyn-rest-server
-        
-        // TODO in version summary, maybe also have:
-        // features: [ { name: my-project, version: 0.1.0-SNAPSHOT, git-sha1: xxx }, ... ]
-        // osgi: [ /* similar metadata extracted from all active osgi bundles */ ]
         InputStream input = ResourceUtils.create().getResourceFromUrl("classpath://build-metadata.properties");
         Properties properties = new Properties();
         String gitSha1 = null, gitBranch = null;
@@ -280,7 +273,12 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         } catch (IOException e) {
             log.error("Failed to load build-metadata.properties", e);
         }
-        return new VersionSummary(BrooklynVersion.get(), gitSha1, gitBranch);
+        gitSha1 = BrooklynVersion.INSTANCE.getSha1FromOsgiManifest();
+
+        FluentIterable<BrooklynFeatureSummary> features = FluentIterable.from(BrooklynVersion.getFeatures(mgmt()))
+                .transform(BrooklynFeatureTransformer.FROM_FEATURE);
+
+        return new VersionSummary(BrooklynVersion.get(), gitSha1, gitBranch, features.toList());
     }
 
     @Override
@@ -289,11 +287,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
             throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
 
         Maybe<ManagementContext> mm = mgmtMaybe();
-        if (mm.isAbsent()) return false;
-        ManagementContext m = mm.get();
-        if (!m.isStartupComplete()) return false;
-        if (!m.isRunning()) return false;
-        return true;
+        return !mm.isAbsent() && mm.get().isStartupComplete() && mm.get().isRunning();
     }
     
     @Override
@@ -301,16 +295,12 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
             throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
         Maybe<ManagementContext> mm = mgmtMaybe();
-        if (mm.isAbsent()) return false;
-        ManagementContext m = mm.get();
-        return (m.isStartupComplete() && !m.isRunning());
+        return !mm.isAbsent() && mm.get().isStartupComplete() && !mm.get().isRunning();
     }
     
     @Override
     public boolean isHealthy() {
-        if (!isUp()) return false;
-        if (!((ManagementContextInternal)mgmt()).errors().isEmpty()) return false;
-        return true;
+        return isUp() && ((ManagementContextInternal) mgmt()).errors().isEmpty();
     }
     
     @Override

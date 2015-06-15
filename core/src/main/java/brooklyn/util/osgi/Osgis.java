@@ -665,10 +665,13 @@ public class Osgis {
         }
         
         public static ManifestHelper forManifest(URL url) throws IOException, BundleException {
-            InputStream in = url.openStream();
-            ManifestHelper helper = forManifest(in);
-            in.close();
-            return helper;
+            InputStream in = null;
+            try {
+                in = url.openStream();
+                return forManifest(in);
+            } finally {
+                if (in != null) in.close();
+            }
         }
         
         public static ManifestHelper forManifest(InputStream in) throws IOException, BundleException {

@@ -401,7 +401,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     
     /** Optional mechanism for setting the classpath which should be scanned by the catalog, if the catalog
      * is scanning the default classpath.  Usually it infers the right thing, but some classloaders
-     * (e.g. surefire) do funny things which the underlying org.reflections.Reflectiosn library can't see in to. 
+     * (e.g. surefire) do funny things which the underlying org.reflections.Reflections library can't see in to.
      * <p>
      * This should normally be invoked early in the server startup.  Setting it after the catalog is loaded will not
      * take effect without an explicit internal call to do so.  Once set, it can be changed prior to catalog loading

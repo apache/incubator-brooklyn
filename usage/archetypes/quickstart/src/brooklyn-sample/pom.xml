@@ -47,7 +47,7 @@
   </parent>
 
   <properties>
-    <project.entry>com.acme.sample.SampleMain</project.entry>
+    <project.entry>com.acme.sample.brooklyn.SampleMain</project.entry>
   </properties>
 
   <dependencies>

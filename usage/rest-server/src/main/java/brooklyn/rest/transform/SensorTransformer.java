@@ -20,6 +20,7 @@ package brooklyn.rest.transform;
 
 import java.net.URI;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.render.RendererHints;
@@ -36,7 +37,7 @@ import com.google.common.collect.Iterables;
 
 public class SensorTransformer {
 
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(SensorTransformer.class);
+    private static final Logger log = LoggerFactory.getLogger(SensorTransformer.class);
 
     public static SensorSummary sensorSummaryForCatalog(Sensor<?> sensor) {
         return new SensorSummary(sensor.getName(), sensor.getTypeName(),

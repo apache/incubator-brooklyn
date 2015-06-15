@@ -19,6 +19,7 @@
 package brooklyn.util;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -26,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -43,6 +45,7 @@ import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 public class ResourceUtilsTest {
@@ -175,6 +178,12 @@ public class ResourceUtilsTest {
         String longString = Identifiers.makeRandomId(256);
         for (int a=32; a<128; a++) longString += (char)a;
         assertEquals(utils.getResourceAsString(Urls.asDataUrlBase64(longString)), longString);
+    }
+
+    @Test
+    public void testGetResources() {
+        Iterable<URL> manifests = ResourceUtils.create().getResources("META-INF/MANIFEST.MF");
+        assertFalse(Iterables.isEmpty(manifests));
     }
 
 }

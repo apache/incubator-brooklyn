@@ -21,6 +21,9 @@ package brooklyn.rest.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -34,18 +37,25 @@ public class VersionSummary implements Serializable {
     private final String version;
     private final String buildSha1;
     private final String buildBranch;
+    private final List<BrooklynFeatureSummary> features;
 
     public VersionSummary(String version) {
         this(version, null, null);
     }
 
+    public VersionSummary(String version, String buildSha1, String buildBranch) {
+        this(version, buildSha1, buildBranch, Collections.<BrooklynFeatureSummary>emptyList());
+    }
+
     public VersionSummary(
             @JsonProperty("version") String version,
-            @JsonProperty("buildSha1")String buildSha1,
-            @JsonProperty("buildBranch") String buildBranch) {
+            @JsonProperty("buildSha1") String buildSha1,
+            @JsonProperty("buildBranch") String buildBranch,
+            @JsonProperty("features") List<BrooklynFeatureSummary> features) {
         this.version = checkNotNull(version, "version");
         this.buildSha1 = buildSha1;
         this.buildBranch = buildBranch;
+        this.features = checkNotNull(features, "features");
     }
 
     @Nonnull
@@ -62,4 +72,10 @@ public class VersionSummary implements Serializable {
     public String getBuildBranch() {
         return buildBranch;
     }
+
+    @Nonnull
+    public List<BrooklynFeatureSummary> getFeatures() {
+        return features;
+    }
+
 }

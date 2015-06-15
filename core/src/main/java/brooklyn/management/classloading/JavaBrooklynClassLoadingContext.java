@@ -21,7 +21,10 @@ package brooklyn.management.classloading;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Enumeration;
 
 import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
@@ -105,5 +108,15 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
     public URL getResource(String name) {
         return getClassLoader().getResource(name);
     }
-    
+
+    @Override
+    public Iterable<URL> getResources(String name) {
+        Enumeration<URL> resources;
+        try {
+            resources = getClassLoader().getResources(name);
+        } catch (IOException e) {
+            throw Exceptions.propagate(e);
+        }
+        return Collections.list(resources);
+    }
 }
