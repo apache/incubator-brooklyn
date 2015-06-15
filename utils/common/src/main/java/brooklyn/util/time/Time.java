@@ -809,8 +809,8 @@ public class Time {
                     result.set(Calendar.SECOND, Integer.parseInt(secsS));
                 } else {
                     double s = Double.parseDouble(secsS);
-                    if (s>=0 && s<=60) {
-                        // in double format, with correct period
+                    if (secsS.indexOf('.')>=0) {
+                        // accept
                     } else if (secsS.length()==5) {
                         // allow ssSSS with no punctuation
                         s = s/=1000;

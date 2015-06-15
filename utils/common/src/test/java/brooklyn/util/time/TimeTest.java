@@ -324,12 +324,11 @@ public class TimeTest {
         assertDatesParseToEqual("10:40:+02 2015 12 1", "2015-12-01-1040 +0200");
     }
     
-    @SuppressWarnings("deprecation")
     @Test
-    public void testParseDateToString() {
-        // java.lang.AssertionError: for: Sun Jun 07 21:21:00 BST 2015 (20150607-212100073) expected [Sun Jun 07 21:22:13 BST 2015] but found [Sun Jun 07 21:21:00 BST 2015]
+    public void testParseDateToStringWithMillisecond() {
         Date d = new Date();
-        d.setSeconds(0);
+        // clear seconds, but add a milli - to ensure not just toString formatting but also seconds computation
+        d.setTime(d.getTime() - (d.getTime() % 60000) + 1);
         assertDatesParseToEqual(d.toString(), Time.makeDateStampString(d.getTime()));
     }
 
