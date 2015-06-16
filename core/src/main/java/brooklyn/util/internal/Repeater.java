@@ -89,7 +89,7 @@ public class Repeater {
     static { TimeExtras.init(); }
 
     @SetFromFlag
-    private final String description;
+    private String description;
     private Callable<?> body = Callables.returning(null);
     private Callable<Boolean> exitCondition;
     @SetFromFlag
