@@ -291,22 +291,22 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     @Override
     public void runPreInstallCommand(String command) {
-        execute(ImmutableList.of(command), "running pre-install commands");
+        execute(ImmutableList.of("cd " + getInstallDir(), command), "running pre-install commands");
     }
 
     @Override
     public void runPostInstallCommand(String command) {
-        execute(ImmutableList.of(command), "running post-install commands");
+        execute(ImmutableList.of("cd " + getInstallDir(), command), "running post-install commands");
     }
 
     @Override
     public void runPreLaunchCommand(String command) {
-        execute(ImmutableList.of(command), "running pre-launch commands");
+        execute(ImmutableList.of("cd " + getRunDir(), command), "running pre-launch commands");
     }
 
     @Override
     public void runPostLaunchCommand(String command) {
-        execute(ImmutableList.of(command), "running post-launch commands");
+        execute(ImmutableList.of("cd " + getRunDir(), command), "running post-launch commands");
     }
 
     /**
