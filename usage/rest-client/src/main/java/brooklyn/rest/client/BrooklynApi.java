@@ -59,6 +59,7 @@ import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.http.BuiltResponsePreservingError;
+import brooklyn.util.http.HttpTool;
 
 import com.wordnik.swagger.core.ApiOperation;
 
@@ -124,12 +125,12 @@ public class BrooklynApi {
                     Object result1 = method.invoke(result0, args);
                     Class<?> type = String.class;
                     if (result1 instanceof Response) {
-                        if(((Response)result1).getStatus()/100 == 2) {
-                           String responseClass = method.getAnnotation(ApiOperation.class).responseClass();
-                           type = Class.forName(responseClass);
+                        Response resp = (Response)result1;
+                        if(HttpTool.isStatusCodeHealthy(resp.getStatus()) && method.isAnnotationPresent(ApiOperation.class)) {
+                           type = getClassFromMethodAnnotationOrDefault(resp, method, type);
                         }
                         // wrap the original response so it self-closes
-                        result1 = BuiltResponsePreservingError.copyResponseAndClose((Response) result1, type);
+                        result1 = BuiltResponsePreservingError.copyResponseAndClose(resp, type);
                     }
                     return result1;
                 } catch (Throwable e) {
@@ -139,6 +140,17 @@ public class BrooklynApi {
                     }
                     throw Exceptions.propagate(e);
                 }  
+            }
+            
+            private Class<?> getClassFromMethodAnnotationOrDefault(Response resp, Method method, Class<?> def){
+                Class<?> type;
+                try{
+                    String responseClass = method.getAnnotation(ApiOperation.class).responseClass();
+                    type = Class.forName(responseClass);
+                } catch (Exception e) {
+                    type = def;
+                }
+                return type;
             }
         });
     }
