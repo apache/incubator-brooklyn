@@ -192,10 +192,11 @@ public abstract class AbstractFailureDetector extends AbstractPolicy {
         doStartPolling();
     }
 
+    @SuppressWarnings("unchecked")
     protected void doStartPolling() {
         if (scheduledTask == null || scheduledTask.isDone()) {
             ScheduledTask task = new ScheduledTask(MutableMap.of("period", getPollPeriod(), "displayName", getTaskName()), pollingTaskFactory);
-            scheduledTask = ((EntityInternal)entity).getExecutionContext().submit(task);;
+            scheduledTask = ((EntityInternal)entity).getExecutionContext().submit(task);
         }
     }
 
@@ -271,6 +272,7 @@ public abstract class AbstractFailureDetector extends AbstractPolicy {
         schedulePublish(0);
     }
 
+    @SuppressWarnings("unchecked")
     protected void schedulePublish(long delay) {
         if (isRunning() && executorQueued.compareAndSet(false, true)) {
             long now = System.currentTimeMillis();

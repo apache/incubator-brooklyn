@@ -157,7 +157,8 @@ public class Enrichers {
             return new CombinerBuilder<S, Object>(vals);
         }
         /** as {@link #combining(Collection)} */
-        public <S> CombinerBuilder<S, Object> combining(AttributeSensor<? extends S>... vals) {
+        @SafeVarargs
+        public final <S> CombinerBuilder<S, Object> combining(AttributeSensor<? extends S>... vals) {
             return new CombinerBuilder<S, Object>(vals);
         }
         /** as {@link #combining(Collection)} but the collection of values comes from the given sensor on multiple entities */
@@ -351,6 +352,7 @@ public class Enrichers {
         // For summing/averaging
         protected Object defaultValueForUnreportedSensors;
         
+        @SafeVarargs
         public AbstractCombinerBuilder(AttributeSensor<? extends S>... vals) {
             this(ImmutableList.copyOf(vals));
         }
@@ -706,6 +708,7 @@ public class Enrichers {
     }
 
     public static class CombinerBuilder<S, T> extends AbstractCombinerBuilder<S, T, CombinerBuilder<S, T>> {
+        @SafeVarargs
         public CombinerBuilder(AttributeSensor<? extends S>... vals) {
             super(vals);
         }

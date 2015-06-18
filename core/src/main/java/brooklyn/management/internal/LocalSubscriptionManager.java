@@ -200,9 +200,9 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
                             sAtClosureCreation.listener.onEvent(event);
                         } catch (Throwable t) {
                             if (event!=null && event.getSource()!=null && Entities.isNoLongerManaged(event.getSource())) {
-                                LOG.debug("Error in "+this+", after entity unmanaged: "+t, t);
+                                LOG.debug("Error processing subscriptions to "+this+", after entity unmanaged: "+t, t);
                             } else {
-                                LOG.warn("Error in "+this+": "+t, t);
+                                LOG.warn("Error processing subscriptions to "+this+": "+t, t);
                             }
                         }
                     }});

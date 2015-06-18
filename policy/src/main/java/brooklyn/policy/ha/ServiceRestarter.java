@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -76,7 +75,7 @@ public class ServiceRestarter extends AbstractPolicy {
 
     /** monitors this sensor, by default ENTITY_FAILED */
     @SetFromFlag("failureSensorToMonitor")
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public static final ConfigKey<Sensor<?>> FAILURE_SENSOR_TO_MONITOR = (ConfigKey) ConfigKeys.newConfigKey(Sensor.class, "failureSensorToMonitor", "", HASensors.ENTITY_FAILED); 
     
     protected final AtomicReference<Long> lastFailureTime = new AtomicReference<Long>();

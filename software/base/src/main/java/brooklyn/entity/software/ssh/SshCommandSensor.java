@@ -87,7 +87,7 @@ public final class SshCommandSensor<T> extends AddSensor<T> {
         Supplier<Map<String,String>> envSupplier = new Supplier<Map<String,String>>() {
             @Override
             public Map<String, String> get() {
-                return MutableMap.copyOf(Strings.toStringMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT)));
+                return MutableMap.copyOf(Strings.toStringMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT), ""));
             }
         };
 

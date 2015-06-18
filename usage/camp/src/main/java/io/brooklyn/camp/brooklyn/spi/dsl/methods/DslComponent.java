@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -39,6 +40,7 @@ import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -72,8 +74,8 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
     
     @Override
     public Task<Entity> newTask() {
-        return TaskBuilder.<Entity>builder().name("component("+componentId+")").body(
-            new EntityInScopeFinder(scopeComponent, scope, componentId)).build();
+        return TaskBuilder.<Entity>builder().name(toString()).tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
+            .body(new EntityInScopeFinder(scopeComponent, scope, componentId)).build();
     }
     
     protected static class EntityInScopeFinder implements Callable<Entity> {
@@ -197,7 +199,8 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
         }
         @Override
         public String toString() {
-            return component.toString()+"."+"attributeWhenReady("+sensorName+")";
+            return (component.scope==Scope.THIS ? "" : component.toString()+".") +
+                "attributeWhenReady("+JavaStringEscapes.wrapJavaString(sensorName)+")";
         }
     }
 
@@ -216,7 +219,7 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 
         @Override
         public Task<Object> newTask() {
-            return Tasks.builder().name("retrieving config for "+keyName).dynamic(false).body(new Callable<Object>() {
+            return Tasks.builder().name("retrieving config for "+keyName).tag(BrooklynTaskTags.TRANSIENT_TASK_TAG).dynamic(false).body(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
                     Entity targetEntity = component.get();
@@ -227,7 +230,8 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 
         @Override
         public String toString() {
-            return component.toString()+"."+"config("+keyName+")";
+            return (component.scope==Scope.THIS ? "" : component.toString()+".") + 
+                "config("+JavaStringEscapes.wrapJavaString(keyName)+")";
         }
     }
     
@@ -262,7 +266,8 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 
         @Override
         public String toString() {
-            return component.toString()+"."+"sensor("+sensorName+")";
+            return (component.scope==Scope.THIS ? "" : component.toString()+".") + 
+                "sensor("+JavaStringEscapes.wrapJavaString(sensorName)+")";
         }
     }
 
@@ -305,10 +310,10 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
 
     @Override
     public String toString() {
-        return "$brooklyn:component("+
-            (scopeComponent==null ? "" : scopeComponent+", ")+
-            (scope==Scope.GLOBAL ? "" : scope+", ")+
-            componentId+
+        return "$brooklyn:entity("+
+            (scopeComponent==null ? "" : JavaStringEscapes.wrapJavaString(scopeComponent.toString())+", ")+
+            (scope==Scope.GLOBAL ? "" : JavaStringEscapes.wrapJavaString(scope.toString())+", ")+
+            JavaStringEscapes.wrapJavaString(componentId)+
             ")";
     }
 

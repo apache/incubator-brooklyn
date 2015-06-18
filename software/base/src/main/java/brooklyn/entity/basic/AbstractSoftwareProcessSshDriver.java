@@ -314,7 +314,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
      * @see SoftwareProcess#SHELL_ENVIRONMENT
      */
     public Map<String, String> getShellEnvironment() {
-        return Strings.toStringMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT));
+        return Strings.toStringMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT), "");
     }
 
 

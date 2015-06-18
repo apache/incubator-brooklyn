@@ -430,7 +430,7 @@ public class TypeCoercions {
         try {
             return (T) wrappedType.getMethod("valueOf", String.class).invoke(null, value);
         } catch (Exception e) {
-            ClassCoercionException tothrow = new ClassCoercionException("Cannot coerce type String to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
+            ClassCoercionException tothrow = new ClassCoercionException("Cannot coerce "+JavaStringEscapes.wrapJavaString(value)+" to "+targetType.getCanonicalName()+" ("+value+"): adapting failed");
             tothrow.initCause(e);
             throw tothrow;
         }

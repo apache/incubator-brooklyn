@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
@@ -36,6 +37,7 @@ import brooklyn.management.TaskAdaptable;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Durations;
@@ -66,6 +68,7 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
     Boolean embedResolutionInTask;
     /** timeout on execution, if possible, or if embedResolutionInTask is true */
     Duration timeout;
+    boolean isTransientTask = true;
     
     T defaultValue = null;
     boolean returnDefaultOnGet = false;
@@ -170,6 +173,12 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
         return this;
     }
     
+    /** whether the task should be marked as transient; defaults true */
+    public ValueResolver<T> transientTask(boolean isTransientTask) {
+        this.isTransientTask = isTransientTask;
+        return this;
+    }
+    
     public Maybe<T> getDefault() {
         if (returnDefaultOnGet) return Maybe.of(defaultValue);
         else return Maybe.absent("No default value set");
@@ -213,12 +222,26 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
         return m.get();
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Maybe<T> getMaybe() {
+        Maybe<T> result = getMaybeInternal();
+        if (log.isTraceEnabled()) {
+            log.trace(this+" evaluated as "+result);
+        }
+        return result;
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected Maybe<T> getMaybeInternal() {
         if (started.getAndSet(true))
             throw new IllegalStateException("ValueResolver can only be used once");
         
         if (expired) return Maybe.absent("Nested resolution of "+getOriginalValue()+" did not complete within "+timeout);
+        
+        ExecutionContext exec = this.exec;
+        if (exec==null) {
+            // if execution context not specified, take it from the current task if present
+            exec = BasicExecutionContext.getCurrentExecutionContext();
+        }
         
         CountdownTimer timerU = parentTimer;
         if (timerU==null && timeout!=null)
@@ -240,7 +263,6 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
             if (v instanceof TaskAdaptable<?>) {
                 //if it's a task, we make sure it is submitted
                 if (!((TaskAdaptable<?>) v).asTask().isSubmitted() ) {
-                    // TODO could try to get exec context from Tasks.current() ... should we?
                     if (exec==null)
                         return Maybe.absent("Value for unsubmitted task '"+getDescription()+"' requested but no execution context available");
                     exec.submit(((TaskAdaptable<?>) v).asTask());
@@ -269,22 +291,24 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
 
             } else if (v instanceof DeferredSupplier<?>) {
                 final Object vf = v;
-                Callable<Object> callable = new Callable<Object>() {
-                    public Object call() throws Exception {
-                        try {
-                            Tasks.setBlockingDetails("Retrieving "+vf);
-                            return ((DeferredSupplier<?>) vf).get();
-                        } finally {
-                            Tasks.resetBlockingDetails();
-                        }
-                    } };
-                    
-                if (Boolean.TRUE.equals(embedResolutionInTask) || timeout!=null) {
+
+                if ((!Boolean.FALSE.equals(embedResolutionInTask) && (exec!=null || timeout!=null)) || Boolean.TRUE.equals(embedResolutionInTask)) {
                     if (exec==null)
                         return Maybe.absent("Embedding in task needed for '"+getDescription()+"' but no execution context available");
                         
+                    Callable<Object> callable = new Callable<Object>() {
+                        public Object call() throws Exception {
+                            try {
+                                Tasks.setBlockingDetails("Retrieving "+vf);
+                                return ((DeferredSupplier<?>) vf).get();
+                            } finally {
+                                Tasks.resetBlockingDetails();
+                            }
+                        } };
                     String description = getDescription();
-                    Task<Object> vt = exec.submit(Tasks.<Object>builder().body(callable).name("Resolving dependent value").description(description).build());
+                    TaskBuilder<Object> vb = Tasks.<Object>builder().body(callable).name("Resolving dependent value").description(description);
+                    if (isTransientTask) vb.tag(BrooklynTaskTags.TRANSIENT_TASK_TAG);
+                    Task<Object> vt = exec.submit(vb.build());
                     // TODO to handle immediate resolution, it would be nice to be able to submit 
                     // so it executes in the current thread,
                     // or put a marker in the target thread or task while it is running that the task 
@@ -296,8 +320,12 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
                     v = vm.get();
                     
                 } else {
-                    v = callable.call();
-                    
+                    try {
+                        Tasks.setBlockingDetails("Retrieving (non-task) "+vf);
+                        v = ((DeferredSupplier<?>) vf).get();
+                    } finally {
+                        Tasks.resetBlockingDetails();
+                    }
                 }
 
             } else if (v instanceof Map) {
@@ -369,5 +397,10 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
     protected Object getOriginalValue() {
         if (parentOriginalValue!=null) return parentOriginalValue;
         return value;
+    }
+    
+    @Override
+    public String toString() {
+        return JavaClassNames.cleanSimpleClassName(this)+"["+JavaClassNames.cleanSimpleClassName(type)+" "+value+"]";
     }
 }

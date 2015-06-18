@@ -18,15 +18,22 @@
  */
 package brooklyn.entity.software;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.AddSensor;
 import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
 
 public class StaticSensor<T> extends AddSensor<T> {
 
+    private static final Logger log = LoggerFactory.getLogger(StaticSensor.class);
+    
     public static final ConfigKey<Object> STATIC_VALUE = ConfigKeys.newConfigKey(Object.class, "static.value");
 
     private final Object value;
@@ -36,9 +43,17 @@ public class StaticSensor<T> extends AddSensor<T> {
         value = params.get(STATIC_VALUE);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void apply(EntityLocal entity) {
         super.apply(entity);
-        entity.setAttribute(sensor, (T) TypeCoercions.coerce(value, sensor.getType()));
+        
+        Maybe<T> v = Tasks.resolving(value).as((Class<T>)sensor.getType()).timeout(Duration.millis(200)).getMaybe();
+        if (v.isPresent()) {
+            log.debug(this+" setting sensor "+sensor+" to "+v.get());
+            entity.setAttribute(sensor, v.get());
+        } else {
+            log.debug(this+" not setting sensor "+sensor+"; cannot resolve "+value);
+        }
     }
 }

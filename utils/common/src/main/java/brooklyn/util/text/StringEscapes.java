@@ -24,6 +24,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,6 +207,12 @@ public class StringEscapes {
             }
             return out.toString();
         }
+        public static List<String> wrapJavaStrings(Iterable<String> values) {
+            if (values==null) return null;
+            List<String> result = MutableList.of();
+            for (String v: values) result.add(wrapJavaString(v));
+            return result;
+        }
 
         /** as {@link #unwrapJavaString(String)} if the given string is wrapped in double quotes;
          * otherwise just returns the given string */
@@ -215,13 +223,17 @@ public class StringEscapes {
 
         /** converts normal string to java escaped for double-quotes and wrapped in those double quotes */
         public static void wrapJavaString(String value, Appendable out) throws IOException {
-            out.append('"');
-            escapeJavaString(value, out);
-            out.append('"');
+            if (value==null) {
+                out.append("null");
+            } else {
+                out.append('"');
+                escapeJavaString(value, out);
+                out.append('"');
+            }
         }
 
         /** converts normal string to java escaped for double-quotes (but not wrapped in double quotes) */
-        public static void escapeJavaString(String value, Appendable out) throws IOException {
+        public static void escapeJavaString(@Nonnull String value, Appendable out) throws IOException {
             for (int i=0; i<value.length(); i++) {
                 char c = value.charAt(i);
                 if (c=='\\' || c=='"') {

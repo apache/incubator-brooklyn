@@ -18,6 +18,7 @@
  */
 package brooklyn.util.time;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +53,8 @@ public class Durations {
             return Maybe.of(t.get(timeout.toMilliseconds(), TimeUnit.MILLISECONDS));
         } catch (TimeoutException e) {
             return Maybe.absent("Task "+t+" did not complete within "+timeout);
+        } catch (CancellationException e) {
+            return Maybe.absent("Task "+t+" was cancelled");
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
