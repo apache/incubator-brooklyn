@@ -32,6 +32,7 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.Strings;
 
 public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshDriver implements VanillaSoftwareProcessDriver {
 
@@ -78,6 +79,15 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
                     throw new IllegalStateException("Error installing archive: " + downloadedFilename);
             }
         }
+        
+        String installCommand = getEntity().getConfig(VanillaSoftwareProcess.INSTALL_COMMAND);
+        
+        if (Strings.isNonBlank(installCommand)) {
+            newScript(INSTALLING)
+                .failOnNonZeroResultCode()
+                .body.append(installCommand)
+                .execute();
+        }
     }
 
     @Override
@@ -89,6 +99,17 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
                     .environmentVariablesReset()
                     .body.append(ArchiveUtils.extractCommands(downloadedFilename, getInstallDir()))
                     .execute();
+        }
+        
+        String customizeCommand = getEntity().getConfig(VanillaSoftwareProcess.CUSTOMIZE_COMMAND);
+        
+        if (Strings.isNonBlank(customizeCommand)) {
+            newScript(CUSTOMIZING)
+                .failOnNonZeroResultCode()
+                // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
+                .environmentVariablesReset()
+                .body.append(customizeCommand)
+                .execute();
         }
     }
 
