@@ -725,19 +725,6 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.5</version>
-                    <executions>
-                        <execution>
-                            <id>sign-artifacts</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>sign</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
                     <!-- 'release' is not used; easier just to checkout, tag, `mvn deploy` manually
                          with -Dbrooklyn.deployTo=TARGET ... and note we need to update docs and examples,
                          which is a non-maven task!) -->
@@ -1203,7 +1190,7 @@
                 <module>usage/all</module>
                 <module>usage/dist</module>
                 <module>usage/archetypes/quickstart</module>
-                <module>usage/downstream-parent</module>
+                <!--<module>usage/downstream-parent</module>-->
             </modules>
         </profile>
         <profile>
@@ -1819,6 +1806,22 @@
                 </snapshotRepository>
             </distributionManagement>
         </profile>
+	<profile>
+	  <id>foghorn</id>
+	  <activation> <property><name>brooklyn.deployTo</name><value>foghorn</value></property> </activation>
+            <distributionManagement>
+                <repository>
+                    <id>libs-release</id>
+          	    <name>libs-release</name>
+                    <url>http://artifactory.foghorn-systems.com:8080/artifactory/libs-release-local</url>
+                </repository>
+                <snapshotRepository>
+                    <id>libs-snapshot</id>
+                    <name>libs-snapshot</name>
+                    <url>http://artifactory.foghorn-systems.com:8080/artifactory/libs-snapshot-local</url>
+                </snapshotRepository>
+            </distributionManagement>
+	</profile>
         <profile>
             <id>sonatype-nexus-repo</id>
             <activation> <property><name>brooklyn.deployTo</name><value>sonatype</value></property> </activation>
