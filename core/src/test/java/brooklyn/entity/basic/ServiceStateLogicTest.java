@@ -167,14 +167,15 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         // won't propagate due to it's SERVICE_STATE_ACTUAL (null) being in IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES
         ServiceNotUpLogic.updateNotUpIndicator(entity, INDICATOR_KEY_1, "We're also pretending to block service up");
         assertAttributeEqualsEventually(entity, Attributes.SERVICE_UP, false);
-        assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
-        assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEqualsContinually(app, Attributes.SERVICE_UP, true);
+        assertAttributeEqualsContinually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         // the entity still has no opinion about its state
-        assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, null);
+        assertAttributeEqualsContinually(entity, Attributes.SERVICE_STATE_ACTUAL, null);
         
         // switching the entity state to one not in IGNORE_ENTITIES_WITH_THESE_SERVICE_STATES will propagate the up state
         ServiceStateLogic.setExpectedState(entity, Lifecycle.RUNNING);
-        assertAttributeEqualsEventually(entity, Attributes.SERVICE_UP, false);
+        assertAttributeEqualsContinually(entity, Attributes.SERVICE_UP, false);
+        assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, false);
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
 
@@ -182,17 +183,18 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         // if the entity expects to be stopped, it will report stopped
         ServiceStateLogic.setExpectedState(entity, Lifecycle.STOPPED);
         assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
-        // and now so does the app 
-        assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
+        // and the app will ignore the entity state, so becomes running
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
         
         // if we clear the not-up indicator, both the entity and the app report service up (with the entity first)
         ServiceNotUpLogic.clearNotUpIndicator(entity, INDICATOR_KEY_1);
-        assertAttributeEqualsEventually(app, Attributes.SERVICE_UP, true);
-        assertAttributeEquals(entity, Attributes.SERVICE_UP, true);
+        assertAttributeEqualsEventually(entity, Attributes.SERVICE_UP, true);
         // but entity is still stopped because that is what is expected there, and that's okay even if service is apparently up
-        assertAttributeEquals(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
+        assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
         // the app however is running, because the default state quorum check is "all are healthy"
-        assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEqualsContinually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEqualsContinually(app, Attributes.SERVICE_UP, true);
         
         // if we change the state quorum check for the app to be "all are healthy and at least one running" *then* it shows stopped
         // (normally this would be done in `initEnrichers` of course)

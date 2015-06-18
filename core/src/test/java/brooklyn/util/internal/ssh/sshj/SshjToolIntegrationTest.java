@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import net.schmizz.sshj.connection.channel.direct.Session;
 
@@ -236,18 +237,24 @@ public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
 
     @Test(groups = {"Integration"})
     public void testAsyncExecAbortsIfProcessFails() throws Exception {
+        final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
         Thread thread = new Thread(new Runnable() {
+            @Override
             public void run() {
-                Stopwatch stopwatch = Stopwatch.createStarted();
-                int exitStatus = tool.execScript(
-                    ImmutableMap.of(SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_EXEC_TIMEOUT.getName(), Duration.millis(1)), 
-                    ImmutableList.of("sleep 63"), 
-                    ImmutableMap.<String,String>of());
-                
-                assertEquals(exitStatus, 1);
-                
-                long seconds = stopwatch.elapsed(TimeUnit.SECONDS);
-                assertTrue(seconds < 30, "exec took "+seconds+" seconds");
+                try {
+                    Stopwatch stopwatch = Stopwatch.createStarted();
+                    int exitStatus = tool.execScript(
+                        ImmutableMap.of(SshjTool.PROP_EXEC_ASYNC.getName(), true, SshjTool.PROP_EXEC_TIMEOUT.getName(), Duration.millis(1)), 
+                        ImmutableList.of("sleep 63"), 
+                        ImmutableMap.<String,String>of());
+                    
+                    assertEquals(exitStatus, 143 /* 128 + Signal number (SIGTERM) */);
+                    
+                    long seconds = stopwatch.elapsed(TimeUnit.SECONDS);
+                    assertTrue(seconds < 30, "exec took "+seconds+" seconds");
+                } catch (Throwable t) {
+                    error.set(t);
+                }
             }});
         
         boolean origFeatureEnablement = BrooklynFeatureEnablement.enable(BrooklynFeatureEnablement.FEATURE_SSH_ASYNC_EXEC);
@@ -255,6 +262,7 @@ public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
             thread.start();
             
             Asserts.succeedsEventually(new Runnable() {
+                @Override
                 public void run() {
                     int exitStatus = tool.execCommands(ImmutableMap.<String,Object>of(), ImmutableList.of("ps aux| grep \"sleep 63\" | grep -v grep"));
                     assertEquals(exitStatus, 0);
@@ -264,6 +272,9 @@ public class SshjToolIntegrationTest extends SshToolAbstractIntegrationTest {
             
             thread.join(30*1000);
             assertFalse(thread.isAlive());
+            if (error.get() != null) {
+                throw Exceptions.propagate(error.get());
+            }
         } finally {
             thread.interrupt();
             BrooklynFeatureEnablement.setEnablement(BrooklynFeatureEnablement.FEATURE_SSH_ASYNC_EXEC, origFeatureEnablement);

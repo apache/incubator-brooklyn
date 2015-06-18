@@ -63,7 +63,14 @@ public class SshMachineLocationIntegrationTest {
         mgmt = null;
     }
 
-    // Note: requires `named:localhost-passphrase` set up with a key whose passphrase is "localhost"    
+    // Note: requires `named:localhost-passphrase` set up with a key whose passphrase is "localhost"
+    // * create the key with:
+    //      ssh-keygen -t rsa -N "brooklyn" -f ~/.ssh/id_rsa_passphrase
+    //      ssh-copy-id localhost
+    // * create brooklyn.properties, containing:
+    //      brooklyn.location.named.localhost-passphrase=localhost
+    //      brooklyn.location.named.localhost-passphrase.privateKeyFile=~/.ssh/id_rsa_passphrase
+    //      brooklyn.location.named.localhost-passphrase.privateKeyPassphrase=brooklyn
     @Test(groups = "Integration")
     public void testExtractingConnectablePassphraselessKey() throws Exception {
         LocalhostMachineProvisioningLocation lhp = (LocalhostMachineProvisioningLocation) mgmt.getLocationRegistry().resolve("named:localhost-passphrase", true, null).orNull();

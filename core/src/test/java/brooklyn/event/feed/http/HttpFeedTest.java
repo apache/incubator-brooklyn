@@ -300,24 +300,11 @@ public class HttpFeedTest extends BrooklynAppUnitTestSupport {
     }
 
 
-    @Test(groups="Integration")
-    /** marked as integration so it doesn't fail the plain build in environments
-     * with dodgy DNS (ie where "unresolvable_hostname_or_one_with_no_webserver_on_port_80" resolves as a host run by the provider)
-     * <p>
-     * (a surprising number of ISP's do this,
-     * happily serving adverts for your ISP, yielding "success" here,
-     * or timing out, giving null here)
-     * <p>
-     * if you want to make this test work, you can e.g. set it to loopback IP assuming you don't have any servers on port 80,
-     * with the following in /etc/hosts
-     * <p>  
-     * 127.0.0.1  unresolvable_hostname_or_one_with_no_webserver_on_port_80
-    // or some other IP which won't resolve
-     */
+    @Test
     public void testPollsAndParsesHttpErrorResponseWild() throws Exception {
         feed = HttpFeed.builder()
                 .entity(entity)
-                .baseUri("http://unresolvable_hostname_or_one_with_no_webserver_on_port_80")
+                .baseUri("http://0.0.0.0")
                 .poll(HttpPollConfig.forSensor(SENSOR_STRING)
                         .onSuccess(Functions.constant("success"))
                         .onFailure(Functions.constant("failure"))

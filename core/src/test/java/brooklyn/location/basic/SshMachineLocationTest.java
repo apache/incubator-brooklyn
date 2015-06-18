@@ -275,6 +275,8 @@ public class SshMachineLocationTest {
     
     // Note: on some (home/airport) networks, `ssh 123.123.123.123` hangs seemingly forever.
     // Make sure we fail, waiting for longer than the 70 second TCP timeout.
+    //
+    // Times out in 2m7s on Ubuntu Vivid (syn retries set to 6)
     @Test(groups = "Integration")
     public void testIsSshableWhenFalse() throws Exception {
         byte[] unreachableIp = new byte[] {123,123,123,123};
@@ -283,7 +285,7 @@ public class SshMachineLocationTest {
             public void run() {
                 assertFalse(unreachableHost.isSshable());
             }},
-            Duration.TWO_MINUTES);
+            Duration.minutes(3));
     }
     
     @Test

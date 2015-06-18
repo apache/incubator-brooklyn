@@ -35,9 +35,9 @@ import java.io.PipedOutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.KeyPair;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,12 +76,10 @@ import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.KeyTransformingLoadingCache.KeyTransformingSameTypeLoadingCache;
-import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.internal.ssh.SshException;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
-import brooklyn.util.javalang.StackTraceSimplifier;
 import brooklyn.util.mutex.MutexSupport;
 import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.net.Urls;
@@ -133,6 +131,9 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
     /** @deprecated since 0.7.0 shouldn't be public */
     public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
+    
+    // Use a sane timeout when doing a connectivity test
+    private static final int SSHABLE_CONNECT_TIMEOUT = (int)Duration.minutes(2).toMilliseconds();
 
     public static final ConfigKey<Duration> SSH_CACHE_EXPIRY_DURATION = ConfigKeys.newConfigKey(Duration.class,
             "sshCacheExpiryDuration", "Expiry time for unused cached ssh connections", Duration.FIVE_MINUTES);
@@ -876,7 +877,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         String cmd = "date";
         try {
             try {
-                Socket s = new Socket(getAddress(), getPort());
+                Socket s = new Socket();
+                s.connect(new InetSocketAddress(getAddress(), getPort()), SSHABLE_CONNECT_TIMEOUT);
                 s.close();
             } catch (IOException e) {
                 if (LOG.isDebugEnabled()) LOG.debug(""+this+" not [yet] reachable (socket "+getAddress()+":"+getPort()+"): "+e);

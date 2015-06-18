@@ -296,9 +296,10 @@ public abstract class ShellAbstractTool implements ShellTool {
          * The executed command will return immediately, but the output from the script
          * will continue to be written 
          * note that some modes require \$RESULT passed in order to access a variable, whereas most just need $ */
+        @Override
         protected List<String> buildRunScriptCommand() {
             String touchCmd = String.format("touch %s %s %s %s", stdoutPath, stderrPath, exitStatusPath, pidPath);
-            String cmd = String.format("( %s > %s 2> %s < /dev/null ; echo $? > %s ) & disown", scriptPath, stdoutPath, stderrPath, exitStatusPath);
+            String cmd = String.format("nohup sh -c \"( %s > %s 2> %s < /dev/null ) ; echo \\$? > %s \" > /dev/null 2>&1 < /dev/null &", scriptPath, stdoutPath, stderrPath, exitStatusPath);
             MutableList.Builder<String> cmds = MutableList.<String>builder()
                     .add(runAsRoot ? BashCommands.sudo(touchCmd) : touchCmd)
                     .add(runAsRoot ? BashCommands.sudo(cmd) : cmd)
@@ -352,8 +353,8 @@ public abstract class ShellAbstractTool implements ShellTool {
          */
         protected List<String> buildRetrieveStdoutAndStderrCommand(int stdoutPosition, int stderrPosition) {
             // Note that `tail -c +1` means start at the *first* character (i.e. start counting from 1, not 0)
-            String catStdoutCmd = "tail -c +"+(stdoutPosition+1)+" "+stdoutPath;
-            String catStderrCmd = "tail -c +"+(stderrPosition+1)+" "+stderrPath+" 1>&2";
+            String catStdoutCmd = "tail -c +"+(stdoutPosition+1)+" "+stdoutPath+" 2> /dev/null";
+            String catStderrCmd = "tail -c +"+(stderrPosition+1)+" "+stderrPath+" 2>&1 > /dev/null";
             MutableList.Builder<String> cmds = MutableList.<String>builder()
                     .add((runAsRoot ? BashCommands.sudo(catStdoutCmd) : catStdoutCmd))
                     .add((runAsRoot ? BashCommands.sudo(catStderrCmd) : catStderrCmd))
@@ -371,9 +372,12 @@ public abstract class ShellAbstractTool implements ShellTool {
             
             // Note that `tail -c +1` means start at the *first* character (i.e. start counting from 1, not 0)
             List<String> waitForExitStatusParts = ImmutableList.of(
+                    //Should be careful here because any output will be part of the stdout/stderr streams
                     "# Long poll", // comment is to aid testing - see SshjToolAsyncStubIntegrationTest
-                    "tail -c +"+(stdoutPosition+1)+" -f "+stdoutPath+" & export TAIL_STDOUT_PID=$!",
-                    "tail -c +"+(stderrPosition+1)+" -f "+stderrPath+" 1>&2 & export TAIL_STDERR_PID=$!",
+                    // disown to avoid Terminated message after killing the process
+                    // redirect error output to avoid "file truncated" messages
+                    "tail -c +"+(stdoutPosition+1)+" -f "+stdoutPath+" 2> /dev/null & export TAIL_STDOUT_PID=$!; disown",
+                    "tail -c +"+(stderrPosition+1)+" -f "+stderrPath+" 1>&2 2> /dev/null & export TAIL_STDERR_PID=$!; disown",
                     "EXIT_STATUS_PATH="+exitStatusPath,
                     "PID_PATH="+pidPath,
                     "MAX_TIME="+maxTime,
@@ -381,19 +385,20 @@ public abstract class ShellAbstractTool implements ShellTool {
                     "while [ \"$COUNTER\" -lt $MAX_TIME ]; do",
                     "    if test -s $EXIT_STATUS_PATH; then",
                     "        EXIT_STATUS=`cat $EXIT_STATUS_PATH`",
+                    "        kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID} 2> /dev/null",
                     "        exit $EXIT_STATUS",
                     "    elif test -s $PID_PATH; then",
                     "        PID=`cat $PID_PATH`",
-                    "        if ! ps -p $PID > /dev/null < /dev/null; then",
+                    "        if ! ps -p $PID > /dev/null 2>&1 < /dev/null; then",
                     "            # no exit status, and not executing; give a few seconds grace in case just about to write exit status",
                     "            sleep 3",
                     "            if test -s $EXIT_STATUS_PATH; then",
                     "                EXIT_STATUS=`cat $EXIT_STATUS_PATH`",
-                    "                kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID}",
+                    "                kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID} 2> /dev/null",
                     "                exit $EXIT_STATUS",
                     "            else",
                     "                echo \"No exit status in $EXIT_STATUS_PATH, and pid in $PID_PATH ($PID) not executing\"",
-                    "                kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID}",
+                    "                kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID} 2> /dev/null",
                     "                exit 126",
                     "            fi",
                     "        fi",
@@ -402,7 +407,7 @@ public abstract class ShellAbstractTool implements ShellTool {
                     "    sleep 1",
                     "    COUNTER+=1",
                     "done",
-                    "kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID}",
+                    "kill ${TAIL_STDERR_PID} ${TAIL_STDOUT_PID} 2> /dev/null",
                     "exit 125"+"\n");
             String waitForExitStatus = Joiner.on("\n").join(waitForExitStatusParts);
 
@@ -422,14 +427,16 @@ public abstract class ShellAbstractTool implements ShellTool {
             // If the buildLongPollCommand didn't complete properly then it might have left tail command running;
             // ensure they are killed.
             cmdParts.add(
-                    "ps aux | grep \"tail -c\" | grep \""+stdoutPath+"\" | grep -v grep | awk '{ printf $2 }' | xargs kill",
-                    "ps aux | grep \"tail -c\" | grep \""+stderrPath+"\" | grep -v grep | awk '{ printf $2 }' | xargs kill");
+                    //ignore error output for the case where there are no running processes and kill is called without arguments
+                    "ps aux | grep \"tail -c\" | grep \""+stdoutPath+"\" | grep -v grep | awk '{ printf $2 }' | xargs kill 2> /dev/null",
+                    "ps aux | grep \"tail -c\" | grep \""+stderrPath+"\" | grep -v grep | awk '{ printf $2 }' | xargs kill 2> /dev/null");
 
             String cmd = Joiner.on("\n").join(cmdParts.build());
             
             return ImmutableList.of(runAsRoot ? BashCommands.sudo(cmd) : cmd);
         }
 
+        @Override
         public abstract int run();
     }
 }
