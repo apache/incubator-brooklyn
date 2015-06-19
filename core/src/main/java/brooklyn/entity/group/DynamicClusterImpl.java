@@ -860,7 +860,12 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     protected void discardNode(Entity entity) {
         removeMember(entity);
-        Entities.unmanage(entity);
+        try {
+            Entities.unmanage(entity);
+        } catch (IllegalStateException e) {
+            //probably already unmanaged
+            LOG.debug("Exception during removing member of cluster " + this + ", unmanaging node " + entity + ". The node is probably already unmanaged.", e);
+        }
     }
 
     protected void stopAndRemoveNode(Entity member) {

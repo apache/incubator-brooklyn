@@ -26,6 +26,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +44,7 @@ import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableSet;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.internal.ssh.cli.SshCliTool;
 import brooklyn.util.internal.ssh.sshj.SshjTool;
@@ -52,8 +54,9 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
-class StartStopSshDriverTest {
+public class StartStopSshDriverTest {
 
     public class BasicStartStopSshDriver extends AbstractSoftwareProcessSshDriver {
         public BasicStartStopSshDriver(EntityLocal entity, SshMachineLocation machine) {
@@ -113,10 +116,10 @@ class StartStopSshDriverTest {
             @Override
             public void run() {
               List<ThreadInfo> currentThreads = getThreadsCalling(StreamGobbler.class);
-              List<Long> currentThreadIds = getThreadId(currentThreads);
+              Collection<Long> currentThreadIds = MutableSet.copyOf(getThreadId(currentThreads));
 
               currentThreadIds.removeAll(existingThreadIds);
-              assertEquals(currentThreadIds, ImmutableList.<Long>of());
+              assertEquals(currentThreadIds, ImmutableSet.<Long>of());
             }
         });
     }

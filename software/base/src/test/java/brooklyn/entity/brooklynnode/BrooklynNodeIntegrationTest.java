@@ -47,6 +47,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
@@ -507,10 +508,16 @@ services:
         assertTrue(Entities.isManaged(brooklynNode));
         assertFalse(isPidRunning(pidFile), "pid in "+pidFile+" still running");
         
+        // Clear the startup app so it's not started second time, in addition to the rebind state
+        // TODO remove this once the startup app is created only if no previous persistence state
+        brooklynNode.config().set(BrooklynNode.APP, (String)null);
+        ((EntityLocal)brooklynNode).setAttribute(BrooklynNode.APP, null);
+        
         // Restart the process; expect persisted state to have been restored, so apps still known about
         brooklynNode.invoke(BrooklynNode.RESTART, ImmutableMap.<String, Object>of(
                 BrooklynNode.RestartSoftwareParameters.RESTART_MACHINE.getName(), "false")).getUnchecked();
 
+        waitForApps(webConsoleUri.toString());
         String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
         List<String> appType = parseJsonList(apps, ImmutableList.of("spec", "type"), String.class);
         assertEquals(appType, ImmutableList.of(BasicApplication.class.getName()));
