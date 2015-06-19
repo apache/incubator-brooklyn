@@ -208,6 +208,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     private static final Pattern LIST_PATTERN = Pattern.compile("^\\[(.*)\\]$");
     private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d*$");
 
+    private static final int NOTES_MAX_LENGTH = 1000;
+
     private final AtomicBoolean loggedSshKeysHint = new AtomicBoolean(false);
     private final AtomicBoolean listedAvailableTemplatesOnNoSuchTemplate = new AtomicBoolean(false);
 
@@ -1296,7 +1298,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 // NB: things like brooklyn.local are disallowed
                 slT.domainName("local.brooklyncentral.org");
             }
-            // convert user metadata to tags because user metadata is otherwise ignored
+            // convert user metadata to tags and notes because user metadata is otherwise ignored
             Map<String, String> md = slT.getUserMetadata();
             if (md!=null && !md.isEmpty()) {
                 Set<String> tags = MutableSet.copyOf(slT.getTags());
@@ -1304,8 +1306,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     tags.add(AbstractCloudMachineNamer.sanitize(entry.getKey())+":"+AbstractCloudMachineNamer.sanitize(entry.getValue()));
                 }
                 slT.tags(tags);
+
+                if (!md.containsKey("notes")) {
+                    String notes = "User Metadata\n=============\n\n  * " + Joiner.on("\n  * ").withKeyValueSeparator(": ").join(md);
+                    if (notes.length() > NOTES_MAX_LENGTH) {
+                        String truncatedMsg = "...\n<truncated - notes total length is " + notes.length() + " characters>";
+                        notes = notes.substring(0, NOTES_MAX_LENGTH - truncatedMsg.length()) + truncatedMsg;
+                    }
+                    md.put("notes", notes);
+                }
             }
-            // TODO put user metadata and tags into notes, when jclouds exposes notes, because metadata not exposed via web portal 
         }
     }
 
