@@ -16,23 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.enricher;
+package brooklyn.enricher.basic;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
-import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
-import com.google.common.base.Preconditions;
+import com.google.common.base.Function;
 
 /**
  * Transforms {@link Sensor} data into a rolling average based on a time window.
@@ -57,11 +52,12 @@ import com.google.common.base.Preconditions;
  * <p>
  * The default average when no data has been received is 0, with a confidence of 0
  */
-//@Catalog(name="Rolling Mean in Time Window", description="Transforms a sensor's data into a rolling average "
-//        + "based on a time window.")
-public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTypeTransformingEnricher<T,Double> {
+public class YamlRollingTimeWindowMeanEnricher<T extends Number> extends AbstractTransformer<T,Double> {
     
-    public static ConfigKey<Double> CONFIDENCE_REQUIRED_TO_PUBLISH = ConfigKeys.newDoubleConfigKey("confidenceRequired",
+    public static ConfigKey<Duration> WINDOW_DURATION = ConfigKeys.newConfigKey(Duration.class, "enricher.window.duration",
+        "Duration for which this window should store data, default one minute", Duration.ONE_MINUTE);
+
+    public static ConfigKey<Double> CONFIDENCE_REQUIRED_TO_PUBLISH = ConfigKeys.newDoubleConfigKey("enricher.window.confidenceRequired",
         "Minimum confidence level (ie period covered) required to publish a rolling average", 0.8d);
 
     public static class ConfidenceQualifiedNumber {
@@ -84,58 +80,32 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
     private final LinkedList<Long> timestamps = new LinkedList<Long>();
     volatile ConfidenceQualifiedNumber lastAverage = new ConfidenceQualifiedNumber(0d,0d);
     
-    @SetFromFlag
-    Duration timePeriod;
-
-    public RollingTimeWindowMeanEnricher() { // for rebinding
-    }
-
-    public RollingTimeWindowMeanEnricher(Entity producer, AttributeSensor<T> source, 
-        AttributeSensor<Double> target, Duration timePeriod) {
-        super(producer, source, target);
-        this.timePeriod = Preconditions.checkNotNull(timePeriod, "timePeriod");
-        
-        if (source!=null && target!=null)
-            this.uniqueTag = JavaClassNames.simpleClassName(getClass())+":"+source.getName()+"/"+timePeriod+"->"+target.getName();
-    }
-
-    /** @deprecated since 0.6.0 use Duration parameter rather than long with millis */
-    public RollingTimeWindowMeanEnricher(Entity producer, AttributeSensor<T> source, 
-            AttributeSensor<Double> target, long timePeriod) {
-        this(producer, source, target, Duration.millis(timePeriod));
-    }
-
-
     @Override
-    public void onEvent(SensorEvent<T> event) {
-        onEvent(event, event.getTimestamp());
-    }
-    
-    public void onEvent(SensorEvent<T> event, long eventTime) {
-        values.addLast(event.getValue());
-        timestamps.addLast(eventTime);
-        if (eventTime>0) {
-            ConfidenceQualifiedNumber average = getAverage(eventTime, 0);
+    protected Function<SensorEvent<T>, Double> getTransformation() {
+        return new Function<SensorEvent<T>, Double>() {
+            @Override
+            public Double apply(SensorEvent<T> event) {
+                long eventTime = event.getTimestamp();
+                if (event.getValue()==null) {
+                    return null;
+                }
+                values.addLast(event.getValue());
+                timestamps.addLast(eventTime);
+                if (eventTime>0) {
+                    ConfidenceQualifiedNumber average = getAverage(eventTime, 0);
 
-            if (average.confidence > getConfig(CONFIDENCE_REQUIRED_TO_PUBLISH)) { 
-                // without confidence, we might publish wildly varying estimates,
-                // causing spurious resizes, so allow it to be configured, and
-                // by default require a high value
+                    if (average.confidence > getConfig(CONFIDENCE_REQUIRED_TO_PUBLISH)) { 
+                        // without confidence, we might publish wildly varying estimates,
+                        // causing spurious resizes, so allow it to be configured, and
+                        // by default require a high value
 
-                // TODO would be nice to include timestamp, etc
-                entity.setAttribute((AttributeSensor<Double>)target, average.value); 
+                        // TODO would be nice to include timestamp, etc
+                        return average.value; 
+                    }
+                }
+                return null;
             }
-        }
-    }
-    
-    @Deprecated /** @deprecated since 0.7.0; not used except in groovy tests; use the 2-arg method */
-    public ConfidenceQualifiedNumber getAverage() {
-        return getAverage(System.currentTimeMillis(), 0);
-    }
-    
-    @Deprecated /** @deprecated since 0.7.0; not used except in groovy tests; use the 2-arg method */
-    public ConfidenceQualifiedNumber getAverage(long fromTimeExact) {
-        return getAverage(fromTimeExact, 0);
+        };
     }
     
     public ConfidenceQualifiedNumber getAverage(long fromTime, long graceAllowed) {
@@ -164,6 +134,7 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
         }
         pruneValues(now);
         
+        Duration timePeriod = getConfig(WINDOW_DURATION);
         long windowStart = Math.max(now-timePeriod.toMilliseconds(), firstTimestamp);
         long windowEnd = Math.max(now-timePeriod.toMilliseconds(), lastTimestamp);
         Double confidence = ((double)(windowEnd - windowStart)) / timePeriod.toMilliseconds();
@@ -197,7 +168,8 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
      * Discards out-of-date values, but keeps at least one value.
      */
     private void pruneValues(long now) {
-        // keep one value from before the period, so that we can tell the window's start time 
+        // keep one value from before the period, so that we can tell the window's start time
+        Duration timePeriod = getConfig(WINDOW_DURATION);
         while(timestamps.size() > 1 && timestamps.get(1) < (now - timePeriod.toMilliseconds())) {
             timestamps.removeFirst();
             values.removeFirst();

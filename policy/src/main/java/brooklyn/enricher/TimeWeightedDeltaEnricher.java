@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
+import brooklyn.enricher.basic.YamlTimeWeightedDeltaEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
@@ -41,6 +42,8 @@ import com.google.common.base.Functions;
  * presented as a units/timeUnit based on the event timing.
  * <p>
  * NB for time (e.g. "total milliseconds consumed") use {@link TimeFractionDeltaEnricher}
+ * <p>
+ * See also {@link YamlTimeWeightedDeltaEnricher} designed for use from YAML.
  */
 //@Catalog(name="Time-weighted Delta", description="Converts an absolute sensor into a delta sensor "
 //        + "(i.e. the diff between the current and previous value), presented as a units/timeUnit "
