@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 
@@ -34,6 +35,7 @@ public class HostGeoLookupIntegrationTest {
 
     public static final Logger log = LoggerFactory.getLogger(HostGeoLookupIntegrationTest.class);
     
+    // Needs fast network connectivity to figure out the external IP. If response not returned in 2s fails.
     @Test(groups = "Integration")
     public void testLocalhostGetsLocation() throws Exception {
         LocalhostMachineProvisioningLocation ll = new LocalhostMachineProvisioningLocation();
@@ -58,7 +60,9 @@ public class HostGeoLookupIntegrationTest {
 
     @Test(groups = "Integration")
     public void testUtraceLookup() throws Exception {
-        HostGeoInfo geo = new UtraceHostGeoLookup().getHostGeoInfo(InetAddress.getByName("utrace.de"));
+        // The test times out in a VM - VirtualBox + Ubuntu Vivid, possibly due to proxy usage?
+        // Increase the timeout so we can actually test it's working correctly, regardless of test environment.
+        HostGeoInfo geo = new UtraceHostGeoLookup().getHostGeoInfo(InetAddress.getByName("utrace.de"), Duration.THIRTY_SECONDS);
         Assert.assertNotNull(geo, "host lookup unavailable - maybe network not available ");
         Assert.assertTrue(geo.displayName.contains("(DE)"));
         Assert.assertEquals(geo.latitude, 51, 2);

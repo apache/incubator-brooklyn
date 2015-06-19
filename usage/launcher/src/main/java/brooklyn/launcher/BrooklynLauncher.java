@@ -623,6 +623,7 @@ public class BrooklynLauncher {
         // Allow the startup to be visible in console for newly created apps.
         ((LocalManagementContext)managementContext).noteStartupComplete();
 
+        // TODO create apps only after becoming master, analogously to catalog initialization
         try {
             createApps();
             startApps();

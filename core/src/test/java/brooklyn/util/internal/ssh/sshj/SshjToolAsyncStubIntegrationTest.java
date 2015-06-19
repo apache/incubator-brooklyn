@@ -117,7 +117,7 @@ public class SshjToolAsyncStubIntegrationTest {
     @Test(groups="Integration")
     public void testPolls() throws Exception {
         sequence = ImmutableList.of(
-                new InjectedResult(containsCmd("& disown"), returning(0, "", "")),
+                new InjectedResult(containsCmd("nohup"), returning(0, "", "")),
                 new InjectedResult(containsCmd("# Long poll"), returning(0, "mystringToStdout", "mystringToStderr")));
 
         runTest(0, "mystringToStdout", "mystringToStderr");
@@ -127,7 +127,7 @@ public class SshjToolAsyncStubIntegrationTest {
     @Test(groups="Integration")
     public void testPollsAndReturnsNonZeroExitCode() throws Exception {
         sequence = ImmutableList.of(
-                new InjectedResult(containsCmd("& disown"), returning(0, "", "")),
+                new InjectedResult(containsCmd("nohup"), returning(0, "", "")),
                 new InjectedResult(containsCmd("# Long poll"), returning(123, "mystringToStdout", "mystringToStderr")),
                 new InjectedResult(containsCmd("# Retrieve status"), returning(0, "123", "")));
 
@@ -138,7 +138,7 @@ public class SshjToolAsyncStubIntegrationTest {
     @Test(groups="Integration")
     public void testPollsRepeatedly() throws Exception {
         sequence = ImmutableList.of(
-                new InjectedResult(containsCmd("& disown"), returning(0, "", "")),
+                new InjectedResult(containsCmd("nohup"), returning(0, "", "")),
                 new InjectedResult(containsCmd("# Long poll"), returning(125, "mystringToStdout", "mystringToStderr")),
                 new InjectedResult(containsCmd("# Retrieve status"), returning(0, "", "")),
                 new InjectedResult(containsCmd("# Long poll"), returning(125, "mystringToStdout2", "mystringToStderr2")),

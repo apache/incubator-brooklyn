@@ -20,6 +20,8 @@ package brooklyn.entity.rebind.persister;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -104,6 +106,19 @@ public class XmlMementoSerializerTest {
     public void testLinkedList() throws Exception {
         List<String> obj = new LinkedList<String>();
         obj.add("123");
+        assertSerializeAndDeserialize(obj);
+    }
+
+    @Test
+    public void testArraysAsList() throws Exception {
+        // For some reason Arrays.asList used in the catalog's libraries can't be deserialized correctly,
+        // but here works perfectly - the generated catalog xml contains
+        //    <libraries class="list">
+        //      <a ...>
+        //        <bundle....>
+        // which is deserialized as an ArrayList with a single member array of bundles.
+        // The cause is the class="list" type which should be java.util.Arrays$ArrayList instead.
+        Collection<String> obj = Arrays.asList("a", "b");
         assertSerializeAndDeserialize(obj);
     }
 
