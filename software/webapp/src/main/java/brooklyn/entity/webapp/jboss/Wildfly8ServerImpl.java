@@ -18,11 +18,14 @@
  */
 package brooklyn.entity.webapp.jboss;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.Enrichers;
+import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
@@ -42,6 +45,14 @@ public class Wildfly8ServerImpl extends JavaWebAppSoftwareProcessImpl implements
 
     public Wildfly8ServerImpl(){
         super();
+    }
+    
+    public Wildfly8ServerImpl(@SuppressWarnings("rawtypes") Map flags) {
+        this(flags, null);
+    }
+
+    public Wildfly8ServerImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
+        super(flags, parent);
     }
 
     @Override
