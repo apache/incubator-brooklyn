@@ -42,6 +42,9 @@ import brooklyn.entity.proxying.ImplementedBy;
  * </pre>
  * You can supply both {@link #DOWNLOAD_URL} and {@link #LAUNCH_COMMAND} configuration as well..
  * <p>
+ * In addition, you can supply an {@link #INSTALL_COMMAND} and / or a {@link #CUSTOMIZE_COMMAND} to reduce the complexity
+ * of the {@link #LAUNCH_COMMAND}, and to avoid repeating actions that are unnecessary in subsequent launches.
+ * <p>
  * By default the PID is used to stop the process using {@code kill} followed by {@code kill -9} if needed and restart
  * is implemented by stopping the process and then running {@link VanillaSoftwareProcessSshDriver#launch()}, but it is
  * possible to override this behavior through config keys:
