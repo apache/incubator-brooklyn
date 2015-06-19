@@ -64,7 +64,7 @@ public interface Wildfly8Server extends JavaWebAppSoftwareProcess, HasShortName 
             new PortAttributeSensorAndConfigKey("webapp.jboss.managementNativePort", "Management native port", "10999+");
 
     /**
-     * Port increments are the standard way to run multiple instances of AS7 on the same machine.
+     * Port increments are the standard way to run multiple instances of Wildfly on the same machine.
      */
     @SetFromFlag("portIncrement")
     ConfigKey<Integer> PORT_INCREMENT =

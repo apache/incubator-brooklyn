@@ -38,12 +38,12 @@ public class JBoss6ServerAwsEc2LiveTest extends JBossServerAwsEc2LiveTest {
     public void test_CentOS_6_3() throws Exception {
         super.test_CentOS_6_3();
     }
-
+    
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
-
-	@Override
-	protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-		return JBoss6Server.class;
-	}
+    
+    @Override
+    protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
+    	return JBoss6Server.class;
+    }
 }

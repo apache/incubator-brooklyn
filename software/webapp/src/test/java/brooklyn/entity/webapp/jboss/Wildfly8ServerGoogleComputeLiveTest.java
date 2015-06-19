@@ -38,12 +38,12 @@ public class Wildfly8ServerGoogleComputeLiveTest extends JBossServerGoogleComput
     public void test_DefaultImage() throws Exception {
         super.test_DefaultImage();
     }
-
+    
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods
     
-	@Override
-	protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-		return Wildfly8Server.class;
-	}
+    @Override
+    protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
+    	return Wildfly8Server.class;
+    }
 }

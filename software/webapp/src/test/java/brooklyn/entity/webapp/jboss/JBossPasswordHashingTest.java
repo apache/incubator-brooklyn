@@ -38,17 +38,17 @@ public class JBossPasswordHashingTest {
         		JavaWebAppSshDriver.hashPassword("test", "123", "ManagementRealm"),
                 "090d846d31185e54a5e8811a2ccb43ee");
     }
-
+    
     @Test
     public void testPasswordForApplicationRealm() {
         assertEquals(
         		JavaWebAppSshDriver.hashPassword("username", "password", "ApplicationRealm"),
                 "888a0504c559a34b1c3e919dcec6d941");
         assertEquals(
-        		JavaWebAppSshDriver.hashPassword("test", "321", "ApplicationRealm"),
+    		JavaWebAppSshDriver.hashPassword("test", "321", "ApplicationRealm"),
                 "a0fdaa45e2d509ac2d390ff6820e2a10");
     }
-
+    
     @Test
     public void testPasswordForCustomRealm() {
         assertEquals(

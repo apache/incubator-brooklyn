@@ -38,12 +38,12 @@ public class JBoss7ServerGoogleComputeLiveTest extends JBossServerGoogleComputeL
     public void test_DefaultImage() throws Exception {
         super.test_DefaultImage();
     }
-
+    
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods
     
-	@Override
-	protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-		return JBoss7Server.class;
-	}
+    @Override
+    protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
+    	return JBoss7Server.class;
+    }
 }

@@ -18,9 +18,11 @@
  */
 package brooklyn.entity.webapp.jboss;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.Enrichers;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
@@ -28,12 +30,9 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.util.guava.Functionals;
+
 import com.google.common.base.Functions;
 import com.google.common.net.HostAndPort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public class Wildfly8ServerImpl extends JavaWebAppSoftwareProcessImpl implements Wildfly8Server {
 
@@ -43,14 +42,6 @@ public class Wildfly8ServerImpl extends JavaWebAppSoftwareProcessImpl implements
 
     public Wildfly8ServerImpl(){
         super();
-    }
-
-    public Wildfly8ServerImpl(@SuppressWarnings("rawtypes") Map flags){
-        this(flags, null);
-    }
-
-    public Wildfly8ServerImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) {
-        super(flags, parent);
     }
 
     @Override
@@ -158,10 +149,6 @@ public class Wildfly8ServerImpl extends JavaWebAppSoftwareProcessImpl implements
     public int getPortOffset() {
         return getConfig(PORT_INCREMENT);
     }
-    
-    public boolean isWelcomeRootEnabled() {
-        return false;
-    }
 
     public String getBindAddress() {
         return getConfig(BIND_ADDRESS);
@@ -173,11 +160,6 @@ public class Wildfly8ServerImpl extends JavaWebAppSoftwareProcessImpl implements
     
     public String getUnsecureBindAddress() {
         return getConfig(BIND_ADDRESS);
-    }
-    
-    // If empty-string, disables Management security (!) by excluding the security-realm attribute
-    public String getHttpManagementInterfaceSecurityRealm() {
-        return "";
     }
 
     public int getDeploymentTimeoutSecs() {
