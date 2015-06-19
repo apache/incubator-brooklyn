@@ -54,6 +54,8 @@ import brooklyn.util.internal.TimeExtras
 
 /**
  * This tests that we can run jboss entity on AWS.
+ * 
+ * TODO Convert this class to Java and use EntitySpec to create server objects.
  */
 public class WebAppLiveIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(WebAppLiveIntegrationTest.class)
