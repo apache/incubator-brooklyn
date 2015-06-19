@@ -34,7 +34,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.eclipse.jetty.util.log.Log;
 import org.jboss.resteasy.client.ClientExecutor;
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
@@ -62,7 +61,6 @@ import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.http.BuiltResponsePreservingError;
-import brooklyn.util.http.HttpTool;
 
 import com.wordnik.swagger.core.ApiOperation;
 
@@ -130,7 +128,7 @@ public class BrooklynApi {
                     Class<?> type = String.class;
                     if (result1 instanceof Response) {
                         Response resp = (Response)result1;
-                        if(HttpTool.isStatusCodeHealthy(resp.getStatus()) && method.isAnnotationPresent(ApiOperation.class)) {
+                        if(isStatusCodeHealthy(resp.getStatus()) && method.isAnnotationPresent(ApiOperation.class)) {
                            type = getClassFromMethodAnnotationOrDefault(method, type);
                         }
                         // wrap the original response so it self-closes
@@ -146,6 +144,8 @@ public class BrooklynApi {
                 }  
             }
             
+            private boolean isStatusCodeHealthy(int code) { return (code>=200 && code<=299); }
+            
             private Class<?> getClassFromMethodAnnotationOrDefault(Method method, Class<?> def){
                 Class<?> type;
                 try{
@@ -153,7 +153,7 @@ public class BrooklynApi {
                     type = Class.forName(responseClass);
                 } catch (Exception e) {
                     type = def;
-                    LOG.info("Unable to get class from annotation: {}.  Defaulting to {}", e.getMessage(), def.getName());
+                    LOG.debug("Unable to get class from annotation: {}.  Defaulting to {}", e.getMessage(), def.getName());
                     Exceptions.propagateIfFatal(e);
                 }
                 return type;
