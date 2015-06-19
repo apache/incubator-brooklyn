@@ -34,6 +34,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.eclipse.jetty.util.log.Log;
 import org.jboss.resteasy.client.ClientExecutor;
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
@@ -41,6 +42,8 @@ import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 import org.jboss.resteasy.specimpl.BuiltResponse;
 import org.jboss.resteasy.util.GenericType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.rest.api.AccessApi;
 import brooklyn.rest.api.ActivityApi;
@@ -71,6 +74,7 @@ public class BrooklynApi {
 
     private final String target;
     private final ClientExecutor clientExecutor;
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynApi.class);
 
     public BrooklynApi(URL endpoint) {
         this(checkNotNull(endpoint, "endpoint").toString());
@@ -127,7 +131,7 @@ public class BrooklynApi {
                     if (result1 instanceof Response) {
                         Response resp = (Response)result1;
                         if(HttpTool.isStatusCodeHealthy(resp.getStatus()) && method.isAnnotationPresent(ApiOperation.class)) {
-                           type = getClassFromMethodAnnotationOrDefault(resp, method, type);
+                           type = getClassFromMethodAnnotationOrDefault(method, type);
                         }
                         // wrap the original response so it self-closes
                         result1 = BuiltResponsePreservingError.copyResponseAndClose(resp, type);
@@ -142,13 +146,15 @@ public class BrooklynApi {
                 }  
             }
             
-            private Class<?> getClassFromMethodAnnotationOrDefault(Response resp, Method method, Class<?> def){
+            private Class<?> getClassFromMethodAnnotationOrDefault(Method method, Class<?> def){
                 Class<?> type;
                 try{
                     String responseClass = method.getAnnotation(ApiOperation.class).responseClass();
                     type = Class.forName(responseClass);
                 } catch (Exception e) {
                     type = def;
+                    LOG.info("Unable to get class from annotation: {}.  Defaulting to {}", e.getMessage(), def.getName());
+                    Exceptions.propagateIfFatal(e);
                 }
                 return type;
             }
