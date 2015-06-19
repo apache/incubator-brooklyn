@@ -126,10 +126,10 @@ public interface RiakNode extends SoftwareProcess {
     PortAttributeSensorAndConfigKey SEARCH_SOLR_PORT = new PortAttributeSensorAndConfigKey("search.solr.port", "Solr port", "8093+");
     PortAttributeSensorAndConfigKey SEARCH_SOLR_JMX_PORT = new PortAttributeSensorAndConfigKey("search.solr.jmx_port", "Solr port", "8985+");
 
-    AttributeSensor<Integer> NODE_GETS = Sensors.newIntegerSensor("riak.node.gets");
-    AttributeSensor<Integer> NODE_GETS_TOTAL = Sensors.newIntegerSensor("riak.node.gets.total");
-    AttributeSensor<Integer> NODE_PUTS = Sensors.newIntegerSensor("riak.node.puts");
-    AttributeSensor<Integer> NODE_PUTS_TOTAL = Sensors.newIntegerSensor("riak.node.puts.total");
+    AttributeSensor<Integer> NODE_GETS = Sensors.newIntegerSensor("riak.node.gets", "Gets in the last minute");
+    AttributeSensor<Integer> NODE_GETS_TOTAL = Sensors.newIntegerSensor("riak.node.gets.total", "Total gets since node started");
+    AttributeSensor<Integer> NODE_PUTS = Sensors.newIntegerSensor("riak.node.puts", "Puts in the last minute");
+    AttributeSensor<Integer> NODE_PUTS_TOTAL = Sensors.newIntegerSensor("riak.node.puts.total", "Total puts since node started");
     AttributeSensor<Integer> VNODE_GETS = Sensors.newIntegerSensor("riak.vnode.gets");
     AttributeSensor<Integer> VNODE_GETS_TOTAL = Sensors.newIntegerSensor("riak.vnode.gets.total");
 
@@ -147,6 +147,9 @@ public interface RiakNode extends SoftwareProcess {
     @SuppressWarnings("serial")
     AttributeSensor<List<String>> RING_MEMBERS = Sensors.newSensor(new TypeToken<List<String>>() {},
             "ring.members", "all the riak nodes in the ring");
+    
+    AttributeSensor<Integer> NODE_OPS = Sensors.newIntegerSensor("riak.node.ops", "Sum of node gets and puts in the last minute");
+    AttributeSensor<Integer> NODE_OPS_TOTAL = Sensors.newIntegerSensor("riak.node.ops.total", "Sum of node gets and puts since the node started");
 
     MethodEffector<Void> JOIN_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "joinCluster");
     MethodEffector<Void> LEAVE_RIAK_CLUSTER = new MethodEffector<Void>(RiakNode.class, "leaveCluster");

@@ -414,6 +414,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         if (config().getLocalRaw(UP_QUORUM_CHECK).isAbsent()) {
             // TODO Only leaving CouchbaseQuorumCheck here in case it is contained in persisted state.
             // If so, need a transformer and then to delete it
+            @SuppressWarnings({ "unused", "hiding" })
             @Deprecated
             class CouchbaseQuorumCheck implements QuorumCheck {
                 @Override
