@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -248,7 +249,8 @@ public class GeoscalingWebClient {
             HttpPost request = new HttpPost(url);
             List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
             nameValuePairs.add(new BasicNameValuePair("MAX_FILE_SIZE", "65536"));
-            nameValuePairs.add(new BasicNameValuePair("domain", name));
+            nameValuePairs.add(new BasicNameValuePair("domain", FilenameUtils.removeExtension(name)));
+            nameValuePairs.add(new BasicNameValuePair("tld", FilenameUtils.getExtension(name)));
             request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             
             sendRequest(request, true);

@@ -26,26 +26,55 @@ import static brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROVIDE_UPTIME_
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
-import javax.net.ssl.SSLSocketFactory;
-
 import org.apache.http.client.HttpClient;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
 import brooklyn.util.http.HttpTool;
+import brooklyn.util.text.Strings;
 
 /**
  * {@link GeoscalingWebClient} unit tests.
  */
 public class GeoscalingWebClientTest {
     
+    private final static String GEOSCALING_URL = "https://www.geoscaling.com";
     private final static String USERNAME = "cloudsoft";
     private final static String PASSWORD = "cl0uds0ft";
-    private final static String PRIMARY_DOMAIN = "domain"+((int)(Math.random()*10000))+".test.org";
-    private final static String SUBDOMAIN = "subdomain"+((int)(Math.random()*10000));
+    
+    private final static String PRIMARY_DOMAIN = "domain-" + Strings.makeRandomId(5) + ".test.org";
+    private final static String SUBDOMAIN = "subdomain-" + Strings.makeRandomId(5);
+    
     private final static String DEFAULT_SCRIPT = "output[] = array(\"fail\");";
     
+    private GeoscalingWebClient geoscaling;
+    
+    private Domain domain;
+    private SmartSubdomain smartSubdomain;
+    
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() {
+        // Insecurely use "trustAll" so that don't need to import signature into trust store
+        // before test will work on jenkins machine.
+        HttpClient httpClient = HttpTool.httpClientBuilder().uri(GEOSCALING_URL).trustAll().build();
+        geoscaling = new GeoscalingWebClient(httpClient);
+        geoscaling.login(USERNAME, PASSWORD);
+    }
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() {
+        if (smartSubdomain != null)
+            smartSubdomain.delete();
+        
+        if (domain != null)
+            domain.delete();
+        
+        if (geoscaling != null)
+            geoscaling.logout();
+    }
     
     @Test(groups = "Integration")
     public void testSimpleNames() {
@@ -58,20 +87,14 @@ public class GeoscalingWebClientTest {
     }
     
     public void testWebClient(String primaryDomainName, String smartSubdomainName) {
-        // Insecurely use "trustAll" so that don't need to import signature into trust store
-        // before test will work on jenkins machine.
-        HttpClient httpClient = HttpTool.httpClientBuilder().uri("https://www.geoscaling.com").trustAll().build();
-        GeoscalingWebClient geoscaling = new GeoscalingWebClient(httpClient);
-        geoscaling.login(USERNAME, PASSWORD);
-        
         assertNull(geoscaling.getPrimaryDomain(primaryDomainName));
         geoscaling.createPrimaryDomain(primaryDomainName);
-        Domain domain = geoscaling.getPrimaryDomain(primaryDomainName);
+        domain = geoscaling.getPrimaryDomain(primaryDomainName);
         assertNotNull(domain);
         
         assertNull(domain.getSmartSubdomain(smartSubdomainName));
         domain.createSmartSubdomain(smartSubdomainName);
-        SmartSubdomain smartSubdomain = domain.getSmartSubdomain(smartSubdomainName);
+        smartSubdomain = domain.getSmartSubdomain(smartSubdomainName);
         assertNotNull(smartSubdomain);
         
         smartSubdomain.configure(
@@ -84,6 +107,7 @@ public class GeoscalingWebClientTest {
         
         smartSubdomain.delete();
         assertNull(domain.getSmartSubdomain(smartSubdomainName));
+        
         domain.delete();
         assertNull(geoscaling.getPrimaryDomain(primaryDomainName));
         
