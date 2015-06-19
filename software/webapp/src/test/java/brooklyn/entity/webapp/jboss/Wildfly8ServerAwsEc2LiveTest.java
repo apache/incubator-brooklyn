@@ -28,12 +28,23 @@ import brooklyn.location.Location;
  */
 public class Wildfly8ServerAwsEc2LiveTest extends JBossServerAwsEc2LiveTest {
 
+    /**
+     * Wildfly8 does not yet support the metrics necessary for this test to pass. 
+     * 
+     * @see https://issues.apache.org/jira/browse/BROOKLYN-142
+     */
+    @Test(groups = "WIP")
     @Override
     protected void doTest(Location loc) throws Exception {
     	super.doTest(loc);
     }
     
-    @Test(groups = {"Live", "Live-sanity"})
+    /**
+     * Wildfly8 does not yet support the metrics necessary for this test to pass. 
+     * 
+     * @see https://issues.apache.org/jira/browse/BROOKLYN-142
+     */
+    @Test(groups = "WIP")
     @Override
     public void test_CentOS_6_3() throws Exception {
         super.test_CentOS_6_3();

@@ -28,17 +28,23 @@ import brooklyn.location.Location;
  */
 public class Wildfly8ServerDockerLiveTest extends JBossServerDockerLiveTest {
 
-   @Override
-   protected void doTest(Location loc) throws Exception {
-	   super.doTest(loc);
-   }
+    /**
+     * Wildfly8 does not yet support the metrics necessary for this test to pass. 
+     * 
+     * @see https://issues.apache.org/jira/browse/BROOKLYN-142
+     */
+    @Test(groups = "WIP")
+    @Override
+    protected void doTest(Location loc) throws Exception {
+        super.doTest(loc);
+    }
 
-   @Test(enabled = false)
-   public void testDummy() {
-   } // Convince testng IDE integration that this really does have test methods
+    @Test(enabled = false)
+    public void testDummy() {
+    } // Convince testng IDE integration that this really does have test methods
 
-   @Override
-   protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-	   return Wildfly8Server.class;
-   }
+    @Override
+    protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
+        return Wildfly8Server.class;
+    }
 }
