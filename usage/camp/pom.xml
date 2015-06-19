@@ -78,6 +78,13 @@
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>1.9.1</version>
+            <exclusions>
+                <!-- Dependency versions mismatch between transitive dependencies, declare explicitly -->
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- TODO not enamoured of including software-base here, but it allows us to reference chef and vanilla for short names;
@@ -132,6 +139,13 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!-- Transitive dependencies, declared explicitly due to version mismatch -->
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons-logging.version}</version>
         </dependency>
     </dependencies>
 
