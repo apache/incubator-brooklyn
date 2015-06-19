@@ -41,10 +41,11 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.Location;
 import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.PolicySpec;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
@@ -53,6 +54,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -71,13 +73,20 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
     }
 
     @Override
-    public void start(Collection<? extends Location> locations) {
-        super.start(locations);
+    protected void doStart() {
+        super.doStart();
         connectSensors();
 
-        Time.sleep(getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER));
+        try {
+            Duration delay = getConfig(DELAY_BEFORE_ADVERTISING_CLUSTER);
+            Tasks.setBlockingDetails("Sleeping for "+delay+" before advertising cluster available");
+            Time.sleep(delay);
+        } finally {
+            Tasks.resetBlockingDetails();
+        }
 
         //FIXME: add a quorum to tolerate failed nodes before setting on fire.
+        @SuppressWarnings("unchecked")
         Optional<Entity> anyNode = Iterables.tryFind(getMembers(), Predicates.and(
                 Predicates.instanceOf(RiakNode.class),
                 EntityPredicates.attributeEqualTo(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true),
@@ -91,8 +100,9 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
     }
 
     protected EntitySpec<?> getMemberSpec() {
-        return getConfig(MEMBER_SPEC, EntitySpec.create(RiakNode.class));
-
+        EntitySpec<?> result = config().get(MEMBER_SPEC);
+        if (result!=null) return result;
+        return EntitySpec.create(RiakNode.class);
     }
 
     protected void connectSensors() {
@@ -112,6 +122,38 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                  .fromMembers()
                  .build();
         addEnricher(first);
+        
+        Map<? extends AttributeSensor<? extends Number>, ? extends AttributeSensor<? extends Number>> enricherSetup = 
+            ImmutableMap.<AttributeSensor<? extends Number>, AttributeSensor<? extends Number>>builder()
+                .put(RiakNode.NODE_PUTS, RiakCluster.NODE_PUTS_1MIN_PER_NODE)
+                .put(RiakNode.NODE_GETS, RiakCluster.NODE_GETS_1MIN_PER_NODE)
+                .put(RiakNode.NODE_OPS, RiakCluster.NODE_OPS_1MIN_PER_NODE)
+            .build();
+        // construct sum and average over cluster
+        for (AttributeSensor<? extends Number> nodeSensor : enricherSetup.keySet()) {
+            addSummingMemberEnricher(nodeSensor);
+            addAveragingMemberEnricher(nodeSensor, enricherSetup.get(nodeSensor));
+        }
+    }
+
+    private void addAveragingMemberEnricher(AttributeSensor<? extends Number> fromSensor, AttributeSensor<? extends Number> toSensor) {
+        addEnricher(Enrichers.builder()
+            .aggregating(fromSensor)
+            .publishing(toSensor)
+            .fromMembers()
+            .computingAverage()
+            .build()
+        );
+    }
+
+    private void addSummingMemberEnricher(AttributeSensor<? extends Number> source) {
+        addEnricher(Enrichers.builder()
+            .aggregating(source)
+            .publishing(source)
+            .fromMembers()
+            .computingSum()
+            .build()
+        );
     }
 
     protected void onServerPoolMemberChanged(final Entity member) {
@@ -161,6 +203,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
             } else {
                 if (nodes != null && nodes.containsKey(member)) {
                     DependentConfiguration.attributeWhenReady(member, RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Predicates.equalTo(false)).blockUntilEnded(Duration.TWO_MINUTES);
+                    @SuppressWarnings("unchecked")
                     Optional<Entity> anyNodeInCluster = Iterables.tryFind(nodes.keySet(), Predicates.and(
                             Predicates.instanceOf(RiakNode.class),
                             EntityPredicates.attributeEqualTo(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true),

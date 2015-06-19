@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
+import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.webapp.WebAppServiceMethods;
@@ -78,6 +79,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
                 maxOpenFiles, defaultMaxOpenFiles);
     }
 
+    @SuppressWarnings("rawtypes")
     public boolean isPackageDownloadUrlProvided() {
         AttributeSensorAndConfigKey[] downloadProperties = { DOWNLOAD_URL_RHEL_CENTOS, DOWNLOAD_URL_UBUNTU, DOWNLOAD_URL_DEBIAN };
         for (AttributeSensorAndConfigKey property : downloadProperties) {
@@ -182,6 +184,8 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
 
         httpFeed = httpFeedBuilder.build();
 
+        addEnricher(Enrichers.builder().combining(NODE_GETS, NODE_PUTS).computingSum().publishing(NODE_OPS).build());
+        addEnricher(Enrichers.builder().combining(NODE_GETS_TOTAL, NODE_PUTS_TOTAL).computingSum().publishing(NODE_OPS_TOTAL).build());
         WebAppServiceMethods.connectWebAppServerPolicies(this);
     }
 
