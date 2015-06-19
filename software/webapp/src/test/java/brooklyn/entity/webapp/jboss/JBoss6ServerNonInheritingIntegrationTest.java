@@ -87,13 +87,10 @@ public class JBoss6ServerNonInheritingIntegrationTest extends BrooklynAppLiveTes
 
         app.start(ImmutableList.of(localhostProvisioningLocation));
         
-        String httpUrl = "http://"+server.getAttribute(JBoss6Server.HOSTNAME)+":"+server.getAttribute(JBoss6Server.HTTP_PORT)+"/";
-        
-        assertEquals(server.getAttribute(JBoss6Server.ROOT_URL).toLowerCase(), httpUrl.toLowerCase());
+        String httpUrl = server.getAttribute(JBoss6Server.ROOT_URL);
         
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(httpUrl, 200);
         HttpTestUtils.assertContentContainsText(httpUrl, "Hello");
-
 
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
