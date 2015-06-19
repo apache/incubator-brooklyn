@@ -43,6 +43,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.time.Duration;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ContiguousSet;
@@ -70,6 +71,11 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         // fail fast if config files not avail
         Entities.getRequiredUrlConfig(this, RIAK_VM_ARGS_TEMPLATE_URL);
         Entities.getRequiredUrlConfig(this, RIAK_APP_CONFIG_TEMPLATE_URL);
+        
+        Integer defaultMaxOpenFiles = RIAK_MAX_OPEN_FILES.getDefaultValue();
+        Integer maxOpenFiles = getConfig(RiakNode.RIAK_MAX_OPEN_FILES);
+        Preconditions.checkArgument(maxOpenFiles >= defaultMaxOpenFiles , "Specified number of open files : %s : is less than the required minimum",
+                maxOpenFiles, defaultMaxOpenFiles);
     }
 
     public boolean isPackageDownloadUrlProvided() {

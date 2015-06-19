@@ -314,7 +314,7 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
         if (isPackageInstall()) {
             commands.add(addSbinPathCommand());
-            commands.add(sudo("service riak start"));
+            commands.add(sudo(format("sh -c \"ulimit -n %s && service riak start\"", maxOpenFiles())));
         } else {
             // NOTE: See instructions at http://superuser.com/questions/433746/is-there-a-fix-for-the-too-many-open-files-in-system-error-on-os-x-10-7-1
             // for increasing the system limit for number of open files
@@ -593,5 +593,9 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
         Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
 //        log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
         scriptHelper.environmentVariablesReset(newPathVariable);
+    }
+
+    public Integer maxOpenFiles() {
+        return entity.getConfig(RiakNode.RIAK_MAX_OPEN_FILES);
     }
 }
