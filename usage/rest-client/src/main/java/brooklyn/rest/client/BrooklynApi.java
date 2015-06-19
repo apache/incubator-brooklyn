@@ -39,7 +39,10 @@ import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.jboss.resteasy.specimpl.BuiltResponse;
 import org.jboss.resteasy.util.GenericType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import brooklyn.rest.api.AccessApi;
 import brooklyn.rest.api.ActivityApi;
@@ -59,6 +62,8 @@ import brooklyn.rest.api.VersionApi;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.http.BuiltResponsePreservingError;
 
+import com.wordnik.swagger.core.ApiOperation;
+
 /**
  * @author Adam Lowe
  */
@@ -67,6 +72,7 @@ public class BrooklynApi {
 
     private final String target;
     private final ClientExecutor clientExecutor;
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynApi.class);
 
     public BrooklynApi(URL endpoint) {
         this(checkNotNull(endpoint, "endpoint").toString());
@@ -116,22 +122,41 @@ public class BrooklynApi {
         final T result0 = ProxyFactory.create(clazz, target, clientExecutor);
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new InvocationHandler() {
             @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                Object result1;
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {                 
                 try {
-                    result1 = method.invoke(result0, args);
+                    Object result1 = method.invoke(result0, args);
+                    Class<?> type = String.class;
+                    if (result1 instanceof Response) {
+                        Response resp = (Response)result1;
+                        if(isStatusCodeHealthy(resp.getStatus()) && method.isAnnotationPresent(ApiOperation.class)) {
+                           type = getClassFromMethodAnnotationOrDefault(method, type);
+                        }
+                        // wrap the original response so it self-closes
+                        result1 = BuiltResponsePreservingError.copyResponseAndClose(resp, type);
+                    }
+                    return result1;
                 } catch (Throwable e) {
                     if (e instanceof InvocationTargetException) {
                         // throw the original exception
                         e = ((InvocationTargetException)e).getTargetException();
                     }
                     throw Exceptions.propagate(e);
+                }  
+            }
+            
+            private boolean isStatusCodeHealthy(int code) { return (code>=200 && code<=299); }
+            
+            private Class<?> getClassFromMethodAnnotationOrDefault(Method method, Class<?> def){
+                Class<?> type;
+                try{
+                    String responseClass = method.getAnnotation(ApiOperation.class).responseClass();
+                    type = Class.forName(responseClass);
+                } catch (Exception e) {
+                    type = def;
+                    LOG.debug("Unable to get class from annotation: {}.  Defaulting to {}", e.getMessage(), def.getName());
+                    Exceptions.propagateIfFatal(e);
                 }
-                if (result1 instanceof Response) {
-                    // wrap the original response so it self-closes
-                    result1 = BuiltResponsePreservingError.copyResponseAndClose((Response) result1);
-                }
-                return result1;
+                return type;
             }
         });
     }
@@ -197,6 +222,11 @@ public class BrooklynApi {
     }
 
     public static <T> T getEntity(Response response, Class<T> type) {
+        if (response instanceof BuiltResponse) {
+            Object entity = response.getEntity();
+            return type.cast(entity);
+        }
+        
         if (!(response instanceof ClientResponse)) {
             throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
         }

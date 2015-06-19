@@ -18,6 +18,19 @@
  */
 package brooklyn.rest.api;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
 import brooklyn.rest.apidoc.Apidoc;
 import brooklyn.rest.domain.EntityConfigSummary;
 
@@ -25,12 +38,6 @@ import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-
-import java.util.List;
-import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/config")
 @Apidoc("Entity Config")
@@ -64,6 +71,7 @@ public interface EntityConfigApi {
             @ApiParam(value = "Return raw config data instead of display values", required = false)
             @QueryParam("raw") @DefaultValue("false") final Boolean raw);
 
+    //To call this endpoint set the Accept request field e.g curl -H "Accept: application/json" ...
     @GET
     @Path("/{config}")
     @ApiOperation(value = "Fetch config value (json)", responseClass = "Object")
