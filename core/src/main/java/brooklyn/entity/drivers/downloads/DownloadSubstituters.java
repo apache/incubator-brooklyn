@@ -55,7 +55,7 @@ public class DownloadSubstituters {
         // since this is the main place it is used, let's do it here
         try {
             LOG.debug("Configuring Freemarker logging for Brooklyn to use SLF4J");
-            freemarker.log.Logger.selectLoggerLibrary(freemarker.log.Logger.LIBRARY_SLF4J);
+            System.setProperty(freemarker.log.Logger.SYSTEM_PROPERTY_NAME_LOGGER_LIBRARY, freemarker.log.Logger.LIBRARY_NAME_SLF4J);
         } catch (Exception e) {
             LOG.warn("Error setting Freemarker logging: "+e, e);
         }
@@ -124,7 +124,7 @@ public class DownloadSubstituters {
 
     public static String substitute(String basevalue, Map<String,?> substitutions) {
         try {
-            Configuration cfg = new Configuration();
+            Configuration cfg = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
             StringTemplateLoader templateLoader = new StringTemplateLoader();
             templateLoader.putTemplate("config", basevalue);
             cfg.setTemplateLoader(templateLoader);
