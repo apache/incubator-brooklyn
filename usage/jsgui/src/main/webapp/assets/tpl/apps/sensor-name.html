@@ -18,7 +18,17 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+<% if (description || type) { %>
 <span class="sensor-name" rel="tooltip" data-placement="left"
-    title="<% if (description) { %><b><%- description %></b><br/><% } %>(<%- type %>)">
+    title="<% 
+         if (description) { %><b><%- description %></b><br/><% } 
+         if (type) { %>(<% 
+           if (type.startsWith("java.lang.") || type.startsWith("util.")) type = type.substring(10);
+         %><%- type %>)<% } %>">
     <%- name %>
 </span>
+<% } else { %>
+<span class="sensor-name">
+    <%- name %>
+</span>
+<% } %>

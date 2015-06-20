@@ -184,30 +184,24 @@ define([
             
             this.zeroClipboard = new ZeroClipboard();
             this.zeroClipboard.on( "dataRequested" , function(client) {
-                var text = $(this).attr('copy-value');
-                if (!text) text = $(this).closest('.floatGroup').find('.value').html();
                 try {
-//                    log("Copying text '"+text+"' to clipboard");
+                    // the zeroClipboard instance is a singleton so check our scope first
+                    if (!$(this).closest("#sensors-table").length) return;
+                    var text = $(this).attr('copy-value');
+                    if (!text) text = $(this).closest('.floatGroup').find('.value').html();
+                    
+//                    log("Copying sensors text '"+text+"' to clipboard");
                     client.setText(text);
                     
-                    var $widget = $(this);
-                    var oldHtml = $widget.html();
-                    var fnRestore = _.once(function() { $widget.html(oldHtml); });
-                    // show the word copied for feedback;
+                    // show the word "copied" for feedback;
                     // NB this occurs on mousedown, due to how flash plugin works
                     // (same style of feedback and interaction as github)
                     // the other "clicks" are now triggered by *mouseup*
+                    var $widget = $(this);
+                    var oldHtml = $widget.html();
                     $widget.html('<b>Copied!</b>');
-                    setTimeout(fnRestore, 3000);
-                    
-                    // these listeners stay registered until page is reloaded
-                    // but they do nothing after first run, due to use of _.once
-                    // however the timeout is good enough, and actually desired
-                    // because on corner case of mousedown-moveaway-mouseup,
-                    // we want to keep the feedback; so they work, but are disabled for now.
-                    // (remove once we are happy with this behaviour, since Feb 2014)
-//                    that.zeroClipboard.on( "mouseout", fnRestore);
-//                    that.zeroClipboard.on( "mouseup", fnRestore);
+                    // use a timeout to restore because mouseouts can leave corner cases (see history)
+                    setTimeout(function() { $widget.html(oldHtml); }, 600);
                 } catch (e) {
                     log("Zeroclipboard failure; falling back to prompt mechanism");
                     log(e);
@@ -248,7 +242,10 @@ define([
         floatMenuActive: false,
         lastFloatMenuRowId: null,
         lastFloatFocusInTextForEventUnmangling: null,
-        updateFloatMenus: function() { this.zeroClipboard.clip( $('.valueCopy') ); },
+        updateFloatMenus: function() {
+            $('#sensors-table *[rel="tooltip"]').tooltip();
+            this.zeroClipboard.clip( $('.valueCopy') );
+        },
         showFloatLeft: function(event) {
             this.noteFloatMenuFocusChange(true, event, "show-left");
             this.showFloatLeftOf($(event.currentTarget));
