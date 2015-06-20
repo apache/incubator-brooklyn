@@ -44,6 +44,7 @@ import org.yaml.snakeyaml.nodes.SequenceNode;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
@@ -350,7 +351,11 @@ public class Yamls {
                 if (e instanceof KnownClassVersionException) {
                     log.debug("Known class version exception; no yaml text being matched for "+this+": "+e);
                 } else {
-                    log.warn("Unable to match yaml text in "+this+": "+e, e);
+                    if (e instanceof UserFacingException) {
+                        log.warn("Unable to match yaml text in "+this+": "+e.getMessage());
+                    } else {
+                        log.warn("Unable to match yaml text in "+this+": "+e, e);
+                    }
                 }
                 return null;
             }
@@ -402,6 +407,9 @@ b: 1
  */
             List<String> result = MutableList.of();
             if (includePrecedingComments) {
+                if (getEndOfPrevious() > getStartOfThis()) {
+                    throw new UserFacingException("YAML not in expected format; when scanning, previous end "+getEndOfPrevious()+" exceeds this start "+getStartOfThis());
+                }
                 String[] preceding = yaml.substring(getEndOfPrevious(), getStartOfThis()).split("\n");
                 // suppress comments which are on the same line as the previous item or indented more than firstLineIndentation,
                 // ensuring appropriate whitespace is added to preceding[0] if it starts mid-line

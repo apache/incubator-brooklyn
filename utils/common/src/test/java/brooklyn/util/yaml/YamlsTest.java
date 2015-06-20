@@ -28,6 +28,8 @@ import org.testng.TestNG;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableList;
+import brooklyn.util.exceptions.UserFacingException;
+import brooklyn.util.yaml.Yamls.YamlExtract;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -162,6 +164,24 @@ public class YamlsTest {
             "x: \n   c: 1\n   d: 2");
     }
 
+    @Test
+    public void testExtractNoOOBE() {
+        // this might log a warning, as item not found, but won't throw
+        YamlExtract r1 = Yamls.getTextOfYamlAtPath(
+            "items:\n- id: sample2\n  itemType: location\n  item:\n    type: jclouds:aws-ec2\n    brooklyn.config:\n      key2: value2\n\n",
+            "item");
+        
+        // won't throw
+        r1.getMatchedYamlTextOrWarn();
+        // will throw
+        try {
+            r1.getMatchedYamlText();
+            Assert.fail();
+        } catch (UserFacingException e) {
+            // expected, it should give a vaguely explanatory exception and no trace
+        }
+    }
+    
     // convenience, since running with older TestNG IDE plugin will fail (older snakeyaml dependency);
     // if you run as a java app it doesn't bring in the IDE TestNG jar version, and it works
     public static void main(String[] args) {

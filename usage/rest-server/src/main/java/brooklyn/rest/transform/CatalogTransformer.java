@@ -59,21 +59,28 @@ public class CatalogTransformer {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(CatalogTransformer.class);
     
     public static CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Entity,EntitySpec<?>> item) {
-        EntitySpec<?> spec = b.getCatalog().createSpec(item);
-        EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
-        EntityType type = typeMap.getSnapshot();
-
         Set<EntityConfigSummary> config = Sets.newTreeSet(SummaryComparators.nameComparator());
         Set<SensorSummary> sensors = Sets.newTreeSet(SummaryComparators.nameComparator());
         Set<EffectorSummary> effectors = Sets.newTreeSet(SummaryComparators.nameComparator());
 
-        for (ConfigKey<?> x: type.getConfigKeys())
-            config.add(EntityTransformer.entityConfigSummary(x, typeMap.getConfigKeyField(x.getName())));
-        for (Sensor<?> x: type.getSensors())
-            sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
-        for (Effector<?> x: type.getEffectors())
-            effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
+        try {
+            EntitySpec<?> spec = b.getCatalog().createSpec(item);
+            EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
+            EntityType type = typeMap.getSnapshot();
 
+            for (ConfigKey<?> x: type.getConfigKeys())
+                config.add(EntityTransformer.entityConfigSummary(x, typeMap.getConfigKeyField(x.getName())));
+            for (Sensor<?> x: type.getSensors())
+                sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
+            for (Effector<?> x: type.getEffectors())
+                effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
+            
+        } catch (Exception e) {
+            // templates with multiple entities can't have spec created in the manner above; just ignore
+            if (log.isTraceEnabled())
+                log.trace("Unable to create spec for "+item+": "+e, e);
+        }
+        
         return new CatalogEntitySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
             item.getJavaType(), item.getPlanYaml(),
             item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),

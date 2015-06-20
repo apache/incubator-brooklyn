@@ -41,6 +41,7 @@ import brooklyn.BrooklynVersion;
 import brooklyn.basic.BrooklynTypes;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
 import brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
@@ -633,11 +634,17 @@ public class Main extends AbstractMain {
             Iterable<CatalogItem<Object, Object>> items = catalog.getCatalogItems();
             for (CatalogItem<Object, Object> item: items) {
                 try {
-                    Object spec = catalog.createSpec(item);
-                    if (spec instanceof EntitySpec) {
-                        BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
+                    if (item.getCatalogItemType()==CatalogItemType.TEMPLATE) {
+                        // skip validation of templates, they might contain instructions,
+                        // and additionally they might contain multiple items in which case
+                        // the validation below won't work anyway (you need to go via a deployment plan)
+                    } else {
+                        Object spec = catalog.createSpec(item);
+                        if (spec instanceof EntitySpec) {
+                            BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
+                        }
+                        log.debug("Catalog loaded spec "+spec+" for item "+item);
                     }
-                    log.debug("Catalog loaded spec "+spec+" for item "+item);                      
                 } catch (Throwable throwable) {
                     catInit.handleException(throwable, item);
                 }

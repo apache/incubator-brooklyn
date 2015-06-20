@@ -183,7 +183,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
                 // TODO support https above
                 // TODO this will probably be logged if we refer to  chef:cookbook  or other service types which BCTR accepts;
                 // better would be to have BCTR supporting the calls above
-                log.warn("The reference " + brooklynType + " looks like an URL but the protocol " +
+                log.debug("The reference " + brooklynType + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
                         protocol + " isn't white listed (" + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + "). " +
                         "Will try to load it as catalog item or java type.");
             }
