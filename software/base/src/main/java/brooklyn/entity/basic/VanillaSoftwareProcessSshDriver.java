@@ -85,6 +85,7 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
         if (Strings.isNonBlank(installCommand)) {
             newScript(INSTALLING)
                 .failOnNonZeroResultCode()
+                .environmentVariablesReset(getShellEnvironment())
                 .body.append(installCommand)
                 .execute();
         }
@@ -106,8 +107,6 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
         if (Strings.isNonBlank(customizeCommand)) {
             newScript(CUSTOMIZING)
                 .failOnNonZeroResultCode()
-                // don't set vars yet -- it resolves dependencies (e.g. DB) which we don't want until we start
-                .environmentVariablesReset()
                 .body.append(customizeCommand)
                 .execute();
         }
