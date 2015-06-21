@@ -22,12 +22,13 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 import java.io.File;
+import java.net.URI;
 
-import brooklyn.test.TestResourceUnavailableException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
@@ -35,6 +36,7 @@ import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
@@ -43,21 +45,23 @@ import com.google.common.collect.ImmutableSet;
 /**
  * TODO re-write this like WebAppIntegrationTest, inheriting, rather than being jboss7 specific.
  */
-public class JBoss7ServerNonInheritingIntegrationTest {
+public class JBoss7ServerNonInheritingIntegrationTest extends BrooklynAppLiveTestSupport {
     
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
-    private TestApplication app;
     private File keystoreFile;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        app = TestApplication.Factory.newManagedInstanceForTests();
+        super.setUp();
+        localhostProvisioningLocation = app.newLocalhostProvisioningLocation();
         keystoreFile = AbstractWebAppFixtureIntegrationTest.createTemporaryKeyStore("myname", "mypass");
     }
 
     @AfterMethod(alwaysRun=true)
+    @Override
     public void tearDown() throws Exception {
+        super.tearDown();
         if (app != null) Entities.destroyAll(app.getManagementContext());
         if (keystoreFile != null) keystoreFile.delete();
     }

@@ -37,7 +37,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -46,6 +45,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
@@ -62,10 +62,11 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.TestResourceUnavailableException;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.FluentKeySigner;
@@ -101,14 +102,13 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
 
     protected synchronized ManagementContext getMgmt() {
         if (mgmt==null)
-            mgmt = new LocalManagementContext();
+            mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
         return mgmt;
     }
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        loc = getMgmt().getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
-            .configure("name", "london"));
+        loc = getMgmt().getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
     }
     
     /*
@@ -143,8 +143,9 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
 
     @AfterClass(alwaysRun=true)
     public synchronized void shutdownMgmt() {
-        if (mgmt != null) {
-            Entities.destroyAll(mgmt);
+        try {
+            if (mgmt != null) Entities.destroyAll(mgmt);
+        } finally {
             mgmt = null;
         }
     }
