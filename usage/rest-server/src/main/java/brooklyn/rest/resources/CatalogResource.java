@@ -160,6 +160,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
+    public void deleteApplication(String applicationId, String version) throws Exception {
+        deleteEntity(applicationId, version);
+    }
+
+    @Override
     public void deleteEntity(String entityId, String version) throws Exception {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(entityId+(Strings.isBlank(version) ? "" : ":"+version), "delete"))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",

@@ -19,6 +19,7 @@
 package brooklyn.rest.resources;
 
 import java.net.URI;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +30,14 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.rest.api.LocationApi;
 import brooklyn.rest.domain.LocationSpec;
 import brooklyn.rest.domain.LocationSummary;
-import brooklyn.rest.domain.SummaryComparators;
 import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.LocationTransformer;
 import brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
@@ -43,6 +45,8 @@ import brooklyn.rest.util.EntityLocationUtils;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.text.NaturalOrderComparator;
+import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -82,7 +86,22 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
         return FluentIterable.from(brooklyn().getLocationRegistry().getDefinedLocations().values())
                 .transform(transformer)
                 .filter(LocationSummary.class)
-                .toSortedList(SummaryComparators.displayNameComparator());
+                .toSortedList(nameOrSpecComparator());
+    }
+
+    private static NaturalOrderComparator COMPARATOR = new NaturalOrderComparator();
+    private static Comparator<LocationSummary> nameOrSpecComparator() {
+        return new Comparator<LocationSummary>() {
+            @Override
+            public int compare(LocationSummary o1, LocationSummary o2) {
+                return COMPARATOR.compare(getNameOrSpec(o1).toLowerCase(), getNameOrSpec(o2).toLowerCase());
+            }
+        };
+    }
+    private static String getNameOrSpec(LocationSummary o) {
+        if (Strings.isNonBlank(o.getName())) return o.getName();
+        if (Strings.isNonBlank(o.getSpec())) return o.getSpec();
+        return o.getId();
     }
 
     // this is here to support the web GUI's circles
@@ -152,6 +171,15 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
     @Override
     @Deprecated
     public void delete(String locationId) {
-        brooklyn().getCatalog().deleteCatalogItem(locationId);
+        // TODO make all locations be part of the catalog, then flip the JS GUI to use catalog api
+        if (deleteAllVersions(locationId)>0) return;
+        throw WebResourceUtils.notFound("No catalog item location matching %s; only catalog item locations can be deleted", locationId);
+    }
+    
+    private int deleteAllVersions(String locationId) {
+        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), locationId);
+        if (item==null) return 0; 
+        brooklyn().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
+        return 1 + deleteAllVersions(locationId);
     }
 }

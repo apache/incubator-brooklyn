@@ -19,6 +19,10 @@ under the License.
 
 <div class="catalog-details">
 
+    <div class="float-right">
+        <button data-name="<%= model.id %>" class="btn btn-danger delete">Delete</button>
+    </div>
+
     <% if (model.get("name") !== undefined) { %>
         <h2><%= model.get("name") %></h2>
     <% } else if (model.get("type") !== undefined) { %>

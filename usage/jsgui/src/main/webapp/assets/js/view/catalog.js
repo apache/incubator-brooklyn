@@ -113,9 +113,16 @@ define([
             // Could use wait flag to block removal of model from collection
             // until server confirms deletion and success handler to perform
             // removal. Useful if delete fails for e.g. lack of entitlement.
-            this.activeModel.destroy();
-            var displayName = $(event.currentTarget).data("name");
-            this.renderEmpty(displayName ? "Deleted " + displayName : "");
+            var that = this;
+            var displayName = $(event.currentTarget).data("name") || "item";
+            this.activeModel.destroy({
+                success: function() {
+                    that.renderEmpty("Deleted " + displayName);
+                },
+                error: function(info) {
+                    that.renderEmpty("Unable to permanently delete " + displayName+". Deletion is temporary, client-side only.");
+                }
+            });
         }
     });
 
@@ -259,6 +266,11 @@ define([
     }
 
     var Catalog = Backbone.Collection.extend({
+        modelX: Backbone.Model.extend({
+          url: function() {
+            return "/v1/catalog/" + this.name + "/" + this.id + "?allVersions=true";
+          }
+        }),
         initialize: function(models, options) {
             this.name = options["name"];
             if (!this.name) {
@@ -267,7 +279,12 @@ define([
             //this.model is a constructor so it shouldn't be _.bind'ed to this
             //It actually works when a browser provided .bind is used, but the
             //fallback implementation doesn't support it.
-            var model = this.model;
+            var that = this; 
+            var model = this.model.extend({
+              url: function() {
+                return "/v1/catalog/" + that.name + "/" + this.id.split(":").join("/");
+              }
+            });
             _.bindAll(this);
             this.model = model;
         },
@@ -466,7 +483,7 @@ define([
                     autoOpen: this.options.kind == "locations",
                     entryTemplateArgs: function (location, index) {
                         return {
-                            type: location.getPrettyName(),
+                            type: location.getIdentifierName(),
                             id: location.getLinkByName("self")
                         };
                     }
@@ -536,13 +553,28 @@ define([
                     .then(function() {
                         var model = accordion.collection.get(id);
                         if (!model) {
-                            // caller probably passed the wrong kind (in case of entity v app, the caller might try both)                        
-                        } else {
+                            // if a version is supplied, try it without a version - needed for locations, navigating after deletion
+                            if (id && id.split(":").length>1) {
+                                model = accordion.collection.get( id.split(":")[0] );
+                            }
+                        }
+                        if (!model) {
+                            // if an ID is supplied without a version, look for first matching version (should be newest)
+                            if (id && id.split(":").length==1 && accordion.collection.models) {
+                                model = _.find(accordion.collection.models, function(m) { 
+                                    return m && m.id && m.id.startsWith(id+":");
+                                });
+                            }
+                        }
+                        // TODO could look in collection for any starting with ID
+                        if (model) {
                             Backbone.history.navigate("/v1/catalog/"+kind+"/"+id);
                             activeDetailsView = kind;
                             accordion.activeCid = model.cid;
                             accordion.options.onItemSelected(kind, model);
                             accordion.show();
+                        } else {
+                            // catalog item not found, or not found yet (it might be reloaded and another callback will try again)
                         }
                     });
             }

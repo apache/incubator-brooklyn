@@ -94,6 +94,19 @@ public interface CatalogApi {
         @PathParam("entityId") String entityId) throws Exception;
 
     @DELETE
+    @Path("/applications/{applicationId}/{version}")
+    @ApiOperation(value = "Deletes a specific version of an application's definition from the catalog")
+    @ApiErrors(value = {
+        @ApiError(code = 404, reason = "Entity not found")
+    })
+    public void deleteApplication(
+        @ApiParam(name = "applicationId", value = "The ID of the application or template to delete", required = true)
+        @PathParam("applicationId") String entityId,
+
+        @ApiParam(name = "version", value = "The version identifier of the application or template to delete", required = true)
+        @PathParam("version") String version) throws Exception;
+
+    @DELETE
     @Path("/entities/{entityId}/{version}")
     @ApiOperation(value = "Deletes a specific version of an entity's definition from the catalog")
     @ApiErrors(value = {

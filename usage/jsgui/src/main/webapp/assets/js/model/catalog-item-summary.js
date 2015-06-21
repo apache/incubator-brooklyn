@@ -19,8 +19,9 @@
 define(["underscore", "backbone"], function (_, Backbone) {
 
     // NB: THIS IS NOT USED CURRENTLY
-    // the logic in application-add-wizard.js simply loads and manipulates json
-    // TODO change that so that it uses this backbone model + collection 
+    // the logic in application-add-wizard.js simply loads and manipulates json;
+    // logic in catalog.js (view) defines its own local model
+    // TODO change those so that they use this backbone model + collection,
     // allowing a way to specify on creation what we are looking up in the catalog -- apps or entities or policies
     
     var CatalogItem = {}
@@ -40,7 +41,7 @@ define(["underscore", "backbone"], function (_, Backbone) {
 
     CatalogItem.Collection = Backbone.Collection.extend({
         model:CatalogItem.Model,
-        url:'/v1/catalog'  // TODO is this application or entities or policies?
+        url:'/v1/catalog'  // TODO is this application or entities or policies? (but note THIS IS NOT USED)
     })
 
     return CatalogItem
