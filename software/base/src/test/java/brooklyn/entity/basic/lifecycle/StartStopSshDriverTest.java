@@ -26,9 +26,9 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -116,7 +116,7 @@ public class StartStopSshDriverTest {
             @Override
             public void run() {
               List<ThreadInfo> currentThreads = getThreadsCalling(StreamGobbler.class);
-              Collection<Long> currentThreadIds = MutableSet.copyOf(getThreadId(currentThreads));
+              Set<Long> currentThreadIds = MutableSet.copyOf(getThreadId(currentThreads));
 
               currentThreadIds.removeAll(existingThreadIds);
               assertEquals(currentThreadIds, ImmutableSet.<Long>of());

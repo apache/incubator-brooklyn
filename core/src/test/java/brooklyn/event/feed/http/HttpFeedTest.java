@@ -51,6 +51,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.BetterMockWebServer;
 import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
@@ -301,28 +302,14 @@ public class HttpFeedTest extends BrooklynAppUnitTestSupport {
 
 
     @Test
-    public void testPollsAndParsesHttpErrorResponseWild() throws Exception {
-        feed = HttpFeed.builder()
-                .entity(entity)
-                .baseUri("http://0.0.0.0")
-                .poll(HttpPollConfig.forSensor(SENSOR_STRING)
-                        .onSuccess(Functions.constant("success"))
-                        .onFailure(Functions.constant("failure"))
-                        .onException(Functions.constant("error")))
-                .build();
-        
-        assertSensorEventually(SENSOR_STRING, "error", TIMEOUT_MS);
-    }
-    
-    @Test
     public void testPollsAndParsesHttpErrorResponseLocal() throws Exception {
+        int unboundPort = Networking.nextAvailablePort(10000);
         feed = HttpFeed.builder()
                 .entity(entity)
-                // combo of port 46069 and unknown path will hopefully give an error
-                // (without the port, in jenkins it returns some bogus success page)
-                .baseUri("http://localhost:46069/path/should/not/exist")
+                .baseUri("http://localhost:" + unboundPort + "/path/should/not/exist")
                 .poll(new HttpPollConfig<String>(SENSOR_STRING)
                         .onSuccess(Functions.constant("success"))
+                        .onFailure(Functions.constant("failure"))
                         .onException(Functions.constant("error")))
                 .build();
         
