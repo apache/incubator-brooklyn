@@ -402,7 +402,7 @@ public class ServiceStateLogic {
             fromMembers = true;
             // above sets default
             super.setEntityLoadingConfig();
-            if (fromMembers && (!(entity instanceof Group))) {
+            if (isAggregatingMembers() && (!(entity instanceof Group))) {
                 if (fromChildren) fromMembers=false;
                 else throw new IllegalStateException("Cannot monitor only members for non-group entity "+entity+": "+this);
             }

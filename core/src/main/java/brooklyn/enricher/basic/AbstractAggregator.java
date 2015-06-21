@@ -58,9 +58,11 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
 
     public static final ConfigKey<Set<? extends Entity>> FROM_HARDCODED_PRODUCERS = ConfigKeys.newConfigKey(new TypeToken<Set<? extends Entity>>() {}, "enricher.aggregating.fromHardcodedProducers");
 
-    public static final ConfigKey<Boolean> FROM_MEMBERS = ConfigKeys.newBooleanConfigKey("enricher.aggregating.fromMembers");
+    public static final ConfigKey<Boolean> FROM_MEMBERS = ConfigKeys.newBooleanConfigKey("enricher.aggregating.fromMembers",
+        "Whether this enricher looks at members; only supported if a Group producer is supplier; defaults to true for Group entities");
 
-    public static final ConfigKey<Boolean> FROM_CHILDREN = ConfigKeys.newBooleanConfigKey("enricher.aggregating.fromChildren");
+    public static final ConfigKey<Boolean> FROM_CHILDREN = ConfigKeys.newBooleanConfigKey("enricher.aggregating.fromChildren",
+        "Whether this enricher looks at children; this is the default for non-Group producers");
 
     public static final ConfigKey<Predicate<? super Entity>> ENTITY_FILTER = ConfigKeys.newConfigKey(new TypeToken<Predicate<? super Entity>>() {}, "enricher.aggregating.entityFilter");
 
@@ -85,8 +87,6 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
         if (fromHardcodedProducers == null && producer == null) producer = entity;
         checkState(fromHardcodedProducers != null ^ producer != null, "must specify one of %s (%s) or %s (%s)", 
                 PRODUCER.getName(), producer, FROM_HARDCODED_PRODUCERS.getName(), fromHardcodedProducers);
-        checkState(producer == null || Boolean.TRUE.equals(fromMembers) || Boolean.TRUE.equals(fromChildren), 
-                "when specifying producer, must specify at least one of fromMembers (%s) or fromChildren (%s)", fromMembers, fromChildren);
 
         if (fromHardcodedProducers != null) {
             for (Entity producer : Iterables.filter(fromHardcodedProducers, entityFilter)) {
@@ -94,13 +94,13 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
             }
         }
         
-        if (Boolean.TRUE.equals(fromMembers)) {
+        if (isAggregatingMembers()) {
             setEntityBeforeSubscribingProducerMemberEvents(entity);
             setEntitySubscribeProducerMemberEvents();
             setEntityAfterSubscribingProducerMemberEvents();
         }
         
-        if (Boolean.TRUE.equals(fromChildren)) {
+        if (isAggregatingChildren()) {
             setEntityBeforeSubscribingProducerChildrenEvents();
             setEntitySubscribingProducerChildrenEvents();
             setEntityAfterSubscribingProducerChildrenEvents();
@@ -132,7 +132,7 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
     }
 
     protected void setEntityBeforeSubscribingProducerMemberEvents(EntityLocal entity) {
-        checkState(producer instanceof Group, "must be a group when fromMembers true: producer=%s; entity=%s; "
+        checkState(producer instanceof Group, "Producer must be a group when fromMembers true: producer=%s; entity=%s; "
                 + "hardcodedProducers=%s", getConfig(PRODUCER), entity, fromHardcodedProducers);
     }
 
@@ -187,6 +187,24 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
         }
     }
 
+    /** true if this should aggregate members */
+    protected boolean isAggregatingMembers() {
+        if (Boolean.TRUE.equals(fromMembers)) return true;
+        if (Boolean.TRUE.equals(fromChildren)) return false;
+        if (fromHardcodedProducers!=null) return false;
+        if (producer instanceof Group) return true;
+        return false;
+    }
+    
+    /** true if this should aggregate members */
+    protected boolean isAggregatingChildren() {
+        if (Boolean.TRUE.equals(fromChildren)) return true;
+        if (Boolean.TRUE.equals(fromMembers)) return false;
+        if (fromHardcodedProducers!=null) return false;
+        if (producer instanceof Group) return false;
+        return true;
+    }
+    
     protected abstract void addProducerHardcoded(Entity producer);
     protected abstract void addProducerMember(Entity producer);
     protected abstract void addProducerChild(Entity producer);

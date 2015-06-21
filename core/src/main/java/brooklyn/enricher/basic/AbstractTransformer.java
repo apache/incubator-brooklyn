@@ -18,8 +18,6 @@
  */
 package brooklyn.enricher.basic;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +30,6 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicSensorEvent;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.task.Tasks;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;

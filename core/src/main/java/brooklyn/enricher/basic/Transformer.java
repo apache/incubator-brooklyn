@@ -37,6 +37,7 @@ import com.google.common.reflect.TypeToken;
 @SuppressWarnings("serial")
 public class Transformer<T,U> extends AbstractTransformer<T,U> {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(Transformer.class);
 
     // exactly one of these should be supplied to set a value

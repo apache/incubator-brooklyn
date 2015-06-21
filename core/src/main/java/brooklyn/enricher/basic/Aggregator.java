@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,7 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
     @SetFromFlag("transformation")
     public static final ConfigKey<Object> TRANSFORMATION_UNTYPED = ConfigKeys.newConfigKey(Object.class, "enricher.transformation.untyped",
         "Specifies a transformation, as a function from a collection to the value, or as a string matching a pre-defined named transformation, "
-        + "such as 'average' (for numbers), 'add' (for numbers), or 'list' (the default, putting any collection of items into a list)");
+        + "such as 'average' (for numbers), 'sum' (for numbers), or 'list' (the default, putting any collection of items into a list)");
     public static final ConfigKey<Function<? super Collection<?>, ?>> TRANSFORMATION = ConfigKeys.newConfigKey(new TypeToken<Function<? super Collection<?>, ?>>() {}, "enricher.transformation");
     
     public static final ConfigKey<Boolean> EXCLUDE_BLANK = ConfigKeys.newBooleanConfigKey("enricher.aggregator.excludeBlank", "Whether explicit nulls or blank strings should be excluded (default false); this only applies if no value filter set", false);
@@ -82,13 +83,20 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
         super.setEntityLoadingConfig();
         this.sourceSensor = (Sensor<T>) getRequiredConfig(SOURCE_SENSOR);
         
-        Object t1 = config().get(TRANSFORMATION_UNTYPED);
-        if (t1 instanceof String) t1 = lookupTransformation((String)t1);
-        
         this.transformation = (Function<? super Collection<T>, ? extends U>) config().get(TRANSFORMATION);
+        
+        Object t1 = config().get(TRANSFORMATION_UNTYPED);
+        Function<? super Collection<?>, ?> t2 = null;
+        if (t1 instanceof String) {
+            t2 = lookupTransformation((String)t1);
+            if (t2==null) {
+                LOG.warn("Unknown transformation '"+t1+"' for "+this+"; will use default transformation");
+            }
+        }
+        
         if (this.transformation==null) {
-            this.transformation = (Function<? super Collection<T>, ? extends U>) t1;
-        } else if (t1!=null && !t1.equals(this.transformation)) {
+            this.transformation = (Function<? super Collection<T>, ? extends U>) t2;
+        } else if (t1!=null && !Objects.equals(t2, this.transformation)) {
             throw new IllegalStateException("Cannot supply both "+TRANSFORMATION_UNTYPED+" and "+TRANSFORMATION+" unless they are equal.");
         }
     }
