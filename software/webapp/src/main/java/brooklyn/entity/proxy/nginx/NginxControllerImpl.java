@@ -113,7 +113,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
                 .uniqueTag("nginx-poll")
                 .entity(this)
                 .period(getConfig(HTTP_POLL_PERIOD))
-                .baseUri(new UrlInferencer(ImmutableMap.of("include-runtime", "true")))
+                .baseUri(new UrlInferencer(null))
                 .poll(new HttpPollConfig<Boolean>(NGINX_URL_ANSWERS_NICELY)
                         // Any response from Nginx is good.
                         .checkSuccess(Predicates.alwaysTrue())
