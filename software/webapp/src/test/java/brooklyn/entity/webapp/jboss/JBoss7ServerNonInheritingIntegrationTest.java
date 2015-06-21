@@ -78,14 +78,13 @@ public class JBoss7ServerNonInheritingIntegrationTest extends BrooklynAppLiveTes
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
         
-        String httpUrl = "http://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
-        String httpsUrl = "https://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/";
-        
-        assertEquals(server.getAttribute(JBoss7Server.ROOT_URL).toLowerCase(), httpUrl.toLowerCase());
-        
+        // Don't rely on hostname; differs from URL when tests run on AWS VM
+        String httpUrl = server.getAttribute(JBoss7Server.ROOT_URL);
+        assertEquals(httpUrl.toLowerCase(), ("http://"+URI.create(httpUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/").toLowerCase());
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(httpUrl, 200);
         HttpTestUtils.assertContentContainsText(httpUrl, "Hello");
         
+        String httpsUrl = "https://"+URI.create(httpUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/";
         HttpTestUtils.assertUrlUnreachable(httpsUrl);
 
         Asserts.succeedsEventually(new Runnable() {
@@ -108,11 +107,11 @@ public class JBoss7ServerNonInheritingIntegrationTest extends BrooklynAppLiveTes
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
         
-        String httpUrl = "http://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
-        String httpsUrl = "https://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/";
+        // Don't rely on hostname; differs from URL when tests run on AWS VM
+        String httpsUrl = server.getAttribute(JBoss7Server.ROOT_URL);
+        assertEquals(httpsUrl.toLowerCase(), ("https://"+URI.create(httpsUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/").toLowerCase());
         
-        assertEquals(server.getAttribute(JBoss7Server.ROOT_URL).toLowerCase(), httpsUrl.toLowerCase());
-        
+        String httpUrl = "http://"+URI.create(httpsUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
         HttpTestUtils.assertUrlUnreachable(httpUrl);
         
         // FIXME HttpTestUtils isn't coping with https, giving
@@ -144,11 +143,12 @@ public class JBoss7ServerNonInheritingIntegrationTest extends BrooklynAppLiveTes
                 .configure(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath())));
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
-        
-        String httpUrl = "http://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
-        String httpsUrl = "https://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/";
 
-        assertEquals(server.getAttribute(JBoss7Server.ROOT_URL).toLowerCase(), httpsUrl.toLowerCase());
+        // Don't rely on hostname; differs from URL when tests run on AWS VM
+        String httpsUrl = server.getAttribute(JBoss7Server.ROOT_URL);
+        String httpUrl = "http://"+URI.create(httpsUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
+        
+        assertEquals(httpsUrl.toLowerCase(), ("https://"+URI.create(httpsUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/").toLowerCase());
 
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(httpUrl, 200);
         HttpTestUtils.assertContentContainsText(httpUrl, "Hello");
