@@ -36,6 +36,8 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.task.Tasks;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -93,7 +95,8 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
                 throw new IllegalStateException("Propagator enricher "+this+" must not have 'propagating' set at same time as either 'propagatingAll' or 'propagatingAllBut'");
             }
             
-            for (Sensor<?> sensor : getConfig(PROPAGATING)) {
+            for (Object sensorO : getConfig(PROPAGATING)) {
+                Sensor<?> sensor = Tasks.resolving(sensorO).as(Sensor.class).timeout(Duration.millis(50)).context(producer).get();
                 if (!sensorMappingTemp.containsKey(sensor)) {
                     sensorMappingTemp.put(sensor, sensor);
                 }

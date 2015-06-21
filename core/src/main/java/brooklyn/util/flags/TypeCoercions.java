@@ -45,11 +45,14 @@ import javax.annotation.concurrent.GuardedBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.Sensor;
+import brooklyn.event.basic.Sensors;
 import brooklyn.internal.BrooklynInitialization;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.MutableSet;
@@ -61,6 +64,7 @@ import brooklyn.util.javalang.Enums;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.UserAndHostAndPort;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
@@ -723,7 +727,31 @@ public class TypeCoercions {
         registerAdapter(String.class, AttributeSensor.class, new Function<String,AttributeSensor>() {
             @Override
             public AttributeSensor apply(final String input) {
-                return new BasicAttributeSensor<Object>(Object.class, input);
+                Entity entity = BrooklynTaskTags.getContextEntity(Tasks.current());
+                if (entity!=null) {
+                    Sensor<?> result = null;
+                    if (entity!=null) {
+                        result = entity.getEntityType().getSensor(input);
+                        if (result instanceof AttributeSensor) 
+                            return (AttributeSensor) result;
+                    }
+                }
+                return Sensors.newSensor(Object.class, input);
+            }
+        });
+        registerAdapter(String.class, Sensor.class, new Function<String,Sensor>() {
+            @Override
+            public AttributeSensor apply(final String input) {
+                Entity entity = BrooklynTaskTags.getContextEntity(Tasks.current());
+                if (entity!=null) {
+                    Sensor<?> result = null;
+                    if (entity!=null) {
+                        result = entity.getEntityType().getSensor(input);
+                        if (result != null) 
+                            return (AttributeSensor) result;
+                    }
+                }
+                return Sensors.newSensor(Object.class, input);
             }
         });
         registerAdapter(String.class, List.class, new Function<String,List>() {
