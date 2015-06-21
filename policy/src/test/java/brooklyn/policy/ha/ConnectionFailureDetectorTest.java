@@ -53,7 +53,7 @@ import com.google.common.net.HostAndPort;
 
 public class ConnectionFailureDetectorTest {
 
-    private static final int TIMEOUT_MS = 10*1000;
+    private static final int TIMEOUT_MS = 30*1000;
     private static final int OVERHEAD = 250;
     private static final int POLL_PERIOD = 100;
 
