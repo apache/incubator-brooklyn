@@ -18,9 +18,19 @@
  */
 package brooklyn.management.internal;
 
+import java.lang.reflect.Constructor;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.config.ConfigPredicates;
+import brooklyn.config.ConfigUtils;
 import brooklyn.config.external.ExternalConfigSupplier;
+import brooklyn.management.ManagementContext;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Maps;
 
@@ -32,10 +42,13 @@ import com.google.common.collect.Maps;
  */
 public class BasicExternalConfigSupplierRegistry implements ExternalConfigSupplierRegistry {
 
+    private static final Logger LOG = LoggerFactory.getLogger(BasicExternalConfigSupplierRegistry.class);
+
     private final Map<String, ExternalConfigSupplier> providersByName = Maps.newLinkedHashMap();
     private final Object providersMapMutex = new Object();
 
-    public BasicExternalConfigSupplierRegistry() {
+    public BasicExternalConfigSupplierRegistry(ManagementContext mgmt) {
+        updateFromBrooklynProperties(mgmt);
     }
 
     @Override
@@ -64,6 +77,44 @@ public class BasicExternalConfigSupplierRegistry implements ExternalConfigSuppli
                 throw new IllegalArgumentException("No provider found with name '" + providerName + "'");
             return provider.get(key);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void updateFromBrooklynProperties(ManagementContext mgmt) {
+        // form is:
+        //     brooklyn.external.<name> : fully.qualified.ClassName
+        //     brooklyn.external.<name>.<key> : <value>
+        //     brooklyn.external.<name>.<key> : <value>
+        //     brooklyn.external.<name>.<key> : <value>
+
+        String EXTERNAL_PROVIDER_PREFIX = "brooklyn.external.";
+        Map<String, Object> externalProviderProperties = mgmt.getConfig().submap(ConfigPredicates.startingWith(EXTERNAL_PROVIDER_PREFIX)).asMapWithStringKeys();
+        ClassLoader classloader = mgmt.getCatalogClassLoader();
+        List<Exception> exceptions = new LinkedList<Exception>();
+
+        for (String key : externalProviderProperties.keySet()) {
+            String strippedKey = key.substring(EXTERNAL_PROVIDER_PREFIX.length());
+            if (strippedKey.contains("."))
+                continue;
+
+            String name = strippedKey;
+            String providerClassname = (String) externalProviderProperties.get(key);
+            Map<String, Object> config = ConfigUtils.filterForPrefixAndStrip(externalProviderProperties, key + ".");
+
+            try {
+                Class<? extends ExternalConfigSupplier> providerClass = (Class<? extends ExternalConfigSupplier>) classloader.loadClass(providerClassname);
+                Constructor<? extends ExternalConfigSupplier> constructor = providerClass.getConstructor(String.class, Map.class);
+                ExternalConfigSupplier configSupplier = constructor.newInstance(name, config);
+                addProvider(name, configSupplier);
+
+            } catch (Exception e) {
+                LOG.error("Failed to instantiate external config supplier named '" + name + "': " + e, e);
+                exceptions.add(e);
+            }
+        }
+
+        if (!exceptions.isEmpty())
+            Exceptions.propagate(exceptions);
     }
 
 }
