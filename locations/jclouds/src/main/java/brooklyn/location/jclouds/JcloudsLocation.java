@@ -364,7 +364,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 ? (OsFamily.WINDOWS == os.getFamily()) 
                 : (OsFamily.WINDOWS == confFamily);
     }
-
+    
+    public boolean isNodeFirewalldEnabled(NodeMetadata node) {
+        String OS = node.getOperatingSystem().getFamily().toString();
+        String version = node.getOperatingSystem().getVersion();
+        return node.getOperatingSystem().getVersion().startsWith("7") &&
+             (node.getOperatingSystem().getFamily().equals(OsFamily.RHEL) ||
+              node.getOperatingSystem().getFamily().equals(OsFamily.CENTOS));
+    }
+    
     protected Semaphore getMachineCreationSemaphore() {
         return checkNotNull(getConfig(MACHINE_CREATION_SEMAPHORE), MACHINE_CREATION_SEMAPHORE.getName());
     }
@@ -868,9 +876,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info("No ports to open in iptables (no inbound ports) for {} at {}", machineLocation, this);
                         } else {
                             customisationForLogging.add("open iptables");
-
-                            List<String> iptablesRules = createIptablesRulesForNetworkInterface(inboundPorts);
-                            iptablesRules.add(IptablesCommands.saveIptablesRules());
+                            
+                            List<String> iptablesRules = Lists.newArrayList();
+                            
+                            if (isNodeFirewalldEnabled(node)) {
+                                for (Integer port : inboundPorts) {
+                                    iptablesRules.add(IptablesCommands.addFirewalldRule(Chain.INPUT, Protocol.TCP, port, Policy.ACCEPT));
+                                 }
+                            } else {
+                                iptablesRules = createIptablesRulesForNetworkInterface(inboundPorts);
+                                iptablesRules.add(IptablesCommands.saveIptablesRules());
+                            }
                             List<String> batch = Lists.newArrayList();
                             // Some entities, such as Riak (erlang based) have a huge range of ports, which leads to a script that
                             // is too large to run (fails with a broken pipe). Batch the rules into batches of 50
@@ -894,8 +910,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         LOG.warn("Ignoring flag OPEN_IPTABLES on Windows location {}", machineLocation);
                     } else {
                         customisationForLogging.add("stop iptables");
-
-                        List<String> cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
+                        
+                        List<String> cmds = ImmutableList.<String>of();
+                        if (isNodeFirewalldEnabled(node)) {
+                            cmds = ImmutableList.of(IptablesCommands.firewalldServiceStop(), IptablesCommands.firewalldServiceStatus());
+                        } else {
+                            cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
+                        }
                         ((SshMachineLocation)machineLocation).execCommands("Stopping iptables", cmds);
                     }
                 }
