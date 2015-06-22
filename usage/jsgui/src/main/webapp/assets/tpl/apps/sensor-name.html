@@ -23,7 +23,7 @@ under the License.
     title="<% 
          if (description) { %><b><%- description %></b><br/><% } 
          if (type) { %>(<% 
-           if (type.startsWith("java.lang.") || type.startsWith("util.")) type = type.substring(10);
+           if (type.startsWith("java.lang.") || type.startsWith("java.util.")) type = type.substring(10);
          %><%- type %>)<% } %>">
     <%- name %>
 </span>
