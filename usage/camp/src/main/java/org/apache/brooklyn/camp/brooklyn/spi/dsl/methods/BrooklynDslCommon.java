@@ -21,6 +21,7 @@ package org.apache.brooklyn.camp.brooklyn.spi.dsl.methods;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -47,6 +48,30 @@ import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import org.apache.commons.beanutils.BeanUtils;
+
+import brooklyn.config.external.ExternalConfigSupplier;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityDynamicType;
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.trait.Configurable;
+import brooklyn.event.Sensor;
+import brooklyn.event.basic.DependentConfiguration;
+import brooklyn.management.Task;
+import brooklyn.management.TaskAdaptable;
+import brooklyn.management.TaskFactory;
+import brooklyn.management.internal.ExternalConfigSupplierRegistry;
+import brooklyn.management.internal.ManagementContextInternal;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.flags.ClassCoercionException;
+import brooklyn.util.flags.FlagUtils;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.javalang.Reflections;
+import brooklyn.util.task.DeferredSupplier;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
+import brooklyn.util.text.Strings;
+import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -294,6 +319,46 @@ public class BrooklynDslCommon {
         @Override
         public String toString() {
             return "$brooklyn:object(\""+type.getName()+"\")";
+        }
+    }
+
+    /**
+     * Defers to management context's {@link ExternalConfigSupplierRegistry} to resolve values at runtime.
+     * The name of the appropriate {@link ExternalConfigSupplier} is captured, along with the key of
+     * the desired config value.
+     */
+    public static DslExternal external(final String providerName, final String key) {
+        return new DslExternal(providerName, key);
+    }
+    protected final static class DslExternal extends BrooklynDslDeferredSupplier<Object> {
+        private static final long serialVersionUID = -3860334240490397057L;
+        private final String providerName;
+        private final String key;
+
+        public DslExternal(String providerName, String key) {
+            this.providerName = providerName;
+            this.key = key;
+        }
+
+        @Override
+        public Task<Object> newTask() {
+            return Tasks.<Object>builder()
+                .name("resolving external configuration: '" + key + "' from provider '" + providerName + "'")
+                .dynamic(false)
+                .body(new Callable<Object>() {
+                    @Override
+                    public Object call() throws Exception {
+                        EntityInternal entity = (EntityInternal) BrooklynDslDeferredSupplier.entity();
+                        ManagementContextInternal managementContext = (ManagementContextInternal) entity.getManagementContext();
+                        return managementContext.getExternalConfigProviderRegistry().getConfig(providerName, key);
+                    }
+                })
+                .build();
+        }
+
+        @Override
+        public String toString() {
+            return "$brooklyn:external("+providerName+", "+key+")";
         }
     }
 
