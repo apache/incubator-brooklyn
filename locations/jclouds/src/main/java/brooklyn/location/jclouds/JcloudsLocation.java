@@ -364,13 +364,15 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 ? (OsFamily.WINDOWS == os.getFamily()) 
                 : (OsFamily.WINDOWS == confFamily);
     }
-    
-    public boolean isNodeFirewalldEnabled(NodeMetadata node) {
-        String OS = node.getOperatingSystem().getFamily().toString();
-        String version = node.getOperatingSystem().getVersion();
-        return node.getOperatingSystem().getVersion().startsWith("7") &&
-             (node.getOperatingSystem().getFamily().equals(OsFamily.RHEL) ||
-              node.getOperatingSystem().getFamily().equals(OsFamily.CENTOS));
+
+    public boolean isLocationFirewalldEnabled(SshMachineLocation location) {
+        int result = location.execCommands("checking if firewalld is active", 
+                ImmutableList.of(IptablesCommands.firewalldServiceIsActive()));
+        if (result == 0) {
+            return true;
+        }
+        
+        return false;
     }
     
     protected Semaphore getMachineCreationSemaphore() {
@@ -876,10 +878,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             LOG.info("No ports to open in iptables (no inbound ports) for {} at {}", machineLocation, this);
                         } else {
                             customisationForLogging.add("open iptables");
-                            
+
                             List<String> iptablesRules = Lists.newArrayList();
-                            
-                            if (isNodeFirewalldEnabled(node)) {
+
+                            if (isLocationFirewalldEnabled((SshMachineLocation)machineLocation)) {
                                 for (Integer port : inboundPorts) {
                                     iptablesRules.add(IptablesCommands.addFirewalldRule(Chain.INPUT, Protocol.TCP, port, Policy.ACCEPT));
                                  }
@@ -910,9 +912,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         LOG.warn("Ignoring flag OPEN_IPTABLES on Windows location {}", machineLocation);
                     } else {
                         customisationForLogging.add("stop iptables");
-                        
+
                         List<String> cmds = ImmutableList.<String>of();
-                        if (isNodeFirewalldEnabled(node)) {
+                        if (isLocationFirewalldEnabled((SshMachineLocation)machineLocation)) {
                             cmds = ImmutableList.of(IptablesCommands.firewalldServiceStop(), IptablesCommands.firewalldServiceStatus());
                         } else {
                             cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());

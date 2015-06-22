@@ -115,7 +115,12 @@ public class IptablesCommands {
     public static String firewalldServiceStatus() {
         return firewalldService("status");
     }
-    
+
+    @Beta // implementation not portable across distros
+    public static String firewalldServiceIsActive() {
+        return firewalldService("is-active");
+    }
+
     /**
      * Returns the command that saves iptables rules on file.
      *

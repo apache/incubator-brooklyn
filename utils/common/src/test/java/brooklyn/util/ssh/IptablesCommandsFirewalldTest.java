@@ -61,6 +61,11 @@ public class IptablesCommandsFirewalldTest {
             + "else echo \"( { which systemctl && systemctl stop firewalld ; } || "
             + "/usr/bin/systemctl stop firewalld )\" | sudo -E -n -S -s -- bash ; fi )";
 
+    private static final String firewalldServiceIsActive = "( if test \"$UID\" -eq 0; then ( ( { "
+            + "which systemctl && systemctl is-active firewalld ; } || /usr/bin/systemctl is-active firewalld ) ); "
+            + "else echo \"( { which systemctl && systemctl is-active firewalld ; } || /usr/bin/systemctl is-active firewalld )\" | "
+            + "sudo -E -n -S -s -- bash ; fi )";
+
     @Test
     public void testAddFirewalldRule() {
         Assert.assertEquals(IptablesCommands.addFirewalldRule(Chain.INPUT,
@@ -90,5 +95,10 @@ public class IptablesCommandsFirewalldTest {
     @Test
     public void testFirewalldServiceStop() {
         Assert.assertEquals(IptablesCommands.firewalldServiceStop(), firewalldServiceStop);
+    }
+
+    @Test
+    public void testFirewalldServiceIsActive() {
+        Assert.assertEquals(IptablesCommands.firewalldServiceIsActive(), firewalldServiceIsActive);
     }
 }
