@@ -19,6 +19,7 @@
 package brooklyn.event.feed.function;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
@@ -98,6 +99,7 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
                 .build();
         
         Asserts.succeedsEventually(new Runnable() {
+            @Override
             public void run() {
                 Integer val = entity.getAttribute(SENSOR_INT);
                 assertTrue(val != null && val > 2, "val=" + val);
@@ -128,6 +130,15 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
     }
     
     @Test
+    public void testFeedDeDupeIgnoresSameObject() throws Exception {
+        testPollsFunctionRepeatedlyToSetAttribute();
+        entity.addFeed(feed);
+        assertFeedIsPolling();
+        entity.addFeed(feed);
+        assertFeedIsPollingContinuously();
+    }
+
+    @Test
     public void testCallsOnSuccessWithResultOfCallable() throws Exception {
         feed = FunctionFeed.builder()
                 .entity(entity)
@@ -153,6 +164,7 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
                 .build();
 
         Asserts.succeedsEventually(new Runnable() {
+            @Override
             public void run() {
                 String val = entity.getAttribute(SENSOR_STRING);
                 assertTrue(val != null && val.contains(errMsg), "val=" + val);
@@ -217,6 +229,7 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
                 .build();
 
         Asserts.succeedsEventually(new Runnable() {
+            @Override
             public void run() {
                 assertEquals(ints.subList(0, 2), ImmutableList.of(0, 1));
                 assertTrue(strings.size()>=2, "wrong strings list: "+strings);
@@ -248,6 +261,26 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
                 .onFailureOrException(Functions.<Integer>constant(null));
     }
     
+    
+    private void assertFeedIsPolling() {
+        final Integer val = entity.getAttribute(SENSOR_INT);
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                assertNotEquals(val, entity.getAttribute(SENSOR_INT));
+            }
+        });
+    }
+    
+    private void assertFeedIsPollingContinuously() {
+        Asserts.succeedsContinually(new Runnable() {
+            @Override
+            public void run() {
+                assertFeedIsPolling();
+            }
+        });
+    }
+
     private static class IncrementingCallable implements Callable<Integer> {
         private final AtomicInteger next = new AtomicInteger(0);
         
