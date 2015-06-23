@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.Closure;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -35,6 +36,8 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
+import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
@@ -51,6 +54,7 @@ import brooklyn.policy.loadbalancing.LoadBalancingPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
@@ -88,7 +92,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         private Entity entityWithMetric;
         private Number metricUpperBound;
         private Number metricLowerBound;
-        private int minPoolSize = 0;
+        private int minPoolSize = 1;
         private int maxPoolSize = Integer.MAX_VALUE;
         private Integer resizeDownIterationIncrement;
         private Integer resizeDownIterationMax;
@@ -357,7 +361,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @SetFromFlag("minPoolSize")
     public static final ConfigKey<Integer> MIN_POOL_SIZE = BasicConfigKey.builder(Integer.class)
             .name("autoscaler.minPoolSize")
-            .defaultValue(0)
+            .defaultValue(1)
             .reconfigurable(true)
             .build();
     
@@ -1034,7 +1038,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
     private void resizeNow() {
         long currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
         CalculatedDesiredPoolSize calculatedDesiredPoolSize = calculateDesiredPoolSize(currentPoolSize);
-        long desiredPoolSize = calculatedDesiredPoolSize.size;
+        final long desiredPoolSize = calculatedDesiredPoolSize.size;
         boolean stable = calculatedDesiredPoolSize.stable;
         
         if (!stable) {
@@ -1054,8 +1058,18 @@ public class AutoScalerPolicy extends AbstractPolicy {
         if (LOG.isDebugEnabled()) LOG.debug("{} requesting resize to {}; current {}, min {}, max {}", 
                 new Object[] {this, desiredPoolSize, currentPoolSize, getMinPoolSize(), getMaxPoolSize()});
         
-        // TODO Should we use int throughout, rather than casting here?
-        getResizeOperator().resize(poolEntity, (int) desiredPoolSize);
+        Entities.submit(entity, Tasks.<Void>builder().name("Auto-scaler")
+            .description("Auto-scaler recommending resize from "+currentPoolSize+" to "+desiredPoolSize)
+            .tag(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)
+            .body(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    // TODO Should we use int throughout, rather than casting here?
+                    getResizeOperator().resize(poolEntity, (int) desiredPoolSize);
+                    return null;
+                }
+            }).build())
+            .blockUntilEnded();
     }
     
     /**
