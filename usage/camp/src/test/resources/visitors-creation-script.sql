@@ -20,7 +20,7 @@ create database visitors;
 use visitors;
 
 # not necessary to create user if we grant (and not supported in some dialects)
-# create user 'brooklyn' identified by 'br00k11n';
+create user 'brooklyn' identified by 'br00k11n';
 
 grant usage on *.* to 'brooklyn'@'%' identified by 'br00k11n';
 

@@ -26,7 +26,7 @@ services:
     http.port: 9280+
     proxy.http.port: 9210+
     java.sysprops: 
-      brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s\\&password=%s",
+      brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s&password=%s",
          component("db").attributeWhenReady("datastore.url"), "visitors", "brooklyn", "br00k11n")
   brooklyn.policies:
   - policyType: brooklyn.policy.autoscaling.AutoScalerPolicy
