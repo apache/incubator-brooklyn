@@ -23,17 +23,16 @@ import java.util.Collection;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
-import org.apache.brooklyn.core.objs.BrooklynObjectInternal.SubscriptionSupportInternal;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 
 import com.google.common.base.Preconditions;
 
-public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObjectInternal {
+public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObjectInternal<CatalogItem<T,SpecT>,CatalogItemDo<T,SpecT>> {
 
     protected final CatalogDo catalog;
     protected final CatalogItemDtoAbstract<T,SpecT> itemDto;
@@ -63,6 +62,19 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObj
     @Override
     public SubscriptionSupportInternal subscriptions() {
         throw new UnsupportedOperationException();
+    }
+    
+    /**
+     * @throws UnsupportedOperationException; relations are not supported for catalog items
+     */
+    @Override
+    public RelationSupportInternal<CatalogItem<T,SpecT>> relations() {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public <U> U getConfig(ConfigKey<U> key) {
+        return config().get(key);
     }
     
     @Override

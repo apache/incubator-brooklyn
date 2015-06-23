@@ -46,7 +46,7 @@ import com.google.common.annotations.Beta;
  * for the brooklyn framework only).
  */
 @Beta
-public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Rebindable {
+public interface EntityInternal extends BrooklynObjectInternal<Entity,EntityInternal>, EntityLocal, Rebindable {
     
     void addLocations(Collection<? extends Location> locations);
 

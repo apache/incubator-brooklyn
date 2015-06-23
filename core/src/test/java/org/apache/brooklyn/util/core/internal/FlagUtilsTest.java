@@ -272,6 +272,11 @@ public class FlagUtilsTest {
             return configSupport;
         }
         
+        @Override
+        public <T> T getConfig(ConfigKey<T> key) {
+            return config().get(key);
+        }
+        
         public <T> T setConfig(ConfigKey<T> key, T val) {
             return config().set(key, val);
         }

@@ -94,7 +94,7 @@ import com.google.common.reflect.TypeToken;
  * 
  * Override {@link #configure(Map)} to add special initialization logic.
  */
-public abstract class AbstractLocation extends AbstractBrooklynObject implements LocationInternal, HasHostGeoInfo, Configurable {
+public abstract class AbstractLocation extends AbstractBrooklynObject<Location,LocationInternal> implements LocationInternal, HasHostGeoInfo, Configurable {
     
     private static final long serialVersionUID = -7495805474138619830L;
 
@@ -175,7 +175,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         locationType = new LocationDynamicType(this);
         
         if (isLegacyConstruction()) {
-            AbstractBrooklynObject checkWeGetThis = configure(properties);
+            AbstractLocation checkWeGetThis = configure(properties);
             assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
 
             boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));

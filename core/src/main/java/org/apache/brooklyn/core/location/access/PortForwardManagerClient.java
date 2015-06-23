@@ -394,6 +394,11 @@ public class PortForwardManagerClient implements PortForwardManager {
     }
 
     @Override
+    public RelationSupport<?> relations() {
+        return getDelegate().relations();
+    }
+    
+    @Override
     public <T> T setConfig(ConfigKey<T> key, T val) {
         return getDelegate().config().set(key, val);
     }

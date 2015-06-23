@@ -141,7 +141,7 @@ import com.google.common.collect.Sets;
  * The legacy (pre 0.5) mechanism for creating entities is for others to call the constructor directly.
  * This is now deprecated.
  */
-public abstract class AbstractEntity extends AbstractBrooklynObject implements EntityLocal, EntityInternal {
+public abstract class AbstractEntity extends AbstractBrooklynObject<Entity,EntityInternal> implements EntityLocal, EntityInternal {
     
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
     
@@ -287,7 +287,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         entityType = new EntityDynamicType(this);
         
         if (isLegacyConstruction()) {
-            AbstractBrooklynObject checkWeGetThis = configure(flags);
+            AbstractEntity checkWeGetThis = configure(flags);
             assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
 
             boolean deferConstructionChecks = (flags.containsKey("deferConstructionChecks") && TypeCoercions.coerce(flags.get("deferConstructionChecks"), Boolean.class));
@@ -2082,4 +2082,5 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         super.onTagsChanged();
         getManagementSupport().getEntityChangeListener().onTagsChanged();
     }
+    
 }

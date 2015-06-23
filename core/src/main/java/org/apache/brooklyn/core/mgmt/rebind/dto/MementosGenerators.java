@@ -44,9 +44,9 @@ import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.AttributeSensor.SensorPersistenceMode;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.Feed;
-import org.apache.brooklyn.api.sensor.AttributeSensor.SensorPersistenceMode;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemDo;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
@@ -66,6 +66,8 @@ import org.apache.brooklyn.util.core.flags.FlagUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+
+import brooklyn.basic.relations.Relationship;
 
 public class MementosGenerators {
 
@@ -429,6 +431,7 @@ public class MementosGenerators {
         return builder.build();
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static void populateBrooklynObjectMementoBuilder(BrooklynObject instance, AbstractMemento.Builder<?> builder) {
         if (Proxy.isProxyClass(instance.getClass())) {
             throw new IllegalStateException("Attempt to create memento from proxy "+instance+" (would fail with wrong type)");
@@ -444,6 +447,13 @@ public class MementosGenerators {
         }
         for (Object tag : instance.tags().getTags()) {
             builder.tags.add(tag); 
+        }
+        if (!(instance instanceof CatalogItem)) {
+            // CatalogItem is a BrooklynObject so it can be persisted
+            // but it does not support relations
+            for (Relationship<?,? extends BrooklynObject> relationship: instance.relations().getRelationships()) {
+                builder.relations.put(relationship.getRelationshipTypeName(), instance.relations().getRelations((Relationship)relationship));
+            }
         }
     }
 

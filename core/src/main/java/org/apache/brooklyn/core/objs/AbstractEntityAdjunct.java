@@ -67,7 +67,7 @@ import com.google.common.collect.Maps;
 /**
  * Common functionality for policies and enrichers
  */
-public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject implements BrooklynObjectInternal, EntityAdjunct, Configurable {
+public abstract class AbstractEntityAdjunct<PublicSelfType extends BrooklynObject,InternalSelfType extends AbstractEntityAdjunct<PublicSelfType,InternalSelfType>> extends AbstractBrooklynObject<PublicSelfType,InternalSelfType> implements BrooklynObjectInternal<PublicSelfType,InternalSelfType>, EntityAdjunct, Configurable {
     private static final Logger log = LoggerFactory.getLogger(AbstractEntityAdjunct.class);
 
     private boolean _legacyNoConstructionInit;
@@ -121,7 +121,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         _legacyNoConstructionInit = (properties != null) && Boolean.TRUE.equals(properties.get("noConstructionInit"));
         
         if (isLegacyConstruction()) {
-            AbstractBrooklynObject checkWeGetThis = configure(properties);
+            InternalSelfType checkWeGetThis = configure(properties);
             assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
 
             boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
@@ -137,7 +137,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     @Override
     @Deprecated
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public AbstractEntityAdjunct configure(Map flags) {
+    public InternalSelfType configure(Map flags) {
         // TODO only set on first time through
         boolean isFirstTime = true;
         
@@ -183,7 +183,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
             }
         }
         
-        return this;
+        return (InternalSelfType) this;
     }
     
     /**
@@ -366,6 +366,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         }
     }
 
+    @Override
     public <T> T getConfig(ConfigKey<T> key) {
         return config().get(key);
     }

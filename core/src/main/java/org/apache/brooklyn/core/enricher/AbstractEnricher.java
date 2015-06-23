@@ -43,7 +43,7 @@ import com.google.common.collect.Maps;
 /**
 * Base {@link Enricher} implementation; all enrichers should extend this or its children
 */
-public abstract class AbstractEnricher extends AbstractEntityAdjunct implements Enricher {
+public abstract class AbstractEnricher extends AbstractEntityAdjunct<Enricher,AbstractEnricher> implements Enricher {
 
     public static final ConfigKey<Boolean> SUPPRESS_DUPLICATES = ConfigKeys.newBooleanConfigKey("enricher.suppressDuplicates",
         "Whether duplicate values published by this enricher should be suppressed");

@@ -41,6 +41,11 @@ public interface Configurable {
     @Deprecated
     public <T> T setConfig(ConfigKey<T> key, T val);
 
+    /**
+     * Convenience method for {@code config().get(key)}
+     */
+    <T> T getConfig(ConfigKey<T> key);
+
     ConfigurationSupport config();
     
     @Beta

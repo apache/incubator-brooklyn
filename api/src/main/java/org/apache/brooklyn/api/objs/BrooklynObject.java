@@ -34,6 +34,8 @@ import org.apache.brooklyn.api.sensor.SensorEventListener;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 
+import brooklyn.basic.relations.Relationship;
+
 /**
  * Super-type of entity, location, policy and enricher.
  */
@@ -70,6 +72,12 @@ public interface BrooklynObject extends Identifiable, Configurable {
      */
     SubscriptionSupport subscriptions();
 
+    /**
+     * Relations specify a typed, directed connection between two entities.
+     * Generic type is overridden in sub-interfaces.
+     */
+    public RelationSupport<?> relations();
+    
     public interface TagSupport {
         /**
          * @return An immutable copy of the set of tags on this entity. 
@@ -140,5 +148,12 @@ public interface BrooklynObject extends Identifiable, Configurable {
          * see {@link SubscriptionSupport#unsubscribe(Entity, SubscriptionHandle)} 
          */
         boolean unsubscribe(SubscriptionHandle handle);
+    }
+    
+    public interface RelationSupport<T extends BrooklynObject> {
+        public <U extends BrooklynObject> void add(Relationship<? super T,U> relationship, U target);
+        public <U extends BrooklynObject> void remove(Relationship<? super T,U> relationship, U target);
+        public Set<Relationship<? super T,? extends BrooklynObject>> getRelationships();
+        public <U extends BrooklynObject> Set<U> getRelations(Relationship<? super T,U> relationship);
     }
 }

@@ -24,7 +24,6 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.EnricherMemento;
 import org.apache.brooklyn.api.objs.Configurable;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
-import org.apache.brooklyn.config.ConfigKey;
 
 import com.google.common.annotations.Beta;
 
@@ -46,17 +45,6 @@ public interface Enricher extends EntityAdjunct, Rebindable, Configurable {
      */
     @Beta
     EnricherType getEnricherType();
-
-    /**
-     * Convenience method for {@code config().get(key)}
-     */
-    <T> T getConfig(ConfigKey<T> key);
-    
-    /**
-     * @deprecated since 0.7.0; use {@link #config()}, such as {@code policy.config().setConfig(key, val)}
-     */
-    @Deprecated
-    <T> T setConfig(ConfigKey<T> key, T val);
 
     /**
      * Users are strongly discouraged from calling or overriding this method.

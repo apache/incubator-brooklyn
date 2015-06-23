@@ -44,7 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynObject implements CatalogItem<T, SpecT> {
+public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynObject<CatalogItem<T, SpecT>, CatalogItemDtoAbstract<T, SpecT>> implements CatalogItem<T, SpecT> {
 
     private static Logger LOG = LoggerFactory.getLogger(CatalogItemDtoAbstract.class);
 
@@ -79,6 +79,11 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     @Override
     public SubscriptionSupportInternal subscriptions() {
         throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public <U> U getConfig(ConfigKey<U> key) {
+        return config().get(key);
     }
     
     @Override
@@ -245,7 +250,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     }
 
     @Override
-    protected AbstractBrooklynObject configure(Map<?, ?> flags) {
+    protected CatalogItemDtoAbstract<T, SpecT> configure(Map<?, ?> flags) {
         FlagUtils.setFieldsFromFlags(flags, this);
         return this;
     }

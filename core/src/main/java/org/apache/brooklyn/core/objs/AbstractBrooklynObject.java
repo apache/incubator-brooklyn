@@ -24,10 +24,12 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.internal.ApiObjectsFactory;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl;
 import org.apache.brooklyn.core.objs.proxy.InternalFactory;
+import org.apache.brooklyn.core.relations.ByObjectBasicRelationSupport;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.text.Identifiers;
@@ -39,7 +41,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
+public abstract class AbstractBrooklynObject<PublicSelfType extends BrooklynObject,InternalSelfType extends BrooklynObjectInternal<PublicSelfType,InternalSelfType>> implements BrooklynObjectInternal<PublicSelfType,InternalSelfType> {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractBrooklynObject.class);
 
@@ -55,8 +57,18 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
     @SetFromFlag(value = "tags")
     private final Set<Object> tags = Sets.newLinkedHashSet();
 
+    private RelationSupportInternal<PublicSelfType> relations = new ByObjectBasicRelationSupport<PublicSelfType>(getPublicThis(), new RelationChangedCallback());
+    
     private volatile ManagementContext managementContext;
-
+    
+    @SuppressWarnings("unchecked")
+    /** returns this cast to T, e.g. EntityInternal */
+    protected InternalSelfType getThis() { return (InternalSelfType)this; }
+    
+    /** returns this cast to PublicT, e.g. Entity */
+    @SuppressWarnings("unchecked")
+    protected PublicSelfType getPublicThis() { return (PublicSelfType)this; }
+    
     public abstract void setDisplayName(String newName);
 
     public AbstractBrooklynObject() {
@@ -86,7 +98,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
      * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
      */
     @Deprecated
-    protected AbstractBrooklynObject configure() {
+    protected InternalSelfType configure() {
         return configure(Collections.emptyMap());
     }
 
@@ -105,7 +117,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
      * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
      */
     @Deprecated
-    protected abstract AbstractBrooklynObject configure(Map<?, ?> flags);
+    protected abstract InternalSelfType configure(Map<?, ?> flags);
 
     protected boolean isLegacyConstruction() {
         return _legacyConstruction;
@@ -242,6 +254,18 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
             }
             onTagsChanged();
             return result;
+        }
+    }
+
+    @Override
+    public RelationSupportInternal<PublicSelfType> relations() {
+        return relations;
+    }
+
+    private class RelationChangedCallback implements Runnable {
+        @Override
+        public void run() {
+            requestPersist();
         }
     }
 

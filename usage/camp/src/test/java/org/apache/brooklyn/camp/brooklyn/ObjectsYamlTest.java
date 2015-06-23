@@ -97,6 +97,11 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         public void setDouble(Double value) { this.value = value; }
 
         @Override
+        public <T> T getConfig(ConfigKey<T> key) {
+            return config().get(key);
+        }
+        
+        @Override
         public <T> T setConfig(ConfigKey<T> key, T value) {
             return config().set(key, value);
         }

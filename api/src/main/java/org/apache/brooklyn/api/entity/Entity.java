@@ -314,6 +314,8 @@ public interface Entity extends BrooklynObject {
 
     GroupSupport groups();
 
+    RelationSupport<Entity> relations();
+    
     @Beta
     public interface SensorSupport {
 
