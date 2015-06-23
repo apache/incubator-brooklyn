@@ -273,7 +273,8 @@ public class JmxSupport implements UsesJmx {
     public void applyJmxJavaSystemProperties(MutableMap.Builder<String,Object> result) {
         if (!isJmx()) return ;
 
-        HostAndPort jmx = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, entity.getAttribute(JMX_PORT));
+        Integer jmxPort = Preconditions.checkNotNull(entity.getAttribute(JMX_PORT), "jmx port must not be null for %s", entity);
+        HostAndPort jmx = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, jmxPort);
         Integer jmxRemotePort = getEntity().getAttribute(JMX_PORT);
         String hostName = jmx.getHostText();
 

@@ -60,6 +60,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.MutableMap;
@@ -350,7 +351,7 @@ services:
         log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
-        waitForApps(webConsoleUri.toString());
+        waitForApps(webConsoleUri, 1);
         String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
         List<String> appType = parseJsonList(apps, ImmutableList.of("spec", "type"), String.class);
         assertEquals(appType, ImmutableList.of(BasicApplication.class.getName()));
@@ -359,6 +360,18 @@ services:
     protected static void waitForApps(String webConsoleUri) {
         HttpTestUtils.assertHttpStatusCodeEquals(webConsoleUri+"/v1/applications", 200, 403);
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(webConsoleUri+"/v1/applications", 200);
+    }
+
+    protected void waitForApps(final URI webConsoleUri, final int num) {
+        waitForApps(webConsoleUri.toString());
+        
+        // e.g. [{"id":"UnBqPcqg","spec":{"name":"Application (UnBqPcqg)","type":"brooklyn.entity.basic.BasicApplication","locations":["pOL4NtiW"]},"status":"RUNNING","links":{"self":"/v1/applications/UnBqPcqg","entities":"/v1/applications/UnBqPcqg/entities"}}]
+        Asserts.succeedsEventually(new Runnable() {
+            public void run() {
+                String appsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
+                List<String> appIds = parseJsonList(appsContent, ImmutableList.of("id"), String.class);
+                assertEquals(appIds.size(), num);
+            }});
     }
 
     @Test(groups="Integration")
@@ -400,7 +413,7 @@ services:
         log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
         URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
-        waitForApps(webConsoleUri.toString());
+        waitForApps(webConsoleUri, 1);
 
         // Check that "mynamedloc" has been picked up from the brooklyn.properties
         String locsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/locations");
@@ -498,7 +511,7 @@ services:
         File pidFile = new File(getDriver(brooklynNode).getPidFile());
         URI webConsoleUri = brooklynNode.getAttribute(BrooklynNode.WEB_CONSOLE_URI);
 
-        waitForApps(webConsoleUri.toString());
+        waitForApps(webConsoleUri, 1);
 
         // Stop just the process; will not have unmanaged entity unless machine was being terminated 
         brooklynNode.invoke(BrooklynNode.STOP, ImmutableMap.<String, Object>of(
