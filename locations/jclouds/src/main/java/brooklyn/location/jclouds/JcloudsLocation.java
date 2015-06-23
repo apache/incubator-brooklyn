@@ -367,6 +367,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 : (OsFamily.WINDOWS == confFamily);
     }
 
+    public boolean isLocationFirewalldEnabled(SshMachineLocation location) {
+        int result = location.execCommands("checking if firewalld is active", 
+                ImmutableList.of(IptablesCommands.firewalldServiceIsActive()));
+        if (result == 0) {
+            return true;
+        }
+        
+        return false;
+    }
+    
     protected Semaphore getMachineCreationSemaphore() {
         return checkNotNull(getConfig(MACHINE_CREATION_SEMAPHORE), MACHINE_CREATION_SEMAPHORE.getName());
     }
@@ -871,8 +881,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         } else {
                             customisationForLogging.add("open iptables");
 
-                            List<String> iptablesRules = createIptablesRulesForNetworkInterface(inboundPorts);
-                            iptablesRules.add(IptablesCommands.saveIptablesRules());
+                            List<String> iptablesRules = Lists.newArrayList();
+
+                            if (isLocationFirewalldEnabled((SshMachineLocation)machineLocation)) {
+                                for (Integer port : inboundPorts) {
+                                    iptablesRules.add(IptablesCommands.addFirewalldRule(Chain.INPUT, Protocol.TCP, port, Policy.ACCEPT));
+                                 }
+                            } else {
+                                iptablesRules = createIptablesRulesForNetworkInterface(inboundPorts);
+                                iptablesRules.add(IptablesCommands.saveIptablesRules());
+                            }
                             List<String> batch = Lists.newArrayList();
                             // Some entities, such as Riak (erlang based) have a huge range of ports, which leads to a script that
                             // is too large to run (fails with a broken pipe). Batch the rules into batches of 50
@@ -897,7 +915,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     } else {
                         customisationForLogging.add("stop iptables");
 
-                        List<String> cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
+                        List<String> cmds = ImmutableList.<String>of();
+                        if (isLocationFirewalldEnabled((SshMachineLocation)machineLocation)) {
+                            cmds = ImmutableList.of(IptablesCommands.firewalldServiceStop(), IptablesCommands.firewalldServiceStatus());
+                        } else {
+                            cmds = ImmutableList.of(IptablesCommands.iptablesServiceStop(), IptablesCommands.iptablesServiceStatus());
+                        }
                         ((SshMachineLocation)machineLocation).execCommands("Stopping iptables", cmds);
                     }
                 }

@@ -89,6 +89,38 @@ public class IptablesCommands {
         return iptablesService("status");
     }
 
+    @Beta // implementation not portable across distros
+    public static String firewalldService(String cmd) {
+        return sudo(alternatives(
+                BashCommands.ifExecutableElse1("systemctl", "systemctl " + cmd + " firewalld"),
+                "/usr/bin/systemctl " + cmd + " firewalld"));
+    }
+
+    @Beta // implementation not portable across distros
+    public static String firewalldServiceStop() {
+        return firewalldService("stop");
+    }
+
+    @Beta // implementation not portable across distros
+    public static String firewalldServiceStart() {
+        return firewalldService("start");
+    }
+
+    @Beta // implementation not portable across distros
+    public static String firewalldServiceRestart() {
+        return firewalldService("restart");
+    }
+
+    @Beta // implementation not portable across distros
+    public static String firewalldServiceStatus() {
+        return firewalldService("status");
+    }
+
+    @Beta // implementation not portable across distros
+    public static String firewalldServiceIsActive() {
+        return firewalldService("is-active");
+    }
+
     /**
      * Returns the command that saves iptables rules on file.
      *
@@ -201,4 +233,29 @@ public class IptablesCommands {
         return addIptablesRule(direction, chain, networkInterface, protocol.convert(), port, policy);
     }
 
+    /**
+     * Returns the command that adds firewalld direct rule.
+     *
+     * @return Returns the command that adds firewalld direct rule.
+     */
+    public static String addFirewalldRule(Chain chain, brooklyn.util.net.Protocol protocol, int port, Policy policy) {
+        return addFirewalldRule(chain, Optional.<String>absent(), protocol, port, policy);
+    }
+    
+    /**
+     * Returns the command that adds firewalld direct rule.
+     *
+     * @return Returns the command that adds firewalld direct rule.
+     */
+    public static String addFirewalldRule(Chain chain, Optional<String> networkInterface, brooklyn.util.net.Protocol protocol, int port, Policy policy) {
+        String command = new String("/usr/bin/firewall-cmd");
+        String commandPermanent = new String("/usr/bin/firewall-cmd --permanent");
+        
+        String interfaceParameter = String.format("%s", networkInterface.isPresent() ? " -i " + networkInterface.get() : "");
+        
+        String commandParameters = String.format(" --direct --add-rule ipv4 filter %s 0 %s -p %s --dport %d -j %s", 
+                                                                chain, interfaceParameter,  protocol, port, policy);
+        
+        return sudo(chain(command + commandParameters, commandPermanent + commandParameters));
+    }
 }
