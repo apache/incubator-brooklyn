@@ -84,7 +84,6 @@ import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 import brooklyn.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.util.BrooklynLanguageExtensions;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
@@ -1509,6 +1508,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     /**
      * Convenience, which calls {@link EntityInternal#feeds()} and {@link FeedSupport#addFeed(Feed)}.
      */
+    @Override
     public <T extends Feed> T addFeed(T feed) {
         return feeds().addFeed(feed);
     }
@@ -1534,8 +1534,16 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         public <T extends Feed> T addFeed(T feed) {
             Feed old = findApparentlyEqualAndWarnIfNotSameUniqueTag(feeds, feed);
             if (old != null) {
-                LOG.debug("Removing "+old+" when adding "+feed+" to "+this);
-                removeFeed(old);
+                if (old == feed) {
+                    if (!BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_FEED_REGISTRATION_PROPERTY)) {
+                        LOG.debug("Feed " + feed + " already added, not adding a second time.");
+                    } // else expected to be added a second time through addFeed, ignore
+                    return feed;
+                } else {
+                    // Different feed object with (seemingly) same functionality, remove previous one, will stop it.
+                    LOG.debug("Removing "+old+" when adding "+feed+" to "+this);
+                    removeFeed(old);
+                }
             }
             
             CatalogUtils.setCatalogItemIdOnAddition(AbstractEntity.this, feed);
