@@ -59,15 +59,15 @@ brooklyn.catalog:
       - type:           server
         name:           My VM
       
-      # location can be `softlayer` or `jclouds:openstack-nova:https://9.9.9.9:9999/v2.0/`,
+      # location can be e.g. `softlayer` or `jclouds:openstack-nova:https://9.9.9.9:9999/v2.0/`,
       # or `localhost` or `byon: { nodes: [ 10.0.0.1, 10.0.0.2, 10.0.1.{1,2} ] }` 
       location:
         jclouds:aws-ec2:
-          # edit these to use your credential(or delete if credentials specified in brooklyn.properties)      
+          # edit these to use your credential (or delete if credentials specified in brooklyn.properties)      
           identity:     <REPLACE>
           credential:   <REPLACE>
           
-          region:       eu-west-1
+          region:       eu-central-1
           
           # we want Ubuntu, with a lot of RAM
           osFamily:     ubuntu
@@ -156,7 +156,7 @@ brooklyn.catalog:
       
       location:
         jclouds:aws-ec2:
-          region:       eu-west-1
+          region:       eu-central-1
           # edit these (or delete if credentials specified in brooklyn.properties)      
           identity:     <REPLACE>
           credential:   <REPLACE>
@@ -202,7 +202,7 @@ brooklyn.catalog:
           
       location:
         jclouds:aws-ec2:
-          region:       eu-west-1
+          region:       eu-central-1
           # edit these (or delete if credentials specified in brooklyn.properties)      
           identity:     <REPLACE>
           credential:   <REPLACE>
@@ -355,5 +355,5 @@ brooklyn.catalog:
           identity:     <REPLACE>
           credential:   <REPLACE>
           
-          region:       eu-west-1
+          region:       eu-central-1
           minRam:       2gb

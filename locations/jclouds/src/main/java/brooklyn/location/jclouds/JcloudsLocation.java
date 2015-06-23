@@ -53,6 +53,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
 import org.jclouds.cloudstack.compute.options.CloudStackTemplateOptions;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
@@ -979,10 +980,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // sometimes AWS nodes come up busted (eg ssh not allowed); just throw it back (and maybe try for another one)
             boolean destroyNode = (node != null) && Boolean.TRUE.equals(setup.get(DESTROY_ON_FAILURE));
 
+            if (e.toString().contains("VPCResourceNotSpecified")) {
+                LOG.error("Detected that your EC2 account is a legacy 'classic' account, but the recommended instance type requires VPC. "
+                    + "You can specify the 'eu-central-1' region to avoid this problem, or you can specify a classic-compatible instance type, "
+                    + "or you can specify a subnet to use with 'networkName' "
+                    + "(taking care that the subnet auto-assigns public IP's and allows ingress on all ports, "
+                    + "as Brooklyn does not currently configure security groups for non-default VPC's; "
+                    + "or setting up Brooklyn to be in the subnet or have a jump host or other subnet access configuration). "
+                    + "For more information on VPC vs classic see http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-vpc.html.");
+            }
+            
             LOG.error("Failed to start VM for {}{}: {}",
                     new Object[] {setup.getDescription(), (destroyNode ? " (destroying "+node+")" : ""), e.getMessage()});
             LOG.debug(Throwables.getStackTraceAsString(e));
-
+            
             if (destroyNode) {
                 if (machineLocation != null) {
                     releaseSafely(machineLocation);
@@ -1241,7 +1252,21 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
             .put(NETWORK_NAME, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        t.networks((String)v);
+                        if (t instanceof AWSEC2TemplateOptions) {
+                            // subnet ID is the sensible interpretation of network name in EC2
+                            ((AWSEC2TemplateOptions)t).subnetId((String)v);
+                            
+                        } else {
+                            if (t instanceof SoftLayerTemplateOptions) {
+                                LOG.warn("networkName may not be supported in SoftLayer; use `templateOptions` with `primaryNetworkComponentNetworkVlanId` or `primaryNetworkBackendComponentNetworkVlanId`");
+                            } else if (!(t instanceof CloudStackTemplateOptions) && !(t instanceof NovaTemplateOptions)) {
+                                LOG.warn("networkName may not be supported in this cloud; only known to work in CloudStack and OpenStack");
+                            }
+                            
+                            // looks like this is only supported in Cloudstack and Openstack
+                            // should we log warning if using another cloud?
+                            t.networks((String)v);
+                        }
                     }})
             .put(DOMAIN_NAME, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {

@@ -193,7 +193,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<Integer> OVERRIDE_RAM = ConfigKeys.newIntegerConfigKey("overrideRam", "Custom ram value");    
     
     public static final ConfigKey<String> NETWORK_NAME = ConfigKeys.newStringConfigKey(
-        "networkName", "Network name to specify as template option (e.g. GCE)");
+        "networkName", "Network name or ID where the instance should be created (e.g. the subnet ID in AWS");
 
     /**
      * CUSTOM_MACHINE_SETUP_SCRIPT_URL accepts a URL location that points to a shell script. 
