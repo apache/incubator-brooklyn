@@ -125,7 +125,7 @@ public class AutoScalerPolicyMetricTest {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
         
         tc.setAttribute(MY_ATTRIBUTE, 0);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 0));
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
     }
     
     @Test(groups="Integration")
