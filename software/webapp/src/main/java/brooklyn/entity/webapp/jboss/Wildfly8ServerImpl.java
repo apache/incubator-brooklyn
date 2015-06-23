@@ -160,6 +160,10 @@ public class Wildfly8ServerImpl extends JavaWebAppSoftwareProcessImpl implements
     public int getPortOffset() {
         return getConfig(PORT_INCREMENT);
     }
+    
+    public boolean isWelcomeRootEnabled() {
+        return false;
+    }
 
     public String getBindAddress() {
         return getConfig(BIND_ADDRESS);
