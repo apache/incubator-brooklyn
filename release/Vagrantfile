@@ -1,0 +1,66 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Vagrantfile that creates a basic workstation for compiling Brooklyn and
+# running tests. Particularly useful for running integration tests, as you
+# can clean up any failed tests simply by destroying and rebuilding the
+# Vagrant instance.
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure(2) do |config|
+
+  # Base on Ubuntu 14.04 LTS
+  config.vm.box = "ubuntu/trusty64"
+
+  # Provider-specific configuration so you can fine-tune various
+  # backing providers for Vagrant. These expose provider-specific options.
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "2048"
+  end
+
+  config.vm.network "forwarded_port", guest: 8008, host: 8008
+
+  config.vm.provision "file", source: "~/.gitconfig", destination: ".gitconfig"
+  config.vm.provision "file", source: "~/.gnupg/gpg.conf", destination: ".gnupg/gpg.conf"
+  config.vm.provision "file", source: "~/.gnupg/pubring.gpg", destination: ".gnupg/pubring.gpg"
+  config.vm.provision "file", source: "~/.gnupg/secring.gpg", destination: ".gnupg/secring.gpg"
+  config.vm.provision "file", source: "gpg-agent.conf", destination: ".gnupg/gpg-agent.conf"
+  config.vm.provision "file", source: "settings.xml", destination: ".m2/settings.xml"
+
+  # Update the VM, install Java and Maven, enable passwordless-ssh-to-localhost,
+  # clone the canonical repository
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get upgrade -y
+    apt-get install -y default-jdk maven git xmlstarlet zip unzip language-pack-en vim-nox gnupg2 gnupg-agent pinentry-curses
+    wget -q -O /tmp/artifactory.zip http://bit.ly/Hqv9aj
+    mkdir -p /opt
+    unzip /tmp/artifactory.zip -d /opt
+    sudo sed -i -e '/Connector port=/ s/=\".*\"/=\"'"8008"'\"/' /opt/artifactory*/tomcat/conf/server.xml
+    /opt/artifactory*/bin/installService.sh
+    service artifactory start
+    chmod -R go= ~vagrant/.gnupg
+    cat /etc/ssh/ssh_host_*_key.pub | awk '{print "localhost,127.0.0.1 "$0}' >> /etc/ssh/ssh_known_hosts
+    su -c 'ssh-keygen -t rsa -b 2048 -N "" -f ~/.ssh/id_rsa; cat ~/.ssh/*.pub >> ~/.ssh/authorized_keys' vagrant
+    su -c 'git clone https://git-wip-us.apache.org/repos/asf/incubator-brooklyn.git apache-brooklyn-git' vagrant
+  SHELL
+end

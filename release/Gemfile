@@ -1,0 +1,5 @@
+#ruby=ruby-2.1.2
+#ruby-gemset=brooklyn-release-helpers
+
+source 'https://rubygems.org'
+gem 'github_api'

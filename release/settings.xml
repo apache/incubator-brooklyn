@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<settings xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd"
+          xmlns="http://maven.apache.org/SETTINGS/1.1.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <servers>
+        <!-- Required for uploads to Apache's Nexus instance. These are LDAP credentials - the same credentials you
+           - would use to log in to Git and Jenkins (but not JIRA) -->
+        <server>
+            <id>apache.snapshots.https</id>
+            <username>xxx</username>
+            <password>xxx</password>
+        </server>
+        <server>
+            <id>apache.releases.https</id>
+            <username>xxx</username>
+            <password>xxx</password>
+        </server>
+
+        <!-- This is used for deployments to the play Artifactory instance that is provisioned by the Vagrant scripts.
+           - It may be safely ignored. -->
+        <server>
+            <id>vagrant-ubuntu-trusty-64</id>
+            <username>admin</username>
+            <password>password</password>
+        </server>
+    </servers>
+
+</settings>
