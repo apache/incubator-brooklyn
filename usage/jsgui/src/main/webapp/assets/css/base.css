@@ -1114,6 +1114,11 @@ tr.app-add-wizard-config-entry {
     margin-bottom: 6px;
     background-color: #F0F0F0;
     border-radius: 5px;
+    overflow-y: scroll;
+}
+.catalog-accordion-wrapper .accordion-nav-row {
+    white-space: pre;
+    word-wrap: normal;
 }
 .accordion-item {
     -webkit-border-radius: 5px;
