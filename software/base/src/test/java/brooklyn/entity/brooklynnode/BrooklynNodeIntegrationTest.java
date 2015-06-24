@@ -48,6 +48,7 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
@@ -362,15 +363,24 @@ services:
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(webConsoleUri+"/v1/applications", 200);
     }
 
+    // TODO Should introduce startup stages and let the client select which stage it expects to be complete
     protected void waitForApps(final URI webConsoleUri, final int num) {
         waitForApps(webConsoleUri.toString());
         
         // e.g. [{"id":"UnBqPcqg","spec":{"name":"Application (UnBqPcqg)","type":"brooklyn.entity.basic.BasicApplication","locations":["pOL4NtiW"]},"status":"RUNNING","links":{"self":"/v1/applications/UnBqPcqg","entities":"/v1/applications/UnBqPcqg/entities"}}]
         Asserts.succeedsEventually(new Runnable() {
+            @Override
             public void run() {
+                //Wait all apps to become managed
                 String appsContent = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
                 List<String> appIds = parseJsonList(appsContent, ImmutableList.of("id"), String.class);
                 assertEquals(appIds.size(), num);
+                
+                // and then to start
+                List<String> statuses = parseJsonList(appsContent, ImmutableList.of("status"), String.class);
+                for (String status : statuses) {
+                    assertEquals(status, Lifecycle.RUNNING.toString().toUpperCase());
+                }
             }});
     }
 
@@ -541,7 +551,6 @@ services:
         File pidFile = new File(getDriver(brooklynNode).getPidFile());
         assertTrue(isPidRunning(pidFile));
         
-        Maybe<MachineLocation> l = Locations.findUniqueMachineLocation(brooklynNode.getLocations());
         brooklynNode.invoke(eff, Collections.<String, Object>emptyMap()).getUnchecked();
 
         // Note can't use driver.isRunning to check shutdown; can't invoke scripts on an unmanaged entity
