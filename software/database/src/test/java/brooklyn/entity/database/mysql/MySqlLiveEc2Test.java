@@ -34,7 +34,8 @@ public class MySqlLiveEc2Test extends AbstractEc2LiveTest {
     @Override
     protected void doTest(Location loc) throws Exception {
         MySqlNode mysql = app.createAndManageChild(EntitySpec.create(MySqlNode.class)
-                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MySqlIntegrationTest.CREATION_SCRIPT));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MySqlIntegrationTest.CREATION_SCRIPT)
+                .configure("test.table.name", "COMMENTS"));
 
         app.start(ImmutableList.of(loc));
 

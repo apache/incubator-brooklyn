@@ -87,7 +87,8 @@ public class MySqlLiveRackspaceTest extends MySqlIntegrationTest {
 
     public void test(String osRegex) throws Exception {
         MySqlNode mysql = app.createAndManageChild(EntitySpec.create(MySqlNode.class)
-                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, CREATION_SCRIPT));
+                .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, CREATION_SCRIPT)
+                .configure("test.table.name", "COMMENTS"));
 
         BrooklynProperties brooklynProperties = mgmt.getBrooklynProperties();
         brooklynProperties.put("brooklyn.location.jclouds.rackspace-cloudservers-uk.imageNameRegex", osRegex);
