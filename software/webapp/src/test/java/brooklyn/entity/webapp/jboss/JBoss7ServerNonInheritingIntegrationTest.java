@@ -22,12 +22,13 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 import java.io.File;
+import java.net.URI;
 
-import brooklyn.test.TestResourceUnavailableException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
@@ -35,6 +36,7 @@ import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
@@ -43,21 +45,23 @@ import com.google.common.collect.ImmutableSet;
 /**
  * TODO re-write this like WebAppIntegrationTest, inheriting, rather than being jboss7 specific.
  */
-public class JBoss7ServerNonInheritingIntegrationTest {
+public class JBoss7ServerNonInheritingIntegrationTest extends BrooklynAppLiveTestSupport {
     
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
-    private TestApplication app;
     private File keystoreFile;
     
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
-        localhostProvisioningLocation = new LocalhostMachineProvisioningLocation();
-        app = TestApplication.Factory.newManagedInstanceForTests();
+        super.setUp();
+        localhostProvisioningLocation = app.newLocalhostProvisioningLocation();
         keystoreFile = AbstractWebAppFixtureIntegrationTest.createTemporaryKeyStore("myname", "mypass");
     }
 
     @AfterMethod(alwaysRun=true)
+    @Override
     public void tearDown() throws Exception {
+        super.tearDown();
         if (app != null) Entities.destroyAll(app.getManagementContext());
         if (keystoreFile != null) keystoreFile.delete();
     }
@@ -74,14 +78,13 @@ public class JBoss7ServerNonInheritingIntegrationTest {
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
         
-        String httpUrl = "http://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
-        String httpsUrl = "https://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/";
-        
-        assertEquals(server.getAttribute(JBoss7Server.ROOT_URL).toLowerCase(), httpUrl.toLowerCase());
-        
+        // Don't rely on hostname; differs from URL when tests run on AWS VM
+        String httpUrl = server.getAttribute(JBoss7Server.ROOT_URL);
+        assertEquals(httpUrl.toLowerCase(), ("http://"+URI.create(httpUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/").toLowerCase());
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(httpUrl, 200);
         HttpTestUtils.assertContentContainsText(httpUrl, "Hello");
         
+        String httpsUrl = "https://"+URI.create(httpUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/";
         HttpTestUtils.assertUrlUnreachable(httpsUrl);
 
         Asserts.succeedsEventually(new Runnable() {
@@ -104,11 +107,11 @@ public class JBoss7ServerNonInheritingIntegrationTest {
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
         
-        String httpUrl = "http://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
-        String httpsUrl = "https://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/";
+        // Don't rely on hostname; differs from URL when tests run on AWS VM
+        String httpsUrl = server.getAttribute(JBoss7Server.ROOT_URL);
+        assertEquals(httpsUrl.toLowerCase(), ("https://"+URI.create(httpsUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/").toLowerCase());
         
-        assertEquals(server.getAttribute(JBoss7Server.ROOT_URL).toLowerCase(), httpsUrl.toLowerCase());
-        
+        String httpUrl = "http://"+URI.create(httpsUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
         HttpTestUtils.assertUrlUnreachable(httpUrl);
         
         // FIXME HttpTestUtils isn't coping with https, giving
@@ -140,11 +143,12 @@ public class JBoss7ServerNonInheritingIntegrationTest {
                 .configure(JBoss7Server.HTTPS_SSL_CONFIG, new HttpsSslConfig().keyAlias("myname").keystorePassword("mypass").keystoreUrl(keystoreFile.getAbsolutePath())));
         
         app.start(ImmutableList.of(localhostProvisioningLocation));
-        
-        String httpUrl = "http://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
-        String httpsUrl = "https://"+server.getAttribute(JBoss7Server.HOSTNAME)+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/";
 
-        assertEquals(server.getAttribute(JBoss7Server.ROOT_URL).toLowerCase(), httpsUrl.toLowerCase());
+        // Don't rely on hostname; differs from URL when tests run on AWS VM
+        String httpsUrl = server.getAttribute(JBoss7Server.ROOT_URL);
+        String httpUrl = "http://"+URI.create(httpsUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTP_PORT)+"/";
+        
+        assertEquals(httpsUrl.toLowerCase(), ("https://"+URI.create(httpsUrl).getHost()+":"+server.getAttribute(JBoss7Server.HTTPS_PORT)+"/").toLowerCase());
 
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(httpUrl, 200);
         HttpTestUtils.assertContentContainsText(httpUrl, "Hello");

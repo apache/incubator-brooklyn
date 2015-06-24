@@ -280,7 +280,7 @@ define([
                     if (yaml) {
                         // it's a yaml catalog template which includes a location, show the yaml tab
            	            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
-                        $("#yaml_code").focus();
+                        $("#yaml_code").setCaretToStart();
                     } else {
                         // it's a java catalog template or yaml template without a location, go to wizard
                         this.currentStep += 1;
@@ -302,7 +302,7 @@ define([
                     that.model.spec.pruneLocations();
                     $("textarea#yaml_code").val(JsYaml.safeDump(oldSpecToCamp(that.model.spec.toJSON())));
                     $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
-                    $("#yaml_code").focus();
+                    $("#yaml_code").setCaretToStart();
                 });
             } else {
                 // call to validate should showFailure

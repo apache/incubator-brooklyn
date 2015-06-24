@@ -25,40 +25,34 @@ import static org.testng.Assert.assertTrue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-
-import brooklyn.entity.basic.ApplicationBuilder;
+import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.lifecycle.MyEntity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
+import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 
-public class JavaSoftwareProcessSshDriverIntegrationTest {
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+
+public class JavaSoftwareProcessSshDriverIntegrationTest extends BrooklynAppLiveTestSupport {
 
     private static final long TIMEOUT_MS = 10 * 1000;
 
     private static final Logger LOG = LoggerFactory.getLogger(JavaSoftwareProcessSshDriverIntegrationTest.class);
 
     private MachineProvisioningLocation<?> localhost;
-    private TestApplication app;
 
     private static class ConcreteJavaSoftwareProcessSshDriver extends JavaSoftwareProcessSshDriver {
         public ConcreteJavaSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
@@ -73,23 +67,14 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
     }
 
     @BeforeMethod(alwaysRun=true)
-    public void setup() {
-        setup(new LocalManagementContext());
-    }
-
-    protected void setup(ManagementContext mgmt) {
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
-        localhost = mgmt.getLocationManager().createLocation(
-                LocationSpec.create(LocalhostMachineProvisioningLocation.class).configure("name", "localhost"));
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void shutdown() {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        localhost = app.newLocalhostProvisioningLocation();
     }
 
     @Test(groups = "Integration")
-    public void testJavaStartStopSshDriverStartsAndStopsApp() {
+    public void testJavaStartStopSshDriverStartsAndStopsApp() throws Exception {
         final MyEntity entity = app.createAndManageChild(EntitySpec.create(MyEntity.class));
         app.start(ImmutableList.of(localhost));
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
@@ -102,7 +87,7 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
     }
 
     @Test(groups = "Integration")
-    public void testGetJavaVersion() {
+    public void testGetJavaVersion() throws Exception {
         SshMachineLocation sshLocation = app.getManagementContext().getLocationManager().createLocation(
                 LocationSpec.create(SshMachineLocation.class).configure("address", "localhost"));
         JavaSoftwareProcessSshDriver driver = new ConcreteJavaSoftwareProcessSshDriver(app, sshLocation);
@@ -113,22 +98,22 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
     }
 
     @Test(groups = "Integration")
-    public void testStartsInMgmtSpecifiedDirectory() {
+    public void testStartsInMgmtSpecifiedDirectory() throws Exception {
         String dir = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
-        shutdown();
-        LocalManagementContext mgmt = new LocalManagementContext();
+        tearDown();
+        mgmt = new LocalManagementContextForTests();
         mgmt.getBrooklynProperties().put(BrooklynConfigKeys.ONBOX_BASE_DIR, dir);
-        setup(mgmt);
+        setUp();
 
         doTestSpecifiedDirectory(dir, dir);
         Os.deleteRecursively(dir);
     }
 
     @Test(groups = "Integration")
-    public void testStartsInAppSpecifiedDirectoryUnderHome() {
+    public void testStartsInAppSpecifiedDirectoryUnderHome() throws Exception {
         String dir = Os.mergePathsUnix("~/.brooklyn-test-"+Strings.makeRandomId(4));
         try {
-            app.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, dir);
+            app.config().set(BrooklynConfigKeys.ONBOX_BASE_DIR, dir);
             doTestSpecifiedDirectory(dir, dir);
         } finally {
             Os.deleteRecursively(dir);
@@ -136,33 +121,33 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
     }
 
     @Test(groups = "Integration")
-    public void testStartsInDifferentRunAndInstallSpecifiedDirectories() {
+    public void testStartsInDifferentRunAndInstallSpecifiedDirectories() throws Exception {
         String dir1 = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
         String dir2 = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
-        app.setConfig(BrooklynConfigKeys.INSTALL_DIR, dir1);
-        app.setConfig(BrooklynConfigKeys.RUN_DIR, dir2);
+        app.config().set(BrooklynConfigKeys.INSTALL_DIR, dir1);
+        app.config().set(BrooklynConfigKeys.RUN_DIR, dir2);
         doTestSpecifiedDirectory(dir1, dir2);
         Os.deleteRecursively(dir1);
         Os.deleteRecursively(dir2);
     }
 
     @Test(groups = "Integration")
-    public void testStartsInLegacySpecifiedDirectory() {
+    public void testStartsInLegacySpecifiedDirectory() throws Exception {
         String dir1 = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
         String dir2 = Os.mergePathsUnix(Os.tmp(), "/brooklyn-test-"+Strings.makeRandomId(4));
-        shutdown();
-        LocalManagementContext mgmt = new LocalManagementContext();
+        tearDown();
+        mgmt = new LocalManagementContextForTests();
         mgmt.getBrooklynProperties().put("brooklyn.dirs.install", dir1);
         mgmt.getBrooklynProperties().put("brooklyn.dirs.run", dir2);
-        setup(mgmt);
+        setUp();
 
-        app.setConfig(BrooklynConfigKeys.RUN_DIR, dir2);
+        app.config().set(BrooklynConfigKeys.RUN_DIR, dir2);
         doTestSpecifiedDirectory(dir1, dir2);
         Os.deleteRecursively(dir1);
         Os.deleteRecursively(dir2);
     }
 
-    protected void doTestSpecifiedDirectory(final String installDirPrefix, final String runDirPrefix) {
+    protected void doTestSpecifiedDirectory(final String installDirPrefix, final String runDirPrefix) throws Exception {
         final MyEntity entity = app.createAndManageChild(EntitySpec.create(MyEntity.class));
         app.start(ImmutableList.of(localhost));
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
@@ -185,5 +170,4 @@ public class JavaSoftwareProcessSshDriverIntegrationTest {
         entity.stop();
         assertFalse(entity.getAttribute(SoftwareProcess.SERVICE_UP));
     }
-
 }
