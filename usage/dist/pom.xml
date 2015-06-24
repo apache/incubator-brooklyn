@@ -106,7 +106,7 @@
                 <executions>
                     <execution>
                         <id>build-distribution-dir</id>
-                        <phase>process-resources</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -125,7 +125,7 @@
                     </execution>
                     <execution>
                         <id>build-distribution-archive</id>
-                        <phase>process-resources</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
@@ -134,39 +134,15 @@
                             <descriptors>
                                 <descriptor>src/main/config/build-distribution.xml</descriptor>
                             </descriptors>
-                            <finalName>brooklyn-${project.version}</finalName>
+                          <!-- finalName affects name in `target/` but we cannot influence name when it is attached/installed,
+                               so `apache-` prefix would be lost there. to keep it consistent this is commented out, 
+                               but would be nice to have if there is a way!
+                            <finalName>apache-brooklyn-${project.version}</finalName>
+                          -->
                             <formats>
                                 <format>tar.gz</format>
                                 <format>zip</format>
                             </formats>
-                            <attach>false</attach>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-distribution</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>attach-artifact</goal>
-                        </goals>
-                        <configuration>
-                            <artifacts>
-                                <artifact>
-                                    <file>${project.build.directory}/apache-brooklyn-${project.version}-dist.tar.gz</file>
-                                    <type>tar.gz</type>
-                                    <classifier>dist</classifier>
-                                </artifact>
-                                <artifact>
-                                    <file>${project.build.directory}/apache-brooklyn-${project.version}-dist.zip</file>
-                                    <type>zip</type>
-                                    <classifier>dist</classifier>
-                                </artifact>
-                            </artifacts>
                         </configuration>
                     </execution>
                 </executions>
