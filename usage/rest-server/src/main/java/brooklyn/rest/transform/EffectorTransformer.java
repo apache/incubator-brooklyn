@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.rest.domain.EffectorSummary;
 import brooklyn.rest.domain.EffectorSummary.ParameterSummary;
@@ -34,7 +33,7 @@ import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.time.Duration;
+import brooklyn.util.task.ValueResolver;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -76,7 +75,7 @@ public class EffectorTransformer {
     protected static EffectorSummary.ParameterSummary<?> parameterSummary(Entity entity, ParameterType<?> parameterType) {
         try {
             Maybe<?> defaultValue = Tasks.resolving(parameterType.getDefaultValue()).as(parameterType.getParameterClass())
-                .context(entity).timeout(Duration.millis(50)).getMaybe();
+                .context(entity).timeout(ValueResolver.REAL_QUICK_WAIT).getMaybe();
             return new ParameterSummary(parameterType.getName(), parameterType.getParameterClassName(), 
                 parameterType.getDescription(), 
                 WebResourceUtils.getValueForDisplay(defaultValue.orNull(), true, false));

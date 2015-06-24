@@ -22,14 +22,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.AddSensor;
+import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.time.Duration;
+import brooklyn.util.task.ValueResolver;
 
+import com.google.common.base.Supplier;
+
+/** 
+ * Provides an initializer/feed which simply sets a given value.
+ * <p>
+ * {@link Task}/{@link Supplier} values are resolved when written,
+ * unlike config values which are resolved on each read.
+ * <p>
+ * This supports a {@link StaticSensor#SENSOR_PERIOD} 
+ * which can be useful if the supplied value is such a function.
+ * However when the source is another sensor,
+ * consider using {@link Propagator} which listens for changes instead. */
 public class StaticSensor<T> extends AddSensor<T> {
 
     private static final Logger log = LoggerFactory.getLogger(StaticSensor.class);
@@ -48,7 +62,7 @@ public class StaticSensor<T> extends AddSensor<T> {
     public void apply(EntityLocal entity) {
         super.apply(entity);
         
-        Maybe<T> v = Tasks.resolving(value).as((Class<T>)sensor.getType()).timeout(Duration.millis(200)).getMaybe();
+        Maybe<T> v = Tasks.resolving(value).as((Class<T>)sensor.getType()).timeout(ValueResolver.PRETTY_QUICK_WAIT).getMaybe();
         if (v.isPresent()) {
             log.debug(this+" setting sensor "+sensor+" to "+v.get());
             entity.setAttribute(sensor, v.get());

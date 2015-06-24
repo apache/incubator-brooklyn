@@ -107,7 +107,7 @@ public class SelectMasterEffectorBody extends EffectorBody<Void> implements Sele
 
     private void waitMasterHandover(final Entity oldMaster, final Entity newMaster) {
         boolean masterChanged = Repeater.create()
-            .backoff(Duration.millis(50), 1.5, Duration.FIVE_SECONDS)
+            .backoff(Repeater.DEFAULT_REAL_QUICK_PERIOD, 1.5, Duration.FIVE_SECONDS)
             .limitTimeTo(Duration.ONE_MINUTE)
             .until(new Callable<Boolean>() {
                 @Override

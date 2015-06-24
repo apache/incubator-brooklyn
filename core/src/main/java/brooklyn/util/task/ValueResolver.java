@@ -38,6 +38,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.JavaClassNames;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Durations;
@@ -57,6 +58,25 @@ import com.google.common.reflect.TypeToken;
  */
 public class ValueResolver<T> implements DeferredSupplier<T> {
 
+    /** 
+     * Period to wait if we're expected to return real quick 
+     * but we want fast things to have time to finish.
+     * <p>
+     * Timings are always somewhat arbitrary but this at least
+     * allows some intention to be captured in code rather than arbitrary values. */
+    public static Duration REAL_QUICK_WAIT = Duration.millis(50);
+    /** 
+     * Period to wait if we're expected to return quickly 
+     * but we want to be a bit more generous for things to finish,
+     * without letting a caller get annoyed. 
+     * <p>
+     * See {@link #REAL_QUICK_WAIT}. */
+    public static Duration PRETTY_QUICK_WAIT = Duration.millis(200);
+    
+    /** Period to wait when we have to poll but want to give the illusion of no wait.
+     * See {@link Repeater#DEFAULT_REAL_QUICK_PERIOD} */ 
+    public static Duration REAL_QUICK_PERIOD = Repeater.DEFAULT_REAL_QUICK_PERIOD;
+    
     private static final Logger log = LoggerFactory.getLogger(ValueResolver.class);
     
     final Object value;

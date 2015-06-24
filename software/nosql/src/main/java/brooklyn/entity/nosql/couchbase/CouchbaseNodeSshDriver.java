@@ -344,7 +344,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         // wait until the re-balance is started
         // (if it's quick, this might miss it, but it will only block for 30s if so)
         Repeater.create()
-                .backoff(Duration.millis(10), 2, Duration.millis(500))
+                .backoff(Repeater.DEFAULT_REAL_QUICK_PERIOD, 2, Duration.millis(500))
                 .limitTimeTo(Duration.THIRTY_SECONDS)
                 .until(new Callable<Boolean>() {
                            @Override

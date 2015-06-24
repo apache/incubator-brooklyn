@@ -39,6 +39,7 @@ import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.EntityTransformer;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.task.ValueResolver;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -96,7 +97,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
         EntityLocal entity = brooklyn().getEntity(application, entityToken);
         ConfigKey<?> ck = findConfig(entity, configKeyName);
         Object value = ((EntityInternal)entity).config().getRaw(ck).orNull();
-        return resolving(value).preferJson(preferJson).asJerseyOutermostReturnValue(true).raw(raw).context(entity).timeout(Duration.millis(100)).renderAs(ck).resolve();
+        return resolving(value).preferJson(preferJson).asJerseyOutermostReturnValue(true).raw(raw).context(entity).timeout(ValueResolver.PRETTY_QUICK_WAIT).renderAs(ck).resolve();
     }
 
     private ConfigKey<?> findConfig(EntityLocal entity, String configKeyName) {

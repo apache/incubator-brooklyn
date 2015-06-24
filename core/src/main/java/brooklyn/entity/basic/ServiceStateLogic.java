@@ -56,6 +56,7 @@ import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.repeat.Repeater;
+import brooklyn.util.task.ValueResolver;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -148,7 +149,7 @@ public class ServiceStateLogic {
             if (!Boolean.TRUE.equals(up) && !Boolean.TRUE.equals(Entities.isReadOnly(entity))) {
                 // pause briefly to allow any recent problem-clearing processing to complete
                 Stopwatch timer = Stopwatch.createStarted();
-                boolean nowUp = Repeater.create().every(Duration.millis(10)).limitTimeTo(Duration.millis(200)).until(entity, 
+                boolean nowUp = Repeater.create().every(ValueResolver.REAL_QUICK_PERIOD).limitTimeTo(ValueResolver.PRETTY_QUICK_WAIT).until(entity, 
                     EntityPredicates.attributeEqualTo(Attributes.SERVICE_UP, true)).run();
                 if (nowUp) {
                     log.debug("Had to wait "+Duration.of(timer)+" for "+entity+" "+Attributes.SERVICE_UP+" to be true before setting "+state);

@@ -83,6 +83,13 @@ public class Repeater {
 
     private static final Logger log = LoggerFactory.getLogger(Repeater.class);
 
+    /** A small initial duration that something should wait between repeats, 
+     * e.g. when doing {@link #backoffTo(Duration)}.
+     * <p>
+     * Chosen to be small enough that a user won't notice at all,
+     * but we're not going to be chewing up CPU while waiting. */  
+    public static final Duration DEFAULT_REAL_QUICK_PERIOD = Duration.millis(10);
+    
     private final String description;
     private Callable<?> body = Callables.returning(null);
     private Callable<Boolean> exitCondition;

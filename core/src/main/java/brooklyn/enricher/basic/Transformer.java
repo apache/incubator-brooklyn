@@ -28,7 +28,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.SensorEvent;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.task.Tasks;
-import brooklyn.util.time.Duration;
+import brooklyn.util.task.ValueResolver;
 
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;
@@ -84,7 +84,7 @@ public class Transformer<T,U> extends AbstractTransformer<T,U> {
         return new Function<SensorEvent<T>, U>() {
             @Override public U apply(SensorEvent<T> input) {
                 // evaluate immediately, or return null
-                // 200ms seems a reasonable compromise for tasks which require BG evaluation
+                // PRETTY_QUICK/200ms seems a reasonable compromise for tasks which require BG evaluation
                 // but which are non-blocking
                 // TODO better would be to have a mode in which tasks are not permitted to block on
                 // external events; they can submit tasks and block on them (or even better, have a callback architecture);
@@ -92,7 +92,7 @@ public class Transformer<T,U> extends AbstractTransformer<T,U> {
                 return (U) Tasks.resolving(targetValueRaw).as(targetSensor.getType())
                     .context(entity)
                     .description("Computing sensor "+targetSensor+" from "+targetValueRaw)
-                    .timeout(Duration.millis(200))
+                    .timeout(ValueResolver.PRETTY_QUICK_WAIT)
                     .getMaybe().orNull();
             }
             public String toString() {

@@ -70,6 +70,7 @@ import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.ParallelTask;
 import brooklyn.util.task.TaskInternal;
 import brooklyn.util.task.Tasks;
+import brooklyn.util.task.ValueResolver;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
@@ -297,8 +298,8 @@ public class DependentConfiguration {
                 }
 
                 CountdownTimer timer = timeout!=null ? timeout.countdownTimer() : null;
-                Duration maxPeriod = Duration.millis(200);
-                Duration nextPeriod = Duration.millis(10);
+                Duration maxPeriod = ValueResolver.PRETTY_QUICK_WAIT;
+                Duration nextPeriod = ValueResolver.REAL_QUICK_PERIOD;
                 while (true) {
                     // check the source on initial run (could be done outside the loop) 
                     // and also (optionally) on each iteration in case it is more recent 
@@ -407,7 +408,7 @@ public class DependentConfiguration {
     /** Returns a task which waits for multiple other tasks (submitting if necessary)
      * and performs arbitrary computation over the List of results.
      * @see #transform(Task, Function) but note argument order is reversed (counterintuitive) to allow for varargs */
-    public static <U,T> Task<T> transformMultiple(Function<List<U>,T> transformer, TaskAdaptable<U> ...tasks) {
+    public static <U,T> Task<T> transformMultiple(Function<List<U>,T> transformer, @SuppressWarnings("unchecked") TaskAdaptable<U> ...tasks) {
         return transformMultiple(MutableMap.of("displayName", "transforming multiple"), transformer, tasks);
     }
 
@@ -425,7 +426,7 @@ public class DependentConfiguration {
     
     /** @see #transformMultiple(Function, TaskAdaptable...) */
     @SuppressWarnings({ "rawtypes" })
-    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, TaskAdaptable<U> ...tasks) {
+    public static <U,T> Task<T> transformMultiple(Map flags, final Function<List<U>,T> transformer, @SuppressWarnings("unchecked") TaskAdaptable<U> ...tasks) {
         return transformMultiple(flags, transformer, Arrays.asList(tasks));
     }
     @SuppressWarnings({ "rawtypes" })
@@ -687,6 +688,7 @@ public class DependentConfiguration {
             validate();
             return new WaitInTaskForAttributeReady<T,V>(this).call();
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         private void validate() {
             checkNotNull(source, "Entity source");
             checkNotNull(sensor, "Sensor");
