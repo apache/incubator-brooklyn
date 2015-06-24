@@ -1257,14 +1257,20 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             ((AWSEC2TemplateOptions)t).subnetId((String)v);
                             
                         } else {
-                            if (t instanceof SoftLayerTemplateOptions) {
-                                LOG.warn("networkName may not be supported in SoftLayer; use `templateOptions` with `primaryNetworkComponentNetworkVlanId` or `primaryNetworkBackendComponentNetworkVlanId`");
+                            if (t instanceof GoogleComputeEngineTemplateOptions) {
+                                // no warning needed
+                                // we think this is the only jclouds endpoint which supports this option
+                                
+                            } else if (t instanceof SoftLayerTemplateOptions) {
+                                LOG.warn("networkName is not be supported in SoftLayer; use `templateOptions` with `primaryNetworkComponentNetworkVlanId` or `primaryNetworkBackendComponentNetworkVlanId`");
                             } else if (!(t instanceof CloudStackTemplateOptions) && !(t instanceof NovaTemplateOptions)) {
-                                LOG.warn("networkName may not be supported in this cloud; only known to work in CloudStack and OpenStack");
+                                LOG.warn("networkName is experimental in many jclouds endpoints may not be supported in this cloud");
+                                // NB, from @andreaturli
+//                                Cloudstack uses custom securityGroupIds and networkIds not the generic networks
+//                                Openstack Nova uses securityGroupNames which is marked as @deprecated (suggests to use groups which is maybe even more confusing)
+//                                Azure supports the custom networkSecurityGroupName
                             }
                             
-                            // looks like this is only supported in Cloudstack and Openstack
-                            // should we log warning if using another cloud?
                             t.networks((String)v);
                         }
                     }})
