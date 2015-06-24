@@ -25,6 +25,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials;
 import static org.jclouds.scriptbuilder.domain.Statements.exec;
+
+import brooklyn.util.flags.MethodCoercions;
 import io.cloudsoft.winrm4j.pywinrm.Session;
 import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
@@ -1292,45 +1294,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     Class<? extends TemplateOptions> clazz = options.getClass();
                     Iterable<Method> methods = Arrays.asList(clazz.getMethods());
                     for(final Map.Entry<String, Object> option : optionsMap.entrySet()) {
-                        Optional<Method> methodOptional = Iterables.tryFind(methods, new Predicate<Method>() {
-                            @Override
-                            public boolean apply(@Nullable Method input) {
-                                // Matches a method with the expected name, and a single parameter that TypeCoercions
-                                // can coerce to
-                                if (input == null) return false;
-                                if (!input.getName().equals(option.getKey())) return false;
-                                int numOptionParams = option.getValue() instanceof List ? ((List)option.getValue()).size() : 1;
-                                Type[] parameterTypes = input.getGenericParameterTypes();
-                                if (parameterTypes.length != numOptionParams) return false;
-                                if (numOptionParams == 1 && !(option.getValue() instanceof List) && parameterTypes.length == 1) {
-                                    return true;
-                                }
-                                for (int paramCount = 0; paramCount < numOptionParams; paramCount ++) {
-                                    if (!TypeCoercions.tryCoerce(((List)option.getValue()).get(paramCount),
-                                            TypeToken.of(parameterTypes[paramCount])).isPresentAndNonNull()) return false;
-                                }
-                                return true;
-                            }
-                        });
-                        if(methodOptional.isPresent()) {
-                            try {
-                                Method method = methodOptional.get();
-                                if (option.getValue() instanceof List) {
-                                    List<Object> parameters = Lists.newArrayList();
-                                    int numOptionParams = ((List)option.getValue()).size();
-                                    for (int paramCount = 0; paramCount < numOptionParams; paramCount++) {
-                                        parameters.add(TypeCoercions.coerce(((List)option.getValue()).get(paramCount), TypeToken.of(method.getGenericParameterTypes()[paramCount])));
-                                    }
-                                    method.invoke(options, parameters.toArray());
-                                } else {
-                                    method.invoke(options, TypeCoercions.coerce(option.getValue(), TypeToken.of(method.getGenericParameterTypes()[0])));
-                                }
-                            } catch (IllegalAccessException e) {
-                                throw Exceptions.propagate(e);
-                            } catch (InvocationTargetException e) {
-                                throw Exceptions.propagate(e);
-                            }
-                        } else {
+                        Maybe<?> result = MethodCoercions.tryFindAndInvokeBestMatchingMethod(options, option.getKey(), option.getValue());
+                        if(result.isAbsent()) {
                             LOG.warn("Ignoring request to set template option {} because this is not supported by {}", new Object[] { option.getKey(), clazz.getCanonicalName() });
                         }
                     }

@@ -210,6 +210,49 @@ For more keys and more detail on the keys below, see
   This setting prevents scripts executed on the VMs from being deleted on completion.
   Note that some scripts run periodically so this can eventually fill a disk; it should only be used for dev/test. 
 
+###### Custom template options
+
+jclouds supports many additional options for configuring how a virtual machine is created and deployed, many of which
+are for cloud-specific features and enhancements. Brooklyn supports some of these, but if what you are looking for is
+not supported directly by Brooklyn, we instead offer a mechanism to set any parameter that is supported by the jclouds
+template options for your cloud.
+
+Part of the process for creating a virtual machine is the creation of a jclouds `TemplateOptions` object. jclouds
+providers extends this with extra options for each cloud - so when using the AWS provider, the object will be of
+type `AWSEC2TemplateOptions`. By [examining the source code](https://github.com/jclouds/jclouds/blob/jclouds-1.9.0/providers/aws-ec2/src/main/java/org/jclouds/aws/ec2/compute/AWSEC2TemplateOptions.java),
+you can see all of the options available to you.
+
+The `templateOptions` config key takes a map. The keys to the map are method names, and Brooklyn will find the method on
+the `TemplateOptions` instance; it then invokes the method with arguments taken from the map value. If a method takes a
+single parameter, then simply give the argument as the value of the key; if the method takes multiple parameters, the
+value of the key should be an array, containing the argument for each parameter.
+
+For example, here is a complete blueprint that sets some AWS EC2 specific options:
+
+    location: AWS_eu-west-1
+    services:
+    - type: brooklyn.entity.basic.EmptySoftwareProcess
+      provisioningProperties:
+        templateOptions:
+          subnetId: subnet-041c8373
+          mapNewVolumeToDeviceName: ["/dev/sda1", 100, true]
+          securityGroupIds: ['sg-4db68928']
+
+Here you can see that we set three template options:
+
+- `subnetId` is an example of a single parameter method. Brooklyn will effectively try to run the statement
+  `templateOptions.subnetId("subnet-041c88373");`
+- `mapNewVolumeToDeviceName` is an example of a multiple parameter method, so the value of the key is an array.
+  Brooklyn will effectively true to run the statement `templateOptions.mapNewVolumeToDeviceName("/dev/sda1", 100, true);`
+- `securityGroupIds` demonstrates an ambiguity between the two types; Brooklyn will first try to parse the value as
+  a multiple parameter method, but there is no method that matches this parameter. In this case, Brooklyn will next try
+  to parse the value as a single parameter method which takes a parameter of type `List`; such a method does exist so
+  the operation will succeed.
+
+If the method call cannot be matched to the template options available - for example if you are trying to set an AWS EC2
+specific option but your location is an OpenStack cloud - then a warning is logged and the option is ignored.
+
+
 ### AWS VPC issues which may affect users with older AWS accounts
 
 AWS now has different default behaviour depending on the age of your AWS account and whether you used the target region before, or during, 2013.
