@@ -69,6 +69,12 @@ define(["underscore", "backbone"], function (_, Backbone) {
             name = this.get('name')
             if (name!=null && name.length>0) return name
             return this.get('spec')
+        },
+        getIdentifierName: function() {
+            var name = null;
+            name = this.get('name')
+            if (name!=null && name.length>0) return name
+            return this.get('spec')
         }
 
     })

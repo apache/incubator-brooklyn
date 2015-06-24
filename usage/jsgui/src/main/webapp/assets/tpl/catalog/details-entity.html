@@ -16,7 +16,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+
 <div class="catalog-details">
+
+    <div class="float-right">
+        <button data-name="<%= model.id %>" class="btn btn-danger delete">Delete</button>
+    </div>
 
     <% if (model.get("name") != model.get("symbolicName")) { %>
         <h2><%- model.get("name") %></h2>
