@@ -50,6 +50,7 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
+import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.ScheduledTask;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
@@ -279,7 +280,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                     Duration left = timer.getDurationRemaining();
                     if (left.isPositive()) {
                         synchronized(writeCount) {
-                            writeCount.wait(left.lowerBound(Duration.millis(10)).toMilliseconds());
+                            writeCount.wait(left.lowerBound(Repeater.DEFAULT_REAL_QUICK_PERIOD).toMilliseconds());
                         }
                     } else {
                         throw new TimeoutException("Timeout waiting for independent write of rebind-periodic-delta, after "+timer.getDurationElapsed());

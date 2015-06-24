@@ -46,6 +46,7 @@ import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DeferredSupplier;
+import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
@@ -57,27 +58,27 @@ public class BrooklynDslCommon {
 
     // Access specific entities
 
-    public static DslComponent entity(String scopeOrId) {
-        return new DslComponent(Scope.GLOBAL, scopeOrId);
+    public static DslComponent entity(String id) {
+        return new DslComponent(Scope.GLOBAL, id);
     }
     public static DslComponent parent() {
         return new DslComponent(Scope.PARENT, null);
     }
-    public static DslComponent child(String scopeOrId) {
-        return new DslComponent(Scope.CHILD, scopeOrId);
+    public static DslComponent child(String id) {
+        return new DslComponent(Scope.CHILD, id);
     }
-    public static DslComponent sibling(String scopeOrId) {
-        return new DslComponent(Scope.SIBLING, scopeOrId);
+    public static DslComponent sibling(String id) {
+        return new DslComponent(Scope.SIBLING, id);
     }
-    public static DslComponent descendant(String scopeOrId) {
-        return new DslComponent(Scope.DESCENDANT, scopeOrId);
+    public static DslComponent descendant(String id) {
+        return new DslComponent(Scope.DESCENDANT, id);
     }
-    public static DslComponent ancestor(String scopeOrId) {
-        return new DslComponent(Scope.ANCESTOR, scopeOrId);
+    public static DslComponent ancestor(String id) {
+        return new DslComponent(Scope.ANCESTOR, id);
     }
     // prefer the syntax above to the below now, but not deprecating the below
-    public static DslComponent component(String scopeOrId) {
-        return component("global", scopeOrId);
+    public static DslComponent component(String id) {
+        return component("global", id);
     }
     public static DslComponent component(String scope, String id) {
         if (!DslComponent.Scope.isValid(scope)) {
@@ -205,7 +206,9 @@ public class BrooklynDslCommon {
 
         @Override
         public String toString() {
-            return "$brooklyn:formatString("+pattern+(args==null || args.length==0 ? "" : ","+Strings.join(args, ","))+")";
+            return "$brooklyn:formatString("+
+                JavaStringEscapes.wrapJavaString(pattern)+
+                (args==null || args.length==0 ? "" : ","+Strings.join(args, ","))+")";
         }
     }
 
@@ -291,7 +294,7 @@ public class BrooklynDslCommon {
 
         @Override
         public String toString() {
-            return "$brooklyn:object("+type+")";
+            return "$brooklyn:object(\""+type.getName()+"\")";
         }
     }
 

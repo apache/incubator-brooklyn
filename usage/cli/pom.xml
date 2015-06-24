@@ -133,6 +133,32 @@
                     </execution>
                 </executions>
             </plugin>
+            
+            <plugin>
+                <!-- we publish the BOM in case anyone wants to access it directly.
+                     the primary consumer to begin with is the dist,
+                     though it could use use unpack goal with an includes filter. -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-catalog</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/classes/brooklyn/default.catalog.bom</file>
+                                    <type>bom</type>
+                                    <classifier>dist</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <!-- Disable the automatic LICENSE/NOTICE placement from the upstream pom, because we need to include
                  bloodhound.js. See "resources" section below for where we include the new LICENSE/NOTICE -->
@@ -165,6 +191,7 @@
                                 i.e. by brooklyn.cli.itemlister.ItemLister
                             -->
                             <exclude>**/src/main/resources/brooklyn/item-lister/statics/style/js/**</exclude>
+                            <exclude>**/*.bom</exclude>
                         </excludes>
                     </configuration>
                 </plugin>

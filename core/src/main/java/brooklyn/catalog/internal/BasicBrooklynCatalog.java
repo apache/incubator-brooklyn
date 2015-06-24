@@ -325,8 +325,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     @SuppressWarnings("unchecked")
     @Override
     public <T, SpecT> SpecT createSpec(CatalogItem<T, SpecT> item) {
+        if (item == null) return null;
         CatalogItemDo<T,SpecT> loadedItem = (CatalogItemDo<T, SpecT>) getCatalogItemDo(item.getSymbolicName(), item.getVersion());
-        if (loadedItem == null) return null;
+        if (loadedItem == null) throw new RuntimeException(item+" not in catalog; cannot create spec");
         Class<SpecT> specType = loadedItem.getSpecType();
         if (specType==null) return null;
 

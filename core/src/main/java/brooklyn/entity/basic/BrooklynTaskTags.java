@@ -267,7 +267,12 @@ public class BrooklynTaskTags extends TaskTags {
     
     public static void setInessential(Task<?> task) { addTagDynamically(task, INESSENTIAL_TASK); }
     public static void setTransient(Task<?> task) { addTagDynamically(task, TRANSIENT_TASK_TAG); }
-    public static boolean isTransient(Task<?> task) { return hasTag(task, TRANSIENT_TASK_TAG); }
+    public static boolean isTransient(Task<?> task) { 
+        if (hasTag(task, TRANSIENT_TASK_TAG)) return true;
+        if (hasTag(task, NON_TRANSIENT_TASK_TAG)) return true;
+        if (task.getSubmittedByTask()!=null) return isTransient(task.getSubmittedByTask());
+        return false;
+    }
     public static boolean isSubTask(Task<?> task) { return hasTag(task, SUB_TASK_TAG); }
     public static boolean isEffectorTask(Task<?> task) { return hasTag(task, EFFECTOR_TAG); }
     

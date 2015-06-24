@@ -80,7 +80,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
                 if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(protocol)) {
                     return serviceType;
                 } else {
-                    log.warn("The reference '" + serviceType + "' looks like an URL but the protocol '" + 
+                    log.debug("The reference '" + serviceType + "' looks like a URL (running the CAMP Brooklyn entity-matcher) but the protocol '" + 
                             protocol + "' isn't white listed " + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + ". " +
                             "Not recognized as catalog item or java item as well!");
                 }
@@ -229,9 +229,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             if (e.toString().contains("Could not find")) {
-                // TODO currently we get this error if a catalog item is passed, giving stack trace is too scary;
-                // when we are doing catalog.createSpec let's remove this block
-                log.warn("Ignoring configuration attributes on "+typeName+", item probably loaded from catalog and flags are not yet supported here");
+                // normal for catalog items, there will be no java type
                 log.debug("Ignoring configuration attributes on "+typeName+", details: "+e);
             } else {
                 log.warn("Ignoring configuration attributes on "+typeName+" due to "+e, e);

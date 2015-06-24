@@ -38,6 +38,7 @@ import brooklyn.rest.domain.SensorSummary;
 import brooklyn.rest.filter.HaHotStateRequired;
 import brooklyn.rest.transform.SensorTransformer;
 import brooklyn.rest.util.WebResourceUtils;
+import brooklyn.util.task.ValueResolver;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
@@ -83,7 +84,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         final EntityLocal entity = brooklyn().getEntity(application, entityToken);
         AttributeSensor<?> sensor = findSensor(entity, sensorName);
         Object value = entity.getAttribute(sensor);
-        return resolving(value).preferJson(preferJson).asJerseyOutermostReturnValue(true).raw(raw).context(entity).timeout(Duration.millis(100)).renderAs(sensor).resolve();
+        return resolving(value).preferJson(preferJson).asJerseyOutermostReturnValue(true).raw(raw).context(entity).timeout(ValueResolver.PRETTY_QUICK_WAIT).renderAs(sensor).resolve();
     }
 
     @Override

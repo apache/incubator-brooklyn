@@ -421,7 +421,7 @@ public class Tasks {
             }
             if (timer.isExpired())
                 return false;
-            Time.sleep(Duration.millis(10));
+            Time.sleep(Repeater.DEFAULT_REAL_QUICK_PERIOD);
         }
     }
     

@@ -63,6 +63,35 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <!-- copy the config file from the CLI project (could instead use unpack goal with an includes filter) -->
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <!-- this can fail in eclipse trying to copy _from_ target/classes.
+                                         see http://jira.codehaus.org/browse/MDEP-259 -->
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>brooklyn-cli</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>bom</type>
+                                    <classifier>dist</classifier>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>target</outputDirectory>
+                                    <destFileName>default.catalog.bom</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
@@ -77,57 +106,43 @@
                 <executions>
                     <execution>
                         <id>build-distribution-dir</id>
-                        <phase>process-resources</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
                         <configuration>
                             <appendAssemblyId>true</appendAssemblyId>
                             <descriptors>
-                                <descriptor>src/main/config/build-distribution-dir.xml</descriptor>
+                                <descriptor>src/main/config/build-distribution.xml</descriptor>
                             </descriptors>
                             <finalName>brooklyn</finalName>
+                            <includeBaseDirectory>false</includeBaseDirectory>
+                            <formats>
+                                <format>dir</format>
+                            </formats>
+                            <attach>false</attach>
                         </configuration>
                     </execution>
                     <execution>
                         <id>build-distribution-archive</id>
-                        <phase>process-resources</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
                         <configuration>
                             <appendAssemblyId>true</appendAssemblyId>
                             <descriptors>
-                                <descriptor>src/main/config/build-distribution-archive.xml</descriptor>
+                                <descriptor>src/main/config/build-distribution.xml</descriptor>
                             </descriptors>
-                            <finalName>brooklyn-${project.version}</finalName>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-distribution</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>attach-artifact</goal>
-                        </goals>
-                        <configuration>
-                            <artifacts>
-                                <artifact>
-                                    <file>${project.build.directory}/apache-brooklyn-${project.version}-dist.tar.gz</file>
-                                    <type>tar.gz</type>
-                                    <classifier>dist</classifier>
-                                </artifact>
-                                <artifact>
-                                    <file>${project.build.directory}/apache-brooklyn-${project.version}-dist.zip</file>
-                                    <type>zip</type>
-                                    <classifier>dist</classifier>
-                                </artifact>
-                            </artifacts>
+                          <!-- finalName affects name in `target/` but we cannot influence name when it is attached/installed,
+                               so `apache-` prefix would be lost there. to keep it consistent this is commented out, 
+                               but would be nice to have if there is a way!
+                            <finalName>apache-brooklyn-${project.version}</finalName>
+                          -->
+                            <formats>
+                                <format>tar.gz</format>
+                                <format>zip</format>
+                            </formats>
                         </configuration>
                     </execution>
                 </executions>

@@ -82,7 +82,7 @@ public final class SshCommandEffector extends AddEffector {
             }
             
             // then set things from the entities defined shell environment, if applicable
-            env.putAll(Strings.toStringMap(entity().getConfig(SoftwareProcess.SHELL_ENVIRONMENT)));
+            env.putAll(Strings.toStringMap(entity().getConfig(SoftwareProcess.SHELL_ENVIRONMENT), ""));
             
             // if we wanted to resolve the surrounding environment in real time -- see above
 //            Map<String,Object> paramsResolved = (Map<String, Object>) Tasks.resolveDeepValue(effectorShellEnv, Map.class, entity().getExecutionContext());

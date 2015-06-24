@@ -687,7 +687,12 @@ public class Strings {
 
     /** returns toString of the object if it is not null, otherwise null */
     public static String toString(Object o) {
-        if (o==null) return null;
+        return toStringWithValueForNull(o, null);
+    }
+
+    /** returns toString of the object if it is not null, otherwise the given value */
+    public static String toStringWithValueForNull(Object o, String valueIfNull) {
+        if (o==null) return valueIfNull;
         return o.toString();
     }
 
@@ -807,13 +812,30 @@ public class Strings {
         return ies(count);
     }
 
-    /** converts a map of any objects to a map of strings, preserving nulls and invoking toString where needed */
+    /** converts a map of any objects to a map of strings, using the tostring, and returning "null" for nulls 
+     * @deprecated since 0.7.0 use {@link #toStringMap(Map, String)} to remove ambiguity about how to handle null */
+    // NB previously the javadoc here was wrong, said it returned null not "null"
+    @Deprecated
     public static Map<String, String> toStringMap(Map<?,?> map) {
+        return toStringMap(map, "null");
+    }
+    /** converts a map of any objects to a map of strings, using {@link Object#toString()},
+     * with the second argument used where a value (or key) is null */
+    public static Map<String, String> toStringMap(Map<?,?> map, String valueIfNull) {
         if (map==null) return null;
         Map<String,String> result = MutableMap.<String, String>of();
         for (Map.Entry<?,?> e: map.entrySet()) {
-            result.put(String.valueOf(e.getKey()), String.valueOf(e.getValue()));
+            result.put(toStringWithValueForNull(e.getKey(), valueIfNull), toStringWithValueForNull(e.getValue(), valueIfNull));
         }
+        return result;
+    }
+    
+    /** converts a list of any objects to a list of strings, using {@link Object#toString()},
+     * with the second argument used where an entry is null */
+    public static List<String> toStringList(List<?> list, String valueIfNull) {
+        if (list==null) return null;
+        List<String> result = MutableList.of();
+        for (Object v: list) result.add(toStringWithValueForNull(v, valueIfNull));
         return result;
     }
 

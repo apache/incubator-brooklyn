@@ -31,6 +31,7 @@ import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
+import org.jclouds.ec2.reference.EC2Constants;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
@@ -96,6 +98,11 @@ public class ComputeServiceRegistryImpl implements ComputeServiceRegistry, Jclou
                  * Filter.3.Name=image-type&Filter.3.Value.1=machine&
                  */
             }
+            
+            // occasionally can get com.google.common.util.concurrent.UncheckedExecutionException: java.lang.RuntimeException: 
+            //     security group eu-central-1/jclouds#brooklyn-bxza-alex-eu-central-shoul-u2jy-nginx-ielm is not available after creating
+            // the default timeout was 500ms so let's raise it in case that helps
+            properties.setProperty(EC2Constants.PROPERTY_EC2_TIMEOUT_SECURITYGROUP_PRESENT, ""+Duration.seconds(30).toMilliseconds());
         }
 
         // FIXME Deprecated mechanism, should have a ConfigKey for overrides
