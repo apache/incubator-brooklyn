@@ -135,6 +135,9 @@
             </plugin>
             
             <plugin>
+                <!-- we publish the BOM in case anyone wants to access it directly.
+                     the primary consumer to begin with is the dist,
+                     though it could use use unpack goal with an includes filter. -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
