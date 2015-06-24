@@ -169,7 +169,8 @@ public class BasicExecutionContext extends AbstractExecutionContext {
 
         taskTags.addAll(tags);
         
-        if (Tasks.current()!=null && BrooklynTaskTags.isTransient(Tasks.current()) && !taskTags.contains(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)) {
+        if (Tasks.current()!=null && BrooklynTaskTags.isTransient(Tasks.current()) 
+                && !taskTags.contains(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG) && !taskTags.contains(BrooklynTaskTags.TRANSIENT_TASK_TAG)) {
             // tag as transient if submitter is transient, unless explicitly tagged as non-transient
             taskTags.add(BrooklynTaskTags.TRANSIENT_TASK_TAG);
         }

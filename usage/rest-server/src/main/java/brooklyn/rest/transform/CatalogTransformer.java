@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynTypes;
 import brooklyn.catalog.CatalogItem;
+import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -76,9 +77,15 @@ public class CatalogTransformer {
                 effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
             
         } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            
             // templates with multiple entities can't have spec created in the manner above; just ignore
-            if (log.isTraceEnabled())
+            if (item.getCatalogItemType()==CatalogItemType.ENTITY) {
+                log.warn("Unable to create spec for "+item+": "+e, e);
+            }
+            if (log.isTraceEnabled()) {
                 log.trace("Unable to create spec for "+item+": "+e, e);
+            }
         }
         
         return new CatalogEntitySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),

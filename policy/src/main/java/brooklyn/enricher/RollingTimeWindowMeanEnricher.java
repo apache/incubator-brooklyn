@@ -23,6 +23,7 @@ import java.util.LinkedList;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
+import brooklyn.enricher.basic.YamlRollingTimeWindowMeanEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.AttributeSensor;
@@ -32,6 +33,7 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 
 /**
@@ -56,7 +58,11 @@ import com.google.common.base.Preconditions;
  * the average is no longer meaningful.
  * <p>
  * The default average when no data has been received is 0, with a confidence of 0
+ * <p>
+ * TODO this may end up being deprecated in favour of near-duplicate code in YAML-friendly {@link YamlRollingTimeWindowMeanEnricher},
+ * marking as @Beta in 0.7.0 timeframe 
  */
+@Beta
 //@Catalog(name="Rolling Mean in Time Window", description="Transforms a sensor's data into a rolling average "
 //        + "based on a time window.")
 public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTypeTransformingEnricher<T,Double> {

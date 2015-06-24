@@ -729,12 +729,9 @@ public class TypeCoercions {
             public AttributeSensor apply(final String input) {
                 Entity entity = BrooklynTaskTags.getContextEntity(Tasks.current());
                 if (entity!=null) {
-                    Sensor<?> result = null;
-                    if (entity!=null) {
-                        result = entity.getEntityType().getSensor(input);
-                        if (result instanceof AttributeSensor) 
-                            return (AttributeSensor) result;
-                    }
+                    Sensor<?> result = entity.getEntityType().getSensor(input);
+                    if (result instanceof AttributeSensor) 
+                        return (AttributeSensor) result;
                 }
                 return Sensors.newSensor(Object.class, input);
             }
@@ -744,12 +741,9 @@ public class TypeCoercions {
             public AttributeSensor apply(final String input) {
                 Entity entity = BrooklynTaskTags.getContextEntity(Tasks.current());
                 if (entity!=null) {
-                    Sensor<?> result = null;
-                    if (entity!=null) {
-                        result = entity.getEntityType().getSensor(input);
-                        if (result != null) 
-                            return (AttributeSensor) result;
-                    }
+                    Sensor<?> result = entity.getEntityType().getSensor(input);
+                    if (result != null) 
+                        return (AttributeSensor) result;
                 }
                 return Sensors.newSensor(Object.class, input);
             }
