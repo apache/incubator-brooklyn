@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import brooklyn.management.osgi.OsgiTestResources;
+import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -212,6 +214,7 @@ public class XmlMementoSerializerTest {
     
     @Test
     public void testEntitySpecFromOsgi() throws Exception {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
         ManagementContext mgmt = LocalManagementContextForTests.builder(true).disableOsgi(false).build();
         try {
             CatalogItem<?, ?> ci = OsgiVersionMoreEntityTest.addMoreEntityV1(mgmt, "1.0");
