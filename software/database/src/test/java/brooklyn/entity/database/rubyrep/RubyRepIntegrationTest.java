@@ -69,10 +69,12 @@ public class RubyRepIntegrationTest {
     public void test_localhost_mysql() throws Exception {
         MySqlNode db1 = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
                 .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MySqlIntegrationTest.CREATION_SCRIPT)
+                .configure("test.table.name", "COMMENTS")
                 .configure(MySqlNode.MYSQL_PORT, PortRanges.fromInteger(9111)));
 
         MySqlNode db2 = tapp.createAndManageChild(EntitySpec.create(MySqlNode.class)
                 .configure(DatastoreCommon.CREATION_SCRIPT_CONTENTS, MySqlIntegrationTest.CREATION_SCRIPT)
+                .configure("test.table.name", "COMMENTS")
                 .configure(MySqlNode.MYSQL_PORT, PortRanges.fromInteger(9112)));
 
 
