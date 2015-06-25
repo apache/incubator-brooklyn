@@ -22,11 +22,11 @@ services:
   name: My Web
   location: localhost
   brooklyn.config:
-    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-M2/brooklyn-example-hello-world-sql-webapp-0.6.0-M2.war
+    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.7.0-M1/brooklyn-example-hello-world-sql-webapp-0.7.0-M1.war
     http.port: 9280+
     proxy.http.port: 9210+
     java.sysprops: 
-      brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s\\&password=%s",
+      brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s&password=%s",
          component("db").attributeWhenReady("datastore.url"), "visitors", "brooklyn", "br00k11n")
 - serviceType: brooklyn.entity.database.mysql.MySqlNode
   id: db

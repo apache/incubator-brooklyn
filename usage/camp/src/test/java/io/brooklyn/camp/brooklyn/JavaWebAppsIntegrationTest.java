@@ -111,7 +111,7 @@ public class JavaWebAppsIntegrationTest {
             Entities.dumpInfo(app);
 
             Assert.assertEquals(app.getChildren().size(), 1);
-            Assert.assertEquals(app.getChildren().iterator().next().getDisplayName(), "jboss1");
+            Assert.assertEquals(app.getChildren().iterator().next().getDisplayName(), "tomcat1");
             Assert.assertEquals(app.getChildren().iterator().next().getLocations().size(), 1);
             
             final String url = Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TEN_SECONDS), new Callable<String>() {
