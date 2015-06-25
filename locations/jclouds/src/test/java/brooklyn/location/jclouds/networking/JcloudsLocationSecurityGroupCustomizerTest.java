@@ -44,6 +44,7 @@ import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.domain.Location;
 import org.jclouds.net.domain.IpPermission;
 import org.jclouds.net.domain.IpProtocol;
+import org.mockito.Answers;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -76,7 +77,7 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
         customizer = new JcloudsLocationSecurityGroupCustomizer("testapp", new TestCidrSupplier());
         location = mock(Location.class);
         securityApi = mock(SecurityGroupExtension.class);
-        computeService = mock(ComputeService.class);
+        computeService = mock(ComputeService.class, Answers.RETURNS_DEEP_STUBS.get());
         when(computeService.getSecurityGroupExtension()).thenReturn(Optional.of(securityApi));
     }
 
@@ -136,6 +137,7 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
         SecurityGroup sharedGroup = newGroup(customizer.getNameForSharedSecurityGroup());
         SecurityGroup group = newGroup("id");
         when(securityApi.listSecurityGroupsForNode(nodeId)).thenReturn(ImmutableSet.of(sharedGroup, group));
+        when(computeService.getContext().unwrap().getId()).thenReturn("aws-ec2");
 
         customizer.addPermissionsToLocation(ImmutableList.of(ssh, jmx), nodeId, computeService);
 
@@ -157,6 +159,7 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
         when(template.getLocation()).thenReturn(location);
         when(template.getOptions()).thenReturn(templateOptions);
         when(securityApi.createSecurityGroup(anyString(), eq(location))).thenReturn(sharedGroup);
+        when(computeService.getContext().unwrap().getId()).thenReturn("aws-ec2");
 
         // Call customize to cache the shared group
         customizer.customize(jcloudsLocation, computeService, template);
@@ -177,6 +180,7 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
         SecurityGroup uniqueGroup = newGroup("unique");
 
         when(securityApi.listSecurityGroupsForNode(nodeId)).thenReturn(ImmutableSet.of(sharedGroup, uniqueGroup));
+        when(computeService.getContext().unwrap().getId()).thenReturn("aws-ec2");
 
         // Expect first call to list security groups on nodeId, second to use cached version
         customizer.addPermissionsToLocation(ImmutableSet.of(ssh), nodeId, computeService);
@@ -196,6 +200,7 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
         when(securityApi.listSecurityGroupsForNode(nodeId)).thenReturn(ImmutableSet.of(sharedGroup, uniqueGroup));
         when(securityApi.addIpPermission(eq(ssh), eq(uniqueGroup)))
                 .thenThrow(new RuntimeException("exception creating " + ssh));
+        when(computeService.getContext().unwrap().getId()).thenReturn("aws-ec2");
 
         try {
             customizer.addPermissionsToLocation(ImmutableList.of(ssh), nodeId, computeService);
@@ -224,6 +229,7 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
             }
         };
         customizer.setRetryExceptionPredicate(messageChecker);
+        when(computeService.getContext().unwrap().getId()).thenReturn("aws-ec2");
 
         IpPermission ssh = newPermission(22);
         String nodeId = "node";
@@ -255,6 +261,7 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
                 .thenThrow(newAwsResponseExceptionWithCode("RequestLimitExceeded"))
                 .thenThrow(newAwsResponseExceptionWithCode("Blocked"))
                 .thenReturn(sharedGroup);
+        when(computeService.getContext().unwrap().getId()).thenReturn("aws-ec2");
 
         try {
             customizer.addPermissionsToLocation(ImmutableList.of(ssh), nodeId, computeService);
