@@ -198,13 +198,15 @@ public class OsgiVersionMoreEntityTest {
     }
 
     public static CatalogItem<?, ?> addMoreEntityV1(ManagementContext mgmt, String versionToRegister) {
-        return addCatalogItemWithNameAndType(mgmt, 
+        TestResourceUnavailableException.throwIfResourceUnavailable(OsgiVersionMoreEntityTest.class, BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
+        return addCatalogItemWithNameAndType(mgmt,
             OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
             versionToRegister,
             OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
             BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
     }
     public static CatalogItem<?, ?> addMoreEntityV2(ManagementContext mgmt, String versionToRegister) {
+        TestResourceUnavailableException.throwIfResourceUnavailable(OsgiVersionMoreEntityTest.class, BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
         return addCatalogItemWithNameAndType(mgmt,
             OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
             versionToRegister,
