@@ -36,6 +36,7 @@ import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Configurable;
@@ -86,7 +87,11 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);
 
     public static final ConfigKey<Location> PARENT_LOCATION = new BasicConfigKey<Location>(Location.class, "parentLocation");
-    
+
+    public static final ConfigKey<Boolean> TEMPORARY_LOCATION = ConfigKeys.newBooleanConfigKey("temporaryLocation",
+            "Indicates that the location is a temporary location that has been created to test connectivity, and that" +
+            "the location's events should not be recorded by usage listeners", false);
+
     private final AtomicBoolean configured = new AtomicBoolean();
     
     private Reference<Long> creationTimeUtc = new BasicReference<Long>(System.currentTimeMillis());

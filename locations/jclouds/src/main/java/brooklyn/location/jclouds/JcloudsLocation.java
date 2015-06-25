@@ -27,6 +27,7 @@ import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLogin
 import static org.jclouds.scriptbuilder.domain.Statements.exec;
 
 import brooklyn.util.flags.MethodCoercions;
+import brooklyn.location.basic.AbstractLocation;
 import io.cloudsoft.winrm4j.pywinrm.Session;
 import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
@@ -35,7 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1479,6 +1479,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         sshProps.put("user", initialUser);
         sshProps.put("address", hostAndPort.getHostText());
         sshProps.put("port", hostAndPort.getPort());
+        sshProps.put(AbstractLocation.TEMPORARY_LOCATION.getName(), true);
         if (initialPassword.isPresent()) sshProps.put("password", initialPassword.get());
         if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
         if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
@@ -1548,6 +1549,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 SshMachineLocation sshLoc = null;
                 try {
                     if (isManaged()) {
+                        sshProps.put(AbstractLocation.TEMPORARY_LOCATION.getName(), true);
                         sshLoc = getManagementContext().getLocationManager().createLocation(sshProps, SshMachineLocation.class);
                     } else {
                         sshLoc = new SshMachineLocation(sshProps);
