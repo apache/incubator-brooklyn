@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.basic;
 
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
 import groovy.time.TimeDuration;
 
 import java.util.Collection;
@@ -66,6 +68,7 @@ import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 /**
  * An {@link Entity} representing a piece of software which can be installed, run, and controlled.
@@ -448,15 +451,27 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         Set<ConfigKey<?>> configKeys = Sets.newHashSet(allConfig.keySet());
         configKeys.addAll(getEntityType().getConfigKeys());
 
+        /* TODO: This won't work if there's a port collision, which will cause the corresponding port attribute
+           to be incremented until a free port is found. In that case the entity will use the free port, but the
+           firewall will open the initial port instead. Mostly a problem for SameServerEntity, localhost location.
+         */
         for (ConfigKey<?> k: configKeys) {
-            if (PortRange.class.isAssignableFrom(k.getType())) {
-                PortRange p = (PortRange)getConfig(k);
+            Object value;
+            if (PortRange.class.isAssignableFrom(k.getType()) || k.getName().matches(".*\\.port")) {
+                value = config().get(k);
+            } else {
+                // config().get() will cause this to block until all config has been resolved
+                // using config().getRaw(k) means that we won't be able to use e.g. 'http.port: $brooklyn:component("x").attributeWhenReady("foo")'
+                // but that's unlikely to be used
+                Maybe<Object> maybeValue = config().getRaw(k);
+                value = maybeValue.isPresent() ? maybeValue.get() : null;
+            }
+
+            Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, new TypeToken<PortRange>() {});
+
+            if (maybePortRange.isPresentAndNonNull()) {
+                PortRange p = maybePortRange.get();
                 if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
-            } else if(k.getName().matches(".*\\.port")){
-                Object value = getConfig(k);
-                if (value instanceof Integer){
-                    ports.add((Integer)value);
-                }
             }
         }        
         

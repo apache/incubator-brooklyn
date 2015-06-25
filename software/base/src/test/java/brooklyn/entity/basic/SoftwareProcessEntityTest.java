@@ -30,6 +30,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.software.MachineLifecycleEffectorTasksTest;
 import brooklyn.entity.trait.Startable;
+import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
@@ -59,6 +60,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -410,9 +412,18 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         doTestReleaseEvenIfErrorDuringStop(SimulatedFailInChildOnStopDriver.class);
     }
 
+    @Test
+    public void testOpenPortsWithPortRangeConfig() throws Exception {
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class)
+            .configure("http.port", "9999+"));
+        Assert.assertTrue(entity.getRequiredOpenPorts().contains(9999));
+    }
+
     @ImplementedBy(MyServiceImpl.class)
     public interface MyService extends SoftwareProcess {
+        PortAttributeSensorAndConfigKey HTTP_PORT = Attributes.HTTP_PORT;
         public SoftwareProcessDriver getDriver();
+        public Collection<Integer> getRequiredOpenPorts();
     }
 
     public static class MyServiceImpl extends SoftwareProcessImpl implements MyService {
@@ -425,7 +436,14 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         }
 
         @Override
-        public Class<?> getDriverInterface() { return SimulatedDriver.class; }
+        public Class<?> getDriverInterface() {
+            return SimulatedDriver.class;
+        }
+
+        @Override
+        public Collection<Integer> getRequiredOpenPorts() {
+            return super.getRequiredOpenPorts();
+        }
     }
 
     @ImplementedBy(MyServiceWithVersionImpl.class)
