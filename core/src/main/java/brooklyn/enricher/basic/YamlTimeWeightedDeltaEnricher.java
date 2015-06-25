@@ -41,6 +41,7 @@ import com.google.common.base.Function;
 public class YamlTimeWeightedDeltaEnricher<T extends Number> extends AbstractTransformer<T,Double> {
     private static final Logger LOG = LoggerFactory.getLogger(YamlTimeWeightedDeltaEnricher.class);
     
+    transient Object lock = new Object();
     Number lastValue;
     long lastTime = -1;
     
@@ -52,28 +53,30 @@ public class YamlTimeWeightedDeltaEnricher<T extends Number> extends AbstractTra
         return new Function<SensorEvent<T>, Double>() {
             @Override
             public Double apply(SensorEvent<T> event) {
-                Number current = TypeCoercions.coerce(event.getValue(), Double.class);
-                
-                if (current == null) return null;
+                synchronized (lock) {
+                    Double current = TypeCoercions.coerce(event.getValue(), Double.class);
 
-                long eventTime = event.getTimestamp();
-                long unitMillis = getConfig(DELTA_PERIOD).toMilliseconds();
-                Double result = null;
-                
-                if (eventTime > 0 && eventTime > lastTime) {
-                    if (lastValue == null || lastTime < 0) {
-                        // cannot calculate time-based delta with a single value
-                        if (LOG.isTraceEnabled()) LOG.trace("{} received event but no last value so will not emit, null -> {} at {}", new Object[] {this, current, eventTime}); 
-                    } else {
-                        double duration = eventTime - lastTime;
-                        result = (current.doubleValue() - lastValue.doubleValue()) / (duration / unitMillis);
+                    if (current == null) return null;
+
+                    long eventTime = event.getTimestamp();
+                    long unitMillis = getConfig(DELTA_PERIOD).toMilliseconds();
+                    Double result = null;
+
+                    if (eventTime > 0 && eventTime > lastTime) {
+                        if (lastValue == null || lastTime < 0) {
+                            // cannot calculate time-based delta with a single value
+                            if (LOG.isTraceEnabled()) LOG.trace("{} received event but no last value so will not emit, null -> {} at {}", new Object[] {this, current, eventTime}); 
+                        } else {
+                            double duration = eventTime - lastTime;
+                            result = (current - lastValue.doubleValue()) / (duration / unitMillis);
+                        }
                     }
+
+                    lastValue = current;
+                    lastTime = eventTime;
+
+                    return result;
                 }
-                
-                lastValue = current;
-                lastTime = eventTime;
-                
-                return result;
             }
         };
     }

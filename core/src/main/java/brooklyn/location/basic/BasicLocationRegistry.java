@@ -344,7 +344,7 @@ public class BasicLocationRegistry implements LocationRegistry {
                             + resolvers.keySet()+" are the only available location resolvers. "
                             + "More information can be found in the logs.";
                 } else {
-                    log.warn("Location resolution failed for '"+spec+"' (will fail shortly): known resolvers are: "+resolvers.keySet());
+                    log.debug("Location resolution failed for '"+spec+"' (if this is being loaded it will fail shortly): known resolvers are: "+resolvers.keySet());
                     errmsg = "Unknown location '"+spec+"': "
                             + "either this location is not recognised or there is a problem with location resolver configuration.";
                 }
