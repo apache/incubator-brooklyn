@@ -336,7 +336,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
         log.debug("Checking Java version at {}@{}", getEntity(), getLocation());
         // sed gets stdin like 'java version "1.7.0_45"'
         ProcessTaskWrapper<Integer> versionCommand = Entities.submit(getEntity(), SshTasks.newSshExecTaskFactory(
-                getLocation(), "java -version 2>&1 | grep \"java version\" | sed 's/.*\"\\(.*\\).*\"/\\1/'"));
+                getLocation(), "java -version 2>&1 | grep \" version\" | sed 's/.*\"\\(.*\\).*\"/\\1/'"));
         versionCommand.get();
         String stdOut = versionCommand.getStdout().trim();
         if (!Strings.isBlank(stdOut)) {
