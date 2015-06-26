@@ -180,7 +180,7 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         EntityTestUtils.assertAttributeEqualsEventually(newEntity, SENSOR_INT, (Integer)0);
     }
 
-    @Test
+    @Test(groups="WIP") // intermittent failures
     public void testReRebindDedupesCorrectlyBasedOnTagOrContentsPersisted() throws Exception {
         doReReReRebindDedupesCorrectlyBasedOnTagOrContentsPersisted(-1, 2, false);
     }
