@@ -19,7 +19,7 @@
 package brooklyn.entity.software.http;
 
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Attributes;
@@ -30,6 +30,8 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.test.EntityTestUtils;
+import brooklyn.test.TestHttpRequestHandler;
+import brooklyn.test.TestHttpServer;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
@@ -44,8 +46,16 @@ public class HttpRequestSensorTest {
     private TestApplication app;
     private EntityLocal entity;
 
-    @BeforeMethod(alwaysRun=true)
+    private TestHttpServer server;
+    private String serverUrl;
+
+    @BeforeClass(alwaysRun=true)
     public void setUp() throws Exception {
+        server = new TestHttpServer()
+            .handler("/myKey/myValue", new TestHttpRequestHandler().header("Content-Type", "application/json").response("{\"myKey\":\"myValue\"}"))
+            .start();
+        serverUrl = server.getUrl();
+
         app = TestApplication.Factory.newManagedInstanceForTests();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
                 .location(app.newLocalhostProvisioningLocation().obtain()));
@@ -55,19 +65,21 @@ public class HttpRequestSensorTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
+        server.stop();
     }
 
-    @Test(groups="Integration")
+    @Test
     public void testHttpSensor() throws Exception {
         HttpRequestSensor<Integer> sensor = new HttpRequestSensor<Integer>(ConfigBag.newInstance()
                 .configure(HttpRequestSensor.SENSOR_PERIOD, Duration.millis(100))
                 .configure(HttpRequestSensor.SENSOR_NAME, SENSOR_STRING.getName())
                 .configure(HttpRequestSensor.SENSOR_TYPE, TARGET_TYPE)
                 .configure(HttpRequestSensor.JSON_PATH, "$.myKey")
-                .configure(HttpRequestSensor.SENSOR_URI, "http://echo.jsontest.com/myKey/myValue"));
+                .configure(HttpRequestSensor.SENSOR_URI, serverUrl + "/myKey/myValue"));
         sensor.apply(entity);
         entity.setAttribute(Attributes.SERVICE_UP, true);
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_STRING, "myValue");
     }
+
 }

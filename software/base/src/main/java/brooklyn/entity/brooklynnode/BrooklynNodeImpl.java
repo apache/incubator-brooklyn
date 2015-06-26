@@ -225,12 +225,26 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     protected void postStop() {
         super.postStop();
         if (isMachineStopped()) {
-            // Don't unmanage in entity's task context as it will self-cancel the task. Wait for the stop effector to complete.
+            // Don't unmanage in entity's task context as it will self-cancel the task. Wait for the stop effector to complete (and all parent entity tasks).
             // If this is not enough (still getting Caused by: java.util.concurrent.CancellationException: null) then
-            // we could search for the top most task with entity context == this and wait on it. Even stronger would be
-            // to wait for BrooklynTaskTags.getTasksInEntityContext(ExecutionManager, this).isEmpty();
+            // we could wait for BrooklynTaskTags.getTasksInEntityContext(ExecutionManager, this).isEmpty();
             Task<?> stopEffectorTask = BrooklynTaskTags.getClosestEffectorTask(Tasks.current(), Startable.STOP);
-            getManagementContext().getExecutionManager().submit(new UnmanageTask(stopEffectorTask, this));
+            Task<?> topEntityTask = getTopEntityTask(stopEffectorTask);
+            getManagementContext().getExecutionManager().submit(new UnmanageTask(topEntityTask, this));
+        }
+    }
+
+    private Task<?> getTopEntityTask(Task<?> stopEffectorTask) {
+        Entity context = BrooklynTaskTags.getContextEntity(stopEffectorTask);
+        Task<?> topTask = stopEffectorTask;
+        while (true) {
+            Task<?> parentTask = topTask.getSubmittedByTask();
+            Entity parentContext = BrooklynTaskTags.getContextEntity(parentTask);
+            if (parentTask == null || parentContext != context) {
+                return topTask;
+            } else {
+                topTask = parentTask;
+            }
         }
     }
 

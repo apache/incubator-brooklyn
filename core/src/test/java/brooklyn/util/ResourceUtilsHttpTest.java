@@ -24,62 +24,49 @@ import static org.testng.Assert.assertFalse;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.bootstrap.HttpServer;
-import org.apache.http.impl.bootstrap.ServerBootstrap;
 import org.apache.http.localserver.RequestBasicAuth;
 import org.apache.http.localserver.ResponseBasicUnauthorized;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.BasicHttpProcessor;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
-import org.apache.http.protocol.ResponseConnControl;
-import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseServer;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import brooklyn.test.TestHttpRequestHandler;
+import brooklyn.test.TestHttpServer;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 
 public class ResourceUtilsHttpTest {
     private ResourceUtils utils;
-    private HttpServer server;
+    private TestHttpServer server;
     private String baseUrl;
 
     @BeforeClass(alwaysRun=true)
     public void setUp() throws Exception {
         utils = ResourceUtils.create(this, "mycontext");
-
-        BasicHttpProcessor httpProcessor = new BasicHttpProcessor();
-        httpProcessor.addInterceptor(new ResponseServer());
-        httpProcessor.addInterceptor(new ResponseContent());
-        httpProcessor.addInterceptor(new ResponseConnControl());
-        httpProcessor.addInterceptor(new RequestBasicAuth());
-        httpProcessor.addInterceptor(new ResponseBasicUnauthorized());
-
-        server = ServerBootstrap.bootstrap()
-                .setListenerPort(24266)
-                .setHttpProcessor(httpProcessor)
-                .registerHandler("/simple", new SimpleResponseHandler("OK"))
-                .registerHandler("/empty", new SimpleResponseHandler(HttpStatus.SC_NO_CONTENT, ""))
-                .registerHandler("/missing", new SimpleResponseHandler(HttpStatus.SC_NOT_FOUND, "Missing"))
-                .registerHandler("/redirect", new SimpleResponseHandler(HttpStatus.SC_MOVED_TEMPORARILY, "Redirect", new BasicHeader("Location", "/simple")))
-                .registerHandler("/cycle", new SimpleResponseHandler(HttpStatus.SC_MOVED_TEMPORARILY, "Redirect", new BasicHeader("Location", "/cycle")))
-                .registerHandler("/secure", new SimpleResponseHandler(HttpStatus.SC_MOVED_TEMPORARILY, "Redirect", new BasicHeader("Location", "https://0.0.0.0/")))
-                .registerHandler("/auth", new AuthHandler("test", "test", "OK"))
-                .registerHandler("/auth_escape", new AuthHandler("test@me:/", "test", "OK"))
-                .registerHandler("/auth_escape2", new AuthHandler("test@me:test", "", "OK"))
-                .registerHandler("/no_credentials", new CheckNoCredentials())
-                .create();
-        server.start();
-        baseUrl = "http://" + server.getInetAddress().getHostName() + ":" + server.getLocalPort();
+        server = new TestHttpServer()
+            .interceptor(new ResponseServer())
+            .interceptor(new ResponseBasicUnauthorized())
+            .interceptor(new RequestBasicAuth())
+            .handler("/simple", new TestHttpRequestHandler().response("OK"))
+            .handler("/empty", new TestHttpRequestHandler().code(HttpStatus.SC_NO_CONTENT))
+            .handler("/missing", new TestHttpRequestHandler().code(HttpStatus.SC_NOT_FOUND).response("Missing"))
+            .handler("/redirect", new TestHttpRequestHandler().code(HttpStatus.SC_MOVED_TEMPORARILY).response("Redirect").header("Location", "/simple"))
+            .handler("/cycle", new TestHttpRequestHandler().code(HttpStatus.SC_MOVED_TEMPORARILY).response("Redirect").header("Location", "/cycle"))
+            .handler("/secure", new TestHttpRequestHandler().code(HttpStatus.SC_MOVED_TEMPORARILY).response("Redirect").header("Location", "https://0.0.0.0/"))
+            .handler("/auth", new AuthHandler("test", "test", "OK"))
+            .handler("/auth_escape", new AuthHandler("test@me:/", "test", "OK"))
+            .handler("/auth_escape2", new AuthHandler("test@me:test", "", "OK"))
+            .handler("/no_credentials", new CheckNoCredentials())
+            .start();
+        baseUrl = server.getUrl();
     }
 
     @AfterClass(alwaysRun=true)
@@ -161,38 +148,6 @@ public class ResourceUtilsHttpTest {
         assertFalse(contents.contains("bit.ly"), "contents="+contents);
     }
 
-    private static class SimpleResponseHandler implements HttpRequestHandler {
-        private int statusCode = HttpStatus.SC_OK;
-        private String responseBody = "";
-        private Header[] headers;
-
-        protected SimpleResponseHandler(String response) {
-            this.responseBody = response;
-        }
-
-        protected SimpleResponseHandler(int status, String response) {
-            this.statusCode = status;
-            this.responseBody = response;
-        }
-
-        protected SimpleResponseHandler(int status, String response, Header... headers) {
-            this.statusCode = status;
-            this.responseBody = response;
-            this.headers = headers;
-        }
-
-        @Override
-        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
-            response.setStatusCode(statusCode);
-            response.setEntity(new StringEntity(responseBody));
-            if (headers != null) {
-                for (Header header : headers) {
-                    response.setHeader(header);
-                }
-            }
-        }
-    }
-
     private static class AuthHandler implements HttpRequestHandler {
         private String username;
         private String password;
@@ -204,6 +159,7 @@ public class ResourceUtilsHttpTest {
             this.responseBody = response;
         }
 
+        @Override
         public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
             String creds = (String) context.getAttribute("creds");
             if (creds == null || !creds.equals(getExpectedCredentials())) {
