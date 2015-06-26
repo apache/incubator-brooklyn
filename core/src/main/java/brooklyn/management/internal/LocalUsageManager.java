@@ -41,6 +41,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
+import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContextInjectable;
@@ -284,6 +285,10 @@ public class LocalUsageManager implements UsageManager {
         // but no strong enough feelings yet...
         
         checkNotNull(loc, "location");
+        if (loc.getConfig(AbstractLocation.TEMPORARY_LOCATION)) {
+            log.info("Ignoring location lifecycle usage event for {} (state {}), because location is a temporary location", loc, state);
+            return;
+        }
         checkNotNull(state, "state of location %s", loc);
         if (loc.getId() == null) {
             log.error("Ignoring location lifecycle usage event for {} (state {}), because location has no id", loc, state);
@@ -302,6 +307,7 @@ public class LocalUsageManager implements UsageManager {
             Entity caller = (Entity) callerContext;
             String entityTypeName = caller.getEntityType().getName();
             String appId = caller.getApplicationId();
+
             final LocationUsage.LocationEvent event = new LocationUsage.LocationEvent(state, caller.getId(), entityTypeName, appId, getUser());
             
             ConcurrentMap<String, LocationUsage> usageMap = managementContext.getStorage().<String, LocationUsage>getMap(LOCATION_USAGE_KEY);

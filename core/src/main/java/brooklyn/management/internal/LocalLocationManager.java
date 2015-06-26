@@ -98,7 +98,7 @@ public class LocalLocationManager implements LocationManagerInternal {
             if (createUnmanaged) {
                 spec.removeConfig(CREATE_UNMANAGED);
             }
-            
+
             T loc = locationFactory.createLocation(spec);
             if (!createUnmanaged) {
                 manage(loc);
