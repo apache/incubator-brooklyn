@@ -122,6 +122,16 @@ public class SshMachineLocationTest {
         assertSame(host2.getMachineDetails(), machineDetails);
     }
     
+    @Test
+    public void testConfigurePrivateAddresses() throws Exception {
+        SshMachineLocation host2 = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                .configure("address", Networking.getLocalHost())
+                .configure(SshMachineLocation.PRIVATE_ADDRESSES, ImmutableList.of("1.2.3.4"))
+                .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true));
+
+        assertEquals(host2.getPrivateAddresses(), ImmutableSet.of("1.2.3.4"));
+    }
+    
     // Wow, this is hard to test (until I accepted creating the entity + effector)! Code smell?
     // Need to call getMachineDetails in a DynamicSequentialTask so that the "innessential" takes effect,
     // to not fail its caller. But to get one of those outside of an effector is non-obvious.
