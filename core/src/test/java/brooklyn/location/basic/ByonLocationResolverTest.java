@@ -38,6 +38,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
@@ -47,12 +48,12 @@ import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
+import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -209,16 +210,20 @@ public class ByonLocationResolverTest {
 
     @Test
     public void testResolvesUsernameAtHost() throws Exception {
-        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"myuser@1.1.1.1\")"), ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1")));
-        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"myuser@1.1.1.1,myuser2@1.1.1.1\")"), ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1"), new UserHostTuple("myuser2", "1.1.1.1")));
-        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"myuser@1.1.1.1,myuser2@1.1.1.2\")"), ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1"), new UserHostTuple("myuser2", "1.1.1.2")));
+        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"myuser@1.1.1.1\")"), 
+                ImmutableSet.of(UserAndHostAndPort.fromParts("myuser", "1.1.1.1", 22)));
+        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"myuser@1.1.1.1,myuser2@1.1.1.1\")"), ImmutableSet.of(
+                UserAndHostAndPort.fromParts("myuser", "1.1.1.1", 22), UserAndHostAndPort.fromParts("myuser2", "1.1.1.1", 22)));
+        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"myuser@1.1.1.1,myuser2@1.1.1.2\")"), ImmutableSet.of(
+                UserAndHostAndPort.fromParts("myuser", "1.1.1.1", 22), UserAndHostAndPort.fromParts("myuser2", "1.1.1.2", 22)));
     }
 
     @Test
     public void testResolvesUserArg() throws Exception {
-        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"1.1.1.1\",user=bob)"), ImmutableSet.of(new UserHostTuple("bob", "1.1.1.1")));
+        assertByonClusterWithUsersEquals(resolve("byon(hosts=\"1.1.1.1\",user=bob)"), 
+                ImmutableSet.of(UserAndHostAndPort.fromParts("bob", "1.1.1.1", 22)));
         assertByonClusterWithUsersEquals(resolve("byon(user=\"bob\",hosts=\"myuser@1.1.1.1,1.1.1.1\")"), 
-                ImmutableSet.of(new UserHostTuple("myuser", "1.1.1.1"), new UserHostTuple("bob", "1.1.1.1")));
+                ImmutableSet.of(UserAndHostAndPort.fromParts("myuser", "1.1.1.1", 22), UserAndHostAndPort.fromParts("bob", "1.1.1.1", 22)));
     }
 
     @Test
@@ -242,6 +247,14 @@ public class ByonLocationResolverTest {
                 new NamedLocationResolver().newLocationFromString(MutableMap.of(), "named:foo", managementContext.getLocationRegistry());
         SshMachineLocation l = ll.obtain(MutableMap.of());
         Assert.assertEquals("bob", l.getUser());
+    }
+
+    @Test
+    public void testResolvesPortArg() throws Exception {
+        assertByonClusterWithUsersEquals(resolve("byon(user=bob,port=8022,hosts=\"1.1.1.1\")"), 
+                ImmutableSet.of(UserAndHostAndPort.fromParts("bob", "1.1.1.1", 8022)));
+        assertByonClusterWithUsersEquals(resolve("byon(user=bob,port=8022,hosts=\"myuser@1.1.1.1,1.1.1.2:8901\")"), 
+                ImmutableSet.of(UserAndHostAndPort.fromParts("myuser", "1.1.1.1", 8022), UserAndHostAndPort.fromParts("bob", "1.1.1.2", 8901)));
     }
 
     @SuppressWarnings("unchecked")
@@ -342,6 +355,13 @@ public class ByonLocationResolverTest {
         assertTrue(location instanceof SshMachineLocation, "Expected location to be SshMachineLocation, found " + location);
     }
 
+    @Test
+    public void testAdditionalConfig() throws Exception {
+        FixedListMachineProvisioningLocation<MachineLocation> loc = resolve("byon(mykey=myval,hosts=\"1.1.1.1\")");
+        MachineLocation machine = loc.obtain(ImmutableMap.of());
+        assertEquals(machine.getConfig(ConfigKeys.newConfigKey(String.class, "mykey")), "myval");
+    }
+
     private void assertByonClusterEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<String> expectedHosts) {
         assertByonClusterEquals(cluster, expectedHosts, defaultNamePredicate);
     }
@@ -359,14 +379,15 @@ public class ByonLocationResolverTest {
         assertTrue(expectedName.apply(cluster.getDisplayName()), "name="+cluster.getDisplayName());
     }
 
-    private void assertByonClusterWithUsersEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<UserHostTuple> expectedHosts) {
+    private void assertByonClusterWithUsersEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<UserAndHostAndPort> expectedHosts) {
         assertByonClusterWithUsersEquals(cluster, expectedHosts, defaultNamePredicate);
     }
     
-    private void assertByonClusterWithUsersEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<UserHostTuple> expectedHosts, Predicate<? super String> expectedName) {
-        Set<UserHostTuple> actualHosts = ImmutableSet.copyOf(Iterables.transform(cluster.getMachines(), new Function<MachineLocation, UserHostTuple>() {
-            @Override public UserHostTuple apply(MachineLocation input) {
-                return new UserHostTuple(((SshMachineLocation)input).getUser(), input.getAddress().getHostName());
+    private void assertByonClusterWithUsersEquals(FixedListMachineProvisioningLocation<? extends MachineLocation> cluster, Set<UserAndHostAndPort> expectedHosts, Predicate<? super String> expectedName) {
+        Set<UserAndHostAndPort> actualHosts = ImmutableSet.copyOf(Iterables.transform(cluster.getMachines(), new Function<MachineLocation, UserAndHostAndPort>() {
+            @Override public UserAndHostAndPort apply(MachineLocation input) {
+                SshMachineLocation machine = (SshMachineLocation) input;
+                return UserAndHostAndPort.fromParts(machine.getUser(), machine.getAddress().getHostName(), machine.getPort());
             }}));
         assertEquals(actualHosts, expectedHosts);
         assertTrue(expectedName.apply(cluster.getDisplayName()), "name="+cluster.getDisplayName());
@@ -398,30 +419,5 @@ public class ByonLocationResolverTest {
     @SuppressWarnings("unchecked")
     private FixedListMachineProvisioningLocation<MachineLocation> resolve(String val, Map<?, ?> locationFlags) {
         return (FixedListMachineProvisioningLocation<MachineLocation>) managementContext.getLocationRegistry().resolve(val, locationFlags);
-    }
-
-    private static class UserHostTuple {
-        final String username;
-        final String hostname;
-        
-        UserHostTuple(String username, String hostname) {
-            this.username = username;
-            this.hostname = hostname;
-        }
-        
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof UserHostTuple && Objects.equal(username, ((UserHostTuple)o).username)
-                    && Objects.equal(hostname, ((UserHostTuple)o).hostname);
-        }
-        
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(username, hostname);
-        }
-        @Override
-        public String toString() {
-            return Objects.toStringHelper(UserHostTuple.class).add("user", username).add("host", hostname).toString();
-        }
     }
 }
