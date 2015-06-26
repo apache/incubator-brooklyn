@@ -24,7 +24,11 @@ import static org.testng.Assert.fail;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -32,6 +36,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
@@ -40,13 +45,20 @@ import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 /**
  * Provisions {@link SshMachineLocation}s in a specific location from a list of known machines
  */
 public class FixedListMachineProvisioningLocationTest {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(FixedListMachineProvisioningLocationTest.class);
+
     SshMachineLocation machine;
     LocalManagementContext mgmt;
     FixedListMachineProvisioningLocation<SshMachineLocation> provisioner;
@@ -316,6 +328,159 @@ public class FixedListMachineProvisioningLocationTest {
         for (SshMachineLocation expected : machines) {
             assertEquals(provisioner2.obtain(), expected);
         }
+    }
+    
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testMachineChooser() throws Exception {
+        List<SshMachineLocation> machines = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            machines.add(mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1."+i))));
+        }
+        final List<SshMachineLocation> desiredOrder = randomized(machines);
+        
+        Function<Iterable<? extends MachineLocation>, MachineLocation> chooser = new Function<Iterable<? extends MachineLocation>, MachineLocation>() {
+            @Override public MachineLocation apply(Iterable<? extends MachineLocation> input) {
+                for (SshMachineLocation contender : desiredOrder) {
+                    if (Iterables.contains(input, contender)) {
+                        return contender;
+                    }
+                }
+                Assert.fail("No intersection of input="+input+" and desiredOrder="+desiredOrder);
+                return null; // unreachable code
+            }
+        };
+        provisioner2 = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
+                .configure("machines", machines)
+                .configure(FixedListMachineProvisioningLocation.MACHINE_CHOOSER, chooser));
+
+        List<SshMachineLocation> result = Lists.newArrayList();
+        for (int i = 0; i < machines.size(); i++) {
+            result.add(provisioner2.obtain());
+        }
+        assertEquals(result, desiredOrder, "result="+result+"; desired="+desiredOrder);
+        LOG.debug("chooser's desiredOrder="+desiredOrder);
+    }
+    
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testMachineChooserPassedToObtain() throws Exception {
+        List<SshMachineLocation> machines = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            machines.add(mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1."+i))));
+        }
+        final List<SshMachineLocation> desiredOrder = randomized(machines);
+        
+        Function<Iterable<? extends MachineLocation>, MachineLocation> chooser = new Function<Iterable<? extends MachineLocation>, MachineLocation>() {
+            @Override public MachineLocation apply(Iterable<? extends MachineLocation> input) {
+                for (SshMachineLocation contender : desiredOrder) {
+                    if (Iterables.contains(input, contender)) {
+                        return contender;
+                    }
+                }
+                Assert.fail("No intersection of input="+input+" and desiredOrder="+desiredOrder);
+                return null; // unreachable code
+            }
+        };
+        provisioner2 = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
+                .configure("machines", machines));
+
+        List<SshMachineLocation> result = Lists.newArrayList();
+        for (int i = 0; i < machines.size(); i++) {
+            result.add(provisioner2.obtain(ImmutableMap.of(FixedListMachineProvisioningLocation.MACHINE_CHOOSER, chooser)));
+        }
+        assertEquals(result, desiredOrder, "result="+result+"; desired="+desiredOrder);
+        LOG.debug("chooser's desiredOrder="+desiredOrder);
+    }
+    
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testMachineChooserNotCalledWhenNoMachines() throws Exception {
+        List<SshMachineLocation> machines = ImmutableList.of(
+                mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1.1"))));
+        final AtomicInteger callCount = new AtomicInteger();
+        
+        Function<Iterable<? extends MachineLocation>, MachineLocation> chooser = new Function<Iterable<? extends MachineLocation>, MachineLocation>() {
+            @Override public MachineLocation apply(Iterable<? extends MachineLocation> input) {
+                callCount.incrementAndGet();
+                return Iterables.get(input, 0);
+            }
+        };
+        provisioner2 = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
+                .configure("machines", machines)
+                .configure(FixedListMachineProvisioningLocation.MACHINE_CHOOSER, chooser));
+        provisioner2.obtain();
+
+        // When no machines available should fail gracefully, without asking the "chooser"
+        try {
+            provisioner2.obtain();
+            fail("Expected "+NoMachinesAvailableException.class.getSimpleName());
+        } catch (NoMachinesAvailableException e) {
+            // Pass; sensible exception
+        }
+        assertEquals(callCount.get(), 1);
+    }
+    
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testFailsWhenMachineChooserReturnsAlreadyAllocatedMachine() throws Exception {
+        final SshMachineLocation machine1 = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1.1")));
+        final SshMachineLocation machine2 = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1.2")));
+        List<SshMachineLocation> machines = ImmutableList.of(machine1, machine2);
+        
+        Function<Iterable<? extends MachineLocation>, MachineLocation> chooser = new Function<Iterable<? extends MachineLocation>, MachineLocation>() {
+            @Override public MachineLocation apply(Iterable<? extends MachineLocation> input) {
+                return machine1;
+            }
+        };
+        provisioner2 = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
+                .configure("machines", machines)
+                .configure(FixedListMachineProvisioningLocation.MACHINE_CHOOSER, chooser));
+        provisioner2.obtain();
+
+        // Should fail when tries to return same machine for a second time
+        try {
+            provisioner2.obtain();
+            fail("Expected "+IllegalStateException.class.getSimpleName());
+        } catch (IllegalStateException e) {
+            if (!e.toString().contains("Machine chooser attempted to choose ")) throw e;
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testFailsWhenMachineChooserReturnsInvalidMachine() throws Exception {
+        final SshMachineLocation machine1 = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("1.1.1.1")));
+        final SshMachineLocation machineOther = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class).configure("address", Networking.getInetAddressWithFixedName("2.2.2.1")));
+        List<SshMachineLocation> machines = ImmutableList.of(machine1);
+        
+        Function<Iterable<? extends MachineLocation>, MachineLocation> chooser = new Function<Iterable<? extends MachineLocation>, MachineLocation>() {
+            @Override public MachineLocation apply(Iterable<? extends MachineLocation> input) {
+                return machineOther;
+            }
+        };
+        provisioner2 = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
+                .configure("machines", machines)
+                .configure(FixedListMachineProvisioningLocation.MACHINE_CHOOSER, chooser));
+
+        // Call when no machines available should fail gracefully, without asking the "chooser"
+        try {
+            provisioner2.obtain();
+            fail("Expected "+IllegalStateException.class.getSimpleName());
+        } catch (IllegalStateException e) {
+            if (!e.toString().contains("Machine chooser attempted to choose ")) throw e;
+        }
+    }
+
+    private static <T> List<T> randomized(Iterable<T> list) {
+        // TODO inefficient implementation, but don't care for small tests
+        Random random = new Random();
+        List<T> result = Lists.newLinkedList();
+        for (T element : list) {
+            int index = (result.isEmpty() ? 0 : random.nextInt(result.size()));
+            result.add(index, element);
+        }
+        return result;
     }
     
     private static void assertUserAndHost(SshMachineLocation l, String user, String host) {

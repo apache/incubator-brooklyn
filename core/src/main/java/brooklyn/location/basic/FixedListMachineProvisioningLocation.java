@@ -31,12 +31,15 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.LocationManager;
+import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.SetFromFlag;
@@ -44,12 +47,14 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
+import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 /**
  * A provisioner of {@link MachineLocation}s which takes a list of machines it can connect to.
@@ -68,6 +73,13 @@ implements MachineProvisioningLocation<T>, Closeable {
     // ConcurrentModificationException in the caller if it iterates over them etc.
     
     private static final Logger log = LoggerFactory.getLogger(FixedListMachineProvisioningLocation.class);
+    
+    public static final ConfigKey<Function<Iterable<? extends MachineLocation>, MachineLocation>> MACHINE_CHOOSER =
+            ConfigKeys.newConfigKey(
+                    new TypeToken<Function<Iterable<? extends MachineLocation>, MachineLocation>>() {}, 
+                    "byon.machineChooser",
+                    "For choosing which of the possible machines is chosen and returned by obtain()",
+                    CollectionFunctionals.<MachineLocation>firstElement());
     
     private final Object lock = new Object();
     
@@ -226,6 +238,7 @@ implements MachineProvisioningLocation<T>, Closeable {
     public T obtain(Map<?,?> flags) throws NoMachinesAvailableException {
         T machine;
         T desiredMachine = (T) flags.get("desiredMachine");
+        Function<Iterable<? extends MachineLocation>, MachineLocation> chooser = getConfigPreferringOverridden(MACHINE_CHOOSER, flags);
         
         synchronized (lock) {
             Set<T> a = getAvailable();
@@ -245,7 +258,10 @@ implements MachineProvisioningLocation<T>, Closeable {
                             (inUse.contains(desiredMachine) ? "machine in use" : "machine unknown"));
                 }
             } else {
-                machine = a.iterator().next();
+                machine = (T) chooser.apply(a);
+                if (!a.contains(machine)) {
+                    throw new IllegalStateException("Machine chooser attempted to choose '"+machine+"' from outside the available set, in "+this);
+                }
             }
             inUse.add(machine);
         }
@@ -270,6 +286,14 @@ implements MachineProvisioningLocation<T>, Closeable {
         return Maps.<String,Object>newLinkedHashMap();
     }
     
+    @SuppressWarnings("unchecked")
+    private <K> K getConfigPreferringOverridden(ConfigKey<K> key, Map<?,?> overrides) {
+        K result = (K) overrides.get(key);
+        if (result == null) result = (K) overrides.get(key.getName());
+        if (result == null) result = getConfig(key);
+        return result;
+    }
+
     /**
      * Facilitates fluent/programmatic style for constructing a fixed pool of machines.
      * <pre>

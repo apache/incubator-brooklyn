@@ -106,6 +106,23 @@ public class CollectionFunctionals {
         return new SizeFunction(valueIfInputNull);
     }
 
+    public static final class FirstElementFunction<T> implements Function<Iterable<? extends T>, T> {
+        private FirstElementFunction() {
+        }
+
+        @Override
+        public T apply(Iterable<? extends T> input) {
+            if (input==null) return null;
+            return Iterables.get(input, 0);
+        }
+
+        @Override public String toString() { return "firstElementFunction"; }
+    }
+
+    public static <T> Function<Iterable<? extends T>, T> firstElement() {
+        return new FirstElementFunction<T>();
+    }
+    
     public static <K> Function<Map<K,?>,Set<K>> keys() {
         return new KeysOfMapFunction<K>();
     }
