@@ -18,6 +18,8 @@
  */
 package brooklyn.location.basic;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
@@ -27,18 +29,23 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Sanitizer;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.management.internal.LocalLocationManager;
-import brooklyn.util.JavaGroovyEquivalents;
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.net.HostAndPort;
 
 /**
  * Examples of valid specs:
@@ -86,7 +93,8 @@ public class ByonLocationResolver extends AbstractLocationResolver {
 
         Object hosts = config.getStringKey("hosts");
         config.remove("hosts");
-        String user = (String)config.getStringKey("user");
+        String user = (String) config.getStringKey("user");
+        Integer port = (Integer) TypeCoercions.coerce(config.getStringKey("port"), Integer.class);
         Class<? extends MachineLocation> locationClass = OS_TO_MACHINE_LOCATION_TYPE.get(config.get(OS_FAMILY));
         
         List<String> hostAddresses;
@@ -108,30 +116,106 @@ public class ByonLocationResolver extends AbstractLocationResolver {
         }
         
         List<MachineLocation> machines = Lists.newArrayList();
-        for (String host : hostAddresses) {
-            String userHere = user;
-            String hostHere = host;
-            if (host.contains("@")) {
-                userHere = host.substring(0, host.indexOf("@"));
-                hostHere = host.substring(host.indexOf("@")+1);
+        for (Object host : hostAddresses) {
+            LocationSpec<? extends MachineLocation> machineSpec;
+            if (host instanceof String) {
+                machineSpec = parseMachine((String)host, locationClass, MutableMap.of("user", user, "port", port), spec);
+            } else if (host instanceof Map) {
+                machineSpec = parseMachine((Map<String, ?>)host, locationClass, MutableMap.of("user", user, "port", port), spec);
+            } else {
+                throw new IllegalArgumentException("Expected machine to be String or Map, but was "+host.getClass().getName()+" ("+host+")");
             }
-            try {
-                InetAddress.getByName(hostHere.trim());
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Invalid host '"+hostHere+"' specified in '"+spec+"': "+e);
-            }
-            LocationSpec<? extends MachineLocation> locationSpec = LocationSpec.create(locationClass)
-                    .configure("address", hostHere.trim())
-                    .configureIfNotNull(LocalLocationManager.CREATE_UNMANAGED, config.get(LocalLocationManager.CREATE_UNMANAGED));
-            if (JavaGroovyEquivalents.groovyTruth(userHere)) {
-                locationSpec.configure("user", userHere.trim());
-            }
-            MachineLocation machine = managementContext.getLocationManager().createLocation(locationSpec);
+            machineSpec.configureIfNotNull(LocalLocationManager.CREATE_UNMANAGED, config.get(LocalLocationManager.CREATE_UNMANAGED));
+            MachineLocation machine = managementContext.getLocationManager().createLocation(machineSpec);
             machines.add(machine);
         }
         
         config.putStringKey("machines", machines);
 
         return config;
+    }
+    
+    protected LocationSpec<? extends MachineLocation> parseMachine(Map<String, ?> vals, Class<? extends MachineLocation> locationClass, Map<String, ?> defaults, String specForErrMsg) {
+        Map<String, Object> valSanitized = Sanitizer.sanitize(vals);
+        Map<String, Object> machineConfig = MutableMap.copyOf(vals);
+        
+        String osfamily = (String) machineConfig.remove(OS_FAMILY.getName());
+        String ssh = (String) machineConfig.remove("ssh");
+        String winrm = (String) machineConfig.remove("winrm");
+        checkArgument(ssh != null ^ winrm != null, "Must specify exactly one of 'ssh' or 'winrm' for machine: %s", valSanitized);
+        
+        UserAndHostAndPort userAndHostAndPort;
+        if (ssh != null) {
+            userAndHostAndPort = parseUserAndHostAndPort((String)ssh);
+        } else {
+            userAndHostAndPort = parseUserAndHostAndPort((String)winrm);
+        }
+        
+        String host = userAndHostAndPort.getHostAndPort().getHostText().trim();
+        machineConfig.put("address", host);
+        try {
+            InetAddress.getByName(host);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid host '"+host+"' specified in '"+specForErrMsg+"': "+e);
+        }
+
+        if (userAndHostAndPort.getUser() != null) {
+            checkArgument(!vals.containsKey("user"), "Must not specify user twice for machine: %s", valSanitized);
+            machineConfig.put("user", userAndHostAndPort.getUser());
+        }
+        if (userAndHostAndPort.getHostAndPort().hasPort()) {
+            checkArgument(!vals.containsKey("port"), "Must not specify port twice for machine: %s", valSanitized);
+            machineConfig.put("port", userAndHostAndPort.getHostAndPort().getPort());
+        }
+        for (Map.Entry<String, ?> entry : defaults.entrySet()) {
+            if (!machineConfig.containsKey(entry.getKey())) {
+                machineConfig.put(entry.getKey(), entry.getValue());
+            }
+        }
+        
+        Class<? extends MachineLocation> locationClassHere = locationClass;
+        if (osfamily != null) {
+            locationClassHere = OS_TO_MACHINE_LOCATION_TYPE.get(osfamily);
+        }
+
+        return LocationSpec.create(locationClassHere).configure(machineConfig);
+    }
+
+    protected LocationSpec<? extends MachineLocation> parseMachine(String val, Class<? extends MachineLocation> locationClass, Map<String, ?> defaults, String specForErrMsg) {
+        Map<String, Object> machineConfig = Maps.newLinkedHashMap();
+
+        UserAndHostAndPort userAndHostAndPort = parseUserAndHostAndPort(val);
+        
+        String host = userAndHostAndPort.getHostAndPort().getHostText().trim();
+        machineConfig.put("address", host);
+        try {
+            InetAddress.getByName(host.trim());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid host '"+host+"' specified in '"+specForErrMsg+"': "+e);
+        }
+        
+        if (userAndHostAndPort.getUser() != null) {
+            machineConfig.put("user", userAndHostAndPort.getUser());
+        }
+        if (userAndHostAndPort.getHostAndPort().hasPort()) {
+            machineConfig.put("port", userAndHostAndPort.getHostAndPort().getPort());
+        }
+        for (Map.Entry<String, ?> entry : defaults.entrySet()) {
+            if (!machineConfig.containsKey(entry.getKey())) {
+                machineConfig.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return LocationSpec.create(locationClass).configure(machineConfig);
+    }
+    
+    private UserAndHostAndPort parseUserAndHostAndPort(String val) {
+        String userPart = null;
+        String hostPart = val;
+        if (val.contains("@")) {
+            userPart = val.substring(0, val.indexOf("@"));
+            hostPart = val.substring(val.indexOf("@")+1);
+        }
+        return UserAndHostAndPort.fromParts(userPart, HostAndPort.fromString(hostPart));
     }
 }
