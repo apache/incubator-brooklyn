@@ -24,7 +24,7 @@ export DATESTAMP=`date "+%Y-%m-%d"`
 export SHA1STAMP=`git rev-parse HEAD`
 
 # BROOKLYN_VERSION_BELOW
-export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.7.0-SNAPSHOT-with-dependencies.jar
+export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.7.0-incubating-with-dependencies.jar
 
 if [ \! -f ${BROOKLYN_JAVADOC_CLASSPATH} ]; then
   echo "Expected to find ${BROOKLYN_JAVADOC_CLASSPATH}"
