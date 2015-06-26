@@ -25,7 +25,7 @@ This should return details of the build as a JSON string similar to the followin
 
 {% highlight json %}
 {
-    "version": "0.7.0-SNAPSHOT",  {% comment %}BROOKLYN_VERSION{% endcomment %}
+    "version": "0.8.0-SNAPSHOT",  {% comment %}BROOKLYN_VERSION{% endcomment %}
     "buildSha1": "c0fdc15291702281acdebf1b11d431a6385f5224",
     "buildBranch": "UNKNOWN"
 }

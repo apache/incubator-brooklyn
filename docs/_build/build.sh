@@ -21,7 +21,7 @@ function help() {
   echo "* website-root  : to build the website only, in the root"
   echo "* guide-latest  : to build the guide only, in /v/latest/"
   # BROOKLYN_VERSION_BELOW
-  echo "* guide-version : to build the guide only, in the versioned namespace /v/0.7.0-SNAPSHOT/"
+  echo "* guide-version : to build the guide only, in the versioned namespace /v/0.8.0-SNAPSHOT/"
   echo "* test-guide-root : to build the guide only, in the root (for testing)"
   echo "* test-both : to build the website to root and guide to /v/latest/ (for testing)"
   echo "* test-both-sub : to build the website to /sub/ and guide to /sub/v/latest/ (for testing)"
@@ -71,7 +71,7 @@ function parse_mode() {
     # Mac bash defaults to v3 not v4, so can't use assoc arrays :(
     DIRS_TO_MOVE[0]=guide
     # BROOKLYN_VERSION_BELOW
-    DIRS_TO_MOVE_TARGET[0]=v/0.7.0-SNAPSHOT
+    DIRS_TO_MOVE_TARGET[0]=v/0.8.0-SNAPSHOT
     DIRS_TO_MOVE[1]=style
     STYLE_SUBDIR=${DIRS_TO_MOVE_TARGET[0]}/style
     DIRS_TO_MOVE_TARGET[1]=$STYLE_SUBDIR

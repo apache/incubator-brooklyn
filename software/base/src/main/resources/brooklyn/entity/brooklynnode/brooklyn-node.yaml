@@ -23,7 +23,7 @@ services:
 - type: brooklyn.entity.brooklynnode.BrooklynNode
 
   ## to use a local file, specify something such as the following:   [BROOKLYN_VERSION_BELOW] 
-  # downloadUrl: file:///tmp/brooklyn-dist-0.7.0-SNAPSHOT-dist.tar.gz
+  # downloadUrl: file:///tmp/brooklyn-dist-0.8.0-SNAPSHOT-dist.tar.gz
 
   ## if deploying to anything other than localhost you must also configure login details, e.g.:
   # managementUsername: admin

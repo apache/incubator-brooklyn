@@ -69,7 +69,7 @@ public class BrooklynVersion {
     private static final String OSGI_SHA1_PROPERTY_NAME = "Implementation-SHA-1";
     private static final String OSGI_BRANCH_PROPERTY_NAME = "Implementation-Branch";
 
-    private final static String VERSION_FROM_STATIC = "0.7.0-SNAPSHOT"; // BROOKLYN_VERSION
+    private final static String VERSION_FROM_STATIC = "0.8.0-SNAPSHOT"; // BROOKLYN_VERSION
     private static final AtomicReference<Boolean> IS_DEV_ENV = new AtomicReference<Boolean>();
 
     private static final String BROOKLYN_FEATURE_PREFIX = "Brooklyn-Feature-";
