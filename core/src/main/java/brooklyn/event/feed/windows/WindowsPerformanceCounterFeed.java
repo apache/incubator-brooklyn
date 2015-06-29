@@ -54,6 +54,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -260,7 +261,8 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         }
     }
 
-    private static class SendPerfCountersToSensors implements PollHandler<WinRmToolResponse> {
+    @VisibleForTesting
+    static class SendPerfCountersToSensors implements PollHandler<WinRmToolResponse> {
         private final EntityLocal entity;
         private final List<WindowsPerformanceCounterPollConfig<?>> polls;
         private final Set<AttributeSensor<?>> failedAttributes = Sets.newLinkedHashSet();
