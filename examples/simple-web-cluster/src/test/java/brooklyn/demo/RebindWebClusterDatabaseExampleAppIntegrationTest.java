@@ -49,7 +49,7 @@ import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixture;
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
+import brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
@@ -151,7 +151,7 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         // expect web-app to be reachable, and wired up to database
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(clusterUrl, 200);
         for (Entity appserver : appservers) {
-            String appserverUrl = checkNotNull(appserver.getAttribute(JBoss7Server.ROOT_URL), "appserver url of "+appserver);
+            String appserverUrl = checkNotNull(appserver.getAttribute(Tomcat8Server.ROOT_URL), "appserver url of "+appserver);
 
             HttpTestUtils.assertHttpStatusCodeEventuallyEquals(appserverUrl, 200);
             assertEquals(expectedJdbcUrl, appserver.getConfig(JavaEntityMethods.javaSysProp("brooklyn.example.db.url")), "of "+appserver);
@@ -169,7 +169,7 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         for (final Entity appserver : webMembersAfterGrow) {
             Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TWO_MINUTES), new Runnable() {
                 @Override public void run() {
-                    String appserverUrl = checkNotNull(appserver.getAttribute(JBoss7Server.ROOT_URL), "appserver url of "+appserver);
+                    String appserverUrl = checkNotNull(appserver.getAttribute(Tomcat8Server.ROOT_URL), "appserver url of "+appserver);
                     HttpTestUtils.assertHttpStatusCodeEquals(appserverUrl, 200);
                     assertEquals(expectedJdbcUrl, appserver.getConfig(JavaEntityMethods.javaSysProp("brooklyn.example.db.url")), "of "+appserver);
                     Asserts.assertEqualsIgnoringOrder(nginx.getAttribute(NginxController.SERVER_POOL_TARGETS).keySet(), webMembersAfterGrow);
@@ -179,7 +179,7 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         // expect enrichers to be there
         Iterables.find(web.getEnrichers(), Predicates.instanceOf(HttpLatencyDetector.class));
         Iterable<Enricher> propagatorEnrichers = Iterables.filter(web.getEnrichers(), Predicates.instanceOf(Propagator.class));
-        assertEquals(Iterables.size(propagatorEnrichers), 2, "propagatorEnrichers="+propagatorEnrichers);
+        assertEquals(Iterables.size(propagatorEnrichers), 3, "propagatorEnrichers="+propagatorEnrichers);
 
         // Check we see evidence of the enrichers having an effect.
         // Relying on WebAppMonitor to stimulate activity.
