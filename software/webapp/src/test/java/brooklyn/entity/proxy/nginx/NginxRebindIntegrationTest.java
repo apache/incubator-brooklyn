@@ -23,7 +23,6 @@ import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
 import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
 import static org.testng.Assert.assertEquals;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -31,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import brooklyn.test.TestResourceUnavailableException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -47,7 +47,7 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
+import brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
@@ -119,7 +119,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         
         // Set up nginx with a server pool
         DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class))
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class))
                 .configure("initialSize", 0));
         
         NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class)
@@ -161,7 +161,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         
         // Set up nginx with a server pool
         DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("war", getTestWar()))
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("war", getTestWar()))
                 .configure("initialSize", 1));
         
         NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class)
@@ -172,8 +172,8 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         origApp.start(ImmutableList.of(localhostProvisioningLocation));
         
         String rootUrl = origNginx.getAttribute(NginxController.ROOT_URL);
-        JBoss7Server origJboss = (JBoss7Server) Iterables.getOnlyElement(origServerPool.getMembers());
-        assertEquals(origNginx.getAttribute(NginxController.SERVER_POOL_TARGETS).keySet(), ImmutableSet.of(origJboss));
+        Tomcat8Server origServer = (Tomcat8Server) Iterables.getOnlyElement(origServerPool.getMembers());
+        assertEquals(origNginx.getAttribute(NginxController.SERVER_POOL_TARGETS).keySet(), ImmutableSet.of(origServer));
         
         assertHttpStatusCodeEventuallyEquals(rootUrl, 200);
         WebAppMonitor monitor = newWebAppMonitor(rootUrl, 200);
@@ -184,13 +184,13 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         ManagementContext newManagementContext = newApp.getManagementContext();
         final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
         final DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());
-        final JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newServerPool.getMembers());
+        final Tomcat8Server newServer = (Tomcat8Server) Iterables.getOnlyElement(newServerPool.getMembers());
 
         // Expect continually to have same nginx members; should not lose them temporarily!
         Asserts.succeedsContinually(new Runnable() {
             public void run() {
                 Map<Entity, String> newNginxMemebers = newNginx.getAttribute(NginxController.SERVER_POOL_TARGETS);
-                assertEquals(newNginxMemebers.keySet(), ImmutableSet.of(newJboss));
+                assertEquals(newNginxMemebers.keySet(), ImmutableSet.of(newServer));
             }});
         
         
@@ -213,7 +213,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         
         Thread.sleep(10*1000);
         
-        newJboss.stop();
+        newServer.stop();
 
         assertHttpStatusCodeEventuallyEquals(rootUrl, 200);
 
@@ -234,7 +234,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
                 .configure("childrenAsMembers", true));
         
         DynamicCluster origServerPool = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(JBoss7Server.class).configure("war", getTestWar()))
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("war", getTestWar()))
                 .configure("initialSize", 1)); 
 
         UrlMapping origMapping = origApp.getManagementContext().getEntityManager().createEntity(EntitySpec.create(UrlMapping.class)
@@ -262,7 +262,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         ManagementContext newManagementContext = newApp.getManagementContext();
         final NginxController newNginx = (NginxController) Iterables.find(newApp.getChildren(), Predicates.instanceOf(NginxController.class));
         DynamicCluster newServerPool = (DynamicCluster) newManagementContext.getEntityManager().getEntity(origServerPool.getId());
-        JBoss7Server newJboss = (JBoss7Server) Iterables.getOnlyElement(newServerPool.getMembers());
+        Tomcat8Server newServer = (Tomcat8Server) Iterables.getOnlyElement(newServerPool.getMembers());
         
         assertAttributeEqualsEventually(newNginx, SoftwareProcess.SERVICE_UP, true);
         assertHttpStatusCodeEventuallyEquals(mappingGroupUrl, 200);
@@ -283,7 +283,7 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         
         Thread.sleep(10*1000);
         
-        newJboss.stop();
+        newServer.stop();
 
         assertHttpStatusCodeEquals(mappingGroupUrl, 200);
 

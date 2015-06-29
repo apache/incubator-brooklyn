@@ -22,13 +22,23 @@
 name: vanilla-date-test
 location: localhost
 services:
-- type: vanilla
+- type: brooklyn.entity.basic.VanillaSoftwareProcess
   name: Date1
   brooklyn.config:
-    launch.command: "echo utc `date +%s` > DATE ; echo human `date` >> DATE ; { nohup sleep 60 & } ; echo $! > $PID_FILE ; sleep 3"
+    launch.command: |
+        echo utc `date +%s` > DATE
+        echo human `date` >> DATE
+        { nohup sleep 60 & }
+        echo $! > $PID_FILE
+        sleep 3
     children.startable.mode: foreground_late
   brooklyn.children:
-  - type: vanilla
+  - type: brooklyn.entity.basic.VanillaSoftwareProcess
     name: Date2
     brooklyn.config:
-      launch.command: "echo utc `date +%s` > DATE ; echo human `date` >> DATE ; { nohup sleep 60 & } ; echo $! > $PID_FILE ; sleep 3"
+      launch.command: |
+        echo utc `date +%s` > DATE
+        echo human `date` >> DATE
+        { nohup sleep 60 & }
+        echo $! > $PID_FILE
+        sleep 3
