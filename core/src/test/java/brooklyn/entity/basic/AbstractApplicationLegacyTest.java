@@ -19,20 +19,23 @@
 package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Tests the deprecated use of AbstractAppliation, where its constructor is called directly.
@@ -41,60 +44,69 @@ import com.google.common.collect.ImmutableMap;
  */
 public class AbstractApplicationLegacyTest extends BrooklynAppUnitTestSupport {
 
+    private SimulatedLocation loc;
     private List<SimulatedLocation> locs;
     
     @BeforeMethod(alwaysRun=true)
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        locs = ImmutableList.of(new SimulatedLocation());
+        loc = mgmt.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
+        locs = ImmutableList.of(loc);
     }
     
     // App and its children will be implicitly managed on first effector call on app
     @Test
-    public void testStartAndStopCallsChildren() throws Exception {
+    public void testStartAndStopUnmanagedAppAutomanagesTheAppAndChildren() throws Exception {
         // deliberately unmanaged
         TestApplication app2 = mgmt.getEntityManager().createEntity(EntitySpec.create(TestApplication.class));
         TestEntity child = app2.addChild(EntitySpec.create(TestEntity.class));
+        assertFalse(Entities.isManaged(app2));
+        assertFalse(Entities.isManaged(child));
         
         app2.invoke(AbstractApplication.START, ImmutableMap.of("locations", locs)).get();
-        assertEquals(child.getCount(), 1);
-        assertEquals(app.getManagementContext().getEntityManager().getEntity(app.getId()), app);
-        assertEquals(app.getManagementContext().getEntityManager().getEntity(child.getId()), child);
+        assertTrue(Entities.isManaged(app2));
+        assertTrue(Entities.isManaged(child));
+        assertEquals(child.getCallHistory(), ImmutableList.of("start"));
+        assertEquals(mgmt.getEntityManager().getEntity(app2.getId()), app2);
+        assertEquals(mgmt.getEntityManager().getEntity(child.getId()), child);
         
         app2.stop();
-        assertEquals(child.getCount(), 0);
+        assertEquals(child.getCallHistory(), ImmutableList.of("start", "stop"));
+        assertFalse(Entities.isManaged(child));
+        assertFalse(Entities.isManaged(app2));
     }
     
     @Test
     public void testStartAndStopWhenManagedCallsChildren() {
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-
-        assertEquals(app.getManagementContext().getEntityManager().getEntity(app.getId()), app);
-        assertEquals(app.getManagementContext().getEntityManager().getEntity(child.getId()), child);
+        assertTrue(Entities.isManaged(app));
+        assertTrue(Entities.isManaged(child));
 
         app.start(locs);
-        assertEquals(child.getCount(), 1);
+        assertEquals(child.getCallHistory(), ImmutableList.of("start"));
         
         app.stop();
-        assertEquals(child.getCount(), 0);
+        assertEquals(child.getCallHistory(), ImmutableList.of("start", "stop"));
+        assertFalse(Entities.isManaged(child));
+        assertFalse(Entities.isManaged(app));
     }
     
     @Test
-    public void testStartDoesNotStartPremanagedChildren() {
+    public void testStartOnManagedAppDoesNotStartPremanagedChildren() {
         TestEntity child = app.addChild(EntitySpec.create(TestEntity.class));
         
         app.start(locs);
-        assertEquals(child.getCount(), 0);
+        assertEquals(child.getCallHistory(), ImmutableList.of());
     }
     
     @Test
-    public void testStartDoesNotStartUnmanagedChildren() {
+    public void testStartOnManagedAppDoesNotStartUnmanagedChildren() {
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         Entities.unmanage(child);
         
         app.start(locs);
-        assertEquals(child.getCount(), 0);
+        assertEquals(child.getCallHistory(), ImmutableList.of());
     }
     
     @Test
@@ -102,21 +114,40 @@ public class AbstractApplicationLegacyTest extends BrooklynAppUnitTestSupport {
         TestEntity child = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         app.start(locs);
-        assertEquals(child.getCount(), 1);
+        assertEquals(child.getCallHistory(), ImmutableList.of("start"));
         
         Entities.unmanage(child);
         
         app.stop();
-        assertEquals(child.getCount(), 1);
+        assertEquals(child.getCallHistory(), ImmutableList.of("start"));
     }
     
     @Test
-    public void testStopDoesNotStopPremanagedChildren() {
+    public void testStopOnManagedAppDoesNotStopPremanagedChildren() {
         app.start(locs);
         
         TestEntity child = app.addChild(EntitySpec.create(TestEntity.class));
         
         app.stop();
-        assertEquals(child.getCount(), 0);
+        assertEquals(child.getCallHistory(), ImmutableList.of());
+    }
+    
+    @Test
+    public void testAppUsesDefaultDisplayName() {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
+                .configure(AbstractApplication.DEFAULT_DISPLAY_NAME, "myDefaultName");
+        TestApplication app2 = ApplicationBuilder.newManagedApp(appSpec, mgmt);
+        
+        assertEquals(app2.getDisplayName(), "myDefaultName");
+    }
+    
+    @Test
+    public void testAppUsesDisplayNameOverDefaultName() {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
+                .displayName("myName")
+                .configure(AbstractApplication.DEFAULT_DISPLAY_NAME, "myDefaultName");
+        TestApplication app2 = ApplicationBuilder.newManagedApp(appSpec, mgmt);
+        
+        assertEquals(app2.getDisplayName(), "myName");
     }
 }

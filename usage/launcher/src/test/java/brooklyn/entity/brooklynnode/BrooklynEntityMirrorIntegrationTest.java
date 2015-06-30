@@ -35,6 +35,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.launcher.BrooklynWebServer;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
@@ -91,7 +92,10 @@ public class BrooklynEntityMirrorIntegrationTest {
             if (useSecurityFilter) server.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);
             server.start();
             
+            serverMgmt.getHighAvailabilityManager().disabled();
             serverApp = ApplicationBuilder.newManagedApp(TestApplication.class, serverMgmt);
+            
+            ((LocalManagementContextForTests)serverMgmt).noteStartupComplete();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }

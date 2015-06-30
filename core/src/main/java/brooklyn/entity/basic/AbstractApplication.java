@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
+import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
@@ -35,6 +36,7 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
 /**
@@ -43,8 +45,21 @@ import brooklyn.util.time.Time;
  * their entities.
  */
 public abstract class AbstractApplication extends AbstractEntity implements StartableApplication {
+    /**
+     * @deprecated since 0.8.0; will be changed to private
+     */
+    @Deprecated
     public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
     
+    /**
+     * The default name to use for this app, if not explicitly overridden by the top-level app.
+     * Necessary to avoid the app being wrapped in another layer of "BasicApplication" on deployment.
+     * Previously, the catalog item gave an explicit name (rathe rthan this defaultDisplayName), which
+     * meant that if the user chose a different name then AMP would automatically wrap this app so
+     * that both names would be presented.
+     */
+    public static final ConfigKey<String> DEFAULT_DISPLAY_NAME = ConfigKeys.newStringConfigKey("defaultDisplayName");
+
     @SetFromFlag("mgmt")
     private volatile ManagementContext mgmt;
     
@@ -59,6 +74,9 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
     public void init() { 
         super.init();
+        if (Strings.isNonBlank(getConfig(DEFAULT_DISPLAY_NAME))) {
+            setDefaultDisplayName(getConfig(DEFAULT_DISPLAY_NAME));
+        }
         initApp();
     }
     
