@@ -22,6 +22,7 @@ import java.lang.annotation.Annotation;
 
 import javax.ws.rs.core.Response;
 
+import org.jboss.resteasy.client.core.BaseClientResponse;
 import org.jboss.resteasy.core.Headers;
 import org.jboss.resteasy.specimpl.BuiltResponse;
 
@@ -51,7 +52,8 @@ public class BuiltResponsePreservingError extends BuiltResponse {
         Object entity = null;
         try {
             status = source.getStatus();
-            headers.putAll(source.getHeaders());
+            if (source instanceof BaseClientResponse)
+                headers.putAll(((BaseClientResponse<?>)source).getMetadata());
             if (source instanceof org.jboss.resteasy.client.ClientResponse) {
                 entity = ((org.jboss.resteasy.client.ClientResponse<?>)source).getEntity(type);
             } else {
@@ -62,7 +64,8 @@ public class BuiltResponsePreservingError extends BuiltResponse {
             Exceptions.propagateIfFatal(e);
             return new BuiltResponsePreservingError(status, headers, entity, new Annotation[0], e);
         } finally {
-            source.close();
+            if (source instanceof BaseClientResponse)
+                ((BaseClientResponse<?>)source).close();
         }
     }
     
