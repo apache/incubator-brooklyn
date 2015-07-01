@@ -117,6 +117,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
                     .publishing(average)
                     .fromMembers()
                     .computingAverage()
+                    .defaultValueForUnreportedSensors(0)
                     .build());
         }
     }
