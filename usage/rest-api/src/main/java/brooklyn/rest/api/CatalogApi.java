@@ -94,27 +94,27 @@ public interface CatalogApi {
         @PathParam("entityId") String entityId) throws Exception;
 
     @DELETE
-    @Path("/applications/{type}/{version}")
+    @Path("/applications/{symbolicName}/{version}")
     @ApiOperation(value = "Deletes a specific version of an application's definition from the catalog")
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public void deleteApplication(
-        @ApiParam(name = "type", value = "The type identifier of the application or template to delete", required = true)
-        @PathParam("type") String type,
+        @ApiParam(name = "symbolicName", value = "The symbolic name of the application or template to delete", required = true)
+        @PathParam("symbolicName") String symbolicName,
 
         @ApiParam(name = "version", value = "The version identifier of the application or template to delete", required = true)
         @PathParam("version") String version) throws Exception;
 
     @DELETE
-    @Path("/entities/{type}/{version}")
+    @Path("/entities/{symbolicName}/{version}")
     @ApiOperation(value = "Deletes a specific version of an entity's definition from the catalog")
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public void deleteEntity(
-        @ApiParam(name = "type", value = "The type identifier of the entity or template to delete", required = true)
-        @PathParam("type") String type,
+        @ApiParam(name = "symbolicName", value = "The symbolic name of the entity or template to delete", required = true)
+        @PathParam("symbolicName") String symbolicName,
 
         @ApiParam(name = "version", value = "The version identifier of the entity or template to delete", required = true)
         @PathParam("version") String version) throws Exception;
@@ -180,14 +180,14 @@ public interface CatalogApi {
         @PathParam("entityId") String entityId) throws Exception;
 
     @GET
-    @Path("/entities/{type}/{version}")
+    @Path("/entities/{symbolicName}/{version}")
     @ApiOperation(value = "Fetch a specific version of an entity's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public CatalogEntitySummary getEntity(
-        @ApiParam(name = "type", value = "The type identifier of the entity or template to retrieve", required = true)
-        @PathParam("type") String type,
+        @ApiParam(name = "symbolicName", value = "The symbolic name of the entity or template to retrieve", required = true)
+        @PathParam("symbolicName") String symbolicName,
 
         @ApiParam(name = "version", value = "The version identifier of the entity or template to retrieve", required = true)
         @PathParam("version") String version) throws Exception;
@@ -205,14 +205,14 @@ public interface CatalogApi {
         @PathParam("applicationId") String applicationId) throws Exception;
 
     @GET
-    @Path("/applications/{type}/{version}")
+    @Path("/applications/{symbolicName}/{version}")
     @ApiOperation(value = "Fetch a specific version of an application's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public CatalogEntitySummary getApplication(
-        @ApiParam(name = "type", value = "The type identifier of the application to retrieve", required = true)
-        @PathParam("type") String type,
+        @ApiParam(name = "symbolicName", value = "The symbolic name of the application to retrieve", required = true)
+        @PathParam("symbolicName") String symbolicName,
 
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
         @PathParam("version") String version) throws Exception;
