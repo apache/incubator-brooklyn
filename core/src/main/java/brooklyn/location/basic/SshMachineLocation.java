@@ -21,6 +21,7 @@ package brooklyn.location.basic;
 import static brooklyn.util.GroovyJavaMethods.truth;
 
 import com.google.common.annotations.Beta;
+
 import groovy.lang.Closure;
 
 import java.io.Closeable;
@@ -114,6 +115,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -144,6 +146,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     public static final ConfigKey<Boolean> DETECT_MACHINE_DETAILS = ConfigKeys.newBooleanConfigKey("detectMachineDetails",
             "Attempt to detect machine details automatically. Works with SSH-accessible Linux instances.", true);
+
+    public static final ConfigKey<Iterable<String>> PRIVATE_ADDRESSES = ConfigKeys.newConfigKey(
+            new TypeToken<Iterable<String>>() {},
+            "privateAddresses",
+            "Private addresses of this machine, e.g. those within the private network", 
+            null);
 
     @SetFromFlag
     protected String user;
@@ -460,7 +468,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     
     @Override
     public Set<String> getPrivateAddresses() {
-        return ImmutableSet.of();
+        Iterable<String> result = getConfig(PRIVATE_ADDRESSES);
+        return (result == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(result);
     }
 
     public HostAndPort getSshHostAndPort() {

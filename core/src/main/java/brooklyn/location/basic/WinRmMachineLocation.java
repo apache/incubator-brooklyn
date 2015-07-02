@@ -53,7 +53,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.net.HostAndPort;
+import com.google.common.reflect.TypeToken;
 
 public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
 
@@ -92,6 +92,12 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
             "Max number of times to attempt WinRM operations", 
             10);
 
+    public static final ConfigKey<Iterable<String>> PRIVATE_ADDRESSES = ConfigKeys.newConfigKey(
+            new TypeToken<Iterable<String>>() {},
+            "privateAddresses",
+            "Private addresses of this machine, e.g. those within the private network", 
+            null);
+
     @Override
     public InetAddress getAddress() {
         return getConfig(ADDRESS);
@@ -128,7 +134,8 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     
     @Override
     public Set<String> getPrivateAddresses() {
-        return ImmutableSet.of();
+        Iterable<String> result = getConfig(PRIVATE_ADDRESSES);
+        return (result == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(result);
     }
 
     public WinRmToolResponse executeScript(String script) {

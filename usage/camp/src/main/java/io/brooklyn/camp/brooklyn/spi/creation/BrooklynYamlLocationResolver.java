@@ -134,7 +134,9 @@ public class BrooklynYamlLocationResolver {
         
         Maybe<Location> l = mgmt.getLocationRegistry().resolve(spec, null, flags);
         if (l.isPresent()) return l.get();
+        
+        RuntimeException exception = ((Absent<?>)l).getException();
         throw new IllegalStateException("Illegal parameter for 'location' ("+spec+"); not resolvable: "+
-            Exceptions.collapseText( ((Absent<?>)l).getException() ));
+            Exceptions.collapseText( exception ), exception);
     }
 }

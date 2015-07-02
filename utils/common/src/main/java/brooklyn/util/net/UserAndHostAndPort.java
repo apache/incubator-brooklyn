@@ -31,6 +31,10 @@ public class UserAndHostAndPort implements Serializable {
         return new UserAndHostAndPort(user, HostAndPort.fromParts(host, port));
     }
 
+    public static UserAndHostAndPort fromParts(String user, HostAndPort hostAndPort) {
+        return new UserAndHostAndPort(user, hostAndPort);
+    }
+
     /**
      * Split a string of the form myuser@myhost:1234 into a user, host and port.
      *  

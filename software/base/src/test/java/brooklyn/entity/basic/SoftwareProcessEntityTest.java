@@ -507,6 +507,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
             events.add("stop");
             launched = false;
             entity.setAttribute(Startable.SERVICE_UP, false);
+            entity.setAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
         }
     
         @Override
@@ -519,6 +520,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         @Override
         public void install() {
             events.add("install");
+            entity.setAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.STARTING);
         }
     
         @Override
@@ -531,6 +533,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
             events.add("launch");
             launched = true;
             entity.setAttribute(Startable.SERVICE_UP, true);
+            entity.setAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         }
 
         @Override

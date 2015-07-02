@@ -48,4 +48,10 @@ public class CollectionFunctionalsTest {
         Assert.assertEquals(CollectionFunctionals.mapSize(-1).apply(null), (Integer)(-1));
     }
 
+    @Test
+    public void testFirstElement() {
+        Assert.assertEquals(CollectionFunctionals.firstElement().apply(null), null);
+        Assert.assertEquals(CollectionFunctionals.firstElement().apply(ImmutableList.of("a")), "a");
+        Assert.assertEquals(CollectionFunctionals.firstElement().apply(ImmutableList.of("a", "b", "c")), "a");
+    }
 }
