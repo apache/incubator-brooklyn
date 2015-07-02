@@ -146,9 +146,9 @@ public class LoggingFilter implements Filter {
                         message.append("******");
                     } else {
                         message.append(httpRequest.getHeader(headerName));
-                        if (headerNames.hasMoreElements()) {
-                            message.append(", ");
-                        }
+                    }
+                    if (headerNames.hasMoreElements()) {
+                        message.append(", ");
                     }
                 }
             }

@@ -44,6 +44,8 @@ import org.jboss.resteasy.util.GenericType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+
 import brooklyn.rest.api.AccessApi;
 import brooklyn.rest.api.ActivityApi;
 import brooklyn.rest.api.ApplicationApi;
@@ -222,24 +224,39 @@ public class BrooklynApi {
     }
 
     public static <T> T getEntity(Response response, Class<T> type) {
-        if (response instanceof BuiltResponse) {
-            Object entity = response.getEntity();
-            return type.cast(entity);
+        if (response instanceof ClientResponse) {
+            ClientResponse<?> clientResponse = (ClientResponse<?>) response;
+            return clientResponse.getEntity(type);
+        } else if (response instanceof BuiltResponse) {
+            // Handle BuiltResponsePreservingError turning objects into Strings
+            if (response.getEntity() instanceof String && !type.equals(String.class)) {
+                return new Gson().fromJson(response.getEntity().toString(), type);
+            }
         }
-        
-        if (!(response instanceof ClientResponse)) {
-            throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
-        }
-        ClientResponse<?> clientResponse = (ClientResponse<?>) response;
-        return (T) clientResponse.getEntity(type);
+        // Last-gasp attempt.
+        return type.cast(response.getEntity());
     }
 
-    public static <T> T getEntityGeneric(Response response, GenericType<T> type) {
-        if (!(response instanceof ClientResponse)) {
-            throw new IllegalArgumentException("Response should be instance of ClientResponse, is: " + response.getClass());
+    public static <T> T getEntity(Response response, GenericType<T> type) {
+        if (response instanceof ClientResponse) {
+            ClientResponse<?> clientResponse = (ClientResponse<?>) response;
+            return clientResponse.getEntity(type);
+        } else if (response instanceof BuiltResponse) {
+            // Handle BuiltResponsePreservingError turning objects into Strings
+            if (response.getEntity() instanceof String) {
+                return new Gson().fromJson(response.getEntity().toString(), type.getGenericType());
+            }
         }
-        ClientResponse<?> clientResponse = (ClientResponse<?>) response;
-        return (T) clientResponse.getEntity(type);
+        // Last-gasp attempt.
+        return type.getType().cast(response.getEntity());
+    }
+
+    /**
+     * @deprecated Use {@link #getEntity(Response, GenericType)} instead.
+     */
+    @Deprecated
+    public static <T> T getEntityGeneric(Response response, GenericType<T> type) {
+        return getEntity(response, type);
     }
 
 }
