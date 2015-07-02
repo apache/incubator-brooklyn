@@ -54,6 +54,7 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.time.Duration;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -97,6 +98,7 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
     protected static final Pattern lineWithPerfData = Pattern.compile("^\"[\\d:/\\-. ]+\",\".*\"$", Pattern.MULTILINE);
     private static final Joiner JOINER_ON_SPACE = Joiner.on(' ');
     private static final Joiner JOINER_ON_COMMA = Joiner.on(',');
+    private static final int OUTPUT_COLUMN_WIDTH = 100;
 
     @SuppressWarnings("serial")
     public static final ConfigKey<Collection<WindowsPerformanceCounterPollConfig<?>>> POLLS = ConfigKeys.newConfigKey(
@@ -188,19 +190,28 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         }
         
         Iterable<String> allParams = ImmutableList.<String>builder()
-                .add("Get-Counter")
+                .add("(Get-Counter")
                 .add("-Counter")
                 .add(JOINER_ON_COMMA.join(Iterables.transform(performanceCounterNames, QuoteStringFunction.INSTANCE)))
                 .add("-SampleInterval")
                 .add("2") // TODO: extract SampleInterval as a config key
+                .add(").CounterSamples")
+                .add("|")
+                .add("Format-Table")
+                .add(String.format("@{Expression={$_.Path};width=%d},@{Expression={$_.CookedValue};width=%<d}", OUTPUT_COLUMN_WIDTH))
+                .add("-HideTableHeaders")
+                .add("|")
+                .add("Out-String")
+                .add("-Width")
+                .add(String.valueOf(OUTPUT_COLUMN_WIDTH * 2))
                 .build();
-        String command = String.format("(%s).CounterSamples.CookedValue", JOINER_ON_SPACE.join(allParams));
+        String command = JOINER_ON_SPACE.join(allParams);
         log.debug("Windows performance counter poll command for {} will be: {}", entity, command);
 
-        GetPerformanceCountersJob<WinRmToolResponse> job = new GetPerformanceCountersJob<WinRmToolResponse>(getEntity(), command);
+        GetPerformanceCountersJob<WinRmToolResponse> job = new GetPerformanceCountersJob(getEntity(), command);
         getPoller().scheduleAtFixedRate(
-                new CallInEntityExecutionContext<WinRmToolResponse>(entity, job),
-                new SendPerfCountersToSensors(getEntity(), getConfig(POLLS)), 
+                new CallInEntityExecutionContext(entity, job),
+                new SendPerfCountersToSensors(getEntity(), polls),
                 minPeriod);
     }
 
@@ -250,10 +261,12 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         }
     }
 
-    private static class SendPerfCountersToSensors implements PollHandler<WinRmToolResponse> {
+    @VisibleForTesting
+    static class SendPerfCountersToSensors implements PollHandler<WinRmToolResponse> {
         private final EntityLocal entity;
         private final List<WindowsPerformanceCounterPollConfig<?>> polls;
         private final Set<AttributeSensor<?>> failedAttributes = Sets.newLinkedHashSet();
+        private static final Pattern MACHINE_NAME_LOOKBACK_PATTERN = Pattern.compile(String.format("(?<=\\\\\\\\.{0,%d})\\\\.*", OUTPUT_COLUMN_WIDTH));
         
         public SendPerfCountersToSensors(EntityLocal entity, Collection<WindowsPerformanceCounterPollConfig<?>> polls) {
             this.entity = entity;
@@ -262,7 +275,7 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
 
         @Override
         public boolean checkSuccess(WinRmToolResponse val) {
-            // TODO not just using statucCode; also looking at absence of stderr.
+            // TODO not just using statusCode; also looking at absence of stderr.
             // Status code is (empirically) unreliable: it returns 0 sometimes even when failed 
             // (but never returns non-zero on success).
             if (val.getStatusCode() != 0) return false;
@@ -275,20 +288,30 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
 
         @Override
         public void onSuccess(WinRmToolResponse val) {
-            String[] values = val.getStdOut().split("\r\n");
-            for (int i = 0; i < polls.size(); i++) {
-                WindowsPerformanceCounterPollConfig<?> config = polls.get(i);
+            for (String pollResponse : val.getStdOut().split("\r\n")) {
+                if (Strings.isNullOrEmpty(pollResponse)) {
+                    continue;
+                }
+                String path = pollResponse.substring(0, OUTPUT_COLUMN_WIDTH - 1);
+                // The performance counter output prepends the sensor name with "\\<machinename>" so we need to remove it
+                Matcher machineNameLookbackMatcher = MACHINE_NAME_LOOKBACK_PATTERN.matcher(path);
+                if (!machineNameLookbackMatcher.find()) {
+                    continue;
+                }
+                String name = machineNameLookbackMatcher.group(0).trim();
+                String rawValue = pollResponse.substring(OUTPUT_COLUMN_WIDTH).replaceAll("^\\s+", "");
+                WindowsPerformanceCounterPollConfig<?> config = getPollConfig(name);
                 Class<?> clazz = config.getSensor().getType();
                 AttributeSensor<Object> attribute = (AttributeSensor<Object>) Sensors.newSensor(clazz, config.getSensor().getName(), config.getDescription());
                 try {
-                    Object value = TypeCoercions.coerce(values[i], TypeToken.of(clazz));
+                    Object value = TypeCoercions.coerce(rawValue, TypeToken.of(clazz));
                     entity.setAttribute(attribute, value);
                 } catch (Exception e) {
                     Exceptions.propagateIfFatal(e);
                     if (failedAttributes.add(attribute)) {
-                        log.warn("Failed to coerce value '{}' to {} for {} -> {}", new Object[] {values[i], clazz, entity, attribute});
+                        log.warn("Failed to coerce value '{}' to {} for {} -> {}", new Object[] {rawValue, clazz, entity, attribute});
                     } else {
-                        if (log.isTraceEnabled()) log.trace("Failed (repeatedly) to coerce value '{}' to {} for {} -> {}", new Object[] {values[i], clazz, entity, attribute});
+                        if (log.isTraceEnabled()) log.trace("Failed (repeatedly) to coerce value '{}' to {} for {} -> {}", new Object[] {rawValue, clazz, entity, attribute});
                     }
                 }
             }
@@ -322,6 +345,15 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         @Override
         public String toString() {
             return super.toString()+"["+getDescription()+"]";
+        }
+
+        private WindowsPerformanceCounterPollConfig<?> getPollConfig(String sensorName) {
+            for (WindowsPerformanceCounterPollConfig<?> poll : polls) {
+                if (poll.getPerformanceCounterName().equalsIgnoreCase(sensorName)) {
+                    return poll;
+                }
+            }
+            throw new IllegalStateException(String.format("%s not found in configured polls: %s", sensorName, polls));
         }
     }
 
