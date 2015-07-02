@@ -107,33 +107,6 @@
     </dependency>
   </dependencies>
 
-  <repositories>
-    <!-- enable snapshots from sonatype -->
-    <repository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <!-- enable snapshots from apache -->
-    <repository>
-      <id>apache-nexus-snapshots</id>
-      <name>Apache Nexus Snapshots</name>
-      <url>https://repository.apache.org/content/repositories/snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
   <build>
     <testSourceDirectory>src/test/java</testSourceDirectory>
     <testResources>
