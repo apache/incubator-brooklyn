@@ -33,7 +33,7 @@ This will create a `brooklyn-{{ site.brooklyn-version }}` folder.
 
 **Note**: You'll need a Java JRE or SDK installed (version 1.7 or later), as Brooklyn is Java under the covers.
 
-**Node #2**: If you want to test Brooklyn on localhost, follow [these instructions]({{site.path.guide}}/ops/locations/#localhost) 
+**Note #2**: If you want to test Brooklyn on localhost, follow [these instructions]({{site.path.guide}}/ops/locations/#localhost)
 to ensure that your Brooklyn can access your machine.
 
 
