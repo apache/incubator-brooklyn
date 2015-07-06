@@ -160,22 +160,22 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public void deleteApplication(String applicationId, String version) throws Exception {
-        deleteEntity(applicationId, version);
+    public void deleteApplication(String symbolicName, String version) throws Exception {
+        deleteEntity(symbolicName, version);
     }
 
     @Override
-    public void deleteEntity(String entityId, String version) throws Exception {
-        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(entityId+(Strings.isBlank(version) ? "" : ":"+version), "delete"))) {
+    public void deleteEntity(String symbolicName, String version) throws Exception {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(symbolicName+(Strings.isBlank(version) ? "" : ":"+version), "delete"))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
                 Entitlements.getEntitlementContext().user());
         }
         
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(entityId, version);
+        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, version);
         if (item == null) {
-            throw WebResourceUtils.notFound("Entity with id '%s:%s' not found", entityId, version);
+            throw WebResourceUtils.notFound("Entity with id '%s:%s' not found", symbolicName, version);
         } else if (item.getCatalogItemType() != CatalogItemType.ENTITY && item.getCatalogItemType() != CatalogItemType.TEMPLATE) {
-            throw WebResourceUtils.preconditionFailed("Item with id '%s:%s' not an entity", entityId, version);
+            throw WebResourceUtils.preconditionFailed("Item with id '%s:%s' not an entity", symbolicName, version);
         } else {
             brooklyn().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
         }
@@ -248,8 +248,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
     
     @Override
-    public CatalogEntitySummary getEntity(String entityId, String version) {
-        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, entityId+(Strings.isBlank(version)?"":":"+version))) {
+    public CatalogEntitySummary getEntity(String symbolicName, String version) {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, symbolicName+(Strings.isBlank(version)?"":":"+version))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
         }
@@ -258,10 +258,10 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         //Or we could provide asEntity/asPolicy cast methods on the CataloItem doing a safety check internally
         @SuppressWarnings("unchecked")
         CatalogItem<? extends Entity, EntitySpec<?>> result =
-              (CatalogItem<? extends Entity, EntitySpec<?>>) brooklyn().getCatalog().getCatalogItem(entityId, version);
+              (CatalogItem<? extends Entity, EntitySpec<?>>) brooklyn().getCatalog().getCatalogItem(symbolicName, version);
 
         if (result==null) {
-            throw WebResourceUtils.notFound("Entity with id '%s:%s' not found", entityId, version);
+            throw WebResourceUtils.notFound("Entity with id '%s:%s' not found", symbolicName, version);
         }
 
         return CatalogTransformer.catalogEntitySummary(brooklyn(), result);
@@ -269,13 +269,13 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogEntitySummary getApplication(String entityId) throws Exception {
-        return getEntity(entityId);
+    public CatalogEntitySummary getApplication(String applicationId) throws Exception {
+        return getEntity(applicationId);
     }
 
     @Override
-    public CatalogEntitySummary getApplication(String applicationId, String version) {
-        return getEntity(applicationId, version);
+    public CatalogEntitySummary getApplication(String symbolicName, String version) {
+        return getEntity(symbolicName, version);
     }
 
     @Override

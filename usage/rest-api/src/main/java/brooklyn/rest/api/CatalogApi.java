@@ -94,27 +94,27 @@ public interface CatalogApi {
         @PathParam("entityId") String entityId) throws Exception;
 
     @DELETE
-    @Path("/applications/{applicationId}/{version}")
+    @Path("/applications/{symbolicName}/{version}")
     @ApiOperation(value = "Deletes a specific version of an application's definition from the catalog")
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public void deleteApplication(
-        @ApiParam(name = "applicationId", value = "The ID of the application or template to delete", required = true)
-        @PathParam("applicationId") String entityId,
+        @ApiParam(name = "symbolicName", value = "The symbolic name of the application or template to delete", required = true)
+        @PathParam("symbolicName") String symbolicName,
 
         @ApiParam(name = "version", value = "The version identifier of the application or template to delete", required = true)
         @PathParam("version") String version) throws Exception;
 
     @DELETE
-    @Path("/entities/{entityId}/{version}")
+    @Path("/entities/{symbolicName}/{version}")
     @ApiOperation(value = "Deletes a specific version of an entity's definition from the catalog")
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public void deleteEntity(
-        @ApiParam(name = "entityId", value = "The ID of the entity or template to delete", required = true)
-        @PathParam("entityId") String entityId,
+        @ApiParam(name = "symbolicName", value = "The symbolic name of the entity or template to delete", required = true)
+        @PathParam("symbolicName") String symbolicName,
 
         @ApiParam(name = "version", value = "The version identifier of the entity or template to delete", required = true)
         @PathParam("version") String version) throws Exception;
@@ -180,15 +180,15 @@ public interface CatalogApi {
         @PathParam("entityId") String entityId) throws Exception;
 
     @GET
-    @Path("/entities/{entityId}/{version}")
+    @Path("/entities/{symbolicName}/{version}")
     @ApiOperation(value = "Fetch a specific version of an entity's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public CatalogEntitySummary getEntity(
-        @ApiParam(name = "entityId", value = "The ID of the entity or template to retrieve", required = true)
-        @PathParam("entityId") String entityId,
-        
+        @ApiParam(name = "symbolicName", value = "The symbolic name of the entity or template to retrieve", required = true)
+        @PathParam("symbolicName") String symbolicName,
+
         @ApiParam(name = "version", value = "The version identifier of the entity or template to retrieve", required = true)
         @PathParam("version") String version) throws Exception;
 
@@ -202,18 +202,18 @@ public interface CatalogApi {
     })
     public CatalogEntitySummary getApplication(
         @ApiParam(name = "applicationId", value = "The ID of the application to retrieve", required = true)
-        @PathParam("applicationId") String entityId) throws Exception;
+        @PathParam("applicationId") String applicationId) throws Exception;
 
     @GET
-    @Path("/applications/{applicationId}/{version}")
+    @Path("/applications/{symbolicName}/{version}")
     @ApiOperation(value = "Fetch a specific version of an application's definition from the catalog", responseClass = "CatalogEntitySummary", multiValueResponse = true)
     @ApiErrors(value = {
         @ApiError(code = 404, reason = "Entity not found")
     })
     public CatalogEntitySummary getApplication(
-        @ApiParam(name = "applicationId", value = "The ID of the application to retrieve", required = true)
-        @PathParam("applicationId") String entityId,
-        
+        @ApiParam(name = "symbolicName", value = "The symbolic name of the application to retrieve", required = true)
+        @PathParam("symbolicName") String symbolicName,
+
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
         @PathParam("version") String version) throws Exception;
 
@@ -227,7 +227,7 @@ public interface CatalogApi {
             @QueryParam("fragment") @DefaultValue("") String fragment,
             @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
             @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
-    
+
     /** @deprecated since 0.7.0 use {@link #getPolicy(String, String)} */
     @Deprecated
     @GET
@@ -239,7 +239,7 @@ public interface CatalogApi {
     public CatalogItemSummary getPolicy(
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
         @PathParam("policyId") String policyId) throws Exception;
-    
+
     @GET
     @Path("/policies/{policyId}/{version}")
     @ApiOperation(value = "Fetch a policy's definition from the catalog", responseClass = "CatalogItemSummary", multiValueResponse = true)
@@ -251,7 +251,7 @@ public interface CatalogApi {
         @PathParam("policyId") String policyId,
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
         @PathParam("version") String version) throws Exception;
-    
+
     @GET
     @Path("/locations")
     @ApiOperation(value = "List available locations optionally matching a query", responseClass = "CatalogLocationSummary", multiValueResponse = true)
@@ -262,7 +262,7 @@ public interface CatalogApi {
             @QueryParam("fragment") @DefaultValue("") String fragment,
             @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
             @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
-    
+
     /** @deprecated since 0.7.0 use {@link #getLocation(String, String)} */
     @Deprecated
     @GET
@@ -274,7 +274,7 @@ public interface CatalogApi {
     public CatalogItemSummary getLocation(
         @ApiParam(name = "locationId", value = "The ID of the location to retrieve", required = true)
         @PathParam("locationId") String locationId) throws Exception;
-    
+
     @GET
     @Path("/locations/{locationId}/{version}")
     @ApiOperation(value = "Fetch a location's definition from the catalog", responseClass = "CatalogItemSummary", multiValueResponse = true)
@@ -286,7 +286,7 @@ public interface CatalogApi {
         @PathParam("locationId") String locationId,
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
         @PathParam("version") String version) throws Exception;
-    
+
     /** @deprecated since 0.7.0 use {@link #getIcon(String, String)} */
     @Deprecated
     @GET
