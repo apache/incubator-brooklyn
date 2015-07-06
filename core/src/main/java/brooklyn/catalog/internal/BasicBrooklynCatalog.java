@@ -1294,9 +1294,13 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                 resultI = catalog.getCatalogItem(typeName, BrooklynCatalog.DEFAULT_VERSION);
                 if (resultI != null) {
                     if (resultI.getJavaType() == null) {
-                        throw new NoSuchElementException("Unable to find catalog item for type "+typeName +
+                        //Catalog items scanned from the classpath (using reflection and annotations) now
+                        //get yaml spec rather than a java type. Can't use those when creating apps from
+                        //the legacy app spec format.
+                        log.warn("Unable to find catalog item for type "+typeName +
                                 ". There is an existing catalog item with ID " + resultI.getId() +
                                 " but it doesn't define a class type.");
+                        return null;
                     }
                 }
             }
