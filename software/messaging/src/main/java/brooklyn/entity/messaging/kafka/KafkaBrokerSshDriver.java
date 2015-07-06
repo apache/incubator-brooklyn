@@ -58,6 +58,11 @@ public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements Kaf
     }
 
     @Override
+    public String getTopicsScriptName() {
+        return "kafka-topics.sh";
+    }
+
+    @Override
     protected String getProcessIdentifier() {
         return "kafka\\.Kafka";
     }
@@ -83,7 +88,7 @@ public class KafkaBrokerSshDriver extends AbstractfKafkaSshDriver implements Kaf
              */
             jmxPort = String.valueOf(entity.getAttribute(KafkaBroker.INTERNAL_JMX_PORT));
         }
-        
+
         return MutableMap.<String, String> builder()
                 .putAll(super.getShellEnvironment())
                 .put("JMX_PORT", jmxPort)

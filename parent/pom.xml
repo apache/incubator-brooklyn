@@ -120,7 +120,7 @@
         <postgresql.version>9.1-901.jdbc4</postgresql.version>
         <activemq.version>5.10.0</activemq.version>
         <rabbitmq-version>2.8.7</rabbitmq-version>
-        <kafka.version>0.7.0-incubating</kafka.version>
+        <kafka.version>0.8.2.1</kafka.version>
         <storm.version>0.8.2</storm.version>
         <redis.version>1.5.2</redis.version>
         <astyanax.version>1.56.24</astyanax.version>

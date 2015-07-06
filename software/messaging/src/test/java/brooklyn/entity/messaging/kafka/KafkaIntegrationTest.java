@@ -108,12 +108,12 @@ public class KafkaIntegrationTest {
      * Connects to the zookeeper controller and tests sending and receiving messages on a topic.
      */
     @Test(groups = "Integration")
-    public void testTwoBrokerCluster() {
+    public void testTwoBrokerCluster() throws InterruptedException {
         final KafkaCluster cluster = app.createAndManageChild(EntitySpec.create(KafkaCluster.class)
                 .configure(KafkaCluster.INITIAL_SIZE, 2));
 
         cluster.start(ImmutableList.of(testLocation));
-        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.FIVE_MINUTES), new Callable<Void>() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.TWO_MINUTES), new Callable<Void>() {
             @Override
             public Void call() {
                 assertTrue(cluster.getAttribute(Startable.SERVICE_UP));
@@ -128,8 +128,8 @@ public class KafkaIntegrationTest {
         KafkaSupport support = new KafkaSupport(cluster);
 
         support.sendMessage("brooklyn", "TEST_MESSAGE");
+        Thread.sleep(Duration.seconds(5).toMilliseconds());
         String message = support.getMessage("brooklyn");
         assertEquals(message, "TEST_MESSAGE");
     }
-
 }

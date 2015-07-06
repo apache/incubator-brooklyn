@@ -54,6 +54,8 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
 
     protected abstract String getLaunchScriptName();
 
+    protected abstract String getTopicsScriptName();
+
     protected abstract String getProcessIdentifier();
 
     @Override
@@ -62,7 +64,7 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
     @Override
     public void preInstall() {
         resolver = Entities.newDownloader(this);
-        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("kafka-%s-src", getVersion()))));
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("kafka_%s", getVersion()))));
     }
 
     @Override
@@ -75,24 +77,12 @@ public abstract class AbstractfKafkaSshDriver extends JavaSoftwareProcessSshDriv
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv "+saveAs);
         commands.add("cd "+getExpandedInstallDir());
-        commands.add("./sbt update");
-        commands.add("./sbt package");
-        if (isV08()) {
-            // target not known in v0.7.x but required in v0.8.0-beta1
-            commands.add("./sbt assembly-package-dependency");
-        }
 
         newScript(INSTALLING)
                 .body.append(commands)
                 .execute();
     }
 
-    protected boolean isV08() {
-        String v = getEntity().getConfig(Kafka.SUGGESTED_VERSION);
-        if (v.startsWith("0.7.")) return false;
-        return true;
-    }
-    
     @Override
     public void customize() {
         Networking.checkPortsValid(getPortMap());

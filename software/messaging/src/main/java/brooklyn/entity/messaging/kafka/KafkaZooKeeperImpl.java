@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.messaging.kafka;
 
+import brooklyn.entity.annotation.EffectorParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,4 +40,8 @@ public class KafkaZooKeeperImpl extends AbstractZooKeeperImpl implements KafkaZo
         return KafkaZooKeeperDriver.class;
     }
 
+    @Override
+    public void createTopic(String topic) {
+        ((KafkaZooKeeperDriver)getDriver()).createTopic(topic);
+    }
 }

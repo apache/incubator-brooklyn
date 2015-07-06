@@ -19,6 +19,8 @@
 package brooklyn.entity.messaging.kafka;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
@@ -50,4 +52,6 @@ public interface KafkaZooKeeper extends ZooKeeperNode, Kafka {
             "kafka.zookeeper.configTemplate", "Kafka zookeeper configuration template (in freemarker format)",
             "classpath://brooklyn/entity/messaging/kafka/zookeeper.properties");
 
+    @Effector(description = "Create a topic with a single partition and only one replica")
+    void createTopic(@EffectorParam(name = "topic") String topic);
 }
