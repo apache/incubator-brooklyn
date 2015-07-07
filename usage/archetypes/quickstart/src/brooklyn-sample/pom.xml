@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.brooklyn</groupId>
+    <artifactId>brooklyn-downstream-parent</artifactId>
+    <version>0.8.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+  </parent>
 
   <groupId>com.acme.sample</groupId>
   <artifactId>brooklyn-sample</artifactId>
@@ -10,10 +17,10 @@
 
   <name>Sample Brooklyn Project com.acme.sample:brooklyn-sample v0.1.0-SNAPSHOT</name>
   <description>
-        Sample optional description goes here.
-    </description>
+    Sample optional description goes here.
+  </description>
 
-<!-- Optional metadata (commented out in this sample) 
+  <!-- Optional metadata (commented out in this sample) 
 
   <url>https://github.com/sample/sample</url>
 
@@ -39,33 +46,9 @@
 
   -->
 
-  <parent>
-    <groupId>org.apache.brooklyn</groupId>
-    <artifactId>brooklyn-downstream-parent</artifactId>
-    <version>0.8.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
-    <relativePath>../pom.xml</relativePath>
-  </parent>
-
   <properties>
     <project.entry>com.acme.sample.brooklyn.SampleMain</project.entry>
   </properties>
-
-  <!-- enable apache snapshots repo if necessary -->
-  <!-- 
-  <repositories>
-    <repository>
-      <id>apache-snapshots</id>
-      <name>Apache Snapshots Repository</name>
-      <url>https://repository.apache.org/content/repositories/snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  -->
 
   <dependencies>
     <dependency>
