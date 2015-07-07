@@ -50,6 +50,7 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.BrooklynGarbageCollector;
+import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
@@ -62,6 +63,7 @@ import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -206,8 +208,8 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
         int expectedCount = 4;
         assertEquals(currentFeeds.size(), expectedCount);
         knownFeeds.addAll(currentFeeds);
-        assertEquals(countActive(knownFeeds), expectedCount);
-        origEntity.setConfig(MyEntityWithNewFeedsEachTimeImpl.MAKE_NEW, !soakTest);
+        assertActiveFeedsEventually(knownFeeds, expectedCount);
+        origEntity.config().set(MyEntityWithNewFeedsEachTimeImpl.MAKE_NEW, !soakTest);
         
         long usedOriginally = -1;
         
@@ -225,7 +227,7 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
 
             switchOriginalToNewManagementContext();
             waitForTaskCountToBecome(origManagementContext, expectedCount + SYSTEM_TASK_COUNT);
-            assertEquals(countActive(knownFeeds), expectedCount);
+            assertActiveFeedsEventually(knownFeeds, expectedCount);
             knownFeeds.clear();
             knownFeeds.addAll(currentFeeds);
             
@@ -243,13 +245,32 @@ public class RebindFeedTest extends RebindTestFixtureWithApp {
             }
         }
     }
+
+    // Feeds take a while to start, also they do it asynchronously from the rebind. Wait for them to catch up.
+    private void assertActiveFeedsEventually(List<Feed> knownFeeds, int expectedCount) {
+        Asserts.eventually(new CountActiveSupplier(knownFeeds), Predicates.equalTo(expectedCount));
+    }
     
-    private int countActive(List<Feed> knownFeeds) {
-        int activeCount=0;
-        for (Feed f: knownFeeds) {
-            if (f.isRunning()) activeCount++;
+    private static class CountActiveSupplier implements Supplier<Integer> {
+        private List<Feed> knownFeeds;
+
+        public CountActiveSupplier(List<Feed> knownFeeds) {
+            this.knownFeeds = knownFeeds;
         }
-        return activeCount;
+
+        @Override
+        public Integer get() {
+            return countActive(knownFeeds);
+        }
+        
+        private int countActive(List<Feed> knownFeeds) {
+            int activeCount=0;
+            for (Feed f: knownFeeds) {
+                if (f.isRunning()) activeCount++;
+            }
+            return activeCount;
+        }
+        
     }
 
     public static class MyEntityWithHttpFeedImpl extends TestEntityWithoutEnrichers {

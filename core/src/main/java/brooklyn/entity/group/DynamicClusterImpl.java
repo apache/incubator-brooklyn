@@ -874,11 +874,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         try {
             if (member instanceof Startable) {
                 Task<?> task = member.invoke(Startable.STOP, Collections.<String,Object>emptyMap());
-                try {
-                    task.get();
-                } catch (Exception e) {
-                    throw Exceptions.propagate(e);
-                }
+                task.getUnchecked();
             }
         } finally {
             Entities.unmanage(member);

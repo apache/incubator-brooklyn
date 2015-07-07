@@ -26,6 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -545,7 +546,7 @@ public class Time {
         // return the error from this method
         Maybe<Calendar> returnResult = result;
 
-        result = parseCalendarFormat(input, new SimpleDateFormat(DATE_FORMAT_OF_DATE_TOSTRING));
+        result = parseCalendarFormat(input, new SimpleDateFormat(DATE_FORMAT_OF_DATE_TOSTRING, Locale.ROOT));
         if (result.isPresent()) return result;
         result = parseCalendarDefaultParse(input);
         if (result.isPresent()) return result;
@@ -750,7 +751,7 @@ public class Time {
                 month = Integer.parseInt(monthS)-1;
             } else {
                 try {
-                    month = new SimpleDateFormat("yyyy-MMM-dd").parse("2015-"+monthS+"-15").getMonth();
+                    month = new SimpleDateFormat("yyyy-MMM-dd", Locale.ROOT).parse("2015-"+monthS+"-15").getMonth();
                 } catch (ParseException e) {
                     return Maybe.absent("Unknown date format '"+input+"': invalid month '"+monthS+"'; try http://yaml.org/type/timestamp.html format e.g. 2015-06-15 16:00:00 +0000");
                 }
@@ -918,7 +919,7 @@ public class Time {
         throw new IllegalArgumentException("Date " + dateString + " cannot be parsed as UTC millis or using format " + format);
     }
     public static Maybe<Calendar> parseCalendarFormat(String dateString, String format) {
-        return parseCalendarFormat(dateString, new SimpleDateFormat(format));
+        return parseCalendarFormat(dateString, new SimpleDateFormat(format, Locale.ROOT));
     }
     public static Maybe<Calendar> parseCalendarFormat(String dateString, DateFormat format) {
         if (dateString == null) { 

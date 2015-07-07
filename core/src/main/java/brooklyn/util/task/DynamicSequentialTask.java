@@ -209,12 +209,18 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             throw new IllegalStateException(message);
         }
         synchronized (task) {
-            if (task.isSubmitted() && !task.isDone()) {
+            if (task.isSubmitted()) {
                 if (log.isTraceEnabled()) {
                     log.trace("DST "+this+" skipping submission of child "+task+" because it is already submitted");
                 }
             } else {
-                ec.submit(task);
+                try {
+                    ec.submit(task);
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    // Give some context when the submit fails (happens when the target is already unmanaged)
+                    throw new IllegalStateException("Failure submitting task "+task+" in "+this+": "+e.getMessage(), e);
+                }
             }
         }
     }
