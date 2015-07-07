@@ -135,6 +135,7 @@ public class ActivePartialRebindIteration extends RebindIteration {
 
     @Override
     protected void loadMementoManifest() throws Exception {
+        checkEnteringPhase(4);
         preprocessManifestFiles();
     }
 

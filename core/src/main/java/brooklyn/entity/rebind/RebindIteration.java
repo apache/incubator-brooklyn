@@ -111,16 +111,19 @@ Multi-phase deserialization:
 <ul>
 <li> 1. load the manifest files and populate the summaries (ID+type) in {@link BrooklynMementoManifest}
 <li> 2. instantiate and reconstruct catalog items
-<li> 2.5. load manifest
-<li> 3. instantiate entities+locations -- so that inter-entity references can subsequently 
+<li> 3. Apply global transformers on raw manifest
+<li> 4. load manifest
+<li> 5. Apply per-blueprint transformers
+<li> 6. Reload manifest because of above changes
+<li> 7. instantiate entities+locations -- so that inter-entity references can subsequently
        be set during deserialize (and entity config/state is set).
-<li> 4. deserialize the manifests to instantiate the mementos
-<li> 5. instantiate policies+enrichers+feeds 
+<li> 8. deserialize the manifests to instantiate the mementos
+<li> 9. instantiate policies+enrichers+feeds
         (could probably merge this with (3), depending how they are implemented)
-<li> 6. reconstruct the locations, policies, etc, then finally entities -- setting all fields and then calling 
+<li> 10. reconstruct the locations, policies, etc, then finally entities -- setting all fields and then calling 
         {@link RebindSupport#reconstruct(RebindContext, Memento)}
-<li> 7. associate policies+enrichers+feeds to all the entities
-<li> 8. manage the entities
+<li> 11. associate policies+enrichers+feeds to all the entities
+<li> 12. manage the entities
 </ul>
 
  If underlying data-store is changed between first and second manifest read (e.g. to add an
@@ -299,18 +302,27 @@ public abstract class RebindIteration {
     }
     
     protected void preprocessManifestFiles() throws Exception {
-        checkContinuingPhase(2);
+        checkContinuingPhase(4);
 
         Preconditions.checkState(mementoRawData!=null, "Memento raw data should be set when calling this");
         Preconditions.checkState(mementoManifest==null, "Memento data should not yet be set when calling this");
         
-        reloadManifestFiles();
+        loadManifestFiles();
         
         overwritingMaster = false;
         isEmpty = mementoManifest.isEmpty();
     }
 
     protected void reloadManifestFiles() throws IOException {
+        checkEnteringPhase(6);
+        loadManifestFiles();
+    }
+
+    protected void loadManifestFiles() throws IOException {
+        //Called twice in the lifecycle to reload changes
+        if (phase != 4 && phase != 6)
+            throw new IllegalStateException("Phase mismatch: should be phase 4 or 6 but is currently "+phase);
+
         // TODO building the manifests should be part of this class (or parent)
         // it does not have anything to do with the persistence store!
         mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
@@ -434,7 +446,7 @@ public abstract class RebindIteration {
     }
 
     protected void instantiateLocationsAndEntities() {
-        checkEnteringPhase(3);
+        checkEnteringPhase(7);
         
         // Instantiate locations
         logRebindingDebug("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToManifest().keySet());
@@ -471,15 +483,14 @@ public abstract class RebindIteration {
     }
 
     protected void instantiateMementos() throws IOException {
-        
-        checkEnteringPhase(4);
-        
+        checkEnteringPhase(8);
+
         memento = persistenceStoreAccess.loadMemento(mementoRawData, rebindContext.lookup(), exceptionHandler);
     }
 
     protected void instantiateAdjuncts(BrooklynObjectInstantiator instantiator) {
         
-        checkEnteringPhase(5);
+        checkEnteringPhase(9);
         
         // Instantiate policies
         if (rebindManager.persistPoliciesEnabled) {
@@ -535,7 +546,7 @@ public abstract class RebindIteration {
 
     protected void reconstructEverything() {
         
-        checkEnteringPhase(6);
+        checkEnteringPhase(10);
         
         // Reconstruct locations
         logRebindingDebug("RebindManager reconstructing locations");
@@ -640,7 +651,7 @@ public abstract class RebindIteration {
 
     protected void associateAdjunctsWithEntities() {
         
-        checkEnteringPhase(7);
+        checkEnteringPhase(11);
 
         logRebindingDebug("RebindManager associating adjuncts to entities");
         for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
@@ -667,7 +678,7 @@ public abstract class RebindIteration {
 
     protected void manageTheObjects() {
 
-        checkEnteringPhase(8);
+        checkEnteringPhase(12);
         
         logRebindingDebug("RebindManager managing locations");
         LocationManagerInternal locationManager = (LocationManagerInternal)managementContext.getLocationManager();
@@ -757,7 +768,7 @@ public abstract class RebindIteration {
 
     protected void finishingUp() {
         
-        checkContinuingPhase(8);
+        checkContinuingPhase(12);
         
         if (!isEmpty) {
             BrooklynLogging.log(LOG, shouldLogRebinding() ? LoggingLevel.INFO : LoggingLevel.DEBUG, 
@@ -1173,6 +1184,8 @@ public abstract class RebindIteration {
     }
 
     private void applyGlobalTransformers() {
+        checkEnteringPhase(3);
+
         Iterable<RawDataTransformer> globalTransformers = new TransformerLoader(managementContext).findGlobalTransformers();
         BrooklynMementoRawData.Builder rawBuilder = BrooklynMementoRawData.builder();
         for (BrooklynObjectType type : BrooklynObjectType.values()) {
@@ -1194,6 +1207,8 @@ public abstract class RebindIteration {
     }
 
     protected void applyBlueprintTransformers() {
+        checkEnteringPhase(5);
+
         BrooklynMementoRawData.Builder rawBuilder = BrooklynMementoRawData.builder();
         applyBlueprintTransformers(BrooklynObjectType.ENTITY, mementoManifest.getEntityIdToManifest(), rawBuilder);
         applyBlueprintTransformers(BrooklynObjectType.POLICY, mementoManifest.getPolicyIdToManifest(), rawBuilder);

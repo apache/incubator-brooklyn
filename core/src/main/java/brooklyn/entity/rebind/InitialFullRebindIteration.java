@@ -88,6 +88,8 @@ public class InitialFullRebindIteration extends RebindIteration {
 
     @Override
     protected void loadMementoManifest() throws Exception {
+        checkEnteringPhase(4);
+
         preprocessManifestFiles();
         
         if (!isEmpty) {
