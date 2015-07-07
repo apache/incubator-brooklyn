@@ -19,6 +19,7 @@
 package brooklyn.entity.effector;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -28,6 +29,7 @@ import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.proxying.EntitySpec;
@@ -37,12 +39,14 @@ import brooklyn.management.Task;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.DynamicSequentialTask;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class EffectorTaskTest extends BrooklynAppUnitTestSupport {
@@ -53,6 +57,7 @@ public class EffectorTaskTest extends BrooklynAppUnitTestSupport {
             .description("doubles the given number")
             .parameter(Integer.class, "numberToDouble")
             .impl(new EffectorBody<Integer>() {
+                @Override
                 public Integer call(ConfigBag parameters) {
                     // do a sanity check
                     Assert.assertNotNull(entity());
@@ -352,4 +357,78 @@ public class EffectorTaskTest extends BrooklynAppUnitTestSupport {
         
         Assert.assertEquals(doubler.invoke(DoublingEntity.DOUBLE, MutableMap.of("numberToDouble", 3, "numberToStartWith", 3)).get(), (Integer)7);
     }
+    
+    public static final Effector<Void> DUMMY = Effectors.effector(Void.class, "dummy")
+            .impl(new EffectorBody<Void>() {
+                @Override
+                public Void call(ConfigBag parameters) {
+                    return null;
+                }
+            })
+            .build();
+    
+    public static final Effector<Void> STALL = Effectors.effector(Void.class, "stall")
+            .parameter(AtomicBoolean.class, "lock")
+            .impl(new EffectorBody<Void>() {
+                @Override
+                public Void call(ConfigBag parameters) {
+                    AtomicBoolean lock = (AtomicBoolean)parameters.getStringKey("lock");
+                    synchronized(lock) {
+                        if (!lock.get()) {
+                            try {
+                                lock.wait();
+                            } catch (InterruptedException e) {
+                                Exceptions.propagate(e);
+                            }
+                        }
+                    }
+                    return null;
+                }
+            })
+            .build();
+
+    public static final Effector<Void> CONTEXT = Effectors.effector(Void.class, "stall_caller")
+            .parameter(AtomicBoolean.class, "lock")
+            .impl(new EffectorBody<Void>() {
+                @Override
+                public Void call(ConfigBag parameters) {
+                    Entity child = Iterables.getOnlyElement(entity().getChildren());
+                    AtomicBoolean lock = new AtomicBoolean();
+                    Task<Void> dummyTask = null;
+
+                    try {
+                        // Queue a (DST secondary) task which waits until notified, so that tasks queued later will get blocked
+                        queue(Effectors.invocation(entity(), STALL, ImmutableMap.of("lock", lock)));
+    
+                        // Start a new task - submitted directly to child's ExecutionContext, as well as added as a
+                        // DST secondary of the current effector.
+                        dummyTask = child.invoke(DUMMY, ImmutableMap.<String, Object>of());
+                        dummyTask.getUnchecked();
+
+                        // Execution completed in the child's ExecutionContext, but still queued as a secondary.
+                        // Destroy the child entity so that no subsequent tasks can be executed in its context.
+                        Entities.destroy(child);
+                    } finally {
+                        // Let STALL complete
+                        synchronized(lock) {
+                            lock.set(true);
+                            lock.notifyAll();
+                        }
+                        // At this point DUMMY will be unblocked and the DST will try to execute it as a secondary.
+                        // Submission will be ignored because DUMMY already executed.
+                        // If it's not ignored then submission will fail because entity is already unmanaged.
+                    }
+                    return null;
+                }
+            })
+            .build();
+    
+
+    @Test
+    public void testNestedEffectorExecutedAsSecondaryTask() throws Exception {
+        app.createAndManageChild(EntitySpec.create(TestEntity.class));
+        Task<Void> effTask = app.invoke(CONTEXT, ImmutableMap.<String, Object>of());
+        effTask.get();
+    }
+
 }
