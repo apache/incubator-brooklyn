@@ -172,6 +172,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected Maybe<URI> uri = Maybe.absent();
     protected CatalogInitialization catalogInitialization;
 
+    private ServerMonitor serverMonitor;
+
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
         this(brooklynProperties, null);
     }
@@ -192,6 +194,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         this.highAvailabilityManager = new HighAvailabilityManagerImpl(this); // TODO leaking "this" reference; yuck
         
         this.entitlementManager = Entitlements.newManager(this, brooklynProperties);
+
+        this.serverMonitor = new LocalServerMonitor(this);
     }
 
     @Override
