@@ -24,6 +24,7 @@
     <groupId>org.apache.brooklyn</groupId>
     <artifactId>brooklyn</artifactId>
     <version>0.7.0-incubating</version>  <!-- BROOKLYN_VERSION -->
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <artifactId>brooklyn-downstream-parent</artifactId>
@@ -42,7 +43,7 @@
 
     <!-- Testing -->
     <testng.version>6.8.8</testng.version>
-    <surefire.version>2.18</surefire.version>
+    <surefire.version>2.18.1</surefire.version>
     <includedTestGroups />
     <excludedTestGroups>Integration,Acceptance,Live,Live-sanity,WIP</excludedTestGroups>
 

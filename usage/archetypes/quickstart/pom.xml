@@ -35,6 +35,15 @@
     <relativePath>../../../parent/pom.xml</relativePath>
   </parent>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.brooklyn</groupId>
+      <artifactId>brooklyn-downstream-parent</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>
