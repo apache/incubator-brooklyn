@@ -33,7 +33,7 @@
         <groupId>org.apache.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.7.0-incubating</version><!-- BROOKLYN_VERSION -->
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <properties>
