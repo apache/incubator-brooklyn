@@ -63,6 +63,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ServerMonitor;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -489,5 +490,12 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public List<Throwable> errors() {
         return errors;
     }
-    
+
+    @Override
+    public ServerMonitor getServerMonitor() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return serverMonitor;
+    }
+
+
 }

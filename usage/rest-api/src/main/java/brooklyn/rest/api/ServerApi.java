@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.api;
 
+import java.util.Collection;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -104,6 +105,11 @@ public interface ServerApi {
             responseClass = "String",
             multiValueResponse = false)
     public String getStatus();
+
+    @GET
+    @Path("/warnings")
+    @ApiOperation(value = "Returns a list of warnings (if present) from the server monitor", responseClass = "String", multiValueResponse = true)
+    public Collection<String> getWarnings();
 
     @GET
     @Path("/up/extended")

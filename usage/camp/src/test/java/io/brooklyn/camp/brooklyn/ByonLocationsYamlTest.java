@@ -43,7 +43,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-public class ByonLocationsYamlTest extends AbstractYamlTest {
+public class
+        ByonLocationsYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(ByonLocationsYamlTest.class);
 
     @Test

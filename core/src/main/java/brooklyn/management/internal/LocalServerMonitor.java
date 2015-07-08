@@ -32,6 +32,7 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ServerMonitor;
 import brooklyn.management.Task;
 import brooklyn.util.os.Os;
 import brooklyn.util.task.ScheduledTask;
@@ -39,8 +40,8 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.time.Duration;
 
-import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.api.client.util.Sets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 

@@ -51,6 +51,7 @@ import brooklyn.management.AccessController;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ServerMonitor;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
