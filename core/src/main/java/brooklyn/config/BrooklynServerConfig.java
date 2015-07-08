@@ -86,6 +86,12 @@ public class BrooklynServerConfig {
             "Whether a backup of in-memory state should be made to the backup persistence location on node demotion, "
             + "in case other nodes might write conflicting state", true);
 
+    public static final ConfigKey<String> DISK_FREE_WARN_THRESHOLD =
+        ConfigKeys.newStringConfigKey("brooklyn.diskfree.warn.threshold",
+            "Threshold at which Brooklyn will warn if the free disk space on the drive used for the management base directory, " +
+            "the persistence directory, or temporary files falls below this value. Can be e.g. \"4gb\"",
+            "1m");
+
     /** @deprecated since 0.7.0, use {@link #PERSISTENCE_BACKUPS_ON_PROMOTION} and {@link #PERSISTENCE_BACKUPS_ON_DEMOTION},
      * which allow using a different target location and are supported on more environments (and now default to true) */
     @Deprecated

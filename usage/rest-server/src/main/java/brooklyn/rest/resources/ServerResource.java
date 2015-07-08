@@ -320,6 +320,13 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     }
 
     @Override
+    public Collection<String> getWarnings() {
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SERVER_STATUS, null))
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());
+        return mgmt().getServerMonitor().getWarnings();
+    }
+
+    @Override
     public String getConfig(String configKey) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ALL_SERVER_INFO, null)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized for this operation", Entitlements.getEntitlementContext().user());

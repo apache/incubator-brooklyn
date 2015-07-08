@@ -19,6 +19,8 @@
 package brooklyn.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import brooklyn.util.os.Os;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 import io.airlift.command.Cli;
@@ -27,6 +29,7 @@ import io.airlift.command.Command;
 import io.airlift.command.Option;
 
 import java.io.Console;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -113,6 +116,8 @@ public class Main extends AbstractMain {
     public static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) {
+        File f = Os.newTempFile("brooklyn", "brooklyn");
+        f.getFreeSpace();
         log.debug("Launching Brooklyn via CLI, with "+Arrays.toString(args));
         BrooklynVersion.INSTANCE.logSummary();
         new Main().execCli(args);

@@ -164,6 +164,11 @@ public interface ManagementContext {
      */
     @Beta // method may move to an internal interface; brooklyn users should not need to call this directly
     HighAvailabilityManager getHighAvailabilityManager();
+
+    /**
+     * Returns the ServerMonitor, which can be used to get a list of server-wide issues (such as lack of disk space)
+     */
+    ServerMonitor getServerMonitor();
     
     /**
      * Returns the ConfigMap (e.g. BrooklynProperties) applicable to this management context.

@@ -63,6 +63,7 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.ServerMonitor;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -172,6 +173,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected Maybe<URI> uri = Maybe.absent();
     protected CatalogInitialization catalogInitialization;
 
+    private ServerMonitor serverMonitor;
+
     public AbstractManagementContext(BrooklynProperties brooklynProperties){
         this(brooklynProperties, null);
     }
@@ -192,6 +195,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         this.highAvailabilityManager = new HighAvailabilityManagerImpl(this); // TODO leaking "this" reference; yuck
         
         this.entitlementManager = Entitlements.newManager(this, brooklynProperties);
+
+        this.serverMonitor = new LocalServerMonitor(this);
     }
 
     @Override
@@ -485,5 +490,12 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public List<Throwable> errors() {
         return errors;
     }
-    
+
+    @Override
+    public ServerMonitor getServerMonitor() {
+        if (!isRunning()) throw new IllegalStateException("Management context no longer running");
+        return serverMonitor;
+    }
+
+
 }

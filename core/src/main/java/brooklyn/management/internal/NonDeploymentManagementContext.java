@@ -58,6 +58,7 @@ import brooklyn.management.EntityManager;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ExecutionManager;
 import brooklyn.management.LocationManager;
+import brooklyn.management.ServerMonitor;
 import brooklyn.management.SubscriptionContext;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementManager;
@@ -305,6 +306,15 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             return initialManagementContext.getHighAvailabilityManager();
         } else {
             return new NonDeploymentHighAvailabilityManager();
+        }
+    }
+
+    @Override
+    public ServerMonitor getServerMonitor() {
+        if (isInitialManagementContextReal()) {
+            return initialManagementContext.getServerMonitor();
+        } else {
+            return new NonDeploymentServerMonitor();
         }
     }
 
@@ -637,6 +647,16 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         }
         @Override
         public long getLastStateChange() {
+            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
+        }
+    }
+
+    /**
+     * For when the initial management context is not "real".
+     */
+    private class NonDeploymentServerMonitor implements ServerMonitor {
+        @Override
+        public Collection<String> getWarnings() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
     }
