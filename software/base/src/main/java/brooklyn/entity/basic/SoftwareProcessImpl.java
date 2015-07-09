@@ -85,9 +85,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     /** @see #connectServiceUpIsRunning() */
     private volatile FunctionFeed serviceProcessIsRunning;
 
-    private static final SoftwareProcessDriverLifecycleEffectorTasks LIFECYCLE_TASKS =
-            new SoftwareProcessDriverLifecycleEffectorTasks();
-
     protected boolean connectedSensors = false;
     
     public SoftwareProcessImpl() {
@@ -129,7 +126,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     @Override
     public void init() {
         super.init();
-        LIFECYCLE_TASKS.attachLifecycleEffectors(this);
+        getLifecycleEffectorTasks().attachLifecycleEffectors(this);
     }
     
     @Override
@@ -442,7 +439,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
     /** returns the ports that this entity wants to use;
      * default implementation returns {@link SoftwareProcess#REQUIRED_OPEN_LOGIN_PORTS} plus first value 
-     * for each {@link PortAttributeSensorAndConfigKey} config key {@link PortRange}
+     * for each {@link brooklyn.event.basic.PortAttributeSensorAndConfigKey} config key {@link PortRange}
      * plus any ports defined with a config keys ending in {@code .port}.
      */
     protected Collection<Integer> getRequiredOpenPorts() {
@@ -614,7 +611,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      */
     @Deprecated
     protected final void doStart(Collection<? extends Location> locations) {
-        LIFECYCLE_TASKS.start(locations);
+        getLifecycleEffectorTasks().start(locations);
     }
     
     /**
@@ -624,7 +621,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      */
     @Deprecated
     protected final void doStop() {
-        LIFECYCLE_TASKS.stop();
+        getLifecycleEffectorTasks().stop();
     }
     
     /**
@@ -634,12 +631,16 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      */
     @Deprecated
     protected final void doRestart(ConfigBag parameters) {
-        LIFECYCLE_TASKS.restart(parameters);
+        getLifecycleEffectorTasks().restart(parameters);
     }
 
     @Deprecated /** @deprecated since 0.7.0 see {@link #doRestart(ConfigBag)} */
     protected final void doRestart() {
         doRestart(ConfigBag.EMPTY);
+    }
+
+    protected SoftwareProcessDriverLifecycleEffectorTasks getLifecycleEffectorTasks() {
+        return getConfig(LIFECYCLE_EFFECTOR_TASKS);
     }
 
 }

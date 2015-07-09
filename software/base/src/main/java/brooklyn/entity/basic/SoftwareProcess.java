@@ -214,7 +214,16 @@ public interface SoftwareProcess extends Entity, Startable {
                     "several others. Set to null or to 0 to disable any delay.",
             Duration.TEN_SECONDS);
 
-    /** controls the behavior when starting (stop, restart) {@link Startable} children as part of the start (stop, restart) effector on this entity
+    /**
+     * Sets the object that manages the sequence of calls of the entity's driver.
+     */
+    @Beta
+    @SetFromFlag("lifecycleEffectorTasks")
+    ConfigKey<SoftwareProcessDriverLifecycleEffectorTasks> LIFECYCLE_EFFECTOR_TASKS = ConfigKeys.newConfigKey(SoftwareProcessDriverLifecycleEffectorTasks.class,
+            "softwareProcess.lifecycleTasks", "An object that handles lifecycle of an entity's associated machine.",
+            new SoftwareProcessDriverLifecycleEffectorTasks());
+
+    /** Controls the behavior when starting (stop, restart) {@link Startable} children as part of the start (stop, restart) effector on this entity
      * <p>
      * (NB: restarts are currently not propagated to children in the default {@link SoftwareProcess}
      * due to the various semantics which may be desired; this may change, but if entities have specific requirements for restart,
@@ -258,7 +267,9 @@ public interface SoftwareProcess extends Entity, Startable {
     }
 
     @SetFromFlag("childStartMode")
-    ConfigKey<ChildStartableMode> CHILDREN_STARTABLE_MODE = ConfigKeys.newConfigKey(ChildStartableMode.class, "children.startable.mode");
+    ConfigKey<ChildStartableMode> CHILDREN_STARTABLE_MODE = ConfigKeys.newConfigKey(ChildStartableMode.class,
+            "children.startable.mode", "Controls behaviour when starting Startable children as part of this entity's lifecycle.",
+            ChildStartableMode.NONE);
 
     @SuppressWarnings("rawtypes")
     AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = Sensors.newSensor(
@@ -301,7 +312,7 @@ public interface SoftwareProcess extends Entity, Startable {
 
         @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
         public static final ConfigKey<StopMode> STOP_PROCESS_MODE = ConfigKeys.newConfigKey(StopMode.class, "stopProcessMode",
-                "When to stop the process with regard to the entity state" +
+                "When to stop the process with regard to the entity state. " +
                 "ALWAYS will try to stop the process even if the entity is marked as stopped, " +
                 "IF_NOT_STOPPED stops the process only if the entity is not marked as stopped, " +
                 "NEVER doesn't stop the process.", StopMode.IF_NOT_STOPPED);

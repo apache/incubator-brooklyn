@@ -18,9 +18,20 @@
  */
 package brooklyn.test.entity;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.Lifecycle;
+import brooklyn.entity.basic.ServiceStateLogic;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.entity.basic.SoftwareProcessDriverLifecycleEffectorTasks;
 import brooklyn.entity.java.VanillaJavaApp;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
+import brooklyn.location.Location;
 
 /**
  * Mock web application server entity for testing.
@@ -28,8 +39,38 @@ import brooklyn.entity.webapp.WebAppService;
 @ImplementedBy(TestJavaWebAppEntityImpl.class)
 public interface TestJavaWebAppEntity extends VanillaJavaApp, WebAppService {
 
+    /**
+     * Injects the test entity's customised lifecycle tasks.
+     */
+    ConfigKey<SoftwareProcessDriverLifecycleEffectorTasks> LIFECYCLE_EFFECTOR_TASKS = ConfigKeys.newConfigKeyWithDefault(
+            SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS,
+            new TestJavaWebAppEntityLifecycleTasks());
+
     void spoofRequest();
     int getA();
     int getB();
     int getC();
+
+    static class TestJavaWebAppEntityLifecycleTasks extends SoftwareProcessDriverLifecycleEffectorTasks {
+        private static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntityLifecycleTasks.class);
+
+        @Override
+        public void start(java.util.Collection<? extends Location> locations) {
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STARTING);
+            LOG.trace("Starting {}", this);
+            entity().setAttribute(SERVICE_PROCESS_IS_RUNNING, true);
+            entity().setAttribute(Attributes.SERVICE_UP, true);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
+        }
+
+        @Override
+        public void stop() {
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
+            LOG.trace("Stopping {}", this);
+            entity().setAttribute(Attributes.SERVICE_UP, false);
+            entity().setAttribute(SERVICE_PROCESS_IS_RUNNING, false);
+            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
+        }
+    }
+
 }

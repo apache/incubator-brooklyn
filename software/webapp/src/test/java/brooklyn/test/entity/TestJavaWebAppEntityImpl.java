@@ -20,22 +20,12 @@ package brooklyn.test.entity;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.basic.ServiceStateLogic;
-import brooklyn.entity.basic.SoftwareProcessDriverLifecycleEffectorTasks;
 import brooklyn.entity.java.VanillaJavaAppImpl;
 import brooklyn.entity.webapp.WebAppServiceConstants;
-import brooklyn.location.Location;
 import brooklyn.util.flags.SetFromFlag;
 
 public class TestJavaWebAppEntityImpl extends VanillaJavaAppImpl implements TestJavaWebAppEntity {
-
-    private static final Logger LOG = LoggerFactory.getLogger(TestJavaWebAppEntity.class);
 
     @SetFromFlag public int a;
     @SetFromFlag public int b;
@@ -45,30 +35,6 @@ public class TestJavaWebAppEntityImpl extends VanillaJavaAppImpl implements Test
     
     // constructor required for use in DynamicCluster.factory
     public TestJavaWebAppEntityImpl(@SuppressWarnings("rawtypes") Map flags, Entity parent) { super(flags, parent); }
-
-    private static final SoftwareProcessDriverLifecycleEffectorTasks LIFECYCLE_TASKS =
-        new SoftwareProcessDriverLifecycleEffectorTasks() {
-        public void start(java.util.Collection<? extends Location> locations) {
-            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STARTING);
-            LOG.trace("Starting {}", this);
-            entity().setAttribute(SERVICE_PROCESS_IS_RUNNING, true);
-            entity().setAttribute(Attributes.SERVICE_UP, true);
-            ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
-        }
-        public void stop() {
-            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
-            LOG.trace("Stopping {}", this);
-            entity().setAttribute(Attributes.SERVICE_UP, false);
-            entity().setAttribute(SERVICE_PROCESS_IS_RUNNING, false);
-            ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
-        }
-    };
-
-    @Override
-    public void init() {
-        super.init();
-        LIFECYCLE_TASKS.attachLifecycleEffectors(this);
-    }
 
     @Override
     public synchronized void spoofRequest() {
@@ -91,4 +57,5 @@ public class TestJavaWebAppEntityImpl extends VanillaJavaAppImpl implements Test
     public int getC() {
         return c;
     }
+
 }
