@@ -376,6 +376,7 @@ public class BashCommands {
                     chainGroup(
                         "echo yum exists, doing update",
                         ok(sudo("yum check-update")),
+                        ok(sudo("yum -y install epel-release")),
                         sudo(yumInstall))));
         if (brewInstall != null)
             commands.add(ifExecutableElse1("brew", brewInstall));

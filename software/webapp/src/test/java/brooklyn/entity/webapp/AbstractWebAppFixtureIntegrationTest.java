@@ -37,6 +37,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import brooklyn.entity.basic.SoftwareProcessDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -235,7 +236,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      * Stop the given underlying entity, but without our entity instance being told!
      */
     protected void killEntityBehindBack(Entity tokill) throws Exception {
-        ((JavaWebAppDriver)((DriverDependentEntity<?>)Entities.deproxy(entity)).getDriver()).stop();
+        ((SoftwareProcessDriver)((DriverDependentEntity<?>) Entities.deproxy(entity)).getDriver()).stop();
         // old method of doing this did some dodgy legacy rebind and failed due to too many dangling refs; above is better in any case
         // but TODO we should have some rebind tests for these!
     }

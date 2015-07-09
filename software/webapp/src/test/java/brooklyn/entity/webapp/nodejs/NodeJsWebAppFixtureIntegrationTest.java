@@ -18,44 +18,32 @@
  */
 package brooklyn.entity.webapp.nodejs;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-
-import java.io.File;
-import java.util.concurrent.TimeUnit;
-
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SoftwareProcessDriver;
+import brooklyn.entity.drivers.DriverDependentEntity;
+import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.trait.Startable;
+import brooklyn.entity.webapp.WebAppService;
+import brooklyn.location.Location;
+import brooklyn.location.basic.PortRanges;
+import brooklyn.management.ManagementContext;
+import brooklyn.test.Asserts;
+import brooklyn.test.EntityTestUtils;
+import brooklyn.test.HttpTestUtils;
+import brooklyn.test.entity.TestApplication;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Urls;
+import brooklyn.util.time.Duration;
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
-import brooklyn.entity.rebind.dto.MementosGenerators;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToMultiFile;
-import brooklyn.entity.trait.Startable;
-import brooklyn.entity.webapp.WebAppService;
-import brooklyn.location.Location;
-import brooklyn.location.basic.PortRanges;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.ManagementNodeState;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMemento;
-import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-
-import com.google.common.collect.ImmutableList;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Integration tests for NodeJS.
@@ -104,7 +92,7 @@ public class NodeJsWebAppFixtureIntegrationTest {
         app = TestApplication.Factory.newManagedInstanceForTests();
         mgmt = app.getManagementContext();
         loc = app.newLocalhostProvisioningLocation();
-        
+
         entity = app.createAndManageChild(EntitySpec.create(NodeJsWebAppService.class)
                 .configure(NodeJsWebAppService.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT))
                 .configure("gitRepoUrl", GIT_REPO_URL)
@@ -124,7 +112,7 @@ public class NodeJsWebAppFixtureIntegrationTest {
     @Test(groups = "Integration")
     public void testCanStartAndStop() {
         LOG.info("test=canStartAndStop; entity="+entity+"; app="+entity.getApplication());
-        
+
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
         Asserts.succeedsEventually(MutableMap.of("timeout", 120*1000), new Runnable() {
             public void run() {
@@ -134,7 +122,7 @@ public class NodeJsWebAppFixtureIntegrationTest {
         entity.stop();
         assertFalse(entity.getAttribute(Startable.SERVICE_UP));
     }
-    
+
     /**
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
@@ -143,7 +131,7 @@ public class NodeJsWebAppFixtureIntegrationTest {
         LOG.info("test=testReportsServiceDownWithKilled; entity="+entity+"; app="+entity.getApplication());
         
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
-        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", 120*1000), entity, Startable.SERVICE_UP, true);
+        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", Duration.minutes(2)), entity, Startable.SERVICE_UP, true);
 
         // Stop the underlying entity, but without our entity instance being told!
         killEntityBehindBack(entity);
@@ -153,36 +141,16 @@ public class NodeJsWebAppFixtureIntegrationTest {
         
         LOG.info("success getting service up false in primary mgmt universe");
     }
-    
+
     /**
      * Stop the given underlying entity, but without our entity instance being told!
      */
     protected void killEntityBehindBack(Entity tokill) throws Exception {
-        // Previously was calling entity.getDriver().kill(); but now our entity instance is a proxy so can't do that
-        ManagementContext newManagementContext = null;
-        File tempDir = Os.newTempDir(getClass());
-        try {
-            ManagementContext managementContext = ((EntityInternal)tokill).getManagementContext();
-            BrooklynMemento brooklynMemento = MementosGenerators.newBrooklynMemento(managementContext);
-            
-            BrooklynMementoPersisterToMultiFile oldPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
-            oldPersister.checkpoint(brooklynMemento, PersistenceExceptionHandlerImpl.builder().build());
-            oldPersister.waitForWritesCompleted(30*1000, TimeUnit.MILLISECONDS);
-
-            BrooklynMementoPersisterToMultiFile newPersister = new BrooklynMementoPersisterToMultiFile(tempDir , getClass().getClassLoader());
-            newManagementContext = new LocalManagementContextForTests();
-            newManagementContext.getRebindManager().setPersister(newPersister, PersistenceExceptionHandlerImpl.builder().build());
-            newManagementContext.getRebindManager().rebind(getClass().getClassLoader(), null, ManagementNodeState.MASTER);
-            newManagementContext.getRebindManager().startPersistence();
-            SoftwareProcess entity2 = (SoftwareProcess) newManagementContext.getEntityManager().getEntity(tokill.getId());
-            entity2.stop();
-        } finally {
-            if (newManagementContext != null) ((ManagementContextInternal)newManagementContext).terminate();
-            Os.deleteRecursively(tempDir.getAbsolutePath());
-        }
-        LOG.info("called to stop {} in parallel mgmt universe", entity);
+        ((SoftwareProcessDriver)((DriverDependentEntity<?>) Entities.deproxy(tokill)).getDriver()).stop();
+        // old method of doing this did some dodgy legacy rebind and failed due to too many dangling refs; above is better in any case
+        // but TODO we should have some rebind tests for these!
     }
-    
+
     @Test(groups = "Integration")
     public void testInitialNamedDeployments() {
         final String urlSubPathToWebApp = APP_NAME;
@@ -191,7 +159,7 @@ public class NodeJsWebAppFixtureIntegrationTest {
         
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
 
-        Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.minutes(1)), new Runnable() {
             public void run() {
                 // TODO get this URL from a web-app entity of some kind?
                 String url = Urls.mergePaths(entity.getAttribute(WebAppService.ROOT_URL), urlSubPathToWebApp, urlSubPathToPageToQuery);
