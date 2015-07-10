@@ -31,7 +31,6 @@ import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.core.test.entity.TestApplicationImpl;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.EntityTestUtils;
-import org.apache.brooklyn.util.groovy.TimeExtras;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
@@ -52,8 +51,6 @@ class Infinispan5ServerIntegrationTest {
 
     static boolean portLeftOpen = false;
     
-    static { TimeExtras.init(); }
-
     @BeforeMethod(groups = "Integration")
     public void failIfPortInUse() {
         if (Networking.isPortAvailable(DEFAULT_PORT)) {
