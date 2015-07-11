@@ -642,22 +642,6 @@
                     <version>2.18.1</version>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.6</version>
-                    <executions>
-                        <execution>
-                            <id>sign-artifacts</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>sign</goal>
-                            </goals>
-                            <configuration>
-                                <executable>gpg2</executable>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
                     <!-- version 2.4+ seems to break eclipse integration as per https://github.com/tesla/m2eclipse-extras/issues/10
                          but cannot find issue on GitHub any more - 404 error -->
@@ -697,19 +681,6 @@
                             </goals>
                         </execution>
                     </executions>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.2</version>
-                    <!-- 'release' is not used; easier just to checkout, tag, `mvn deploy` manually
-                         with -Dbrooklyn.deployTo=TARGET ... and note we need to update docs and examples,
-                         which is a non-maven task!) -->
-                    <configuration>
-                        <mavenExecutorId>forked-path</mavenExecutorId>
-                        <useReleaseProfile>false</useReleaseProfile>
-                        <arguments>-Dbrooklyn.deployTo=apache</arguments>
-                        <goals>deploy</goals>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
