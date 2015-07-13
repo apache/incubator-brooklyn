@@ -34,12 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.rest.domain.CatalogLocationSummary;
-import brooklyn.rest.domain.LocationSummary;
-import brooklyn.rest.testing.BrooklynRestResourceTest;
-import brooklyn.test.Asserts;
-
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -47,6 +41,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
+
+import brooklyn.location.LocationSpec;
+import brooklyn.location.basic.SimulatedLocation;
+import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.rest.domain.CatalogLocationSummary;
+import brooklyn.rest.domain.LocationSummary;
+import brooklyn.rest.testing.BrooklynRestResourceTest;
+import brooklyn.test.Asserts;
 
 @Test(singleThreaded = true)
 public class LocationResourceTest extends BrooklynRestResourceTest {
@@ -146,6 +148,27 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         URI expectedLocationUri = URI.create("/v1/locations/"+locationName);
         LocationSummary location = client().resource(expectedLocationUri).get(LocationSummary.class);
         assertEquals(location.getSpec(), "brooklyn.catalog:"+locationName+":"+locationVersion);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void testGetLocationConfig() {
+        SimulatedLocation parentLoc = (SimulatedLocation) getManagementContext().getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class)
+                .configure("myParentKey", "myParentVal"));
+        SimulatedLocation loc = (SimulatedLocation) getManagementContext().getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class)
+                .parent(parentLoc)
+                .configure("mykey", "myval")
+                .configure("password", "mypassword"));
+    
+        // "full" means including-inherited, filtered to exclude secrets
+        URI uriFull = URI.create("/v1/locations/"+loc.getId()+"?full=true");
+        LocationSummary summaryFull = client().resource(uriFull).get(LocationSummary.class);
+        assertEquals(summaryFull.getConfig(), ImmutableMap.of("mykey", "myval", "myParentKey", "myParentVal"), "conf="+summaryFull.getConfig());
+        
+        // Default is local-only, filtered to exclude secrets
+        URI uriDefault = URI.create("/v1/locations/"+loc.getId());
+        LocationSummary summaryDefault = client().resource(uriDefault).get(LocationSummary.class);
+        assertEquals(summaryDefault.getConfig(), ImmutableMap.of("mykey", "myval"), "conf="+summaryDefault.getConfig());
     }
 
     @Test(dependsOnMethods = { "testAddLegacyLocationDefinition" })
