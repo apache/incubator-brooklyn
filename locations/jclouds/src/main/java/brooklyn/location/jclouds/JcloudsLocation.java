@@ -1531,8 +1531,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 sshProps.put("user", initialUser);
                 sshProps.put("address", address);
                 sshProps.put("port", port);
-                if (initialPassword.isPresent()) sshProps.put("password", initialPassword.get());
-                if (initialPrivateKey.isPresent()) sshProps.put("privateKeyData", initialPrivateKey.get());
+                if (initialPassword.isPresent()) {
+                    sshProps.put("password", initialPassword.get());
+                } else {
+                    sshProps.remove("password");
+                }
+                if (initialPrivateKey.isPresent()) {
+                    sshProps.put("privateKeyData", initialPrivateKey.get());
+                } else {
+                    sshProps.remove("privateKeyData");
+                }
     
                 // TODO Retrying lots of times as workaround for vcloud-director. There the guest customizations
                 // can cause the VM to reboot shortly after it was ssh'able.
