@@ -81,6 +81,7 @@
 
     <modules>
         <module>parent</module>
+        <module>usage/downstream-parent</module>
 
         <module>api</module>
         <module>camp</module>
@@ -115,7 +116,6 @@
         <module>usage/camp</module>
         <module>usage/cli</module>
         <module>usage/dist</module>
-        <module>usage/downstream-parent</module>
         <module>usage/jsgui</module>
         <module>usage/launcher</module>
         <module>usage/logback-includes</module>
