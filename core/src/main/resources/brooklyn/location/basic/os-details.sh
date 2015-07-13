@@ -56,6 +56,18 @@ if [ -z $VERSION_ID ] && [ -f /etc/debian_version ]; then
     VERSION_ID=$(cat /etc/debian_version)
 fi
 
+# Suse doesn't have os-release or lsb_release
+if [ -z $VERSION_ID ] && [ -f /etc/SuSE-release  ]; then
+    NAME=Suse
+    VERSION_MAJOR=$(cat /etc/SuSE-release | grep VERSION | sed 's/VERSION \= //')
+    VERSION_PATCH=$(cat /etc/SuSE-release | grep PATCHLEVEL | sed 's/PATCHLEVEL \= //')
+    if [ -z $VERSION_PATCH ]; then
+        VERSION_ID=${VERSION_MAJOR}
+    else
+        VERSION_ID=${VERSION_MAJOR}.${VERSION_PATCH}
+    fi
+fi
+
 # Hardware info
 # Is the loss of precision converting bytes and kilobytes to megabytes acceptable?
 # We can do floating point calculations with precision with the bc program, but it

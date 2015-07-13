@@ -119,6 +119,12 @@ public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
         runTest(ImmutableMap.of("imageId", "us-east-1/ami-a35a33ca", "hardwareId", SMALL_HARDWARE_ID, JcloudsLocationConfig.OPEN_IPTABLES.getName(), "true"));
     }
     
+    @Test(groups = {"Live"})
+    public void test_Suse_11sp3() throws Exception {
+        // Image: {id=us-east-1/ami-c08fcba8, providerId=ami-c08fcba8, name=suse-sles-11-sp3-v20150127-pv-ssd-x86_64, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=suse, arch=paravirtual, version=, description=amazon/suse-sles-11-sp3-v20150127-pv-ssd-x86_64, is64Bit=true}, description=SUSE Linux Enterprise Server 11 Service Pack 3 (PV, 64-bit, SSD-Backed), version=x86_64, status=AVAILABLE[available], loginUser=root, userMetadata={owner=013907871322, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}}
+        runTest(ImmutableMap.of("imageId", "us-east-1/ami-c08fcba8", "hardwareId", SMALL_HARDWARE_ID, "loginUser", "ec2-user"));//, JcloudsLocationConfig.OPEN_IPTABLES.getName(), "true"));
+    }
+    
     protected void runTest(Map<String,?> flags) throws Exception {
         Map<String,?> allFlags = MutableMap.<String,Object>builder()
                 .put("tags", ImmutableList.of(getClass().getName()))
