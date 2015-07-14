@@ -1375,7 +1375,7 @@
                                     In time we should minimize our export lists to
                                     what is really needed.
                                 -->
-                                <Export-Package>brooklyn.*</Export-Package>
+                                <Export-Package>brooklyn.*,org.apache.brooklyn.*</Export-Package>
                                 <Implementation-SHA-1>${buildNumber}</Implementation-SHA-1>
                                 <Implementation-Branch>${scmBranch}</Implementation-Branch>
                             </instructions>
