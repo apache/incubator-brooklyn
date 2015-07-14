@@ -74,8 +74,8 @@ public class BrooklynMementoPersisterInMemorySizeIntegrationTest extends Brookly
         long out1 = recorder.getBytesOut();
         int filesOut1 = recorder.getCountDataOut();
         Assert.assertTrue(out1>512, "should have written at least 0.5k, only wrote "+out1);
-        Assert.assertTrue(out1<20*1000, "should have written less than 20k, wrote "+out1);
-        Assert.assertTrue(filesOut1<20, "should have written fewer than 20 files, wrote "+out1);
+        Assert.assertTrue(out1<30*1000, "should have written less than 30k, wrote "+out1);
+        Assert.assertTrue(filesOut1<30, "should have written fewer than 30 files, wrote "+out1);
         
         ((EntityInternal)app).setAttribute(TestEntity.NAME, "hello world");
         if (forceDelay) Time.sleep(Duration.FIVE_SECONDS);

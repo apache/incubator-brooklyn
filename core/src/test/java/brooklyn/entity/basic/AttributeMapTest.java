@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class AttributeMapTest {
+    final int NUM_TASKS = Math.min(500 * Runtime.getRuntime().availableProcessors(), 1000);
 
     Application app;
     TestEntityImpl entity;
@@ -77,7 +78,7 @@ public class AttributeMapTest {
     public void testConcurrentUpdatesDoNotCauseConcurrentModificationException() throws Exception {
         List<Future<?>> futures = Lists.newArrayList();
         
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < NUM_TASKS; i++) {
             final AttributeSensor<String> nextSensor = Sensors.newStringSensor("attributeMapTest.exampleSensor"+i, "");
             Future<?> future = executor.submit(newUpdateMapRunnable(map, nextSensor, "a"));
             futures.add(future);
@@ -92,7 +93,7 @@ public class AttributeMapTest {
     public void testConcurrentUpdatesAndGetsDoNotCauseConcurrentModificationException() throws Exception {
         List<Future<?>> futures = Lists.newArrayList();
         
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < NUM_TASKS; i++) {
             final AttributeSensor<String> nextSensor = Sensors.newStringSensor("attributeMapTest.exampleSensor"+i, "");
             Future<?> future = executor.submit(newUpdateMapRunnable(map, nextSensor, "a"));
             Future<?> future2 = executor.submit(newGetAttributeCallable(map, nextSensor));
@@ -171,7 +172,7 @@ public class AttributeMapTest {
         
         List<Future<?>> futures = Lists.newArrayList();
         
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < NUM_TASKS; i++) {
             Future<?> future = executor.submit(newModifyAttributeCallable(map, sensor, modifier));
             futures.add(future);
         }
@@ -180,7 +181,7 @@ public class AttributeMapTest {
             future.get();
         }
 
-        assertEquals(map.getValue(sensor), Integer.valueOf(1000));
+        assertEquals(map.getValue(sensor), Integer.valueOf(NUM_TASKS));
     }
     
     @Test

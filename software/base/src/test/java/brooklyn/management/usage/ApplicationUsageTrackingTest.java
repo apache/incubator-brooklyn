@@ -19,6 +19,7 @@
 package brooklyn.management.usage;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -190,16 +191,14 @@ public class ApplicationUsageTrackingTest {
         assertApplicationUsage(usage2, app);
         assertApplicationEvent(usage2.getEvents().get(2), Lifecycle.STOPPING, preStop, postStop);
         assertApplicationEvent(usage2.getEvents().get(3), Lifecycle.STOPPED, preStop, postStop);
+        //Apps unmanage themselves on stop
+        assertApplicationEvent(usage2.getEvents().get(4), Lifecycle.DESTROYED, preStop, postStop);
         
-        // Destroy
-        long preDestroy = System.currentTimeMillis();
-        Entities.unmanage(app);
-        long postDestroy = System.currentTimeMillis();
+        assertFalse(mgmt.getEntityManager().isManaged(app), "App should already be unmanaged");
         
         Set<ApplicationUsage> usages3 = mgmt.getUsageManager().getApplicationUsage(Predicates.alwaysTrue());
         ApplicationUsage usage3 = Iterables.getOnlyElement(usages3);
         assertApplicationUsage(usage3, app);
-        assertApplicationEvent(usage3.getEvents().get(4), Lifecycle.DESTROYED, preDestroy, postDestroy);
         
         assertEquals(usage3.getEvents().size(), 5, "usage="+usage3);
     }
