@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.qa.longevity;
+package org.apache.brooklyn.qa.longevity;
 
-import brooklyn.qa.longevity.StatusRecorder.Record;
+import org.apache.brooklyn.qa.longevity.StatusRecorder.Record;
 
 public interface MonitorListener {
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.qa.load;
+package org.apache.brooklyn.qa.load;
 
 import static java.lang.String.format;
 

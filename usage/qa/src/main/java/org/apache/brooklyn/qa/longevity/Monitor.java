@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.qa.longevity;
+package org.apache.brooklyn.qa.longevity;
 
-import static brooklyn.qa.longevity.StatusRecorder.Factory.chain;
-import static brooklyn.qa.longevity.StatusRecorder.Factory.noop;
-import static brooklyn.qa.longevity.StatusRecorder.Factory.toFile;
-import static brooklyn.qa.longevity.StatusRecorder.Factory.toLog;
+import static org.apache.brooklyn.qa.longevity.StatusRecorder.Factory.chain;
+import static org.apache.brooklyn.qa.longevity.StatusRecorder.Factory.noop;
+import static org.apache.brooklyn.qa.longevity.StatusRecorder.Factory.toFile;
+import static org.apache.brooklyn.qa.longevity.StatusRecorder.Factory.toLog;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.File;

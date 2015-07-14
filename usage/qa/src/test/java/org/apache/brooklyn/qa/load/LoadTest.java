@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.qa.load;
+package org.apache.brooklyn.qa.load;
 
+import org.apache.brooklyn.qa.load.SimulatedTheeTierApp;
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;

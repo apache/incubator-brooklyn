@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.qa.longevity;
+package org.apache.brooklyn.qa.longevity;
 
+import org.apache.brooklyn.qa.longevity.MonitorUtils;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -32,7 +33,7 @@ import java.util.List;
 
 import org.testng.annotations.Test;
 
-import brooklyn.qa.longevity.MonitorUtils.ProcessHasStderr;
+import org.apache.brooklyn.qa.longevity.MonitorUtils.ProcessHasStderr;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 

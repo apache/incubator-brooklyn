@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.qa.longevity.webcluster;
+package org.apache.brooklyn.qa.longevity.webcluster;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
