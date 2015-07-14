@@ -79,7 +79,7 @@ public class DynamicClusterWithAvailabilityZonesMultiLocationTest extends Brookl
                 .configure(MultiLocation.SUB_LOCATIONS, ImmutableList.<MachineProvisioningLocation<?>>of(subLoc1, subLoc2)));
     }
 
-    @Test
+    @Test(groups="WIP") // disabled for release due to spurious intermittent failures
     public void testReplacesEntityInSameZone() throws Exception {
         ((EntityLocal)cluster).config().set(DynamicCluster.ENABLE_AVAILABILITY_ZONES, true);
         cluster.start(ImmutableList.of(multiLoc));
