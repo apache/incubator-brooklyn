@@ -135,6 +135,16 @@
 
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-jsgui</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+            <!-- declare the dependency so that it is ready for when the copy-dependency step below needs it -->
+            <!-- without this, brooklyn-jsgui might get build *after* this one, so the copy-dependency fails -->
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-logback-xml</artifactId>
             <version>${project.version}</version>
             <!-- optional so that this project has logging; dependencies may redeclare or supply their own -->
