@@ -67,10 +67,9 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     @SetFromFlag("version")
     public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(BrooklynConfigKeys.SUGGESTED_VERSION, "0.8.0-SNAPSHOT"); // BROOKLYN_VERSION
 
-    // Takes precedence over downloadUrl, if non-null
     @SetFromFlag("distroUploadUrl")
     public static final ConfigKey<String> DISTRO_UPLOAD_URL = ConfigKeys.newStringConfigKey(
-            "brooklynnode.distro.uploadurl", "URL for uploading the brooklyn distro (retrieved locally and pushed to remote install location)", null);
+            "brooklynnode.distro.uploadurl", "URL for uploading the brooklyn distro (retrieved locally and pushed to remote install location. Takes precedence over downloadUrl, if non-null)", null);
 
     // Note that download URL only supports versions in org.apache.brooklyn, so not 0.6.0 and earlier 
     // (which used maven group io.brooklyn). Aled thinks we can live with that.

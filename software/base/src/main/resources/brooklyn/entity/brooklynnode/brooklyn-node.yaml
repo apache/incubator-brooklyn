@@ -22,8 +22,8 @@ name: Example Brooklyn Node
 services:
 - type: brooklyn.entity.brooklynnode.BrooklynNode
 
-  ## to use a local file, specify something such as the following:   [BROOKLYN_VERSION_BELOW] 
-  # downloadUrl: file:///tmp/brooklyn-dist-0.8.0-SNAPSHOT-dist.tar.gz
+  ## URL for uploading the brooklyn distro (retrieved locally and pushed to remote install location)
+  # brooklynnode.distro.uploadurl: file:///tmp/brooklyn-dist-<version>-dist.tar.gz
 
   ## if deploying to anything other than localhost you must also configure login details, e.g.:
   # managementUsername: admin
