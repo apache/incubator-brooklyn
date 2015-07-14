@@ -52,13 +52,6 @@ public class KafkaSupport {
      * Send a message to the {@link KafkaCluster} on the given topic.
      */
     public void sendMessage(String topic, String message) {
-        ZooKeeperNode zookeeper = cluster.getZooKeeper();
-        for(Entity e : cluster.getCluster().getChildren()) {
-            if(e instanceof KafkaBroker) {
-
-                break;
-            }
-        }
         Optional<Entity> anyBrokerNodeInCluster = Iterables.tryFind(cluster.getCluster().getChildren(), Predicates.and(
                 Predicates.instanceOf(KafkaBroker.class),
                 EntityPredicates.attributeEqualTo(KafkaBroker.SERVICE_UP, true)));
