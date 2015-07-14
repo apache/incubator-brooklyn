@@ -82,7 +82,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Range;
 import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.Runnables;
 import com.google.gson.Gson;
@@ -486,12 +485,11 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                     .baseUri(webConsoleUri)
                     .credentialsIfNotNull(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
                     .poll(new HttpPollConfig<Boolean>(WEB_CONSOLE_ACCESSIBLE)
-                            // TODO `BrooklynNode` shouldn't report `SERVICE_UP` until `/v1/server/healthy` returns true;
-                            // but this should wait until v0.8.0 as we'll need managed nodes to implement `/v1/server/healthy` (added May 2015);
-                            // when that is added BrooklynNodeIntegrationTest.waitForApps can remove the 403 check, it should require 200 always.
-                            // .suburl("/v1/server/healthy")  then check: responseTextEquals("true")
-                            .onSuccess(HttpValueFunctions.responseCodeEquals(200))
-                            .setOnFailureOrException(false))
+                            .suburl("/v1/server/healthy")
+                            .onSuccess(Functionals.chain(HttpValueFunctions.jsonContents(), JsonFunctions.cast(Boolean.class)))
+                            //if using an old distribution the path doesn't exist, but at least the instance is responding
+                            .onFailure(HttpValueFunctions.responseCodeEquals(404))
+                            .setOnException(false))
                     .poll(new HttpPollConfig<ManagementNodeState>(MANAGEMENT_NODE_STATE)
                             .suburl("/v1/server/ha/state")
                             .onSuccess(Functionals.chain(Functionals.chain(HttpValueFunctions.jsonContents(), JsonFunctions.cast(String.class)), Enums.fromStringFunction(ManagementNodeState.class)))

@@ -112,7 +112,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                 }
             }
         }
-        if (subpath==null) subpath = format("brooklyn-%s", getVersion());
+        if (subpath==null) subpath = format("brooklyn-dist-%s", getVersion());
         setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(subpath)));
     }
 
@@ -127,8 +127,8 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         String uploadUrl = entity.getConfig(BrooklynNode.DISTRO_UPLOAD_URL);
         
         // Need to explicitly give file, because for snapshot URLs you don't get a clean filename from the URL.
-        // This filename is used to generate the first URL to try: 
-        // file://$HOME/.brooklyn/repository/BrooklynNode/0.6.0-SNAPSHOT/brooklyn-0.6.0-SNAPSHOT-dist.tar.gz
+        // This filename is used to generate the first URL to try: [BROOKLYN_VERSION_BELOW]
+        // file://$HOME/.brooklyn/repository/BrooklynNode/0.8.0-SNAPSHOT/brooklynnode-0.8.0-snapshot.tar.gz
         // (DOWNLOAD_URL overrides this and has a default which comes from maven)
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
