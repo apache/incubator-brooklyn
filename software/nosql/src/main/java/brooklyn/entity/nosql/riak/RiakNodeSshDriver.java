@@ -36,10 +36,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
@@ -61,7 +61,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 // TODO: Alter -env ERL_CRASH_DUMP path in vm.args
-public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implements RiakNodeDriver {
+public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements RiakNodeDriver {
 
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeSshDriver.class);
     private static final String sbinPath = "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
@@ -69,6 +69,11 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
     public RiakNodeSshDriver(final RiakNodeImpl entity, final SshMachineLocation machine) {
         super(entity, machine);
+    }
+
+    @Override
+    protected String getLogFileLocation() {
+        return "/var/log/riak/solr.log";
     }
 
     @Override
@@ -555,6 +560,14 @@ public class RiakNodeSshDriver extends AbstractSoftwareProcessSshDriver implemen
 
         } else {
             log.warn("entity {}: is not in the riak cluster", entity.getId());
+        }
+    }
+
+    @Override
+    public void setup() {
+        if(entity.getConfig(RiakNode.SEARCH_ENABLED)) {
+            // JavaSoftwareProcessSshDriver.setup() is called in order to install java
+            super.setup();
         }
     }
 

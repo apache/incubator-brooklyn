@@ -189,6 +189,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         WebAppServiceMethods.connectWebAppServerPolicies(this);
     }
 
+    @Override
     public void disconnectSensors() {
         super.disconnectSensors();
         if (httpFeed != null) {
@@ -242,46 +243,62 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         getDriver().recoverFailedNode(nodeName);
     }
 
+    @Override
     public Integer getRiakWebPort() {
         return getAttribute(RiakNode.RIAK_WEB_PORT);
     }
 
+    @Override
     public Integer getRiakPbPort() {
         return getAttribute(RiakNode.RIAK_PB_PORT);
     }
 
+    @Override
     public Integer getHandoffListenerPort() {
         return getAttribute(RiakNode.HANDOFF_LISTENER_PORT);
     }
 
+    @Override
     public Integer getEpmdListenerPort() {
         return getAttribute(RiakNode.EPMD_LISTENER_PORT);
     }
 
+    @Override
     public Integer getErlangPortRangeStart() {
         return getAttribute(RiakNode.ERLANG_PORT_RANGE_START);
     }
 
+    @Override
     public Integer getErlangPortRangeEnd() {
         return getAttribute(RiakNode.ERLANG_PORT_RANGE_END);
     }
 
+    @Override
+    public Boolean isSearchEnabled() {
+        return getConfig(RiakNode.SEARCH_ENABLED);
+    }
+
+    @Override
     public Integer getSearchSolrPort() {
-        return getAttribute(RiakNode.SEARCH_SOLR_PORT);
+        return getConfig(RiakNode.SEARCH_SOLR_PORT);
     }
 
+    @Override
     public Integer getSearchSolrJmxPort() {
-        return getAttribute(RiakNode.SEARCH_SOLR_JMX_PORT);
+        return getConfig(RiakNode.SEARCH_SOLR_JMX_PORT);
     }
 
+    @Override
     public String getMajorVersion() {
         return getFullVersion().substring(0, 3);
     }
 
+    @Override
     public String getFullVersion() {
         return getConfig(RiakNode.SUGGESTED_VERSION);
     }
 
+    @Override
     public String getOsMajorVersion() {
         return getDriver().getOsMajorVersion();
     }
