@@ -8,12 +8,15 @@ layout: website-normal
 To launch Brooklyn, from the directory where Brooklyn is unpacked, run:
 
 {% highlight bash %}
-% nohup bin/brooklyn launch &
+% nohup bin/brooklyn launch > /dev/null 2&>1 &
 {% endhighlight %}
 
 With no configuration, this will launch the Brooklyn web console and REST API on [`http://localhost:8081/`](http://localhost:8081/).
 No password is set, but the server is listening only on the loopback network interface for security.
 Once [security is configured](brooklyn_properties.html), Brooklyn will listen on all network interfaces by default.
+By default, Brooklyn will write log messages at the INFO level or above to `brooklyn.info.log` and messgages at the
+DEBUG level or above to `brooklyn.debug.log`. Redirecting the output to `/dev/null` prevents the default console output
+being written to `nohup.out`.
 
 You may wish to [add Brooklyn to your path](#path-setup);
 assuming you've done this, to get information the supported CLI options 
