@@ -134,11 +134,8 @@
                             <descriptors>
                                 <descriptor>src/main/config/build-distribution.xml</descriptor>
                             </descriptors>
-                          <!-- finalName affects name in `target/` but we cannot influence name when it is attached/installed,
-                               so `apache-` prefix would be lost there. to keep it consistent this is commented out, 
-                               but would be nice to have if there is a way!
-                            <finalName>apache-brooklyn-${project.version}</finalName>
-                          -->
+                            <finalName>apache-brooklyn-${project.version}-bin</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
                             <formats>
                                 <format>tar.gz</format>
                                 <format>zip</format>

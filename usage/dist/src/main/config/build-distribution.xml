@@ -90,7 +90,7 @@
             <outputDirectory>lib/brooklyn</outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
-            <outputFileNameMapping>${artifact.groupId}-${artifact.artifactId}-${artifact.version}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
+            <outputFileNameMapping>${artifact.groupId}-${artifact.artifactId}-${artifact.version}-bin.${artifact.extension}</outputFileNameMapping>
         </dependencySet>
     </dependencySets>
 </assembly>
