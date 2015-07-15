@@ -146,7 +146,7 @@ public class MongoDBShardClusterImpl extends DynamicClusterImpl implements Mongo
                     
                     MongoDBServer primary = replicaSet.getAttribute(MongoDBReplicaSet.PRIMARY_ENTITY);
                     if (primary != null) {
-                        String addr = Strings.removeFromStart(primary.getAttribute(MongoDBServer.MONGO_SERVER_ENDPOINT), "http://");
+                        String addr = String.format("%s:%d", primary.getAttribute(MongoDBServer.SUBNET_HOSTNAME), primary.getAttribute(MongoDBServer.PORT));
                         String replicaSetURL = ((MongoDBReplicaSet) replicaSet).getName() + "/" + addr;
                         boolean added = client.addShardToRouter(replicaSetURL);
                         if (added) {

@@ -238,7 +238,7 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
             releasePort(null, p);
     }
     
-    public static class LocalhostMachine extends SshMachineLocation {
+    public static class LocalhostMachine extends SshMachineLocation implements HasSubnetHostname {
         // declaring this here (as well as on LocalhostMachineProvisioningLocation) because:
         //  1. machine.getConfig(key) will not inherit default value of machine.getParent()'s key
         //  2. things might instantiate a `LocalhostMachine` without going through LocalhostMachineProvisioningLocation
@@ -299,6 +299,14 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
                 address = Networking.getLocalHost();
             super.configure(properties);
             return this;
+        }
+        @Override
+        public String getSubnetHostname() {
+           return Networking.getLocalHost().getHostName();
+        }
+        @Override
+        public String getSubnetIp() {
+            return Networking.getLocalHost().getHostAddress();
         }
     }
 
