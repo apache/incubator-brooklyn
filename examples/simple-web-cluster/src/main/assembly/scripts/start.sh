@@ -19,7 +19,7 @@
 #
 
 if [ -z "$BROOKLYN_APP_CLASS" ] ; then 
-    BROOKLYN_APP_CLASS=brooklyn.demo.WebClusterDatabaseExample
+    BROOKLYN_APP_CLASS=org.apache.brooklyn.demo.WebClusterDatabaseExample
 fi
 
 if [ -z "$JAVA" ] ; then 
