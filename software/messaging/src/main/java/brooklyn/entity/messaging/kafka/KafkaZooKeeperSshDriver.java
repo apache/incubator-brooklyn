@@ -21,6 +21,8 @@ package brooklyn.entity.messaging.kafka;
 import java.util.Map;
 
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
@@ -51,6 +53,11 @@ public class KafkaZooKeeperSshDriver extends AbstractfKafkaSshDriver implements 
     }
 
     @Override
+    protected String getTopicsScriptName() {
+        return "kafka-topics.sh";
+    }
+
+    @Override
     protected String getProcessIdentifier() {
         return "quorum\\.QuorumPeerMain";
     }
@@ -60,4 +67,12 @@ public class KafkaZooKeeperSshDriver extends AbstractfKafkaSshDriver implements 
         return getEntity().getAttribute(KafkaZooKeeper.ZOOKEEPER_PORT);
     }
 
+    @Override
+    public void createTopic(String topic) {
+        String zookeeperUrl = getEntity().getAttribute(Attributes.HOSTNAME) + ":" + getZookeeperPort();
+        newScript(CUSTOMIZING)
+                .failOnNonZeroResultCode()
+                .body.append(String.format("./bin/%s  --create --zookeeper %s --replication-factor 1 --partitions 1 --topic %s", getTopicsScriptName(), zookeeperUrl, topic))
+                .execute();
+    }
 }

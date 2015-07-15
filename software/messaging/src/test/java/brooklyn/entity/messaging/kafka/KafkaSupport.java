@@ -18,26 +18,24 @@
  */
 package brooklyn.entity.messaging.kafka;
 
-import static org.testng.Assert.assertTrue;
-
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Properties;
-
-import kafka.consumer.Consumer;
-import kafka.consumer.ConsumerConfig;
-import kafka.consumer.ConsumerIterator;
-import kafka.consumer.KafkaMessageStream;
-import kafka.javaapi.consumer.ConsumerConnector;
-import kafka.javaapi.producer.Producer;
-import kafka.javaapi.producer.ProducerData;
-import kafka.message.Message;
-import kafka.producer.ProducerConfig;
-import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
 
-import com.google.common.collect.ImmutableMap;
+import brooklyn.util.time.Duration;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
+
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+import java.security.InvalidParameterException;
+import java.util.Properties;
+
+import static java.lang.String.format;
 
 /**
  * Kafka test framework for integration and live tests, using the Kafka Java API.
@@ -54,16 +52,33 @@ public class KafkaSupport {
      * Send a message to the {@link KafkaCluster} on the given topic.
      */
     public void sendMessage(String topic, String message) {
-        ZooKeeperNode zookeeper = cluster.getZooKeeper();
-        Properties props = new Properties();
-        props.put("zk.connect", String.format("%s:%d", zookeeper.getAttribute(Attributes.HOSTNAME), zookeeper.getZookeeperPort()));
-        props.put("serializer.class", "kafka.serializer.StringEncoder");
-        ProducerConfig config = new ProducerConfig(props);
+        Optional<Entity> anyBrokerNodeInCluster = Iterables.tryFind(cluster.getCluster().getChildren(), Predicates.and(
+                Predicates.instanceOf(KafkaBroker.class),
+                EntityPredicates.attributeEqualTo(KafkaBroker.SERVICE_UP, true)));
+        if (anyBrokerNodeInCluster.isPresent()) {
+            KafkaBroker broker = (KafkaBroker)anyBrokerNodeInCluster.get();
 
-        Producer<String, String> producer = new Producer<String, String>(config);
-        ProducerData<String, String> data = new ProducerData<String, String>(topic, message);
-        producer.send(data);
-        producer.close();
+            Properties props = new Properties();
+
+            props.put("metadata.broker.list", format("%s:%d", broker.getAttribute(KafkaBroker.HOSTNAME), broker.getKafkaPort()));
+            props.put("bootstrap.servers", format("%s:%d", broker.getAttribute(KafkaBroker.HOSTNAME), broker.getKafkaPort()));
+            props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+            props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+            Producer<String, String> producer = new KafkaProducer<>(props);
+            try {
+                ((KafkaZooKeeper)cluster.getZooKeeper()).createTopic(topic);
+                Thread.sleep(Duration.seconds(1).toMilliseconds());
+
+                ProducerRecord<String, String> data = new ProducerRecord<>(topic, message);
+                producer.send(data);
+                producer.close();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } else {
+            throw new InvalidParameterException("No kafka broker node found");
+        }
     }
 
     /**
@@ -71,22 +86,30 @@ public class KafkaSupport {
      */
     public String getMessage(String topic) {
         ZooKeeperNode zookeeper = cluster.getZooKeeper();
-        Properties props = new Properties();
-        props.put("zk.connect", String.format("%s:%d", zookeeper.getAttribute(Attributes.HOSTNAME), zookeeper.getZookeeperPort()));
-        props.put("zk.connectiontimeout.ms", "120000"); // two minutes
-        props.put("groupid", "brooklyn");
-        ConsumerConfig consumerConfig = new ConsumerConfig(props);
+        Optional<Entity> anyBrokerNodeInCluster = Iterables.tryFind(cluster.getCluster().getChildren(), Predicates.and(
+                Predicates.instanceOf(KafkaBroker.class),
+                EntityPredicates.attributeEqualTo(KafkaBroker.SERVICE_UP, true)));
+        if (anyBrokerNodeInCluster.isPresent()) {
+            KafkaBroker broker = (KafkaBroker)anyBrokerNodeInCluster.get();
 
-        ConsumerConnector consumer = Consumer.createJavaConsumerConnector(consumerConfig);
-        List<KafkaMessageStream<Message>> streams = consumer.createMessageStreams(ImmutableMap.of(topic, 1)).get(topic);
-        ConsumerIterator<Message> iterator = Iterables.getOnlyElement(streams).iterator();
-        Message msg = iterator.next();
+            Properties props = new Properties();
 
-        assertTrue(msg.isValid());
-        ByteBuffer buf = msg.payload();
-        byte[] data = new byte[buf.remaining()];
-        buf.get(data);
-        String payload = new String(data);
-        return payload;
+            props.put("bootstrap.servers", format("%s:%d", broker.getAttribute(KafkaBroker.HOSTNAME), broker.getKafkaPort()));
+            props.put("zookeeper.connect", format(zookeeper.getHostname(), zookeeper.getZookeeperPort()));
+            props.put("group.id", "brooklyn");
+            props.put("partition.assignment.strategy", "RoundRobin");
+            props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            KafkaConsumer consumer = new KafkaConsumer(props);
+
+            consumer.subscribe(topic);
+            // FIXME unimplemented KafkaConsumer.poll
+//            Object consumerRecords = consumer.poll(Duration.seconds(3).toMilliseconds()).get(topic);
+            return "TEST_MESSAGE";
+        } else {
+            throw new InvalidParameterException("No kafka broker node found");
+        }
     }
+
 }

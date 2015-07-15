@@ -24,4 +24,5 @@ public interface KafkaZooKeeperDriver extends JavaSoftwareProcessDriver {
 
     Integer getZookeeperPort();
 
+    void createTopic(String topic);
 }

@@ -68,13 +68,6 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     @Override
     public ZooKeeperNode getZookeeper() { return getConfig(ZOOKEEPER); }
 
-    public KafkaTopic createTopic(Map<?, ?> properties) {
-        KafkaTopic result = addChild(EntitySpec.create(KafkaTopic.class).configure(properties));
-        Entities.manage(result);
-        result.create();
-        return result;
-    }
-
     @Override
     public Class<?> getDriverInterface() {
         return KafkaBrokerDriver.class;
