@@ -16,8 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.demo;
+package org.apache.brooklyn.demo;
 
+import org.apache.brooklyn.demo.WebClusterDatabaseExampleApp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
