@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.demo;
+package org.apache.brooklyn.demo;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.nosql.couchdb.CouchDBCluster;
+import brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
+import brooklyn.entity.nosql.mongodb.MongoDBServer;
 import brooklyn.entity.proxying.EntitySpec;
 
-/** CouchDB cluster. */
-public class SimpleCouchDBCluster extends ApplicationBuilder {
+public class SimpleMongoDBReplicaSet extends ApplicationBuilder {
 
-    /** Create entities. */
     protected void doBuild() {
-        addChild(EntitySpec.create(CouchDBCluster.class)
-                .configure("initialSize", "2")
-                .configure("clusterName", "Brooklyn")
-                .configure("httpPort", "8000+"));
+        addChild(EntitySpec.create(MongoDBReplicaSet.class)
+            .configure("name", "Simple MongoDB replica set")
+            .configure("initialSize", 3)
+            .configure("replicaSetName", "simple-replica-set")
+            .configure("memberSpec", EntitySpec.create(MongoDBServer.class)
+                    .configure("mongodbConfTemplateUrl", "classpath:///mongodb.conf")
+                    .configure("enableRestInterface", true)
+                    .configure("port", "27017+")));
     }
 
 }
