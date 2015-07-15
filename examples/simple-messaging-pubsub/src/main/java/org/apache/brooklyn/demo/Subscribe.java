@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.demo;
+package org.apache.brooklyn.demo;
 
 import javax.jms.Connection;
 import javax.jms.MessageConsumer;
