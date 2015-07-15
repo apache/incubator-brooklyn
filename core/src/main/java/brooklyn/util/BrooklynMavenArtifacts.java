@@ -35,7 +35,7 @@ public class BrooklynMavenArtifacts {
 
     public static MavenArtifact artifact(String subgroupUnderIoBrooklyn, String artifactId, String packaging, String classifier) {
         return new MavenArtifact(
-                Strings.isEmpty(subgroupUnderIoBrooklyn) ? "io.brooklyn" : "io.brooklyn."+subgroupUnderIoBrooklyn,
+                Strings.isEmpty(subgroupUnderIoBrooklyn) ? "org.apache.brooklyn" : "org.apache.brooklyn."+subgroupUnderIoBrooklyn,
                 artifactId, packaging, classifier, BrooklynVersion.get());
     }
 

@@ -181,7 +181,6 @@ import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
-import com.google.common.reflect.TypeToken;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -233,6 +232,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     @Override
+    @Deprecated
     public JcloudsLocation configure(Map<?,?> properties) {
         super.configure(properties);
 
@@ -255,7 +255,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (maxConcurrent == null || maxConcurrent < 1) {
                 throw new IllegalStateException(MAX_CONCURRENT_MACHINE_CREATIONS.getName() + " must be >= 1, but was "+maxConcurrent);
             }
-            setConfig(MACHINE_CREATION_SEMAPHORE, new Semaphore(maxConcurrent, true));
+            config().set(MACHINE_CREATION_SEMAPHORE, new Semaphore(maxConcurrent, true));
         }
         return this;
     }
@@ -441,7 +441,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     public void setDefaultImageId(String val) {
-        setConfig(DEFAULT_IMAGE_ID, val);
+        config().set(DEFAULT_IMAGE_ID, val);
     }
 
     // TODO remove tagMapping, or promote it
@@ -454,6 +454,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     // TODO Decide on semantics. If I give "TomcatServer" and "Ubuntu", then must I get back an image that matches both?
     // Currently, just takes first match that it finds...
+    @Override
     public Map<String,Object> getProvisioningFlags(Collection<String> tags) {
         Map<String,Object> result = Maps.newLinkedHashMap();
         Collection<String> unmatchedTags = Lists.newArrayList();
@@ -542,6 +543,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             node);
     }
 
+    @Override
     public MachineMetadata getMachineMetadata(MachineLocation l) {
         if (l instanceof JcloudsSshMachineLocation) {
             return getMachineMetadata( ((JcloudsSshMachineLocation)l).node );
@@ -586,6 +588,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * as well as ACCESS_IDENTITY and ACCESS_CREDENTIAL,
      * plus any further properties to specify e.g. images, hardware profiles, accessing user
      * (for initial login, and a user potentially to create for subsequent ie normal access) */
+    @Override
     public MachineLocation obtain(Map<?,?> flags) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(config().getBag(), flags);
         Integer attempts = setup.get(MACHINE_CREATE_ATTEMPTS);
@@ -1292,7 +1295,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     if (optionsMap.isEmpty()) return;
 
                     Class<? extends TemplateOptions> clazz = options.getClass();
-                    Iterable<Method> methods = Arrays.asList(clazz.getMethods());
                     for(final Map.Entry<String, Object> option : optionsMap.entrySet()) {
                         Maybe<?> result = MethodCoercions.tryFindAndInvokeBestMatchingMethod(options, option.getKey(), option.getValue());
                         if(result.isAbsent()) {
@@ -2537,7 +2539,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                             return inferredHostAndPort.getHostText();
                         } else {
                             LOG.warn("Error querying aws-ec2 instance "+node.getId()+"@"+node.getLocation()+" over ssh for its hostname; falling back to jclouds metadata for address", e);
-                        }                            
+                        }
                     }
                 }
             }
@@ -2547,12 +2549,18 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     private String getPublicHostnameGeneric(NodeMetadata node, @Nullable ConfigBag setup) {
-        //prefer the public address to the hostname because hostname is sometimes wrong/abbreviated
-        //(see that javadoc; also e.g. on rackspace, the hostname lacks the domain)
+        // JcloudsUtil.getFirstReachableAddress() already succeeded so at least one of the provided
+        // public and private IPs is reachable. Prefer the public IP. Don't use hostname as a fallback
+        // from the public address - if public address is missing why would hostname resolve to a 
+        // public IP? It is sometimes wrong/abbreviated, resolving to the wrong IP, also e.g. on
+        // rackspace, the hostname lacks the domain.
+        //
+        // TODO Some of the private addresses might not be reachable, should check connectivity before
+        // making a choice.
+        // TODO Choose an IP once and stick to it - multiple places call JcloudsUtil.getFirstReachableAddress(),
+        // could even get different IP on each call.
         if (groovyTruth(node.getPublicAddresses())) {
             return node.getPublicAddresses().iterator().next();
-        } else if (groovyTruth(node.getHostname())) {
-            return node.getHostname();
         } else if (groovyTruth(node.getPrivateAddresses())) {
             return node.getPrivateAddresses().iterator().next();
         } else {
