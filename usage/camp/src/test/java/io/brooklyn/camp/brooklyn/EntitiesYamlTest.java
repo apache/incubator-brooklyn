@@ -171,6 +171,23 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertNull(dynamicConfNameValue);
     }
 
+    @Test
+    public void testExplicitFlags() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
+            "  brooklyn.flags:",
+            "    confName: Foo Bar");
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
+    @Test
+    public void testUndeclaredExplicitFlagsIgnored() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
+            "  brooklyn.flags:",
+            "    test.dynamic.confName: Foo Bar");
+        String dynamicConfNameValue = testEntity.getConfig(ConfigKeys.newStringConfigKey("test.dynamic.confName"));
+        Assert.assertNull(dynamicConfNameValue);
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     public void testEmptyConfig() throws Exception {
@@ -615,6 +632,27 @@ public class EntitiesYamlTest extends AbstractYamlTest {
                 "     $brooklyn:entitySpec:\n"+
                 "       type: brooklyn.test.entity.TestEntity\n"+
                 "       confName: inchildspec\n";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        
+        TestEntity child = (TestEntity) entity.createAndManageChildFromConfig();
+        assertEquals(child.getConfig(TestEntity.CONF_NAME), "inchildspec");
+    }
+
+    @Test
+    public void testEntitySpecExplicitFlags() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n"+
+                "  brooklyn.flags:\n"+
+                "    confName: inParent\n"+
+                "  brooklyn.config:\n"+
+                "   test.childSpec:\n"+
+                "     $brooklyn:entitySpec:\n"+
+                "       type: brooklyn.test.entity.TestEntity\n"+
+                "       brooklyn.flags:\n"+
+                "         confName: inchildspec\n";
         
         Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
         TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());

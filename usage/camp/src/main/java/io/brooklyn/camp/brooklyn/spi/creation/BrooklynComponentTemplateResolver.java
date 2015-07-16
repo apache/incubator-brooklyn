@@ -348,11 +348,17 @@ public class BrooklynComponentTemplateResolver {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void configureEntityConfig(EntitySpec<?> spec) {
-        ConfigBag bag = ConfigBag.newInstance((Map<Object, Object>) attrs.getStringKey("brooklyn.config"));
-
         // first take *recognised* flags and config keys from the top-level, and put them in the bag (of brooklyn.config)
-        // (for component templates this will have been done already by BrooklynEntityMatcher, but for specs it is needed here)
+        // attrs will contain only brooklyn.xxx properties when coming from BrooklynEntityMatcher.
+        // Any top-level flags will go into "brooklyn.flags". When resolving a spec from $brooklyn:entitySpec
+        // top level flags remain in place. Have to support both cases.
+
+        ConfigBag bag = ConfigBag.newInstance((Map<Object, Object>) attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_CONFIG));
         ConfigBag bagFlags = ConfigBag.newInstanceCopying(attrs);
+        if (attrs.containsKey(BrooklynCampReservedKeys.BROOKLYN_FLAGS)) {
+            bagFlags.putAll((Map<String, Object>) attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_FLAGS));
+        }
+
         List<FlagConfigKeyAndValueRecord> topLevelApparentConfig = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bagFlags);
         for (FlagConfigKeyAndValueRecord r: topLevelApparentConfig) {
             if (r.getConfigKeyMaybeValue().isPresent())

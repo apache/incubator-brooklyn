@@ -38,6 +38,7 @@ import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.management.osgi.OsgiTestResources;
 import brooklyn.test.TestResourceUnavailableException;
+import brooklyn.test.entity.TestEntity;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
@@ -609,7 +610,54 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             assertTrue(e.toString().contains("recursive"), "Unexpected error message: "+e);
         }
     }
+
+    @Test
+    public void testConfigAppliedToCatalogItem() throws Exception {
+        addTestEntityCatalogItem();
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  brooklyn.config:",
+                "    test.confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
+
+    @Test
+    public void testFlagsAppliesToCatalogItem() throws Exception {
+        addTestEntityCatalogItem();
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
+
+    @Test
+    public void testExplicitFlagsAppliesToCatalogItem() throws Exception {
+        addTestEntityCatalogItem();
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  brooklyn.flags:",
+                "    confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
     
+    private void addTestEntityCatalogItem() {
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "   id: test",
+                "   version: " + TEST_VERSION,
+                "services:",
+                "- type: " + TestEntity.class.getName());
+    }
+
     private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {
         addCatalogOSGiEntity(symbolicName, serviceType);
         String yaml = "name: simple-app-yaml\n" +

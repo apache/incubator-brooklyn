@@ -19,6 +19,7 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import io.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate.Builder;
 import io.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
@@ -32,15 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
-import brooklyn.entity.Entity;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 
@@ -131,37 +127,28 @@ public class BrooklynEntityMatcher implements PdpMatcher {
         if (locations!=null)
             builder.customAttribute("locations", locations);
 
-        MutableMap<Object, Object> brooklynConfig = MutableMap.of();
-        Object origBrooklynConfig = attrs.remove("brooklyn.config");
-        if (origBrooklynConfig!=null) {
-            if (!(origBrooklynConfig instanceof Map))
-                throw new IllegalArgumentException("brooklyn.config must be a map of brooklyn config keys");
-            brooklynConfig.putAll((Map<?,?>)origBrooklynConfig);
+        MutableMap<Object, Object> brooklynFlags = MutableMap.of();
+        Object origBrooklynFlags = attrs.remove(BrooklynCampReservedKeys.BROOKLYN_FLAGS);
+        if (origBrooklynFlags!=null) {
+            if (!(origBrooklynFlags instanceof Map))
+                throw new IllegalArgumentException("brooklyn.flags must be a map of brooklyn flags");
+            brooklynFlags.putAll((Map<?,?>)origBrooklynFlags);
         }
-        // also take *recognised* flags and config keys from the top-level, and put them under config
-        List<FlagConfigKeyAndValueRecord> topLevelApparentConfig = extractValidConfigFlagsOrKeys(type, attrs, true);
-        if (topLevelApparentConfig!=null) for (FlagConfigKeyAndValueRecord r: topLevelApparentConfig) {
-            if (r.getConfigKeyMaybeValue().isPresent())
-                brooklynConfig.put(r.getConfigKey(), r.getConfigKeyMaybeValue().get());
-            if (r.getFlagMaybeValue().isPresent())
-                brooklynConfig.put(r.getFlagName(), r.getFlagMaybeValue().get());
-        }
-        // (any other brooklyn config goes here)
-        if (!brooklynConfig.isEmpty())
-            builder.customAttribute("brooklyn.config", brooklynConfig);
 
-        addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.policies");
-        addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.enrichers");
-        addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.initializers");
-        addCustomListAttributeIfNonNull(builder, attrs, "brooklyn.children");
-        addCustomMapAttributeIfNonNull(builder, attrs, "brooklyn.catalog");
+        addCustomMapAttributeIfNonNull(builder, attrs, BrooklynCampReservedKeys.BROOKLYN_CONFIG);
+        addCustomListAttributeIfNonNull(builder, attrs, BrooklynCampReservedKeys.BROOKLYN_POLICIES);
+        addCustomListAttributeIfNonNull(builder, attrs, BrooklynCampReservedKeys.BROOKLYN_ENRICHERS);
+        addCustomListAttributeIfNonNull(builder, attrs, BrooklynCampReservedKeys.BROOKLYN_INITIALIZERS);
+        addCustomListAttributeIfNonNull(builder, attrs, BrooklynCampReservedKeys.BROOKLYN_CHILDREN);
+        addCustomMapAttributeIfNonNull(builder, attrs, BrooklynCampReservedKeys.BROOKLYN_CATALOG);
 
-        if (!attrs.isEmpty()) {
-            log.warn("Ignoring PDP attributes on "+deploymentPlanItem+": "+attrs);
+        brooklynFlags.putAll(attrs);
+        if (!brooklynFlags.isEmpty()) {
+            builder.customAttribute(BrooklynCampReservedKeys.BROOKLYN_FLAGS, brooklynFlags);
         }
-        
+
         atc.add(builder.build());
-        
+
         return true;
     }
 
@@ -200,41 +187,6 @@ public class BrooklynEntityMatcher implements PdpMatcher {
             } else {
                 throw new IllegalArgumentException(key + " must be a map, is: " + items.getClass().getName());
             }
-        }
-    }
-
-    /** finds flags and keys on the given typeName which are present in the given map;
-     * returns those (using the config key name), and removes them from attrs
-     */
-    protected List<FlagConfigKeyAndValueRecord> extractValidConfigFlagsOrKeys(String typeName, Map<String, Object> attrs, boolean removeIfFound) {
-        if (attrs==null || attrs.isEmpty())
-            return null;
-        try {
-            // TODO don't use the mgmt loader, but instead use something like catalog.createSpec
-            // currently we get warnings and are unable to retrieve flags for items which come from catalog 
-            Class<? extends Entity> type = BrooklynComponentTemplateResolver.Factory.newInstance(JavaBrooklynClassLoadingContext.create(mgmt), typeName).loadEntityClass();
-            ConfigBag bag = ConfigBag.newInstance(attrs);
-            List<FlagConfigKeyAndValueRecord> values = FlagUtils.findAllFlagsAndConfigKeys(null, type, bag);
-            
-            if (removeIfFound) {
-                // remove from attrs
-                MutableMap<String, Object> used = MutableMap.copyOf(bag.getAllConfig());
-                for (String unusedKey: bag.getUnusedConfig().keySet())
-                    used.remove(unusedKey);
-                for (String usedKey: used.keySet())
-                    attrs.remove(usedKey);
-            }
-            
-            return values;
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            if (e.toString().contains("Could not find")) {
-                // normal for catalog items, there will be no java type
-                log.debug("Ignoring configuration attributes on "+typeName+", details: "+e);
-            } else {
-                log.warn("Ignoring configuration attributes on "+typeName+" due to "+e, e);
-            }
-            return null;
         }
     }
 
