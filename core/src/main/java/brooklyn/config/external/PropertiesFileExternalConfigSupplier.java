@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 
+import brooklyn.management.ManagementContext;
 import brooklyn.util.stream.Streams;
 
 
@@ -42,8 +43,8 @@ public class PropertiesFileExternalConfigSupplier extends AbstractExternalConfig
 
     private final Properties properties;
 
-    public PropertiesFileExternalConfigSupplier(String name, Map<?, ?> config) throws IOException {
-        super(name);
+    public PropertiesFileExternalConfigSupplier(ManagementContext managementContext, String name, Map<?, ?> config) throws IOException {
+        super(managementContext, name);
         this.properties = loadProperties((String) config.get(PROPERTIES_URL));
     }
 

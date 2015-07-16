@@ -18,16 +18,24 @@
  */
 package brooklyn.config.external;
 
+import brooklyn.management.ManagementContext;
+
 
 /**
  * Default superclass for all {@link ExternalConfigSupplier} implementations.
  */
 abstract public class AbstractExternalConfigSupplier implements ExternalConfigSupplier {
 
+    private final ManagementContext managementContext;
     private final String name;
 
-    protected AbstractExternalConfigSupplier(String name) {
+    protected AbstractExternalConfigSupplier(ManagementContext managementContext, String name) {
+        this.managementContext = managementContext;
         this.name = name;
+    }
+
+    public ManagementContext getManagementContext() {
+        return managementContext;
     }
 
     public String getName() {

@@ -20,6 +20,8 @@ package brooklyn.config.external;
 
 import java.util.Map;
 
+import brooklyn.management.ManagementContext;
+
 
 /**
  * Instances are populated via sub-keys specified directly in the <tt>brooklyn.properties</tt> file:
@@ -37,8 +39,8 @@ public class InPlaceExternalConfigSupplier extends AbstractExternalConfigSupplie
 
     private final Map<?,?> config;
 
-    public InPlaceExternalConfigSupplier(String name, Map<?, ?> config) {
-        super(name);
+    public InPlaceExternalConfigSupplier(ManagementContext managementContext, String name, Map<?, ?> config) {
+        super(managementContext, name);
         this.config = config;
     }
 
