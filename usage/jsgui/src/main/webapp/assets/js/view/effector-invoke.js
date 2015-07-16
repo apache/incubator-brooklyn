@@ -71,6 +71,9 @@ define([
                 // select the body of the table we just rendered and append params
                 var $tbody = this.$("tbody")
                 _(params).each(function (param) {
+                    // TODO: this should be another view whose implementation is specific to
+                    // the type of the parameter (i.e. text, dates, checkboxes etc. can all
+                    // be handled separately).
                     $tbody.append(that.effectorParam({
                         name:param.name,
                         type:param.type,
@@ -112,19 +115,26 @@ define([
         },
 
         extractParamsFromTable:function () {
-            var parameters = {}
-            
+            var parameters = {};
+
             // iterate over the rows
+            // TODO: this should be generic alongside the rendering of parameters.
             this.$(".effector-param").each(function (index) {
                 var key = $(this).find(".param-name").text();
-                var value = $(this).find(".param-value").attr('id') == 'selector-container' ? 
-                        $(this).find(".param-value option:selected").attr("value") : 
-                        $(this).find(".param-value").val();
+                var valElement = $(this).find(".param-value");
+                var value;
+                if (valElement.attr('id') == 'selector-container') {
+                    value = $(this).find(".param-value option:selected").attr("value")
+                } else if (valElement.is(":checkbox")) {
+                    value = ("checked" == valElement.attr("checked")) ? "true" : "false";
+                } else {
+                    value = valElement.val();
+                }
                 //treat empty field as null value
                 if (value !== '') {
                     parameters[key] = value;
                 }
-            })
+            });
             return parameters
         },
 

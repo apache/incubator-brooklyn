@@ -32,10 +32,12 @@ define([
     locationsFixture.url = 'fixtures/location-list.json'
     locationsFixture.fetch()
 
+    const effector = collection.at(0);
+
     var modalView = new EffectorInvokeView({
         tagName:"div",
         className:"modal",
-        model:collection.at(0),
+        model: effector,
         entity:entityFixture.at(0),
         locations: locationsFixture
     })
@@ -43,10 +45,6 @@ define([
     describe("view/effector-invoke", function () {
         // render and keep the reference to the view
         modalView.render()
-
-        // Select the third item in the option list rather than the "None" and
-        // horizontal bar placeholders.
-        modalView.$(".select-location option:eq(2)").attr("selected", "selected");
 
         it("must render a bootstrap modal", function () {
             expect(modalView.$(".modal-header").length).toBe(1)
@@ -61,19 +59,24 @@ define([
         })
 
         it("must have the list of parameters in body", function () {
-            expect(modalView.$(".modal-body table").length).toBe(1)
-            expect(modalView.$(".modal-body tr").length).toBe(2) // one tr from the head
-            expect(modalView.$(".modal-body .param-name").html()).toBe("locations")
-        })
-        it("must have two buttons in the footer", function () {
-            expect(modalView.$(".modal-footer button").length).toBe(2)
-            expect(modalView.$(".modal-footer button.invoke-effector").length).toBe(1)
-        })
+            expect(modalView.$(".modal-body table").length).toBe(1);
+            // +1 because one <tr> from table head
+            expect(modalView.$(".modal-body tr").length).toBe(effector.get("parameters").length + 1)
+        });
 
         it("must properly extract parameters from table", function () {
-            var params = modalView.extractParamsFromTable()
+            // Select the third item in the option list rather than the "None" and
+            // horizontal bar placeholders.
+            window.m = modalView;
+            modalView.$(".select-location option:eq(2)").attr("selected", "selected");
+
+            var params = modalView.extractParamsFromTable();
+            console.log(params);
             expect(params["locations"]).toBe("123")
-            expect(params).toEqual({"locations": "123"})
-        })
+            expect(params).toEqual({
+                "locations": "123",
+                "booleanValue": "true"
+            });
+        });
     })
 })
