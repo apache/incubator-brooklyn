@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.rest.client;
+package org.apache.brooklyn.rest.client;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -62,7 +62,7 @@ import brooklyn.rest.api.ServerApi;
 import brooklyn.rest.api.UsageApi;
 import brooklyn.rest.api.VersionApi;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.http.BuiltResponsePreservingError;
+import org.apache.brooklyn.util.http.BuiltResponsePreservingError;
 
 import com.wordnik.swagger.core.ApiOperation;
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.rest.client;
+package org.apache.brooklyn.rest.client;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;

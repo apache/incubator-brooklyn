@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.http;
+package org.apache.brooklyn.util.http;
 
 import java.lang.annotation.Annotation;
 
