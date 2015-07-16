@@ -29,7 +29,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.messaging.storm.StormDeployment;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;

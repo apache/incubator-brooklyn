@@ -41,7 +41,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.CommandLineUtil;
