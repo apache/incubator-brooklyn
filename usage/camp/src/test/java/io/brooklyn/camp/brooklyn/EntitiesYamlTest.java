@@ -156,6 +156,16 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testFlagAtRootEntityImpl() throws Exception {
+        Entity app = createAndStartApplication(
+                "services:",
+                "- serviceType: " + TestEntityImpl.class.getName(),
+                "  confName: Foo Bar");
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
+    @Test
     public void testConfigKeyAtRoot() throws Exception {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  test.confName: Foo Bar");
@@ -176,6 +186,17 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  brooklyn.flags:",
             "    confName: Foo Bar");
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
+    @Test
+    public void testExplicitFlagsEntityImpl() throws Exception {
+        Entity app = createAndStartApplication(
+                "services:",
+                "- serviceType: " + TestEntityImpl.class.getName(),
+                "  brooklyn.flags:",
+                "    confName: Foo Bar");
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
         Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
     }
 

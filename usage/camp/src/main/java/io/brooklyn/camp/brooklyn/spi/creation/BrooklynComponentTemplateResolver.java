@@ -27,6 +27,7 @@ import io.brooklyn.camp.spi.ApplicationComponentTemplate;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -359,7 +360,7 @@ public class BrooklynComponentTemplateResolver {
             bagFlags.putAll((Map<String, Object>) attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_FLAGS));
         }
 
-        List<FlagConfigKeyAndValueRecord> topLevelApparentConfig = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bagFlags);
+        Collection<FlagConfigKeyAndValueRecord> topLevelApparentConfig = findAllFlagsAndConfigKeys(spec, bagFlags);
         for (FlagConfigKeyAndValueRecord r: topLevelApparentConfig) {
             if (r.getConfigKeyMaybeValue().isPresent())
                 bag.putIfAbsent((ConfigKey)r.getConfigKey(), r.getConfigKeyMaybeValue().get());
@@ -368,7 +369,7 @@ public class BrooklynComponentTemplateResolver {
         }
 
         // now set configuration for all the items in the bag
-        List<FlagConfigKeyAndValueRecord> records = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bag);
+        Collection<FlagConfigKeyAndValueRecord> records = findAllFlagsAndConfigKeys(spec, bag);
         Set<String> keyNamesUsed = new LinkedHashSet<String>();
         for (FlagConfigKeyAndValueRecord r: records) {
             if (r.getFlagMaybeValue().isPresent()) {
@@ -394,6 +395,21 @@ public class BrooklynComponentTemplateResolver {
                 spec.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), transformed);
             }
         }
+    }
+
+    /**
+     * Searches for config keys in the type, additional interfaces and the implementation (if specified)
+     */
+    private Collection<FlagConfigKeyAndValueRecord> findAllFlagsAndConfigKeys(EntitySpec<?> spec, ConfigBag bagFlags) {
+        Set<FlagConfigKeyAndValueRecord> allKeys = MutableSet.of();
+        allKeys.addAll(FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bagFlags));
+        if (spec.getImplementation() != null) {
+            allKeys.addAll(FlagUtils.findAllFlagsAndConfigKeys(null, spec.getImplementation(), bagFlags));
+        }
+        for (Class<?> iface : spec.getAdditionalInterfaces()) {
+            allKeys.addAll(FlagUtils.findAllFlagsAndConfigKeys(null, iface, bagFlags));
+        }
+        return allKeys;
     }
 
     protected static class SpecialFlagsTransformer implements Function<Object, Object> {

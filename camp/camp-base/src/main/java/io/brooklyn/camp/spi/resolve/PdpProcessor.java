@@ -39,6 +39,7 @@ import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.yaml.snakeyaml.error.YAMLException;
 
+import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.yaml.Yamls;
@@ -104,8 +105,17 @@ public class PdpProcessor {
         }
 
         Map<String, Object> attrs = plan.getCustomAttributes();
-        if (attrs!=null && !attrs.isEmpty())
-            atc.addCustomAttributes(attrs);
+        if (attrs!=null && !attrs.isEmpty()) {
+            Map<String, Object> customAttrs = attrs;
+            if (customAttrs.containsKey("id")) {
+                // id shouldn't be leaking to entities, see InternalEntityFactory.createEntityAndDescendantsUninitialized.
+                // If set it will go through to the spec because AbstractBrooklynObject has @SetFromFlag("id") on the id property.
+                // Follows logic in BrooklynEntityMatcher.apply(...).
+                customAttrs = MutableMap.copyOf(attrs);
+                customAttrs.put("planId", customAttrs.remove("id"));
+            }
+            atc.addCustomAttributes(customAttrs);
+        }
         
         if (atc.getInstantiator()==null)
             // set a default instantiator which just invokes the component's instantiators

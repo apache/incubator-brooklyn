@@ -39,6 +39,7 @@ import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.management.osgi.OsgiTestResources;
 import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
@@ -613,7 +614,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testConfigAppliedToCatalogItem() throws Exception {
-        addTestEntityCatalogItem();
+        addCatalogOSGiEntity("test", TestEntity.class.getName());
         String testName = "test-applies-config-on-catalog-item";
         Entity app = createAndStartApplication(
                 "services:",
@@ -626,7 +627,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testFlagsAppliesToCatalogItem() throws Exception {
-        addTestEntityCatalogItem();
+        addCatalogOSGiEntity("test", TestEntity.class.getName());
         String testName = "test-applies-config-on-catalog-item";
         Entity app = createAndStartApplication(
                 "services:",
@@ -638,7 +639,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testExplicitFlagsAppliesToCatalogItem() throws Exception {
-        addTestEntityCatalogItem();
+        addCatalogOSGiEntity("test", TestEntity.class.getName());
         String testName = "test-applies-config-on-catalog-item";
         Entity app = createAndStartApplication(
                 "services:",
@@ -649,15 +650,45 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
     }
     
-    private void addTestEntityCatalogItem() {
-        addCatalogItems(
-                "brooklyn.catalog:",
-                "   id: test",
-                "   version: " + TEST_VERSION,
+
+    @Test
+    public void testConfigAppliedToCatalogItemImpl() throws Exception {
+        addCatalogOSGiEntity("test", TestEntityImpl.class.getName());
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
                 "services:",
-                "- type: " + TestEntity.class.getName());
+                "- type: " + ver("test"),
+                "  brooklyn.config:",
+                "    test.confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
     }
 
+    @Test
+    public void testFlagsAppliesToCatalogItemImpl() throws Exception {
+        addCatalogOSGiEntity("test", TestEntityImpl.class.getName());
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
+
+    @Test
+    public void testExplicitFlagsAppliesToCatalogItemImpl() throws Exception {
+        addCatalogOSGiEntity("test", TestEntityImpl.class.getName());
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  brooklyn.flags:",
+                "    confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
+    
     private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {
         addCatalogOSGiEntity(symbolicName, serviceType);
         String yaml = "name: simple-app-yaml\n" +
