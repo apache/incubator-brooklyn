@@ -18,5 +18,5 @@
 #
 name: example-app-no-location
 services:
-- serviceType: brooklyn.cli.CliTest$ExampleEntity
+- serviceType: org.apache.brooklyn.cli.CliTest$ExampleEntity
   name: Example app

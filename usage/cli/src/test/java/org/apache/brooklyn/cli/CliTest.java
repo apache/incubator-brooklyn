@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.cli;
+package org.apache.brooklyn.cli;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -49,12 +49,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.cli.AbstractMain.BrooklynCommand;
-import brooklyn.cli.AbstractMain.BrooklynCommandCollectingArgs;
-import brooklyn.cli.AbstractMain.HelpCommand;
-import brooklyn.cli.Main.AppShutdownHandler;
-import brooklyn.cli.Main.GeneratePasswordCommand;
-import brooklyn.cli.Main.LaunchCommand;
+import org.apache.brooklyn.cli.AbstractMain.BrooklynCommand;
+import org.apache.brooklyn.cli.AbstractMain.BrooklynCommandCollectingArgs;
+import org.apache.brooklyn.cli.AbstractMain.HelpCommand;
+import org.apache.brooklyn.cli.Main.AppShutdownHandler;
+import org.apache.brooklyn.cli.Main.GeneratePasswordCommand;
+import org.apache.brooklyn.cli.Main.LaunchCommand;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;

@@ -83,7 +83,7 @@ REM start Brooklyn
 REM NO easy way to find process PID!!!
 pushd %BROOKLYN_HOME%
 
-"%JAVA_BIN%" %JAVA_OPTS% -cp "%INITIAL_CLASSPATH%" brooklyn.cli.Main %*
+"%JAVA_BIN%" %JAVA_OPTS% -cp "%INITIAL_CLASSPATH%" org.apache.brooklyn.cli.Main %*
 
 popd
 

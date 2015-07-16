@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.cli;
+package org.apache.brooklyn.cli;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -33,7 +33,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.cli.AbstractMain.BrooklynCommand;
+import org.apache.brooklyn.cli.AbstractMain.BrooklynCommand;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;

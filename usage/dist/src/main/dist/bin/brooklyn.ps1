@@ -120,7 +120,7 @@ $javaargs += "-cp"
 $javaargs += "`"$($INITIAL_CLASSPATH)`""
 
 # main class
-$javaargs += "brooklyn.cli.Main"
+$javaargs += "org.apache.brooklyn.cli.Main"
 
 # copy in the arguments that were given to this script
 $javaargs += $args
