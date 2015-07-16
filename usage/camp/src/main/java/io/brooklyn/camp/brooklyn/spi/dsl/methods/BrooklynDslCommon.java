@@ -18,6 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn.spi.dsl.methods;
 
+import io.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator;
 import io.brooklyn.camp.brooklyn.spi.creation.EntitySpecConfiguration;
 import io.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
@@ -144,7 +145,7 @@ public class BrooklynDslCommon {
         ConfigBag config = ConfigBag.newInstance(arguments);
         String typeName = BrooklynYamlTypeInstantiator.InstantiatorFromKey.extractTypeName("object", config).orNull();
         Map<String,Object> objectFields = (Map<String, Object>) config.getStringKeyMaybe("object.fields").or(MutableMap.of());
-        Map<String,Object> brooklynConfig = (Map<String, Object>) config.getStringKeyMaybe("brooklyn.config").or(MutableMap.of());
+        Map<String,Object> brooklynConfig = (Map<String, Object>) config.getStringKeyMaybe(BrooklynCampReservedKeys.BROOKLYN_CONFIG).or(MutableMap.of());
         try {
             // TODO Should use catalog's classloader, rather than Class.forName; how to get that? Should we return a future?!
             Class<?> type = Class.forName(typeName);

@@ -18,6 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn.spi.creation;
 
+import io.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
 
 import java.util.List;
@@ -98,7 +99,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
         
         @Override
         protected Object getDecorationAttributeJsonValue(ConfigBag attrs) {
-            return attrs.getStringKey("brooklyn.policies");
+            return attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_POLICIES);
         }
 
         @Override
@@ -144,7 +145,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
         
         @Override
         protected Object getDecorationAttributeJsonValue(ConfigBag attrs) {
-            return attrs.getStringKey("brooklyn.enrichers");
+            return attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_ENRICHERS);
         }
 
         @Override
@@ -167,7 +168,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
         
         @Override
         protected Object getDecorationAttributeJsonValue(ConfigBag attrs) {
-            return attrs.getStringKey("brooklyn.initializers");
+            return attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_INITIALIZERS);
         }
 
         @Override

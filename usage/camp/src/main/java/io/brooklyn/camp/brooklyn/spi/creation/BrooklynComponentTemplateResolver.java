@@ -19,6 +19,7 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import io.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import io.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
 import io.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
 import io.brooklyn.camp.spi.AbstractResource;
@@ -293,7 +294,7 @@ public class BrooklynComponentTemplateResolver {
         if (planId==null)
             planId = (String) attrs.getStringKey(BrooklynCampConstants.PLAN_ID_FLAG);
 
-        Object childrenObj = attrs.getStringKey("brooklyn.children");
+        Object childrenObj = attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_CHILDREN);
         if (childrenObj != null) {
             // Creating a new set of encounteredCatalogTypes means that this won't check things recursively;
             // but we are looking at children so we probably *should* be resetting the recursive list we've looked at;
@@ -462,7 +463,7 @@ public class BrooklynComponentTemplateResolver {
     @SuppressWarnings("unchecked")
     protected List<Map<String, Object>> getChildren(Map<String, Object> attrs) {
         if (attrs==null) return null;
-        return (List<Map<String, Object>>) attrs.get("brooklyn.children");
+        return (List<Map<String, Object>>) attrs.get(BrooklynCampReservedKeys.BROOKLYN_CHILDREN);
     }
 
 }
