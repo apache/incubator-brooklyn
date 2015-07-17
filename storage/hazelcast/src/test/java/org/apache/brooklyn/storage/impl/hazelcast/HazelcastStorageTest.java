@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.storage.impl.hazelcast;
+package org.apache.brooklyn.storage.impl.hazelcast;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -33,8 +33,8 @@ import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.internal.storage.Reference;
 import brooklyn.internal.storage.impl.BrooklynStorageImpl;
-import brooklyn.internal.storage.impl.hazelcast.HazelcastDataGrid;
-import brooklyn.internal.storage.impl.hazelcast.HazelcastDataGridFactory;
+import org.apache.brooklyn.internal.storage.impl.hazelcast.HazelcastDataGrid;
+import org.apache.brooklyn.internal.storage.impl.hazelcast.HazelcastDataGridFactory;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableList;
 
