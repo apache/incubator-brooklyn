@@ -105,7 +105,7 @@ public abstract class ShellAbstractTool implements ShellTool {
     public static <T> T getOptionalVal(Map<String,?> map, ConfigKey<T> keyC) {
         if (keyC==null) return null;
         String key = keyC.getName();
-        if (map!=null && map.containsKey(key)) {
+        if (map!=null && map.containsKey(key) && map.get(key) != null) {
             return TypeCoercions.coerce(map.get(key), keyC.getTypeToken());
         } else {
             return keyC.getDefaultValue();
@@ -115,7 +115,7 @@ public abstract class ShellAbstractTool implements ShellTool {
     /** returns the value of the key if specified, otherwise defaultValue */
     protected static <T> T getOptionalVal(Map<String,?> map, ConfigKey<T> keyC, T defaultValue) {
         String key = keyC.getName();
-        if (map.containsKey(key)) {
+        if (map!=null && map.containsKey(key) && map.get(key) != null) {
             return TypeCoercions.coerce(map.get(key), keyC.getTypeToken());
         } else {
             return defaultValue;
