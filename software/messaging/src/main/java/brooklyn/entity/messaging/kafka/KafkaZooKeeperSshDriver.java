@@ -22,9 +22,10 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
+
+import static brooklyn.util.text.StringEscapes.BashStringEscapes.escapeLiteralForDoubleQuotedBash;
 
 public class KafkaZooKeeperSshDriver extends AbstractfKafkaSshDriver implements KafkaZooKeeperDriver {
 
@@ -72,7 +73,10 @@ public class KafkaZooKeeperSshDriver extends AbstractfKafkaSshDriver implements 
         String zookeeperUrl = getEntity().getAttribute(Attributes.HOSTNAME) + ":" + getZookeeperPort();
         newScript(CUSTOMIZING)
                 .failOnNonZeroResultCode()
-                .body.append(String.format("./bin/%s  --create --zookeeper %s --replication-factor 1 --partitions 1 --topic %s", getTopicsScriptName(), zookeeperUrl, topic))
+                .body.append(String.format("./bin/%s  --create --zookeeper \"%s\" --replication-factor 1 --partitions 1 --topic \"%s\"",
+                                           getTopicsScriptName(),
+                                           escapeLiteralForDoubleQuotedBash(zookeeperUrl),
+                                           escapeLiteralForDoubleQuotedBash(topic)))
                 .execute();
     }
 }
