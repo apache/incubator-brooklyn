@@ -63,13 +63,17 @@ define([
                 type: "post",
                 data: JSON.stringify(config),
                 contentType: "application/json"
-            }).fail(function (response) {
-                var message = JSON.parse(response.responseText).message;
-                self.showError(message);
+            	success: function (response) {
+            	    if (_.isFunction(this.options.onSave)) {
+                        ajax.done(this.options.onSave);
+                    }
+                },
+                error: function (response) {
+                        var message = JSON.parse(response.responseText).message;
+                        self.showError(message);
+                }
             });
-            if (_.isFunction(this.options.onSave)) {
-                ajax.done(this.options.onSave);
-            }
+            
             return ajax;
         },
 
