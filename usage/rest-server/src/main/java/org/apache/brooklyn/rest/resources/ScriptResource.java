@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import brooklyn.rest.api.ScriptApi;
-import brooklyn.rest.domain.ScriptExecutionSummary;
+import org.apache.brooklyn.rest.api.ScriptApi;
+import org.apache.brooklyn.rest.domain.ScriptExecutionSummary;
 import brooklyn.util.stream.ThreadLocalPrintStream;
 import brooklyn.util.stream.ThreadLocalPrintStream.OutputCapturingContext;
 import groovy.lang.Binding;

@@ -31,7 +31,7 @@ import brooklyn.location.basic.BasicLocationDefinition;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContext;
-import brooklyn.rest.domain.LocationSummary;
+import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
@@ -49,11 +49,11 @@ public class LocationTransformer {
     
     /** @deprecated since 0.7.0 use method taking management context and detail specifier */
     @Deprecated
-    public static LocationSummary newInstance(String id, brooklyn.rest.domain.LocationSpec locationSpec) {
+    public static LocationSummary newInstance(String id, org.apache.brooklyn.rest.domain.LocationSpec locationSpec) {
         return newInstance(null, id, locationSpec, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
     }
     @SuppressWarnings("deprecation")
-    public static LocationSummary newInstance(ManagementContext mgmt, String id, brooklyn.rest.domain.LocationSpec locationSpec, LocationDetailLevel level) {
+    public static LocationSummary newInstance(ManagementContext mgmt, String id, org.apache.brooklyn.rest.domain.LocationSpec locationSpec, LocationDetailLevel level) {
         // TODO: Remove null checks on mgmt when newInstance(String, LocationSpec) is deleted
         Map<String, ?> config = locationSpec.getConfig();
         if (mgmt != null && (level==LocationDetailLevel.FULL_EXCLUDING_SECRET || level==LocationDetailLevel.FULL_INCLUDING_SECRET)) {

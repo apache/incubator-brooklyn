@@ -32,11 +32,11 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.EntitySpec;
-import brooklyn.rest.domain.EntitySummary;
-import brooklyn.rest.domain.SensorSummary;
+import org.apache.brooklyn.rest.domain.ApplicationSpec;
+import org.apache.brooklyn.rest.domain.ApplicationSummary;
+import org.apache.brooklyn.rest.domain.EntitySpec;
+import org.apache.brooklyn.rest.domain.EntitySummary;
+import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;

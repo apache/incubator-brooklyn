@@ -45,8 +45,8 @@ import com.sun.jersey.api.client.GenericType;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.rest.domain.CatalogLocationSummary;
-import brooklyn.rest.domain.LocationSummary;
+import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
+import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
 
@@ -68,7 +68,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
                 "credential", "CR3dential");
         ClientResponse response = client().resource("/v1/locations")
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, new brooklyn.rest.domain.LocationSpec(legacyLocationName, "aws-ec2:us-east-1", expectedConfig));
+                .post(ClientResponse.class, new org.apache.brooklyn.rest.domain.LocationSpec(legacyLocationName, "aws-ec2:us-east-1", expectedConfig));
 
         URI addedLegacyLocationUri = response.getLocation();
         log.info("added legacy, at: " + addedLegacyLocationUri);

@@ -26,8 +26,8 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
 import brooklyn.management.HasTaskChildren;
 import brooklyn.management.Task;
-import brooklyn.rest.api.ActivityApi;
-import brooklyn.rest.domain.TaskSummary;
+import org.apache.brooklyn.rest.api.ActivityApi;
+import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.transform.TaskTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 

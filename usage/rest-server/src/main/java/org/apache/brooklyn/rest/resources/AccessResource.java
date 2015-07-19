@@ -22,8 +22,8 @@ import javax.ws.rs.core.Response;
 
 import brooklyn.management.internal.AccessManager;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.rest.api.AccessApi;
-import brooklyn.rest.domain.AccessSummary;
+import org.apache.brooklyn.rest.api.AccessApi;
+import org.apache.brooklyn.rest.domain.AccessSummary;
 import org.apache.brooklyn.rest.transform.AccessTransformer;
 
 import com.google.common.annotations.Beta;

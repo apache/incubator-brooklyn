@@ -33,10 +33,10 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.EntitySpec;
-import brooklyn.rest.domain.PolicyConfigSummary;
-import brooklyn.rest.domain.PolicySummary;
+import org.apache.brooklyn.rest.domain.ApplicationSpec;
+import org.apache.brooklyn.rest.domain.EntitySpec;
+import org.apache.brooklyn.rest.domain.PolicyConfigSummary;
+import org.apache.brooklyn.rest.domain.PolicySummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimplePolicy;

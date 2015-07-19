@@ -62,8 +62,8 @@ import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.EntitySpec;
+import org.apache.brooklyn.rest.domain.ApplicationSpec;
+import org.apache.brooklyn.rest.domain.EntitySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
@@ -333,7 +333,7 @@ public class BrooklynRestResourceUtils {
     }
 
     @SuppressWarnings({ "unchecked", "deprecation" })
-    private brooklyn.entity.proxying.EntitySpec<? extends Entity> toCoreEntitySpec(brooklyn.rest.domain.EntitySpec spec) {
+    private brooklyn.entity.proxying.EntitySpec<? extends Entity> toCoreEntitySpec(org.apache.brooklyn.rest.domain.EntitySpec spec) {
         String type = spec.getType();
         String name = spec.getName();
         Map<String, String> config = (spec.getConfig() == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(spec.getConfig());

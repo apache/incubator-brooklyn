@@ -22,7 +22,7 @@ package org.apache.brooklyn.rest.transform;
 import com.google.common.base.Function;
 
 import brooklyn.BrooklynVersion.BrooklynFeature;
-import brooklyn.rest.domain.BrooklynFeatureSummary;
+import org.apache.brooklyn.rest.domain.BrooklynFeatureSummary;
 
 public class BrooklynFeatureTransformer {
 

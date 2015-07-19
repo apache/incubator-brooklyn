@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.rest.domain;
 
-import static brooklyn.rest.util.RestApiTestUtils.asJson;
-import static brooklyn.rest.util.RestApiTestUtils.fromJson;
-import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.asJson;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;
@@ -33,10 +33,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
-import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.EntitySpec;
-import brooklyn.rest.domain.Status;
 import brooklyn.test.entity.TestApplicationImpl;
 
 import com.google.common.collect.ImmutableMap;

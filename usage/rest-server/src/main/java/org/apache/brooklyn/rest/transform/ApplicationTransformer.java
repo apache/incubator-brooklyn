@@ -18,14 +18,14 @@
  */
 package org.apache.brooklyn.rest.transform;
 
-import static brooklyn.rest.domain.Status.ACCEPTED;
-import static brooklyn.rest.domain.Status.RUNNING;
-import static brooklyn.rest.domain.Status.STARTING;
-import static brooklyn.rest.domain.Status.STOPPED;
-import static brooklyn.rest.domain.Status.STOPPING;
-import static brooklyn.rest.domain.Status.UNKNOWN;
-import static brooklyn.rest.domain.Status.DESTROYED;
-import static brooklyn.rest.domain.Status.ERROR;
+import static org.apache.brooklyn.rest.domain.Status.ACCEPTED;
+import static org.apache.brooklyn.rest.domain.Status.RUNNING;
+import static org.apache.brooklyn.rest.domain.Status.STARTING;
+import static org.apache.brooklyn.rest.domain.Status.STOPPED;
+import static org.apache.brooklyn.rest.domain.Status.STOPPING;
+import static org.apache.brooklyn.rest.domain.Status.UNKNOWN;
+import static org.apache.brooklyn.rest.domain.Status.DESTROYED;
+import static org.apache.brooklyn.rest.domain.Status.ERROR;
 
 import java.net.URI;
 import java.util.Collection;
@@ -39,9 +39,9 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.rest.domain.ApplicationSpec;
-import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.Status;
+import org.apache.brooklyn.rest.domain.ApplicationSpec;
+import org.apache.brooklyn.rest.domain.ApplicationSummary;
+import org.apache.brooklyn.rest.domain.Status;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;

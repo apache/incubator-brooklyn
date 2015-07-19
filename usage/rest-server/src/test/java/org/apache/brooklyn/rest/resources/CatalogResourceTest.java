@@ -46,10 +46,10 @@ import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
-import brooklyn.rest.domain.CatalogEntitySummary;
-import brooklyn.rest.domain.CatalogItemSummary;
-import brooklyn.rest.domain.CatalogLocationSummary;
-import brooklyn.rest.domain.CatalogPolicySummary;
+import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
+import org.apache.brooklyn.rest.domain.CatalogItemSummary;
+import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
+import org.apache.brooklyn.rest.domain.CatalogPolicySummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 

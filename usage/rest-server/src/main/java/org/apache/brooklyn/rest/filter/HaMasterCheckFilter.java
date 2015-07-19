@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
-import brooklyn.rest.domain.ApiError;
+import org.apache.brooklyn.rest.domain.ApiError;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.text.Strings;
 

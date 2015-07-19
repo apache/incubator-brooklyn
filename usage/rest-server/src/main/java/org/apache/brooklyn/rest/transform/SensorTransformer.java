@@ -27,7 +27,7 @@ import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
-import brooklyn.rest.domain.SensorSummary;
+import org.apache.brooklyn.rest.domain.SensorSummary;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.URLParamEncoder;

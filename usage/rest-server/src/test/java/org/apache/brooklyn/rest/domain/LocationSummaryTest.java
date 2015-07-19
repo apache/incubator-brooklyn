@@ -18,11 +18,9 @@
  */
 package org.apache.brooklyn.rest.domain;
 
-import brooklyn.rest.domain.LocationSpec;
-import brooklyn.rest.domain.LocationSummary;
-import static brooklyn.rest.util.RestApiTestUtils.asJson;
-import static brooklyn.rest.util.RestApiTestUtils.fromJson;
-import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.asJson;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;

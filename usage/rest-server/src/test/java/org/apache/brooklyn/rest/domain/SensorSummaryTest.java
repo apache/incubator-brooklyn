@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.rest.domain;
 
-import static brooklyn.rest.util.RestApiTestUtils.asJson;
-import static brooklyn.rest.util.RestApiTestUtils.fromJson;
-import static brooklyn.rest.util.RestApiTestUtils.jsonFixture;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.asJson;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
 
 import java.io.IOException;
@@ -37,7 +37,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.management.ManagementContext;
-import brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.transform.SensorTransformer;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;

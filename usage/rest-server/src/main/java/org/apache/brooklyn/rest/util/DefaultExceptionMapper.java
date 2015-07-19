@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.error.YAMLException;
 
 import brooklyn.management.entitlement.Entitlements;
-import brooklyn.rest.domain.ApiError;
-import brooklyn.rest.domain.ApiError.Builder;
+import org.apache.brooklyn.rest.domain.ApiError;
+import org.apache.brooklyn.rest.domain.ApiError.Builder;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.UserFacingException;

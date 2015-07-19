@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
-import brooklyn.rest.domain.ScriptExecutionSummary;
+import org.apache.brooklyn.rest.domain.ScriptExecutionSummary;
 import org.apache.brooklyn.rest.testing.mocks.RestMockApp;
 
 public class ScriptResourceTest {

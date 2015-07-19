@@ -26,9 +26,9 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.policy.Policy;
 import brooklyn.policy.basic.Policies;
-import brooklyn.rest.domain.ApplicationSummary;
-import brooklyn.rest.domain.PolicyConfigSummary;
-import brooklyn.rest.domain.PolicySummary;
+import org.apache.brooklyn.rest.domain.ApplicationSummary;
+import org.apache.brooklyn.rest.domain.PolicyConfigSummary;
+import org.apache.brooklyn.rest.domain.PolicySummary;
 import org.apache.brooklyn.rest.resources.PolicyConfigResource;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 

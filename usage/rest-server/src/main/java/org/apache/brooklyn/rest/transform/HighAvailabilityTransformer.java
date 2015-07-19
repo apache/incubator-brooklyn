@@ -23,8 +23,8 @@ import java.util.Map;
 
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementNodeSyncRecord;
-import brooklyn.rest.domain.HighAvailabilitySummary;
-import brooklyn.rest.domain.HighAvailabilitySummary.HaNodeSummary;
+import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
+import org.apache.brooklyn.rest.domain.HighAvailabilitySummary.HaNodeSummary;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
