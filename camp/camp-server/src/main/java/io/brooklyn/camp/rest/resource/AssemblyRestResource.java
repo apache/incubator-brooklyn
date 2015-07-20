@@ -25,7 +25,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
-import brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.rest.apidoc.Apidoc;
 
 import com.wordnik.swagger.core.ApiOperation;
 import com.wordnik.swagger.core.ApiParam;

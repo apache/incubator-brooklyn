@@ -21,7 +21,7 @@ package org.apache.brooklyn.rest;
 import java.util.ArrayList;
 import java.util.List;
 
-import brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
+import org.apache.brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
 import org.apache.brooklyn.rest.resources.AbstractBrooklynRestResource;
 import org.apache.brooklyn.rest.resources.AccessResource;
 import org.apache.brooklyn.rest.resources.ActivityResource;

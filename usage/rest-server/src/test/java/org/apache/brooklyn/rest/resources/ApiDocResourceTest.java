@@ -29,7 +29,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.apache.brooklyn.rest.BrooklynRestApi;
-import brooklyn.rest.apidoc.ApidocRoot;
+import org.apache.brooklyn.rest.apidoc.ApidocRoot;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import com.google.common.collect.Iterables;

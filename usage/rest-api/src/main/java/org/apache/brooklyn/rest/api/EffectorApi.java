@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.rest.apidoc.Apidoc;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import com.wordnik.swagger.core.ApiError;
 import com.wordnik.swagger.core.ApiErrors;

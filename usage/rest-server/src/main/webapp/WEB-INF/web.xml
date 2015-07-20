@@ -80,7 +80,7 @@
         <init-param>
             <param-name>com.sun.jersey.config.property.classnames</param-name>
             <param-value>
-                brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
+                org.apache.brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
                 org.apache.brooklyn.rest.util.FormMapProvider;
                 org.codehaus.jackson.jaxrs.JacksonJsonProvider;
                 org.apache.brooklyn.rest.resources.ActivityResource;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.rest.apidoc;
+package org.apache.brooklyn.rest.apidoc;
 
 import javax.ws.rs.ext.Provider;
 

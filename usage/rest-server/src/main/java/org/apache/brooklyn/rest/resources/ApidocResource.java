@@ -18,12 +18,12 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.rest.apidoc.Apidoc;
 
 import javax.ws.rs.Path;
 
 @Apidoc("API Documentation")
 @Path("/v1/apidoc")
-public class ApidocResource extends brooklyn.rest.apidoc.ApidocResource {
+public class ApidocResource extends org.apache.brooklyn.rest.apidoc.ApidocResource {
 
 }

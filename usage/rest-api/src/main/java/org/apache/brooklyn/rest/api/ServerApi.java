@@ -34,7 +34,7 @@ import javax.ws.rs.core.Response;
 
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.ManagementNodeState;
-import brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.rest.apidoc.Apidoc;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.VersionSummary;
 
