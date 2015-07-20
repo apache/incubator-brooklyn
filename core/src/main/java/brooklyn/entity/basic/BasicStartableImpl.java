@@ -30,6 +30,7 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -38,38 +39,53 @@ import com.google.common.collect.Lists;
 public class BasicStartableImpl extends AbstractEntity implements BasicStartable {
 
     private static final Logger log = LoggerFactory.getLogger(BasicStartableImpl.class);
-    
-    public BasicStartableImpl() {
-        super();
-    }
 
     @Override
     public void start(Collection<? extends Location> locations) {
         log.info("Starting entity "+this+" at "+locations);
-        addLocations(locations);
-        
-        // essentially does StartableMethods.start(this, locations),
-        // but optionally filters locations for each child
-        
-        brooklyn.location.basic.Locations.LocationsFilter filter = getConfig(LOCATIONS_FILTER);
-        Iterable<Entity> startables = filterStartableManagedEntities(getChildren());
-        if (startables == null || Iterables.isEmpty(startables)) return;
+        try {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
 
-        List<Task<?>> tasks = Lists.newArrayList();
-        for (final Entity entity : startables) {
-            Collection<? extends Location> l2 = locations;
-            if (filter!=null) {
-                l2 = filter.filterForContext(new ArrayList<Location>(locations), entity);
-                log.debug("Child "+entity+" of "+this+" being started in filtered location list: "+l2);
+            addLocations(locations);
+
+            // essentially does StartableMethods.start(this, locations),
+            // but optionally filters locations for each child
+
+            brooklyn.location.basic.Locations.LocationsFilter filter = getConfig(LOCATIONS_FILTER);
+            Iterable<Entity> startables = filterStartableManagedEntities(getChildren());
+            if (!Iterables.isEmpty(startables)) {
+                List<Task<?>> tasks = Lists.newArrayListWithCapacity(Iterables.size(startables));
+                for (final Entity entity : startables) {
+                    Collection<? extends Location> l2 = locations;
+                    if (filter != null) {
+                        l2 = filter.filterForContext(new ArrayList<Location>(locations), entity);
+                        log.debug("Child " + entity + " of " + this + " being started in filtered location list: " + l2);
+                    }
+                    tasks.add(Entities.invokeEffectorWithArgs(this, entity, Startable.START, l2));
+                }
+                for (Task<?> t : tasks) {
+                    t.getUnchecked();
+                }
             }
-            tasks.add( Entities.invokeEffectorWithArgs(this, entity, Startable.START, l2) );
+            setAttribute(Attributes.SERVICE_UP, true);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
+        } catch (Throwable t) {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
+            throw Exceptions.propagate(t);
         }
-        for (Task<?> t: tasks) t.getUnchecked();
     }
 
     @Override
     public void stop() {
-        StartableMethods.stop(this);
+        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
+        setAttribute(SERVICE_UP, false);
+        try {
+            StartableMethods.stop(this);
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
+        } catch (Exception e) {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
+            throw Exceptions.propagate(e);
+        }
     }
 
     @Override
