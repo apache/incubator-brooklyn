@@ -18,11 +18,6 @@
  */
 package brooklyn.management.internal;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-
 import java.io.StringReader;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +27,11 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.Beta;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.config.BrooklynServerConfig;
@@ -58,11 +58,9 @@ import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
-
-import com.google.common.annotations.Beta;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
+import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 /** Utility methods for working with entities and applications */
 public class EntityManagementUtils {
@@ -89,45 +87,33 @@ public class EntityManagementUtils {
     
     /** as {@link #createApplication(ManagementContext, EntitySpec)} but for a YAML spec */
     public static <T extends Application> T createUnstarted(ManagementContext mgmt, String yaml) {
-        AssemblyTemplate at = getCampPlatform(mgmt).get().pdp().registerDeploymentPlan( new StringReader(yaml) );
-        return createUnstarted(mgmt, at);
+        EntitySpec<T> spec = createEntitySpec(mgmt, yaml);
+        return createUnstarted(mgmt, spec);
     }
     
-    /** as {@link #createApplication(ManagementContext, EntitySpec)} but for an assembly template */
     @SuppressWarnings("unchecked")
-    public static <T extends Application> T createUnstarted(ManagementContext mgmt, AssemblyTemplate at) {
+    public static <T extends Application> EntitySpec<T> createEntitySpec(ManagementContext mgmt, String yaml) {
         CampPlatform camp = getCampPlatform(mgmt).get();
+        AssemblyTemplate at = camp.pdp().registerDeploymentPlan( new StringReader(yaml) );
         AssemblyTemplateInstantiator instantiator;
         try {
             instantiator = at.getInstantiator().newInstance();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
-        Assembly assembly;
         if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
             BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-            
-            EntitySpec<?> spec = ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
-            Entity app = mgmt.getEntityManager().createEntity(spec);
-            Entities.startManagement((Application)app, mgmt);
-            return (T) app;
+            return (EntitySpec<T>) ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
         } else {
-            // currently, all brooklyn plans should produce the above; currently this will always throw Unsupported  
-            try {
-                assembly = instantiator.instantiate(at, camp);
-                return (T) mgmt.getEntityManager().getEntity(assembly.getId());
-            } catch (UnsupportedOperationException e) {
-                if (at.getPlatformComponentTemplates()==null || at.getPlatformComponentTemplates().isEmpty()) {
-                    if (at.getCustomAttributes().containsKey("brooklyn.catalog"))
-                        throw new IllegalArgumentException("Unrecognized application blueprint format: expected an application, not a brooklyn.catalog");
-                    throw new IllegalArgumentException("Unrecognized application blueprint format: no services defined");
-                }
-                // map this (expected) error to a nicer message
-                throw new IllegalArgumentException("Unrecognized application blueprint format");
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                throw new IllegalArgumentException("Invalid plan: "+at, e);
+            // The unknown instantiator can create the app (Assembly), but not a spec.
+            // Currently, all brooklyn plans should produce the above.
+            if (at.getPlatformComponentTemplates()==null || at.getPlatformComponentTemplates().isEmpty()) {
+                if (at.getCustomAttributes().containsKey("brooklyn.catalog"))
+                    throw new IllegalArgumentException("Unrecognized application blueprint format: expected an application, not a brooklyn.catalog");
+                throw new IllegalArgumentException("Unrecognized application blueprint format: no services defined");
             }
+            // map this (expected) error to a nicer message
+            throw new IllegalArgumentException("Unrecognized application blueprint format");
         }
     }
     
@@ -160,10 +146,6 @@ public class EntityManagementUtils {
 
     public static CreationResult<? extends Application,Void> createStarting(ManagementContext mgmt, String appSpec) {
         return start(createUnstarted(mgmt, appSpec));
-    }
-
-    public static CreationResult<? extends Application,Void> createStarting(ManagementContext mgmt, AssemblyTemplate at) {
-        return start(createUnstarted(mgmt, at));
     }
 
     public static <T extends Application> CreationResult<T,Void> start(T app) {

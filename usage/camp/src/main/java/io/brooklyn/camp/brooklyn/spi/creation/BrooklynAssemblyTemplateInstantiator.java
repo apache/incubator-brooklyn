@@ -47,9 +47,11 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
+import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.util.ResourceUtils;
@@ -76,11 +78,15 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     public Application create(AssemblyTemplate template, CampPlatform platform) {
-        Application instance = EntityManagementUtils.createUnstarted(getBrooklynManagementContext(platform), template);
-        log.debug("CAMP created {}", instance);
+        ManagementContext mgmt = getBrooklynManagementContext(platform);
+        BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
+        EntitySpec<? extends Application> spec = createSpec(template, platform, loader, true);
+        Application instance = mgmt.getEntityManager().createEntity(spec);
+        log.info("CAMP placing '{}' under management", instance);
+        Entities.startManagement(instance, mgmt);
         return instance;
     }
-
+    
     private ManagementContext getBrooklynManagementContext(CampPlatform platform) {
         return ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
     }
