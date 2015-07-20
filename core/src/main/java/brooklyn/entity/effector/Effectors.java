@@ -135,12 +135,15 @@ public class Effectors {
     public static <T> TaskAdaptable<T> invocation(Entity entity, Effector<T> eff, @Nullable Map<?,?> parameters) {
         @SuppressWarnings("unchecked")
         Effector<T> eff2 = (Effector<T>) ((EntityInternal)entity).getEffector(eff.getName());
-        if (log.isTraceEnabled())
-            log.trace("invoking "+eff+"/"+
-                (eff instanceof EffectorWithBody<?> ? ((EffectorWithBody<?>)eff).getBody() : "bodyless")+
-                " on entity " + entity+" "+
-                (eff2==eff ? "" : " (actually "+eff2+"/"+
-                        (eff2 instanceof EffectorWithBody<?> ? ((EffectorWithBody<?>)eff2).getBody() : "bodyless")+")"));
+        if (log.isTraceEnabled()) {
+            Object eff1Body = (eff instanceof EffectorWithBody<?> ? ((EffectorWithBody<?>) eff).getBody() : "bodyless");
+            String message = String.format("Invoking %s/%s on entity %s", eff, eff1Body, entity);
+            if (eff != eff2) {
+                Object eff2Body = (eff2 instanceof EffectorWithBody<?> ? ((EffectorWithBody<?>) eff2).getBody() : "bodyless");
+                message += String.format(" (actually %s/%s)", eff2, eff2Body);
+            }
+            log.trace(message);
+        }
         if (eff2 != null) {
             if (eff2 != eff) {
                 if (eff2 instanceof EffectorWithBody) {
