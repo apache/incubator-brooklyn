@@ -18,7 +18,8 @@
  */
 package brooklyn.management.internal;
 
-import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -35,8 +36,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
-import brooklyn.config.BrooklynServerConfig;
+import brooklyn.basic.AbstractBrooklynObjectSpec;
+import brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -50,19 +51,15 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
+import brooklyn.plan.PlanNotRecognizedException;
+import brooklyn.plan.PlanToSpecFactory;
+import brooklyn.plan.PlanToSpecTransformer;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 /** Utility methods for working with entities and applications */
 public class EntityManagementUtils {
@@ -82,43 +79,36 @@ public class EntityManagementUtils {
         return app;
     }
 
-    /** convenience for accessing camp */
-    public static Maybe<CampPlatform> getCampPlatform(ManagementContext mgmt) {
-        return BrooklynServerConfig.getCampPlatform(mgmt);
-    }
-    
-    /** as {@link #createApplication(ManagementContext, EntitySpec)} but for a YAML spec */
+    /** as {@link #createUnstarted(ManagementContext, EntitySpec)} but for a YAML spec */
     public static <T extends Application> T createUnstarted(ManagementContext mgmt, String yaml) {
         EntitySpec<T> spec = createEntitySpec(mgmt, yaml);
         return createUnstarted(mgmt, spec);
     }
     
-    @SuppressWarnings("unchecked")
     public static <T extends Application> EntitySpec<T> createEntitySpec(ManagementContext mgmt, String yaml) {
-        CampPlatform camp = getCampPlatform(mgmt).get();
-        AssemblyTemplate at = camp.pdp().registerDeploymentPlan( new StringReader(yaml) );
-        AssemblyTemplateInstantiator instantiator;
-        try {
-            instantiator = at.getInstantiator().newInstance();
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-        if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-            return (EntitySpec<T>) ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
-        } else {
-            // The unknown instantiator can create the app (Assembly), but not a spec.
-            // Currently, all brooklyn plans should produce the above.
-            if (at.getPlatformComponentTemplates()==null || at.getPlatformComponentTemplates().isEmpty()) {
-                if (at.getCustomAttributes().containsKey("brooklyn.catalog"))
-                    throw new IllegalArgumentException("Unrecognized application blueprint format: expected an application, not a brooklyn.catalog");
-                throw new IllegalArgumentException("Unrecognized application blueprint format: no services defined");
+        Collection<String> types = new ArrayList<String>();
+        for (PlanToSpecTransformer c : PlanToSpecFactory.all(mgmt)) {
+            try {
+                return c.createApplicationSpec(yaml);
+            } catch (PlanNotRecognizedException e) {
+                types.add(c.getName());
             }
-            // map this (expected) error to a nicer message
-            throw new IllegalArgumentException("Unrecognized application blueprint format");
         }
+        throw new PlanNotRecognizedException("Invalid plan, tried parsing with " + types);
     }
-    
+
+    public static AbstractBrooklynObjectSpec<?, ?> createCatalogSpec(ManagementContext mgmt, CatalogItem<?, ?> item) {
+        Collection<String> types = new ArrayList<String>();
+        for (PlanToSpecTransformer c : PlanToSpecFactory.all(mgmt)) {
+            try {
+                return c.createCatalogSpec(item);
+            } catch (PlanNotRecognizedException e) {
+                types.add(c.getName());
+            }
+        }
+        throw new PlanNotRecognizedException("Invalid plan, tried parsing with " + types);
+    }
+
     /** container for operation which creates something and which wants to return both
      * the items created and any pending create/start task */
     public static class CreationResult<T,U> {
@@ -289,5 +279,5 @@ public class EntityManagementUtils {
             return true;
         }
     }
-    
+
 }

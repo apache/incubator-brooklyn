@@ -53,7 +53,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.internal.CampCatalogUtils;
+import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
@@ -319,7 +319,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (specType==null) return null;
 
         if (loadedItem.getPlanYaml() != null) {
-            SpecT yamlSpec = CampCatalogUtils.createSpec(mgmt, loadedItem);
+            SpecT yamlSpec = (SpecT) EntityManagementUtils.createCatalogSpec(mgmt, loadedItem);
             if (yamlSpec != null) {
                 return yamlSpec;
             }
@@ -780,7 +780,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     .plan(candidateYaml)
                     .libraries(libraryBundles)
                     .build();
-                Object spec = CampCatalogUtils.createSpec(mgmt, itemToAttempt);
+                Object spec = EntityManagementUtils.createCatalogSpec(mgmt, itemToAttempt);
                 if (spec!=null) {
                     catalogItemType = candidateCiType;
                     planYaml = candidateYaml;
@@ -812,7 +812,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                             .plan(cutDownYaml)
                             .libraries(libraryBundles)
                             .build();
-                    Object cutdownSpec = CampCatalogUtils.createSpec(mgmt, itemToAttempt);
+                    Object cutdownSpec = EntityManagementUtils.createCatalogSpec(mgmt, itemToAttempt);
                     if (cutdownSpec!=null) {
                         catalogItemType = candidateCiType;
                         planYaml = candidateYaml;

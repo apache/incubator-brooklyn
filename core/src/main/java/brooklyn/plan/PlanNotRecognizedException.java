@@ -16,21 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.lite;
+package brooklyn.plan;
 
-import io.brooklyn.camp.spi.Assembly;
-import brooklyn.test.entity.TestApplication;
+public class PlanNotRecognizedException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
 
-public class TestAppAssembly extends Assembly {
-
-    private TestApplication brooklynApp;
-
-    public TestAppAssembly(TestApplication brooklynApp) {
-        this.brooklynApp = brooklynApp;
+    public PlanNotRecognizedException() {
+        super();
     }
-    
-    public TestApplication getBrooklynApp() {
-        return brooklynApp;
+
+    public PlanNotRecognizedException(String message, Throwable cause) {
+        super(message, cause);
     }
-    
+
+    public PlanNotRecognizedException(String message) {
+        super(message);
+    }
+
+    public PlanNotRecognizedException(Throwable cause) {
+        super(cause);
+    }
+
 }

@@ -36,6 +36,11 @@
     <dependencies>
         
         <dependency>
+            <groupId>org.apache.brooklyn.camp</groupId>
+            <artifactId>camp-base</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
@@ -111,6 +116,13 @@
         </dependency>
         
         <!-- demo and tests -->
+        <dependency>
+            <groupId>org.apache.brooklyn.camp</groupId>
+            <artifactId>camp-base</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>

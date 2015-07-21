@@ -18,16 +18,14 @@
  */
 package io.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.CampPlatform;
-
 import java.util.Set;
 
-import brooklyn.config.BrooklynServerConfig;
+import com.google.common.collect.ImmutableSet;
+
 import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-
-import com.google.common.collect.ImmutableSet;
+import io.brooklyn.camp.CampPlatform;
 
 public class BrooklynCampConstants {
 
@@ -44,7 +42,8 @@ public class BrooklynCampConstants {
             .inheritance(ConfigInheritance.NONE)
             .build();
 
-    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = BrooklynServerConfig.CAMP_PLATFORM;
+    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
+            "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
 
     public static final Set<String> YAML_URL_PROTOCOL_WHITELIST = ImmutableSet.of("classpath", "http");
 }

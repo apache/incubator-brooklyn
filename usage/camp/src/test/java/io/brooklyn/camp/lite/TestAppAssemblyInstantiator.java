@@ -16,20 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.lite;
-
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AbstractResource;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-import io.brooklyn.camp.spi.collection.ResolvableLink;
-import io.brooklyn.camp.spi.instantiate.BasicAssemblyTemplateInstantiator;
+package io.brooklyn.camp.lite;
 
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.ManagementContext;
@@ -38,6 +29,14 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
+import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
+import io.brooklyn.camp.spi.AbstractResource;
+import io.brooklyn.camp.spi.Assembly;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.PlatformComponentTemplate;
+import io.brooklyn.camp.spi.collection.ResolvableLink;
+import io.brooklyn.camp.spi.instantiate.BasicAssemblyTemplateInstantiator;
 
 /** simple illustrative instantiator which always makes a {@link TestApplication}, populated with {@link TestEntity} children,
  * all setting {@link TestEntity#CONF_NAME} for the name in the plan and in the service specs

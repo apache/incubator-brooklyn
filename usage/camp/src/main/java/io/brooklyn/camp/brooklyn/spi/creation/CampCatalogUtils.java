@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management.internal;
+package io.brooklyn.camp.brooklyn.spi.creation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -29,13 +29,11 @@ import com.google.common.collect.Iterables;
 
 import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
@@ -50,13 +48,15 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 import brooklyn.util.yaml.Yamls;
 import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import io.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 
 public class CampCatalogUtils {
-    @SuppressWarnings("unchecked")
-    public static <SpecT> SpecT createSpec(ManagementContext mgmt, CatalogItem<?, SpecT> item) {
+
+    public static AbstractBrooklynObjectSpec<?, ?> createSpec(ManagementContext mgmt, CatalogItem<?, ?> item) {
         // preferred way is to parse the yaml, to resolve references late;
         // the parsing on load is to populate some fields, but it is optional.
         // TODO messy for location and policy that we need brooklyn.{locations,policies} root of the yaml, but it works;
@@ -86,11 +86,11 @@ public class CampCatalogUtils {
         if (Strings.isBlank( ((AbstractBrooklynObjectSpec<?, ?>)spec).getDisplayName() ))
             ((AbstractBrooklynObjectSpec<?, ?>)spec).displayName(item.getDisplayName());
 
-        return (SpecT) spec;
+        return spec;
     }
 
     private static EntitySpec<?> createEntitySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
-        CampPlatform camp = BrooklynServerConfig.getCampPlatform(loader.getManagementContext()).get();
+        CampPlatform camp = getCampPlatform(loader.getManagementContext());
 
         // TODO should not register new AT each time we instantiate from the same plan; use some kind of cache
         AssemblyTemplate at;
@@ -225,8 +225,20 @@ public class CampCatalogUtils {
     }
 
     private static DeploymentPlan makePlanFromYaml(ManagementContext mgmt, String yaml) {
-        CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
+        CampPlatform camp = getCampPlatform(mgmt);
         return camp.pdp().parseDeploymentPlan(Streams.newReaderWithContents(yaml));
+    }
+
+    /**
+     * @return the CAMP platform associated with a management context, if there is one.
+     */
+    public static CampPlatform getCampPlatform(ManagementContext mgmt) {
+        CampPlatform result = mgmt.getConfig().getConfig(BrooklynCampConstants.CAMP_PLATFORM);
+        if (result!=null) {
+            return result;
+        } else {
+            throw new IllegalStateException("No CAMP Platform is registered with this Brooklyn management context.");
+        }
     }
 
 }

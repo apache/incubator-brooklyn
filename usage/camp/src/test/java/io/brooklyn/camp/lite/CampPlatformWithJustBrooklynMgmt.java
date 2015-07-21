@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.lite;
+package io.brooklyn.camp.lite;
 
-import io.brooklyn.camp.BasicCampPlatform;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
+import io.brooklyn.camp.BasicCampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
 
 public class CampPlatformWithJustBrooklynMgmt extends BasicCampPlatform implements HasBrooklynManagementContext {
 
@@ -30,7 +30,7 @@ public class CampPlatformWithJustBrooklynMgmt extends BasicCampPlatform implemen
 
     public CampPlatformWithJustBrooklynMgmt(ManagementContext mgmt) {
         this.mgmt = mgmt;
-        ((BrooklynProperties)mgmt.getConfig()).put(BrooklynServerConfig.CAMP_PLATFORM, this);
+        ((BrooklynProperties)mgmt.getConfig()).put(BrooklynCampConstants.CAMP_PLATFORM, this);
     }
     
     @Override
