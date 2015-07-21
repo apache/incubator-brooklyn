@@ -683,7 +683,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         
         CatalogItemType catalogItemType;
         String planYaml;
-        AbstractBrooklynObjectSpec<?,?> spec;
         boolean resolved = false;
         List<Exception> errors = MutableList.of();
         
@@ -779,10 +778,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             
             // then try parsing plan - this will use loader
             try {
-                spec = CampCatalogUtils.createSpec(id, candidateCiType, candidateYaml, loader);
+                AbstractBrooklynObjectSpec<?,?> spec = CampCatalogUtils.createSpec(id, candidateCiType, candidateYaml, loader);
                 if (spec!=null) {
                     catalogItemType = candidateCiType;
-//                    plan = candidatePlan;
                     planYaml = candidateYaml;
                     resolved = true;
                 }

@@ -20,7 +20,7 @@ package brooklyn.management.internal;
 
 import java.io.StringReader;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
@@ -29,9 +29,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.config.BrooklynServerConfig;
@@ -165,51 +167,37 @@ public class EntityManagementUtils {
     /** adds entities from the given yaml, under the given parent; but does not start them */
     public static List<Entity> addChildrenUnstarted(final EntityLocal parent, String yaml) {
         log.debug("Creating child of "+parent+" from yaml:\n{}", yaml);
-        
+
         ManagementContext mgmt = parent.getApplication().getManagementContext();
-        CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
-        
-        AssemblyTemplate at = camp.pdp().registerDeploymentPlan( new StringReader(yaml) );
 
-        AssemblyTemplateInstantiator instantiator;
-        try {
-            instantiator = at.getInstantiator().newInstance();
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-        if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-            EntitySpec<?> specA = ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, false);
+        EntitySpec<?> specA = createEntitySpec(mgmt, yaml);
 
-            // see whether we can promote children
-            List<EntitySpec<?>> specs = MutableList.of();
-            if (hasNoNameOrCustomKeysOrRoot(at, specA)) {
-                // we can promote
-                for (EntitySpec<?> specC: specA.getChildren()) {
-                    collapseSpec(specA, specC);
-                    specs.add(specC);
-                }
-            } else {
-                // if not promoting, set a nice name if needed
-                if (Strings.isEmpty(specA.getDisplayName())) {
-                    int size = specA.getChildren().size();
-                    String childrenCountString = size+" "+(size!=1 ? "children" : "child");
-                    specA.displayName("Dynamically added "+childrenCountString);
-                }
-                specs.add(specA);
+        // see whether we can promote children
+        List<EntitySpec<?>> specs = MutableList.of();
+        if (canPromote(specA)) {
+            // we can promote
+            for (EntitySpec<?> specC: specA.getChildren()) {
+                collapseSpec(specA, specC);
+                specs.add(specC);
             }
-
-            final List<Entity> children = MutableList.of();
-            for (EntitySpec<?> spec: specs) {
-                Entity child = (Entity)parent.addChild(spec);
-                Entities.manage(child);
-                children.add(child);
-            }
-            
-            return children;
         } else {
-            throw new IllegalStateException("Spec could not be parsed to supply a compatible instantiator");
+            // if not promoting, set a nice name if needed
+            if (Strings.isEmpty(specA.getDisplayName())) {
+                int size = specA.getChildren().size();
+                String childrenCountString = size+" "+(size!=1 ? "children" : "child");
+                specA.displayName("Dynamically added "+childrenCountString);
+            }
+            specs.add(specA);
         }
+
+        final List<Entity> children = MutableList.of();
+        for (EntitySpec<?> spec: specs) {
+            Entity child = (Entity)parent.addChild(spec);
+            Entities.manage(child);
+            children.add(child);
+        }
+
+        return children;
     }
 
     public static CreationResult<List<Entity>,List<String>> addChildrenStarting(final EntityLocal parent, String yaml) {
@@ -258,7 +246,8 @@ public class EntityManagementUtils {
 
         // NB: this clobbers child config; might prefer to deeply merge maps etc
         // (but this should not be surprising, as unwrapping is often parameterising the nested blueprint, so outer config should dominate) 
-        targetToBeExpanded.configure(sourceToBeCollapsed.getConfig());
+        Map<ConfigKey<?>, Object> configWithoutWrapperMarker = Maps.filterKeys(sourceToBeCollapsed.getConfig(), Predicates.not(Predicates.<ConfigKey<?>>equalTo(EntityManagementUtils.WRAPPER_APP_MARKER)));
+        targetToBeExpanded.configure(configWithoutWrapperMarker);
         targetToBeExpanded.configure(sourceToBeCollapsed.getFlags());
         
         // TODO copying tags to all entities is not ideal;
@@ -266,14 +255,26 @@ public class EntityManagementUtils {
         targetToBeExpanded.tags(sourceToBeCollapsed.getTags());
     }
 
-    /** worker method to help determine whether child/children can be promoted */
-    @Beta //where should this live long-term?
-    public static boolean hasNoNameOrCustomKeysOrRoot(AssemblyTemplate template, EntitySpec<?> spec) {
-        if (!Strings.isEmpty(template.getName())) {
+    public static boolean canPromote(EntitySpec<?> spec) {
+        return canPromoteBasedOnName(spec) &&
+                isWrapperApp(spec) &&
+                //equivalent to no keys starting with "brooklyn."
+                spec.getEnrichers().isEmpty() &&
+                spec.getInitializers().isEmpty() &&
+                spec.getPolicies().isEmpty();
+    }
+
+    public static boolean isWrapperApp(EntitySpec<?> spec) {
+        return Boolean.TRUE.equals(spec.getConfig().get(EntityManagementUtils.WRAPPER_APP_MARKER));
+    }
+
+    private static boolean canPromoteBasedOnName(EntitySpec<?> spec) {
+        if (!Strings.isEmpty(spec.getDisplayName())) {
             if (spec.getChildren().size()==1) {
                 String childName = Iterables.getOnlyElement(spec.getChildren()).getDisplayName();
-                if (Strings.isEmpty(childName) || childName.equals(template.getName())) {
+                if (Strings.isEmpty(childName) || childName.equals(spec.getDisplayName())) {
                     // if child has no name, or it's the same, could still promote
+                    return true;
                 } else {
                     return false;
                 }
@@ -284,25 +285,9 @@ public class EntityManagementUtils {
         } else if (spec.getChildren().size()>1) {
             // don't allow multiple children if a name is specified as a root
             return false;
+        } else {
+            return true;
         }
-        
-        Set<String> rootAttrs = template.getCustomAttributes().keySet();
-        for (String rootAttr: rootAttrs) {
-            if (rootAttr.equals("brooklyn.catalog") || rootAttr.equals("brooklyn.config")) {
-                // these do not block promotion
-                continue;
-            }
-            if (rootAttr.startsWith("brooklyn.")) {
-                // any others in 'brooklyn' namespace will block promotion
-                return false;
-            }
-            // location is allowed in both, and is copied on promotion
-            // (name also copied)
-            // others are root currently are ignored on promotion; they are usually metadata
-            // TODO might be nice to know what we are excluding
-        }
-        
-        return true;
     }
     
 }

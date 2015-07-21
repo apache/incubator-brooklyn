@@ -61,39 +61,25 @@ public class CampCatalogUtils {
         // TODO messy for location and policy that we need brooklyn.{locations,policies} root of the yaml, but it works;
         // see related comment when the yaml is set, in addAbstractCatalogItems
         // (not sure if anywhere else relies on that syntax; if not, it should be easy to fix!)
-        DeploymentPlan plan = makePlanFromYaml(mgmt, itemDo.getPlanYaml());
         BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, itemDo);
-        SpecT spec;
-        switch (itemDo.getCatalogItemType()) {
-            case TEMPLATE:
-            case ENTITY:
-                spec = createEntitySpec(itemDo.getSymbolicName(), plan, loader);
-                break;
-            case POLICY:
-                spec = createPolicySpec(itemDo.getSymbolicName(), plan, loader);
-                break;
-            case LOCATION:
-                spec = createLocationSpec(plan, loader);
-                break;
-            default: throw new RuntimeException("Only entity, policy & location catalog items are supported. Unsupported catalog item type " + itemDo.getCatalogItemType());
-        }
+        SpecT spec = createSpec(itemDo.getSymbolicName(), itemDo.getCatalogItemType(), itemDo.getPlanYaml(), loader);
         ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemId(itemDo.getId());
-        
+
         if (Strings.isBlank( ((AbstractBrooklynObjectSpec<?, ?>)spec).getDisplayName() ))
             ((AbstractBrooklynObjectSpec<?, ?>)spec).displayName(itemDo.getDisplayName());
-        
+
         return spec;
     }
 
-    public static <T, SpecT> SpecT createSpec(String optionalId, CatalogItemType ciType, String yaml, BrooklynClassLoadingContext loader) {
+    public static <T, SpecT> SpecT createSpec(String symbolicName, CatalogItemType ciType, String yaml, BrooklynClassLoadingContext loader) {
         DeploymentPlan plan = makePlanFromYaml(loader.getManagementContext(), yaml);
         Preconditions.checkNotNull(ciType, "catalog item type for "+plan); 
         switch (ciType) {
         case TEMPLATE:
         case ENTITY: 
-            return createEntitySpec(optionalId, plan, loader);
+            return createEntitySpec(symbolicName, plan, loader);
         case LOCATION: return createLocationSpec(plan, loader);
-        case POLICY: return createPolicySpec(optionalId, plan, loader);
+        case POLICY: return createPolicySpec(symbolicName, plan, loader);
         }
         throw new IllegalStateException("Unknown CI Type "+ciType+" for "+plan);
     }
@@ -182,7 +168,7 @@ public class CampCatalogUtils {
         }
         return (SpecT) spec;
     }
-    
+
     private static <T, SpecT> SpecT createLocationSpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         // See #createPolicySpec; this impl is modeled on that.
         // spec.catalogItemId is set by caller

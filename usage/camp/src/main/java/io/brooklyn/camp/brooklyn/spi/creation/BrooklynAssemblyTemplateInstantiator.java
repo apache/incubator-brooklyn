@@ -100,6 +100,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
             loader, buildWrapperAppTemplate(template));
         EntitySpec<? extends Application> app = resolver.resolveSpec(null);
+        app.configure(EntityManagementUtils.WRAPPER_APP_MARKER, Boolean.TRUE);
 
         // first build the children into an empty shell app
         List<EntitySpec<?>> childSpecs = buildTemplateServicesAsSpecs(loader, template, platform);
@@ -114,8 +115,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
             // if promoted, apply the transformations done to the app
             // (transformations will be done by the resolveSpec call above, but we are collapsing oldApp so transfer to app=newApp)
             EntityManagementUtils.collapseSpec(oldApp, app);
-        } else {
-            app.configure(EntityManagementUtils.WRAPPER_APP_MARKER, Boolean.TRUE);
         }
 
         return app;
@@ -149,7 +148,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
             return false;
 
-        return EntityManagementUtils.hasNoNameOrCustomKeysOrRoot(template, app);
+        return EntityManagementUtils.canPromote(app);
     }
 
     private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform) {
