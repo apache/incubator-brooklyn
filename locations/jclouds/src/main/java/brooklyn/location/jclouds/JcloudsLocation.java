@@ -105,6 +105,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineManagementMixins.MachineMetadata;
 import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
+import brooklyn.location.MachineManagementMixins.SuspendResumeLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.access.PortForwardManager;
 import brooklyn.location.access.PortMapping;
@@ -181,14 +182,15 @@ import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
-import com.google.common.reflect.TypeToken;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
  * Configuration flags are defined in {@link JcloudsLocationConfig}.
  */
 @SuppressWarnings("serial")
-public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig, RichMachineProvisioningLocation<MachineLocation>, LocationWithObjectStore {
+public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements
+        JcloudsLocationConfig, RichMachineProvisioningLocation<MachineLocation>,
+        LocationWithObjectStore, SuspendResumeLocation<MachineLocation> {
 
     // TODO After converting from Groovy to Java, this is now very bad code! It relies entirely on putting
     // things into and taking them out of maps; it's not type-safe, and it's thus very error-prone.
@@ -1006,6 +1008,18 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
             throw Exceptions.propagate(e);
         }
+    }
+
+    // ------------- suspend and resume ------------------------------------
+
+    @Override
+    public void suspendMachine(MachineLocation location) {
+        getComputeService().suspendNode(location.getId());
+    }
+
+    @Override
+    public void resumeMachine(MachineLocation location) {
+        getComputeService().resumeNode(location.getId());
     }
 
     // ------------- constructing the template, etc ------------------------
