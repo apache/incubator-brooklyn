@@ -63,6 +63,7 @@ import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
+import brooklyn.location.MachineManagementMixins.SuspendsMachines;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.AbstractLocation;
@@ -72,7 +73,6 @@ import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.Task;
-import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -155,8 +155,18 @@ public abstract class MachineLifecycleEffectorTasks {
                 .build();
     }
 
+    /** @see {@link #newStartEffector()} */
+    public Effector<Void> newSuspendEffector() {
+        return Effectors.effector(Void.class, "suspend")
+                .description("Suspend the process/service represented by an entity")
+                .parameter(StopSoftwareParameters.STOP_PROCESS_MODE)
+                .parameter(StopSoftwareParameters.STOP_MACHINE_MODE)
+                .impl(newSuspendEffectorTask())
+                .build();
+    }
+
     /**
-     * Returns the {@link TaskFactory} which supplies the implementation for the start effector.
+     * Returns the {@link EffectorBody} which supplies the implementation for the start effector.
      * <p>
      * Calls {@link #start(Collection)} in this class.
      */
@@ -196,7 +206,7 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     /**
-     * Calls {@link #stop()}.
+     * Calls {@link #stop(ConfigBag)}.
      *
      * @see {@link #newStartEffectorTask()}
      */
@@ -205,6 +215,21 @@ public abstract class MachineLifecycleEffectorTasks {
             @Override
             public Void call(ConfigBag parameters) {
                 stop(parameters);
+                return null;
+            }
+        };
+    }
+
+    /**
+     * Calls {@link #suspend(ConfigBag)}.
+     *
+     * @see {@link #newStartEffectorTask()}
+     */
+    public EffectorBody<Void> newSuspendEffectorTask() {
+        return new EffectorBody<Void>() {
+            @Override
+            public Void call(ConfigBag parameters) {
+                suspend(parameters);
                 return null;
             }
         };
@@ -576,6 +601,27 @@ public abstract class MachineLifecycleEffectorTasks {
      * If no errors were encountered call {@link #postStopCustom()} at the end.
      */
     public void stop(ConfigBag parameters) {
+        doStop(parameters, new Callable<StopMachineDetails<Integer>>() {
+            public StopMachineDetails<Integer> call() {
+                return stopAnyProvisionedMachines();
+            }
+        });
+    }
+
+    /**
+     * As {@link #stop} but calling {@link #suspendAnyProvisionedMachines} rather than
+     * {@link #stopAnyProvisionedMachines}.
+     */
+    public void suspend(ConfigBag parameters) {
+        doStop(parameters, new Callable<StopMachineDetails<Integer>>() {
+            @Override
+            public StopMachineDetails<Integer> call() throws Exception {
+                return suspendAnyProvisionedMachines();
+            }
+        });
+    }
+
+    protected void doStop(ConfigBag parameters, Callable<StopMachineDetails<Integer>> stopTask) {
         preStopConfirmCustom();
 
         log.info("Stopping {} in {}", entity(), entity().getLocations());
@@ -608,11 +654,7 @@ public abstract class MachineLifecycleEffectorTasks {
         Task<StopMachineDetails<Integer>> stoppingMachine = null;
         if (canStop(stopMachineMode, machine.isAbsent())) {
             // Release this machine (even if error trying to stop process - we rethrow that after)
-            stoppingMachine = DynamicTasks.queue("stopping (machine)", new Callable<StopMachineDetails<Integer>>() {
-                public StopMachineDetails<Integer> call() {
-                    return stopAnyProvisionedMachines();
-                }
-            });
+            stoppingMachine = DynamicTasks.queue("stopping (machine)", stopTask);
 
             DynamicTasks.drain(entity().getConfig(STOP_PROCESS_TIMEOUT), false);
 
@@ -750,7 +792,7 @@ public abstract class MachineLifecycleEffectorTasks {
     protected abstract String stopProcessesAtMachine();
 
     /**
-     * Stop the {@link MachineLocation} the entity is provisioned at.
+     * Stop and release the {@link MachineLocation} the entity is provisioned at.
      * <p>
      * Can run synchronously or not, caller will submit/queue as needed, and will block on any submitted tasks.
      */
@@ -775,16 +817,63 @@ public abstract class MachineLifecycleEffectorTasks {
             return new StopMachineDetails<Integer>("No machine decommissioning necessary - not a machine ("+machine+")", 0);
         }
         
-        try {
-            entity().removeLocations(ImmutableList.of(machine));
-            entity().setAttribute(Attributes.HOSTNAME, null);
-            entity().setAttribute(Attributes.ADDRESS, null);
-            entity().setAttribute(Attributes.SUBNET_HOSTNAME, null);
-            entity().setAttribute(Attributes.SUBNET_ADDRESS, null);
-            if (provisioner != null) provisioner.release((MachineLocation)machine);
-        } catch (Throwable t) {
-            throw Exceptions.propagate(t);
-        }
+        clearEntityLocationAttributes(machine);
+        provisioner.release((MachineLocation)machine);
+
         return new StopMachineDetails<Integer>("Decommissioned "+machine, 1);
     }
+
+    /**
+     * Suspend the {@link MachineLocation} the entity is provisioned at.
+     * <p>
+     * Expects the entity's {@link SoftwareProcess#PROVISIONING_LOCATION provisioner} to be capable of
+     * {@link SuspendsMachines suspending machines}.
+     *
+     * @throws java.lang.UnsupportedOperationException if the entity's provisioner cannot suspend machines.
+     * @see brooklyn.location.MachineManagementMixins.SuspendsMachines
+     */
+    protected StopMachineDetails<Integer> suspendAnyProvisionedMachines() {
+        @SuppressWarnings("unchecked")
+        MachineProvisioningLocation<MachineLocation> provisioner = entity().getAttribute(SoftwareProcess.PROVISIONING_LOCATION);
+
+        if (Iterables.isEmpty(entity().getLocations())) {
+            log.debug("No machine decommissioning necessary for " + entity() + " - no locations");
+            return new StopMachineDetails<>("No machine suspend necessary - no locations", 0);
+        }
+
+        // Only release this machine if we ourselves provisioned it (e.g. it might be running other services)
+        if (provisioner == null) {
+            log.debug("No machine decommissioning necessary for " + entity() + " - did not provision");
+            return new StopMachineDetails<>("No machine suspend necessary - did not provision", 0);
+        }
+
+        Location machine = getLocation(null);
+        if (!(machine instanceof MachineLocation)) {
+            log.debug("No decommissioning necessary for " + entity() + " - not a machine location (" + machine + ")");
+            return new StopMachineDetails<>("No machine suspend necessary - not a machine (" + machine + ")", 0);
+        }
+
+        if (!(provisioner instanceof SuspendsMachines)) {
+            log.debug("Location provisioner ({}) cannot suspend machines", provisioner);
+            throw new UnsupportedOperationException("Location provisioner cannot suspend machines: " + provisioner);
+        }
+
+        clearEntityLocationAttributes(machine);
+        SuspendsMachines.class.cast(provisioner).suspendMachine(MachineLocation.class.cast(machine));
+
+        return new StopMachineDetails<>("Suspended " + machine, 1);
+    }
+
+    /**
+     * Nulls the attached entity's hostname, address, subnet hostname and subnet address sensors
+     * and removes the given machine from its locations.
+     */
+    protected void clearEntityLocationAttributes(Location machine) {
+        entity().removeLocations(ImmutableList.of(machine));
+        entity().setAttribute(Attributes.HOSTNAME, null);
+        entity().setAttribute(Attributes.ADDRESS, null);
+        entity().setAttribute(Attributes.SUBNET_HOSTNAME, null);
+        entity().setAttribute(Attributes.SUBNET_ADDRESS, null);
+    }
+
 }
