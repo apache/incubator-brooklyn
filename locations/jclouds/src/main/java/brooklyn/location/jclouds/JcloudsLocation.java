@@ -126,6 +126,7 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineLocationCustomizer;
 import brooklyn.location.MachineManagementMixins.MachineMetadata;
 import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
+import brooklyn.location.MachineManagementMixins.SuspendsMachines;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.access.PortForwardManager;
 import brooklyn.location.access.PortMapping;
@@ -187,7 +188,9 @@ import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
  * Configuration flags are defined in {@link JcloudsLocationConfig}.
  */
 @SuppressWarnings("serial")
-public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements JcloudsLocationConfig, RichMachineProvisioningLocation<MachineLocation>, LocationWithObjectStore {
+public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements
+        JcloudsLocationConfig, RichMachineProvisioningLocation<MachineLocation>,
+        LocationWithObjectStore, SuspendsMachines {
 
     // TODO After converting from Groovy to Java, this is now very bad code! It relies entirely on putting
     // things into and taking them out of maps; it's not type-safe, and it's thus very error-prone.
@@ -1020,6 +1023,35 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
 
             throw Exceptions.propagate(e);
+        }
+    }
+
+    // ------------- suspend and resume ------------------------------------
+
+    /**
+     * Suspends the given location.
+     * <p>
+     * Note that this method does <b>not</b> call the lifecycle methods of any
+     * {@link #getCustomizers(ConfigBag) customizers} attached to this location.
+     */
+    @Override
+    public void suspendMachine(MachineLocation rawLocation) {
+        String instanceId = vmInstanceIds.remove(rawLocation);
+        if (instanceId == null) {
+            LOG.info("Attempt to suspend unknown machine " + rawLocation + " in " + this);
+            throw new IllegalArgumentException("Unknown machine " + rawLocation);
+        }
+        LOG.info("Suspending machine {} in {}, instance id {}", new Object[]{rawLocation, this, instanceId});
+        Exception toThrow = null;
+        try {
+            getComputeService().suspendNode(instanceId);
+        } catch (Exception e) {
+            toThrow = e;
+            LOG.error("Problem suspending machine " + rawLocation + " in " + this + ", instance id " + instanceId, e);
+        }
+        removeChild(rawLocation);
+        if (toThrow != null) {
+            throw Exceptions.propagate(toThrow);
         }
     }
 
@@ -2159,7 +2191,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             throw new IllegalArgumentException("Unknown machine "+rawMachine);
         }
         JcloudsMachineLocation machine = (JcloudsMachineLocation) rawMachine;
-        
+
         LOG.info("Releasing machine {} in {}, instance id {}", new Object[] {machine, this, instanceId});
 
         Exception tothrow = null;
