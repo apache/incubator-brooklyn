@@ -20,10 +20,6 @@ package brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.truth;
 
-import com.google.common.annotations.Beta;
-
-import groovy.lang.Closure;
-
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -52,6 +48,27 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
@@ -66,6 +83,7 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
+import brooklyn.location.access.PortForwardManager;
 import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -96,26 +114,7 @@ import brooklyn.util.task.system.internal.ExecWithLoggingHelpers;
 import brooklyn.util.task.system.internal.ExecWithLoggingHelpers.ExecRunner;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
-
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.net.HostAndPort;
-import com.google.common.reflect.TypeToken;
+import groovy.lang.Closure;
 
 /**
  * Operations on a machine that is accessible via ssh.
@@ -151,6 +150,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             new TypeToken<Iterable<String>>() {},
             "privateAddresses",
             "Private addresses of this machine, e.g. those within the private network", 
+            null);
+
+    public static final ConfigKey<Map<Integer, String>> TCP_PORT_MAPPINGS = ConfigKeys.newConfigKey(
+            new TypeToken<Map<Integer, String>>() {},
+            "tcpPortMappings",
+            "NAT'ed ports, giving the mapping from private TCP port to a public host:port", 
             null);
 
     @SetFromFlag
@@ -251,6 +256,25 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         usedPorts = (usedPorts != null) ? Sets.newLinkedHashSet(usedPorts) : Sets.<Integer>newLinkedHashSet();
     }
 
+    @Override
+    public void init() {
+        super.init();
+
+        // Register any pre-existing port-mappings with the PortForwardManager
+        Map<Integer, String> tcpPortMappings = getConfig(TCP_PORT_MAPPINGS);
+        if (tcpPortMappings != null) {
+            PortForwardManager pfm = (PortForwardManager) getManagementContext().getLocationRegistry().resolve("portForwardManager(scope=global)");
+            for (Map.Entry<Integer, String> entry : tcpPortMappings.entrySet()) {
+                int targetPort = entry.getKey();
+                HostAndPort publicEndpoint = HostAndPort.fromString(entry.getValue());
+                if (!publicEndpoint.hasPort()) {
+                    throw new IllegalArgumentException("Invalid portMapping ('"+entry.getValue()+"') for port "+targetPort+" in machine "+this);
+                }
+                pfm.associate(publicEndpoint.getHostText(), publicEndpoint, this, targetPort);
+            }
+        }
+    }
+    
     private final transient Object poolCacheMutex = new Object();
     @Nonnull
     private LoadingCache<Map<String, ?>, Pool<SshTool>> getSshPoolCache() {

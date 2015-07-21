@@ -19,8 +19,6 @@
 package brooklyn.location.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.cloudsoft.winrm4j.winrm.WinRmTool;
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +28,7 @@ import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -38,22 +37,26 @@ import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.location.MachineDetails;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.OsDetails;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.location.MachineDetails;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.OsDetails;
+import brooklyn.location.access.PortForwardManager;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
+import io.cloudsoft.winrm4j.winrm.WinRmTool;
+import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
 
@@ -96,6 +99,12 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
             new TypeToken<Iterable<String>>() {},
             "privateAddresses",
             "Private addresses of this machine, e.g. those within the private network", 
+            null);
+
+    public static final ConfigKey<Map<Integer, String>> TCP_PORT_MAPPINGS = ConfigKeys.newConfigKey(
+            new TypeToken<Map<Integer, String>>() {},
+            "tcpPortMappings",
+            "NAT'ed ports, giving the mapping from private TCP port to a public host:port", 
             null);
 
     @Override
@@ -245,8 +254,21 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     @Override
     public void init() {
         super.init();
-    }
 
+        // Register any pre-existing port-mappings with the PortForwardManager
+        Map<Integer, String> tcpPortMappings = getConfig(TCP_PORT_MAPPINGS);
+        if (tcpPortMappings != null) {
+            PortForwardManager pfm = (PortForwardManager) getManagementContext().getLocationRegistry().resolve("portForwardManager(scope=global)");
+            for (Map.Entry<Integer, String> entry : tcpPortMappings.entrySet()) {
+                int targetPort = entry.getKey();
+                HostAndPort publicEndpoint = HostAndPort.fromString(entry.getValue());
+                if (!publicEndpoint.hasPort()) {
+                    throw new IllegalArgumentException("Invalid portMapping ('"+entry.getValue()+"') for port "+targetPort+" in machine "+this);
+                }
+                pfm.associate(publicEndpoint.getHostText(), publicEndpoint, this, targetPort);
+            }
+        }
+    }
     public String getUser() {
         return config().get(USER);
     }
