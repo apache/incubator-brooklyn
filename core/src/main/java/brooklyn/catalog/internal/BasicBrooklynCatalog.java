@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
@@ -500,7 +499,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         else sourceYaml = new Yaml().dump(item);
         
         CatalogItemType itemType = TypeCoercions.coerce(getFirstAs(catalogMetadata, Object.class, "itemType", "item_type").orNull(), CatalogItemType.class);
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, "<load>:0", libraryBundles);
 
         String id = getFirstAs(catalogMetadata, String.class, "id").orNull();
         String version = getFirstAs(catalogMetadata, String.class, "version").orNull();
@@ -514,7 +512,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             log.warn("Name property will be ignored due to the existence of displayName and at least one of id, symbolicName");
         }
 
-        PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, loader, result).reconstruct();
+        PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, libraryBundles, result).reconstruct();
         if (!planInterpreter.isResolved()) {
             throw Exceptions.create("Could not resolve item "
                 + (Strings.isNonBlank(id) ? id : Strings.isNonBlank(symbolicName) ? symbolicName : Strings.isNonBlank(name) ? name : "<no-name>")
@@ -602,7 +600,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         final Boolean catalogDeprecated = Boolean.valueOf(deprecated);
 
         // run again now that we know the ID
-        planInterpreter = new PlanInterpreterGuessingType(id, item, sourceYaml, itemType, loader, result).reconstruct();
+        planInterpreter = new PlanInterpreterGuessingType(id, item, sourceYaml, itemType, libraryBundles, result).reconstruct();
         if (!planInterpreter.isResolved()) {
             throw new IllegalStateException("Could not resolve plan once id and itemType are known (recursive reference?): "+sourceYaml);
         }
@@ -678,7 +676,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         final String id;
         final Map<?,?> item;
         final String itemYaml;
-        final BrooklynClassLoadingContext loader;
+        final Collection<CatalogBundle> libraryBundles;
         final List<CatalogItemDtoAbstract<?, ?>> itemsDefinedSoFar;
         
         CatalogItemType catalogItemType;
@@ -687,7 +685,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         List<Exception> errors = MutableList.of();
         
         public PlanInterpreterGuessingType(@Nullable String id, Object item, String itemYaml, @Nullable CatalogItemType optionalCiType, 
-                BrooklynClassLoadingContext loader, List<CatalogItemDtoAbstract<?,?>> itemsDefinedSoFar) {
+                Collection<CatalogBundle> libraryBundles, List<CatalogItemDtoAbstract<?,?>> itemsDefinedSoFar) {
             // ID is useful to prevent recursive references (currently for entities only)
             this.id = id;
             
@@ -700,7 +698,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                 this.itemYaml = itemYaml;
             }
             this.catalogItemType = optionalCiType;
-            this.loader = loader;
+            this.libraryBundles = libraryBundles;
             this.itemsDefinedSoFar = itemsDefinedSoFar;
         }
 
@@ -778,7 +776,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             
             // then try parsing plan - this will use loader
             try {
-                AbstractBrooklynObjectSpec<?,?> spec = CampCatalogUtils.createSpec(id, candidateCiType, candidateYaml, loader);
+                CatalogItem<?, ?> itemToAttempt = createItemBuilder(candidateCiType, getIdWithRandomDefault(), DEFAULT_VERSION)
+                    .plan(candidateYaml)
+                    .libraries(libraryBundles)
+                    .build();
+                Object spec = CampCatalogUtils.createSpec(mgmt, itemToAttempt);
                 if (spec!=null) {
                     catalogItemType = candidateCiType;
                     planYaml = candidateYaml;
@@ -806,7 +808,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             if (type!=null && key!=null) {
                 try {
                     String cutDownYaml = key + ":\n" + makeAsIndentedList("type: "+type);
-                    Object cutdownSpec = CampCatalogUtils.createSpec(id, candidateCiType, cutDownYaml, loader);
+                    CatalogItem<?, ?> itemToAttempt = createItemBuilder(candidateCiType, getIdWithRandomDefault(), DEFAULT_VERSION)
+                            .plan(cutDownYaml)
+                            .libraries(libraryBundles)
+                            .build();
+                    Object cutdownSpec = CampCatalogUtils.createSpec(mgmt, itemToAttempt);
                     if (cutdownSpec!=null) {
                         catalogItemType = candidateCiType;
                         planYaml = candidateYaml;
@@ -819,6 +825,10 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             }
             
             return false;
+        }
+
+        private String getIdWithRandomDefault() {
+            return id != null ? id : Strings.makeRandomId(10);
         }
         public Map<?,?> getItem() {
             return item;

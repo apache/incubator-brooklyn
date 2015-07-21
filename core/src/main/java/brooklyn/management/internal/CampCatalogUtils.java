@@ -34,9 +34,9 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
-import brooklyn.catalog.internal.CatalogItemDo;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynServerConfig;
+import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
@@ -55,37 +55,41 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 
 public class CampCatalogUtils {
-    public static <T, SpecT> SpecT createSpec(ManagementContext mgmt, CatalogItemDo<T, SpecT> itemDo) {
+    @SuppressWarnings("unchecked")
+    public static <SpecT> SpecT createSpec(ManagementContext mgmt, CatalogItem<?, SpecT> item) {
         // preferred way is to parse the yaml, to resolve references late;
         // the parsing on load is to populate some fields, but it is optional.
         // TODO messy for location and policy that we need brooklyn.{locations,policies} root of the yaml, but it works;
         // see related comment when the yaml is set, in addAbstractCatalogItems
         // (not sure if anywhere else relies on that syntax; if not, it should be easy to fix!)
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, itemDo);
-        SpecT spec = createSpec(itemDo.getSymbolicName(), itemDo.getCatalogItemType(), itemDo.getPlanYaml(), loader);
-        ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemId(itemDo.getId());
+        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, item);
+        DeploymentPlan plan = makePlanFromYaml(loader.getManagementContext(), item.getPlanYaml());
+        Preconditions.checkNotNull(item.getCatalogItemType(), "catalog item type for "+plan);
+        AbstractBrooklynObjectSpec<?, ?> spec;
+        switch (item.getCatalogItemType()) {
+            case TEMPLATE:
+            case ENTITY:
+                spec = createEntitySpec(item.getSymbolicName(), plan, loader);
+                break;
+            case LOCATION: 
+                spec = createLocationSpec(plan, loader);
+                break;
+            case POLICY: 
+                spec = createPolicySpec(item.getSymbolicName(), plan, loader);
+                break;
+            default:
+                throw new IllegalStateException("Unknown CI Type "+item.getCatalogItemType()+" for "+plan);
+        }
+
+        ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemId(item.getId());
 
         if (Strings.isBlank( ((AbstractBrooklynObjectSpec<?, ?>)spec).getDisplayName() ))
-            ((AbstractBrooklynObjectSpec<?, ?>)spec).displayName(itemDo.getDisplayName());
+            ((AbstractBrooklynObjectSpec<?, ?>)spec).displayName(item.getDisplayName());
 
-        return spec;
+        return (SpecT) spec;
     }
 
-    public static <T, SpecT> SpecT createSpec(String symbolicName, CatalogItemType ciType, String yaml, BrooklynClassLoadingContext loader) {
-        DeploymentPlan plan = makePlanFromYaml(loader.getManagementContext(), yaml);
-        Preconditions.checkNotNull(ciType, "catalog item type for "+plan); 
-        switch (ciType) {
-        case TEMPLATE:
-        case ENTITY: 
-            return createEntitySpec(symbolicName, plan, loader);
-        case LOCATION: return createLocationSpec(plan, loader);
-        case POLICY: return createPolicySpec(symbolicName, plan, loader);
-        }
-        throw new IllegalStateException("Unknown CI Type "+ciType+" for "+plan);
-    }
-    
-    @SuppressWarnings("unchecked")
-    private static <T, SpecT> SpecT createEntitySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+    private static EntitySpec<?> createEntitySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         CampPlatform camp = BrooklynServerConfig.getCampPlatform(loader.getManagementContext()).get();
 
         // TODO should not register new AT each time we instantiate from the same plan; use some kind of cache
@@ -100,7 +104,7 @@ public class CampCatalogUtils {
         try {
             AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
             if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createNestedSpec(at, camp, loader, 
+                return ((AssemblyTemplateSpecInstantiator)instantiator).createNestedSpec(at, camp, loader, 
                     getInitialEncounteredSymbol(symbolicName));
             }
             throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
@@ -113,11 +117,11 @@ public class CampCatalogUtils {
         return symbolicName==null ? MutableSet.<String>of() : MutableSet.of(symbolicName);
     }
 
-    private static <T, SpecT> SpecT createPolicySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+    private static PolicySpec<?> createPolicySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         return createPolicySpec(plan, loader, getInitialEncounteredSymbol(symbolicName));
     }
 
-    private static <T, SpecT> SpecT createPolicySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes) {
+    private static PolicySpec<?> createPolicySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes) {
         //Would ideally re-use io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver.PolicySpecResolver
         //but it is CAMP specific and there is no easy way to get hold of it.
         Object policies = checkNotNull(plan.getCustomAttributes().get(BasicBrooklynCatalog.POLICIES_KEY), "policy config");
@@ -131,7 +135,7 @@ public class CampCatalogUtils {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T, SpecT> SpecT createPolicySpec(BrooklynClassLoadingContext loader, Object policy, Set<String> encounteredCatalogTypes) {
+    private static PolicySpec<?> createPolicySpec(BrooklynClassLoadingContext loader, Object policy, Set<String> encounteredCatalogTypes) {
         Map<String, Object> itemMap;
         if (policy instanceof String) {
             itemMap = ImmutableMap.<String, Object>of("type", policy);
@@ -166,10 +170,10 @@ public class CampCatalogUtils {
         if (brooklynConfig != null) {
             spec.configure(brooklynConfig);
         }
-        return (SpecT) spec;
+        return spec;
     }
 
-    private static <T, SpecT> SpecT createLocationSpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
+    private static LocationSpec<?> createLocationSpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
         // See #createPolicySpec; this impl is modeled on that.
         // spec.catalogItemId is set by caller
         Object locations = checkNotNull(plan.getCustomAttributes().get(BasicBrooklynCatalog.LOCATIONS_KEY), "location config");
@@ -183,7 +187,7 @@ public class CampCatalogUtils {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T, SpecT> SpecT createLocationSpec(BrooklynClassLoadingContext loader, Object location) {
+    private static LocationSpec<?> createLocationSpec(BrooklynClassLoadingContext loader, Object location) {
         Map<String, Object> itemMap;
         if (location instanceof String) {
             itemMap = ImmutableMap.<String, Object>of("type", location);
@@ -201,7 +205,7 @@ public class CampCatalogUtils {
             if (brooklynConfig != null) {
                 spec.configure(brooklynConfig);
             }
-            return (SpecT) spec;
+            return spec;
         } else {
             Maybe<Location> loc = loader.getManagementContext().getLocationRegistry().resolve(type, false, brooklynConfig);
             if (loc.isPresent()) {
@@ -210,7 +214,7 @@ public class CampCatalogUtils {
                 Class<? extends Location> locType = loc.get().getClass();
                 Set<Object> locTags = loc.get().tags().getTags();
                 String locDisplayName = loc.get().getDisplayName();
-                return (SpecT) LocationSpec.create(locType)
+                return LocationSpec.create(locType)
                         .configure(locConfig)
                         .displayName(locDisplayName)
                         .tags(locTags);
