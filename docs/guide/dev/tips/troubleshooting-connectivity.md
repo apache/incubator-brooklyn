@@ -10,7 +10,7 @@ do I get my service (e.g. a TCP host:port) publicly accessible over the internet
 This varies a lot - e.g. Is the VM public or in a private network? Is the service only accessible through
 a load balancer? Should the service be globally reachable or only to a particular CIDR?
 
-This blog post gives some general tips for debugging connectivity issues, which are applicable to a 
+This guide gives some general tips for debugging connectivity issues, which are applicable to a 
 range of different service types. Choose those that are appropriate for your use-case.
 
 ## VM reachable
