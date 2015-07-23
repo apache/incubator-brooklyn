@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -31,11 +30,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
@@ -63,6 +66,7 @@ import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.transform.BrooklynFeatureTransformer;
 import brooklyn.rest.transform.HighAvailabilityTransformer;
+import brooklyn.rest.util.ShutdownHandler;
 import brooklyn.rest.util.WebResourceUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -77,9 +81,6 @@ import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
-
 public class ServerResource extends AbstractBrooklynRestResource implements ServerApi {
 
     private static final int SHUTDOWN_TIMEOUT_CHECK_INTERVAL = 200;
@@ -88,6 +89,9 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
 
     private static final String BUILD_SHA_1_PROPERTY = "git-sha-1";
     private static final String BUILD_BRANCH_PROPERTY = "git-branch-name";
+    
+    @Context
+    private ShutdownHandler shutdownHandler;
 
     @Override
     public void reloadBrooklynProperties() {
@@ -122,13 +126,14 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
             delayForHttpReturn = Duration.of(delayMillis, TimeUnit.MILLISECONDS);
         }
 
-        Preconditions.checkState(delayForHttpReturn.isPositive(), "Only positive delay allowed for delayForHttpReturn");
+        Preconditions.checkState(delayForHttpReturn.nanos() >= 0, "Only positive or 0 delay allowed for delayForHttpReturn");
 
         boolean isSingleTimeout = shutdownTimeout.equals(requestTimeout);
         final AtomicBoolean completed = new AtomicBoolean();
         final AtomicBoolean hasAppErrorsOrTimeout = new AtomicBoolean();
 
         new Thread("shutdown") {
+            @Override
             public void run() {
                 boolean terminateTried = false;
                 try {
@@ -178,10 +183,15 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                     complete();
                 
                     if (!hasAppErrorsOrTimeout.get() || forceShutdownOnError) {
-                        //give the http request a chance to complete gracefully
+                        //give the http request a chance to complete gracefully, the server will be stopped in a shutdown hook
                         Time.sleep(delayForHttpReturn);
-                        
-                        System.exit(0);
+
+                        if (shutdownHandler != null) {
+                            shutdownHandler.onShutdownRequest();
+                        } else {
+                            log.warn("ShutdownHandler not set, exiting process");
+                            System.exit(0);
+                        }
                         
                     } else {
                         // There are app errors, don't exit the process, allowing any exception to continue throwing

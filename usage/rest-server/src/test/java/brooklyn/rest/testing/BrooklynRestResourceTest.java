@@ -60,6 +60,7 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         setUpJersey();
     }
 
+    @Override
     @AfterClass(alwaysRun = true)
     public void tearDown() throws Exception {
         tearDownJersey();

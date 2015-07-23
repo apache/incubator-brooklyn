@@ -194,6 +194,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-rest-server</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-software-messaging</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

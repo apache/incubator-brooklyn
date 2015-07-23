@@ -25,9 +25,16 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableSet;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynProperties;
@@ -38,13 +45,16 @@ import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
 
-import com.google.common.collect.ImmutableSet;
-import com.sun.jersey.api.client.UniformInterfaceException;
-
 @Test(singleThreaded = true)
 public class ServerResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ServerResourceTest.class);
+    
+    @Override
+    @BeforeClass(alwaysRun = true)
+    public void setUp() throws Exception {
+        super.setUp();
+    }
 
     @Test
     public void testGetVersion() throws Exception {
@@ -89,13 +99,22 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
         assertEquals(reloadCount.get(), 1);
     }
     
-    // TODO Do not run this! It does a system.exit in ServerResource.shutdown
-    @Test(enabled=false)
+    @Test
     public void testShutdown() throws Exception {
         assertTrue(getManagementContext().isRunning());
+        assertFalse(shutdownListener.isRequested());
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("requestTimeout", "0");
+        formData.add("delayForHttpReturn", "0");
+        client().resource("/v1/server/shutdown").entity(formData).post();
         
-        client().resource("/v1/server/shutdown").post();
-        
+        Asserts.succeedsEventually(new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(shutdownListener.isRequested());
+            }
+        });
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
                 assertFalse(getManagementContext().isRunning());

@@ -34,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.servlet.DispatcherType;
 
 import org.eclipse.jetty.server.Connector;
@@ -47,6 +48,16 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
+import com.sun.jersey.api.core.DefaultResourceConfig;
+import com.sun.jersey.api.core.ResourceConfig;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynServerPaths;
@@ -68,6 +79,8 @@ import brooklyn.rest.filter.LoggingFilter;
 import brooklyn.rest.filter.NoCacheFilter;
 import brooklyn.rest.filter.RequestTaggingFilter;
 import brooklyn.rest.util.ManagementContextProvider;
+import brooklyn.rest.util.ShutdownHandler;
+import brooklyn.rest.util.ShutdownHandlerProvider;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -85,16 +98,6 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.web.ContextHandlerCollectionHotSwappable;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
-import com.sun.jersey.api.core.DefaultResourceConfig;
-import com.sun.jersey.api.core.ResourceConfig;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 /**
  * Starts the web-app running, connected to the given management context
@@ -194,6 +197,8 @@ public class BrooklynWebServer {
     
     private Class<BrooklynPropertiesSecurityFilter> securityFilterClazz;
 
+    private ShutdownHandler shutdownHandler;
+
     public BrooklynWebServer(ManagementContext managementContext) {
         this(Maps.newLinkedHashMap(), managementContext);
     }
@@ -223,6 +228,10 @@ public class BrooklynWebServer {
 
     public void setSecurityFilter(Class<BrooklynPropertiesSecurityFilter> filterClazz) {
         this.securityFilterClazz = filterClazz;
+    }
+
+    public void setShutdownHandler(@Nullable ShutdownHandler shutdownHandler) {
+        this.shutdownHandler = shutdownHandler;
     }
 
     public BrooklynWebServer setPort(Object port) {
@@ -324,7 +333,7 @@ public class BrooklynWebServer {
         return this;
     }
 
-    public static void installAsServletFilter(ServletContextHandler context) {
+    public void installAsServletFilter(ServletContextHandler context) {
         ResourceConfig config = new DefaultResourceConfig();
         // load all our REST API modules, JSON, and Swagger
         for (Object r: BrooklynRestApi.getAllResources())
@@ -347,6 +356,8 @@ public class BrooklynWebServer {
 
         ManagementContext mgmt = (ManagementContext) context.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
         config.getSingletons().add(new ManagementContextProvider(mgmt));
+
+        config.getSingletons().add(new ShutdownHandlerProvider(shutdownHandler));
     }
 
     ContextHandlerCollectionHotSwappable handlers = new ContextHandlerCollectionHotSwappable();

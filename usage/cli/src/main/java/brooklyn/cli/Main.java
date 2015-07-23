@@ -19,12 +19,6 @@
 package brooklyn.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovyShell;
-import io.airlift.command.Cli;
-import io.airlift.command.Cli.CliBuilder;
-import io.airlift.command.Command;
-import io.airlift.command.Option;
 
 import java.io.Console;
 import java.io.IOException;
@@ -33,9 +27,22 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.basic.BrooklynTypes;
@@ -69,9 +76,11 @@ import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.launcher.BrooklynServerDetails;
 import brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import brooklyn.management.ManagementContext;
+import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.rest.security.PasswordHasher;
+import brooklyn.rest.util.ShutdownHandler;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
@@ -84,14 +93,12 @@ import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
-
-import com.google.common.annotations.Beta;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Objects.ToStringHelper;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovyShell;
+import io.airlift.command.Cli;
+import io.airlift.command.Cli.CliBuilder;
+import io.airlift.command.Command;
+import io.airlift.command.Option;
 
 /**
  * This class is the primary CLI for brooklyn.
@@ -384,6 +391,7 @@ public class Main extends AbstractMain {
         public Void call() throws Exception {
             // Configure launcher
             BrooklynLauncher launcher;
+            AppShutdownHandler shutdownHandler = new AppShutdownHandler();
             failIfArguments();
             try {
                 if (log.isDebugEnabled()) log.debug("Invoked launch command {}", this);
@@ -440,6 +448,7 @@ public class Main extends AbstractMain {
                 launcher.highAvailabilityMode(highAvailabilityMode);
 
                 launcher.stopWhichAppsOnShutdown(stopWhichAppsOnShutdownMode);
+                launcher.shutdownHandler(shutdownHandler);
                 
                 computeAndSetApp(launcher, utils, loader);
                 
@@ -478,8 +487,10 @@ public class Main extends AbstractMain {
             }
             
             if (!exitAndLeaveAppsRunningAfterStarting) {
-                waitAfterLaunch(ctx);
+                waitAfterLaunch(ctx, shutdownHandler);
             }
+
+            // will call mgmt.terminate() in BrooklynShutdownHookJob
             return null;
         }
 
@@ -687,31 +698,37 @@ public class Main extends AbstractMain {
             }
         }
         
-        protected void waitAfterLaunch(ManagementContext ctx) throws IOException {
+        protected void waitAfterLaunch(ManagementContext ctx, AppShutdownHandler shutdownHandler) throws IOException {
             if (stopOnKeyPress) {
                 // Wait for the user to type a key
                 log.info("Server started. Press return to stop.");
-                stdin.read();
+                // Read in another thread so we can use timeout on the wait.
+                Task<Void> readTask = ctx.getExecutionManager().submit(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        stdin.read();
+                        return null;
+                    }
+                });
+                while (!shutdownHandler.isRequested()) {
+                    try {
+                        readTask.get(Duration.ONE_SECOND);
+                        break;
+                    } catch (TimeoutException e) {
+                        //check if there's a shutdown request
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw Exceptions.propagate(e);
+                    } catch (ExecutionException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                }
+                log.info("Shutting down applications.");
                 stopAllApps(ctx.getApplications());
             } else {
                 // Block forever so that Brooklyn doesn't exit (until someone does cntrl-c or kill)
                 log.info("Launched Brooklyn; will now block until shutdown command received via GUI/API (recommended) or process interrupt.");
-                waitUntilInterrupted();
-            }
-        }
-
-        protected void waitUntilInterrupted() {
-            Object mutex = new Object();
-            synchronized (mutex) {
-                try {
-                    while (!Thread.currentThread().isInterrupted()) {
-                        mutex.wait();
-                        log.debug("Spurious wake in brooklyn Main while waiting for interrupt, how about that!");
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return; // exit gracefully
-                }
+                shutdownHandler.waitOnShutdownRequest();
             }
         }
 
@@ -963,5 +980,27 @@ public class Main extends AbstractMain {
     /** method intended for overriding when a custom {@link InfoCommand} is being specified  */
     protected Class<? extends BrooklynCommand> cliDefaultInfoCommand() {
         return DefaultInfoCommand.class;
+    }
+    
+    public static class AppShutdownHandler implements ShutdownHandler {
+        private CountDownLatch lock = new CountDownLatch(1);
+
+        @Override
+        public void onShutdownRequest() {
+            lock.countDown();
+        }
+        
+        public boolean isRequested() {
+            return lock.getCount() == 0;
+        }
+
+        public void waitOnShutdownRequest() {
+            try {
+                lock.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return; // exit gracefully
+            }
+        }
     }
 }
