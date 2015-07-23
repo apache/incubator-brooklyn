@@ -96,7 +96,11 @@ public class ByonLocationResolver extends AbstractLocationResolver {
         String user = (String) config.getStringKey("user");
         Integer port = (Integer) TypeCoercions.coerce(config.getStringKey("port"), Integer.class);
         Class<? extends MachineLocation> locationClass = OS_TO_MACHINE_LOCATION_TYPE.get(config.get(OS_FAMILY));
-        
+
+        MutableMap<String, Object> defaultProps = MutableMap.of();
+        defaultProps.addIfNotNull("user", user);
+        defaultProps.addIfNotNull("port", port);
+
         List<String> hostAddresses;
         
         if (hosts instanceof String) {
@@ -119,9 +123,9 @@ public class ByonLocationResolver extends AbstractLocationResolver {
         for (Object host : hostAddresses) {
             LocationSpec<? extends MachineLocation> machineSpec;
             if (host instanceof String) {
-                machineSpec = parseMachine((String)host, locationClass, MutableMap.of("user", user, "port", port), spec);
+                machineSpec = parseMachine((String)host, locationClass, defaultProps, spec);
             } else if (host instanceof Map) {
-                machineSpec = parseMachine((Map<String, ?>)host, locationClass, MutableMap.of("user", user, "port", port), spec);
+                machineSpec = parseMachine((Map<String, ?>)host, locationClass, defaultProps, spec);
             } else {
                 throw new IllegalArgumentException("Expected machine to be String or Map, but was "+host.getClass().getName()+" ("+host+")");
             }
