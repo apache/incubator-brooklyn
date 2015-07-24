@@ -7,7 +7,13 @@
             {
                 "name":"locations",
                 "type":"java.util.Collection",
-                "description":null
+                "description":"A list of locations"
+            },
+            {
+                "name":"booleanValue",
+                "type":"java.lang.Boolean",
+                "description":"True or false",
+                "defaultValue": true
             }
         ],
         "links":{

@@ -19,30 +19,42 @@
 define([
     "model/effector-summary", "model/effector-param"
 ], function (EffectorSummary, EffectorParam) {
-    $.ajaxSetup({ async:false });
-    
+
+    $.ajaxSetup({async: false});
+
     describe("effector-spec: EffectorSummary model", function () {
-        var effectorCollection = new EffectorSummary.Collection
-        effectorCollection.url = "fixtures/effector-summary-list.json"
-        effectorCollection.fetch()
+        var effectorCollection = new EffectorSummary.Collection;
+        effectorCollection.url = "fixtures/effector-summary-list.json";
+        effectorCollection.fetch();
 
-        it("must have 3 objects", function () {
-            expect(effectorCollection.length).toBe(3)
-        })
+        it("must have start, stop and restart effectors", function () {
+            var actual = effectorCollection.pluck("name").sort();
+            var expected = ["restart", "start", "stop"].sort();
+            expect(actual).toEqual(expected);
+        });
 
-        it("has a first object 'name'", function () {
-            var effector1 = effectorCollection.at(0)
-            expect(effector1.get("name")).toBe("start")
-            expect(effector1.get("returnType")).toBe("void")
-            expect(effector1.get("parameters").length).toBe(1)
-        })
+        describe("the start effector", function () {
+            var startEffector = effectorCollection.at(0);
+            it("has void return type and two parameters", function () {
+                expect(startEffector.get("name")).toBe("start");
+                expect(startEffector.get("returnType")).toBe("void");
+                expect(startEffector.get("parameters").length).toBe(2);
+            });
 
-        it(" effector1 has a first parameter named 'locations'", function () {
-            var effector1 = effectorCollection.at(0)
-            var param1 = new EffectorParam.Model(effector1.getParameterByName("locations"))
-            expect(param1.get("name")).toBe("locations")
-            expect(param1.get("type")).toBe("java.util.Collection")
-            expect(param1.get("description")).toBe("")
+            it("has a parameter named 'locations'", function () {
+                var parameter = new EffectorParam.Model(startEffector.getParameterByName("locations"));
+                expect(parameter.get("name")).toBe("locations");
+                expect(parameter.get("type")).toBe("java.util.Collection");
+                expect(parameter.get("description")).toBe("A list of locations");
+            });
+
+            it("has a parameter named 'booleanValue'", function () {
+                var parameter = new EffectorParam.Model(startEffector.getParameterByName("booleanValue"));
+                expect(parameter.get("name")).toBe("booleanValue");
+                expect(parameter.get("type")).toBe("java.lang.Boolean");
+                expect(parameter.get("description")).toBe("True or false");
+                expect(parameter.get("defaultValue")).toBe(true);
+            });
         })
     })
-})
+});

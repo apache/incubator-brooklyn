@@ -26,6 +26,14 @@ under the License.
     server-side mechanism for populating options in some situations. -->
     <% if (name == 'locations' || name == 'location') { %>
     <td><div id="selector-container" class="input-medium param-value"></div></td>
+    <% } else if (type == 'java.lang.Boolean') { %>
+    <td>
+        <% if (defaultValue) { %>
+        <input type="checkbox" class="param-value" checked>
+        <% } else { %>
+        <input type="checkbox" class="param-value">
+        <% } %>
+    </td>
     <% } else { %>
     <td><!--  use 1 line textarea so it can be resized -->
       <textarea class="input-medium param-value"><%- defaultValue %></textarea>
