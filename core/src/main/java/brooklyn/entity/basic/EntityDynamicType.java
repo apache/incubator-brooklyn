@@ -130,15 +130,36 @@ public class EntityDynamicType extends BrooklynDynamicType<Entity, AbstractEntit
             instance.emit(AbstractEntity.EFFECTOR_ADDED, newEffector.getName());
     }
 
-    /** Adds an effector with an explicit body */
+    /**
+     * Adds an effector with an explicit body to this entity.
+     */
     @Beta
     public <T> void addEffector(Effector<T> effector, EffectorTaskFactory<T> body) {
         addEffector(new EffectorAndBody<T>(effector, body));
     }
-    /** Adds an effector with an explicit body */
+
+    /**
+     * Adds an effector with an explicit body to this entity.
+     */
     @Beta
     public <T> void addEffector(Effector<T> effector, EffectorBody<T> body) {
         addEffector(effector, new EffectorBodyTaskFactory<T>(body));
+    }
+
+    /**
+     * Removes the given {@link Effector} from this entity.
+     * <p>
+     * Note that if the argument is an instance of {@link EffectorWithBody} it will
+     * still be possible to invoke the effector on the entity by calling
+     * <code>entity.invoke(effector, argumentsMap)</code>.
+     */
+    @Beta
+    public void removeEffector(Effector<?> effector) {
+        Effector<?> removed = effectors.remove(effector.getName());
+        invalidateSnapshot();
+        if (removed != null) {
+            instance.emit(AbstractEntity.EFFECTOR_REMOVED, removed.getName());
+        }
     }
 
     // --------------------------------------------------

@@ -18,45 +18,41 @@
  */
 package brooklyn.entity.basic;
 
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Application;
+import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.effector.EffectorTaskTest;
 import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
-public class DynamicEntityTest {
-
-    Application app;
-    
-    @BeforeMethod(alwaysRun=true)
-    public void setup() throws Exception {
-        app = ApplicationBuilder.newManagedApp(EntitySpec.create(BasicApplication.class), LocalManagementContextForTests.newInstance());
-    }
-    
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
-    }
+public class DynamicEntityTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testEffectorAddedDuringInit() {
-        BasicEntity entity = app.addChild(EntitySpec.create(BasicEntity.class)
-            .addInitializer(new EntityInitializer() {
-                public void apply(EntityLocal entity) {
-                    ((EntityInternal)entity).getMutableEntityType().addEffector(EffectorTaskTest.DOUBLE_1);
-                }
-            }));
-        // TODO why doesn't the call to addChild above automatically manage the child (now that we use specs for creation) ?
-        // (if there is a good reason, put it in addChild!)
-        Entities.manage(entity);
-        
-        Assert.assertEquals(entity.invoke(EffectorTaskTest.DOUBLE_BODYLESS, MutableMap.of("numberToDouble", 5)).getUnchecked(), (Integer)10);
+        BasicEntity entity = app.createAndManageChild(EntitySpec.create(BasicEntity.class)
+                .addInitializer(new EntityInitializer() {
+                    public void apply(EntityLocal entity) {
+                        ((EntityInternal) entity).getMutableEntityType().addEffector(EffectorTaskTest.DOUBLE_1);
+                    }
+                }));
+        assertEquals(entity.invoke(EffectorTaskTest.DOUBLE_BODYLESS, MutableMap.of("numberToDouble", 5)).getUnchecked(), (Integer) 10);
+    }
+
+    @Test
+    public void testEffectorRemovedDuringInit() {
+        TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .addInitializer(new EntityInitializer() {
+                    @Override
+                    public void apply(EntityLocal entity) {
+                        ((EntityInternal) entity).getMutableEntityType().removeEffector(TestEntity.IDENTITY_EFFECTOR);
+                    }
+                }));
+        assertFalse(entity.getMutableEntityType().getEffectors().containsKey(TestEntity.IDENTITY_EFFECTOR.getName()));
     }
     
 }
