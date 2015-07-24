@@ -87,7 +87,7 @@ public class JavaWebAppsMatchingTest {
         
         DeploymentPlan plan = platform.pdp().parseDeploymentPlan(input);
         log.info("DP is:\n"+plan.toString());
-        Map<?,?> cfg1 = (Map<?, ?>) plan.getServices().get(0).getCustomAttributes().get("brooklyn.config");
+        Map<?,?> cfg1 = (Map<?, ?>) plan.getServices().get(0).getCustomAttributes().get(BrooklynCampReservedKeys.BROOKLYN_CONFIG);
         Map<?,?> cfg = MutableMap.copyOf(cfg1);
         
         Assert.assertEquals(cfg.remove("literalValue1"), "$brooklyn: is a fun place");
@@ -106,7 +106,7 @@ public class JavaWebAppsMatchingTest {
         Assert.assertEquals(at.getCustomAttributes().get("location"), "localhost");
         
         PlatformComponentTemplate pct = at.getPlatformComponentTemplates().links().iterator().next().resolve();
-        Object cfg2 = pct.getCustomAttributes().get("brooklyn.config");
+        Object cfg2 = pct.getCustomAttributes().get(BrooklynCampReservedKeys.BROOKLYN_CONFIG);
         Assert.assertEquals(cfg2, cfg1);
     }
 
@@ -133,7 +133,7 @@ public class JavaWebAppsMatchingTest {
 
         PlatformComponentTemplate pct2 = pcti.next().resolve(); 
 
-        Map<?,?> config = (Map<?, ?>) pct1.getCustomAttributes().get("brooklyn.config");
+        Map<?,?> config = (Map<?, ?>) pct1.getCustomAttributes().get(BrooklynCampReservedKeys.BROOKLYN_CONFIG);
         Map<?,?> javaSysProps = (Map<?, ?>) config.get("java.sysprops");
         Object dbUrl = javaSysProps.get("brooklyn.example.db.url");
         Assert.assertTrue(dbUrl instanceof DeferredSupplier<?>, "url is: "+dbUrl);

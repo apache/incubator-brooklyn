@@ -19,6 +19,7 @@
 package io.brooklyn.camp.brooklyn.spi.creation;
 
 import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import io.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import io.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
 import io.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
 import io.brooklyn.camp.spi.AbstractResource;
@@ -26,6 +27,7 @@ import io.brooklyn.camp.spi.ApplicationComponentTemplate;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -293,7 +295,7 @@ public class BrooklynComponentTemplateResolver {
         if (planId==null)
             planId = (String) attrs.getStringKey(BrooklynCampConstants.PLAN_ID_FLAG);
 
-        Object childrenObj = attrs.getStringKey("brooklyn.children");
+        Object childrenObj = attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_CHILDREN);
         if (childrenObj != null) {
             // Creating a new set of encounteredCatalogTypes means that this won't check things recursively;
             // but we are looking at children so we probably *should* be resetting the recursive list we've looked at;
@@ -347,12 +349,18 @@ public class BrooklynComponentTemplateResolver {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void configureEntityConfig(EntitySpec<?> spec) {
-        ConfigBag bag = ConfigBag.newInstance((Map<Object, Object>) attrs.getStringKey("brooklyn.config"));
-
         // first take *recognised* flags and config keys from the top-level, and put them in the bag (of brooklyn.config)
-        // (for component templates this will have been done already by BrooklynEntityMatcher, but for specs it is needed here)
+        // attrs will contain only brooklyn.xxx properties when coming from BrooklynEntityMatcher.
+        // Any top-level flags will go into "brooklyn.flags". When resolving a spec from $brooklyn:entitySpec
+        // top level flags remain in place. Have to support both cases.
+
+        ConfigBag bag = ConfigBag.newInstance((Map<Object, Object>) attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_CONFIG));
         ConfigBag bagFlags = ConfigBag.newInstanceCopying(attrs);
-        List<FlagConfigKeyAndValueRecord> topLevelApparentConfig = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bagFlags);
+        if (attrs.containsKey(BrooklynCampReservedKeys.BROOKLYN_FLAGS)) {
+            bagFlags.putAll((Map<String, Object>) attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_FLAGS));
+        }
+
+        Collection<FlagConfigKeyAndValueRecord> topLevelApparentConfig = findAllFlagsAndConfigKeys(spec, bagFlags);
         for (FlagConfigKeyAndValueRecord r: topLevelApparentConfig) {
             if (r.getConfigKeyMaybeValue().isPresent())
                 bag.putIfAbsent((ConfigKey)r.getConfigKey(), r.getConfigKeyMaybeValue().get());
@@ -361,7 +369,7 @@ public class BrooklynComponentTemplateResolver {
         }
 
         // now set configuration for all the items in the bag
-        List<FlagConfigKeyAndValueRecord> records = FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bag);
+        Collection<FlagConfigKeyAndValueRecord> records = findAllFlagsAndConfigKeys(spec, bag);
         Set<String> keyNamesUsed = new LinkedHashSet<String>();
         for (FlagConfigKeyAndValueRecord r: records) {
             if (r.getFlagMaybeValue().isPresent()) {
@@ -387,6 +395,21 @@ public class BrooklynComponentTemplateResolver {
                 spec.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), transformed);
             }
         }
+    }
+
+    /**
+     * Searches for config keys in the type, additional interfaces and the implementation (if specified)
+     */
+    private Collection<FlagConfigKeyAndValueRecord> findAllFlagsAndConfigKeys(EntitySpec<?> spec, ConfigBag bagFlags) {
+        Set<FlagConfigKeyAndValueRecord> allKeys = MutableSet.of();
+        allKeys.addAll(FlagUtils.findAllFlagsAndConfigKeys(null, spec.getType(), bagFlags));
+        if (spec.getImplementation() != null) {
+            allKeys.addAll(FlagUtils.findAllFlagsAndConfigKeys(null, spec.getImplementation(), bagFlags));
+        }
+        for (Class<?> iface : spec.getAdditionalInterfaces()) {
+            allKeys.addAll(FlagUtils.findAllFlagsAndConfigKeys(null, iface, bagFlags));
+        }
+        return allKeys;
     }
 
     protected static class SpecialFlagsTransformer implements Function<Object, Object> {
@@ -462,7 +485,7 @@ public class BrooklynComponentTemplateResolver {
     @SuppressWarnings("unchecked")
     protected List<Map<String, Object>> getChildren(Map<String, Object> attrs) {
         if (attrs==null) return null;
-        return (List<Map<String, Object>>) attrs.get("brooklyn.children");
+        return (List<Map<String, Object>>) attrs.get(BrooklynCampReservedKeys.BROOKLYN_CHILDREN);
     }
 
 }

@@ -38,6 +38,8 @@ import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.management.osgi.OsgiTestResources;
 import brooklyn.test.TestResourceUnavailableException;
+import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
@@ -608,6 +610,83 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         } catch (IllegalStateException e) {
             assertTrue(e.toString().contains("recursive"), "Unexpected error message: "+e);
         }
+    }
+
+    @Test
+    public void testConfigAppliedToCatalogItem() throws Exception {
+        addCatalogOSGiEntity("test", TestEntity.class.getName());
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  brooklyn.config:",
+                "    test.confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
+
+    @Test
+    public void testFlagsAppliesToCatalogItem() throws Exception {
+        addCatalogOSGiEntity("test", TestEntity.class.getName());
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
+
+    @Test
+    public void testExplicitFlagsAppliesToCatalogItem() throws Exception {
+        addCatalogOSGiEntity("test", TestEntity.class.getName());
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  brooklyn.flags:",
+                "    confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
+    
+
+    @Test
+    public void testConfigAppliedToCatalogItemImpl() throws Exception {
+        addCatalogOSGiEntity("test", TestEntityImpl.class.getName());
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  brooklyn.config:",
+                "    test.confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
+
+    @Test
+    public void testFlagsAppliesToCatalogItemImpl() throws Exception {
+        addCatalogOSGiEntity("test", TestEntityImpl.class.getName());
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
+    }
+
+    @Test
+    public void testExplicitFlagsAppliesToCatalogItemImpl() throws Exception {
+        addCatalogOSGiEntity("test", TestEntityImpl.class.getName());
+        String testName = "test-applies-config-on-catalog-item";
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + ver("test"),
+                "  brooklyn.flags:",
+                "    confName: " + testName);
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
     }
     
     private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {

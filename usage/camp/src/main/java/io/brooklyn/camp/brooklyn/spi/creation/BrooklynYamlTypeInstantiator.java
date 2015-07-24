@@ -32,6 +32,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Reflections;
+import io.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
@@ -155,7 +156,7 @@ public abstract class BrooklynYamlTypeInstantiator {
         @Nonnull
         public Map<String,?> getConfigMap() {
             MutableMap<String,Object> result = MutableMap.of();
-            Object bc = data.getStringKey("brooklyn.config");
+            Object bc = data.getStringKey(BrooklynCampReservedKeys.BROOKLYN_CONFIG);
             if (bc!=null) {
                 if (bc instanceof Map)
                     result.putAll((Map<? extends String, ?>) bc);

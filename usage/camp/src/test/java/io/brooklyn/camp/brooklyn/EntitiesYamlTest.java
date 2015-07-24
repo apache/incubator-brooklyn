@@ -156,6 +156,16 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testFlagAtRootEntityImpl() throws Exception {
+        Entity app = createAndStartApplication(
+                "services:",
+                "- serviceType: " + TestEntityImpl.class.getName(),
+                "  confName: Foo Bar");
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
+    @Test
     public void testConfigKeyAtRoot() throws Exception {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  test.confName: Foo Bar");
@@ -167,6 +177,34 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
             "  test.dynamic.confName: Foo Bar");
         // should NOT be set (and there should be a warning in the log)
+        String dynamicConfNameValue = testEntity.getConfig(ConfigKeys.newStringConfigKey("test.dynamic.confName"));
+        Assert.assertNull(dynamicConfNameValue);
+    }
+
+    @Test
+    public void testExplicitFlags() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
+            "  brooklyn.flags:",
+            "    confName: Foo Bar");
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
+    @Test
+    public void testExplicitFlagsEntityImpl() throws Exception {
+        Entity app = createAndStartApplication(
+                "services:",
+                "- serviceType: " + TestEntityImpl.class.getName(),
+                "  brooklyn.flags:",
+                "    confName: Foo Bar");
+        Entity testEntity = Iterables.getOnlyElement(app.getChildren());
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Foo Bar");
+    }
+
+    @Test
+    public void testUndeclaredExplicitFlagsIgnored() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
+            "  brooklyn.flags:",
+            "    test.dynamic.confName: Foo Bar");
         String dynamicConfNameValue = testEntity.getConfig(ConfigKeys.newStringConfigKey("test.dynamic.confName"));
         Assert.assertNull(dynamicConfNameValue);
     }
@@ -615,6 +653,27 @@ public class EntitiesYamlTest extends AbstractYamlTest {
                 "     $brooklyn:entitySpec:\n"+
                 "       type: brooklyn.test.entity.TestEntity\n"+
                 "       confName: inchildspec\n";
+        
+        Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
+        TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
+        
+        TestEntity child = (TestEntity) entity.createAndManageChildFromConfig();
+        assertEquals(child.getConfig(TestEntity.CONF_NAME), "inchildspec");
+    }
+
+    @Test
+    public void testEntitySpecExplicitFlags() throws Exception {
+        String yaml =
+                "services:\n"+
+                "- serviceType: brooklyn.test.entity.TestEntity\n"+
+                "  brooklyn.flags:\n"+
+                "    confName: inParent\n"+
+                "  brooklyn.config:\n"+
+                "   test.childSpec:\n"+
+                "     $brooklyn:entitySpec:\n"+
+                "       type: brooklyn.test.entity.TestEntity\n"+
+                "       brooklyn.flags:\n"+
+                "         confName: inchildspec\n";
         
         Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
         TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
