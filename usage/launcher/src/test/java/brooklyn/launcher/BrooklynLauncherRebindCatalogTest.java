@@ -19,12 +19,19 @@
 package brooklyn.launcher;
 
 import java.io.File;
-import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 import brooklyn.catalog.BrooklynCatalog;
 import brooklyn.catalog.CatalogItem;
@@ -34,11 +41,6 @@ import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.os.Os;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
-
 public class BrooklynLauncherRebindCatalogTest {
 
     private static final String TEST_VERSION = "test-version";
@@ -47,13 +49,25 @@ public class BrooklynLauncherRebindCatalogTest {
     private static final Iterable<String> EXPECTED_DEFAULT_IDS = ImmutableSet.of("one:" + TEST_VERSION, "two:" + TEST_VERSION);
     private static final Iterable<String> EXPECTED_ADDED_IDS = ImmutableSet.of("three:" + TEST_VERSION, "four:" + TEST_VERSION);
 
+    private List<BrooklynLauncher> launchers = Lists.newCopyOnWriteArrayList();
+    
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        for (BrooklynLauncher launcher : launchers) {
+            launcher.terminate();
+        }
+        launchers.clear();
+    }
+    
     private BrooklynLauncher newLauncherForTests(String persistenceDir) {
         CatalogInitialization catalogInitialization = new CatalogInitialization(CATALOG_INITIAL, false, null, false);
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .brooklynProperties(LocalManagementContextForTests.builder(true).buildProperties())
                 .catalogInitialization(catalogInitialization)
                 .persistMode(PersistMode.AUTO)
-                .persistenceDir(persistenceDir);
+                .persistenceDir(persistenceDir)
+                .webconsole(false);
+        launchers.add(launcher);
         return launcher;
     }
 
@@ -70,7 +84,7 @@ public class BrooklynLauncherRebindCatalogTest {
         catalog.deleteCatalogItem("one", TEST_VERSION);
         catalog.deleteCatalogItem("two", TEST_VERSION);
 
-        Assert.assertEquals(((Collection) catalog.getCatalogItems()).size(), 0);
+        Assert.assertEquals(Iterables.size(catalog.getCatalogItems()), 0);
 
         catalog.addItems(new ResourceUtils(this).getResourceAsString(CATALOG_ADDITIONS));
 
