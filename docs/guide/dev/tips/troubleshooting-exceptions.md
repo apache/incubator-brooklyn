@@ -28,7 +28,6 @@ First let's take a look at the `customize()` method of the Tomcat server bluepri
       copyTemplate(entity.getConfig(TomcatServer.SERVER_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "server.xml"));
       copyTemplate(entity.getConfig(TomcatServer.WEB_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "web.xml"));
 
-      // Deduplicate same code in JBoss
       if (isProtocolEnabled("HTTPS")) {
           String keystoreUrl = Preconditions.checkNotNull(getSslKeystoreUrl(), "keystore URL must be specified if using HTTPS for " + entity);
           String destinationSslKeystoreFile = getHttpsSslKeystoreFile();
@@ -68,7 +67,9 @@ Execution failed, invalid result 127 for customizing TomcatServerImpl{id=e1HP2s8
 
 [![Script failure error in the Brooklyn debug console.](images/script-failure.png)](images/script-failure-large.png)
 
-By selecting the `Activities` tab and drilling down into the tasks, we eventually get to the task that failed:
+By selecting the `Activities` tab, we can drill into the task that failed. The list of tasks shown (where the 
+effectors are shown as top-level tasks) are clickable links. Selecting that row will show the details of
+that particular task, including its sub-tasks. We can eventually get to the specific sub-task that failed:
 
 [![Task failure error in the Brooklyn debug console.](images/failed-task.png)](images/failed-task-large.png)
 
@@ -112,7 +113,7 @@ is named `brooklyn.debug.log`. Usually the easiest way to navigate the log file 
 `less brooklyn.debug.log`. We can quickly find find the stack trace by first navigating to the end of the log file
 with `Shift-G`, then performing a reverse-lookup by typing `?Tomcat` and pressing `Enter`. If searching for the 
 blueprint type (in this case Tomcat) simply matches tasks unrelated to the exception, you can also search for 
-the text of the error message, in this case `? invalid result 127`. You can make the search case-insensitivy by
+the text of the error message, in this case `? invalid result 127`. You can make the search case-insensitivity by
 typing `-i` before performing the search. To skip the current match and move to the next on (i.e. 'up' as we're
 performing a reverse-lookup), simply press `n`
 
@@ -426,8 +427,9 @@ the `Show/hide empty records` icon (highlighted in yellow above):
 
 We know from previous steps that the installation and launch scripts completed, and we know the procecess is running,
 but we can see here that the server is not responding to JMX requests. A good thing to check here would be that the
-JMX port is not being blocked by iptables, firewalls or security groups. Let's assume that we've checked that
-and they're all open. There is still one more thing that Brooklyn can tell us.
+JMX port is not being blocked by iptables, firewalls or security groups
+ (see the (troubleshooting connectivity guide)[troubleshooting-connectivity.html]). 
+Let's assume that we've checked that and they're all open. There is still one more thing that Brooklyn can tell us.
 
 Still on the `Sensors` tab, let's take a look at the `log.location` sensor:
 
