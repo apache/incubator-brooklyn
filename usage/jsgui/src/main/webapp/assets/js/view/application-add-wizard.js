@@ -22,7 +22,7 @@
  */
 define([
     "underscore", "jquery", "backbone", "brooklyn-utils", "js-yaml",
-    "model/entity", "model/application", "model/location",
+    "model/entity", "model/application", "model/location", "model/catalog-application",
     "text!tpl/app-add-wizard/modal-wizard.html",
     "text!tpl/app-add-wizard/create.html",
     "text!tpl/app-add-wizard/create-step-template-entry.html", 
@@ -30,14 +30,15 @@ define([
     "text!tpl/app-add-wizard/required-config-entry.html",
     "text!tpl/app-add-wizard/edit-config-entry.html",
     "text!tpl/app-add-wizard/deploy.html",
+    "text!tpl/app-add-wizard/deploy-version-option.html",
     "text!tpl/app-add-wizard/deploy-location-row.html",
     "text!tpl/app-add-wizard/deploy-location-option.html",
     "bootstrap"
     
-], function (_, $, Backbone, Util, JsYaml, Entity, Application, Location,
+], function (_, $, Backbone, Util, JsYaml, Entity, Application, Location, CatalogApplication,
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
-             DeployLocationRowHtml, DeployLocationOptionHtml
+             DeployVersionOptionHtml, DeployLocationRowHtml, DeployLocationOptionHtml
 ) {
 
     /** Special ID to indicate that no locations will be provided when starting the server. */
@@ -56,7 +57,7 @@ define([
     function oldSpecToCamp(spec) {
         var services;
         if (spec.type) {
-            services = [entityToCamp({type: spec.type, config: spec.config})];
+            services = [entityToCamp({type: spec.type, version: spec.version, config: spec.config})];
         } else if (spec.entities) {
             services = [];
             var entities = spec.entities;
@@ -80,6 +81,7 @@ define([
         var result = {};
         if (entity.name && (!options || !options.exclude_name)) result.name = entity.name;
         if (entity.type) result.type = entity.type;
+        if (entity.type && entity.version) result.type += ":" + entity.version;
         if (entity.config && _.size(entity.config)) result["brooklyn.config"] = entity.config;
         return result;
     }
@@ -95,6 +97,8 @@ define([
         },
         template:_.template(ModalHtml),
         initialize:function () {
+            this.catalog = {}
+            this.catalog.applications = {}
             this.model = {}
             this.model.spec = new Application.Spec;
             this.model.yaml = "";
@@ -105,7 +109,7 @@ define([
                               step_id:'what-app',
                               title:'Create Application',
                               instructions:'Choose or build the application to deploy',
-                              view:new ModalWizard.StepCreate({ model:this.model, wizard: this })
+                              view:new ModalWizard.StepCreate({ model:this.model, wizard: this, catalog: this.catalog })
                           },
                           {
                               // TODO rather than make this another step -- since we now on preview revert to the yaml tab
@@ -113,7 +117,7 @@ define([
                               step_id:'name-and-locations',
                               title:'<%= appName %>',
                               instructions:'Specify the locations to deploy to and any additional configuration',
-                              view:new ModalWizard.StepDeploy({ model:this.model })
+                              view:new ModalWizard.StepDeploy({ model:this.model, catalog: this.catalog })
                           }
                           ]
         },
@@ -344,7 +348,6 @@ define([
         initialize:function () {
             var self = this
             self.catalogEntityIds = []
-            self.catalogApplicationIds = []
 
             this.$el.html(this.template({}))
 
@@ -358,20 +361,23 @@ define([
                 self.catalogEntityIds = _.map(result, function(item) { return item.id })
                 self.$(".entity-type-input").typeahead().data('typeahead').source = self.catalogEntityIds
             })
-            // TODO use catalog-item-summary.js instead of raw json; see comments in that file
-            $.get('/v1/catalog/applications', {}, function (result) {
-                self.catalogApplicationItems = result
-                self.catalogApplicationIds = _.map(result, function(item) { return item.id })
-                self.$("#appClassTab .application-type-input").typeahead().data('typeahead').source = self.catalogApplicationIds
-                $('#catalog-applications-throbber').hide();
-                $('#catalog-applications-empty').hide();
-                if (self.catalogApplicationItems && self.catalogApplicationItems.length > 0) {
-                    self.addTemplateLozenges()
-                } else {
-                    $('#catalog-applications-empty').show();
-                    self.showYamlTab();
+            this.options.catalog.applications = new CatalogApplication.Collection();
+            this.options.catalog.applications.fetch({
+                data: $.param({
+                    allVersions: true
+                }),
+                success: function (collection, response, options) {
+                    self.$("#appClassTab .application-type-input").typeahead().data('typeahead').source = collection.getTypes();
+                    $('#catalog-applications-throbber').hide();
+                    $('#catalog-applications-empty').hide();
+                    if (collection.size() > 0) {
+                        self.addTemplateLozenges()
+                    } else {
+                        $('#catalog-applications-empty').show();
+                        self.showYamlTab();
+                    }
                 }
-            })
+            });
         },
         renderConfiguredEntities:function () {
             var $configuredEntities = this.$('#entitiesAccordionish').empty()
@@ -436,17 +442,18 @@ define([
         },
         addTemplateLozenges: function(event) {
             var that = this
-            _.each(this.catalogApplicationItems, function(item) {
-                that.addTemplateLozenge(that, item)
+            _.each(this.options.catalog.applications.getDistinctApplications(), function(item) {
+                that.addTemplateLozenge(that, item[0])
             })
         },
         addTemplateLozenge: function(that, item) {
             var $tempel = _.template(CreateStepTemplateEntryHtml, {
-                id: item.id,
-                name: item.name || item.id,
-                description: item.description,
-                planYaml:  item.planYaml,
-                iconUrl: item.iconUrl
+                id: item.get('id'),
+                type: item.get('type'),
+                name: item.get('name') || item.get('id'),
+                description: item.get('description'),
+                planYaml:  item.get('planYaml'),
+                iconUrl: item.get('iconUrl')
             })
             $("#create-step-template-entries", that.$el).append($tempel)
         },
@@ -457,9 +464,10 @@ define([
             if (!wasSelected) {
                 $tl.addClass("selected")
                 this.selectedTemplate = {
-                    type: $tl.attr('id'),
+                    id: $tl.attr('id'),
+                    type: $tl.data('type'),
                     name: $tl.data("name"),
-                    yaml: $tl.data("yaml")
+                    yaml: $tl.data("yaml"),
                 };
                 if (this.selectedTemplate.yaml) {
                     $("textarea#yaml_code").val(this.selectedTemplate.yaml);
@@ -509,10 +517,11 @@ define([
         saveTemplate:function () {
             if (!this.selectedTemplate) return false
             var type = this.selectedTemplate.type;
-            if (!_.contains(this.catalogApplicationIds, type)) {
+            if (!this.options.catalog.applications.hasType(type)) {
                 $('.entity-info-message').show('slow').delay(2000).hide('slow')
                 return false
             }
+
             this.model.spec.set("type", type);
             this.model.name = this.selectedTemplate.name;
             this.model.catalogEntityData = "LOAD"
@@ -522,7 +531,7 @@ define([
             var that = this
             var tab = $.find('#appClassTab')
             var type = $(tab).find('#app-java-type').val()
-            if (!_.contains(this.catalogApplicationIds, type)) {
+            if (!this.options.catalog.applications.hasType(type)) {
                 $('.entity-info-message').show('slow').delay(2000).hide('slow')
                 return false
             }
@@ -609,13 +618,15 @@ define([
         events:{
             'click #add-selector-container':'addLocation',
             'click #remove-app-location':'removeLocation',
-            'change .select-location': 'selection',
+            'change .select-version': 'selectionVersion',
+            'change .select-location': 'selectionLocation',
             'blur #application-name':'updateName',
             'click #remove-config':'removeConfigRow',
             'click #add-config':'addConfigRow'
         },
 
         template:_.template(DeployHtml),
+        versionOptionTemplate:_.template(DeployVersionOptionHtml),
         locationRowTemplate:_.template(DeployLocationRowHtml),
         locationOptionTemplate:_.template(DeployLocationOptionHtml),
 
@@ -630,11 +641,35 @@ define([
         renderName:function () {
             this.$('#application-name').val(this.model.spec.get("name"))
         },
+        renderVersions: function() {
+            var optionTemplate = this.versionOptionTemplate
+                select = this.$('.select-version')
+                container = this.$('#app-versions')
+                defaultVersion = '0.0.0.SNAPSHOT';
+
+            select.empty();
+
+            var versions = this.options.catalog.applications.getVersions(this.model.spec.get('type'));
+            for (var vi = 0; vi < versions.length; vi++) {
+                var version = versions[vi];
+                select.append(optionTemplate({
+                    version: version
+                }));
+            }
+
+            if (versions.length === 1 && versions[0] === defaultVersion) {
+                this.model.spec.set('version', '');
+                container.hide();
+            } else {
+                this.model.spec.set('version', versions[0]);
+                container.show();
+            }
+        },
         renderAddedLocations:function () {
             // renders the locations added to the model
             var rowTemplate = this.locationRowTemplate,
                 optionTemplate = this.locationOptionTemplate,
-                container = this.$("#selector-container");
+                container = this.$("#selector-container-location");
             container.empty();
             for (var li = 0; li < this.model.spec.get("locations").length; li++) {
                 var chosenLocation = this.model.spec.get("locations")[li];
@@ -675,6 +710,7 @@ define([
             // clear any error message (we are being displayed fresh; if there are errors in the update, we'll show them in code below)
             this.$('div.error-message').hide();
             this.renderName()
+            this.renderVersions()
             this.locations.fetch({
                 success:function () {
                     if (that.model.spec.get("locations").length==0)
@@ -749,7 +785,10 @@ define([
             })
             return map;
         },
-        selection:function (event) {
+        selectionVersion:function (event) {
+            this.model.spec.set("version", $(event.currentTarget).val())
+        },
+        selectionLocation:function (event) {
             var loc_id = $(event.currentTarget).val(),
                 isNoneLocation = loc_id === NO_LOCATION_INDICATOR;
             var locationValid = isNoneLocation || this.locations.find(function (candidate) {

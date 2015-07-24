@@ -158,7 +158,7 @@
         </testResources>
         <plugins>
             <!--
-                 run js tests with: $ mvn clean process-resources jasmine:test
+                 run js tests with: $ mvn clean process-test-resources jasmine:test
                  run tests in the browser with: $ mvn jasmine:bdd
             -->
             <plugin>
