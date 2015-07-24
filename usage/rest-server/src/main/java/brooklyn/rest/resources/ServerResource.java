@@ -43,9 +43,11 @@ import com.google.common.collect.FluentIterable;
 import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
@@ -136,6 +138,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
             @Override
             public void run() {
                 boolean terminateTried = false;
+                ManagementContext mgmt = mgmt();
                 try {
                     if (stopAppsFirst) {
                         CountdownTimer shutdownTimeoutTimer = null;
@@ -143,22 +146,50 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                             shutdownTimeoutTimer = shutdownTimeout.countdownTimer();
                         }
 
+                        log.debug("Stopping applications");
                         List<Task<?>> stoppers = new ArrayList<Task<?>>();
-                        for (Application app: mgmt().getApplications()) {
-                            if (app instanceof StartableApplication)
+                        int allStoppableApps = 0;
+                        for (Application app: mgmt.getApplications()) {
+                            allStoppableApps++;
+                            Lifecycle appState = app.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
+                            if (app instanceof StartableApplication &&
+                                    // Don't try to stop an already stopping app. Subsequent stops will complete faster
+                                    // cancelling the first stop task.
+                                    appState != Lifecycle.STOPPING) {
                                 stoppers.add(Entities.invokeEffector((EntityLocal)app, app, StartableApplication.STOP));
+                            } else {
+                                log.debug("App " + app + " is already stopping, will not stop second time. Will wait for original stop to complete.");
+                            }
                         }
 
+                        log.debug("Waiting for " + allStoppableApps + " apps to stop, of which " + stoppers.size() + " stopped explicitly.");
                         for (Task<?> t: stoppers) {
                             if (!waitAppShutdown(shutdownTimeoutTimer, t)) {
                                 //app stop error
                                 hasAppErrorsOrTimeout.set(true);
                             }
                         }
+
+                        // Wait for apps which were already stopping when we tried to shut down.
+                        if (hasStoppableApps(mgmt)) {
+                            log.debug("Apps are still stopping, wait for proper unmanage.");
+                            while (hasStoppableApps(mgmt) && (shutdownTimeoutTimer == null || !shutdownTimeoutTimer.isExpired())) {
+                                Duration wait;
+                                if (shutdownTimeoutTimer != null) {
+                                    wait = Duration.min(shutdownTimeoutTimer.getDurationRemaining(), Duration.ONE_SECOND);
+                                } else {
+                                    wait = Duration.ONE_SECOND;
+                                }
+                                Time.sleep(wait);
+                            }
+                            if (hasStoppableApps(mgmt)) {
+                                hasAppErrorsOrTimeout.set(true);
+                            }
+                        }
                     }
 
                     terminateTried = true;
-                    ((ManagementContextInternal)mgmt()).terminate(); 
+                    ((ManagementContextInternal)mgmt).terminate(); 
 
                 } catch (Throwable e) {
                     Throwable interesting = Exceptions.getFirstInteresting(e);
@@ -176,7 +207,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                     hasAppErrorsOrTimeout.set(true);
                     
                     if (!terminateTried) {
-                        ((ManagementContextInternal)mgmt()).terminate(); 
+                        ((ManagementContextInternal)mgmt).terminate(); 
                     }
                 } finally {
 
@@ -201,6 +232,19 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                 }
             }
 
+            private boolean hasStoppableApps(ManagementContext mgmt) {
+                for (Application app : mgmt.getApplications()) {
+                    if (app instanceof StartableApplication) {
+                        Lifecycle state = app.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
+                        if (state != Lifecycle.STOPPING && state != Lifecycle.STOPPED) {
+                            log.warn("Shutting down, expecting all apps to be in stopping state, but found application " + app + " to be in state " + state + ". Just started?");
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            }
+
             private void complete() {
                 synchronized (completed) {
                     completed.set(true);
@@ -214,6 +258,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                 if (shutdownTimeoutTimer != null) {
                     waitInterval = Duration.of(SHUTDOWN_TIMEOUT_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
                 }
+                // waitInterval == null - blocks indefinitely
                 while(!t.blockUntilEnded(waitInterval)) {
                     if (shutdownTimeoutTimer.isExpired()) {
                         log.warn("Timeout while waiting for applications to stop at "+t+".\n"+t.getStatusDetail(true));
@@ -237,7 +282,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                     //then better wait until the 'completed' flag is set, rather than timing out
                     //at just about the same time (i.e. always wait for the shutdownTimeout in this case).
                     //This will prevent undefined behaviour where either one of shutdownTimeout or requestTimeout
-                    //will be first to expire and the error flag won't be set predicably, it will
+                    //will be first to expire and the error flag won't be set predictably, it will
                     //toggle depending on which expires first.
                     //Note: shutdownTimeout is checked at SHUTDOWN_TIMEOUT_CHECK_INTERVAL interval, meaning it is
                     //practically rounded up to the nearest SHUTDOWN_TIMEOUT_CHECK_INTERVAL.
