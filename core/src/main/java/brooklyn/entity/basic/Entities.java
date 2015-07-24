@@ -931,6 +931,10 @@ public class Entities {
         return new LocalManagementContext( BrooklynProperties.Factory.newEmpty().addFromMap(props));
     }
 
+    public static ManagementContext getManagementContext(Entity entity) {
+        return ((EntityInternal) entity).getManagementContext();
+    }
+
     public static void unmanage(Entity entity) {
         if (((EntityInternal)entity).getManagementSupport().isDeployed()) {
             ((EntityInternal)entity).getManagementContext().getEntityManager().unmanage(entity);
