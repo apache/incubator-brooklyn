@@ -11,6 +11,7 @@ children:
 - high-availability.md
 - catalog/
 - logging.md
+- troubleshooting/
 ---
 
 {% include list-children.html %}

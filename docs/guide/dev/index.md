@@ -14,7 +14,6 @@ children:
 - tips/
 - tips/logging.md
 - tips/debugging-remote-brooklyn.md
-- tips/troubleshooting-connectivity.md
 - rest/rest-api-doc.md
 ---
 
