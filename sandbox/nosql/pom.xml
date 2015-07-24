@@ -91,6 +91,20 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes combine.children="append">
+                        <!--
+                            Configuration artifacts (for installations) are based on templated defaults for 
+                            the given components. These are files "without any degree of creativity" from the
+                            perspective of the Brooklyn/Apache contribution.
+                        -->
+                        <exclude>src/main/resources/brooklyn/entity/nosql/hazelcast/hazelcast-brooklyn.xml</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
