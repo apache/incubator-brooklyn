@@ -22,7 +22,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
 
-import brooklyn.util.time.Duration;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -66,16 +65,11 @@ public class KafkaSupport {
             props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
             Producer<String, String> producer = new KafkaProducer<>(props);
-            try {
-                ((KafkaZooKeeper)cluster.getZooKeeper()).createTopic(topic);
-                Thread.sleep(Duration.seconds(1).toMilliseconds());
+            ((KafkaZooKeeper)cluster.getZooKeeper()).createTopic(topic);
 
-                ProducerRecord<String, String> data = new ProducerRecord<>(topic, message);
-                producer.send(data);
-                producer.close();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            ProducerRecord<String, String> data = new ProducerRecord<>(topic, message);
+            producer.send(data);
+            producer.close();
         } else {
             throw new InvalidParameterException("No kafka broker node found");
         }

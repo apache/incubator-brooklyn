@@ -125,11 +125,16 @@ public class KafkaIntegrationTest {
 
         Entities.dumpInfo(cluster);
 
-        KafkaSupport support = new KafkaSupport(cluster);
+        final KafkaSupport support = new KafkaSupport(cluster);
 
         support.sendMessage("brooklyn", "TEST_MESSAGE");
-        Thread.sleep(Duration.seconds(5).toMilliseconds());
-        String message = support.getMessage("brooklyn");
-        assertEquals(message, "TEST_MESSAGE");
+
+        Asserts.succeedsEventually(MutableMap.of("timeout", Duration.FIVE_SECONDS), new Runnable() {
+            @Override
+            public void run() {
+                String message = support.getMessage("brooklyn");
+                assertEquals(message, "TEST_MESSAGE");
+            }
+        });
     }
 }
