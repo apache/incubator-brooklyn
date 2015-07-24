@@ -2,10 +2,11 @@
 title: Troubleshooting
 layout: website-normal
 children:
-- troubleshooting-runtime-errors.md
-- troubleshooting-deployment.md
-- troubleshooting-softwareprocess.md
-- troubleshooting-connectivity.md
+- { path: overview.md, title: Overview }
+- { path: deployment.md, title: Deployment }
+- { path: connectivity.md, title: Server Connectivity }
+- { path: softwareprocess.md, title: SoftwareProcess Entities }
+- { path: going-deep-in-java-and-logs.md, title: Going Deep in Java and Logs }
 ---
 
 {% include list-children.html %}

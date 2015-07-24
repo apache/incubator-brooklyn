@@ -1,17 +1,14 @@
 ---
 layout: website-normal
-title: Troubleshooting Exceptions and Node Failure
+title: "Troubleshooting: Going Deep in Java and Logs"
 toc: /guide/toc.json
 ---
 
-Whether you're customizing out-of-the-box blueprints, or developing your own custom blueprints, you will
-inevitably have to deal with node failure, or exceptions being thrown by your node. Thankfully Brooklyn
-provides plenty of information to help you locate and resolve any issues you may encounter.
+This guide takes a deep look at the Java and log messages for some failure scenarios,
+giving common steps used to identify the issues.
 
-This guide looks at three common failure scenarios and describes the steps that can be taken to
-identify the issue.
+## Script Failure
 
-## Script failure
 Many blueprints run bash scripts as part of the installation. This section highlights how to identify a problem with
 a bash script.
 
@@ -163,7 +160,8 @@ Combining this with the error message of `mkrid: command not found` we can see t
 misspelled `mkrid` on line 72 of `TomcatSshDriver.java`.
 
 
-## Non-Script failure
+## Non-Script Failure
+
 The section above gives an example of a failure that occurs when a script is run. In this section we will look at
 a failure in a non-script related part of the code. We'll use the `customize()` method of the Tomcat server again,
 but this time, we'll correct the spelling of 'mkdir' and add a line that attempts to copy a nonexistent resource 
@@ -222,7 +220,7 @@ at brooklyn.util.ResourceUtils.getResourceFromUrl(ResourceUtils.java:230)
 Looking for `Tomcat` in the stack trace, we can see in this case the problem lies at line 79 of `TomcatSshDriver.java`
 
 
-## External failure
+## External Failure
 
 Sometimes an entity will fail outside the direct commands issues by Brooklyn. When installing and launching an entity,
 Brooklyn will check the return code of scripts that were run to ensure that they completed successfully (i.e. the
@@ -428,8 +426,9 @@ the `Show/hide empty records` icon (highlighted in yellow above):
 We know from previous steps that the installation and launch scripts completed, and we know the procecess is running,
 but we can see here that the server is not responding to JMX requests. A good thing to check here would be that the
 JMX port is not being blocked by iptables, firewalls or security groups
- (see the (troubleshooting connectivity guide)[troubleshooting-connectivity.html]). 
+(see the (troubleshooting connectivity guide)[troubleshooting-connectivity.html]). 
 Let's assume that we've checked that and they're all open. There is still one more thing that Brooklyn can tell us.
+
 
 Still on the `Sensors` tab, let's take a look at the `log.location` sensor:
 

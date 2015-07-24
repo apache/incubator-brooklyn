@@ -1,10 +1,10 @@
 ---
 layout: website-normal
-title: Troubleshooting Runtime Errors
+title: Troubleshooting Overview
 toc: /guide/toc.json
 ---
 
-This guide describes sources of information for runtime errors.
+This guide describes sources of information for understanding when things go wrong.
 
 Whether you're customizing out-of-the-box blueprints, or developing your own custom blueprints, you will
 inevitably have to deal with entity failure. Thankfully Brooklyn provides plenty of information to help 
@@ -82,7 +82,7 @@ For example, it can show the exception stack trace in the thread that was execut
 ## Log Files
 
 Brooklyn's logging is configurable, for the files created, the logging levels, etc. 
-See [Logging docs](/guide/ops/logging.html).
+See [Logging docs](../logging.html).
 
 With out-of-the-box logging, `brooklyn.info.log` and `brooklyn.debug.log` files are created. These are by default 
 rolling log files: when the log reaches a given size, it is compressed and a new log file is started.

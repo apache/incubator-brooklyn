@@ -4,7 +4,7 @@ title: Troubleshooting SoftwareProcess Entities
 toc: /guide/toc.json
 ---
 
-The [guide for troubleshooting runtime errors](troubleshooting-runtime-errors.html) in Brooklyn gives 
+The [troubleshooting overview](overview.html) in Brooklyn gives 
 information for how to find more information about errors.
 
 If that doesn't give enough information to diagnose, fix or workaround the problem, then it can be required
