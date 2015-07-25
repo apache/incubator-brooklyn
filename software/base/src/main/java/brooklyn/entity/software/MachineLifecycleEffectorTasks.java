@@ -25,10 +25,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
@@ -62,6 +70,7 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.Task;
 import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
@@ -76,13 +85,6 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
-
-import com.google.common.annotations.Beta;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 /**
  * Default skeleton for start/stop/restart tasks on machines.
@@ -116,6 +118,8 @@ public abstract class MachineLifecycleEffectorTasks {
     public static final ConfigKey<Duration> STOP_PROCESS_TIMEOUT = ConfigKeys.newConfigKey(Duration.class,
             "process.stop.timeout", "How long to wait for the processes to be stopped; use null to mean forever", Duration.TWO_MINUTES);
 
+    protected final MachineInitTasks machineInitTasks = new MachineInitTasks();
+    
     /** Attaches lifecycle effectors (start, restart, stop) to the given entity post-creation. */
     public void attachLifecycleEffectors(Entity entity) {
         ((EntityInternal) entity).getMutableEntityType().addEffector(newStartEffector());
@@ -344,6 +348,28 @@ public abstract class MachineLifecycleEffectorTasks {
                 entity().setAttribute(Attributes.SSH_ADDRESS, sshAddress);
             }
 
+            if (Boolean.TRUE.equals(entity().getConfig(SoftwareProcess.OPEN_IPTABLES))) {
+                if (machine instanceof SshMachineLocation) {
+                    Iterable<Integer> inboundPorts = (Iterable<Integer>) machine.config().get(CloudLocationConfig.INBOUND_PORTS);
+                    machineInitTasks.openIptablesAsync(inboundPorts, (SshMachineLocation)machine);
+                } else {
+                    log.warn("Ignoring flag OPEN_IPTABLES on non-ssh location {}", machine);
+                }
+            }
+            if (Boolean.TRUE.equals(entity().getConfig(SoftwareProcess.STOP_IPTABLES))) {
+                if (machine instanceof SshMachineLocation) {
+                    machineInitTasks.stopIptablesAsync((SshMachineLocation)machine);
+                } else {
+                    log.warn("Ignoring flag STOP_IPTABLES on non-ssh location {}", machine);
+                }
+            }
+            if (Boolean.TRUE.equals(entity().getConfig(SoftwareProcess.DONT_REQUIRE_TTY_FOR_SUDO))) {
+                if (machine instanceof SshMachineLocation) {
+                    machineInitTasks.dontRequireTtyForSudoAsync((SshMachineLocation)machine);
+                } else {
+                    log.warn("Ignoring flag DONT_REQUIRE_TTY_FOR_SUDO on non-ssh location {}", machine);
+                }
+            }
             resolveOnBoxDir(entity(), machine);
             preStartCustom(machine);
         }});
@@ -761,5 +787,4 @@ public abstract class MachineLifecycleEffectorTasks {
         }
         return new StopMachineDetails<Integer>("Decommissioned "+machine, 1);
     }
-
 }

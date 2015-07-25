@@ -47,6 +47,7 @@ public class TomcatServerEc2LiveTest extends AbstractEc2LiveTest {
     @Override
     protected void doTest(Location loc) throws Exception {
         final TomcatServer server = app.createAndManageChild(EntitySpec.create(TomcatServer.class)
+                .configure(TomcatServer.OPEN_IPTABLES, true)
                 .configure("war", getTestWar()));
         
         app.start(ImmutableList.of(loc));
