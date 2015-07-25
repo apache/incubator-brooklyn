@@ -877,8 +877,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
                 if (setup.get(OPEN_IPTABLES)) {
                     if (windows) {
-                        LOG.warn("Ignoring flag OPEN_IPTABLES on Windows location {}", machineLocation);
+                        LOG.warn("Ignoring DEPRECATED flag OPEN_IPTABLES on Windows location {}", machineLocation);
                     } else {
+                        LOG.warn("Using DEPRECATED flag OPEN_IPTABLES (will not be supported in future versions) for {} at {}", machineLocation, this);
+                        
                         @SuppressWarnings("unchecked")
                         Iterable<Integer> inboundPorts = (Iterable<Integer>) setup.get(INBOUND_PORTS);
 
@@ -917,8 +919,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
                 if (setup.get(STOP_IPTABLES)) {
                     if (windows) {
-                        LOG.warn("Ignoring flag OPEN_IPTABLES on Windows location {}", machineLocation);
+                        LOG.warn("Ignoring DEPRECATED flag OPEN_IPTABLES on Windows location {}", machineLocation);
                     } else {
+                        LOG.warn("Using DEPRECATED flag STOP_IPTABLES (will not be supported in future versions) for {} at {}", machineLocation, this);
+                        
                         customisationForLogging.add("stop iptables");
 
                         List<String> cmds = ImmutableList.<String>of();

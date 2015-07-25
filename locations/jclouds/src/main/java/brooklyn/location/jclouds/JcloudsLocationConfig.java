@@ -106,12 +106,20 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
             Constants.PROPERTY_ENDPOINT, "Equivalent to 'endpoint'; provided for jclouds compatibility", null);
     
     // note causing problems on centos due to use of `sudo -n`; but required for default RHEL VM
+    /**
+     * @deprecated since 0.8.0; instead configure this on the entity. See SoftwareProcess.OPEN_IPTABLES.
+     */
+    @Deprecated
     public static final ConfigKey<Boolean> OPEN_IPTABLES = ConfigKeys.newBooleanConfigKey("openIptables", 
-            "Whether to open the INBOUND_PORTS via iptables rules; " +
+            "[DEPRECATED - use openIptables on SoftwareProcess entity] Whether to open the INBOUND_PORTS via iptables rules; " +
             "if true then ssh in to run iptables commands, as part of machine provisioning", false);
 
+    /**
+     * @deprecated since 0.8.0; instead configure this on the entity. See SoftwareProcess.STOP_IPTABLES.
+     */
+    @Deprecated
     public static final ConfigKey<Boolean> STOP_IPTABLES = ConfigKeys.newBooleanConfigKey("stopIptables", 
-            "Whether to stop iptables entirely; " +
+            "[DEPRECATED - use stopIptables on SoftwareProcess entity] Whether to stop iptables entirely; " +
             "if true then ssh in to stop the iptables service, as part of machine provisioning", false);
 
     public static final ConfigKey<String> HARDWARE_ID = ConfigKeys.newStringConfigKey("hardwareId",
