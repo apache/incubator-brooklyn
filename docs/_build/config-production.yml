@@ -1,5 +1,6 @@
 # in production we always set the URL and dependencies should come from the remote source
 
 url: https://brooklyn.incubator.apache.org
+url_root: https://brooklyn.incubator.apache.org
 
 dependency_mode: remote
