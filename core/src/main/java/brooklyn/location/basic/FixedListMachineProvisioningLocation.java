@@ -31,30 +31,34 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.management.LocationManager;
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.WildcardGlobs;
-import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
-
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.location.Location;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.MachineLocationCustomizer;
+import brooklyn.location.MachineProvisioningLocation;
+import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.cloud.CloudLocationConfig;
+import brooklyn.management.LocationManager;
+import brooklyn.util.collections.CollectionFunctionals;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.text.WildcardGlobs;
+import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 /**
  * A provisioner of {@link MachineLocation}s which takes a list of machines it can connect to.
@@ -80,6 +84,8 @@ implements MachineProvisioningLocation<T>, Closeable {
                     "byon.machineChooser",
                     "For choosing which of the possible machines is chosen and returned by obtain()",
                     CollectionFunctionals.<MachineLocation>firstElement());
+
+    public static final ConfigKey<Collection<MachineLocationCustomizer>> MACHINE_LOCATION_CUSTOMIZERS = CloudLocationConfig.MACHINE_LOCATION_CUSTOMIZERS;
     
     private final Object lock = new Object();
     
@@ -238,13 +244,14 @@ implements MachineProvisioningLocation<T>, Closeable {
     public T obtain(Map<?,?> flags) throws NoMachinesAvailableException {
         T machine;
         T desiredMachine = (T) flags.get("desiredMachine");
-        Function<Iterable<? extends MachineLocation>, MachineLocation> chooser = getConfigPreferringOverridden(MACHINE_CHOOSER, flags);
+        ConfigBag allflags = ConfigBag.newInstanceExtending(config().getBag()).putAll(flags);
+        Function<Iterable<? extends MachineLocation>, MachineLocation> chooser = allflags.get(MACHINE_CHOOSER);
         
         synchronized (lock) {
             Set<T> a = getAvailable();
             if (a.isEmpty()) {
                 if (canProvisionMore()) {
-                    provisionMore(1, flags);
+                    provisionMore(1, allflags.getAllConfig());
                     a = getAvailable();
                 }
                 if (a.isEmpty())
@@ -265,11 +272,21 @@ implements MachineProvisioningLocation<T>, Closeable {
             }
             inUse.add(machine);
         }
+        
+        for (MachineLocationCustomizer customizer : getMachineCustomizers(allflags)) {
+            customizer.customize(machine);
+        }
+        
         return machine;
     }
 
     @Override
     public void release(T machine) {
+        ConfigBag machineConfig = ((ConfigurationSupportInternal)machine.config()).getBag();
+        for (MachineLocationCustomizer customizer : getMachineCustomizers(machineConfig)) {
+            customizer.preRelease(machine);
+        }
+
         synchronized (lock) {
             if (inUse.contains(machine) == false)
                 throw new IllegalStateException("Request to release machine "+machine+", but this machine is not currently allocated");
@@ -292,6 +309,11 @@ implements MachineProvisioningLocation<T>, Closeable {
         if (result == null) result = (K) overrides.get(key.getName());
         if (result == null) result = getConfig(key);
         return result;
+    }
+
+    protected Collection<MachineLocationCustomizer> getMachineCustomizers(ConfigBag setup) {
+        Collection<MachineLocationCustomizer> customizers = setup.get(MACHINE_LOCATION_CUSTOMIZERS);
+        return (customizers == null ? ImmutableList.<MachineLocationCustomizer>of() : customizers);
     }
 
     /**

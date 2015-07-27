@@ -34,23 +34,24 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Entities;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
-import brooklyn.util.stream.Streams;
-
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
+import brooklyn.entity.basic.Entities;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.basic.RecordingMachineLocationCustomizer.Call;
+import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.entity.LocalManagementContextForTests;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.net.Networking;
+import brooklyn.util.stream.Streams;
 
 /**
  * Provisions {@link SshMachineLocation}s in a specific location from a list of known machines
@@ -470,6 +471,35 @@ public class FixedListMachineProvisioningLocationTest {
         } catch (IllegalStateException e) {
             if (!e.toString().contains("Machine chooser attempted to choose ")) throw e;
         }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testMachineCustomizerSetOnByon() throws Exception {
+        machine = mgmt.getLocationManager().createLocation(MutableMap.of("address", Inet4Address.getByName("192.168.144.200")), SshMachineLocation.class);
+        RecordingMachineLocationCustomizer customizer = new RecordingMachineLocationCustomizer();
+        
+        provisioner2 = mgmt.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
+                .configure("machines", ImmutableList.of(machine))
+                .configure(FixedListMachineProvisioningLocation.MACHINE_LOCATION_CUSTOMIZERS.getName(), ImmutableList.of(customizer)));
+                
+        SshMachineLocation obtained = provisioner2.obtain();
+        assertEquals(Iterables.getOnlyElement(customizer.calls), new Call("customize", ImmutableList.of(obtained)));
+        
+        provisioner2.release(obtained);
+        assertEquals(customizer.calls.size(), 2);
+        assertEquals(Iterables.get(customizer.calls, 1), new Call("preRelease", ImmutableList.of(obtained)));
+    }
+
+    @Test
+    public void testMachineCustomizerSetOnObtainCall() throws Exception {
+        RecordingMachineLocationCustomizer customizer = new RecordingMachineLocationCustomizer();
+        
+        SshMachineLocation obtained = provisioner.obtain(ImmutableMap.of(FixedListMachineProvisioningLocation.MACHINE_LOCATION_CUSTOMIZERS, ImmutableList.of(customizer)));
+        assertEquals(Iterables.getOnlyElement(customizer.calls), new Call("customize", ImmutableList.of(obtained)));
+        
+        // TODO Does not call preRelease, because customizer is not config on provisioner, and is not config on machine
+        provisioner.release(obtained);
     }
 
     private static <T> List<T> randomized(Iterable<T> list) {
