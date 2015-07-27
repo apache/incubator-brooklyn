@@ -15,7 +15,7 @@ children:
 The file `~/.brooklyn/brooklyn.properties` is read when Brooklyn starts
 to load server configuration values.
 A different properties file can be specified either additionally or instead
-through [CLI options](cli.html#configuration). 
+through [CLI options](launch.html#configuration-files).
 
 A template [brooklyn.properties]({{brooklyn_properties_url_path}}) file is available,
 with abundant comments.

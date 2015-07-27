@@ -432,4 +432,4 @@ provisioned. See `brooklyn.location.basic.FixedListMachineProvisioningLocation.M
 
 * [More Locations](more-locations.html)
 * [SSH Keys](ssh-keys.html)
-* [Cloud Credentials](cloud-credentials.md)
+* [Cloud Credentials](cloud-credentials.html)
