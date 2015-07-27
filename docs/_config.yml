@@ -45,10 +45,7 @@ exclude: ['/Gemfile*','/README.md']
 sass:
     sass_dir: style/css
 
-# used for the "verify" page
-brooklyn-stable-versions: [ 0.7.0-M2-incubating ]
-
-brooklyn-stable-version: 0.7.0-M2-incubating
+brooklyn-stable-version: 0.7.0-incubating
 
 brooklyn-version: 0.8.0-SNAPSHOT # BROOKLYN_VERSION
 brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)
