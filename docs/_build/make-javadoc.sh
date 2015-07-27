@@ -24,13 +24,7 @@ export DATESTAMP=`date "+%Y-%m-%d"`
 export SHA1STAMP=`git rev-parse HEAD`
 
 # BROOKLYN_VERSION_BELOW
-export BROOKLYN_JAVADOC_CLASSPATH=../../usage/all/target/brooklyn-all-0.8.0-SNAPSHOT-with-dependencies.jar
-
-if [ \! -f ${BROOKLYN_JAVADOC_CLASSPATH} ]; then
-  echo "Expected to find ${BROOKLYN_JAVADOC_CLASSPATH}"
-  echo "Please run a full Maven build in the project root"
-  exit 1
-fi
+export BROOKLYN_JAVADOC_CLASSPATH=$( mvn -f ../../pom.xml --projects :brooklyn-all dependency:build-classpath | grep -E -v '^\[[A-Z]+\]' )
 
 echo "building javadoc at $DATESTAMP from:
 $SOURCE_PATHS"
