@@ -23,6 +23,8 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -38,24 +40,23 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.EmptySoftwareProcess;
+import brooklyn.entity.basic.EmptySoftwareProcessDriver;
+import brooklyn.entity.basic.EmptySoftwareProcessImpl;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
+import brooklyn.util.exceptions.Exceptions;
 
 @Test(singleThreaded = true)
 public class ServerResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ServerResourceTest.class);
     
-    @Override
-    @BeforeClass(alwaysRun = true)
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
     @Test
     public void testGetVersion() throws Exception {
         VersionSummary version = client().resource("/v1/server/version").get(VersionSummary.class);
@@ -98,28 +99,6 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
         client().resource("/v1/server/properties/reload").post();
         assertEquals(reloadCount.get(), 1);
     }
-    
-    @Test
-    public void testShutdown() throws Exception {
-        assertTrue(getManagementContext().isRunning());
-        assertFalse(shutdownListener.isRequested());
-
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData.add("requestTimeout", "0");
-        formData.add("delayForHttpReturn", "0");
-        client().resource("/v1/server/shutdown").entity(formData).post();
-        
-        Asserts.succeedsEventually(new Runnable() {
-            @Override
-            public void run() {
-                assertTrue(shutdownListener.isRequested());
-            }
-        });
-        Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
-                assertFalse(getManagementContext().isRunning());
-            }});
-    }
 
     @Test
     void testGetConfig() throws Exception {
@@ -153,4 +132,45 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
             }
         }
     }
+
+    // Alternatively could reuse a blocking location, see brooklyn.entity.basic.SoftwareProcessEntityTest.ReleaseLatchLocation
+    @ImplementedBy(StopLatchEntityImpl.class)
+    public interface StopLatchEntity extends EmptySoftwareProcess {
+        public void unblock();
+        public boolean isBlocked();
+    }
+
+    public static class StopLatchEntityImpl extends EmptySoftwareProcessImpl implements StopLatchEntity {
+        private CountDownLatch lock = new CountDownLatch(1);
+        private volatile boolean isBlocked;
+
+        @Override
+        public void unblock() {
+            lock.countDown();
+        }
+
+        @Override
+        protected void postStop() {
+            super.preStop();
+            try {
+                isBlocked = true;
+                lock.await();
+                isBlocked = false;
+            } catch (InterruptedException e) {
+                throw Exceptions.propagate(e);
+            }
+        }
+
+        @Override
+        public Class<?> getDriverInterface() {
+            return EmptySoftwareProcessDriver.class;
+        }
+
+        @Override
+        public boolean isBlocked() {
+            return isBlocked;
+        }
+
+    }
+
 }

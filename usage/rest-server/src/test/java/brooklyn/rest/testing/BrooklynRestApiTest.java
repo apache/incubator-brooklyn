@@ -93,6 +93,10 @@ public abstract class BrooklynRestApiTest {
     
     @AfterClass
     public void tearDown() throws Exception {
+        destroyManagementContext();
+    }
+
+    protected void destroyManagementContext() {
         if (manager!=null) {
             Entities.destroyAll(manager);
             manager = null;
