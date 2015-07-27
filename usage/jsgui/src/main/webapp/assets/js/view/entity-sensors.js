@@ -188,8 +188,8 @@ define([
                     // the zeroClipboard instance is a singleton so check our scope first
                     if (!$(this).closest("#sensors-table").length) return;
                     var text = $(this).attr('copy-value');
-                    if (!text) text = $(this).closest('.floatGroup').find('.value').html();
-                    
+                    if (!text) text = $(this).closest('.floatGroup').find('.value').text();
+
 //                    log("Copying sensors text '"+text+"' to clipboard");
                     client.setText(text);
                     
