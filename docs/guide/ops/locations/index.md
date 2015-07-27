@@ -407,4 +407,4 @@ brooklyn.location.named.On-Prem\ Iron\ Example.privateKeyPassphrase=s3cr3tpassph
 
 * [More Locations](more-locations.html)
 * [SSH Keys](ssh-keys.html)
-* [Cloud Credentials](cloud-credentials.md)
+* [Cloud Credentials](cloud-credentials.html)

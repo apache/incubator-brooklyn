@@ -43,7 +43,6 @@ The ports used by Brooklyn are:
 
 Whether to use https rather than http is configurable using the CLI option `--https`; 
 the port to use is configurable using the CLI option `--port <port>`.
-See [CLI](cli.html) documentation for more details.
 
 To enable remote Brooklyn access, ensure these ports are open in the firewall.
 For example, to open port 8443 in iptables, ues the command:
@@ -68,4 +67,4 @@ It is normally recommended that Brooklyn run as a non-root user with keys instal
 
 ### Linux Kernel Entropy
 
-Check that the [linux kernel entropy](increase-entropy.html) is sufficient.
+Check that the [linux kernel entropy]({{ site.path.website }}/documentation/increase-entropy.html) is sufficient.

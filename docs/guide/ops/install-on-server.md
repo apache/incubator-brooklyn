@@ -50,7 +50,7 @@ Before installing Apache Brooklyn, it is recommented to configure the host as fo
 * enable [passwordless ssh login]({{ site.path.guide }}/ops/locations/ssh-keys.html)
 * create a `~/.brooklyn` directory on the host with `$ mkdir ~/.brooklyn`
 * check your `iptables` or other firewall service, making sure that incoming connections on port 8443 is not blocked
-* check that the [linux kernel entropy](increase-entropy.html) is sufficient
+* check that the [linux kernel entropy]({{ site.path.website }}/documentation/increase-entropy.html) is sufficient
 
 
 ### <a id="download"></a>Download Brooklyn
