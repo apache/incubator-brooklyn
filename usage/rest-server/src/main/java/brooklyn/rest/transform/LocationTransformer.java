@@ -178,7 +178,7 @@ public class LocationTransformer {
                     configOrig.put(LocationConfigKeys.DISPLAY_NAME.getName(), configExtra.get(LocationConfigKeys.DISPLAY_NAME.getName()));
             }
         }
-        Map<String, ?> config = level!=LocationDetailLevel.NONE ? null : copyConfig(configOrig, level);
+        Map<String, ?> config = level==LocationDetailLevel.NONE ? null : copyConfig(configOrig, level);
         
         return new LocationSummary(
             l.getId(),
