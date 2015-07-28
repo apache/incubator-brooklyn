@@ -23,7 +23,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.HasShortName;
@@ -38,25 +37,17 @@ import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MySql Node", description="MySql is an open source relational database management system (RDBMS)", iconUrl="classpath:///mysql-logo-110x57.png")
 @ImplementedBy(MySqlNodeImpl.class)
-public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommon, DatabaseNode {
+public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommon {
 
     // NOTE MySQL changes the minor version number of their GA release frequently, check for latest version if install fails
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.5.37");
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.6.26");
 
-    //http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-osx10.6-x86_64.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
-    //http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.21-linux2.6-i686.tar.gz/from/http://gd.tuwien.ac.at/db/mysql/
+    //http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-5.6.26-osx10.9-x86_64.tar.gz
+    //http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-5.6.26-linux-glibc2.5-x86_64.tar.gz
     @SetFromFlag("downloadUrl")
     public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(
-            Attributes.DOWNLOAD_URL, "http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-${version}-${driver.osTag}.tar.gz/from/${driver.mirrorUrl}");
-
-    /** download mirror, if desired; defaults to Austria which seems one of the fastest */
-    @SetFromFlag("mirrorUrl")
-    public static final ConfigKey<String> MIRROR_URL = ConfigKeys.newStringConfigKey("mysql.install.mirror.url", "URL of mirror", 
-//        "http://mysql.mirrors.pair.com/"   // Pennsylvania
-//        "http://gd.tuwien.ac.at/db/mysql/"
-        "http://www.mirrorservice.org/sites/ftp.mysql.com/" //UK mirror service
-         );
+            Attributes.DOWNLOAD_URL, "http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-${version}-${driver.osTag}.tar.gz");
 
     @SetFromFlag("port")
     public static final PortAttributeSensorAndConfigKey MYSQL_PORT = new PortAttributeSensorAndConfigKey("mysql.port", "MySQL port", PortRanges.fromString("3306, 13306+"));
