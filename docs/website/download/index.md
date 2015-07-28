@@ -15,7 +15,7 @@ children:
   </div>
   <div class="panel-body" markdown="1">
 A pre-built package that contains Apache Brooklyn and all of its dependencies in a single, easy-to-run package. Suitable for
-Linux and Windows servers and workstations that have Java 1.7 or newer.
+Linux and Windows servers and workstations that have Java 1.7<a href="#java-footnote">*</a>.
 
 **Choose your preferred file format to see the list of mirrors where you can download this file.**
 
@@ -53,6 +53,9 @@ contribute code changes to Apache Brooklyn, we recommend you get the source code
 </div><!-- row -->
 
 We also publish Maven artifacts for Apache Brooklyn. These are available from [Maven Central](https://search.maven.org/#search%7Cga%7C1%7Corg.apache.brooklyn).
+
+<a name="java-footnote">*</a> We recommend Java 1.7 as this platform has had the most testing. Java 1.8 may also be suitable. Brooklyn is
+not compatible with Java 1.6 or earlier versions.
 
 ## What next?
 
