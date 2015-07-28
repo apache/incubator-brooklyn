@@ -21,9 +21,12 @@ package brooklyn.location.basic;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Iterables;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
@@ -31,6 +34,7 @@ import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import brooklyn.util.guava.Maybe;
+import brooklyn.util.net.HasNetworkAddresses;
 
 /** utilities for working with MachineLocations */
 public class Machines {
@@ -38,6 +42,7 @@ public class Machines {
     private static final Logger log = LoggerFactory.getLogger(Machines.class);
     
     public static Maybe<String> getSubnetHostname(Location where) {
+        // TODO Should we look at HasNetworkAddresses? But that's not a hostname.
         String hostname = null;
         if (where instanceof HasSubnetHostname) {
             hostname = ((HasSubnetHostname) where).getSubnetHostname();
@@ -57,6 +62,12 @@ public class Machines {
         String result = null;
         if (where instanceof HasSubnetHostname) {
             result = ((HasSubnetHostname) where).getSubnetIp();
+        }
+        if (where instanceof HasNetworkAddresses) {
+            Set<String> privateAddrs = ((HasNetworkAddresses) where).getPrivateAddresses();
+            if (privateAddrs.size() > 0) {
+                result = Iterables.get(privateAddrs, 0);
+            }
         }
         if (result == null && where instanceof MachineLocation) {
             InetAddress addr = ((MachineLocation) where).getAddress();

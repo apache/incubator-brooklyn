@@ -26,11 +26,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.jclouds.compute.options.RunScriptOptions.Builder.overrideLoginCredentials;
 import static org.jclouds.scriptbuilder.domain.Statements.exec;
 
-import brooklyn.util.flags.MethodCoercions;
-import brooklyn.location.basic.AbstractLocation;
-import io.cloudsoft.winrm4j.pywinrm.Session;
-import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -93,70 +88,6 @@ import org.jclouds.softlayer.compute.options.SoftLayerTemplateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.config.ConfigUtils;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Sanitizer;
-import brooklyn.entity.rebind.persister.LocationWithObjectStore;
-import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineManagementMixins.MachineMetadata;
-import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.location.access.PortForwardManager;
-import brooklyn.location.access.PortMapping;
-import brooklyn.location.basic.BasicMachineMetadata;
-import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.location.basic.LocationConfigUtils;
-import brooklyn.location.basic.LocationConfigUtils.OsCredential;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.WinRmMachineLocation;
-import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
-import brooklyn.location.cloud.AvailabilityZoneExtension;
-import brooklyn.location.cloud.names.AbstractCloudMachineNamer;
-import brooklyn.location.cloud.names.CloudMachineNamer;
-import brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
-import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
-import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
-import brooklyn.location.jclouds.zone.AwsAvailabilityZoneExtension;
-import brooklyn.management.AccessController;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.crypto.SecureKeys;
-import brooklyn.util.exceptions.CompoundRuntimeException;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.ReferenceWithError;
-import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.internal.ssh.ShellTool;
-import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.javalang.Enums;
-import brooklyn.util.javalang.Reflections;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.net.Networking;
-import brooklyn.util.net.Protocol;
-import brooklyn.util.os.Os;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.ssh.IptablesCommands;
-import brooklyn.util.ssh.IptablesCommands.Chain;
-import brooklyn.util.ssh.IptablesCommands.Policy;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.ByteSizeStrings;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.KeyValueParser;
-import brooklyn.util.text.Strings;
-import brooklyn.util.text.TemplateProcessor;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -181,6 +112,75 @@ import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.config.ConfigKey.HasConfigKey;
+import brooklyn.config.ConfigUtils;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.Sanitizer;
+import brooklyn.entity.rebind.persister.LocationWithObjectStore;
+import brooklyn.entity.rebind.persister.PersistenceObjectStore;
+import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
+import brooklyn.location.LocationSpec;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.MachineLocationCustomizer;
+import brooklyn.location.MachineManagementMixins.MachineMetadata;
+import brooklyn.location.MachineManagementMixins.RichMachineProvisioningLocation;
+import brooklyn.location.NoMachinesAvailableException;
+import brooklyn.location.access.PortForwardManager;
+import brooklyn.location.access.PortMapping;
+import brooklyn.location.basic.AbstractLocation;
+import brooklyn.location.basic.BasicMachineMetadata;
+import brooklyn.location.basic.LocationConfigKeys;
+import brooklyn.location.basic.LocationConfigUtils;
+import brooklyn.location.basic.LocationConfigUtils.OsCredential;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.WinRmMachineLocation;
+import brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
+import brooklyn.location.cloud.AvailabilityZoneExtension;
+import brooklyn.location.cloud.names.AbstractCloudMachineNamer;
+import brooklyn.location.cloud.names.CloudMachineNamer;
+import brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
+import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
+import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
+import brooklyn.location.jclouds.zone.AwsAvailabilityZoneExtension;
+import brooklyn.management.AccessController;
+import brooklyn.util.ResourceUtils;
+import brooklyn.util.collections.MutableList;
+import brooklyn.util.collections.MutableMap;
+import brooklyn.util.collections.MutableSet;
+import brooklyn.util.config.ConfigBag;
+import brooklyn.util.crypto.SecureKeys;
+import brooklyn.util.exceptions.CompoundRuntimeException;
+import brooklyn.util.exceptions.Exceptions;
+import brooklyn.util.exceptions.ReferenceWithError;
+import brooklyn.util.flags.MethodCoercions;
+import brooklyn.util.flags.SetFromFlag;
+import brooklyn.util.flags.TypeCoercions;
+import brooklyn.util.guava.Maybe;
+import brooklyn.util.internal.ssh.ShellTool;
+import brooklyn.util.internal.ssh.SshTool;
+import brooklyn.util.javalang.Enums;
+import brooklyn.util.javalang.Reflections;
+import brooklyn.util.net.Cidr;
+import brooklyn.util.net.Networking;
+import brooklyn.util.net.Protocol;
+import brooklyn.util.os.Os;
+import brooklyn.util.repeat.Repeater;
+import brooklyn.util.ssh.BashCommands;
+import brooklyn.util.ssh.IptablesCommands;
+import brooklyn.util.ssh.IptablesCommands.Chain;
+import brooklyn.util.ssh.IptablesCommands.Policy;
+import brooklyn.util.stream.Streams;
+import brooklyn.util.text.ByteSizeStrings;
+import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.KeyValueParser;
+import brooklyn.util.text.Strings;
+import brooklyn.util.text.TemplateProcessor;
+import brooklyn.util.time.Duration;
+import brooklyn.util.time.Time;
+import io.cloudsoft.winrm4j.pywinrm.Session;
+import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -438,6 +438,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             }
         }
         return result;
+    }
+
+    protected Collection<MachineLocationCustomizer> getMachineCustomizers(ConfigBag setup) {
+        Collection<MachineLocationCustomizer> customizers = setup.get(MACHINE_LOCATION_CUSTOMIZERS);
+        return (customizers == null ? ImmutableList.<MachineLocationCustomizer>of() : customizers);
     }
 
     public void setDefaultImageId(String val) {
@@ -877,8 +882,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
                 if (setup.get(OPEN_IPTABLES)) {
                     if (windows) {
-                        LOG.warn("Ignoring flag OPEN_IPTABLES on Windows location {}", machineLocation);
+                        LOG.warn("Ignoring DEPRECATED flag OPEN_IPTABLES on Windows location {}", machineLocation);
                     } else {
+                        LOG.warn("Using DEPRECATED flag OPEN_IPTABLES (will not be supported in future versions) for {} at {}", machineLocation, this);
+                        
                         @SuppressWarnings("unchecked")
                         Iterable<Integer> inboundPorts = (Iterable<Integer>) setup.get(INBOUND_PORTS);
 
@@ -917,8 +924,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
                 if (setup.get(STOP_IPTABLES)) {
                     if (windows) {
-                        LOG.warn("Ignoring flag OPEN_IPTABLES on Windows location {}", machineLocation);
+                        LOG.warn("Ignoring DEPRECATED flag OPEN_IPTABLES on Windows location {}", machineLocation);
                     } else {
+                        LOG.warn("Using DEPRECATED flag STOP_IPTABLES (will not be supported in future versions) for {} at {}", machineLocation, this);
+                        
                         customisationForLogging.add("stop iptables");
 
                         List<String> cmds = ImmutableList.<String>of();
@@ -953,6 +962,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
                 customizer.customize(this, computeService, machineLocation);
+            }
+            for (MachineLocationCustomizer customizer : getMachineCustomizers(setup)) {
+                customizer.customize(machineLocation);
             }
 
             customizedTimestamp = Duration.of(provisioningStopwatch);
@@ -2162,6 +2174,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     + (tothrow==null ? "will throw subsequently" : "swallowing due to previous error")+": "+e, e);
                 if (tothrow==null) tothrow = e;
             }
+        }
+        for (MachineLocationCustomizer customizer : getMachineCustomizers(setup)) {
+            customizer.preRelease(machine);
         }
 
         try {

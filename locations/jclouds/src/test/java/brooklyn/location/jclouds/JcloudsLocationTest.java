@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.annotation.Nullable;
 
 import org.jclouds.scriptbuilder.domain.OsFamily;
@@ -48,6 +49,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
+import brooklyn.location.MachineLocationCustomizer;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.names.CustomMachineNamer;
@@ -383,6 +385,9 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
             for (JcloudsLocationCustomizer customizer : getCustomizers(config().getBag())) {
                 customizer.customize(this, null, (JcloudsMachineLocation)result);
             }
+            for (MachineLocationCustomizer customizer : getMachineCustomizers(config().getBag())) {
+                customizer.customize((JcloudsMachineLocation)result);
+            }
 
             return result;
         }
@@ -440,22 +445,27 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     @Test
     public void testInvokesCustomizerCallbacks() throws Exception {
         JcloudsLocationCustomizer customizer = Mockito.mock(JcloudsLocationCustomizer.class);
+        MachineLocationCustomizer machineCustomizer = Mockito.mock(MachineLocationCustomizer.class);
 //        Mockito.when(customizer.customize(Mockito.any(JcloudsLocation.class), Mockito.any(ComputeService.class), Mockito.any(JcloudsSshMachineLocation.class)));
         ConfigBag allConfig = ConfigBag.newInstance()
             .configure(CLOUD_PROVIDER, "aws-ec2")
             .configure(ACCESS_IDENTITY, "bogus")
             .configure(ACCESS_CREDENTIAL, "bogus")
             .configure(JcloudsLocationConfig.JCLOUDS_LOCATION_CUSTOMIZERS, ImmutableList.of(customizer))
+            .configure(JcloudsLocation.MACHINE_LOCATION_CUSTOMIZERS, ImmutableList.of(machineCustomizer))
             .configure(JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 1);
         FakeLocalhostWithParentJcloudsLocation ll = managementContext.getLocationManager().createLocation(LocationSpec.create(FakeLocalhostWithParentJcloudsLocation.class).configure(allConfig.getAllConfig()));
         JcloudsMachineLocation l = (JcloudsMachineLocation)ll.obtain();
         Mockito.verify(customizer, Mockito.times(1)).customize(ll, null, l);
         Mockito.verify(customizer, Mockito.never()).preRelease(l);
         Mockito.verify(customizer, Mockito.never()).postRelease(l);
+        Mockito.verify(machineCustomizer, Mockito.times(1)).customize(l);
+        Mockito.verify(machineCustomizer, Mockito.never()).preRelease(l);
         
         ll.release(l);
         Mockito.verify(customizer, Mockito.times(1)).preRelease(l);
         Mockito.verify(customizer, Mockito.times(1)).postRelease(l);
+        Mockito.verify(machineCustomizer, Mockito.times(1)).preRelease(l);
     }
 
     // now test creating users

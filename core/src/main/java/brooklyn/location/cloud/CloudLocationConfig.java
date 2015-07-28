@@ -18,11 +18,15 @@
  */
 package brooklyn.location.cloud;
 
+import java.util.Collection;
+
 import com.google.common.annotations.Beta;
+import com.google.common.reflect.TypeToken;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.location.MachineLocationCustomizer;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -105,4 +109,8 @@ public interface CloudLocationConfig {
     public static final ConfigKey<String> DOMAIN_NAME = new BasicConfigKey<String>(String.class, "domainName",
         "DNS domain where the host should be created, e.g. yourdomain.com (selected clouds only)", null);
 
+    @SuppressWarnings("serial")
+    public static final ConfigKey<Collection<MachineLocationCustomizer>> MACHINE_LOCATION_CUSTOMIZERS = ConfigKeys.newConfigKey(
+            new TypeToken<Collection<MachineLocationCustomizer>>() {},
+            "machineCustomizers", "Optional machine customizers");
 }

@@ -19,6 +19,7 @@
 package io.brooklyn.camp.brooklyn;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 
 import java.io.StringReader;
 import java.util.Map;
@@ -28,20 +29,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import brooklyn.location.basic.LocationPredicates;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.basic.WinRmMachineLocation;
-import brooklyn.util.net.UserAndHostAndPort;
-
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.net.HostAndPort;
+
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.location.MachineLocation;
+import brooklyn.location.access.PortForwardManager;
+import brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import brooklyn.location.basic.LocationPredicates;
+import brooklyn.location.basic.SshMachineLocation;
+import brooklyn.location.basic.WinRmMachineLocation;
+import brooklyn.util.net.UserAndHostAndPort;
 
 public class ByonLocationsYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(ByonLocationsYamlTest.class);
@@ -165,7 +168,56 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
                 "mykey", "myval3"));
         assertEquals(machine3.getPrivateAddresses(), ImmutableSet.of("10.0.0.3"));
     }
-    
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testByonPortMapping() throws Exception {
+        String yaml = Joiner.on("\n").join(
+                "location:",
+                "  byon:",
+                "    hosts:",
+                "    - ssh: 1.1.1.1:22",
+                "      privateAddresses: [10.0.0.1]",
+                "      tcpPortMappings: {22: \"83.222.229.1:12001\", 8080: \"83.222.229.1:12002\"}",
+                "      password: mypassword",
+                "      user: myuser",
+                "      mykey: myval1",
+                "    - winrm: 1.1.1.2:8985",
+                "      privateAddresses: [10.0.0.2]",
+                "      tcpPortMappings: {8985: \"83.222.229.2:12003\", 8080: \"83.222.229.2:12004\"}",
+                "      password: mypassword",
+                "      user: myuser",
+                "      mykey: myval2",
+                "      osfamily: windows",
+                "services:",
+                "- serviceType: brooklyn.entity.basic.BasicApplication");
+
+        Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
+        FixedListMachineProvisioningLocation<MachineLocation> loc = (FixedListMachineProvisioningLocation<MachineLocation>) Iterables.get(app.getLocations(), 0);
+        PortForwardManager pfm = (PortForwardManager) mgmt().getLocationRegistry().resolve("portForwardManager(scope=global)");
+        
+        Set<MachineLocation> machines = loc.getAvailable();
+        assertEquals(machines.size(), 2, "machines="+machines);
+        SshMachineLocation machine1 = (SshMachineLocation) Iterables.find(machines, LocationPredicates.configEqualTo(ConfigKeys.newStringConfigKey("mykey"), "myval1"));
+        WinRmMachineLocation machine2 = (WinRmMachineLocation) Iterables.find(machines, Predicates.instanceOf(WinRmMachineLocation.class));
+
+        assertMachine(machine1, UserAndHostAndPort.fromParts("myuser", "83.222.229.1", 12001), ImmutableMap.of(
+                SshMachineLocation.PASSWORD.getName(), "mypassword",
+                "mykey", "myval1"));
+        assertEquals(machine1.getPrivateAddresses(), ImmutableSet.of("10.0.0.1"));
+        assertEquals(pfm.lookup(machine1, 22), HostAndPort.fromParts("83.222.229.1", 12001));
+        assertEquals(pfm.lookup(machine1, 8080), HostAndPort.fromParts("83.222.229.1", 12002));
+        assertNull(pfm.lookup(machine1, 12345));
+        
+        assertMachine(machine2, UserAndHostAndPort.fromParts("myuser", "83.222.229.2",  12003), ImmutableMap.of(
+                SshMachineLocation.PASSWORD.getName(), "mypassword",
+                "mykey", "myval2"));
+        assertEquals(machine2.getPrivateAddresses(), ImmutableSet.of("10.0.0.2"));
+        assertEquals(pfm.lookup(machine2, 8985), HostAndPort.fromParts("83.222.229.2", 12003));
+        assertEquals(pfm.lookup(machine2, 8080), HostAndPort.fromParts("83.222.229.2", 12004));
+        assertNull(pfm.lookup(machine2, 12345));
+    }
+
     private void assertMachine(SshMachineLocation machine, UserAndHostAndPort conn, Map<String, ?> config) {
         assertEquals(machine.getAddress().getHostAddress(), conn.getHostAndPort().getHostText());
         assertEquals(machine.getPort(), conn.getHostAndPort().getPort());
