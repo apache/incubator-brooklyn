@@ -124,12 +124,6 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObj
     }
 
     @Override
-    @Deprecated
-    public TagSupport getTagSupport() {
-        return tags();
-    }
-
-    @Override
     public String getDescription() {
         return itemDto.getDescription();
     }

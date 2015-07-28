@@ -125,7 +125,7 @@ public class EntitiesTest extends BrooklynAppUnitTestSupport {
         Assert.assertTrue(entity.tags().containsTag(entity.getParent()));
         Assert.assertFalse(entity.tags().containsTag(entity));
         
-        entity.removeTag(2);
+        entity.tags().removeTag(2);
         Assert.assertEquals(entity.tags().getTags(), MutableSet.of(app));
     }
     

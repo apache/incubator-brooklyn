@@ -200,12 +200,6 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
         return new BasicTagSupport();
     }
 
-    @Override
-    @Deprecated
-    public TagSupport getTagSupport() {
-        return tags();
-    }
-
     protected class BasicTagSupport implements TagSupport {
         @Override
         public Set<Object> getTags() {

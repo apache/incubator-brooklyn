@@ -57,13 +57,6 @@ public interface BrooklynObject extends Identifiable, Configurable {
      */
     TagSupport tags();
     
-    /**
-     * @since 0.7.0-M2
-     * @deprecated since 0.7.0-M2; use {@link #tags()}
-     */
-    @Deprecated
-    TagSupport getTagSupport();
-    
     public interface TagSupport {
         /**
          * @return An immutable copy of the set of tags on this entity. 
