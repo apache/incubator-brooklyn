@@ -180,11 +180,11 @@ define([
                     // the zeroClipboard instance is a singleton so check our scope first
                     if (!$(this).closest("#config-table").length) return;
                     var text = $(this).attr('copy-value');
-                    if (!text) text = $(this).closest('.floatGroup').find('.value').html();
+                    if (!text) text = $(this).closest('.floatGroup').find('.value').text();
                     
 //                    log("Copying config text '"+text+"' to clipboard");
                     client.setText(text);
-                    
+
                     // show the word "copied" for feedback;
                     // NB this occurs on mousedown, due to how flash plugin works
                     // (same style of feedback and interaction as github)
