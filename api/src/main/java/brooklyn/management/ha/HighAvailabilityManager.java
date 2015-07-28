@@ -113,12 +113,6 @@ public interface HighAvailabilityManager {
     ManagementPlaneSyncRecord getLastManagementPlaneSyncRecord();
     
     /**
-     * @deprecated since 0.7.0 use {@link #getLastManagementPlaneSyncRecord()} or {@link #loadManagementPlaneSyncRecord(boolean)}
-     * to be explicit about the source.  
-     */
-    ManagementPlaneSyncRecord getManagementPlaneSyncState();
-    
-    /**
      * @param useLocalKnowledgeForThisNode - if true, the record for this mgmt node will be replaced with the
      * actual current status known in this JVM (may be more recent than what is persisted);
      * for most purposes there is little difference but in some cases the local node being updated

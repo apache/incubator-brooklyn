@@ -531,11 +531,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return lastSyncRecord;
     }
     
-    @Override
-    public ManagementPlaneSyncRecord getManagementPlaneSyncState() {
-        return loadManagementPlaneSyncRecord(true);
-    }
-
     @SuppressWarnings("unchecked")
     protected void registerPollTask() {
         final Runnable job = new Runnable() {

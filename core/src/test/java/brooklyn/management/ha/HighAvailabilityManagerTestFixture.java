@@ -126,7 +126,7 @@ public abstract class HighAvailabilityManagerTestFixture {
             .setLocalTicker(ticker)
             .setRemoteTicker(ticker);
         try {
-            ManagementPlaneSyncRecord state = manager2.getManagementPlaneSyncState();
+            ManagementPlaneSyncRecord state = manager2.loadManagementPlaneSyncRecord(true);
             assertNotNull(state);
         } finally {
             manager2.stop();

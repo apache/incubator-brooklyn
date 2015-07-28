@@ -359,7 +359,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         
         log.info("publish "+n1.ownNodeId);
         n1.ha.publishAndCheck(false);
-        ManagementPlaneSyncRecord memento1b = n1.ha.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento1b = n1.ha.loadManagementPlaneSyncRecord(true);
         log.info(n1+" HA now: "+memento1b);
         
         ManagementNodeState expectedStateAfterDemotion = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_DEFAULT_STANDBY_IS_HOT_PROPERTY) ?
@@ -373,7 +373,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         assertEquals(memento1b.getManagementNodes().get(n2.ownNodeId).getRemoteTimestamp(), time1);
         
         // n2 now sees itself as master, with n1 in standby again
-        ManagementPlaneSyncRecord memento2c = n2.ha.getManagementPlaneSyncState();
+        ManagementPlaneSyncRecord memento2c = n2.ha.loadManagementPlaneSyncRecord(true);
         log.info(n2+" HA now: "+memento2c);
         assertEquals(memento2c.getManagementNodes().get(n1.ownNodeId).getStatus(), expectedStateAfterDemotion);
         assertEquals(memento2c.getManagementNodes().get(n2.ownNodeId).getStatus(), ManagementNodeState.MASTER);
