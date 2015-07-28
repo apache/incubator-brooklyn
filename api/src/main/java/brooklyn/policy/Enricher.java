@@ -42,15 +42,6 @@ public interface Enricher extends EntityAdjunct, Rebindable, Configurable {
     String getId();
 
     /**
-     * Get the name assigned to this enricher.
-     * 
-     * @deprecated since 0.7; use {@link #getDisplayName()}
-     */
-    @Deprecated
-    @Override
-    String getName();
-
-    /**
      * Information about the type of this entity; analogous to Java's object.getClass.
      */
     @Beta
