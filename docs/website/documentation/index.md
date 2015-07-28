@@ -21,11 +21,7 @@ Our main user manual is organised by release version. Please pick the version th
 - [{{ site.brooklyn-stable-version }}]({{ site.path.v }}/latest) -
   This is the latest stable version.
 
-- [0.7.0-M1]({{ site.path.v }}/0.7.0-M1) -
-  Please note that this release was made prior to entering the Apache Incubator,
-  and therefore it is not endorsed by Apache.
-
-- [Other versions]({{ site.path.website }}/meta/versions.html)
+- [Older versions]({{ site.path.website }}/meta/versions.html)
 
 
 ## Other Docs
