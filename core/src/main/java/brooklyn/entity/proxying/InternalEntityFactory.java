@@ -38,7 +38,6 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.management.internal.LocalEntityManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.EnricherSpec;
@@ -179,19 +178,12 @@ public class InternalEntityFactory extends InternalFactory {
         return entity;
     }
     
-    @SuppressWarnings("deprecation")
     protected <T extends Entity> T createEntityAndDescendantsUninitialized(EntitySpec<T> spec, Map<String,Entity> entitiesByEntityId, Map<String,EntitySpec<?>> specsByEntityId) {
         if (spec.getFlags().containsKey("parent") || spec.getFlags().containsKey("owner")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent or owner; use spec.parent() instead for "+spec);
         }
         if (spec.getFlags().containsKey("id")) {
             throw new IllegalArgumentException("Spec's flags must not contain id; use spec.id() instead for "+spec);
-        }
-        if (spec.getId() != null) {
-            log.warn("Use of deprecated EntitySpec.id ({}); instead let management context pick the random+unique id", spec);
-            if (((LocalEntityManager)managementContext.getEntityManager()).isKnownEntityId(spec.getId())) {
-                throw new IllegalArgumentException("Entity with id "+spec.getId()+" already exists; cannot create new entity with this explicit id from spec "+spec);
-            }
         }
         
         try {
@@ -337,8 +329,7 @@ public class InternalEntityFactory extends InternalFactory {
      * although for old-style entities flags from the spec are passed to the constructor.
      */
     public <T extends Entity> T constructEntity(Class<? extends T> clazz, EntitySpec<T> spec) {
-        @SuppressWarnings("deprecation")
-        T entity = constructEntityImpl(clazz, spec.getFlags(), spec.getId());
+        T entity = constructEntityImpl(clazz, spec.getFlags());
         if (((AbstractEntity)entity).getProxy() == null) ((AbstractEntity)entity).setProxy(createEntityProxy(spec, entity));
         return entity;
     }
@@ -370,6 +361,10 @@ public class InternalEntityFactory extends InternalFactory {
             ((AbstractEntity)entity).setProxy(proxy);
         }
         return entity;
+    }
+
+    protected <T extends Entity> T constructEntityImpl(Class<? extends T> clazz, Map<String, ?> constructionFlags) {
+        return constructEntityImpl(clazz, constructionFlags, null);
     }
     
     protected <T extends Entity> T constructEntityImpl(Class<? extends T> clazz, Map<String, ?> constructionFlags, String entityId) {

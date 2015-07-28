@@ -133,8 +133,6 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
         return new EntitySpec<T>(type);
     }
 
-    private String id;
-    
     private Class<? extends T> impl;
     private Entity parent;
     private final Map<String, Object> flags = Maps.newLinkedHashMap();
@@ -163,16 +161,6 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     @Override
     protected void checkValidType(Class<? extends T> type) {
         // EntitySpec does nothing.  Other specs do check it's an implementation etc.
-    }
-    
-    /**
-     * @return The id to use when creating the entity, or null if allow brooklyn to generate a unique id.
-    /**
-     * @deprecated since 0.7.0; instead let the management context pick a random+unique id
-     */
-    @Deprecated
-    public String getId() {
-        return id;
     }
     
     /**
@@ -256,16 +244,6 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     
     public List<Location> getLocations() {
         return locations;
-    }
-
-    /**
-     * @deprecated since 0.7.0; instead let the management context pick a random+unique id
-     */
-    @Deprecated
-    public EntitySpec<T> id(String val) {
-        checkMutable();
-        id = val;
-        return this;
     }
 
     public EntitySpec<T> impl(Class<? extends T> val) {
