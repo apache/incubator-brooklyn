@@ -301,14 +301,6 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return config().get(key);
     }
     
-    /**
-     * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().getBag()}
-     */
-    @Deprecated
-    public Map<ConfigKey<?>, Object> getAllConfig() {
-        return configsInternal.getAllConfig();
-    }
-    
     protected <K> K getRequiredConfig(ConfigKey<K> key) {
         K result = config().get(key);
         if (result==null) 
