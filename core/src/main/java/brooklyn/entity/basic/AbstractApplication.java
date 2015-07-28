@@ -42,11 +42,8 @@ import brooklyn.util.time.Time;
  * their entities.
  */
 public abstract class AbstractApplication extends AbstractEntity implements StartableApplication {
-    /**
-     * @deprecated since 0.8.0; will be changed to private
-     */
-    @Deprecated
-    public static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
+    
+    private static final Logger log = LoggerFactory.getLogger(AbstractApplication.class);
     
     /**
      * The default name to use for this app, if not explicitly overridden by the top-level app.
