@@ -181,11 +181,6 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed
         return activated;
     }
     
-    @Override
-    public boolean isActive() {
-        return isRunning();
-    }
-    
     public EntityLocal getEntity() {
         return entity;
     }

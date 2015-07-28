@@ -47,12 +47,6 @@ public interface Feed extends EntityAdjunct, Rebindable {
      */
     boolean isActivated();
     
-    /** 
-     * @return true iff the feed is actually running (like {@link #isActivated()}, but including other items like poll jobs not cancelled)
-     * @deprecated since 0.7.0 use {@link #isRunning()}
-     */ @Deprecated
-    boolean isActive();
-    
     void start();
 
     /** suspends this feed (stops the poller, or indicates that the feed should start in a state where the poller is stopped) */
