@@ -68,7 +68,7 @@
 
         <!-- Dependencies -->
         <brooklyn.version>0.8.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
-        <jclouds.groupId>org.apache.jclouds</jclouds.groupId>
+        <jclouds.groupId>io.cloudsoft.jclouds</jclouds.groupId>
 
         <!-- These dependencies also appear in usage/downstream-parent/pom.xml -
            - please synchronise versions between these two pom files -->
