@@ -461,13 +461,6 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
         throw Exceptions.propagate(throwable);
     }
 
-    @Override @Deprecated
-    public Task<?> last() {
-        List<Task<?>> l = getQueue();
-        if (l.isEmpty()) return null;
-        return l.get(l.size()-1);
-    }
-
     @Override
     public void drain(Duration optionalTimeout, boolean includePrimary, boolean throwFirstError) {
         try {

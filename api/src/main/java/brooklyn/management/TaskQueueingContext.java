@@ -43,11 +43,6 @@ public interface TaskQueueingContext {
     /** returns a list of queued tasks (immutable copy) */
     public List<Task<?>> getQueue();
 
-    /** returns the last task in the queue, or null if none 
-     * @deprecated since 0.7.0 this method is misleading if the caller attempts to block on the task and the queue aborts */
-    @Deprecated
-    public Task<?> last();
-
     /** Drains the task queue for this context to complete, ie waits for this context to complete (or terminate early)
      * @param optionalTimeout null to run forever
      * @param includePrimaryThread whether the parent (this context) should also be joined on;

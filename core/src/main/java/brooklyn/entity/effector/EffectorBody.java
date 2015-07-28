@@ -82,16 +82,6 @@ public abstract class EffectorBody<T> {
         return DynamicTasks.queue(task.newTask());
     }
     
-    /** Returns the last task queued in this context, or null if none. 
-     * Does not block, and there is no guarantee the task is submitted
-     * or even that it will be submitted (if the queue aborts early). 
-     * @deprecated since 0.7.0 not needed, and misleading given {@link #last(Class)},
-     * and the prospect that the task will never complete if there are errors */
-    @Deprecated
-    protected Task<?> last() {
-        return DynamicTasks.getTaskQueuingContext().last();
-    }
-
     /** see {@link DynamicTasks#waitForLast()} */
     protected Task<?> waitForLast() {
         return DynamicTasks.waitForLast();
