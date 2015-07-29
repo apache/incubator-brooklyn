@@ -54,6 +54,7 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.SubscriptionManager;
 import brooklyn.management.Task;
 import brooklyn.management.TaskAdaptable;
+import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
@@ -386,7 +387,8 @@ public class LocalManagementContext extends AbstractManagementContext {
             configMap.addFromMap(brooklynAdditionalProperties);
         }
         this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
-
+        this.entitlementManager = Entitlements.newManager(this, configMap);
+        
         clearLocationRegistry();
         
         BrooklynFeatureEnablement.init(configMap);

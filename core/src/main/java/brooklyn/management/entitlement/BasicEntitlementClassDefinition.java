@@ -18,6 +18,7 @@
  */
 package brooklyn.management.entitlement;
 
+import com.google.common.base.Objects;
 import com.google.common.reflect.TypeToken;
 
 
@@ -46,4 +47,8 @@ public class BasicEntitlementClassDefinition<T> implements EntitlementClass<T> {
         return argumentType;
     }
 
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("identitifier", identifier).add("argumentType", argumentType).toString();
+    }
 }

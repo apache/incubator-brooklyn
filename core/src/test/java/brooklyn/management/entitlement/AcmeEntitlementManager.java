@@ -18,7 +18,7 @@
  */
 package brooklyn.management.entitlement;
 
-class AcmeEntitlementManager extends PerUserEntitlementManager {
+public class AcmeEntitlementManager extends PerUserEntitlementManager {
 
     public AcmeEntitlementManager() {
         // default mode (if no user specified) is root
