@@ -47,9 +47,9 @@ import brooklyn.util.exceptions.Exceptions;
 
 public abstract class AcmeEntitlementManagerTestFixture {
 
-    ManagementContext mgmt;
-    Application app;
-    ConfigBag configBag;
+    protected ManagementContext mgmt;
+    protected Application app;
+    protected ConfigBag configBag;
     
     public void setup(ConfigBag cfg) {
         mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newEmpty().addFrom(cfg));

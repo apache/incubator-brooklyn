@@ -18,10 +18,22 @@
  */
 package brooklyn.management.entitlement;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
@@ -36,13 +48,6 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
-
-import com.google.common.annotations.Beta;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.reflect.TypeToken;
 
 /** @since 0.7.0 */
 @Beta
@@ -173,6 +178,10 @@ public class Entitlements {
             public <T> boolean isEntitled(EntitlementContext context, EntitlementClass<T> permission, T typeArgument) {
                 return true;
             }
+            @Override
+            public String toString() {
+                return "Entitlements.root";
+            }
         };
     }
 
@@ -183,12 +192,22 @@ public class Entitlements {
             public <T> boolean isEntitled(EntitlementContext context, EntitlementClass<T> permission, T typeArgument) {
                 return false;
             }
+            @Override
+            public String toString() {
+                return "Entitlements.minimal";
+            }
         };
     }
 
     public static class FineGrainedEntitlements {
     
+        private static final Joiner COMMA_JOINER = Joiner.on(',');
+
         public static EntitlementManager anyOf(final EntitlementManager... checkers) {
+            return anyOf(Arrays.asList(checkers));
+        }
+        
+        public static EntitlementManager anyOf(final Iterable<? extends EntitlementManager> checkers) {
             return new EntitlementManager() {
                 @Override
                 public <T> boolean isEntitled(EntitlementContext context, EntitlementClass<T> permission, T typeArgument) {
@@ -197,10 +216,18 @@ public class Entitlements {
                             return true;
                     return false;
                 }
+                @Override
+                public String toString() {
+                    return "Entitlements.anyOf(" + COMMA_JOINER.join(checkers) + ")";
+                }
             };
         }
         
         public static EntitlementManager allOf(final EntitlementManager... checkers) {
+            return allOf(Arrays.asList(checkers));
+        }
+        
+        public static EntitlementManager allOf(final Iterable<? extends EntitlementManager> checkers) {
             return new EntitlementManager() {
                 @Override
                 public <T> boolean isEntitled(EntitlementContext context, EntitlementClass<T> permission, T typeArgument) {
@@ -208,6 +235,10 @@ public class Entitlements {
                         if (checker.isEntitled(context, permission, typeArgument))
                             return true;
                     return false;
+                }
+                @Override
+                public String toString() {
+                    return "Entitlements.allOf(" + COMMA_JOINER.join(checkers) + ")";
                 }
             };
         }
@@ -235,7 +266,10 @@ public class Entitlements {
                 if (!Objects.equal(this.permission, permission)) return false;
                 return test.apply((U)typeArgument);
             }
-            
+            @Override
+            public String toString() {
+                return "Entitlements.allowing(" + permission + " -> " + test + ")";
+            }
         }
         public static EntitlementManager seeNonSecretSensors() {
             return allowing(SEE_SENSOR, new Predicate<EntityAndItem<String>>() {
@@ -243,6 +277,10 @@ public class Entitlements {
                 public boolean apply(EntityAndItem<String> input) {
                     if (input == null) return false;
                     return !Entities.isSecret(input.getItem());
+                }
+                @Override
+                public String toString() {
+                    return "Predicates.nonSecret";
                 }
             });
         }
@@ -348,12 +386,14 @@ public class Entitlements {
         if ("minimal".equalsIgnoreCase(type)) return minimal();
         if (Strings.isNonBlank(type)) {
             try {
-                ClassLoader cl = mgmt==null ? null : ((ManagementContextInternal)mgmt).getBaseClassLoader();
+                ClassLoader cl = mgmt==null ? null : ((ManagementContextInternal)mgmt).getCatalogClassLoader();
                 if (cl==null) cl = Entitlements.class.getClassLoader();
                 Class<?> clazz = cl.loadClass(type);
-                Optional<?> result = Reflections.invokeConstructorWithArgs(clazz, brooklynProperties);
-                if (result.isPresent()) return (EntitlementManager) result.get();
-                return (EntitlementManager) clazz.newInstance();
+                return (EntitlementManager) instantiate(clazz, ImmutableList.of(
+                        new Object[] {mgmt, brooklynProperties},
+                        new Object[] {mgmt},
+                        new Object[] {brooklynProperties},
+                        new Object[0]));
             } catch (Exception e) { 
                 throw Exceptions.propagate(e); 
             }
@@ -361,5 +401,15 @@ public class Entitlements {
         throw new IllegalStateException("Invalid entitlement manager specified: '"+type+"'");
     }
     
-
+    private static Object instantiate(Class<?> clazz, List<Object[]> constructorArgOptions) {
+        try {
+            for (Object[] constructorArgOption : constructorArgOptions) {
+                Optional<?> result = Reflections.invokeConstructorWithArgs(clazz, constructorArgOption);
+                if (result.isPresent()) return result.get();
+            }
+        } catch (Exception e) { 
+            throw Exceptions.propagate(e); 
+        }
+        throw new IllegalStateException("No matching constructor to instantiate "+clazz);
+    }
 }
