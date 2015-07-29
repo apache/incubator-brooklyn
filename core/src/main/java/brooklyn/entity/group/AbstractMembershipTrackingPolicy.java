@@ -241,7 +241,8 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
 
     /**
      * Called when a member is removed.
-     * Note that entity change events may arrive after this event; they should typically be ignored. 
+     * Note that entity change events may arrive after this event; they should typically be ignored.
+     * The entity could already be unmanaged at this point so limited functionality is available (i.e. can't access config keys).
      */
     protected void onEntityRemoved(Entity member) {}
 }

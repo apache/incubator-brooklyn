@@ -159,9 +159,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     @Override
     protected void initEnrichers() {
-        if (getConfigRaw(UP_QUORUM_CHECK, true).isAbsent() && getConfig(INITIAL_SIZE)==0) {
+        if (config().getRaw(UP_QUORUM_CHECK).isAbsent() && getConfig(INITIAL_SIZE)==0) {
             // if initial size is 0 then override up check to allow zero if empty
-            setConfig(UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
+            config().set(UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
             setAttribute(SERVICE_UP, true);
         } else {
             setAttribute(SERVICE_UP, false);
@@ -173,7 +173,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     
     @Override
     public void setRemovalStrategy(Function<Collection<Entity>, Entity> val) {
-        setConfig(REMOVAL_STRATEGY, checkNotNull(val, "removalStrategy"));
+        config().set(REMOVAL_STRATEGY, checkNotNull(val, "removalStrategy"));
     }
 
     protected Function<Collection<Entity>, Entity> getRemovalStrategy() {
@@ -183,7 +183,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     @Override
     public void setZonePlacementStrategy(NodePlacementStrategy val) {
-        setConfig(ZONE_PLACEMENT_STRATEGY, checkNotNull(val, "zonePlacementStrategy"));
+        config().set(ZONE_PLACEMENT_STRATEGY, checkNotNull(val, "zonePlacementStrategy"));
     }
 
     protected NodePlacementStrategy getZonePlacementStrategy() {
@@ -192,11 +192,15 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     @Override
     public void setZoneFailureDetector(ZoneFailureDetector val) {
-        setConfig(ZONE_FAILURE_DETECTOR, checkNotNull(val, "zoneFailureDetector"));
+        config().set(ZONE_FAILURE_DETECTOR, checkNotNull(val, "zoneFailureDetector"));
     }
 
     protected ZoneFailureDetector getZoneFailureDetector() {
         return checkNotNull(getConfig(ZONE_FAILURE_DETECTOR), "zoneFailureDetector config");
+    }
+
+    protected EntitySpec<?> getFirstMemberSpec() {
+        return getConfig(FIRST_MEMBER_SPEC);
     }
 
     protected EntitySpec<?> getMemberSpec() {
@@ -780,7 +784,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
         EntitySpec<?> memberSpec = null;
-        if (getMembers().isEmpty()) memberSpec = getConfig(FIRST_MEMBER_SPEC);
+        if (getMembers().isEmpty()) memberSpec = getFirstMemberSpec();
         if (memberSpec == null) memberSpec = getMemberSpec();
         
         if (memberSpec != null) {

@@ -65,6 +65,9 @@ public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommo
     
     public static final ConfigKey<Object> MYSQL_SERVER_CONF_LOWER_CASE_TABLE_NAMES = MYSQL_SERVER_CONF.subKey("lower_case_table_names", "See MySQL guide. Set 1 to ignore case in table names (useful for OS portability)");
     
+    @SetFromFlag("serverId")
+    public static final ConfigKey<Integer> MYSQL_SERVER_ID = ConfigKeys.newIntegerConfigKey("mysql.server_id", "Corresponds to server_id option", 0);
+    
     @SetFromFlag("password")
     public static final StringAttributeSensorAndConfigKey PASSWORD = new StringAttributeSensorAndConfigKey(
             "mysql.password", "Database admin password (or randomly generated if not set)", null);

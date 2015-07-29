@@ -148,6 +148,14 @@ public class CollectionFunctionals {
         return Predicates.compose(Predicates.equalTo(targetSize), CollectionFunctionals.sizeFunction());
     }
 
+    public static Predicate<Iterable<?>> empty() {
+        return sizeEquals(0);
+    }
+
+    public static Predicate<Iterable<?>> notEmpty() {
+        return Predicates.not(empty());
+    }
+
     public static <K> Predicate<Map<K,?>> mapSizeEquals(int targetSize) {
         return Predicates.compose(Predicates.equalTo(targetSize), CollectionFunctionals.<K>mapSize());
     }
