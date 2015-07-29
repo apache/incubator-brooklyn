@@ -18,10 +18,16 @@
  */
 package brooklyn.rest.testing;
 
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeMethod;
+
+import com.google.common.base.Preconditions;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.core.DefaultResourceConfig;
+import com.sun.jersey.test.framework.AppDescriptor;
+import com.sun.jersey.test.framework.JerseyTest;
+import com.sun.jersey.test.framework.LowLevelAppDescriptor;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationRegistry;
@@ -34,22 +40,24 @@ import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.rest.util.BrooklynRestResourceUtils;
 import brooklyn.rest.util.NullHttpServletRequestProvider;
 import brooklyn.rest.util.NullServletConfigProvider;
+import brooklyn.rest.util.ShutdownHandlerProvider;
+import brooklyn.rest.util.TestShutdownHandler;
 import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.exceptions.Exceptions;
-
-import com.google.common.base.Preconditions;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.core.DefaultResourceConfig;
-import com.sun.jersey.test.framework.AppDescriptor;
-import com.sun.jersey.test.framework.JerseyTest;
-import com.sun.jersey.test.framework.LowLevelAppDescriptor;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 public abstract class BrooklynRestApiTest {
 
     private ManagementContext manager;
     
     protected boolean useLocalScannedCatalog = false;
+    protected TestShutdownHandler shutdownListener = createShutdownHandler();
+
+    @BeforeMethod(alwaysRun = true)
+    public void setUpMethod() {
+        shutdownListener.reset();
+    }
     
     protected synchronized void useLocalScannedCatalog() {
         if (manager!=null && !useLocalScannedCatalog)
@@ -57,6 +65,10 @@ public abstract class BrooklynRestApiTest {
         useLocalScannedCatalog = true;
     }
     
+    private TestShutdownHandler createShutdownHandler() {
+        return new TestShutdownHandler();
+    }
+
     protected synchronized ManagementContext getManagementContext() {
         if (manager==null) {
             if (useLocalScannedCatalog) {
@@ -81,6 +93,10 @@ public abstract class BrooklynRestApiTest {
     
     @AfterClass
     public void tearDown() throws Exception {
+        destroyManagementContext();
+    }
+
+    protected void destroyManagementContext() {
         if (manager!=null) {
             Entities.destroyAll(manager);
             manager = null;
@@ -119,6 +135,7 @@ public abstract class BrooklynRestApiTest {
         // and the servlet config provider must be an instance; addClasses doesn't work for some reason
         addResource(new NullServletConfigProvider());
         addProvider(NullHttpServletRequestProvider.class);
+        addResource(new ShutdownHandlerProvider(shutdownListener));
     }
 
     protected final void setUpResources() {

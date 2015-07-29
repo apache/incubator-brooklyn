@@ -19,11 +19,6 @@
 package brooklyn.launcher;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
-import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.io.Closeable;
 import java.io.File;
@@ -40,6 +35,14 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
@@ -86,6 +89,7 @@ import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import brooklyn.rest.security.provider.BrooklynUserWithRandomPasswordSecurityProvider;
+import brooklyn.rest.util.ShutdownHandler;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;
@@ -98,14 +102,11 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
-
-import com.google.common.annotations.Beta;
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+import io.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 /**
  * Example usage is:
@@ -156,6 +157,7 @@ public class BrooklynLauncher {
     private boolean ignoreAppErrors = true;
     
     private StopWhichAppsOnShutdown stopWhichAppsOnShutdown = StopWhichAppsOnShutdown.THESE_IF_NOT_PERSISTED;
+    private ShutdownHandler shutdownHandler;
     
     private Function<ManagementContext,Void> customizeManagement = null;
     private CatalogInitialization catalogInitialization = null;
@@ -492,6 +494,14 @@ public class BrooklynLauncher {
     }
 
     /**
+     * A listener to call when the user requests a shutdown (i.e. through the REST API)
+     */
+    public BrooklynLauncher shutdownHandler(ShutdownHandler shutdownHandler) {
+        this.shutdownHandler = shutdownHandler;
+        return this;
+    }
+
+    /**
      * @param destinationDir Directory for state to be copied to
      * @param destinationLocation Optional location if target for copied state is a blob store.
      */
@@ -772,6 +782,7 @@ public class BrooklynLauncher {
             webServer.setPublicAddress(publicAddress);
             if (port!=null) webServer.setPort(port);
             if (useHttps!=null) webServer.setHttpsEnabled(useHttps);
+            webServer.setShutdownHandler(shutdownHandler);
             webServer.putAttributes(brooklynProperties);
             if (skipSecurityFilter != Boolean.TRUE) {
                 webServer.setSecurityFilter(BrooklynPropertiesSecurityFilter.class);
@@ -1048,5 +1059,5 @@ public class BrooklynLauncher {
             }
         }
     }
-    
+
 }

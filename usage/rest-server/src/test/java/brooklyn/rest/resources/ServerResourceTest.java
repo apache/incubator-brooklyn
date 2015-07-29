@@ -23,29 +23,40 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableSet;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.EmptySoftwareProcess;
+import brooklyn.entity.basic.EmptySoftwareProcessDriver;
+import brooklyn.entity.basic.EmptySoftwareProcessImpl;
+import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.domain.HighAvailabilitySummary;
 import brooklyn.rest.domain.VersionSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.test.Asserts;
-
-import com.google.common.collect.ImmutableSet;
-import com.sun.jersey.api.client.UniformInterfaceException;
+import brooklyn.util.exceptions.Exceptions;
 
 @Test(singleThreaded = true)
 public class ServerResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(ServerResourceTest.class);
-
+    
     @Test
     public void testGetVersion() throws Exception {
         VersionSummary version = client().resource("/v1/server/version").get(VersionSummary.class);
@@ -88,19 +99,6 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
         client().resource("/v1/server/properties/reload").post();
         assertEquals(reloadCount.get(), 1);
     }
-    
-    // TODO Do not run this! It does a system.exit in ServerResource.shutdown
-    @Test(enabled=false)
-    public void testShutdown() throws Exception {
-        assertTrue(getManagementContext().isRunning());
-        
-        client().resource("/v1/server/shutdown").post();
-        
-        Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
-                assertFalse(getManagementContext().isRunning());
-            }});
-    }
 
     @Test
     void testGetConfig() throws Exception {
@@ -134,4 +132,45 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
             }
         }
     }
+
+    // Alternatively could reuse a blocking location, see brooklyn.entity.basic.SoftwareProcessEntityTest.ReleaseLatchLocation
+    @ImplementedBy(StopLatchEntityImpl.class)
+    public interface StopLatchEntity extends EmptySoftwareProcess {
+        public void unblock();
+        public boolean isBlocked();
+    }
+
+    public static class StopLatchEntityImpl extends EmptySoftwareProcessImpl implements StopLatchEntity {
+        private CountDownLatch lock = new CountDownLatch(1);
+        private volatile boolean isBlocked;
+
+        @Override
+        public void unblock() {
+            lock.countDown();
+        }
+
+        @Override
+        protected void postStop() {
+            super.preStop();
+            try {
+                isBlocked = true;
+                lock.await();
+                isBlocked = false;
+            } catch (InterruptedException e) {
+                throw Exceptions.propagate(e);
+            }
+        }
+
+        @Override
+        public Class<?> getDriverInterface() {
+            return EmptySoftwareProcessDriver.class;
+        }
+
+        @Override
+        public boolean isBlocked() {
+            return isBlocked;
+        }
+
+    }
+
 }

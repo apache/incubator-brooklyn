@@ -52,6 +52,7 @@ import org.testng.annotations.Test;
 import brooklyn.cli.AbstractMain.BrooklynCommand;
 import brooklyn.cli.AbstractMain.BrooklynCommandCollectingArgs;
 import brooklyn.cli.AbstractMain.HelpCommand;
+import brooklyn.cli.Main.AppShutdownHandler;
 import brooklyn.cli.Main.GeneratePasswordCommand;
 import brooklyn.cli.Main.LaunchCommand;
 import brooklyn.entity.Entity;
@@ -214,10 +215,10 @@ public class CliTest {
     
     @Test
     public void testWaitsForInterrupt() throws Exception {
-        final LaunchCommand launchCommand = new Main.LaunchCommand();
+        final AppShutdownHandler listener = new AppShutdownHandler();
         Thread t = new Thread(new Runnable() {
             @Override public void run() {
-                launchCommand.waitUntilInterrupted();
+                listener.waitOnShutdownRequest();
             }});
         
         t.start();
