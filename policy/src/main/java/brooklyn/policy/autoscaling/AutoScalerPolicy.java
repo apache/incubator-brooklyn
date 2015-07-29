@@ -157,32 +157,11 @@ public class AutoScalerPolicy extends AbstractPolicy {
             this.resizeUpIterationMax = val; return this;
         }
 
-        /**
-         * @deprecated since 0.7; use {@link #minPeriodBetweenExecs(Duration)}
-         */
-        @Deprecated
-        public Builder minPeriodBetweenExecs(long val) {
-            return minPeriodBetweenExecs(Duration.of(val, TimeUnit.MILLISECONDS));
-        }
         public Builder minPeriodBetweenExecs(Duration val) {
             this.minPeriodBetweenExecs = val; return this;
         }
-        /**
-         * @deprecated since 0.7; use {@link #resizeUpStabilizationDelay(Duration)}
-         */
-        @Deprecated
-        public Builder resizeUpStabilizationDelay(long val) {
-            return resizeUpStabilizationDelay(Duration.of(val, TimeUnit.MILLISECONDS));
-        }
         public Builder resizeUpStabilizationDelay(Duration val) {
             this.resizeUpStabilizationDelay = val; return this;
-        }
-        /**
-         * @deprecated since 0.7; use {@link #resizeDownStabilizationDelay(Duration)}
-         */
-        @Deprecated
-        public Builder resizeDownStabilizationDelay(long val) {
-            return resizeDownStabilizationDelay(Duration.of(val, TimeUnit.MILLISECONDS));
         }
         public Builder resizeDownStabilizationDelay(Duration val) {
             this.resizeDownStabilizationDelay = val; return this;
@@ -204,13 +183,6 @@ public class AutoScalerPolicy extends AbstractPolicy {
         }
         public Builder maxSizeReachedSensor(BasicNotificationSensor<? super MaxPoolSizeReachedEvent> val) {
             this.maxSizeReachedSensor = val; return this;
-        }
-        /**
-         * @deprecated since 0.7; use {@link #maxReachedNotificationDelay(Duration)}
-         */
-        @Deprecated
-        public Builder maxReachedNotificationDelay(long val) {
-            return maxReachedNotificationDelay(Duration.of(val, TimeUnit.MILLISECONDS));
         }
         public Builder maxReachedNotificationDelay(Duration val) {
             this.maxReachedNotificationDelay = val; return this;
@@ -529,35 +501,14 @@ public class AutoScalerPolicy extends AbstractPolicy {
         setOrDefault(RESIZE_DOWN_ITERATION_MAX, val);
     }
 
-    /**
-     * @deprecated since 0.7.0; use {@link #setMinPeriodBetweenExecs(Duration)}
-     */
-    public void setMinPeriodBetweenExecs(long val) {
-        setMinPeriodBetweenExecs(Duration.millis(val));
-    }
-
     public void setMinPeriodBetweenExecs(Duration val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing minPeriodBetweenExecs from {} to {}", new Object[] {this, getMinPeriodBetweenExecs(), val});
         config().set(MIN_PERIOD_BETWEEN_EXECS, val);
     }
 
-    /**
-     * @deprecated since 0.7.0; use {@link #setResizeDownStabilizationDelay(Duration)}
-     */
-    public void setResizeUpStabilizationDelay(long val) {
-        setResizeUpStabilizationDelay(Duration.millis(val));
-    }
-    
     public void setResizeUpStabilizationDelay(Duration val) {
         if (LOG.isInfoEnabled()) LOG.info("{} changing resizeUpStabilizationDelay from {} to {}", new Object[] {this, getResizeUpStabilizationDelay(), val});
         config().set(RESIZE_UP_STABILIZATION_DELAY, val);
-    }
-    
-    /**
-     * @deprecated since 0.7.0; use {@link #setResizeDownStabilizationDelay(Duration)}
-     */
-    public void setResizeDownStabilizationDelay(long val) {
-        setResizeDownStabilizationDelay(Duration.millis(val));
     }
     
     public void setResizeDownStabilizationDelay(Duration val) {
