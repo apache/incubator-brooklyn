@@ -24,18 +24,15 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 
@@ -60,15 +57,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
      */
     public static final ConfigKey<String> DEFAULT_DISPLAY_NAME = ConfigKeys.newStringConfigKey("defaultDisplayName");
 
-    @SetFromFlag("mgmt")
-    private volatile ManagementContext mgmt;
-    
-    private boolean deployed = false;
-
-    BrooklynProperties brooklynProperties = null;
-
     private volatile Application application;
-    
+
     public AbstractApplication() {
     }
 
@@ -156,9 +146,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         this.addLocations(locations);
         Collection<? extends Location> locationsToUse = getLocations();
         ServiceProblemsLogic.clearProblemsIndicator(this, START);
-        ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application starting");
-        recordApplicationEvent(Lifecycle.STARTING);
+        setExpectedStateAndRecordLifecycleEvent(Lifecycle.STARTING);
         try {
             preStart(locationsToUse);
             // if there are other items which should block service_up, they should be done in preStart
@@ -176,9 +165,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
         } finally {
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         }
-        
-        deployed = true;
-        recordApplicationEvent(Lifecycle.RUNNING);
+
+        setExpectedStateAndRecordLifecycleEvent(Lifecycle.RUNNING);
 
         logApplicationLifecycle("Started");
     }
@@ -214,23 +202,19 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
 
         ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application stopping");
         setAttribute(SERVICE_UP, false);
-        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
-        recordApplicationEvent(Lifecycle.STOPPING);
+        setExpectedStateAndRecordLifecycleEvent(Lifecycle.STOPPING);
         try {
             doStop();
         } catch (Exception e) {
-            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
-            recordApplicationEvent(Lifecycle.ON_FIRE);
+            setExpectedStateAndRecordLifecycleEvent(Lifecycle.ON_FIRE);
             log.warn("Error stopping application " + this + " (rethrowing): "+e);
             throw Exceptions.propagate(e);
         }
-        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application stopping");
-        ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
-        recordApplicationEvent(Lifecycle.STOPPED);
+        ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application stopped");
+        setExpectedStateAndRecordLifecycleEvent(Lifecycle.STOPPED);
 
         if (getParent()==null) {
             synchronized (this) {
-                deployed = false;
                 //TODO review mgmt destroy lifecycle
                 //  we don't necessarily want to forget all about the app on stop, 
                 //since operator may be interested in things recently stopped;
@@ -261,8 +245,13 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
             recordApplicationEvent(Lifecycle.DESTROYED);
         }
     }
-    
-    private void recordApplicationEvent(Lifecycle state) {
+
+    protected void setExpectedStateAndRecordLifecycleEvent(Lifecycle state) {
+        ServiceStateLogic.setExpectedState(this, state);
+        recordApplicationEvent(state);
+    }
+
+    protected void recordApplicationEvent(Lifecycle state) {
         try {
             ((ManagementContextInternal)getManagementContext()).getUsageManager().recordApplicationEvent(this, state);
         } catch (RuntimeInterruptedException e) {
