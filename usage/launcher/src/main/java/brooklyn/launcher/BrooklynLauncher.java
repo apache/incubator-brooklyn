@@ -946,7 +946,6 @@ public class BrooklynLauncher {
                         .configure(BrooklynNode.WEB_CONSOLE_PUBLIC_ADDRESS, publicAddress)
                         .configure(BrooklynNode.CLASSPATH, Splitter.on(":").splitToList(classpath))
                         .configure(BrooklynNode.NO_WEB_CONSOLE_AUTHENTICATION, Boolean.TRUE.equals(skipSecurityFilter))
-                        .configure(BrooklynNode.NO_SHUTDOWN_ON_EXIT, stopWhichAppsOnShutdown == StopWhichAppsOnShutdown.NONE)
                         .displayName("Brooklyn Console"));
             }
         };

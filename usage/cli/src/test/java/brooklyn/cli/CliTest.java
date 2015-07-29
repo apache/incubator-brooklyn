@@ -241,7 +241,7 @@ public class CliTest {
                 "--location", "localhost",
                 "--port", "1234",
                 "--bindAddress", "myhostname",
-                "--noConsole", "--noConsoleSecurity", "--noShutdownOnExit", "--stopOnKeyPress", 
+                "--noConsole", "--noConsoleSecurity", "--stopOnKeyPress", 
                 "--localBrooklynProperties", "/path/to/myprops",
                 LaunchCommand.PERSIST_OPTION, LaunchCommand.PERSIST_OPTION_REBIND, 
                 "--persistenceDir", "/path/to/mypersist",
@@ -255,7 +255,6 @@ public class CliTest {
         assertTrue(details.contains("bindAddress=myhostname"), details);
         assertTrue(details.contains("noConsole=true"), details);
         assertTrue(details.contains("noConsoleSecurity=true"), details);
-        assertTrue(details.contains("noShutdownOnExit=true"), details);
         assertTrue(details.contains("stopOnKeyPress=true"), details);
         assertTrue(details.contains("localBrooklynProperties=/path/to/myprops"), details);
         assertTrue(details.contains("persist=rebind"), details);
@@ -274,7 +273,7 @@ public class CliTest {
         assertTrue(details.contains("port=null"), details);
         assertTrue(details.contains("noConsole=false"), details);
         assertTrue(details.contains("noConsoleSecurity=false"), details);
-        assertTrue(details.contains("noShutdownOnExit=false"), details);
+        assertTrue(details.contains("stopWhichAppsOnShutdown=theseIfNotPersisted"), details);
         assertTrue(details.contains("stopOnKeyPress=false"), details);
         assertTrue(details.contains("localBrooklynProperties=null"), details);
         assertTrue(details.contains("persist=disabled"), details);

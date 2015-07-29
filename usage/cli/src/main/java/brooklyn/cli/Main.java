@@ -321,12 +321,6 @@ public class Main extends AbstractMain {
                     + "Can be used in combination with --persist auto --persistenceDir <custom folder location> to attach to the running app at a later time.")
         public boolean exitAndLeaveAppsRunningAfterStarting = false;
 
-        /** @deprecated since 0.7.0 see {@link #stopWhichAppsOnShutdown} */
-        @Deprecated
-        @Option(name = { "-ns", "--noShutdownOnExit" },
-            description = "Deprecated synonym for `--stopOnShutdown none`")
-        public boolean noShutdownOnExit = false;
-        
         final static String PERSIST_OPTION = "--persist";
         protected final static String PERSIST_OPTION_DISABLED = "disabled";
         protected final static String PERSIST_OPTION_AUTO = "auto";
@@ -561,18 +555,7 @@ public class Main extends AbstractMain {
         
         protected StopWhichAppsOnShutdown computeStopWhichAppsOnShutdown() {
             boolean isDefault = STOP_THESE_IF_NOT_PERSISTED.equals(stopWhichAppsOnShutdown);
-            if (noShutdownOnExit) {
-                if (isDefault) {
-                    // the default; assume it was not explicitly specified so no error
-                    stopWhichAppsOnShutdown = STOP_NONE;
-                    // but warn of deprecation
-                    log.warn("Deprecated paramater `--noShutdownOnExit` detected; this will likely be removed in a future version; "
-                        + "replace with `"+STOP_WHICH_APPS_ON_SHUTDOWN+" "+stopWhichAppsOnShutdown+"`");
-                    return StopWhichAppsOnShutdown.NONE;
-                } else {
-                    throw new FatalConfigurationRuntimeException("Cannot specify both `--noShutdownOnExit` and `"+STOP_WHICH_APPS_ON_SHUTDOWN+"`");
-                }
-            } else if (exitAndLeaveAppsRunningAfterStarting && isDefault) {
+            if (exitAndLeaveAppsRunningAfterStarting && isDefault) {
                 return StopWhichAppsOnShutdown.NONE;
             } else {
                 return Enums.valueOfIgnoreCase(StopWhichAppsOnShutdown.class, stopWhichAppsOnShutdown).get();
@@ -823,7 +806,6 @@ public class Main extends AbstractMain {
                     .add("catalogReset", catalogReset)
                     .add("catalogForce", catalogForce)
                     .add("stopWhichAppsOnShutdown", stopWhichAppsOnShutdown)
-                    .add("noShutdownOnExit", noShutdownOnExit)
                     .add("stopOnKeyPress", stopOnKeyPress)
                     .add("localBrooklynProperties", localBrooklynProperties)
                     .add("persist", persist)
