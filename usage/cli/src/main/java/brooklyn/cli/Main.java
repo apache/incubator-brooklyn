@@ -115,9 +115,7 @@ import io.airlift.command.Option;
  */
 public class Main extends AbstractMain {
 
-    /** @deprecated since 0.7.0 will become private static, subclasses should define their own logger */
-    @Deprecated
-    public static final Logger log = LoggerFactory.getLogger(Main.class);
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String... args) {
         log.debug("Launching Brooklyn via CLI, with "+Arrays.toString(args));
