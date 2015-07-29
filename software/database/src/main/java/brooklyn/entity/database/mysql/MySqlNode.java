@@ -20,8 +20,11 @@ package brooklyn.entity.database.mysql;
 
 import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
+import brooklyn.entity.annotation.Effector;
+import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.proxying.ImplementedBy;
@@ -80,6 +83,9 @@ public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommo
 
     public static final AttributeSensor<Double> QUERIES_PER_SECOND_FROM_MYSQL = Sensors.newDoubleSensor("mysql.queries.perSec.fromMysql");
 
-    public String executeScript(String commands);
+    MethodEffector<String> EXECUTE_SCRIPT = new MethodEffector<String>(MySqlNode.class, "executeScript");
+    
+    @Effector(description = "Execute SQL script on the node as the root user")
+    public String executeScript(@EffectorParam(name="commands") String commands);
 
 }

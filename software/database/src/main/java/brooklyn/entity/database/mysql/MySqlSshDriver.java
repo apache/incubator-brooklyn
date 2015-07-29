@@ -173,7 +173,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
             ).summary("setting password"));
 
         if (hasCreationScript)
-            executeScriptFromInstalledFileAsync("creation-script.sql");
+            executeScriptFromInstalledFileAsync("creation-script.sql").asTask().getUnchecked();
 
         // not sure necessary to stop then subsequently launch, but seems safest
         // (if skipping, use a flag in launch to indicate we've just launched it)
@@ -270,6 +270,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
                 SshEffectorTasks.ssh(
                                 "cd "+getRunDir(),
                                 getBaseDir()+"/bin/mysql --defaults-file="+getConfigFile()+" < "+filenameAlreadyInstalledAtServer)
+                        .requiringExitCodeZero()
                         .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
     }
 
