@@ -339,17 +339,6 @@ public interface SoftwareProcess extends Entity, Startable {
                 "ALWAYS will try to stop the machine even if the entity is marked as stopped, " +
                 "IF_NOT_STOPPED stops the machine only if the entity is not marked as stopped, " +
                 "NEVER doesn't stop the machine.", StopMode.IF_NOT_STOPPED);
-
-        /** @since 0.7.0 semantics of parameters to restart being explored
-         *  @deprecated since 0.7.0 use  {@link #STOP_MACHINE_MODE} instead */
-        @Beta
-        @Deprecated
-        public static final ConfigKey<Boolean> STOP_MACHINE = ConfigKeys.newBooleanConfigKey("stopMachine",
-                "Whether to stop the machine provisioned for this entity:  'true', or 'false' are supported, " +
-                "with the default being 'true'." +
-                " 'true' is equivalent to " + STOP_MACHINE_MODE.getName() + " = " + StopMode.IF_NOT_STOPPED.name() + "." +
-                " 'false' is equivalent to " + STOP_MACHINE_MODE.getName() + " = " + StopMode.NEVER.name() + ".", true);
-
     }
     
     // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks

@@ -32,6 +32,7 @@ import brooklyn.entity.java.VanillaJavaApp;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.Location;
+import brooklyn.util.config.ConfigBag;
 
 /**
  * Mock web application server entity for testing.
@@ -64,7 +65,7 @@ public interface TestJavaWebAppEntity extends VanillaJavaApp, WebAppService {
         }
 
         @Override
-        public void stop() {
+        public void stop(ConfigBag parameters) {
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
             LOG.trace("Stopping {}", this);
             entity().setAttribute(Attributes.SERVICE_UP, false);

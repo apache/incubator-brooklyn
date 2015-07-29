@@ -73,7 +73,7 @@ public abstract class AbstractSoftwareProcessRestartIntegrationTest extends Broo
 
         // Stop the process
         Entities.invokeEffector(app, entity, SoftwareProcess.STOP, ImmutableMap.of(
-                StopSoftwareParameters.STOP_MACHINE.getName(), false))
+                StopSoftwareParameters.STOP_MACHINE_MODE.getName(), StopSoftwareParameters.StopMode.NEVER))
                 .get();
         EntityTestUtils.assertAttributeEqualsEventually(entity, SoftwareProcess.SERVICE_UP, false);
         EntityTestUtils.assertAttributeEqualsEventually(entity, SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);

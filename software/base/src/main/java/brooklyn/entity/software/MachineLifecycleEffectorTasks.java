@@ -543,12 +543,6 @@ public abstract class MachineLifecycleEffectorTasks {
         // nothing by default
     }
 
-    /** @deprecated since 0.7.0 use {@link #restart(ConfigBag)} */
-    @Deprecated
-    public void restart() {
-        restart(ConfigBag.EMPTY);
-    }
-
     /**
      * whether when 'auto' mode is specified, the machine should be stopped when the restart effector is called
      * <p>
@@ -633,12 +627,6 @@ public abstract class MachineLifecycleEffectorTasks {
         }
 
         throw new IllegalArgumentException("Invalid value '"+isRestartChildren+"' for "+RestartSoftwareParameters.RESTART_CHILDREN.getName());
-    }
-
-    /** @deprecated since 0.7.0 use {@link #stop(ConfigBag)} */
-    @Deprecated
-    public void stop() {
-        stop(ConfigBag.EMPTY);
     }
 
     /**
@@ -778,22 +766,7 @@ public abstract class MachineLifecycleEffectorTasks {
     }
 
     public static StopMode getStopMachineMode(ConfigBag parameters) {
-        @SuppressWarnings("deprecation")
-        final boolean hasStopMachine = parameters.containsKey(StopSoftwareParameters.STOP_MACHINE);
-        @SuppressWarnings("deprecation")
-        final Boolean isStopMachine = parameters.get(StopSoftwareParameters.STOP_MACHINE);
-
-        final boolean hasStopMachineMode = parameters.containsKey(StopSoftwareParameters.STOP_MACHINE_MODE);
         final StopMode stopMachineMode = parameters.get(StopSoftwareParameters.STOP_MACHINE_MODE);
-
-        if (hasStopMachine && isStopMachine != null) {
-            checkCompatibleMachineModes(isStopMachine, hasStopMachineMode, stopMachineMode);
-            if (isStopMachine) {
-                return StopMode.IF_NOT_STOPPED;
-            } else {
-                return StopMode.NEVER;
-            }
-        }
         return stopMachineMode;
     }
 
@@ -805,18 +778,6 @@ public abstract class MachineLifecycleEffectorTasks {
     protected static boolean canStop(StopMode stopMode, boolean isStopped) {
         return stopMode == StopMode.ALWAYS ||
                 stopMode == StopMode.IF_NOT_STOPPED && !isStopped;
-    }
-
-    @SuppressWarnings("deprecation")
-    private static void checkCompatibleMachineModes(Boolean isStopMachine, boolean hasStopMachineMode, StopMode stopMachineMode) {
-        if (hasStopMachineMode &&
-                (isStopMachine && stopMachineMode != StopMode.IF_NOT_STOPPED ||
-                 !isStopMachine && stopMachineMode != StopMode.NEVER)) {
-            throw new IllegalStateException("Incompatible values for " +
-                    StopSoftwareParameters.STOP_MACHINE.getName() + " (" + isStopMachine + ") and " +
-                    StopSoftwareParameters.STOP_MACHINE_MODE.getName() + " (" + stopMachineMode + "). " +
-                    "Use only one of the parameters.");
-        }
     }
 
     /** 
