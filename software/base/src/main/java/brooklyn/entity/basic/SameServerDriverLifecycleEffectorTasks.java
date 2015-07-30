@@ -84,7 +84,7 @@ public class SameServerDriverLifecycleEffectorTasks extends MachineLifecycleEffe
                 value = maybeValue.isPresent() ? maybeValue.get() : null;
             }
 
-            Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, new TypeToken<PortRange>() {});
+            Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, TypeToken.of(PortRange.class));
 
             if (maybePortRange.isPresentAndNonNull()) {
                 PortRange p = maybePortRange.get();

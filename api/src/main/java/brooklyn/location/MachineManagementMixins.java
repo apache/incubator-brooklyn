@@ -20,18 +20,28 @@ package brooklyn.location;
 
 import java.util.Map;
 
+import com.google.common.annotations.Beta;
+
+/**
+ * Defines mixins for interesting locations.
+ */
 public class MachineManagementMixins {
     
-    public interface RichMachineProvisioningLocation<T extends MachineLocation> extends MachineProvisioningLocation<T>, ListsMachines, GivesMachineMetadata, KillsMachines {}
-    
+    public interface RichMachineProvisioningLocation<T extends MachineLocation> extends
+            MachineProvisioningLocation<T>, ListsMachines, GivesMachineMetadata, KillsMachines {}
+
     public interface ListsMachines {
-        /** returns map of machine ID to metadata record for all machines known in a given cloud location */ 
+        /**
+         * @return A map of machine ID to metadata record for all machines known in a given cloud location.
+         */
         Map<String,MachineMetadata> listMachines();
     }
     
     public interface GivesMachineMetadata {
-        /** returns the MachineMetadata for a given (brooklyn) machine location instance, 
-         * or null if not matched */
+        /**
+         * @return the {@link MachineMetadata} for a given (brooklyn) machine location instance,
+         * or null if not matched.
+         */
         MachineMetadata getMachineMetadata(MachineLocation location);
     }
     
@@ -55,5 +65,28 @@ public class MachineManagementMixins {
         /** original metadata object, if available; e.g. ComputeMetadata when using jclouds */ 
         Object getOriginalMetadata();
     }
-    
+
+    /**
+     * Implement to indicate that a location can suspend and resume machines.
+     */
+    @Beta
+    public interface SuspendResumeLocation extends SuspendsMachines, ResumesMachines {};
+
+
+    @Beta
+    public interface SuspendsMachines {
+        /**
+         * Suspend the indicated machine.
+         */
+        void suspendMachine(MachineLocation location);
+    }
+
+    @Beta
+    public interface ResumesMachines {
+        /**
+         * Resume the indicated machine.
+         */
+        void resumeMachine(MachineLocation location);
+    }
+
 }

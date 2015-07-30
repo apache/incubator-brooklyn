@@ -59,20 +59,30 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
             return;
         }
         
-        DynamicTasks.queue("pre-restart", new Runnable() { public void run() {
-            preRestartCustom();
-        }});
+        DynamicTasks.queue("pre-restart", new PreRestartTask());
 
         log.debug("restart of "+entity()+" appears to have driver and hostname - doing driver-level restart");
         entity().getDriver().restart();
         
         restartChildren(parameters);
         
-        DynamicTasks.queue("post-restart", new Runnable() { public void run() {
+        DynamicTasks.queue("post-restart", new PostRestartTask());
+    }
+
+    private class PreRestartTask implements Runnable {
+        @Override
+        public void run() {
+            preRestartCustom();
+        }
+    }
+
+    private class PostRestartTask implements Runnable {
+        @Override
+        public void run() {
             postStartCustom();
             postRestartCustom();
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
-        }});
+        }
     }
     
     @Override
@@ -233,7 +243,7 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         
         if (childException!=null)
             throw new IllegalStateException(result+"; but error stopping child: "+childException, childException);
-        
+
         return result;
     }
     
