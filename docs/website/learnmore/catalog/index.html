@@ -23,6 +23,7 @@ under the License.
 <head>
 
   {% include base-head.html %}
+  <script type="text/javascript" src="{{site.path.style}}/js/catalog/items.js"></script>
   <link rel="stylesheet" href="{{site.path.style}}/css/catalog_items.css" type="text/css" media="screen"/>
 </head>
 
@@ -128,16 +129,8 @@ under the License.
     });
   };
   
-  var items_loaded;
   $(document).ready(function () {
-    if(!items_loaded) {
-      $.getJSON( "{{site.path.style}}/js/catalog/items.json", function( data ) {
-        items_loaded = data;
-        updateItems(data);
-      });
-    } else {
-      updateItems(items_loaded);
-    }
+    updateItems(items);
 
     function updateItems(items) {
       if (!String.prototype.trim) {
