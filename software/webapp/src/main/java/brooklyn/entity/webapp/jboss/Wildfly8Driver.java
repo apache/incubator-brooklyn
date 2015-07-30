@@ -18,27 +18,13 @@
  */
 package brooklyn.entity.webapp.jboss;
 
-import org.testng.annotations.Test;
+import brooklyn.entity.webapp.JavaWebAppDriver;
 
-import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
-import brooklyn.location.Location;
+public interface Wildfly8Driver extends JavaWebAppDriver{
 
-/**
- * A simple test of installing+running JBoss AS7 on Docker, using various OS distros and versions.
- */
-public class JBoss7ServerDockerLiveTest extends JBossServerDockerLiveTest {
-
-   @Override
-   protected void doTest(Location loc) throws Exception {
-	   super.doTest(loc);
-   }
-
-   @Test(enabled = false)
-   public void testDummy() {
-   } // Convince testng IDE integration that this really does have test methods
-
-   @Override
-   protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-	   return JBoss7Server.class;
-   }
+    /**
+     * The path to the keystore file on the Wildfly 8 server machine.
+     * Result is undefined if SSL is not enabled/configured.
+     */
+    public String getSslKeystoreFile();
 }

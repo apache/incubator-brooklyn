@@ -35,13 +35,15 @@ import org.testng.annotations.Test
 
 import brooklyn.config.BrooklynProperties
 import brooklyn.entity.Application
-import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.basic.Entities
+import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.trait.Startable
 import brooklyn.entity.webapp.jboss.JBoss6Server
 import brooklyn.entity.webapp.jboss.JBoss6ServerImpl
 import brooklyn.entity.webapp.jboss.JBoss7Server
 import brooklyn.entity.webapp.jboss.JBoss7ServerImpl
+import brooklyn.entity.webapp.jboss.Wildfly8Server
+import brooklyn.entity.webapp.jboss.Wildfly8ServerImpl
 import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.location.Location
@@ -52,6 +54,8 @@ import brooklyn.util.internal.TimeExtras
 
 /**
  * This tests that we can run jboss entity on AWS.
+ * 
+ * TODO Convert this class to Java and use EntitySpec to create server objects.
  */
 public class WebAppLiveIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(WebAppLiveIntegrationTest.class)
@@ -81,7 +85,8 @@ public class WebAppLiveIntegrationTest {
         TomcatServer tomcat = new TomcatServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
         JBoss6Server jboss6 = new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT)
         JBoss7Server jboss7 = new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
-        return [ [ tomcat ], [ jboss6 ], [ jboss7 ] ]
+		Wildfly8Server wildfly8 = new Wildfly8ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
+        return [ [ tomcat ], [ jboss6 ], [ jboss7 ], [ wildfly8 ] ]
     }
 
     private File getResource(String path) {

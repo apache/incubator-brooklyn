@@ -24,21 +24,26 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.Location;
 
 /**
- * A simple test of installing+running JBoss AS7 on Docker, using various OS distros and versions.
+ * A simple test of installing+running JBoss AS7 on AWS-EC2, using various OS distros and versions. 
  */
-public class JBoss7ServerDockerLiveTest extends JBossServerDockerLiveTest {
+public class JBoss7ServerGoogleComputeLiveTest extends JBossServerGoogleComputeLiveTest {
 
-   @Override
-   protected void doTest(Location loc) throws Exception {
-	   super.doTest(loc);
-   }
-
-   @Test(enabled = false)
-   public void testDummy() {
-   } // Convince testng IDE integration that this really does have test methods
-
-   @Override
-   protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-	   return JBoss7Server.class;
-   }
+    @Override
+    protected void doTest(Location loc) throws Exception {
+    	super.doTest(loc);
+    }
+    
+    @Test(groups = {"Live"})
+    @Override
+    public void test_DefaultImage() throws Exception {
+        super.test_DefaultImage();
+    }
+    
+    @Test(enabled=false)
+    public void testDummy() {} // Convince testng IDE integration that this really does have test methods
+    
+    @Override
+    protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
+    	return JBoss7Server.class;
+    }
 }

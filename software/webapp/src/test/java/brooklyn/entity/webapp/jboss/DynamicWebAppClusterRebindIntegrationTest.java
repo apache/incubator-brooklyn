@@ -24,13 +24,11 @@ import static brooklyn.test.HttpTestUtils.assertUrlUnreachableEventually;
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -45,9 +43,9 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
+import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

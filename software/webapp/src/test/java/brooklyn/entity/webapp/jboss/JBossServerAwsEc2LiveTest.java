@@ -18,26 +18,23 @@
  */
 package brooklyn.entity.webapp.jboss;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertNotNull;
-
-import java.net.URL;
-
-import brooklyn.test.TestResourceUnavailableException;
-import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractGoogleComputeLiveTest;
+import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.proxying.EntitySpec;
+import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
+import brooklyn.entity.webapp.WebAppServiceConstants;
+import brooklyn.entity.webapp.WebAppServiceMetrics;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
+import brooklyn.test.TestResourceUnavailableException;
 
 import com.google.common.collect.ImmutableList;
 
 /**
- * A simple test of installing+running on AWS-EC2, using various OS distros and versions. 
+ * A simple test of installing+running JBoss type servers on AWS-EC2, using various OS distros and versions. 
  */
-public class Jboss7ServerGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {
+public abstract class JBossServerAwsEc2LiveTest extends AbstractEc2LiveTest {
 
     public String getTestWar() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
@@ -46,33 +43,26 @@ public class Jboss7ServerGoogleComputeLiveTest extends AbstractGoogleComputeLive
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        final JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
+        final JavaWebAppSoftwareProcess server = app.createAndManageChild(EntitySpec.create(getServerType())
                 .configure("war", getTestWar()));
         
         app.start(ImmutableList.of(loc));
         
-        String url = server.getAttribute(JBoss7Server.ROOT_URL);
+        String url = server.getAttribute(WebAppServiceConstants.ROOT_URL);
         
         HttpTestUtils.assertHttpStatusCodeEventuallyEquals(url, 200);
         HttpTestUtils.assertContentContainsText(url, "Hello");
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertNotNull(server.getAttribute(JBoss7Server.REQUEST_COUNT));
-                assertNotNull(server.getAttribute(JBoss7Server.ERROR_COUNT));
-                assertNotNull(server.getAttribute(JBoss7Server.TOTAL_PROCESSING_TIME));
-                assertNotNull(server.getAttribute(JBoss7Server.MAX_PROCESSING_TIME));
-                assertNotNull(server.getAttribute(JBoss7Server.BYTES_RECEIVED));
-                assertNotNull(server.getAttribute(JBoss7Server.BYTES_SENT));
+                assertNotNull(server.getAttribute(WebAppServiceMetrics.REQUEST_COUNT));
+                assertNotNull(server.getAttribute(WebAppServiceMetrics.ERROR_COUNT));
+                assertNotNull(server.getAttribute(WebAppServiceMetrics.TOTAL_PROCESSING_TIME));
+                assertNotNull(server.getAttribute(WebAppServiceMetrics.MAX_PROCESSING_TIME));
+                assertNotNull(server.getAttribute(WebAppServiceMetrics.BYTES_RECEIVED));
+                assertNotNull(server.getAttribute(WebAppServiceMetrics.BYTES_SENT));
             }});
     }
     
-    @Test(groups = {"Live"})
-    @Override
-    public void test_DefaultImage() throws Exception {
-        super.test_DefaultImage();
-    }
-
-    @Test(enabled=false)
-    public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
+    protected abstract Class<? extends JavaWebAppSoftwareProcess> getServerType();
 }

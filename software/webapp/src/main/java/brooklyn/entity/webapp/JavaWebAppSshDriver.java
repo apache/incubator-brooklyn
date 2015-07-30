@@ -32,7 +32,10 @@ import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.Strings;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 
 public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver implements JavaWebAppDriver {
 
@@ -197,5 +200,29 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
     @Override
     public FilenameToWebContextMapper getFilenameContextMapper() {
         return new FilenameToWebContextMapper();
+    }
+    
+    /**
+     * Creates a hash of a username, password and security realm that is suitable for use
+     * with AS7 and Wildfly 8.
+     * <p/>
+     * Although AS7 has an <code>add-user.sh</code> script it is unsuitable for use in
+     * non-interactive modes. (See AS7-5061 for details.) Versions 7.1.2+ (EAP) accept
+     * a <code>--silent</code> flag. When this entity is updated past 7.1.1 we should
+     * probably use that instead.
+     * <p/>
+     * This method mirrors AS7 and Wildfly 8's method of hashing user's passwords. Refer
+     * to its class <code>UsernamePasswordHashUtil.generateHashedURP</code> for their
+     * implementation.
+     *
+     * @see <a href="https://issues.jboss.org/browse/AS7-5061">AS7-5061</a>
+     * @see <a href="https://github.com/jboss-remoting/jboss-sasl/blob/master/src/main/java/org/jboss/sasl/util/UsernamePasswordHashUtil.java">
+     *     UsernamePasswordHashUtil.generateHashedURP</a>
+     * @return <code>HEX(MD5(username ':' realm ':' password))</code>
+     */
+    public static String hashPassword(String username, String password, String realm) {
+        String concat = username + ":" + realm + ":" + password;
+        byte[] hashed = Hashing.md5().hashString(concat, Charsets.UTF_8).asBytes();
+        return BaseEncoding.base16().lowerCase().encode(hashed);
     }
 }

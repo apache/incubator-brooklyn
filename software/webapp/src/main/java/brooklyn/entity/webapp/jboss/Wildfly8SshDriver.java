@@ -41,9 +41,9 @@ import brooklyn.util.text.Strings;
 
 import com.google.common.base.Preconditions;
 
-public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver {
+public class Wildfly8SshDriver extends JavaWebAppSshDriver implements Wildfly8Driver {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JBoss7SshDriver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Wildfly8SshDriver.class);
 
     // TODO more configurability of config files, java memory, etc
 
@@ -52,13 +52,13 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     public static final String KEYSTORE_FILE = ".keystore";
     public static final String MANAGEMENT_REALM = "ManagementRealm";
 
-    public JBoss7SshDriver(JBoss7ServerImpl entity, SshMachineLocation machine) {
+    public Wildfly8SshDriver(Wildfly8ServerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
     @Override
-    public JBoss7ServerImpl getEntity() {
-        return (JBoss7ServerImpl) super.getEntity();
+    public Wildfly8ServerImpl getEntity() {
+        return (Wildfly8ServerImpl) super.getEntity();
     }
 
     @Override
@@ -67,7 +67,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     }
     
     protected String getTemplateConfigurationUrl() {
-        return entity.getConfig(JBoss7Server.TEMPLATE_CONFIGURATION_URL);
+        return entity.getConfig(Wildfly8Server.TEMPLATE_CONFIGURATION_URL);
     }
 
     @Override
@@ -81,29 +81,29 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     }
 
     private Integer getManagementHttpPort() {
-        return entity.getAttribute(JBoss7Server.MANAGEMENT_HTTP_PORT);
+        return entity.getAttribute(Wildfly8Server.MANAGEMENT_HTTP_PORT);
     }
 
     private Integer getManagementHttpsPort() {
-        return entity.getAttribute(JBoss7Server.MANAGEMENT_HTTPS_PORT);
+        return entity.getAttribute(Wildfly8Server.MANAGEMENT_HTTPS_PORT);
     }
 
     private Integer getManagementNativePort() {
-        return entity.getAttribute(JBoss7Server.MANAGEMENT_NATIVE_PORT);
+        return entity.getAttribute(Wildfly8Server.MANAGEMENT_NATIVE_PORT);
     }
 
     private String getManagementUsername() {
-        return entity.getConfig(JBoss7Server.MANAGEMENT_USER);
+        return entity.getConfig(Wildfly8Server.MANAGEMENT_USER);
     }
 
     private String getManagementPassword() {
-        return entity.getConfig(JBoss7Server.MANAGEMENT_PASSWORD);
+        return entity.getConfig(Wildfly8Server.MANAGEMENT_PASSWORD);
     }
 
     @Override
     public void preInstall() {
         resolver = Entities.newDownloader(this);
-        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("jboss-as-%s", getVersion()))));
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("wildfly-%s", getVersion()))));
     }
 
     @Override
@@ -142,8 +142,8 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         Preconditions.checkState(Strings.isNonBlank(getManagementUsername()), "User for management realm required");
         String managementPassword = getManagementPassword();
         if (Strings.isBlank(managementPassword)) {
-            LOG.debug(this+" has no password specified for "+JBoss7Server.MANAGEMENT_PASSWORD.getName()+"; using a random string");
-            entity.setConfig(JBoss7Server.MANAGEMENT_PASSWORD, Strings.makeRandomId(8));
+            LOG.debug(this+" has no password specified for "+Wildfly8Server.MANAGEMENT_PASSWORD.getName()+"; using a random string");
+            entity.setConfig(Wildfly8Server.MANAGEMENT_PASSWORD, Strings.makeRandomId(8));
         }
         String hashedPassword = hashPassword(getManagementUsername(), getManagementPassword(), MANAGEMENT_REALM);
 
@@ -194,7 +194,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
 
     @Override
     public void launch() {
-        entity.setAttribute(JBoss7Server.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
+        entity.setAttribute(Wildfly8Server.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
 
         // We wait for evidence of JBoss running because, using
         // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,

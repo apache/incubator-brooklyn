@@ -24,16 +24,27 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.Location;
 
 /**
- * A simple test of installing+running JBoss AS6 on AWS-EC2, using various OS distros and versions. 
+ * A simple test of installing+running Wildfly 8 on AWS-EC2, using various OS distros and versions. 
  */
-public class JBoss6ServerAwsEc2LiveTest extends JBossServerAwsEc2LiveTest {
+public class Wildfly8ServerAwsEc2LiveTest extends JBossServerAwsEc2LiveTest {
 
+    /**
+     * Wildfly8 does not yet support the metrics necessary for this test to pass. 
+     * 
+     * @see https://issues.apache.org/jira/browse/BROOKLYN-142
+     */
+    @Test(groups = "WIP")
     @Override
     protected void doTest(Location loc) throws Exception {
     	super.doTest(loc);
     }
     
-    @Test(groups = {"Live", "Live-sanity"})
+    /**
+     * Wildfly8 does not yet support the metrics necessary for this test to pass. 
+     * 
+     * @see https://issues.apache.org/jira/browse/BROOKLYN-142
+     */
+    @Test(groups = "WIP")
     @Override
     public void test_CentOS_6_3() throws Exception {
         super.test_CentOS_6_3();
@@ -44,6 +55,6 @@ public class JBoss6ServerAwsEc2LiveTest extends JBossServerAwsEc2LiveTest {
     
     @Override
     protected Class<? extends JavaWebAppSoftwareProcess> getServerType() {
-    	return JBoss6Server.class;
+    	return Wildfly8Server.class;
     }
 }

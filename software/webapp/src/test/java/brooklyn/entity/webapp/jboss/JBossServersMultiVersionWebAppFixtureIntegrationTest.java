@@ -45,10 +45,14 @@ public class JBossServersMultiVersionWebAppFixtureIntegrationTest extends Abstra
         JBoss7Server jboss7 = jboss7App.createAndManageChild(EntitySpec.create(JBoss7Server.class)
                 .configure(JBoss7Server.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
         
+        TestApplication wildfly8App = newTestApplication();
+        Wildfly8Server wildfly8 = wildfly8App.createAndManageChild(EntitySpec.create(Wildfly8Server.class)
+                .configure(Wildfly8Server.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
+        
         return new JavaWebAppSoftwareProcess[][] {
                 new JavaWebAppSoftwareProcess[] {jboss6}, 
-                new JavaWebAppSoftwareProcess[] {jboss7}
-                
+                new JavaWebAppSoftwareProcess[] {jboss7},
+                new JavaWebAppSoftwareProcess[] {wildfly8}
         };
     }
 

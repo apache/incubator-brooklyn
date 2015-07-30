@@ -24,9 +24,9 @@ import brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import brooklyn.location.Location;
 
 /**
- * A simple test of installing+running JBoss AS7 on Docker, using various OS distros and versions.
+ * A simple test of installing+running JBoss AS7 on SoftLayer, using various OS distros and versions.
  */
-public class JBoss7ServerDockerLiveTest extends JBossServerDockerLiveTest {
+public class JBoss7ServerSoftLayerLiveTest extends JBossServerSoftLayerLiveTest {
 
    @Override
    protected void doTest(Location loc) throws Exception {
