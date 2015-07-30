@@ -16,40 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.network.bind;
+package brooklyn.entity.basic;
 
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.location.basic.SshMachineLocation;
-
-/**
- * Implements methods in {@link brooklyn.entity.basic.AbstractSoftwareProcessSshDriver}.
- * {@link #isRunning()} returns true.
- */
-public class DoNothingSoftwareProcessDriver extends AbstractSoftwareProcessSshDriver {
-
-    public DoNothingSoftwareProcessDriver(EntityLocal entity, SshMachineLocation machine) {
-        super(entity, machine);
-    }
+public class DoNothingSoftwareProcessImpl extends SoftwareProcessImpl implements DoNothingSoftwareProcess {
 
     @Override
-    public boolean isRunning() {
-        return true;
+    public Class getDriverInterface() {
+        return DoNothingSoftwareProcessDriver.class;
     }
-
+    
     @Override
-    public void install() {
-    }
-
-    @Override
-    public void customize() {
-    }
-
-    @Override
-    public void launch() {
-    }
-
-    @Override
-    public void stop() {
+    protected void connectSensors() {
+        super.connectSensors();
+        if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.STARTING) {
+            setAttribute(SERVICE_UP, true);
+        }
     }
 }

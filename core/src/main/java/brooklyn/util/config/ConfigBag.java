@@ -354,6 +354,19 @@ public class ConfigBag {
         return getStringKeyMaybe(key, true);
     }
 
+    /** gets a {@link Maybe}-wrapped value from a key, inferring the type of that key (e.g. {@link ConfigKey} or {@link String}) */
+    @Beta
+    public Maybe<Object> getObjKeyMaybe(Object key) {
+        if (key instanceof HasConfigKey<?>) key = ((HasConfigKey<?>)key).getConfigKey();
+        if (key instanceof ConfigKey<?>) key = ((ConfigKey<?>)key).getName();
+        if (key instanceof String) {
+            return getStringKeyMaybe((String)key, true);
+        } else {
+            logInvalidKey(key);
+            return Maybe.absent();
+        }
+    }
+
     /** like get, but without marking it as used */
     public <T> T peek(ConfigKey<T> key) {
         return get(key, false);

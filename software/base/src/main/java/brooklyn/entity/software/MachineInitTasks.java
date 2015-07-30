@@ -85,7 +85,7 @@ public class MachineInitTasks {
      * See docs in {@link BashCommands#dontRequireTtyForSudo()}
      */
     public Task<Boolean> dontRequireTtyForSudoAsync(final SshMachineLocation machine) {
-        return SshTasks.dontRequireTtyForSudo(machine, true).newTask().asTask();
+        return DynamicTasks.queue(SshTasks.dontRequireTtyForSudo(machine, true).newTask().asTask());
     }
 
     protected void openIptablesImpl(Iterable<Integer> inboundPorts, SshMachineLocation machine) {

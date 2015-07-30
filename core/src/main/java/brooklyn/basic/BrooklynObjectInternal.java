@@ -91,6 +91,9 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
         void addToLocalBag(Map<String, ?> vals);
 
         @Beta
+        void removeFromLocalBag(String key);
+
+        @Beta
         void refreshInheritedConfig();
         
         @Beta

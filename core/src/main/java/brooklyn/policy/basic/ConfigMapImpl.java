@@ -26,6 +26,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Maps;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.internal.AbstractConfigMapImpl;
 import brooklyn.entity.basic.ConfigKeys;
@@ -37,10 +41,6 @@ import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ConfigKeySelfExtracting;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Maps;
 
 public class ConfigMapImpl extends AbstractConfigMapImpl {
 
@@ -117,6 +117,10 @@ public class ConfigMapImpl extends AbstractConfigMapImpl {
         for (Map.Entry<String, ?> entry : vals.entrySet()) {
             setConfig(ConfigKeys.newConfigKey(Object.class, entry.getKey()), entry.getValue());
         }
+    }
+
+    public void removeFromLocalBag(String key) {
+        ownConfig.remove(key);
     }
 
     @Override

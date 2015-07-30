@@ -98,6 +98,9 @@ implements MachineProvisioningLocation<T>, Closeable {
     @SetFromFlag
     protected Set<T> pendingRemoval;
     
+    @SetFromFlag
+    protected Map<T, Map<String, Object>> origConfigs;
+
     public FixedListMachineProvisioningLocation() {
         this(Maps.newLinkedHashMap());
     }
@@ -143,6 +146,7 @@ implements MachineProvisioningLocation<T>, Closeable {
         if (machines == null) machines = Sets.newLinkedHashSet();
         if (inUse == null) inUse = Sets.newLinkedHashSet();
         if (pendingRemoval == null) pendingRemoval = Sets.newLinkedHashSet();
+        if (origConfigs == null) origConfigs = Maps.newLinkedHashMap();
         return super.configure(properties);
     }
     
@@ -271,6 +275,7 @@ implements MachineProvisioningLocation<T>, Closeable {
                 }
             }
             inUse.add(machine);
+            updateMachineConfig(machine, flags);
         }
         
         for (MachineLocationCustomizer customizer : getMachineCustomizers(allflags)) {
@@ -290,6 +295,7 @@ implements MachineProvisioningLocation<T>, Closeable {
         synchronized (lock) {
             if (inUse.contains(machine) == false)
                 throw new IllegalStateException("Request to release machine "+machine+", but this machine is not currently allocated");
+            restoreMachineConfig(machine);
             inUse.remove(machine);
             
             if (pendingRemoval.contains(machine)) {
@@ -301,6 +307,36 @@ implements MachineProvisioningLocation<T>, Closeable {
     @Override
     public Map<String,Object> getProvisioningFlags(Collection<String> tags) {
         return Maps.<String,Object>newLinkedHashMap();
+    }
+    
+    protected void updateMachineConfig(T machine, Map<?, ?> flags) {
+        if (origConfigs == null) {
+            // For backwards compatibility, where peristed state did not have this.
+            origConfigs = Maps.newLinkedHashMap();
+        }
+        Map<String, Object> strFlags = ConfigBag.newInstance(flags).getAllConfig();
+        Map<String, Object> origConfig = ((ConfigurationSupportInternal)machine.config()).getLocalBag().getAllConfig();
+        origConfigs.put(machine, origConfig);
+        requestPersist();
+        
+        ((ConfigurationSupportInternal)machine.config()).addToLocalBag(strFlags);
+    }
+    
+    protected void restoreMachineConfig(MachineLocation machine) {
+        if (origConfigs == null) {
+            // For backwards compatibility, where peristed state did not have this.
+            origConfigs = Maps.newLinkedHashMap();
+        }
+        Map<String, Object> origConfig = origConfigs.remove(machine);
+        if (origConfig == null) return;
+        requestPersist();
+        
+        Set<String> currentKeys = ((ConfigurationSupportInternal)machine.config()).getLocalBag().getAllConfig().keySet();
+        Set<String> newKeys = Sets.difference(currentKeys, origConfig.entrySet());
+        for (String key : newKeys) {
+            ((ConfigurationSupportInternal)machine.config()).removeFromLocalBag(key);
+        }
+        ((ConfigurationSupportInternal)machine.config()).addToLocalBag(origConfig);
     }
     
     @SuppressWarnings("unchecked")

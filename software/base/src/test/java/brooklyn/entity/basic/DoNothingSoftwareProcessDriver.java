@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.network.bind;
+package brooklyn.entity.basic;
 
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.basic.SshMachineLocation;
 
 /**
- * Implements methods in {@link brooklyn.entity.basic.AbstractSoftwareProcessSshDriver}.
+ * Implements methods in {@link brooklyn.entity.basic.AbstractSoftwareProcessSshDriver}
+ * such that no actions are performed.
+ * <p>
  * {@link #isRunning()} returns true.
  */
 public class DoNothingSoftwareProcessDriver extends AbstractSoftwareProcessSshDriver {
@@ -35,6 +35,18 @@ public class DoNothingSoftwareProcessDriver extends AbstractSoftwareProcessSshDr
     @Override
     public boolean isRunning() {
         return true;
+    }
+
+    @Override
+    public void copyPreInstallResources() {
+    }
+
+    @Override
+    public void copyInstallResources() {
+    }
+
+    @Override
+    public void copyRuntimeResources() {
     }
 
     @Override
