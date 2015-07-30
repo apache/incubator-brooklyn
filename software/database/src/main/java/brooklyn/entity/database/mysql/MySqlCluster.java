@@ -39,6 +39,10 @@ public interface MySqlCluster extends DynamicCluster, HasDatastoreUrl {
         AttributeSensor<String> MASTER_LOG_FILE = Sensors.newStringSensor("mysql.master.log_file", "The binary log file master is writing to");
         AttributeSensor<Integer> MASTER_LOG_POSITION = Sensors.newIntegerSensor("mysql.master.log_position", "The position in the log file to start replication");
     }
+    interface MySqlSlave {
+        AttributeSensor<Boolean> SLAVE_HEALTHY = Sensors.newBooleanSensor("mysql.slave.healthy", "Indicates that the replication state of the slave is healthy");
+        AttributeSensor<Integer> SLAVE_SECONDS_BEHIND_MASTER = Sensors.newIntegerSensor("mysql.slave.seconds_behind_master", "How many seconds behind master is the replication state on the slave");
+    }
 
     ConfigKey<String> SLAVE_USERNAME = ConfigKeys.newStringConfigKey(
             "mysql.slave.username", "The user name slaves will use to connect to the master", "slave");
