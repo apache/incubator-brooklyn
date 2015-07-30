@@ -49,7 +49,7 @@ import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 public abstract class BrooklynRestApiTest {
 
-    private ManagementContext manager;
+    protected ManagementContext manager;
     
     protected boolean useLocalScannedCatalog = false;
     protected TestShutdownHandler shutdownListener = createShutdownHandler();

@@ -25,6 +25,7 @@ import static brooklyn.rest.domain.Status.STOPPED;
 import static brooklyn.rest.domain.Status.STOPPING;
 import static brooklyn.rest.domain.Status.UNKNOWN;
 import static brooklyn.rest.domain.Status.DESTROYED;
+import static brooklyn.rest.domain.Status.ERROR;
 
 import java.net.URI;
 import java.util.Collection;
@@ -81,6 +82,7 @@ public class ApplicationTransformer {
             case DESTROYED:
                 return DESTROYED;
             case ON_FIRE:
+                return ERROR;
             default:
                 return UNKNOWN;
         }

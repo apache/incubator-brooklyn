@@ -39,11 +39,26 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
 import brooklyn.entity.Application;
+import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationConfigKeys;
@@ -58,6 +73,7 @@ import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.domain.EntitySummary;
 import brooklyn.rest.domain.PolicySummary;
 import brooklyn.rest.domain.SensorSummary;
+import brooklyn.rest.domain.Status;
 import brooklyn.rest.domain.TaskSummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.CapitalizePolicy;
@@ -70,18 +86,6 @@ import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BrooklynRestResourceTest {
@@ -316,6 +320,27 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             if (simpleSpec.getName().equals(app.getSpec().getName())) return;
         }
         Assert.fail("simple-app not found in list of applications: "+applications);
+    }
+
+    @Test(dependsOnMethods = "testDeployApplication")
+    public void testGetApplicationOnFire() {
+        Application app = Iterables.find(manager.getApplications(), EntityPredicates.displayNameEqualTo(simpleSpec.getName()));
+        Lifecycle origState = app.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
+        
+        ApplicationSummary summary = client().resource("/v1/applications/"+app.getId())
+                .get(ApplicationSummary.class);
+        assertEquals(summary.getStatus(), Status.RUNNING);
+
+        ((EntityLocal)app).setAttribute(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        try {
+            ApplicationSummary summary2 = client().resource("/v1/applications/"+app.getId())
+                    .get(ApplicationSummary.class);
+            log.info("Application: " + summary2);
+            assertEquals(summary2.getStatus(), Status.ERROR);
+            
+        } finally {
+            ((EntityLocal)app).setAttribute(Attributes.SERVICE_STATE_ACTUAL, origState);
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
