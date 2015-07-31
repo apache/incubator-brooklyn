@@ -1044,6 +1044,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         @Override
+        public void removeFromLocalBag(String key) {
+            configsInternal.removeFromLocalBag(key);
+        }
+
+        @Override
         public void refreshInheritedConfig() {
             if (getParent() != null) {
                 configsInternal.setInheritedConfig(((EntityInternal)getParent()).getAllConfig(), ((EntityInternal)getParent()).config().getBag());

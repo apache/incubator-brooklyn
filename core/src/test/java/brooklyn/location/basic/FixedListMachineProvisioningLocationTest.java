@@ -19,6 +19,7 @@
 package brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.fail;
 
 import java.net.Inet4Address;
@@ -41,6 +42,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineLocation;
@@ -498,8 +501,61 @@ public class FixedListMachineProvisioningLocationTest {
         SshMachineLocation obtained = provisioner.obtain(ImmutableMap.of(FixedListMachineProvisioningLocation.MACHINE_LOCATION_CUSTOMIZERS, ImmutableList.of(customizer)));
         assertEquals(Iterables.getOnlyElement(customizer.calls), new Call("customize", ImmutableList.of(obtained)));
         
-        // TODO Does not call preRelease, because customizer is not config on provisioner, and is not config on machine
         provisioner.release(obtained);
+        assertEquals(customizer.calls.size(), 2);
+        assertEquals(customizer.calls.get(1), new Call("preRelease", ImmutableList.of(obtained)));
+    }
+
+    @Test
+    public void testMachineGivenCustomFlagForDurationOfUsage() throws Exception {
+        boolean origContains = machine.config().getBag().getAllConfig().containsKey("mykey");
+        SshMachineLocation obtained = provisioner.obtain(ImmutableMap.of("mykey", "myNewVal"));
+        Object obtainedVal = obtained.config().getBag().getAllConfig().get("mykey");
+        provisioner.release(obtained);
+        boolean releasedContains = obtained.config().getBag().getAllConfig().containsKey("mykey");
+        
+        assertEquals(obtained, machine);
+        assertFalse(origContains);
+        assertEquals(obtainedVal, "myNewVal");
+        assertFalse(releasedContains);
+    }
+    
+    @Test
+    public void testMachineConfigRestoredToDefaultsOnRelease() throws Exception {
+        ConfigKey<String> mykey = ConfigKeys.newStringConfigKey("mykey");
+        
+        boolean origContains = machine.config().getBag().getAllConfig().containsKey("mykey");
+        SshMachineLocation obtained = provisioner.obtain();
+        obtained.config().set(mykey, "myNewVal");
+        Object obtainedVal = obtained.config().getBag().getAllConfig().get("mykey");
+        
+        provisioner.release(obtained);
+        boolean releasedContains = machine.config().getBag().getAllConfig().containsKey("mykey");
+        releasedContains |= (machine.config().get(mykey) != null);
+        
+        assertEquals(obtained, machine);
+        assertFalse(origContains);
+        assertEquals(obtainedVal, "myNewVal");
+        assertFalse(releasedContains);
+    }
+    
+    @Test
+    public void testMachineGivenOverriddenFlagForDurationOfUsage() throws Exception {
+        SshMachineLocation machine2 = new SshMachineLocation(
+                MutableMap.of("address", Inet4Address.getByName("192.168.144.200"), "mykey", "myval"));
+        provisioner2 = new FixedListMachineProvisioningLocation<SshMachineLocation>(
+                MutableMap.of("machines", MutableList.of(machine2)));
+
+        Object origVal = machine2.config().getBag().getAllConfig().get("mykey");
+        SshMachineLocation obtained = provisioner2.obtain(ImmutableMap.of("mykey", "myNewVal"));
+        Object obtainedVal = obtained.config().getBag().getAllConfig().get("mykey");
+        provisioner2.release(obtained);
+        Object releasedVal = obtained.config().getBag().getAllConfig().get("mykey");
+        
+        assertEquals(obtained, machine2);
+        assertEquals(origVal, "myval");
+        assertEquals(obtainedVal, "myNewVal");
+        assertEquals(releasedVal, "myval");
     }
 
     private static <T> List<T> randomized(Iterable<T> list) {

@@ -442,7 +442,12 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         public void addToLocalBag(Map<String, ?> vals) {
             configBag.putAll(vals);
         }
-        
+
+        @Override
+        public void removeFromLocalBag(String key) {
+            configBag.remove(key);
+        }
+
         @Override
         public void refreshInheritedConfig() {
             // no-op for location

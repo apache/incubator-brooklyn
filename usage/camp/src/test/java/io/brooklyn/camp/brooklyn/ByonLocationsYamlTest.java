@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -38,12 +39,17 @@ import com.google.common.net.HostAndPort;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.DoNothingSoftwareProcess;
+import brooklyn.entity.basic.Entities;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.access.PortForwardManager;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.LocationPredicates;
+import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.WinRmMachineLocation;
+import brooklyn.location.cloud.CloudLocationConfig;
+import brooklyn.test.Asserts;
 import brooklyn.util.net.UserAndHostAndPort;
 
 public class ByonLocationsYamlTest extends AbstractYamlTest {
@@ -216,6 +222,36 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
         assertEquals(pfm.lookup(machine2, 8985), HostAndPort.fromParts("83.222.229.2", 12003));
         assertEquals(pfm.lookup(machine2, 8080), HostAndPort.fromParts("83.222.229.2", 12004));
         assertNull(pfm.lookup(machine2, 12345));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testPassesInboundPortsToMachineAndRemovesOnceMachineReleased() throws Exception {
+        String yaml = Joiner.on("\n").join(
+                "location:",
+                "  byon:",
+                "    hosts:",
+                "    - ssh: 1.1.1.1:22",
+                "      password: mypassword",
+                "      user: myuser",
+                "services:",
+                "- type: brooklyn.entity.basic.DoNothingSoftwareProcess",
+                "  brooklyn.config:",
+                "    requiredOpenLoginPorts: [22, 1024]");
+
+        Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
+        DoNothingSoftwareProcess entity = (DoNothingSoftwareProcess) Iterables.find(Entities.descendants(app), Predicates.instanceOf(DoNothingSoftwareProcess.class));
+        FixedListMachineProvisioningLocation<MachineLocation> loc = (FixedListMachineProvisioningLocation<MachineLocation>) Iterables.get(app.getLocations(), 0);
+        
+        // Machine should have been given the inbound-ports
+        SshMachineLocation machine = Machines.findUniqueSshMachineLocation(entity.getLocations()).get();
+        Asserts.assertEqualsIgnoringOrder((Iterable<?>)machine.config().get(CloudLocationConfig.INBOUND_PORTS), ImmutableList.of(22, 1024));
+        
+        // Stop the entity; should release the machine
+        entity.stop();
+        MachineLocation availableMachine = Iterables.getOnlyElement(loc.getAvailable());
+        assertEquals(availableMachine, machine);
+        assertNull(machine.config().get(CloudLocationConfig.INBOUND_PORTS));
     }
 
     private void assertMachine(SshMachineLocation machine, UserAndHostAndPort conn, Map<String, ?> config) {

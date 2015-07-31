@@ -282,6 +282,11 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         }
         
         @Override
+        public void removeFromLocalBag(String key) {
+            configsInternal.removeFromLocalBag(key);
+        }
+        
+        @Override
         public void refreshInheritedConfig() {
             // no-op for location
         }

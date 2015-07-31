@@ -275,6 +275,11 @@ public class EntityConfigMap extends AbstractConfigMapImpl {
         ownConfig.putAll(localConfigBag.getAllConfigAsConfigKeyMap());
     }
 
+    public void removeFromLocalBag(String key) {
+        localConfigBag.remove(key);
+        ownConfig.remove(key);
+    }
+
     public void clearInheritedConfig() {
         inheritedConfig.clear();
         inheritedConfigBag.clear();
