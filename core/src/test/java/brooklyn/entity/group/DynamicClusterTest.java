@@ -122,6 +122,20 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
             if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
         }
     }
+    
+    @Test
+    public void startThenStopThenStartWithNewLocationFails() throws Exception {
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
+        try {
+            cluster.start(ImmutableList.of(loc));
+            cluster.stop();
+            cluster.start(ImmutableList.of(loc2));
+            fail();
+        } catch (Exception e) {
+            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+        }
+    }
 
     @Test
     public void startMethodFailsIfLocationsParameterHasMoreThanOneElement() throws Exception {
