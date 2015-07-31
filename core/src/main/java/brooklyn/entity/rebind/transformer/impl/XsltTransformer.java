@@ -20,17 +20,15 @@ package brooklyn.entity.rebind.transformer.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import brooklyn.entity.rebind.transformer.RawDataTransformer;
+import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;
 
@@ -45,15 +43,20 @@ public class XsltTransformer implements RawDataTransformer {
         this.xsltContent = xsltContent;
     }
     
-    public String transform(String input) throws IOException, URISyntaxException, TransformerException {
-        // stream source is single-use
-        StreamSource xslt = new StreamSource(new ByteArrayInputStream(xsltContent.getBytes()));
-        Transformer transformer = factory.newTransformer(xslt);
-        
-        Source text = new StreamSource(new ByteArrayInputStream(input.getBytes()));
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(input.length());
-        transformer.transform(text, new StreamResult(baos));
-        
-        return new String(baos.toByteArray());
+    @Override
+    public String transform(String input) {
+        try {
+            // stream source is single-use
+            StreamSource xslt = new StreamSource(new ByteArrayInputStream(xsltContent.getBytes()));
+            Transformer transformer = factory.newTransformer(xslt);
+            
+            Source text = new StreamSource(new ByteArrayInputStream(input.getBytes()));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(input.length());
+            transformer.transform(text, new StreamResult(baos));
+            
+            return new String(baos.toByteArray());
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
     }
 }

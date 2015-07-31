@@ -36,11 +36,6 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
 
     private static final Logger log = LoggerFactory.getLogger(ActivePartialRebindTest.class);
     
-    protected void doPartialRebindOfIds(String ...objectsToRebindIds) {
-        RebindManagerImpl rm = (RebindManagerImpl) origManagementContext.getRebindManager();
-        rm.rebindPartialActive(null, objectsToRebindIds);        
-    }
-    
     @Test
     public void testRebindChildSimple() throws Exception {
         TestEntity c1 = origApp.addChild(EntitySpec.create(TestEntity.class));

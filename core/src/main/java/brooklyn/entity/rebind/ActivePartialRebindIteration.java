@@ -95,7 +95,7 @@ public class ActivePartialRebindIteration extends RebindIteration {
      * so there is a short window for data loss between this write and the subsequent read.
      */
     @Override
-    protected void loadManifestFiles() throws Exception {
+    protected void loadRawMementos() {
         checkEnteringPhase(1);
         Builder mementoRawBuilder = BrooklynMementoRawData.builder();
 
@@ -125,10 +125,20 @@ public class ActivePartialRebindIteration extends RebindIteration {
         }
         // then rebuild
         mementoRawData = mementoRawBuilder.build();
+    }
 
+    @Override
+    protected void instantiateCatalogMementos() {
+        checkEnteringPhase(2);
+        //NOP
+    }
+
+    @Override
+    protected void loadMementoManifest() throws Exception {
+        checkEnteringPhase(4);
         preprocessManifestFiles();
     }
-    
+
     @Override
     protected void preprocessManifestFiles() throws Exception {
         for (CompoundTransformer transformer: transformers) {
@@ -140,8 +150,8 @@ public class ActivePartialRebindIteration extends RebindIteration {
 
     @Override
     protected void rebuildCatalog() {
-        checkEnteringPhase(2);
-        
+        checkContinuingPhase(2);
+
         // skip; old catalog items should be re-used
     }
     

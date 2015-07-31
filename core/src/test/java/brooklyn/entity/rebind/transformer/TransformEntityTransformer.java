@@ -18,13 +18,11 @@
  */
 package brooklyn.entity.rebind.transformer;
 
-import com.google.common.annotations.Beta;
+public class TransformEntityTransformer implements RawDataTransformer {
 
-/**
- * Transforms the raw data of persisted state (e.g. of an entity).
- */
-@Beta
-public interface RawDataTransformer {
+    @Override
+    public String transform(String input) {
+        return input.replace("MemoryGenerator", "StaticGenerator").replace("<value class=\"double\">3.141592653589793</value>", "");
+    }
 
-    public String transform(String input);
 }

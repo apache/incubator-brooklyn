@@ -16,15 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind.transformer;
+package brooklyn.osgi.tests.transforms;
 
-import com.google.common.annotations.Beta;
+import brooklyn.entity.basic.AbstractEntity;
 
-/**
- * Transforms the raw data of persisted state (e.g. of an entity).
- */
-@Beta
-public interface RawDataTransformer {
+public class TransformOsgiEntityNamed extends AbstractEntity {
 
-    public String transform(String input);
 }

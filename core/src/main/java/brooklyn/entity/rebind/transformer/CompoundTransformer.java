@@ -220,7 +220,7 @@ public class CompoundTransformer {
         return transform(rawData);
     }
     
-    public BrooklynMementoRawData transform(BrooklynMementoRawData rawData) throws Exception {
+    public BrooklynMementoRawData transform(BrooklynMementoRawData rawData) {
         Map<String, String> entities = MutableMap.copyOf(rawData.getEntities());
         Map<String, String> locations = MutableMap.copyOf(rawData.getLocations());
         Map<String, String> policies = MutableMap.copyOf(rawData.getPolicies());

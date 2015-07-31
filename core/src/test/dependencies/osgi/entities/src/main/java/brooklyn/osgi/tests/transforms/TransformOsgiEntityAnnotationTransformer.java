@@ -16,41 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind.dto;
+package brooklyn.osgi.tests.transforms;
 
-import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
+import brooklyn.entity.rebind.transformer.RawDataTransformer;
 
-public class EntityMementoManifestImpl implements EntityMementoManifest {
-    private String id;
-    private String type;
-    private String parentId;
-    private String catalogItemId;
-
-    public EntityMementoManifestImpl(String id, String type, String parentId, String catalogItemId) {
-        this.id = id;
-        this.type = type;
-        this.parentId = parentId;
-        this.catalogItemId = catalogItemId;
-    }
+public class TransformOsgiEntityAnnotationTransformer implements  RawDataTransformer {
 
     @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public String getType() {
-        return type;
-    }
-
-    @Override
-    public String getParent() {
-        return parentId;
-    }
-
-    @Override
-    public String getCatalogItemId() {
-        return catalogItemId;
+    public String transform(String input) {
+        return TransformOsgiEntityAnnotationTransformer.class.getName();
     }
 
 }

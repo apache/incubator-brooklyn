@@ -16,15 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind.transformer;
+package brooklyn.osgi.tests.more;
 
-import com.google.common.annotations.Beta;
+import java.util.concurrent.Callable;
 
-/**
- * Transforms the raw data of persisted state (e.g. of an entity).
- */
-@Beta
-public interface RawDataTransformer {
+import brooklyn.entity.basic.AbstractEntity;
 
-    public String transform(String input);
+public class TransformEntityImpl extends AbstractEntity implements TransformEntity {
+
+    public static class MemoryGenerator implements Callable<Object> {
+        Object value;
+
+        public MemoryGenerator(Object value) {
+            this.value = value;
+        }
+
+        @Override
+        public Object call() throws Exception {
+            return value;
+        }
+
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        setAttribute(GENERATOR, new MemoryGenerator(Math.PI));
+    }
+
 }

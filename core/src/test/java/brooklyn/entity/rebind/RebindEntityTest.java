@@ -204,7 +204,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         RebindTestUtils.waitForPersisted(origManagementContext);
         
         BrooklynMementoManifest mf = loadMementoManifest();
-        Assert.assertTrue(mf.getLocationIdToType().isEmpty(), "Expected no locations; had "+mf.getLocationIdToType());
+        Assert.assertTrue(mf.getLocationIdToManifest().isEmpty(), "Expected no locations; had "+mf.getLocationIdToManifest());
     }
 
     @Test

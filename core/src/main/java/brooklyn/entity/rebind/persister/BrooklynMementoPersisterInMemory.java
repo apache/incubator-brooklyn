@@ -42,8 +42,10 @@ import brooklyn.entity.rebind.RebindExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
+import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
+import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
@@ -139,19 +141,19 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
                                 });
                     }
                     @Override public Location lookupLocation(String id) {
-                        Class<?> clazz = loadClass(manifest.getLocationIdToType().get(id));
+                        Class<?> clazz = loadClass(manifest.getLocationIdToManifest().get(id).getType());
                         return (Location) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
                     @Override public Policy lookupPolicy(String id) {
-                        Class<?> clazz = loadClass(manifest.getPolicyIdToType().get(id));
+                        Class<?> clazz = loadClass(manifest.getPolicyIdToManifest().get(id).getType());
                         return (Policy) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
                     @Override public Enricher lookupEnricher(String id) {
-                        Class<?> clazz = loadClass(manifest.getEnricherIdToType().get(id));
+                        Class<?> clazz = loadClass(manifest.getEnricherIdToManifest().get(id).getType());
                         return (Enricher) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
                     @Override public Feed lookupFeed(String id) {
-                        Class<?> clazz = loadClass(manifest.getFeedIdToType().get(id));
+                        Class<?> clazz = loadClass(manifest.getFeedIdToManifest().get(id).getType());
                         return (Feed) invokeConstructor(clazz, new Object[0], new Object[] {MutableMap.of()});
                     }
                     @Override public CatalogItem<?, ?> lookupCatalogItem(String id) {
@@ -207,5 +209,13 @@ public class BrooklynMementoPersisterInMemory extends AbstractBrooklynMementoPer
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    @Override
+    public BrooklynCatalogMementoManifest loadCatalogMementos(
+            BrooklynMementoRawData mementoData,
+            RebindExceptionHandler exceptionHandler) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

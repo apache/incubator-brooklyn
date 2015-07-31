@@ -16,15 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind.transformer;
+package brooklyn.osgi.tests.more;
 
-import com.google.common.annotations.Beta;
+import java.util.concurrent.Callable;
 
-/**
- * Transforms the raw data of persisted state (e.g. of an entity).
- */
-@Beta
-public interface RawDataTransformer {
+import brooklyn.entity.Entity;
+import brooklyn.event.AttributeSensor;
+import brooklyn.event.basic.Sensors;
 
-    public String transform(String input);
+import com.google.common.reflect.TypeToken;
+
+public interface TransformEntity extends Entity {
+    @SuppressWarnings("serial")
+    public static final AttributeSensor<Callable<Object>> GENERATOR = Sensors.newSensor(new TypeToken<Callable<Object>>() {}, "identity", "identity");
 }

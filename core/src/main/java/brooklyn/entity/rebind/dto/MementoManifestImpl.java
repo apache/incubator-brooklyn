@@ -16,15 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind.transformer;
+package brooklyn.entity.rebind.dto;
 
-import com.google.common.annotations.Beta;
+import brooklyn.mementos.BrooklynMementoManifest.MementoManifest;
 
-/**
- * Transforms the raw data of persisted state (e.g. of an entity).
- */
-@Beta
-public interface RawDataTransformer {
+public class MementoManifestImpl implements MementoManifest {
+    private String id;
+    private String type;
+    private String parentId;
+    private String catalogItemId;
 
-    public String transform(String input);
+    public MementoManifestImpl(String id, String type, String parentId, String catalogItemId) {
+        this.id = id;
+        this.type = type;
+        this.parentId = parentId;
+        this.catalogItemId = catalogItemId;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getType() {
+        return type;
+    }
+
+    @Override
+    public String getParent() {
+        return parentId;
+    }
+
+    @Override
+    public String getCatalogItemId() {
+        return catalogItemId;
+    }
+
 }

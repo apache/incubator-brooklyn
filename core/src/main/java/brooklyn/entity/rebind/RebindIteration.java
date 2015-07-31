@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -55,6 +56,7 @@ import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
+import brooklyn.entity.rebind.transformer.RawDataTransformer;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
@@ -68,9 +70,10 @@ import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocationManagerInternal;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.ManagementTransitionMode;
+import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
-import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
+import brooklyn.mementos.BrooklynMementoManifest.MementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.mementos.CatalogItemMemento;
@@ -108,15 +111,19 @@ Multi-phase deserialization:
 <ul>
 <li> 1. load the manifest files and populate the summaries (ID+type) in {@link BrooklynMementoManifest}
 <li> 2. instantiate and reconstruct catalog items
-<li> 3. instantiate entities+locations -- so that inter-entity references can subsequently 
+<li> 3. Apply global transformers on raw manifest
+<li> 4. load manifest
+<li> 5. Apply per-blueprint transformers
+<li> 6. Reload manifest because of above changes
+<li> 7. instantiate entities+locations -- so that inter-entity references can subsequently
        be set during deserialize (and entity config/state is set).
-<li> 4. deserialize the manifests to instantiate the mementos
-<li> 5. instantiate policies+enrichers+feeds 
+<li> 8. deserialize the manifests to instantiate the mementos
+<li> 9. instantiate policies+enrichers+feeds
         (could probably merge this with (3), depending how they are implemented)
-<li> 6. reconstruct the locations, policies, etc, then finally entities -- setting all fields and then calling 
+<li> 10. reconstruct the locations, policies, etc, then finally entities -- setting all fields and then calling 
         {@link RebindSupport#reconstruct(RebindContext, Memento)}
-<li> 7. associate policies+enrichers+feeds to all the entities
-<li> 8. manage the entities
+<li> 11. associate policies+enrichers+feeds to all the entities
+<li> 12. manage the entities
 </ul>
 
  If underlying data-store is changed between first and second manifest read (e.g. to add an
@@ -175,6 +182,7 @@ public abstract class RebindIteration {
     // set in first phase
     
     protected BrooklynMementoRawData mementoRawData;
+    protected BrooklynCatalogMementoManifest mementoCatalogManifest;
     protected BrooklynMementoManifest mementoManifest;
     protected Boolean overwritingMaster;
     protected Boolean isEmpty;
@@ -227,8 +235,13 @@ public abstract class RebindIteration {
     }
     
     protected void doRun() throws Exception {
-        loadManifestFiles();
+        loadRawMementos();
+        instantiateCatalogMementos();
         rebuildCatalog();
+        applyGlobalTransformers();
+        loadMementoManifest();
+        applyBlueprintTransformers();
+        reloadManifestFiles();
         instantiateLocationsAndEntities();
         instantiateMementos();
         instantiateAdjuncts(instantiator); 
@@ -238,8 +251,12 @@ public abstract class RebindIteration {
         finishingUp();
     }
     
-    protected abstract void loadManifestFiles() throws Exception;
-    
+    protected abstract void loadRawMementos();
+
+    protected abstract void instantiateCatalogMementos();
+
+    protected abstract void loadMementoManifest() throws Exception;
+
     public void run() {
         if (iterationStarted.getAndSet(true)) {
             throw new IllegalStateException("Iteration "+this+" has already run; create a new instance for another rebind pass.");
@@ -285,29 +302,42 @@ public abstract class RebindIteration {
     }
     
     protected void preprocessManifestFiles() throws Exception {
-        checkContinuingPhase(1);
+        checkContinuingPhase(4);
 
         Preconditions.checkState(mementoRawData!=null, "Memento raw data should be set when calling this");
         Preconditions.checkState(mementoManifest==null, "Memento data should not yet be set when calling this");
         
-        // TODO building the manifests should be part of this class (or parent)
-        // it does not have anything to do with the persistence store!
-        mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
+        loadManifestFiles();
         
         overwritingMaster = false;
         isEmpty = mementoManifest.isEmpty();
+    }
+
+    protected void reloadManifestFiles() throws IOException {
+        checkEnteringPhase(6);
+        loadManifestFiles();
+    }
+
+    protected void loadManifestFiles() throws IOException {
+        //Called twice in the lifecycle to reload changes
+        if (phase != 4 && phase != 6)
+            throw new IllegalStateException("Phase mismatch: should be phase 4 or 6 but is currently "+phase);
+
+        // TODO building the manifests should be part of this class (or parent)
+        // it does not have anything to do with the persistence store!
+        mementoManifest = persistenceStoreAccess.loadMementoManifest(mementoRawData, exceptionHandler);
     }
 
     @SuppressWarnings("deprecation")
     protected void rebuildCatalog() {
         
         // Build catalog early so we can load other things
-        checkEnteringPhase(2);
+        checkContinuingPhase(2);
         
         // Instantiate catalog items
         if (rebindManager.persistCatalogItemsEnabled) {
-            logRebindingDebug("RebindManager instantiating catalog items: {}", mementoManifest.getCatalogItemIds());
-            for (CatalogItemMemento catalogItemMemento : mementoManifest.getCatalogItemMementos().values()) {
+            logRebindingDebug("RebindManager instantiating catalog items: {}", mementoCatalogManifest.getCatalogItemIds());
+            for (CatalogItemMemento catalogItemMemento : mementoCatalogManifest.getCatalogItemMementos().values()) {
                 logRebindingDebug("RebindManager instantiating catalog item {}", catalogItemMemento);
                 try {
                     CatalogItem<?, ?> catalogItem = instantiator.newCatalogItem(catalogItemMemento);
@@ -317,13 +347,13 @@ public abstract class RebindIteration {
                 }
             }
         } else {
-            logRebindingDebug("Not rebinding catalog; feature disabled: {}", mementoManifest.getCatalogItemIds());
+            logRebindingDebug("Not rebinding catalog; feature disabled: {}", mementoCatalogManifest.getCatalogItemIds());
         }
 
         // Reconstruct catalog entries
         if (rebindManager.persistCatalogItemsEnabled) {
             logRebindingDebug("RebindManager reconstructing catalog items");
-            for (CatalogItemMemento catalogItemMemento : mementoManifest.getCatalogItemMementos().values()) {
+            for (CatalogItemMemento catalogItemMemento : mementoCatalogManifest.getCatalogItemMementos().values()) {
                 CatalogItem<?, ?> item = rebindContext.getCatalogItem(catalogItemMemento.getId());
                 logRebindingDebug("RebindManager reconstructing catalog item {}", catalogItemMemento);
                 if (item == null) {
@@ -381,7 +411,7 @@ public abstract class RebindIteration {
                 needsInitialItemsLoaded = true;
                 needsAdditionalItemsLoaded = true;
             } else {
-                if (!isEmpty) {
+                if (!mementoRawData.isEmpty()) {
                     logRebindingDebug("RebindManager clearing local catalog and loading from persisted state");
                     itemsForResettingCatalog = rebindContext.getCatalogItems();
                     needsInitialItemsLoaded = false;
@@ -416,14 +446,13 @@ public abstract class RebindIteration {
     }
 
     protected void instantiateLocationsAndEntities() {
-
-        checkEnteringPhase(3);
+        checkEnteringPhase(7);
         
         // Instantiate locations
-        logRebindingDebug("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToType().keySet());
-        for (Map.Entry<String, String> entry : mementoManifest.getLocationIdToType().entrySet()) {
+        logRebindingDebug("RebindManager instantiating locations: {}", mementoManifest.getLocationIdToManifest().keySet());
+        for (Map.Entry<String, MementoManifest> entry : mementoManifest.getLocationIdToManifest().entrySet()) {
             String locId = entry.getKey();
-            String locType = entry.getValue();
+            String locType = entry.getValue().getType();
             if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating location {}", locId);
             
             try {
@@ -436,9 +465,9 @@ public abstract class RebindIteration {
         
         // Instantiate entities
         logRebindingDebug("RebindManager instantiating entities: {}", mementoManifest.getEntityIdToManifest().keySet());
-        for (Map.Entry<String, EntityMementoManifest> entry : mementoManifest.getEntityIdToManifest().entrySet()) {
+        for (Map.Entry<String, MementoManifest> entry : mementoManifest.getEntityIdToManifest().entrySet()) {
             String entityId = entry.getKey();
-            EntityMementoManifest entityManifest = entry.getValue();
+            MementoManifest entityManifest = entry.getValue();
             
             if (LOG.isTraceEnabled()) LOG.trace("RebindManager instantiating entity {}", entityId);
             
@@ -454,15 +483,14 @@ public abstract class RebindIteration {
     }
 
     protected void instantiateMementos() throws IOException {
-        
-        checkEnteringPhase(4);
-        
+        checkEnteringPhase(8);
+
         memento = persistenceStoreAccess.loadMemento(mementoRawData, rebindContext.lookup(), exceptionHandler);
     }
 
     protected void instantiateAdjuncts(BrooklynObjectInstantiator instantiator) {
         
-        checkEnteringPhase(5);
+        checkEnteringPhase(9);
         
         // Instantiate policies
         if (rebindManager.persistPoliciesEnabled) {
@@ -518,7 +546,7 @@ public abstract class RebindIteration {
 
     protected void reconstructEverything() {
         
-        checkEnteringPhase(6);
+        checkEnteringPhase(10);
         
         // Reconstruct locations
         logRebindingDebug("RebindManager reconstructing locations");
@@ -623,7 +651,7 @@ public abstract class RebindIteration {
 
     protected void associateAdjunctsWithEntities() {
         
-        checkEnteringPhase(7);
+        checkEnteringPhase(11);
 
         logRebindingDebug("RebindManager associating adjuncts to entities");
         for (EntityMemento entityMemento : sortParentFirst(memento.getEntityMementos()).values()) {
@@ -650,7 +678,7 @@ public abstract class RebindIteration {
 
     protected void manageTheObjects() {
 
-        checkEnteringPhase(8);
+        checkEnteringPhase(12);
         
         logRebindingDebug("RebindManager managing locations");
         LocationManagerInternal locationManager = (LocationManagerInternal)managementContext.getLocationManager();
@@ -740,7 +768,7 @@ public abstract class RebindIteration {
 
     protected void finishingUp() {
         
-        checkContinuingPhase(8);
+        checkContinuingPhase(12);
         
         if (!isEmpty) {
             BrooklynLogging.log(LOG, shouldLogRebinding() ? LoggingLevel.INFO : LoggingLevel.DEBUG, 
@@ -772,14 +800,14 @@ public abstract class RebindIteration {
         }
     }
     
-    protected String findCatalogItemId(ClassLoader cl, Map<String, EntityMementoManifest> entityIdToManifest, EntityMementoManifest entityManifest) {
+    protected String findCatalogItemId(ClassLoader cl, Map<String, MementoManifest> entityIdToManifest, MementoManifest entityManifest) {
         if (entityManifest.getCatalogItemId() != null) {
             return entityManifest.getCatalogItemId();
         }
 
         if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_BACKWARDS_COMPATIBILITY_INFER_CATALOG_ITEM_ON_REBIND)) {
             //First check if any of the parent entities has a catalogItemId set.
-            EntityMementoManifest ptr = entityManifest;
+            MementoManifest ptr = entityManifest;
             while (ptr != null) {
                 if (ptr.getCatalogItemId() != null) {
                     CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(managementContext, ptr.getCatalogItemId());
@@ -859,7 +887,7 @@ public abstract class RebindIteration {
             this.reflections = reflections;
         }
 
-        protected Entity newEntity(EntityMementoManifest entityManifest) {
+        protected Entity newEntity(MementoManifest entityManifest) {
             String entityId = entityManifest.getId();
             String catalogItemId = findCatalogItemId(classLoader, mementoManifest.getEntityIdToManifest(), entityManifest);
             String entityType = entityManifest.getType();
@@ -1153,6 +1181,59 @@ public abstract class RebindIteration {
     
     protected boolean shouldLogRebinding() {
         return (readOnlyRebindCount.get() < 5) || (readOnlyRebindCount.get()%1000==0);
+    }
+
+    private void applyGlobalTransformers() {
+        checkEnteringPhase(3);
+
+        Iterable<RawDataTransformer> globalTransformers = new TransformerLoader(managementContext).findGlobalTransformers();
+        BrooklynMementoRawData.Builder rawBuilder = BrooklynMementoRawData.builder();
+        for (BrooklynObjectType type : BrooklynObjectType.values()) {
+            if (type == BrooklynObjectType.UNKNOWN) continue;
+            Map<String, String> objs = mementoRawData.getObjectsOfType(type);
+            for (Entry<String, String> entry: objs.entrySet()) {
+                String contents = entry.getValue();
+                for (RawDataTransformer transformer : globalTransformers) {
+                    try {
+                        contents = transformer.transform(contents);
+                    } catch (Exception e) {
+                        LOG.warn("Transformer " + transformer + " failed while working on " + entry.getKey(), e);
+                    }
+                }
+                rawBuilder.put(type, entry.getKey(), contents);
+            }
+        }
+        mementoRawData = rawBuilder.build();
+    }
+
+    protected void applyBlueprintTransformers() {
+        checkEnteringPhase(5);
+
+        BrooklynMementoRawData.Builder rawBuilder = BrooklynMementoRawData.builder();
+        applyBlueprintTransformers(BrooklynObjectType.ENTITY, mementoManifest.getEntityIdToManifest(), rawBuilder);
+        applyBlueprintTransformers(BrooklynObjectType.POLICY, mementoManifest.getPolicyIdToManifest(), rawBuilder);
+        applyBlueprintTransformers(BrooklynObjectType.ENRICHER, mementoManifest.getEnricherIdToManifest(), rawBuilder);
+        applyBlueprintTransformers(BrooklynObjectType.FEED, mementoManifest.getFeedIdToManifest(), rawBuilder);
+        applyBlueprintTransformers(BrooklynObjectType.LOCATION, mementoManifest.getLocationIdToManifest(), rawBuilder);
+        mementoRawData = rawBuilder.build();
+    }
+
+    protected void applyBlueprintTransformers(BrooklynObjectType brooklynObjectType, Map<String, MementoManifest> brooklynObjectIdToManifest, BrooklynMementoRawData.Builder rawBuilder) {
+        Map<String, String> objs = mementoRawData.getObjectsOfType(brooklynObjectType);
+        TransformerLoader transformerLoader = new TransformerLoader(managementContext);
+        for (MementoManifest manifest : brooklynObjectIdToManifest.values()) {
+            String id = manifest.getId();
+            Iterable<RawDataTransformer> blueprintTransformers = transformerLoader.findBlueprintTransformers(manifest);
+            String contents = objs.get(id);
+            for (RawDataTransformer transformer : blueprintTransformers) {
+                try {
+                    contents = transformer.transform(contents);
+                } catch (Exception e) {
+                    LOG.warn("Transformer " + transformer + " failed while working on " + id, e);
+                }
+            }
+            rawBuilder.put(brooklynObjectType, id, contents);
+        }
     }
 
 }

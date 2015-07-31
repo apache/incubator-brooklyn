@@ -18,13 +18,10 @@
  */
 package brooklyn.entity.rebind.transformer;
 
-import com.google.common.annotations.Beta;
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.rebind.transformer.TransformedBy;
 
-/**
- * Transforms the raw data of persisted state (e.g. of an entity).
- */
-@Beta
-public interface RawDataTransformer {
+@TransformedBy(TransformEntityAnnotationTransformer.class)
+public class TransformEntityAnnotated extends AbstractEntity {
 
-    public String transform(String input);
 }

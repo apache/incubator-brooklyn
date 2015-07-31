@@ -322,4 +322,10 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         CatalogItem<?, ?> found = catalog.getCatalogItem(symbolicName, version);
         assertNull(found);
     }
+
+    protected void doPartialRebindOfIds(String ...objectsToRebindIds) {
+        RebindManagerImpl rm = (RebindManagerImpl) origManagementContext.getRebindManager();
+        rm.rebindPartialActive(null, objectsToRebindIds);
+    }
+
 }

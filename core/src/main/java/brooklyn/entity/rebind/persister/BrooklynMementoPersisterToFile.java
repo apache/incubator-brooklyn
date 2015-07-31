@@ -144,4 +144,5 @@ public class BrooklynMementoPersisterToFile extends AbstractBrooklynMementoPersi
             LOG.error("Failed to persist memento", e);
         }
     }
+
 }

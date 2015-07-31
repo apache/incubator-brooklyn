@@ -18,13 +18,17 @@
  */
 package brooklyn.entity.rebind.transformer;
 
-import com.google.common.annotations.Beta;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Transforms the raw data of persisted state (e.g. of an entity).
- */
-@Beta
-public interface RawDataTransformer {
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-    public String transform(String input);
+@Retention(RUNTIME)
+@Target(TYPE)
+public @interface TransformedBy {
+    public static final int ANY_VERSION = -1;
+
+    Class<? extends RawDataTransformer> value();
+    int fromVersion() default ANY_VERSION;
 }

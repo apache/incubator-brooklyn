@@ -25,8 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
+import brooklyn.entity.rebind.dto.BasicCatalogMementoManifest;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
+import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -69,19 +71,28 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
     }
     
     @Override
+    public BrooklynCatalogMementoManifest loadCatalogMementos(BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler) {
+        BasicCatalogMementoManifest.Builder builder = BasicCatalogMementoManifest.builder();
+        for (CatalogItemMemento entity : memento.getCatalogItemMementos().values()) {
+            builder.catalogItem(entity);
+        }
+        return builder.build();
+    }
+
+    @Override
     public BrooklynMementoManifest loadMementoManifest(BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler) {
         BrooklynMementoManifestImpl.Builder builder = BrooklynMementoManifestImpl.builder();
         for (EntityMemento entity : memento.getEntityMementos().values()) {
             builder.entity(entity.getId(), entity.getType(), entity.getParent(), entity.getCatalogItemId());
         }
-        for (LocationMemento entity : memento.getLocationMementos().values()) {
-            builder.location(entity.getId(), entity.getType());
+        for (LocationMemento location : memento.getLocationMementos().values()) {
+            builder.location(location.getId(), location.getType(), location.getCatalogItemId());
         }
-        for (PolicyMemento entity : memento.getPolicyMementos().values()) {
-            builder.policy(entity.getId(), entity.getType());
+        for (PolicyMemento policy : memento.getPolicyMementos().values()) {
+            builder.policy(policy.getId(), policy.getType(), policy.getCatalogItemId());
         }
-        for (EnricherMemento entity : memento.getEnricherMementos().values()) {
-            builder.enricher(entity.getId(), entity.getType());
+        for (EnricherMemento enricher : memento.getEnricherMementos().values()) {
+            builder.enricher(enricher.getId(), enricher.getType(), enricher.getCatalogItemId());
         }
         for (CatalogItemMemento entity : memento.getCatalogItemMementos().values()) {
             builder.catalogItem(entity);
@@ -98,6 +109,7 @@ public abstract class AbstractBrooklynMementoPersister implements BrooklynMement
         memento.reset(checkNotNull(newMemento, "memento"));
     }
     
+    @Override
     public void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler) {
         throw new IllegalStateException("Not supported; use "+BrooklynMementoPersisterToObjectStore.class);
     }

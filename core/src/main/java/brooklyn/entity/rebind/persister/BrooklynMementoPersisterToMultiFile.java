@@ -37,6 +37,7 @@ import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
+import brooklyn.mementos.BrooklynCatalogMementoManifest;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.mementos.BrooklynMementoPersister;
@@ -216,7 +217,8 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String contents = readFile(file);
                     String id = (String) XmlUtil.xpath(contents, "/location/id");
                     String type = (String) XmlUtil.xpath(contents, "/location/type");
-                    builder.location(id, type);
+                    String catalogItemId = (String) XmlUtil.xpath(contents, "/entity/catalogItemId");
+                    builder.location(id, type, Strings.emptyToNull(catalogItemId));
                 } catch (Exception e) {
                     exceptionHandler.onLoadMementoFailed(BrooklynObjectType.LOCATION, "File "+file, e);
                 }
@@ -226,7 +228,8 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String contents = readFile(file);
                     String id = (String) XmlUtil.xpath(contents, "/policy/id");
                     String type = (String) XmlUtil.xpath(contents, "/policy/type");
-                    builder.policy(id, type);
+                    String catalogItemId = (String) XmlUtil.xpath(contents, "/entity/catalogItemId");
+                    builder.policy(id, type, Strings.emptyToNull(catalogItemId));
                 } catch (Exception e) {
                     exceptionHandler.onLoadMementoFailed(BrooklynObjectType.POLICY, "File "+file, e);
                 }
@@ -236,7 +239,8 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String contents = readFile(file);
                     String id = (String) XmlUtil.xpath(contents, "/enricher/id");
                     String type = (String) XmlUtil.xpath(contents, "/enricher/type");
-                    builder.enricher(id, type);
+                    String catalogItemId = (String) XmlUtil.xpath(contents, "/entity/catalogItemId");
+                    builder.enricher(id, type, Strings.emptyToNull(catalogItemId));
                 } catch (Exception e) {
                     exceptionHandler.onLoadMementoFailed(BrooklynObjectType.ENRICHER, "File "+file, e);
                 }
@@ -246,7 +250,8 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
                     String contents = readFile(file);
                     String id = (String) XmlUtil.xpath(contents, "/catalogItem/id");
                     String type = (String) XmlUtil.xpath(contents, "/catalogItem/type");
-                    builder.enricher(id, type);
+                    String catalogItemId = (String) XmlUtil.xpath(contents, "/entity/catalogItemId");
+                    builder.enricher(id, type, Strings.emptyToNull(catalogItemId));
                 } catch (Exception e) {
                     exceptionHandler.onLoadMementoFailed(BrooklynObjectType.CATALOG_ITEM, "File "+file, e);
                 }
@@ -456,6 +461,7 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
         waitForWritesCompleted(Duration.of(timeout, unit));
     }
     
+    @Override
     public void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException {
         for (MementoFileWriter<?> writer : entityWriters.values()) {
             writer.waitForWriteCompleted(timeout);
@@ -596,6 +602,14 @@ public class BrooklynMementoPersisterToMultiFile implements BrooklynMementoPersi
     @Override
     public String getBackingStoreDescription() {
         return toString();
+    }
+
+    @Override
+    public BrooklynCatalogMementoManifest loadCatalogMementos(
+            BrooklynMementoRawData mementoData,
+            RebindExceptionHandler exceptionHandler) {
+        // TODO Auto-generated method stub
+        return null;
     }
     
 }

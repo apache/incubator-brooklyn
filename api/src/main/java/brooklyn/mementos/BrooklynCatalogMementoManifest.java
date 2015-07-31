@@ -16,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind.transformer;
+package brooklyn.mementos;
 
-import com.google.common.annotations.Beta;
+import java.util.Collection;
+import java.util.Map;
 
-/**
- * Transforms the raw data of persisted state (e.g. of an entity).
- */
-@Beta
-public interface RawDataTransformer {
-
-    public String transform(String input);
+public interface BrooklynCatalogMementoManifest {
+    CatalogItemMemento getCatalogItemMemento(String id);
+    Collection<String> getCatalogItemIds();
+    Map<String, CatalogItemMemento> getCatalogItemMementos();
+    boolean isEmpty();
 }

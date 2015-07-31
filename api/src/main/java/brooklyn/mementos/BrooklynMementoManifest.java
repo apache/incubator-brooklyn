@@ -19,7 +19,6 @@
 package brooklyn.mementos;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Map;
 
 import brooklyn.entity.trait.Identifiable;
@@ -29,30 +28,26 @@ import brooklyn.entity.trait.Identifiable;
  * 
  * @author aled
  */
-public interface BrooklynMementoManifest extends Serializable {
-    public interface EntityMementoManifest extends Identifiable{
+public interface BrooklynMementoManifest extends BrooklynCatalogMementoManifest, Serializable {
+    public interface MementoManifest extends Identifiable {
+        @Override
         public String getId();
         public String getType();
         public String getParent();
         public String getCatalogItemId();
     }
 
-    public Map<String, EntityMementoManifest> getEntityIdToManifest();
+    public Map<String, MementoManifest> getEntityIdToManifest();
 
-    public Map<String, String> getLocationIdToType();
+    public Map<String, MementoManifest> getLocationIdToManifest();
 
-    public Map<String, String> getPolicyIdToType();
+    public Map<String, MementoManifest> getPolicyIdToManifest();
 
-    public Map<String, String> getEnricherIdToType();
+    public Map<String, MementoManifest> getEnricherIdToManifest();
 
-    public Map<String, String> getFeedIdToType();
+    public Map<String, MementoManifest> getFeedIdToManifest();
     
-    public CatalogItemMemento getCatalogItemMemento(String id);
-
-    public Collection<String> getCatalogItemIds();
-
-    public Map<String, CatalogItemMemento> getCatalogItemMementos();
-
+    @Override
     public boolean isEmpty();
     
 }

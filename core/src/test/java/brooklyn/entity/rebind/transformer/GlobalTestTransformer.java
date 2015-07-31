@@ -18,13 +18,17 @@
  */
 package brooklyn.entity.rebind.transformer;
 
-import com.google.common.annotations.Beta;
+import brooklyn.entity.rebind.transformer.RawDataTransformer;
 
-/**
- * Transforms the raw data of persisted state (e.g. of an entity).
- */
-@Beta
-public interface RawDataTransformer {
+public class GlobalTestTransformer implements RawDataTransformer {
 
-    public String transform(String input);
+    @Override
+    public String transform(String input) {
+        if ("test".equals(input)) {
+            return GlobalTestTransformer.class.getSimpleName();
+        } else {
+            return input.replace("TransformEntityImplV1", "TransformEntityImplV2");
+        }
+    }
+
 }
