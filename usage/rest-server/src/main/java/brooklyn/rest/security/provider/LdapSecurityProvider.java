@@ -100,7 +100,13 @@ public class LdapSecurityProvider extends AbstractSecurityProvider implements Se
         }
     }
 
-    private String getUserDN(String user) {
+    /**
+     * Returns the LDAP path for the user
+     *
+     * @param user
+     * @return String
+     */
+    protected String getUserDN(String user) {
         List<String> domain = Lists.transform(Arrays.asList(ldapRealm.split("\\.")), new Function<String, String>() {
             @Override
             public String apply(String input) {
