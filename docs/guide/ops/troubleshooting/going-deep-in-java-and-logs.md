@@ -111,7 +111,7 @@ is named `brooklyn.debug.log`. Usually the easiest way to navigate the log file 
 with `Shift-G`, then performing a reverse-lookup by typing `?Tomcat` and pressing `Enter`. If searching for the 
 blueprint type (in this case Tomcat) simply matches tasks unrelated to the exception, you can also search for 
 the text of the error message, in this case `? invalid result 127`. You can make the search case-insensitivity by
-typing `-i` before performing the search. To skip the current match and move to the next on (i.e. 'up' as we're
+typing `-i` before performing the search. To skip the current match and move to the next one (i.e. 'up' as we're
 performing a reverse-lookup), simply press `n`
 
 In this case, the `?Tomcat` search takes us directly to the full stack trace (Only the last part of the trace
@@ -230,8 +230,7 @@ the entity fails to start.
 We can simulate this type of failure by launching Tomcat with an invalid configuration file. As seen in the previous
 examples, Brooklyn copies two xml configuration files to the server: `server.xml` and `web.xml`
 
-The first few non-comment lines of `server.xml` are as follows (you can see the full file [here]
-(https://github.com/apache/incubator-brooklyn/blob/master/software/webapp/src/main/resources/brooklyn/entity/webapp/tomcat/server.xml)):
+The first few non-comment lines of `server.xml` are as follows (you can see the full file [here](https://github.com/apache/incubator-brooklyn/blob/master/software/webapp/src/main/resources/brooklyn/entity/webapp/tomcat/server.xml)):
 
 {% highlight xml %}
 
@@ -426,7 +425,7 @@ the `Show/hide empty records` icon (highlighted in yellow above):
 We know from previous steps that the installation and launch scripts completed, and we know the procecess is running,
 but we can see here that the server is not responding to JMX requests. A good thing to check here would be that the
 JMX port is not being blocked by iptables, firewalls or security groups
-(see the (troubleshooting connectivity guide)[troubleshooting-connectivity.html]). 
+(see the [troubleshooting connectivity guide](connectivity.html)). 
 Let's assume that we've checked that and they're all open. There is still one more thing that Brooklyn can tell us.
 
 
