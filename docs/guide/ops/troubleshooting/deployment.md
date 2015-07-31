@@ -84,5 +84,5 @@ This just means that the entity did not get to service-up in the pre-defined tim
 two minutes, and can be configured using the `start.timeout` config key; the timer begins after the 
 start tasks are completed).
 
-See the guide on [runtime errors](troubleshooting-runtime-errors.html) for where to find additional information, especially the section on
+See the [overview](overview.html) for where to find additional information, especially the section on
 "Entity's Error Status".
