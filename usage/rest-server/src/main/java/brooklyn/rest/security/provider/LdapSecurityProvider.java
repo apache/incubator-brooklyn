@@ -35,6 +35,12 @@ import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynWebConfig;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A {@link SecurityProvider} implementation that relies on LDAP to authenticate.
@@ -49,6 +55,7 @@ public class LdapSecurityProvider extends AbstractSecurityProvider implements Se
 
     private final String ldapUrl;
     private final String ldapRealm;
+    private final String organizationUnit;
 
     public LdapSecurityProvider(ManagementContext mgmt) {
         StringConfigMap properties = mgmt.getConfig();
@@ -56,11 +63,20 @@ public class LdapSecurityProvider extends AbstractSecurityProvider implements Se
         Strings.checkNonEmpty(ldapUrl, "LDAP security provider configuration missing required property "+BrooklynWebConfig.LDAP_URL);
         ldapRealm = CharMatcher.isNot('"').retainFrom(properties.getConfig(BrooklynWebConfig.LDAP_REALM));
         Strings.checkNonEmpty(ldapRealm, "LDAP security provider configuration missing required property "+BrooklynWebConfig.LDAP_REALM);
+
+        if(Strings.isBlank(properties.getConfig(BrooklynWebConfig.LDAP_OU))) {
+            LOG.info("Setting LDAP ou attribute to: Users");
+            organizationUnit = "Users";
+        } else {
+            organizationUnit = CharMatcher.isNot('"').retainFrom(properties.getConfig(BrooklynWebConfig.LDAP_OU));
+        }
+        Strings.checkNonEmpty(ldapRealm, "LDAP security provider configuration missing required property "+BrooklynWebConfig.LDAP_OU);
     }
 
-    public LdapSecurityProvider(String ldapUrl, String ldapRealm) {
+    public LdapSecurityProvider(String ldapUrl, String ldapRealm, String organizationUnit) {
         this.ldapUrl = ldapUrl;
         this.ldapRealm = ldapRealm;
+        this.organizationUnit = organizationUnit;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -68,7 +84,7 @@ public class LdapSecurityProvider extends AbstractSecurityProvider implements Se
     public boolean authenticate(HttpSession session, String user, String password) {
         if (session==null || user==null) return false;
         checkCanLoad();
-        
+
         Hashtable env = new Hashtable();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, ldapUrl);
@@ -85,7 +101,15 @@ public class LdapSecurityProvider extends AbstractSecurityProvider implements Se
     }
 
     private String getUserDN(String user) {
-        return "cn=" + user + "," + ldapRealm;
+        List<String> domain = Lists.transform(Arrays.asList(ldapRealm.split("\\.")), new Function<String, String>() {
+            @Override
+            public String apply(String input) {
+                return "dc=" + input;
+            }
+        });
+
+        String dc = Joiner.on(",").join(domain).toLowerCase();
+        return "cn=" + user + ",ou=" + organizationUnit + "," + dc;
     }
 
     static boolean triedLoading = false;

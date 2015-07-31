@@ -66,6 +66,9 @@ public class BrooklynWebConfig {
     public final static ConfigKey<String> LDAP_REALM = ConfigKeys.newStringConfigKey(
             BASE_NAME_SECURITY+".ldap.realm");
 
+    public final static ConfigKey<String> LDAP_OU = ConfigKeys.newStringConfigKey(
+            BASE_NAME_SECURITY+"ldap.ou");
+
     public final static ConfigKey<Boolean> HTTPS_REQUIRED = ConfigKeys.newBooleanConfigKey(
             BASE_NAME+".security.https.required",
             "Whether HTTPS is required; false here can be overridden by CLI option", false); 
