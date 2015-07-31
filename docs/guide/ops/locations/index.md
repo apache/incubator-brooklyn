@@ -401,6 +401,31 @@ brooklyn.location.named.On-Prem\ Iron\ Example.privateKeyFile=~/.ssh/produser_id
 brooklyn.location.named.On-Prem\ Iron\ Example.privateKeyPassphrase=s3cr3tpassphrase
 {% endhighlight %}
 
+For more complex host configuration, one can define custom config values per machine. In the example 
+below, there will be two machines. The first will be a machine reachable on
+`ssh -i ~/.ssh/brooklyn.pem -p 8022 myuser@50.51.52.53`. The second is a windows machine, reachable 
+over WinRM. Each machine has also has a private address (e.g. for within a private network).
+
+{% highlight yaml %}
+location:
+  byon:
+    hosts:
+    - ssh: 50.51.52.53:8022
+      privateAddresses: [10.0.0.1]
+      privateKeyFile: ~/.ssh/brooklyn.pem
+      user: myuser
+    - winrm: 50.51.52.54:8985
+      privateAddresses: [10.0.0.2]
+      password: mypassword
+      user: myuser
+      osfamily: windows
+{% endhighlight %}
+
+The BYON location also supports a machine chooser, using the config key `byon.machineChooser`. 
+This allows one to plugin logic to choose from the set of available machines in the pool. For
+example, additional config could be supplied for each machine. This could be used (during the call
+to `location.obtain()`) to find the config that matches the requirements of the entity being
+provisioned. See `brooklyn.location.basic.FixedListMachineProvisioningLocation.MACHINE_CHOOSER`.
 
 
 ### Other Location Topics
