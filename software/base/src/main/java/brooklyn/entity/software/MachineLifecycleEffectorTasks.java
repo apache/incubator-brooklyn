@@ -171,6 +171,24 @@ public abstract class MachineLifecycleEffectorTasks {
      * Calls {@link #start(Collection)} in this class.
      */
     public EffectorBody<Void> newStartEffectorTask() {
+        // TODO included anonymous inner class for backwards compatibility with persisted state.
+        new EffectorBody<Void>() {
+            @Override
+            public Void call(ConfigBag parameters) {
+                Collection<? extends Location> locations  = null;
+
+                Object locationsRaw = parameters.getStringKey(LOCATIONS.getName());
+                locations = Locations.coerceToCollection(entity().getManagementContext(), locationsRaw);
+
+                if (locations==null) {
+                    // null/empty will mean to inherit from parent
+                    locations = Collections.emptyList();
+                }
+
+                start(locations);
+                return null;
+            }
+        };
         return new StartEffectorBody();
     }
 
@@ -199,6 +217,14 @@ public abstract class MachineLifecycleEffectorTasks {
      * @see {@link #newStartEffectorTask()}
      */
     public EffectorBody<Void> newRestartEffectorTask() {
+        // TODO included anonymous inner class for backwards compatibility with persisted state.
+        new EffectorBody<Void>() {
+            @Override
+            public Void call(ConfigBag parameters) {
+                restart(parameters);
+                return null;
+            }
+        };
         return new RestartEffectorBody();
     }
 
@@ -216,6 +242,14 @@ public abstract class MachineLifecycleEffectorTasks {
      * @see {@link #newStartEffectorTask()}
      */
     public EffectorBody<Void> newStopEffectorTask() {
+        // TODO included anonymous inner class for backwards compatibility with persisted state.
+        new EffectorBody<Void>() {
+            @Override
+            public Void call(ConfigBag parameters) {
+                stop(parameters);
+                return null;
+            }
+        };
         return new StopEffectorBody();
     }
 
