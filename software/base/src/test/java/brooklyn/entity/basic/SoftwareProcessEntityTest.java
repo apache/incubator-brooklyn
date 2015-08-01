@@ -262,7 +262,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         d.events.clear();
 
         TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.STOP,
-                ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE, true)));
+                ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE_MODE, StopSoftwareParameters.StopMode.IF_NOT_STOPPED)));
         t1.asTask().get();
 
         assertEquals(d.events, ImmutableList.of("stop"));
@@ -279,7 +279,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         d.events.clear();
 
         TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.STOP,
-                ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE, false)));
+                ConfigBag.newInstance().configure(StopSoftwareParameters.STOP_MACHINE_MODE, StopSoftwareParameters.StopMode.NEVER)));
         t1.asTask().get(10, TimeUnit.SECONDS);
 
         assertEquals(d.events, ImmutableList.of("stop"));

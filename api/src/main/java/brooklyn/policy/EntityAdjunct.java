@@ -34,12 +34,6 @@ public interface EntityAdjunct extends BrooklynObject {
     String getId();
 
     /**
-     * @deprecated since 0.7; use {@link #getDisplayName()}
-     */
-    @Deprecated
-    String getName();
-    
-    /**
      * Whether the adjunct is destroyed
      */
     boolean isDestroyed();

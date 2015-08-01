@@ -42,15 +42,6 @@ public interface Enricher extends EntityAdjunct, Rebindable, Configurable {
     String getId();
 
     /**
-     * Get the name assigned to this enricher.
-     * 
-     * @deprecated since 0.7; use {@link #getDisplayName()}
-     */
-    @Deprecated
-    @Override
-    String getName();
-
-    /**
      * Information about the type of this entity; analogous to Java's object.getClass.
      */
     @Beta
@@ -66,12 +57,6 @@ public interface Enricher extends EntityAdjunct, Rebindable, Configurable {
      */
     @Deprecated
     <T> T setConfig(ConfigKey<T> key, T val);
-
-    /**
-     * @deprecated since 0.7.0; use {@link #config()}, such as {@code policy.config().getBag()}
-     */
-    @Deprecated
-    Map<ConfigKey<?>, Object> getAllConfig();
 
     /**
      * Users are strongly discouraged from calling or overriding this method.

@@ -40,7 +40,6 @@ import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.drivers.DriverDependentEntity;
 import brooklyn.entity.drivers.EntityDriverManager;
-import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.function.FunctionFeed;
@@ -50,7 +49,6 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.location.basic.Machines;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.Task;
 import brooklyn.policy.EnricherSpec;
@@ -394,30 +392,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         Entities.waitForServiceUp(this, Duration.of(duration, units));
     }
 
-    /** @deprecated since 0.7.0, this isn't a general test for modifiability, and was hardly ever used (now never used) */
-    @Deprecated
-    public void checkModifiable() {
-        Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
-        if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.RUNNING) return;
-        if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.STARTING) return;
-        throw new IllegalStateException("Cannot configure entity "+this+" in state "+state);
-    }
-
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
-    protected final void startInLocation(Collection<? extends Location> locations) {}
-
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
-    protected final void startInLocation(Location location) {}
-
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
-    protected final void startInLocation(final MachineProvisioningLocation<?> location) {}
-    
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
-    protected final void startInLocation(MachineLocation machine) {}
-
-    /** @deprecated since 0.6.0 use/override method in {@link SoftwareProcessDriverLifecycleEffectorTasks} */
-    protected final void callStartHooks() {}
-    
     protected Map<String,Object> obtainProvisioningFlags(MachineProvisioningLocation location) {
         ConfigBag result = ConfigBag.newInstance(location.getProvisioningFlags(ImmutableList.of(getClass().getName())));
         result.putAll(getConfig(PROVISIONING_PROPERTIES));
@@ -474,11 +448,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         
         log.debug("getRequiredOpenPorts detected default {} for {}", ports, this);
         return ports;
-    }
-
-    /** @deprecated since 0.6.0 use {@link Machines#findSubnetHostname(Entity)} */ @Deprecated
-    public String getLocalHostname() {
-        return Machines.findSubnetHostname(this).get();
     }
 
     protected void initDriver(MachineLocation machine) {
@@ -555,20 +524,22 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
 
     /**
-     * If custom behaviour is required by sub-classes, consider overriding {@link #doStart(Collection)})}.
+     * If custom behaviour is required by sub-classes, consider overriding {@link #preStart()} or {@link #postStart()})}.
+     * Also consider adding additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
      */
     @Override
     public final void start(final Collection<? extends Location> locations) {
         if (DynamicTasks.getTaskQueuingContext() != null) {
-            doStart(locations);
+            getLifecycleEffectorTasks().start(locations);
         } else {
-            Task<?> task = Tasks.builder().name("start (sequential)").body(new Runnable() { public void run() { doStart(locations); } }).build();
+            Task<?> task = Tasks.builder().name("start (sequential)").body(new Runnable() { public void run() { getLifecycleEffectorTasks().start(locations); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }
 
     /**
-     * If custom behaviour is required by sub-classes, consider overriding {@link #doStop()}.
+     * If custom behaviour is required by sub-classes, consider overriding  {@link #preStop()} or {@link #postStop()}.
+     * Also consider adding additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
      */
     @Override
     public final void stop() {
@@ -581,64 +552,27 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         // or do a SERVICE_STATE check before setting SERVICE_UP to true in a feed (?).
 
         if (DynamicTasks.getTaskQueuingContext() != null) {
-            doStop();
+            getLifecycleEffectorTasks().stop(ConfigBag.EMPTY);
         } else {
-            Task<?> task = Tasks.builder().name("stop").body(new Runnable() { public void run() { doStop(); } }).build();
+            Task<?> task = Tasks.builder().name("stop").body(new Runnable() { public void run() { getLifecycleEffectorTasks().stop(ConfigBag.EMPTY); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }
 
     /**
-     * If custom behaviour is required by sub-classes, consider overriding {@link #doRestart()}.
+     * If custom behaviour is required by sub-classes, consider overriding {@link #preRestart()} or {@link #postRestart()}.
+     * Also consider adding additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
      */
     @Override
     public final void restart() {
         if (DynamicTasks.getTaskQueuingContext() != null) {
-            doRestart(ConfigBag.EMPTY);
+            getLifecycleEffectorTasks().restart(ConfigBag.EMPTY);
         } else {
-            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { doRestart(ConfigBag.EMPTY); } }).build();
+            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { getLifecycleEffectorTasks().restart(ConfigBag.EMPTY); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }
     
-    /**
-     * To be overridden instead of {@link #start(Collection)}; sub-classes should call {@code super.doStart(locations)} and should
-     * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
-     * @deprecated since 0.7.0 override {@link #preStart()} or {@link #postStart()}, 
-     * or define a {@link SoftwareProcessDriverLifecycleEffectorTasks} subclass if more complex behaviour needed
-     * (this method is no longer invoked by the {@link EffectorBody} call path, 
-     * hence deprecating it and marking it final to highlight incompatibilities at compile time)
-     */
-    @Deprecated
-    protected final void doStart(Collection<? extends Location> locations) {
-        getLifecycleEffectorTasks().start(locations);
-    }
-    
-    /**
-     * To be overridden instead of {@link #stop()}; sub-classes should call {@code super.doStop()} and should
-     * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
-     * @deprecated since 0.7.0 override {@link #preStop()} or {@link #postStop()}; see note on {@link #doStart(Collection)} for more information 
-     */
-    @Deprecated
-    protected final void doStop() {
-        getLifecycleEffectorTasks().stop();
-    }
-    
-    /**
-     * To be overridden instead of {@link #restart()}; sub-classes should call {@code super.doRestart(ConfigBag)} and should
-     * add do additional work via tasks, executed using {@link DynamicTasks#queue(String, Callable)}.
-     * @deprecated since 0.7.0; see note on {@link #doStart(Collection)} for more information 
-     */
-    @Deprecated
-    protected final void doRestart(ConfigBag parameters) {
-        getLifecycleEffectorTasks().restart(parameters);
-    }
-
-    @Deprecated /** @deprecated since 0.7.0 see {@link #doRestart(ConfigBag)} */
-    protected final void doRestart() {
-        doRestart(ConfigBag.EMPTY);
-    }
-
     protected SoftwareProcessDriverLifecycleEffectorTasks getLifecycleEffectorTasks() {
         return getConfig(LIFECYCLE_EFFECTOR_TASKS);
     }

@@ -21,7 +21,6 @@ package brooklyn.mementos;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
@@ -73,9 +72,6 @@ public interface BrooklynMementoPersister {
      */
     BrooklynMementoRawData loadMementoRawData(RebindExceptionHandler exceptionHandler);
 
-    /** @deprecated since 0.7.0 use {@link #loadMementoManifest(BrooklynMementoRawData, RebindExceptionHandler)} */
-    BrooklynMementoManifest loadMementoManifest(RebindExceptionHandler exceptionHandler) throws IOException;
-    
     /**
      * Loads minimal manifest information (almost entirely *not* deserialized).
      * Implementations should load the raw data if {@link BrooklynMementoRawData} is not supplied,
@@ -83,8 +79,6 @@ public interface BrooklynMementoPersister {
      */
     BrooklynMementoManifest loadMementoManifest(@Nullable BrooklynMementoRawData mementoData, RebindExceptionHandler exceptionHandler) throws IOException;
 
-    /** @deprecated since 0.7.0 use {@link #loadMemento(RebindExceptionHandler)} */
-    BrooklynMemento loadMemento(LookupContext lookupContext, RebindExceptionHandler exceptionHandler) throws IOException;
      /**
       * Retrieves the memento class, containing deserialized objects (but not the {@link BrooklynObject} class).
       * Implementations should load the raw data if {@link BrooklynMementoRawData} is not supplied,
@@ -93,10 +87,6 @@ public interface BrooklynMementoPersister {
       * Note that this method is *not* thread safe.
       */
     BrooklynMemento loadMemento(@Nullable BrooklynMementoRawData mementoData, LookupContext lookupContext, RebindExceptionHandler exceptionHandler) throws IOException;
-
-    /** @deprecated since 0.7.0, use {@link #checkpoint(BrooklynMementoRawData, PersistenceExceptionHandler)} 
-     * and javadoc on implementations of that */ @Deprecated  // pretty sure this is not used outwith deprecated code
-    void checkpoint(BrooklynMemento memento, PersistenceExceptionHandler exceptionHandler);
 
     /** applies a full checkpoint (write) of all state */  
     void checkpoint(BrooklynMementoRawData newMemento, PersistenceExceptionHandler exceptionHandler);
@@ -113,12 +103,6 @@ public interface BrooklynMementoPersister {
 
     @VisibleForTesting
     void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException;
-
-    /**
-     * @deprecated since 0.7.0; use {@link #waitForWritesCompleted(Duration)}
-     */
-    @VisibleForTesting
-    void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
 
     String getBackingStoreDescription();
     

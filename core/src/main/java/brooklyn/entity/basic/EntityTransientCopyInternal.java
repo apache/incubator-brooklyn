@@ -83,9 +83,6 @@ public interface EntityTransientCopyInternal {
     Maybe<Object> getConfigRaw(ConfigKey<?> key, boolean includeInherited);
     Maybe<Object> getConfigRaw(HasConfigKey<?> key, boolean includeInherited);
     TagSupport tags();
-    @Deprecated TagSupport getTagSupport();
-    @Deprecated Set<Object> getTags();
-    @Deprecated boolean containsTag(@Nonnull Object tag);
     String getCatalogItemId();
 
     

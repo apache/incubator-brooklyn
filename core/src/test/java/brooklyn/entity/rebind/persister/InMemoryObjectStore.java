@@ -109,7 +109,7 @@ public class InMemoryObjectStore implements PersistenceObjectStore {
                 if (val2==null) val2 = val;
                 else val2 = val2 + val;
 
-                map.put(key, val);
+                map.put(key, val2);
                 mapModTime.put(key, new Date());
             }
         }

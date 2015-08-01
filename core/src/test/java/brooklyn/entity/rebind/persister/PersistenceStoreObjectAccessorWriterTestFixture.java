@@ -20,6 +20,7 @@ package brooklyn.entity.rebind.persister;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Date;
@@ -30,13 +31,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
-
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 public abstract class PersistenceStoreObjectAccessorWriterTestFixture {
 
@@ -68,6 +69,26 @@ public abstract class PersistenceStoreObjectAccessorWriterTestFixture {
         accessor.waitForCurrentWrites(TIMEOUT);
 
         assertEquals(accessor.get(), "abc");
+    }
+
+    @Test
+    public void testExists() throws Exception {
+        accessor.put("abc");
+        accessor.waitForCurrentWrites(TIMEOUT);
+        assertTrue(accessor.exists());
+        
+        accessor.delete();
+        accessor.waitForCurrentWrites(TIMEOUT);
+        assertFalse(accessor.exists());
+    }
+    
+    @Test
+    public void testAppendsFile() throws Exception {
+        accessor.put("abc\n");
+        accessor.append("def\n");
+        accessor.waitForCurrentWrites(TIMEOUT);
+
+        assertEquals(accessor.get(), "abc\ndef\n");
     }
 
     /** most storage systems support <= 1ms resolution; but some file systems -- esp FAT and OSX HFS+ are much much higher! */

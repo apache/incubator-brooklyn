@@ -515,7 +515,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public ManagementNodeState getNodeState() {
         ManagementNodeState myNodeState = getInternalNodeState();
@@ -523,9 +522,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         // if target is master then we claim already being master, to prevent other nodes from taking it
         // (we may fail subsequently of course)
         if (myNodeState==ManagementNodeState.MASTER) return myNodeState;
-        
-        // for backwards compatibility; remove in 0.8.0
-        if (myNodeState==ManagementNodeState.UNINITIALISED) return ManagementNodeState.INITIALIZING;
         
         if (!nodeStateTransitionComplete) return ManagementNodeState.INITIALIZING;
         return myNodeState;
@@ -535,11 +531,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         return lastSyncRecord;
     }
     
-    @Override
-    public ManagementPlaneSyncRecord getManagementPlaneSyncState() {
-        return loadManagementPlaneSyncRecord(true);
-    }
-
     @SuppressWarnings("unchecked")
     protected void registerPollTask() {
         final Runnable job = new Runnable() {

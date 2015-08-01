@@ -21,8 +21,6 @@ package brooklyn.management.ha;
 import brooklyn.util.guava.Maybe;
 
 public enum ManagementNodeState {
-    /** @deprecated since 0.7.0 synonym for maintenance (plus, it should have been US English!) */
-    UNINITIALISED,
     /** Node is either coming online, or is in some kind of recovery/transitioning mode */
     INITIALIZING,
     

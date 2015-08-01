@@ -235,14 +235,6 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
     public static final ConfigKey<Duration> POLL_PERIOD = ConfigKeys.newConfigKey(Duration.class, "brooklynnode.poll_period",
             "Frequency to poll for client sensors", Duration.seconds(2));
 
-    @Deprecated
-    /** @deprecated since 0.7.0  this flag is being replaced with the stopWhichAppsOnShutdown flag; 
-     * if truly needed that could be represented here, but in general the hope is to remove all such complexity, 
-     * so the better way if you really do need this is to use {@link #EXTRA_LAUNCH_PARAMETERS} */
-    @SetFromFlag("noShutdownOnExit")
-    public static final ConfigKey<Boolean> NO_SHUTDOWN_ON_EXIT = ConfigKeys.newBooleanConfigKey("brooklynnode.noshutdownonexit", 
-        "Whether to pass the (deprecated) noShutdownOnExit flag to the process", false);
-
     public interface DeployBlueprintEffector {
         ConfigKey<Map<String,Object>> BLUEPRINT_CAMP_PLAN = new MapConfigKey<Object>(Object.class, "blueprintPlan",
             "CAMP plan for the blueprint to be deployed; currently only supports Java map or JSON string (not yet YAML)");

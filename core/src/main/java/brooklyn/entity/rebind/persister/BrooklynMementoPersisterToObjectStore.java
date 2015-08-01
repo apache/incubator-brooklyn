@@ -322,11 +322,6 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
     }
 
     @Override
-    public BrooklynMementoManifest loadMementoManifest(final RebindExceptionHandler exceptionHandler) throws IOException {
-        return loadMementoManifest(null, exceptionHandler);
-    }
-    
-    @Override
     public BrooklynMementoManifest loadMementoManifest(BrooklynMementoRawData mementoData, final RebindExceptionHandler exceptionHandler) throws IOException {
         if (mementoData==null)
             mementoData = loadMementoRawData(exceptionHandler);
@@ -390,11 +385,6 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         }
 
         return result;
-    }
-
-    @Override
-    public BrooklynMemento loadMemento(LookupContext lookupContext, final RebindExceptionHandler exceptionHandler) throws IOException {
-        return loadMemento(null, lookupContext, exceptionHandler);
     }
     
     @Override
@@ -547,24 +537,6 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         }
     }
 
-
-    @Override
-    public void checkpoint(BrooklynMemento newMemento, PersistenceExceptionHandler exceptionHandler) {
-        checkWritesAllowed();
-
-        MutableDelta delta = new PersisterDeltaImpl();
-        delta.addAll(BrooklynObjectType.ENTITY, newMemento.getEntityMementos().values());
-        delta.addAll(BrooklynObjectType.LOCATION, newMemento.getLocationMementos().values());
-        delta.addAll(BrooklynObjectType.POLICY, newMemento.getPolicyMementos().values());
-        delta.addAll(BrooklynObjectType.ENRICHER, newMemento.getEnricherMementos().values());
-        delta.addAll(BrooklynObjectType.FEED, newMemento.getFeedMementos().values());
-        delta.addAll(BrooklynObjectType.CATALOG_ITEM, newMemento.getCatalogItemMementos().values());
-        
-        Stopwatch stopwatch = deltaImpl(delta, exceptionHandler);
-        
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed entire memento in {}", Time.makeTimeStringRounded(stopwatch));
-    }
-
     @Override
     public void delta(Delta delta, PersistenceExceptionHandler exceptionHandler) {
         checkWritesAllowed();
@@ -638,12 +610,6 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         }
     }
 
-    @Override
-    @VisibleForTesting
-    public void waitForWritesCompleted(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
-        waitForWritesCompleted(Duration.of(timeout, unit));
-    }
-    
     @Override
     public void waitForWritesCompleted(Duration timeout) throws InterruptedException, TimeoutException {
         boolean locked = lock.readLock().tryLock(timeout.toMillisecondsRoundingUp(), TimeUnit.MILLISECONDS);

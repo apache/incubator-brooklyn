@@ -99,7 +99,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
      * {@link DynamicTasks#queue(String, java.util.concurrent.Callable)}.
      */
     protected void doStop() {
-        LIFECYCLE_TASKS.stop();
+        LIFECYCLE_TASKS.stop(ConfigBag.EMPTY);
     }
 
     /**

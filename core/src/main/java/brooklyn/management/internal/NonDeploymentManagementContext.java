@@ -604,10 +604,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
         @Override
-        public ManagementPlaneSyncRecord getManagementPlaneSyncState() {
-            throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
-        }
-        @Override
         public ManagementPlaneSyncRecord getLastManagementPlaneSyncRecord() {
             throw new IllegalStateException("Non-deployment context "+NonDeploymentManagementContext.this+" is not valid for this operation.");
         }
