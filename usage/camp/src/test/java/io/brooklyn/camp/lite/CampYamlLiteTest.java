@@ -16,16 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.lite;
+package io.brooklyn.camp.lite;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-
-import brooklyn.test.TestResourceUnavailableException;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.pdp.PdpYamlTest;
-import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -40,6 +34,10 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogBundle;
@@ -57,6 +55,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.Task;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.osgi.OsgiStandaloneTest;
+import brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
@@ -64,10 +63,10 @@ import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.stream.Streams;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
+import io.brooklyn.camp.spi.Assembly;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.pdp.PdpYamlTest;
+import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
 /** Tests of lightweight CAMP integration. Since the "real" integration is in brooklyn-camp project,
  * but some aspects of CAMP we want to be able to test here. */

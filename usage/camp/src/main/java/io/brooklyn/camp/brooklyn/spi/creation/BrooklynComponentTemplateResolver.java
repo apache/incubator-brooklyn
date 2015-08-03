@@ -18,15 +18,6 @@
  */
 package io.brooklyn.camp.brooklyn.spi.creation;
 
-import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
-import io.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
-import io.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
-import io.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
-import io.brooklyn.camp.spi.AbstractResource;
-import io.brooklyn.camp.spi.ApplicationComponentTemplate;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,6 +30,11 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
@@ -67,11 +63,15 @@ import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
-
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
+import io.brooklyn.camp.CampPlatform;
+import io.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import io.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
+import io.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
+import io.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
+import io.brooklyn.camp.spi.AbstractResource;
+import io.brooklyn.camp.spi.ApplicationComponentTemplate;
+import io.brooklyn.camp.spi.AssemblyTemplate;
+import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
 /**
  * This generates instances of a template resolver that use a {@link ServiceTypeResolver}
@@ -252,7 +252,7 @@ public class BrooklynComponentTemplateResolver {
         // including it's OSGi bundles in the loader classpath.
         } else {
             // TODO perhaps migrate to catalog.createSpec ?
-            EntitySpec<?> spec = BrooklynAssemblyTemplateInstantiator.resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
+            EntitySpec<?> spec = BrooklynAssemblyTemplateInstantiator.resolveCatalogYamlReferenceSpec(getCampPlatform(), item, encounteredCatalogTypes);
             spec.catalogItemId(item.getId());
             
             return (EntitySpec<T>)spec;
@@ -305,7 +305,7 @@ public class BrooklynComponentTemplateResolver {
             Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
             for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                EntitySpec<? extends Entity> childSpec = BrooklynAssemblyTemplateInstantiator.resolveSpec(ResourceUtils.create(this), entityResolver, encounteredCatalogTypes);
+                EntitySpec<? extends Entity> childSpec = BrooklynAssemblyTemplateInstantiator.resolveSpec(getCampPlatform(), ResourceUtils.create(this), entityResolver, encounteredCatalogTypes);
                 spec.child(childSpec);
             }
         }
@@ -488,4 +488,7 @@ public class BrooklynComponentTemplateResolver {
         return (List<Map<String, Object>>) attrs.get(BrooklynCampReservedKeys.BROOKLYN_CHILDREN);
     }
 
+    private CampPlatform getCampPlatform() {
+        return CampCatalogUtils.getCampPlatform(mgmt);
+    }
 }

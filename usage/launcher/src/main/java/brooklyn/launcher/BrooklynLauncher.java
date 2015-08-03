@@ -83,6 +83,7 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
+import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoRawData;
@@ -916,7 +917,7 @@ public class BrooklynLauncher {
             apps.add(app);
         }
         for (String blueprint : yamlAppsToManage) {
-            Application app = getAppFromYaml(blueprint);
+            Application app = EntityManagementUtils.createUnstarted(managementContext, blueprint);
             // Note: BrooklynAssemblyTemplateInstantiator automatically puts applications under management.
             apps.add(app);
         }
@@ -956,23 +957,6 @@ public class BrooklynLauncher {
                 .start(ImmutableList.of(localhost));
     }
 
-    protected Application getAppFromYaml(String input) {
-        AssemblyTemplate at = campPlatform.pdp().registerDeploymentPlan(new StringReader(input));
-        BrooklynAssemblyTemplateInstantiator instantiator;
-        try {
-            AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
-            if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
-                instantiator = BrooklynAssemblyTemplateInstantiator.class.cast(ati);
-            } else {
-                throw new IllegalStateException("Cannot create application with instantiator: " + ati);
-            }
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-        Application app = instantiator.create(at, campPlatform);
-        return app;
-    }
-    
     protected void startApps() {
         if ((stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.ALL) || 
             (stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.ALL_IF_NOT_PERSISTED && persistMode==PersistMode.DISABLED)) {

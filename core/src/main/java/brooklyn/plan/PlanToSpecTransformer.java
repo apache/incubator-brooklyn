@@ -16,21 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.brooklyn.api;
+package brooklyn.plan;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-
-import java.util.Set;
-
+import brooklyn.basic.AbstractBrooklynObjectSpec;
+import brooklyn.catalog.CatalogItem;
+import brooklyn.entity.Application;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
+import brooklyn.management.ManagementContextInjectable;
 
-public interface AssemblyTemplateSpecInstantiator extends AssemblyTemplateInstantiator {
-
-    EntitySpec<?> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, boolean autoUnwrapIfAppropriate);
-    EntitySpec<?> createNestedSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext itemLoader, Set<String> encounteredCatalogTypes);
-
-    
+public interface PlanToSpecTransformer extends ManagementContextInjectable {
+    String getName();
+    boolean accepts(String mime);
+    <T extends Application> EntitySpec<T> createApplicationSpec(String plan);
+    AbstractBrooklynObjectSpec<?, ?> createCatalogSpec(CatalogItem<?, ?> item);
 }

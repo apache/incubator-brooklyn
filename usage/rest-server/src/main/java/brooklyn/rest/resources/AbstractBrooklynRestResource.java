@@ -18,15 +18,12 @@
  */
 package brooklyn.rest.resources;
 
-import io.brooklyn.camp.CampPlatform;
-
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
@@ -146,8 +143,4 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
 
     }
 
-    protected CampPlatform camp() {
-        return BrooklynServerConfig.getCampPlatform(mgmt()).get();
-    }
-    
 }
