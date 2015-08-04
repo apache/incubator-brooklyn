@@ -38,7 +38,7 @@ import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.osgi.OsgiStandaloneTest;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import brooklyn.util.text.StringFunctions;
 
 import com.google.common.collect.ImmutableList;

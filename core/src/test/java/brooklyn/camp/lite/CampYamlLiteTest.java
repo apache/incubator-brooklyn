@@ -21,7 +21,7 @@ package brooklyn.camp.lite;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.pdp.PdpYamlTest;

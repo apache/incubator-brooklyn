@@ -44,7 +44,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import brooklyn.util.javalang.UrlClassLoader;
 
 import com.google.common.base.Function;

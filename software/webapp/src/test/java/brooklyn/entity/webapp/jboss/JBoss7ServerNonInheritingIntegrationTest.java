@@ -36,7 +36,7 @@ import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;

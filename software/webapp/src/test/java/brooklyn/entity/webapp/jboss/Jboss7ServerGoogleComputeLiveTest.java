@@ -23,7 +23,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractGoogleComputeLiveTest;

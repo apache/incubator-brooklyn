@@ -37,7 +37,7 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.management.osgi.OsgiTestResources;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.ResourceUtils;

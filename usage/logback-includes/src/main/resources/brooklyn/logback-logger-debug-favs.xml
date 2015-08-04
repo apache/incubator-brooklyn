@@ -25,4 +25,8 @@
     <logger name="brooklyn.location.basic.jclouds" level="DEBUG"/>
     <logger name="brooklyn.util.internal.ssh" level="DEBUG"/>
 
+    <logger name="org.apache.brooklyn.SSH" level="DEBUG"/>
+    <logger name="org.apache.brooklyn.location.basic.jclouds" level="DEBUG"/>
+    <logger name="org.apache.brooklyn.util.internal.ssh" level="DEBUG"/>
+
 </included>

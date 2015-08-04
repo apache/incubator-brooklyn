@@ -18,7 +18,7 @@
  */
 package io.brooklyn.camp.brooklyn.catalog;
 
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import java.io.File;

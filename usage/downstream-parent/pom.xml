@@ -99,7 +99,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <!-- includes brooklyn.test.LoggingVerboseReporter -->
+      <!-- includes org.apache.brooklyn.test.LoggingVerboseReporter -->
       <groupId>org.apache.brooklyn</groupId>
       <artifactId>brooklyn-utils-test-support</artifactId>
       <version>${brooklyn.version}</version>
@@ -327,7 +327,7 @@
           <properties>
             <property>
               <name>listener</name>
-              <value>brooklyn.test.LoggingVerboseReporter</value>
+              <value>org.apache.brooklyn.test.LoggingVerboseReporter</value>
             </property>
           </properties>
           <enableAssertions>true</enableAssertions>

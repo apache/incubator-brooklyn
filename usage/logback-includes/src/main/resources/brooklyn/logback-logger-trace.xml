@@ -22,5 +22,6 @@
     <!-- enable TRACE logging -->
     <logger name="brooklyn" level="TRACE"/>
     <logger name="io.brooklyn" level="TRACE"/>
-      
+    <logger name="org.apache.brooklyn" level="DEBUG"/>
+          
 </included>

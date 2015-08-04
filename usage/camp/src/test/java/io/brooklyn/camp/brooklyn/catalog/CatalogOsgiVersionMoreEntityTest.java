@@ -38,7 +38,7 @@ import brooklyn.location.LocationSpec;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.text.Strings;
 
