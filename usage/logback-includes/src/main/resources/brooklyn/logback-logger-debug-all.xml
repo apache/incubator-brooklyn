@@ -22,6 +22,8 @@
     <!-- log all brooklyn at debug -->
     <logger name="brooklyn" level="DEBUG"/>
     <logger name="io.brooklyn" level="DEBUG"/>
+    <logger name="org.apache.brooklyn" level="DEBUG"/>
+
 
     <!-- jclouds uses org.jclouds.* class logging as well as special jclouds.* logger categories -->
     <logger name="org.jclouds" level="DEBUG"/>
