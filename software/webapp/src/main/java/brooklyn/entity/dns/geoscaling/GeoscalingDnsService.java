@@ -22,6 +22,7 @@ import java.net.URI;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.dns.AbstractGeoDnsService;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppServiceConstants;
@@ -33,6 +34,11 @@ import brooklyn.util.flags.SetFromFlag;
 @ImplementedBy(GeoscalingDnsServiceImpl.class)
 public interface GeoscalingDnsService extends AbstractGeoDnsService {
     
+    @SetFromFlag("sslTrustAll")
+    public static final ConfigKey<Boolean> SSL_TRUST_ALL = ConfigKeys.newBooleanConfigKey(
+            "ssl.trustAll",
+            "Whether to trust all certificates, or to fail with 'peer not authenticated' if untrusted (default false)",
+            false);
     @SetFromFlag("randomizeSubdomainName")
     public static final ConfigKey<Boolean> RANDOMIZE_SUBDOMAIN_NAME = new BasicConfigKey<Boolean>(
             Boolean.class, "randomize.subdomain.name");

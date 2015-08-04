@@ -35,6 +35,7 @@ import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.collections.MutableSet;
+import brooklyn.util.http.HttpTool;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
@@ -44,7 +45,7 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
 
     // Must remember any desired redirection targets if they're specified before configure() has been called.
     private Set<HostGeoInfo> rememberedTargetHosts;
-    private final GeoscalingWebClient webClient = new GeoscalingWebClient();
+    private GeoscalingWebClient webClient;
     
     // These are available only after the configure() method has been invoked.
     private boolean randomizeSmartSubdomainName;
@@ -62,6 +63,13 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         
         // defaulting to randomized subdomains makes deploying multiple applications easier
         if (getConfig(RANDOMIZE_SUBDOMAIN_NAME)==null) setConfig(RANDOMIZE_SUBDOMAIN_NAME, true); 
+        
+        Boolean trustAll = getConfig(SSL_TRUST_ALL);
+        if (Boolean.TRUE.equals(trustAll)) {
+            webClient = new GeoscalingWebClient(HttpTool.httpClientBuilder().trustAll().build());
+        } else {
+            webClient = new GeoscalingWebClient();
+        }
     }
     
     // Ensure our configure() method gets called; may be able to remove this if/when the framework detects this

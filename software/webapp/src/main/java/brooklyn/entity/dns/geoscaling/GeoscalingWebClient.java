@@ -38,7 +38,6 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -49,6 +48,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 
+import brooklyn.util.http.HttpTool;
 import brooklyn.util.text.Strings;
 
 /**
@@ -176,7 +176,7 @@ public class GeoscalingWebClient {
     
     
     public GeoscalingWebClient() {
-        this(new DefaultHttpClient());
+        this(HttpTool.httpClientBuilder().build());
     }
 
     public GeoscalingWebClient(HttpClient httpClient) {
