@@ -22,9 +22,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 
+import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
+import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
@@ -36,7 +38,11 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
     @Override
     protected void initEnrichers() {
         super.initEnrichers();
-        addEnricher(ServiceStateLogic.newEnricherFromChildren());
+        
+        // Because can have multiple children (similar to groups/clusters/apps), need to
+        // monitor their health and indicate this has failed if any of them have failed.
+        addEnricher(ServiceStateLogic.newEnricherFromChildren()
+                .configure(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumCheck.QuorumChecks.all()));
     }
     
     /**
