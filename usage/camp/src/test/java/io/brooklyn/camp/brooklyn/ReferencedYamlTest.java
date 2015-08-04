@@ -20,7 +20,7 @@ package io.brooklyn.camp.brooklyn;
 
 import java.util.Collection;
 
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

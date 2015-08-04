@@ -24,7 +24,7 @@ import static org.testng.Assert.fail;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;

@@ -23,7 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;

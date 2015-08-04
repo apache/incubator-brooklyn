@@ -18,6 +18,7 @@
  */
 package brooklyn.test;
 
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import java.io.File;
 import java.io.InputStream;
 import java.net.InetAddress;

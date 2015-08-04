@@ -39,7 +39,7 @@ import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.osgi.OsgiTestResources;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.text.Strings;
 

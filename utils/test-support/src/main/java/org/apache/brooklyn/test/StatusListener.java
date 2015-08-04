@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.test;
+package org.apache.brooklyn.test;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

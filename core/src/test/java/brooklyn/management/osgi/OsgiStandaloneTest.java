@@ -26,7 +26,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarInputStream;
 
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import brooklyn.util.exceptions.Exceptions;
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;

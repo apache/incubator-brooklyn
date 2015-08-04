@@ -1411,7 +1411,7 @@
                             <properties>
                                 <property>
                                     <name>listener</name>
-                                    <value>brooklyn.test.LoggingVerboseReporter,brooklyn.test.BrooklynLeakListener,brooklyn.test.PlatformTestSelectorListener</value>
+                                    <value>org.apache.brooklyn.test.LoggingVerboseReporter,org.apache.brooklyn.test.BrooklynLeakListener,org.apache.brooklyn.test.PlatformTestSelectorListener</value>
                                 </property>
                             </properties>
                             <enableAssertions>true</enableAssertions>

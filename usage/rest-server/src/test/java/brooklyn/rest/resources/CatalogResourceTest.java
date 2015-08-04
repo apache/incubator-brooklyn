@@ -51,7 +51,7 @@ import brooklyn.rest.domain.CatalogItemSummary;
 import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.rest.domain.CatalogPolicySummary;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;

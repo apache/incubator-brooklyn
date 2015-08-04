@@ -24,7 +24,7 @@ import static org.testng.Assert.assertNull;
 import java.net.URL;
 import java.util.Map;
 
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

@@ -30,7 +30,7 @@ import brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogItem.CatalogItemType;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.management.osgi.OsgiTestResources;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 
 public class CatalogYamlTemplateTest extends AbstractYamlTest {

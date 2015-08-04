@@ -29,7 +29,7 @@ import brooklyn.entity.Entity;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.Policy;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 import com.google.common.collect.Iterables;
 

@@ -28,7 +28,7 @@ import brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.test.HttpTestUtils;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 import com.google.common.collect.ImmutableList;
 

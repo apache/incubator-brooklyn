@@ -31,7 +31,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import brooklyn.management.osgi.OsgiTestResources;
-import brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
