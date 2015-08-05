@@ -31,7 +31,7 @@ import brooklyn.basic.BrooklynDynamicType;
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynType;
 import brooklyn.basic.BrooklynTypes;
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.EntityType;

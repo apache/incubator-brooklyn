@@ -30,8 +30,8 @@ import java.util.List;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.catalog.BrooklynCatalog;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;

@@ -24,8 +24,8 @@ import io.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.Insta
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.catalog.BrooklynCatalog;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;

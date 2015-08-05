@@ -8,7 +8,7 @@ import io.airlift.command.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.catalog.BrooklynCatalog;
 import brooklyn.cli.Main;
 
 import com.google.common.base.Objects.ToStringHelper;

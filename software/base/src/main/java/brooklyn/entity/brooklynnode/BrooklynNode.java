@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.basic.BrooklynConfigKeys;

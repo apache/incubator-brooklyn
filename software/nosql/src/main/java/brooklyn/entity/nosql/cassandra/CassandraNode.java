@@ -21,7 +21,7 @@ package brooklyn.entity.nosql.cassandra;
 import java.math.BigInteger;
 import java.util.Set;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;

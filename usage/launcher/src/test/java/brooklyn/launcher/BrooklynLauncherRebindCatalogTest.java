@@ -33,8 +33,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-import brooklyn.catalog.BrooklynCatalog;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.test.entity.LocalManagementContextForTests;

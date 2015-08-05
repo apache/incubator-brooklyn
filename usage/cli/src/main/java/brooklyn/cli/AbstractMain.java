@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.catalog.BrooklynCatalog;
 import brooklyn.cli.Main.LaunchCommand;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;

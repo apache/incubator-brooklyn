@@ -20,7 +20,7 @@ package brooklyn.entity.nosql.mongodb;
 
 import org.bson.BasicBSONObject;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.ImplementedBy;

@@ -25,7 +25,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.catalog.CatalogConfig;
+import org.apache.brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Application;

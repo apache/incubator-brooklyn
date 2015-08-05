@@ -23,7 +23,7 @@ import java.util.Map;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;

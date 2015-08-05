@@ -25,7 +25,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;

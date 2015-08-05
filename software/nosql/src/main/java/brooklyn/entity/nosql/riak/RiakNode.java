@@ -21,7 +21,7 @@ package brooklyn.entity.nosql.riak;
 import java.net.URI;
 import java.util.List;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;

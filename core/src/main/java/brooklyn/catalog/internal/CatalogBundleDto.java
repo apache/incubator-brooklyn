@@ -21,7 +21,7 @@ package brooklyn.catalog.internal;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-import brooklyn.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
 
 public class CatalogBundleDto implements CatalogBundle {
     private String symbolicName;

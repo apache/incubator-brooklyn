@@ -21,7 +21,7 @@ package io.brooklyn.camp.brooklyn.spi.creation.service;
 import java.util.ServiceLoader;
 
 import io.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 

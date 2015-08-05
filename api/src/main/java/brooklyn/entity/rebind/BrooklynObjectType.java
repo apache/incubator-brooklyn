@@ -19,7 +19,7 @@
 package brooklyn.entity.rebind;
 
 import brooklyn.basic.BrooklynObject;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.location.Location;

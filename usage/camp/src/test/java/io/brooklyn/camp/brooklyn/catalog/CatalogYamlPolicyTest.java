@@ -23,7 +23,7 @@ import io.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import org.testng.annotations.Test;
 
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Entity;
 import brooklyn.event.basic.BasicConfigKey;

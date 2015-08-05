@@ -24,7 +24,7 @@ import io.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Entity;
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefEntity;
