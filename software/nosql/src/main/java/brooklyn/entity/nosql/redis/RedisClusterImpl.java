@@ -20,6 +20,8 @@ package brooklyn.entity.nosql.redis;
 
 import java.util.Collection;
 
+import org.mortbay.util.MultiException;
+
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Lifecycle;
@@ -40,8 +42,8 @@ import com.google.common.collect.ImmutableSet;
 
 public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
 
-    private static AttributeSensor<RedisStore> MASTER = Sensors.newSensor(RedisStore.class, "redis.master");
-    private static AttributeSensor<DynamicCluster> SLAVES = Sensors.newSensor(DynamicCluster.class, "redis.slaves");
+    private static final AttributeSensor<RedisStore> MASTER = Sensors.newSensor(RedisStore.class, "redis.master");
+    private static final AttributeSensor<DynamicCluster> SLAVES = Sensors.newSensor(DynamicCluster.class, "redis.slaves");
 
     public RedisClusterImpl() {
     }
@@ -119,8 +121,21 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
     }
 
     private void doStop() {
-        getSlaves().invoke(DynamicCluster.STOP, ImmutableMap.<String, Object>of()).getUnchecked();
-        getMaster().invoke(RedisStore.STOP, ImmutableMap.<String, Object>of()).getUnchecked();
+        MultiException multiException = new MultiException();
+
+        try {
+            getSlaves().invoke(DynamicCluster.STOP, ImmutableMap.<String, Object>of()).getUnchecked();
+        } catch (Exception e) {
+            multiException.add(e);
+        }
+
+        try {
+            getMaster().invoke(RedisStore.STOP, ImmutableMap.<String, Object>of()).getUnchecked();
+        } catch (Exception e) {
+            multiException.add(e);
+        }
+
+        multiException.ifExceptionThrowRuntime();
     }
 
     @Override
