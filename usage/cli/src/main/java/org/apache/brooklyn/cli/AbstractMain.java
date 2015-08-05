@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.cli;
+package org.apache.brooklyn.cli;
 
 import io.airlift.command.Arguments;
 import io.airlift.command.Cli;
@@ -42,7 +42,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
-import brooklyn.cli.Main.LaunchCommand;
+import org.apache.brooklyn.cli.Main.LaunchCommand;
+
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;
 import brooklyn.util.exceptions.UserFacingException;

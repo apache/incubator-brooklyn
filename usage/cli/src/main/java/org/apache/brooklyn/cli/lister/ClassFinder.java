@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.cli.lister;
+package org.apache.brooklyn.cli.lister;
 
 import java.io.File;
 import java.lang.annotation.Annotation;

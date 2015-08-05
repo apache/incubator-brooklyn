@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.brooklyn.catalog.BrooklynCatalog;
-import brooklyn.cli.Main;
+import org.apache.brooklyn.cli.Main;
 
 import com.google.common.base.Objects.ToStringHelper;
 

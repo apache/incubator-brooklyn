@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.cli;
+package org.apache.brooklyn.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -49,17 +49,18 @@ import brooklyn.basic.BrooklynTypes;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+import org.apache.brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
+import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
+import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeDefaultTemplateCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeGetImageCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeListHardwareProfilesCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
+import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
+
 import brooklyn.catalog.internal.CatalogInitialization;
-import brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
-import brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
-import brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
-import brooklyn.cli.CloudExplorer.ComputeDefaultTemplateCommand;
-import brooklyn.cli.CloudExplorer.ComputeGetImageCommand;
-import brooklyn.cli.CloudExplorer.ComputeListHardwareProfilesCommand;
-import brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
-import brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
-import brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
-import brooklyn.cli.ItemLister.ListAllCommand;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;

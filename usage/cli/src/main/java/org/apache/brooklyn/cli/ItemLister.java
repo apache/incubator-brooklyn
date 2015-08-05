@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.cli;
+package org.apache.brooklyn.cli;
 
 import io.airlift.command.Command;
 import io.airlift.command.Option;
@@ -35,8 +35,9 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.Catalog;
-import brooklyn.cli.lister.ClassFinder;
-import brooklyn.cli.lister.ItemDescriptors;
+import org.apache.brooklyn.cli.lister.ClassFinder;
+import org.apache.brooklyn.cli.lister.ItemDescriptors;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
