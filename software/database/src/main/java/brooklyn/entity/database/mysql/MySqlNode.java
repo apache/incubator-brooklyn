@@ -44,51 +44,52 @@ public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommo
 
     // NOTE MySQL changes the minor version number of their GA release frequently, check for latest version if install fails
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.6.26");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "5.6.26");
 
     //http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-5.6.26-osx10.9-x86_64.tar.gz
     //http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-5.6.26-linux-glibc2.5-x86_64.tar.gz
     @SetFromFlag("downloadUrl")
-    public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(
+    BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(
             Attributes.DOWNLOAD_URL, "http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-${version}-${driver.osTag}.tar.gz");
 
     @SetFromFlag("port")
-    public static final PortAttributeSensorAndConfigKey MYSQL_PORT = new PortAttributeSensorAndConfigKey("mysql.port", "MySQL port", PortRanges.fromString("3306, 13306+"));
+    PortAttributeSensorAndConfigKey MYSQL_PORT = new PortAttributeSensorAndConfigKey("mysql.port", "MySQL port", PortRanges.fromString("3306, 13306+"));
 
     @SetFromFlag("dataDir")
-    public static final ConfigKey<String> DATA_DIR = ConfigKeys.newStringConfigKey(
+    ConfigKey<String> DATA_DIR = ConfigKeys.newStringConfigKey(
             "mysql.datadir", "Directory for writing data files", null);
 
     @SetFromFlag("serverConf")
-    public static final MapConfigKey<Object> MYSQL_SERVER_CONF = new MapConfigKey<Object>(
+    MapConfigKey<Object> MYSQL_SERVER_CONF = new MapConfigKey<Object>(
             Object.class, "mysql.server.conf", "Configuration options for mysqld");
     
-    public static final ConfigKey<Object> MYSQL_SERVER_CONF_LOWER_CASE_TABLE_NAMES = MYSQL_SERVER_CONF.subKey("lower_case_table_names", "See MySQL guide. Set 1 to ignore case in table names (useful for OS portability)");
+    ConfigKey<Object> MYSQL_SERVER_CONF_LOWER_CASE_TABLE_NAMES = MYSQL_SERVER_CONF.subKey("lower_case_table_names", "See MySQL guide. Set 1 to ignore case in table names (useful for OS portability)");
     
     @SetFromFlag("serverId")
-    public static final ConfigKey<Integer> MYSQL_SERVER_ID = ConfigKeys.newIntegerConfigKey("mysql.server_id", "Corresponds to server_id option", 0);
+    ConfigKey<Integer> MYSQL_SERVER_ID = ConfigKeys.newIntegerConfigKey("mysql.server_id", "Corresponds to server_id option", 0);
     
     @SetFromFlag("password")
-    public static final StringAttributeSensorAndConfigKey PASSWORD = new StringAttributeSensorAndConfigKey(
+    StringAttributeSensorAndConfigKey PASSWORD = new StringAttributeSensorAndConfigKey(
             "mysql.password", "Database admin password (or randomly generated if not set)", null);
 
     @SetFromFlag("socketUid")
-    public static final StringAttributeSensorAndConfigKey SOCKET_UID = new StringAttributeSensorAndConfigKey(
+    StringAttributeSensorAndConfigKey SOCKET_UID = new StringAttributeSensorAndConfigKey(
             "mysql.socketUid", "Socket uid, for use in file /tmp/mysql.sock.<uid>.3306 (or randomly generated if not set)", null);
     
     /** @deprecated since 0.7.0 use DATASTORE_URL */ @Deprecated
-    public static final AttributeSensor<String> MYSQL_URL = DATASTORE_URL;
+    AttributeSensor<String> MYSQL_URL = DATASTORE_URL;
 
     @SetFromFlag("configurationTemplateUrl")
-    static final BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new StringAttributeSensorAndConfigKey(
+    BasicAttributeSensorAndConfigKey<String> TEMPLATE_CONFIGURATION_URL = new StringAttributeSensorAndConfigKey(
             "mysql.template.configuration.url", "Template file (in freemarker format) for the mysql.conf file",
             "classpath://brooklyn/entity/database/mysql/mysql.conf");
 
-    public static final AttributeSensor<Double> QUERIES_PER_SECOND_FROM_MYSQL = Sensors.newDoubleSensor("mysql.queries.perSec.fromMysql");
+    AttributeSensor<Double> QUERIES_PER_SECOND_FROM_MYSQL = Sensors.newDoubleSensor("mysql.queries.perSec.fromMysql");
 
     MethodEffector<String> EXECUTE_SCRIPT = new MethodEffector<String>(MySqlNode.class, "executeScript");
-    
+    String EXECUTE_SCRIPT_COMMANDS = "commands";
+
     @Effector(description = "Execute SQL script on the node as the root user")
-    public String executeScript(@EffectorParam(name="commands") String commands);
+    String executeScript(@EffectorParam(name=EXECUTE_SCRIPT_COMMANDS) String commands);
 
 }

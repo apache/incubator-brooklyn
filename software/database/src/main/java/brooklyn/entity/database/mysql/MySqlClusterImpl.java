@@ -221,7 +221,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
         if (!IS_MASTER.apply(node)) {
             ServiceNotUpLogic.updateNotUpIndicator((EntityLocal)node, MySqlSlave.SLAVE_HEALTHY, "Replication not started");
 
-            FunctionFeed.builder()
+            addFeed(FunctionFeed.builder()
                 .entity((EntityLocal)node)
                 .period(Duration.FIVE_SECONDS)
                 .poll(FunctionPollConfig.forSensor(MySqlSlave.SLAVE_HEALTHY)
@@ -230,7 +230,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                         .onSuccess(new SlaveStateParser(node))
                         .setOnFailure(false)
                         .description("Polls SHOW SLAVE STATUS"))
-                .build();
+                .build());
 
             node.addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
                     .from(MySqlSlave.SLAVE_HEALTHY)
@@ -240,7 +240,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
         return node;
     }
 
-    public class SlaveStateCallable implements Callable<String> {
+    public static class SlaveStateCallable implements Callable<String> {
         private Entity slave;
         public SlaveStateCallable(Entity slave) {
             this.slave = slave;
@@ -257,7 +257,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
 
     }
 
-    public class SlaveStateParser implements Function<String, Boolean> {
+    public static class SlaveStateParser implements Function<String, Boolean> {
         private Entity slave;
 
         public SlaveStateParser(Entity slave) {
@@ -376,9 +376,6 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                     !Boolean.TRUE.equals(node.getAttribute(NODE_REPLICATION_INITIALIZED))) {
 
                 // Events executed sequentially so no need to synchronize here.
-                if (Boolean.TRUE.equals(node.getAttribute(NODE_REPLICATION_INITIALIZED))) {
-                    return;
-                }
                 ((EntityLocal)node).setAttribute(NODE_REPLICATION_INITIALIZED, Boolean.TRUE);
 
                 DynamicTasks.queueIfPossible(TaskBuilder.builder()
@@ -430,7 +427,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
 
     // Can't call node.executeScript directly, need to change execution context, so use an effector task
     private static String executeScriptOnNode(MySqlNode node, String commands) {
-        return node.invoke(MySqlNode.EXECUTE_SCRIPT, ImmutableMap.of("commands", commands)).getUnchecked();
+        return node.invoke(MySqlNode.EXECUTE_SCRIPT, ImmutableMap.of(MySqlNode.EXECUTE_SCRIPT_COMMANDS, commands)).getUnchecked();
     }
 
     private static String validateSqlParam(String config) {
