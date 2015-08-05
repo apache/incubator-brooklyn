@@ -29,7 +29,7 @@
         <symbolicName>BasicApp</symbolicName>
     </template>
     <template name="Custom App" type="brooklyn.entity.basic.BasicApplication">
-        <symbolicName>io.brooklyn.camp.brooklyn.catalog.TestBasicApp</symbolicName>
+        <symbolicName>org.apache.brooklyn.camp.brooklyn.catalog.TestBasicApp</symbolicName>
         <!-- Tests that "java:" prefix won't load an old-style catalog item with the same id -->
     </template>
     <template name="Osgi App" type="brooklyn.osgi.tests.SimpleApplication">

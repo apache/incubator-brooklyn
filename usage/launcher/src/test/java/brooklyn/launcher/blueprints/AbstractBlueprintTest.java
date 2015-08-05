@@ -19,13 +19,13 @@
 package brooklyn.launcher.blueprints;
 
 import static org.testng.Assert.assertNotEquals;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 
 import java.io.File;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collection;
 
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;

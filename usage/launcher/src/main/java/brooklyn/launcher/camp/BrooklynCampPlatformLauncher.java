@@ -19,13 +19,14 @@
 package brooklyn.launcher.camp;
 
 import io.brooklyn.camp.CampServer;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatform;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import io.brooklyn.camp.spi.PlatformRootSummary;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 
 import com.google.common.annotations.Beta;
 
