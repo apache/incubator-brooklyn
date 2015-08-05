@@ -23,15 +23,17 @@ import static org.testng.Assert.assertEquals;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
+import brooklyn.event.SensorEvent;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class EntityLocationsTest extends BrooklynAppUnitTestSupport {
 
@@ -48,8 +50,8 @@ public class EntityLocationsTest extends BrooklynAppUnitTestSupport {
         final Location l = app.newSimulatedLocation();
         final Location l2 = app.newSimulatedLocation();
         
-        final RecordingSensorEventListener addedEvents = new RecordingSensorEventListener();
-        final RecordingSensorEventListener removedEvents = new RecordingSensorEventListener();
+        final RecordingSensorEventListener<Object> addedEvents = new RecordingSensorEventListener<>();
+        final RecordingSensorEventListener<Object> removedEvents = new RecordingSensorEventListener<>();
         app.subscribe(app, AbstractEntity.LOCATION_ADDED, addedEvents);
         app.subscribe(app, AbstractEntity.LOCATION_REMOVED, removedEvents);
 
@@ -82,8 +84,8 @@ public class EntityLocationsTest extends BrooklynAppUnitTestSupport {
     public void testNotNotifiedDuplicateAddedLocations() throws Exception {
         final Location l = app.newSimulatedLocation();
         
-        final RecordingSensorEventListener addedEvents = new RecordingSensorEventListener();
-        final RecordingSensorEventListener removedEvents = new RecordingSensorEventListener();
+        final RecordingSensorEventListener<Object> addedEvents = new RecordingSensorEventListener<>();
+        final RecordingSensorEventListener<Object> removedEvents = new RecordingSensorEventListener<>();
         app.subscribe(app, AbstractEntity.LOCATION_ADDED, addedEvents);
         app.subscribe(app, AbstractEntity.LOCATION_REMOVED, removedEvents);
 
@@ -100,25 +102,26 @@ public class EntityLocationsTest extends BrooklynAppUnitTestSupport {
         assertEventValuesEquals(removedEvents, ImmutableList.of());
     }
     
-    private void assertEventValuesEqualsEventually(final RecordingSensorEventListener listener, final List<?> expectedVals) {
+    private void assertEventValuesEqualsEventually(final RecordingSensorEventListener<Object> listener, final List<?> expectedVals) {
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
                 assertEventValuesEquals(listener, expectedVals);
             }});
     }
     
-    private void assertEventValuesEqualsContinually(final RecordingSensorEventListener listener, final List<?> expectedVals) {
+    private void assertEventValuesEqualsContinually(final RecordingSensorEventListener<Object> listener, final List<?> expectedVals) {
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
                 assertEventValuesEquals(listener, expectedVals);
             }});
     }
-    
-    private void assertEventValuesEquals(final RecordingSensorEventListener listener, final List<?> expectedVals) {
-        assertEquals(listener.events.size(), expectedVals.size(), "events="+listener.events);
+
+    private void assertEventValuesEquals(final RecordingSensorEventListener<Object> listener, final List<?> expectedVals) {
+        Iterable<SensorEvent<Object>> events = listener.getEvents();
+        assertEquals(Iterables.size(events), expectedVals.size(), "events=" + events);
         for (int i = 0; i < expectedVals.size(); i++) {
             Object expectedVal = expectedVals.get(i);
-            assertEquals(listener.events.get(i).getValue(), expectedVal, "events="+listener.events);
+            assertEquals(Iterables.get(events, i).getValue(), expectedVal, "events=" + events);
         }
     }
 }

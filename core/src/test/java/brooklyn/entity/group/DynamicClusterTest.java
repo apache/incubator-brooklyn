@@ -50,8 +50,8 @@ import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
-import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
 import brooklyn.entity.basic.Lifecycle;
+import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
@@ -212,14 +212,14 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
             .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class))
             .configure(DynamicCluster.INITIAL_SIZE, 1));
         
-        RecordingSensorEventListener r = new RecordingSensorEventListener();
+        RecordingSensorEventListener<Lifecycle> r = new RecordingSensorEventListener<>();
         app.subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, r);
 
         cluster.start(ImmutableList.of(loc));
         EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
-        for (SensorEvent<?> evt: r.events) {
+        for (SensorEvent<Lifecycle> evt: r.getEvents()) {
             if (evt.getValue()==Lifecycle.ON_FIRE)
-                Assert.fail("Should not have published "+Lifecycle.ON_FIRE+" during normal start up: "+r.events);
+                Assert.fail("Should not have published " + Lifecycle.ON_FIRE + " during normal start up: " + r.getEvents());
         }
     }
 

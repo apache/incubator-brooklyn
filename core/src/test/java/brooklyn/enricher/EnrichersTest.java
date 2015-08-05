@@ -30,7 +30,7 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityAdjuncts;
-import brooklyn.entity.basic.EntitySubscriptionTest.RecordingSensorEventListener;
+import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
@@ -190,7 +190,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
 
     @Test(groups="Integration") // because takes a second
     public void testTransformingRespectsUnchangedButWillRepublish() {
-        RecordingSensorEventListener record = new RecordingSensorEventListener();
+        RecordingSensorEventListener<String> record = new RecordingSensorEventListener<>();
         app.getManagementContext().getSubscriptionManager().subscribe(entity, STR2, record);
         
         entity.addEnricher(Enrichers.builder()
@@ -201,29 +201,29 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
                             return ("ignoredval".equals(input)) ? Entities.UNCHANGED : input;
                         }})
                 .build());
-        Asserts.assertThat(record.events, CollectionFunctionals.sizeEquals(0));
-        
+        Asserts.assertThat(record.getEvents(), CollectionFunctionals.sizeEquals(0));
+
         entity.setAttribute(STR1, "myval");
-        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(1));
+        Asserts.eventually(Suppliers.ofInstance(record), CollectionFunctionals.sizeEquals(1));
         EntityTestUtils.assertAttributeEquals(entity, STR2, "myval");
-        
+
         entity.setAttribute(STR1, "ignoredval");
         EntityTestUtils.assertAttributeEqualsContinually(entity, STR2, "myval");
-        
+
         entity.setAttribute(STR1, "myval2");
-        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(2));
+        Asserts.eventually(Suppliers.ofInstance(record), CollectionFunctionals.sizeEquals(2));
         EntityTestUtils.assertAttributeEquals(entity, STR2, "myval2");
-        
+
         entity.setAttribute(STR1, "myval2");
         entity.setAttribute(STR1, "myval2");
         entity.setAttribute(STR1, "myval3");
-        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(5));
+        Asserts.eventually(Suppliers.ofInstance(record), CollectionFunctionals.sizeEquals(5));
     }
 
     public void testTransformingSuppressDuplicates() {
-        RecordingSensorEventListener record = new RecordingSensorEventListener();
+        RecordingSensorEventListener<String> record = new RecordingSensorEventListener<>();
         app.getManagementContext().getSubscriptionManager().subscribe(entity, STR2, record);
-        
+
         entity.addEnricher(Enrichers.builder()
                 .transforming(STR1)
                 .publishing(STR2)
@@ -232,14 +232,14 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
                 .build());
 
         entity.setAttribute(STR1, "myval");
-        Asserts.eventually(Suppliers.ofInstance(record.events), CollectionFunctionals.sizeEquals(1));
+        Asserts.eventually(Suppliers.ofInstance(record), CollectionFunctionals.sizeEquals(1));
         EntityTestUtils.assertAttributeEquals(entity, STR2, "myval");
-        
+
         entity.setAttribute(STR1, "myval2");
         entity.setAttribute(STR1, "myval2");
         entity.setAttribute(STR1, "myval3");
         EntityTestUtils.assertAttributeEqualsContinually(entity, STR2, "myval3");
-        Asserts.assertThat(record.events, CollectionFunctionals.sizeEquals(3));
+        Asserts.assertThat(record.getEvents(), CollectionFunctionals.sizeEquals(3));
     }
 
     @Test

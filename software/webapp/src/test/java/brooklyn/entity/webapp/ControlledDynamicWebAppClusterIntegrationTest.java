@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,6 @@ import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.webapp.ControlledDynamicWebAppClusterTest.RecordingSensorEventListener;
 import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
@@ -49,7 +49,6 @@ import brooklyn.test.entity.TestJavaWebAppEntity;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -146,14 +145,14 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
         app.subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, listener);
         app.start(locs);
         
-        Asserts.eventually(Suppliers.ofInstance(listener.getValues()), CollectionFunctionals.sizeEquals(2));
-        assertEquals(listener.getValues(), ImmutableList.of(Lifecycle.STARTING, Lifecycle.RUNNING), "vals="+listener.getValues());
-        listener.getValues().clear();
+        Asserts.eventually(Suppliers.ofInstance(listener.getEventValues()), CollectionFunctionals.sizeEquals(2));
+        assertEquals(listener.getEventValues(), ImmutableList.of(Lifecycle.STARTING, Lifecycle.RUNNING), "vals="+listener.getEventValues());
+        listener.clearEvents();
         
         app.stop();
         EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
-        Asserts.eventually(Suppliers.ofInstance(listener.getValues()), CollectionFunctionals.sizeEquals(2));
-        assertEquals(listener.getValues(), ImmutableList.of(Lifecycle.STOPPING, Lifecycle.STOPPED), "vals="+listener.getValues());
+        Asserts.eventually(Suppliers.ofInstance(listener), CollectionFunctionals.sizeEquals(2));
+        assertEquals(listener.getEventValues(), ImmutableList.of(Lifecycle.STOPPING, Lifecycle.STOPPED), "vals="+listener.getEventValues());
     }
     
     @Test(groups="Integration")

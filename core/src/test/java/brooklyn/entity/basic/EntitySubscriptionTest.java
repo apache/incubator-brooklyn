@@ -20,16 +20,12 @@ package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
+import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.SubscriptionHandle;
@@ -38,6 +34,7 @@ import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class EntitySubscriptionTest {
 
@@ -51,7 +48,7 @@ public class EntitySubscriptionTest {
     private TestEntity observedChildEntity;
     private TestEntity observedMemberEntity;
     private TestEntity otherEntity;
-    private RecordingSensorEventListener listener;
+    private RecordingSensorEventListener<Object> listener;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
@@ -67,7 +64,7 @@ public class EntitySubscriptionTest {
         
         otherEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        listener = new RecordingSensorEventListener();
+        listener = new RecordingSensorEventListener<>();
         
         app.start(ImmutableList.of(loc));
     }
@@ -90,7 +87,7 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, observedEntity, 123),
                         new BasicSensorEvent<String>(TestEntity.NAME, observedEntity, "myname"),
                         new BasicSensorEvent<Integer>(TestEntity.MY_NOTIF, observedEntity, 456)));
@@ -106,7 +103,7 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, observedEntity, 123),
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, otherEntity, 456)));
             }});
@@ -121,7 +118,7 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, observedChildEntity, 123)));
             }});
     }
@@ -135,7 +132,7 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, observedChildEntity2, 123)));
             }});
     }
@@ -149,7 +146,7 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, observedMemberEntity, 123)));
             }});
     }
@@ -164,7 +161,7 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, observedMemberEntity2, 123)));
             }});
     }
@@ -179,7 +176,7 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of());
+                assertEquals(listener.getEvents(), ImmutableList.of());
             }});
     }
     
@@ -198,7 +195,7 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, otherEntity, 456)));
             }});
     }
@@ -217,7 +214,7 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, observedEntity, 123),
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, otherEntity, 456)));
             }});
@@ -234,18 +231,11 @@ public class EntitySubscriptionTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events.size(), NUM_EVENTS);
+                assertEquals(Iterables.size(listener.getEvents()), NUM_EVENTS);
                 for (int i = 0; i < NUM_EVENTS; i++) {
-                    assertEquals(listener.events.get(i).getValue(), i);
+                    assertEquals(Iterables.get(listener.getEvents(), i).getValue(), i);
                 }
             }});
     }
 
-    public static class RecordingSensorEventListener implements SensorEventListener<Object> {
-        public final List<SensorEvent<?>> events = new CopyOnWriteArrayList<SensorEvent<?>>();
-        
-        @Override public void onEvent(SensorEvent<Object> event) {
-            events.add(event);
-        }
-    }
 }

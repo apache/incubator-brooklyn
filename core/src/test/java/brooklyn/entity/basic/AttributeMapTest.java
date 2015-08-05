@@ -29,14 +29,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Application;
 import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.AttributeMap;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.Asserts;
@@ -48,6 +47,7 @@ import brooklyn.util.guava.Maybe;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class AttributeMapTest {
@@ -189,14 +189,14 @@ public class AttributeMapTest {
         AttributeSensor<Integer> sensor = Sensors.newIntegerSensor("a", "");
         AttributeSensor<Integer> childSensor = Sensors.newIntegerSensor("a.b", "");
         
-        final RecordingSensorEventListener listener = new RecordingSensorEventListener();
+        final RecordingSensorEventListener<Object> listener = new RecordingSensorEventListener<>();
         entity.subscribe(entity, sensor, listener);
         
         map.modify(childSensor, Functions.constant(Maybe.<Integer>absent()));
         
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
-                assertTrue(listener.getEvents().isEmpty(), "events="+listener.getEvents());
+                assertTrue(Iterables.isEmpty(listener.getEvents()), "events="+listener.getEvents());
             }});
     }
     
@@ -223,16 +223,5 @@ public class AttributeMapTest {
             }
         };
     }
-    
-    public static class RecordingSensorEventListener implements SensorEventListener<Object> {
-        private List<SensorEvent<Object>> events = Collections.synchronizedList(Lists.<SensorEvent<Object>>newArrayList());
 
-        @Override public void onEvent(SensorEvent<Object> event) {
-            events.add(event);
-        }
-        
-        public List<SensorEvent<Object>> getEvents() {
-            return ImmutableList.copyOf(events);
-        }
-    }
 }
