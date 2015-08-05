@@ -21,8 +21,8 @@ package org.apache.brooklyn.demo;
 import java.util.Arrays;
 import java.util.List;
 
-import brooklyn.catalog.Catalog;
-import brooklyn.catalog.CatalogConfig;
+import org.apache.brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ConfigKeys;

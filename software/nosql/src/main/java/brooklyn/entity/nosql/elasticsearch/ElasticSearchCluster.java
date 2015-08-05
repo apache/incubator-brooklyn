@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.nosql.elasticsearch;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;

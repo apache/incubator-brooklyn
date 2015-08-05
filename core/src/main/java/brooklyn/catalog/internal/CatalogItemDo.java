@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import brooklyn.basic.BrooklynObjectInternal;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.management.ManagementContext;

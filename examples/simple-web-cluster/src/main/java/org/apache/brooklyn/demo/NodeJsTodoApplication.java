@@ -19,7 +19,7 @@
 package org.apache.brooklyn.demo;
 
 import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;

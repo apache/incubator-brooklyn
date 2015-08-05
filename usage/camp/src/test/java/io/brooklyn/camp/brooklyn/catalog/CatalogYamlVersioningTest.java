@@ -28,8 +28,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.catalog.BrooklynCatalog;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.entity.Entity;

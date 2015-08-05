@@ -20,7 +20,7 @@ package brooklyn.enricher;
 
 import java.util.LinkedList;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;

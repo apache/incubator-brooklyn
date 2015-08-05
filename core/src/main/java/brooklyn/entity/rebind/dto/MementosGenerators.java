@@ -27,7 +27,7 @@ import java.util.Set;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynTypes;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogItemDo;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;

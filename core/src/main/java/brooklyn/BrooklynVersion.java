@@ -41,7 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.classloading.OsgiBrooklynClassLoadingContext;
 import brooklyn.util.ResourceUtils;

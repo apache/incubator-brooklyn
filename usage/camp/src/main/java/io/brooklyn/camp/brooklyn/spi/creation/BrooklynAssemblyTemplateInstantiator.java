@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynServerConfig;

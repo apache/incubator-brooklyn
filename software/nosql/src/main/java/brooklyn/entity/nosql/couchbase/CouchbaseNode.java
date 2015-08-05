@@ -20,7 +20,7 @@ package brooklyn.entity.nosql.couchbase;
 
 import java.net.URI;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.annotation.Effector;

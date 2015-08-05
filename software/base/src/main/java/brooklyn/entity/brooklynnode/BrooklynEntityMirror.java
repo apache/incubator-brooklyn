@@ -20,7 +20,7 @@ package brooklyn.entity.brooklynnode;
 
 import java.util.Map;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;

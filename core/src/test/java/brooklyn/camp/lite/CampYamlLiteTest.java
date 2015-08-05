@@ -41,8 +41,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;

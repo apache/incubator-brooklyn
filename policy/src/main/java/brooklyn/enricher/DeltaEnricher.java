@@ -19,7 +19,7 @@
 package brooklyn.enricher;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.enricher.basic.AbstractTransformingEnricher;
 import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;

@@ -25,7 +25,7 @@ import io.brooklyn.camp.spi.collection.ResolvableLink;
 import java.util.ArrayList;
 import java.util.List;
 
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;

@@ -23,7 +23,7 @@ import java.net.URI;
 import java.util.Collection;
 
 import brooklyn.basic.BrooklynObject;
-import brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.catalog.BrooklynCatalog;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;

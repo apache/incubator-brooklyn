@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
-import brooklyn.catalog.CatalogConfig;
+import org.apache.brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.CatalogConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.HttpLatencyDetector;

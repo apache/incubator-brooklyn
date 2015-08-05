@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.messaging.storm;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;

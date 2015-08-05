@@ -20,7 +20,9 @@ package brooklyn.catalog;
 
 import javax.annotation.Nullable;
 
-import brooklyn.catalog.CatalogItem.CatalogItemType;
+import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;

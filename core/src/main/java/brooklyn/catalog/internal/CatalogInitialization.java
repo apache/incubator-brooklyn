@@ -25,7 +25,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;

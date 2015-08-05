@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.machine;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.EmptySoftwareProcess;

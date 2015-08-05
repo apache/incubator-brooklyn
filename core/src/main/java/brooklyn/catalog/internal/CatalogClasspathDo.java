@@ -32,8 +32,8 @@ import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.Catalog;
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;

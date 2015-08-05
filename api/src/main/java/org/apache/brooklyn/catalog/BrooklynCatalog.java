@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.catalog;
+package org.apache.brooklyn.catalog;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;

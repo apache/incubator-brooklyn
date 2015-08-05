@@ -20,7 +20,7 @@ package brooklyn.entity.nosql.cassandra;
 
 import java.util.Set;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.annotation.Effector;

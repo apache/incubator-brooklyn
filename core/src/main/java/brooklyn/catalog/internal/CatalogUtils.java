@@ -27,9 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
-import brooklyn.catalog.BrooklynCatalog;
-import brooklyn.catalog.CatalogItem;
-import brooklyn.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.Entity;

@@ -20,7 +20,7 @@ package brooklyn.mementos;
 
 import java.util.Collection;
 
-import brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.catalog.CatalogItem;
 
 public interface CatalogItemMemento extends Memento {
 

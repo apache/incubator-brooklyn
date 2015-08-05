@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.cli.lister.ClassFinder;
 import brooklyn.cli.lister.ItemDescriptors;
 import brooklyn.entity.Entity;

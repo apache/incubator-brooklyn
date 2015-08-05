@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.proxying.ImplementedBy;
 

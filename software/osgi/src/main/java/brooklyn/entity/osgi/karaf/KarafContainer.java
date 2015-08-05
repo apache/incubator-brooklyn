@@ -21,7 +21,7 @@ package brooklyn.entity.osgi.karaf;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
