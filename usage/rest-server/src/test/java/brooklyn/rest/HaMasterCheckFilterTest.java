@@ -19,13 +19,13 @@
 package brooklyn.rest;
 
 import static org.testng.Assert.assertEquals;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 import java.io.File;
 import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jetty.server.Server;
