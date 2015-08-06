@@ -20,7 +20,6 @@ package brooklyn.entity.webapp;
 
 import static org.testng.Assert.assertEquals;
 
-import java.net.URL;
 import java.util.List;
 
 import org.apache.brooklyn.test.TestResourceUnavailableException;
@@ -38,8 +37,6 @@ import brooklyn.entity.proxy.LoadBalancer;
 import brooklyn.entity.proxy.TrackingAbstractController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
@@ -47,7 +44,6 @@ import brooklyn.test.entity.TestJavaWebAppEntity;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSupport {
     private static final Logger log = LoggerFactory.getLogger(ControlledDynamicWebAppClusterTest.class);
@@ -138,39 +134,7 @@ public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSuppo
 
         assertEquals(cluster.getCluster().getDisplayName(), "mydisplayname");
     }
-    
-    public static class RecordingSensorEventListener<T> implements SensorEventListener<T> {
-        private final List<SensorEvent<T>> events = Lists.newCopyOnWriteArrayList();
-        private final List<T> values = Lists.newCopyOnWriteArrayList();
-        private boolean skipDuplicateValues;
 
-        public RecordingSensorEventListener() {
-            this(false);
-        }
-        
-        public RecordingSensorEventListener(boolean skipDuplicateValues) {
-            this.skipDuplicateValues = skipDuplicateValues;
-        }
-        
-        @Override
-        public void onEvent(SensorEvent<T> event) {
-            events.add(event);
-            if (skipDuplicateValues && !values.isEmpty() && values.get(values.size()-1).equals(event.getValue())) {
-                // skip
-            } else {
-                values.add(event.getValue());
-            }
-        }
-        
-        public List<SensorEvent<T>> getEvents() {
-            return events;
-        }
-        
-        public List<T> getValues() {
-            return values;
-        }
-    }
-    
     @Test
     public void testMembersReflectChildClusterMembers() {
         final ControlledDynamicWebAppCluster cluster = app.createAndManageChild(EntitySpec.create(ControlledDynamicWebAppCluster.class)

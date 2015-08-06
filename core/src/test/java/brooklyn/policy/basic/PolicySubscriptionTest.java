@@ -20,16 +20,12 @@ package brooklyn.policy.basic;
 
 import static org.testng.Assert.assertEquals;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.SubscriptionHandle;
@@ -48,7 +44,7 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
     private TestEntity entity;
     private TestEntity otherEntity;
     private AbstractPolicy policy;
-    private RecordingSensorEventListener listener;
+    private RecordingSensorEventListener<Object> listener;
     
     @BeforeMethod(alwaysRun=true)
     @Override
@@ -57,7 +53,7 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         loc = app.newSimulatedLocation();
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         otherEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        listener = new RecordingSensorEventListener();
+        listener = new RecordingSensorEventListener<>();
         policy = new AbstractPolicy() {};
         entity.addPolicy(policy);
         app.start(ImmutableList.of(loc));
@@ -76,7 +72,7 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, entity, 123),
                         new BasicSensorEvent<String>(TestEntity.NAME, entity, "myname"),
                         new BasicSensorEvent<Integer>(TestEntity.MY_NOTIF, entity, 789)));
@@ -99,7 +95,7 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         Thread.sleep(SHORT_WAIT_MS);
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, otherEntity, 789)));
             }});
     }
@@ -118,17 +114,10 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertEquals(listener.events, ImmutableList.of(
+                assertEquals(listener.getEvents(), ImmutableList.of(
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, entity, 123),
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, otherEntity, 456)));
             }});
     }
     
-    private static class RecordingSensorEventListener implements SensorEventListener<Object> {
-        final List<SensorEvent<?>> events = new CopyOnWriteArrayList<SensorEvent<?>>();
-        
-        @Override public void onEvent(SensorEvent<Object> event) {
-            events.add(event);
-        }
-    }
 }
