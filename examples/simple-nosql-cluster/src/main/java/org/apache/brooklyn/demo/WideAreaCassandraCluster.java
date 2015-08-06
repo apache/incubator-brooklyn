@@ -23,14 +23,15 @@ import java.util.List;
 
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.catalog.CatalogConfig;
+import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
+import org.apache.brooklyn.entity.nosql.cassandra.CassandraFabric;
+import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.nosql.cassandra.CassandraDatacenter;
-import brooklyn.entity.nosql.cassandra.CassandraFabric;
-import brooklyn.entity.nosql.cassandra.CassandraNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.policy.EnricherSpec;
@@ -58,8 +59,8 @@ public class WideAreaCassandraCluster extends AbstractApplication {
         addChild(EntitySpec.create(CassandraFabric.class)
                 .configure(CassandraDatacenter.CLUSTER_NAME, "Brooklyn")
                 .configure(CassandraDatacenter.INITIAL_SIZE, getConfig(CASSANDRA_CLUSTER_SIZE)) // per location
-                .configure(CassandraDatacenter.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
-                .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
+                .configure(CassandraDatacenter.ENDPOINT_SNITCH_NAME, "org.apache.brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
+                .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://org/apache/brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
                 .configure(CassandraFabric.MEMBER_SPEC, EntitySpec.create(CassandraDatacenter.class)
                         .configure(CassandraDatacenter.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
                                 .enricher(EnricherSpec.create(ServiceFailureDetector.class))

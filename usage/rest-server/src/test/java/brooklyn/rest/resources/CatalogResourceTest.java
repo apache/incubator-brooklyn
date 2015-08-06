@@ -202,7 +202,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     // not of the entity itself, so the test won't make sense any more.
     public void testGetCatalogEntityDetails() {
         CatalogEntitySummary details = client()
-                .resource(URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStore"))
+                .resource(URI.create("/v1/catalog/entities/org.apache.brooklyn.entity.nosql.redis.RedisStore"))
                 .get(CatalogEntitySummary.class);
         assertTrue(details.toString().contains("redis.port"), "expected more config, only got: "+details);
         String iconUrl = "/v1/catalog/icon/" + details.getSymbolicName();
@@ -215,7 +215,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     // not of the entity itself, so the test won't make sense any more.
     public void testGetCatalogEntityPlusVersionDetails() {
         CatalogEntitySummary details = client()
-                .resource(URI.create("/v1/catalog/entities/brooklyn.entity.nosql.redis.RedisStore:0.0.0.SNAPSHOT"))
+                .resource(URI.create("/v1/catalog/entities/org.apache.brooklyn.entity.nosql.redis.RedisStore:0.0.0.SNAPSHOT"))
                 .get(CatalogEntitySummary.class);
         assertTrue(details.toString().contains("redis.port"), "expected more config, only got: "+details);
         String expectedIconUrl = "/v1/catalog/icon/" + details.getSymbolicName() + "/" + details.getVersion();
@@ -236,7 +236,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     }
 
     private void addTestCatalogItemRedisAsEntity(String catalogItemId) {
-        addTestCatalogItem(catalogItemId, null, TEST_VERSION, "brooklyn.entity.nosql.redis.RedisStore");
+        addTestCatalogItem(catalogItemId, null, TEST_VERSION, "org.apache.brooklyn.entity.nosql.redis.RedisStore");
     }
 
     private void addTestCatalogItem(String catalogItemId, String itemType, String version, String service) {

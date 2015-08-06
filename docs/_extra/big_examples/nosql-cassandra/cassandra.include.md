@@ -189,7 +189,7 @@ public class WideAreaCassandraCluster extends AbstractApplication {
         .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
         .configure(CassandraCluster.INITIAL_SIZE, 2) // per location
         .configure(CassandraCluster.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
-        .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar"));
+        .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://org/apache/brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar"));
   }
 }
 {% endhighlight %}
@@ -203,7 +203,7 @@ public class WideAreaCassandraCluster extends AbstractApplication {
         .configure(CassandraCluster.CLUSTER_NAME, "Brooklyn")
         .configure(CassandraCluster.INITIAL_SIZE, 2) // per location
         .configure(CassandraCluster.ENDPOINT_SNITCH_NAME, "brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch")
-        .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
+        .configure(CassandraNode.CUSTOM_SNITCH_JAR_URL, "classpath://org/apache/brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar")
         .configure(CassandraFabric.MEMBER_SPEC, EntitySpec.create(CassandraCluster.class)
             .configure(CassandraCluster.MEMBER_SPEC, EntitySpec.create(CassandraNode.class)
                 .policy(PolicySpec.create(ServiceFailureDetector.class))

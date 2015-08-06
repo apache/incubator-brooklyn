@@ -22,7 +22,7 @@ name: Simple Cassandra cluster
 location: localhost
 
 services:
-- type: brooklyn.entity.nosql.cassandra.CassandraDatacenter
+- type: org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter
   name: Brooklyn
   brooklyn.config:
     initialSize: 1

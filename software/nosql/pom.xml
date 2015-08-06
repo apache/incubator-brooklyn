@@ -255,23 +255,23 @@
                     the given components. These are files "without any degree of creativity" from the
                     perspective of the Brooklyn/Apache contribution.
                 -->
-                <exclude>src/main/resources/brooklyn/entity/nosql/cassandra/cassandra-1.2.yaml</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/cassandra/cassandra-2.0.yaml</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/cassandra/cassandra-rackdc.properties</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/couchdb/couch.ini</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/couchdb/couch.uri</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/mongodb/default.conf</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/mongodb/default-mongod.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/cassandra/cassandra-1.2.yaml</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/cassandra/cassandra-2.0.yaml</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/cassandra/cassandra-rackdc.properties</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/couchdb/couch.ini</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/couchdb/couch.uri</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/mongodb/default.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/mongodb/default-mongod.conf</exclude>
                 <exclude>src/test/resources/test-mongodb.conf</exclude>
                 <exclude>src/test/resources/test-mongodb-configserver.conf</exclude>
                 <exclude>src/test/resources/test-mongodb-router.conf</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/redis/redis.conf</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/redis/slave.conf</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/riak/app.config</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/riak/vm.args</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/riak/riak.conf</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/riak/riak-mac.conf</exclude>
-                <exclude>src/main/resources/brooklyn/entity/nosql/solr/solr.xml</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/redis/redis.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/redis/slave.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/riak/app.config</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/riak/vm.args</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/riak/riak.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/riak/riak-mac.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/solr/solr.xml</exclude>
 
                 <!--
                     The source code for cassandra-multicloud-snitch.jar is in sandbox/cassandra-multicloud-snitch.
