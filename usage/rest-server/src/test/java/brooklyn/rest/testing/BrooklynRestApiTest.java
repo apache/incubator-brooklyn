@@ -18,6 +18,7 @@
  */
 package brooklyn.rest.testing;
 
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
@@ -45,7 +46,6 @@ import brooklyn.rest.util.TestShutdownHandler;
 import brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.exceptions.Exceptions;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 public abstract class BrooklynRestApiTest {
 

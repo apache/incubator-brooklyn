@@ -24,15 +24,15 @@ locations:
 - rackspace-cloudservers-uk
 
 services:
-- type: brooklyn.entity.nosql.cassandra.CassandraFabric
+- type: org.apache.brooklyn.entity.nosql.cassandra.CassandraFabric
   name: Brooklyn
   brooklyn.config:
     initialSize: 2
-    snitchName: brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch
-    customSnitchJarUrl: classpath://brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar
+    snitchName: org.apache.brooklyn.entity.nosql.cassandra.customsnitch.MultiCloudSnitch
+    customSnitchJarUrl: classpath://org/apache/brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar
     memberSpec:
       $brooklyn:entitySpec:
-        type: brooklyn.entity.nosql.cassandra.CassandraNode
+        type: org.apache.brooklyn.entity.nosql.cassandra.CassandraNode
         brookyn.policies:
         - type: brooklyn.policy.ha.ServiceRestarter
         brooklyn.enrichers:

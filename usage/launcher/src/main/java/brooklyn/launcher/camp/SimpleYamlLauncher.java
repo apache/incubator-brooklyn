@@ -18,8 +18,8 @@
  */
 package brooklyn.launcher.camp;
 
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
-import io.brooklyn.camp.brooklyn.YamlLauncherAbstract;
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
+import org.apache.brooklyn.camp.brooklyn.YamlLauncherAbstract;
 
 import com.google.common.annotations.Beta;
 

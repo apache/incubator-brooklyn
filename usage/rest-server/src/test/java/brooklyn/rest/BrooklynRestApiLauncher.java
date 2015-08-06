@@ -19,8 +19,6 @@
 package brooklyn.rest;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
-import io.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -32,6 +30,8 @@ import java.util.List;
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.servlet.FilterHolder;

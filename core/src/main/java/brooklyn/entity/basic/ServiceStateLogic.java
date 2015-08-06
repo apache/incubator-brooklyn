@@ -149,8 +149,11 @@ public class ServiceStateLogic {
             if (!Boolean.TRUE.equals(up) && !Boolean.TRUE.equals(Entities.isReadOnly(entity))) {
                 // pause briefly to allow any recent problem-clearing processing to complete
                 Stopwatch timer = Stopwatch.createStarted();
-                boolean nowUp = Repeater.create().every(ValueResolver.REAL_QUICK_PERIOD).limitTimeTo(ValueResolver.PRETTY_QUICK_WAIT).until(entity, 
-                    EntityPredicates.attributeEqualTo(Attributes.SERVICE_UP, true)).run();
+                boolean nowUp = Repeater.create()
+                        .every(ValueResolver.REAL_QUICK_PERIOD)
+                        .limitTimeTo(ValueResolver.PRETTY_QUICK_WAIT)
+                        .until(entity, EntityPredicates.attributeEqualTo(Attributes.SERVICE_UP, true))
+                        .run();
                 if (nowUp) {
                     log.debug("Had to wait "+Duration.of(timer)+" for "+entity+" "+Attributes.SERVICE_UP+" to be true before setting "+state);
                 } else {

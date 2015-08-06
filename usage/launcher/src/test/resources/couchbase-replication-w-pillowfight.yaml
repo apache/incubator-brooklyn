@@ -19,7 +19,7 @@
 name: Couchbase w Replicating Cluster and Pillow Fight
 
 services:
-- type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
+- type: org.apache.brooklyn.entity.nosql.couchbase.CouchbaseCluster
   id: couchbase
   name: Couchbase Primary Cluster
   adminUsername: Administrator
@@ -36,7 +36,7 @@ services:
   location: aws-ec2:us-west-1
 
 
-- type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
+- type: org.apache.brooklyn.entity.nosql.couchbase.CouchbaseCluster
   id: couchbase-backup
   name: Couchbase Backup Cluster
   adminUsername: Administrator
@@ -49,7 +49,7 @@ services:
   location: softlayer:ams01
 
 
-- type: "classpath://brooklyn/entity/nosql/couchbase/pillowfight.yaml"
+- type: "classpath://org/apache/brooklyn/entity/nosql/couchbase/pillowfight.yaml"
   brooklyn.config:
     base_url: $brooklyn:entity("couchbase").attributeWhenReady("couchbase.cluster.connection.url") 
 

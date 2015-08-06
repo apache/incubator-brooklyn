@@ -21,7 +21,7 @@ origin: "https://github.com/amirrajan/nodejs-todo/"
 locations:
 - jclouds:softlayer:ams01
 services:
-- type: brooklyn.entity.nosql.redis.RedisStore
+- type: org.apache.brooklyn.entity.nosql.redis.RedisStore
   id: redis
   name: "Redis"
 - type: brooklyn.entity.webapp.nodejs.NodeJsWebAppService

@@ -41,7 +41,7 @@ description: Test multi-layer application with each entity having an enricher re
 origin: https://github.com/apache/incubator-brooklyn
 id: app1
 brooklyn.enrichers:
-  - enricherType: io.brooklyn.camp.brooklyn.TestReferencingEnricher
+  - enricherType: org.apache.brooklyn.camp.brooklyn.TestReferencingEnricher
     brooklyn.config:
       test.reference.app: $brooklyn:component("app1")
       test.reference.entity1: $brooklyn:component("e1")
@@ -51,11 +51,11 @@ brooklyn.enrichers:
       test.reference.grandchild1: $brooklyn:component("gc1")
       test.reference.grandchild2: $brooklyn:component("gc2")
 services:
-- serviceType: io.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
+- serviceType: org.apache.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
   id: e1
   name: entity 1
   brooklyn.enrichers:
-  - enricherType: io.brooklyn.camp.brooklyn.TestReferencingEnricher
+  - enricherType: org.apache.brooklyn.camp.brooklyn.TestReferencingEnricher
     brooklyn.config:
       test.reference.app: $brooklyn:component("app1")
       test.reference.entity1: $brooklyn:component("e1")
@@ -65,11 +65,11 @@ services:
       test.reference.grandchild1: $brooklyn:component("gc1")
       test.reference.grandchild2: $brooklyn:component("gc2")
   brooklyn.children:
-    - serviceType: io.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
+    - serviceType: org.apache.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
       id: c1
       name: child 1
       brooklyn.enrichers:
-      - enricherType: io.brooklyn.camp.brooklyn.TestReferencingEnricher
+      - enricherType: org.apache.brooklyn.camp.brooklyn.TestReferencingEnricher
         brooklyn.config:
           test.reference.app: $brooklyn:component("app1")
           test.reference.entity1: $brooklyn:component("e1")
@@ -79,11 +79,11 @@ services:
           test.reference.grandchild1: $brooklyn:component("gc1")
           test.reference.grandchild2: $brooklyn:component("gc2")
       brooklyn.children:
-      - serviceType: io.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
+      - serviceType: org.apache.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
         id: gc1
         name: grandchild 1
         brooklyn.enrichers:
-        - enricherType: io.brooklyn.camp.brooklyn.TestReferencingEnricher
+        - enricherType: org.apache.brooklyn.camp.brooklyn.TestReferencingEnricher
           brooklyn.config:
             test.reference.app: $brooklyn:component("app1")
             test.reference.entity1: $brooklyn:component("e1")
@@ -92,11 +92,11 @@ services:
             test.reference.child2: $brooklyn:component("c2")
             test.reference.grandchild1: $brooklyn:component("gc1")
             test.reference.grandchild2: $brooklyn:component("gc2")
-      - serviceType: io.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
+      - serviceType: org.apache.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
         id: gc2
         name: grandchild 2
         brooklyn.enrichers:
-        - enricherType: io.brooklyn.camp.brooklyn.TestReferencingEnricher
+        - enricherType: org.apache.brooklyn.camp.brooklyn.TestReferencingEnricher
           brooklyn.config:
             test.reference.app: $brooklyn:component("app1")
             test.reference.entity1: $brooklyn:component("e1")
@@ -105,11 +105,11 @@ services:
             test.reference.child2: $brooklyn:component("c2")
             test.reference.grandchild1: $brooklyn:component("gc1")
             test.reference.grandchild2: $brooklyn:component("gc2") 
-    - serviceType: io.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
+    - serviceType: org.apache.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
       id: c2
       name: child 2
       brooklyn.enrichers:
-      - enricherType: io.brooklyn.camp.brooklyn.TestReferencingEnricher
+      - enricherType: org.apache.brooklyn.camp.brooklyn.TestReferencingEnricher
         brooklyn.config:
           test.reference.app: $brooklyn:component("app1")
           test.reference.entity1: $brooklyn:component("e1")
@@ -118,11 +118,11 @@ services:
           test.reference.child2: $brooklyn:component("c2")
           test.reference.grandchild1: $brooklyn:component("gc1")
           test.reference.grandchild2: $brooklyn:component("gc2")
-- serviceType: io.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
+- serviceType: org.apache.brooklyn.camp.brooklyn.ReferencingYamlTestEntity
   id: e2
   name: entity 2
   brooklyn.enrichers:
-  - enricherType: io.brooklyn.camp.brooklyn.TestReferencingEnricher
+  - enricherType: org.apache.brooklyn.camp.brooklyn.TestReferencingEnricher
     brooklyn.config:
       test.reference.app: $brooklyn:component("app1")
       test.reference.entity1: $brooklyn:component("e1")

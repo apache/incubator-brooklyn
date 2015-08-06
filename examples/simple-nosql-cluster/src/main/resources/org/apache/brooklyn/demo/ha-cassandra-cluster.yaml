@@ -22,7 +22,7 @@ name: HA Cassandra cluster
 location: aws-ec2:us-east-1
 
 services:
-- type: brooklyn.entity.nosql.cassandra.CassandraDatacenter
+- type: org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter
   name: Brooklyn
   brooklyn.config:
     initialSize: 6
@@ -36,7 +36,7 @@ services:
     snitchName: GossipingPropertyFileSnitch
     memberSpec:
       $brooklyn:entitySpec:
-        type: brooklyn.entity.nosql.cassandra.CassandraNode
+        type: org.apache.brooklyn.entity.nosql.cassandra.CassandraNode
         brookyn.policies:
         - type: brooklyn.policy.ha.ServiceRestarter
         brooklyn.enrichers:

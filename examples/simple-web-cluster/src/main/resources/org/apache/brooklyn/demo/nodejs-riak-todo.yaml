@@ -21,7 +21,7 @@ location:
   jclouds:aws-ec2:us-west-1:
     imageId: us-west-1/ami-c33cdd87
 services:
-- type: brooklyn.entity.nosql.riak.RiakCluster
+- type: org.apache.brooklyn.entity.nosql.riak.RiakCluster
   initialSize: 2
   id: mycluster
   brooklyn.config:

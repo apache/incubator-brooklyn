@@ -25,7 +25,7 @@ services:
   name: testentity
   brooklyn.config:
     test.name: Name of the test entity
-- serviceType: io.brooklyn.camp.brooklyn.TestEntityWithInitConfig 
+- serviceType: org.apache.brooklyn.camp.brooklyn.TestEntityWithInitConfig 
   name: testentity with init config
   brooklyn.config:
     test.entity: $brooklyn:component("te1") # This entity will be accessed in TestEntityWithInitConfig.init()
