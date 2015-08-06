@@ -183,7 +183,7 @@ brooklyn.catalog:
                             $brooklyn:entity("riak-cluster").attributeWhenReady("main.uri"))
                             
       # use the off-the-shelf Riak cluster
-      - type:           brooklyn.entity.nosql.riak.RiakCluster
+      - type:           org.apache.brooklyn.entity.nosql.riak.RiakCluster
         id:             riak-cluster
         initialSize:    3
         # and add a policy to scale based on ops per minute

@@ -20,11 +20,12 @@ package org.apache.brooklyn.demo;
 
 import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 import org.apache.brooklyn.catalog.Catalog;
+import org.apache.brooklyn.entity.nosql.redis.RedisStore;
+
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.nosql.redis.RedisStore;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.nodejs.NodeJsWebAppService;

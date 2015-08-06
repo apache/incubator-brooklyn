@@ -18,6 +18,6 @@
 #
 name: Mongo1
 services:
-- serviceType: brooklyn.entity.nosql.mongodb.MongoDBServer
+- serviceType: org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer
   name: MongoDB Single Server
   location: localhost

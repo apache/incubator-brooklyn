@@ -21,12 +21,12 @@ description: MongoDB sharded deployment with MongoDB (javascript) client
 origin: https://github.com/apache/incubator-brooklyn
 location: localhost
 services:
-- serviceType: brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
+- serviceType: org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
   id: shardeddeployment
   name: MongoDB Sharded Deployment
   brooklyn.config:
     initialRouterClusterSize: 1
-- serviceType: brooklyn.entity.nosql.mongodb.MongoDBClient
+- serviceType: org.apache.brooklyn.entity.nosql.mongodb.MongoDBClient
   name: MongoDB Javascript Client
   brooklyn.config:
     shardedDeployment: $brooklyn:component("shardeddeployment")
