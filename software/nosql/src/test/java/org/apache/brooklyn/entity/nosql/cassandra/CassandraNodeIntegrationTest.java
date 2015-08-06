@@ -27,6 +27,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
 import org.apache.brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
+import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.NetworkingTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -38,8 +40,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.NetworkingTestUtils;
 import brooklyn.util.math.MathPredicates;
 
 import com.google.common.collect.ImmutableList;

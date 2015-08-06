@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.software.http;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -29,7 +30,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.TestHttpRequestHandler;
 import brooklyn.test.TestHttpServer;
 import brooklyn.test.entity.TestApplication;

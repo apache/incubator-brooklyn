@@ -20,6 +20,7 @@ package brooklyn.rest.resources;
 
 import java.net.URI;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jetty.server.Server;
 import org.testng.Assert;
@@ -35,7 +36,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncher;
 import brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.http.HttpTool;

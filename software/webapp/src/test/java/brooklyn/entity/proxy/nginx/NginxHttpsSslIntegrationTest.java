@@ -23,6 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,6 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;

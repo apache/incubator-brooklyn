@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.proxy.nginx;
 
+import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -27,8 +29,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.Location;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.HttpTestUtils;
 
 import com.google.common.collect.ImmutableList;
 

@@ -24,6 +24,7 @@ import static brooklyn.rest.BrooklynRestApiLauncher.StartMode.WEB_XML;
 
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.http.HttpStatus;
 import org.eclipse.jetty.server.Server;
 import org.testng.annotations.Test;
@@ -31,7 +32,6 @@ import org.testng.annotations.Test;
 import brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import brooklyn.rest.util.BrooklynRestResourceUtilsTest.SampleNoOpApplication;
 import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
 
 public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixture {
 

@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
@@ -38,7 +39,6 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.rest.BrooklynRestApiLauncher;
 import brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import brooklyn.rest.security.provider.TestSecurityProvider;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 

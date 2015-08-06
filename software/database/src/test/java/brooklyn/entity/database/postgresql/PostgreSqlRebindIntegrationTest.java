@@ -18,13 +18,13 @@
  */
 package brooklyn.entity.database.postgresql;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.EntityTestUtils;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

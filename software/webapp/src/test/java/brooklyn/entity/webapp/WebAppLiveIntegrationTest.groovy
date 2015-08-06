@@ -20,7 +20,7 @@ package brooklyn.entity.webapp
 
 import static brooklyn.entity.basic.ConfigKeys.*
 import static brooklyn.entity.webapp.jboss.JBoss6Server.*
-import static brooklyn.test.TestUtils.*
+import static org.apache.brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 
@@ -46,7 +46,7 @@ import brooklyn.entity.webapp.tomcat.TomcatServer
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.location.Location
 import brooklyn.location.basic.BasicLocationRegistry
-import brooklyn.test.TestUtils
+import org.apache.brooklyn.test.TestUtils
 import brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
 

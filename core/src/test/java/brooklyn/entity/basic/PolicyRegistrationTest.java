@@ -25,6 +25,7 @@ import static org.testng.Assert.fail;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.test.TestUtils;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -36,7 +37,6 @@ import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.Policy;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.test.TestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityNoEnrichersImpl;
 import brooklyn.util.collections.MutableMap;

@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.webapp;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -26,7 +27,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 

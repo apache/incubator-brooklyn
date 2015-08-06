@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.jsgui;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.testng.annotations.AfterMethod;
@@ -28,7 +29,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.management.ManagementContext;
 import brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
 
 /** Convenience and demo for launching programmatically. */
 public class BrooklynJavascriptGuiLauncherTest {

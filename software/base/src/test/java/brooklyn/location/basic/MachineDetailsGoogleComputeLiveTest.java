@@ -21,6 +21,7 @@ package brooklyn.location.basic;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.MachineDetails;
 import brooklyn.location.OsDetails;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.util.collections.MutableMap;
 
 // This test really belongs in brooklyn-location but depends on AbstractGoogleComputeLiveTest in brooklyn-software-base

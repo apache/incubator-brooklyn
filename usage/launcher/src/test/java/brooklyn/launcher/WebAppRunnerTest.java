@@ -24,6 +24,7 @@ import static org.testng.Assert.fail;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 

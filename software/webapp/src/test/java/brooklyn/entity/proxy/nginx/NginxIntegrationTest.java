@@ -18,16 +18,18 @@
  */
 package brooklyn.entity.proxy.nginx;
 
-import static brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
-import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
-import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
+import static org.apache.brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
+import static org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
+import static org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.WebAppMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -44,8 +46,6 @@ import brooklyn.entity.webapp.WebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.WebAppMonitor;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 

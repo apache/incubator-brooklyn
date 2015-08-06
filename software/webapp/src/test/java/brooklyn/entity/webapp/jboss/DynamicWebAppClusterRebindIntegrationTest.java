@@ -18,9 +18,9 @@
  */
 package brooklyn.entity.webapp.jboss;
 
-import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
-import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
-import static brooklyn.test.HttpTestUtils.assertUrlUnreachableEventually;
+import static org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
+import static org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
+import static org.apache.brooklyn.test.HttpTestUtils.assertUrlUnreachableEventually;
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
@@ -31,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.WebAppMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -45,7 +46,6 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.webapp.DynamicWebAppCluster;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 

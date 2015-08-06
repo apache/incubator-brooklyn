@@ -35,8 +35,10 @@ import brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import brooklyn.entity.webapp.HttpsSslConfig;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
+
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;

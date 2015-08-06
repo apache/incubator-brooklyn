@@ -19,6 +19,8 @@
 package org.apache.brooklyn.qa.load;
 
 import org.apache.brooklyn.qa.load.SimulatedTheeTierApp;
+import org.apache.brooklyn.test.PerformanceTestUtils;
+
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
@@ -45,7 +47,6 @@ import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.PerformanceTestUtils;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 

@@ -21,6 +21,7 @@ package brooklyn.entity.java;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -36,7 +37,6 @@ import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.JmxService;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;

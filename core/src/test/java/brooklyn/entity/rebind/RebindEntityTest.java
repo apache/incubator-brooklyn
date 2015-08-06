@@ -18,8 +18,8 @@
  */
 package brooklyn.entity.rebind;
 
-import static brooklyn.test.EntityTestUtils.assertAttributeEquals;
-import static brooklyn.test.EntityTestUtils.assertConfigEquals;
+import static org.apache.brooklyn.test.EntityTestUtils.assertAttributeEquals;
+import static org.apache.brooklyn.test.EntityTestUtils.assertConfigEquals;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
