@@ -101,7 +101,7 @@
                             the given components. These are files "without any degree of creativity" from the
                             perspective of the Brooklyn/Apache contribution.
                         -->
-                        <exclude>src/main/resources/brooklyn/entity/nosql/hazelcast/hazelcast-brooklyn.xml</exclude>
+                        <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/hazelcast/hazelcast-brooklyn.xml</exclude>
                     </excludes>
                 </configuration>
             </plugin>
