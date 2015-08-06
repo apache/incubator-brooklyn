@@ -43,9 +43,9 @@ public class PropertiesFileExternalConfigSupplier extends AbstractExternalConfig
 
     private final Properties properties;
 
-    public PropertiesFileExternalConfigSupplier(ManagementContext managementContext, String name, Map<?, ?> config) throws IOException {
+    public PropertiesFileExternalConfigSupplier(ManagementContext managementContext, String name, Map<String, String> config) throws IOException {
         super(managementContext, name);
-        this.properties = loadProperties((String) config.get(PROPERTIES_URL));
+        this.properties = loadProperties(config.get(PROPERTIES_URL));
     }
 
     public String get(String key) {

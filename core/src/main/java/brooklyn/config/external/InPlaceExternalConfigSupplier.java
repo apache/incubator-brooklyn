@@ -37,15 +37,15 @@ import brooklyn.management.ManagementContext;
  */
 public class InPlaceExternalConfigSupplier extends AbstractExternalConfigSupplier {
 
-    private final Map<?,?> config;
+    private final Map<String, String> config;
 
-    public InPlaceExternalConfigSupplier(ManagementContext managementContext, String name, Map<?, ?> config) {
+    public InPlaceExternalConfigSupplier(ManagementContext managementContext, String name, Map<String, String> config) {
         super(managementContext, name);
         this.config = config;
     }
 
     public String get(String key) {
-        return (String) config.get(key);
+        return config.get(key);
     }
 
 }
