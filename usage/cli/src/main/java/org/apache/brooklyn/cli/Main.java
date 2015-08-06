@@ -61,6 +61,16 @@ import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
 import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
 
 import brooklyn.catalog.internal.CatalogInitialization;
+import org.apache.brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
+import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
+import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeDefaultTemplateCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeGetImageCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeListHardwareProfilesCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
+import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
+import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;

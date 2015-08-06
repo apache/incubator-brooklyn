@@ -53,7 +53,7 @@ public class CliIntegrationTest extends BaseCliIntegrationTest {
      */
     @Test(groups = "Integration")
     public void testLaunchCliApp() throws Throwable {
-        final Process brooklyn = startBrooklyn("--verbose", "launch", "--stopOnKeyPress", "--app", "brooklyn.cli.BaseCliIntegrationTest$TestApplication", "--location", "localhost", "--noConsole");
+        final Process brooklyn = startBrooklyn("--verbose", "launch", "--stopOnKeyPress", "--app", "org.apache.brooklyn.cli.BaseCliIntegrationTest$TestApplication", "--location", "localhost", "--noConsole");
 
         BrooklynCliTest test = new BrooklynCliTest(brooklyn) {
             @Override

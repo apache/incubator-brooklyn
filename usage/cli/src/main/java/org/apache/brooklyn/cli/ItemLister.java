@@ -37,7 +37,6 @@ import brooklyn.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.cli.lister.ClassFinder;
 import org.apache.brooklyn.cli.lister.ItemDescriptors;
-
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;

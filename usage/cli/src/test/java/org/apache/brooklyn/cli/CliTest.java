@@ -56,6 +56,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import org.apache.brooklyn.cli.AbstractMain.BrooklynCommand;
+import org.apache.brooklyn.cli.AbstractMain.BrooklynCommandCollectingArgs;
+import org.apache.brooklyn.cli.AbstractMain.HelpCommand;
+import org.apache.brooklyn.cli.Main.AppShutdownHandler;
+import org.apache.brooklyn.cli.Main.GeneratePasswordCommand;
+import org.apache.brooklyn.cli.Main.LaunchCommand;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
