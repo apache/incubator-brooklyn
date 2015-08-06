@@ -19,5 +19,5 @@
 name: Mongo3
 location: localhost
 services:
-- type: brooklyn.entity.nosql.mongodb.MongoDBReplicaSet
+- type: org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet
   name: MongoDB Replica Set

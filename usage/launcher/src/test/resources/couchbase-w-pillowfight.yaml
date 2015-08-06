@@ -21,7 +21,7 @@ name: Couchbase w Pillow Fight
 location: softlayer:wdc01
 
 services:
-- type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
+- type: org.apache.brooklyn.entity.nosql.couchbase.CouchbaseCluster
   id: couchbase
   adminUsername: Administrator
   adminPassword: Password
@@ -30,6 +30,6 @@ services:
   - bucket: default
     bucket-port: 11211
 
-- type: "classpath://brooklyn/entity/nosql/couchbase/pillowfight.yaml"
+- type: "classpath://org/apache/brooklyn/entity/nosql/couchbase/pillowfight.yaml"
   brooklyn.config:
     base_url: $brooklyn:entity("couchbase").attributeWhenReady("couchbase.cluster.connection.url") 

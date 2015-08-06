@@ -21,7 +21,7 @@ name: Couchbase One Bucket
 location: softlayer:wdc01
 
 services:
-- type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
+- type: org.apache.brooklyn.entity.nosql.couchbase.CouchbaseCluster
   initialSize: 3
   intialQuorumSize: 2
   adminUsername: Administrator

@@ -20,7 +20,7 @@ name: Sharded MongoDB With Web App
 description: Auto-scaling web app backed by MongoDB
 location: my-docker-cloud
 services:
-- type: brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
+- type: org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
   id: mongo
   name: Mongo DB Backend
   brooklyn.config:
@@ -34,7 +34,7 @@ services:
   brooklyn.config:
     memberSpec:
       $brooklyn:entitySpec:
-        type: brooklyn.entity.nosql.mongodb.sharding.CoLocatedMongoDBRouter
+        type: org.apache.brooklyn.entity.nosql.mongodb.sharding.CoLocatedMongoDBRouter
         brooklyn.enrichers:
           - type: brooklyn.enricher.basic.Propagator
             brooklyn.config:

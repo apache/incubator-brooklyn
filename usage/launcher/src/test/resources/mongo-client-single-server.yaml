@@ -19,10 +19,10 @@
 name: Mongo Single Server with Scripts
 location: localhost
 services:
-- serviceType: brooklyn.entity.nosql.mongodb.MongoDBServer
+- serviceType: org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer
   id: mySingleServer
   name: mongod
-- serviceType: brooklyn.entity.nosql.mongodb.MongoDBClient
+- serviceType: org.apache.brooklyn.entity.nosql.mongodb.MongoDBClient
   name: MongoDB Javascript Client
   brooklyn.config:
     server: $brooklyn:component("mySingleServer")
