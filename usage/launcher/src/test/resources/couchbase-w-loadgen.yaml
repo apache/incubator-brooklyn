@@ -22,7 +22,7 @@ location: softlayer:wdc01
 
 services:
 
-- type: brooklyn.entity.nosql.couchbase.CouchbaseCluster
+- type: org.apache.brooklyn.entity.nosql.couchbase.CouchbaseCluster
   id: cb-cluster
   adminUsername: Administrator
   adminPassword: Password
@@ -35,7 +35,7 @@ services:
   brooklyn.policies:
   - type: brooklyn.policy.autoscaling.AutoScalerPolicy
     brooklyn.config:
-      metric: $brooklyn:sensor("brooklyn.entity.nosql.couchbase.CouchbaseCluster",
+      metric: $brooklyn:sensor("org.apache.brooklyn.entity.nosql.couchbase.CouchbaseCluster",
         "couchbase.stats.cluster.per.node.ops")
       metricLowerBound: 500
       metricUpperBound: 1000

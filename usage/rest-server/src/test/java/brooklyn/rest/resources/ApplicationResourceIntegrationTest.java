@@ -55,7 +55,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     private static final Logger log = LoggerFactory.getLogger(ApplicationResourceIntegrationTest.class);
 
     private final ApplicationSpec redisSpec = ApplicationSpec.builder().name("redis-app")
-            .entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")))
+            .entities(ImmutableSet.of(new EntitySpec("redis-ent", "org.apache.brooklyn.entity.nosql.redis.RedisStore")))
             .locations(ImmutableSet.of("localhost"))
             .build();
 

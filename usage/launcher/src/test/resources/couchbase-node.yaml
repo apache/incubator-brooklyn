@@ -21,6 +21,6 @@ name: Couchbase Node
 location: softlayer:wdc01
 
 services:
-- type: brooklyn.entity.nosql.couchbase.CouchbaseNode
+- type: org.apache.brooklyn.entity.nosql.couchbase.CouchbaseNode
   adminUsername: Administrator
   adminPassword: Password

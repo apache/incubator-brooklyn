@@ -141,7 +141,7 @@ brooklyn.catalog:
   id: datastore
   version: 1.0
   itemType: template
-  iconUrl: classpath://brooklyn/entity/nosql/riak/riak.png
+  iconUrl: classpath://org/apache/brooklyn/entity/nosql/riak/riak.png
   name: Datastore (Riak)
   description: Riak is an open-source NoSQL key-value data store.
   item:
@@ -157,7 +157,7 @@ This YAML will install three items:
 ~~~ yaml
 brooklyn.catalog:
   version: 1.1
-  iconUrl: classpath://brooklyn/entity/nosql/riak/riak.png
+  iconUrl: classpath://org/apache/brooklyn/entity/nosql/riak/riak.png
   description: Riak is an open-source NoSQL key-value data store.
   items:
     - id: riak-node

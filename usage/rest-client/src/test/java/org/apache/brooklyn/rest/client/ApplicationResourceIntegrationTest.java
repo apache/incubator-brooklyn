@@ -62,10 +62,10 @@ public class ApplicationResourceIntegrationTest {
 
     private static final Duration LONG_WAIT = Duration.minutes(10);
     
-    private final String redisSpec = "{\"name\": \"redis-app\", \"type\": \"brooklyn.entity.nosql.redis.RedisStore\", \"locations\": [ \"localhost\"]}";
+    private final String redisSpec = "{\"name\": \"redis-app\", \"type\": \"org.apache.brooklyn.entity.nosql.redis.RedisStore\", \"locations\": [ \"localhost\"]}";
     
     private final ApplicationSpec legacyRedisSpec = ApplicationSpec.builder().name("redis-legacy-app")
-            .entities(ImmutableSet.of(new EntitySpec("redis-ent", "brooklyn.entity.nosql.redis.RedisStore")))
+            .entities(ImmutableSet.of(new EntitySpec("redis-ent", "org.apache.brooklyn.entity.nosql.redis.RedisStore")))
             .locations(ImmutableSet.of("localhost"))
             .build();
 

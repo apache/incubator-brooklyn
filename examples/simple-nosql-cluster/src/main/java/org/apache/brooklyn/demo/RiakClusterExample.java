@@ -22,13 +22,14 @@ import java.util.List;
 
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.catalog.CatalogConfig;
+import org.apache.brooklyn.entity.nosql.riak.RiakCluster;
+import org.apache.brooklyn.entity.nosql.riak.RiakNode;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.nosql.riak.RiakCluster;
-import brooklyn.entity.nosql.riak.RiakNode;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.launcher.BrooklynLauncher;
 import brooklyn.policy.EnricherSpec;
