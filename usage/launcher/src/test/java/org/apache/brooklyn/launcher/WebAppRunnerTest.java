@@ -75,7 +75,7 @@ public class WebAppRunnerTest {
 
         BrooklynProperties brooklynProperties = BrooklynProperties.Factory.newEmpty();
         brooklynProperties.putAll(bigProps);
-        brooklynProperties.put("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider");
+        brooklynProperties.put("brooklyn.webconsole.security.provider","org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider");
         brooklynProperties.put("brooklyn.webconsole.security.https.required","false");
         return new BrooklynWebServer(bigProps, newManagementContext(brooklynProperties));
     }
@@ -149,7 +149,7 @@ public class WebAppRunnerTest {
 
         BrooklynLauncher launcher = BrooklynLauncher.newInstance()
                 .brooklynProperties(BrooklynProperties.Factory.newEmpty())
-                .brooklynProperties("brooklyn.webconsole.security.provider","brooklyn.rest.security.provider.AnyoneSecurityProvider")
+                .brooklynProperties("brooklyn.webconsole.security.provider","org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider")
                 .webapp("/hello", "hello-world.war")
                 .start();
         BrooklynServerDetails details = launcher.getServerDetails();

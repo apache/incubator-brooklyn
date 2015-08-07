@@ -18,6 +18,8 @@
  */
 package brooklyn.config.render;
 
+import brooklyn.config.render.RendererHints;
+
 /** Methods used when testing the {@link RendererHints} regiostry. */
 public class TestRendererHints {
 

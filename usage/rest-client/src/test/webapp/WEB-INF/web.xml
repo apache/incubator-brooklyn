@@ -26,7 +26,7 @@
 
     <filter>
         <filter-name>Brooklyn Request Tagging Filter</filter-name>
-        <filter-class>brooklyn.rest.filter.RequestTaggingFilter</filter-class>
+        <filter-class>org.apache.brooklyn.rest.filter.RequestTaggingFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>Brooklyn Request Tagging Filter</filter-name>
@@ -35,7 +35,7 @@
 
     <filter>
         <filter-name>Brooklyn Properties Authentication Filter</filter-name>
-        <filter-class>brooklyn.rest.filter.BrooklynPropertiesSecurityFilter</filter-class>
+        <filter-class>org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>Brooklyn Properties Authentication Filter</filter-name>
@@ -44,7 +44,7 @@
 
     <filter>
         <filter-name>Brooklyn Logging Filter</filter-name>
-        <filter-class>brooklyn.rest.filter.LoggingFilter</filter-class>
+        <filter-class>org.apache.brooklyn.rest.filter.LoggingFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>Brooklyn Logging Filter</filter-name>
@@ -53,7 +53,7 @@
 
     <filter>
         <filter-name>Brooklyn HA Master Filter</filter-name>
-        <filter-class>brooklyn.rest.filter.HaMasterCheckFilter</filter-class>
+        <filter-class>org.apache.brooklyn.rest.filter.HaMasterCheckFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>Brooklyn HA Master Filter</filter-name>
@@ -82,22 +82,22 @@
         <init-param>
             <param-name>com.sun.jersey.config.property.classnames</param-name>
             <param-value>
-                brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
-                brooklyn.rest.util.FormMapProvider;
+                org.apache.brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
+                org.apache.brooklyn.rest.util.FormMapProvider;
                 org.codehaus.jackson.jaxrs.JacksonJsonProvider;
-                brooklyn.rest.resources.ActivityResource;
-                brooklyn.rest.resources.ApidocResource;
-                brooklyn.rest.resources.ApplicationResource;
-                brooklyn.rest.resources.CatalogResource;
-                brooklyn.rest.resources.EffectorResource;
-                brooklyn.rest.resources.EntityConfigResource;
-                brooklyn.rest.resources.EntityResource;
-                brooklyn.rest.resources.LocationResource;
-                brooklyn.rest.resources.PolicyConfigResource;
-                brooklyn.rest.resources.PolicyResource;
-                brooklyn.rest.resources.ScriptResource;
-                brooklyn.rest.resources.SensorResource;
-                brooklyn.rest.resources.VersionResource;
+                org.apache.brooklyn.rest.resources.ActivityResource;
+                org.apache.brooklyn.rest.resources.ApidocResource;
+                org.apache.brooklyn.rest.resources.ApplicationResource;
+                org.apache.brooklyn.rest.resources.CatalogResource;
+                org.apache.brooklyn.rest.resources.EffectorResource;
+                org.apache.brooklyn.rest.resources.EntityConfigResource;
+                org.apache.brooklyn.rest.resources.EntityResource;
+                org.apache.brooklyn.rest.resources.LocationResource;
+                org.apache.brooklyn.rest.resources.PolicyConfigResource;
+                org.apache.brooklyn.rest.resources.PolicyResource;
+                org.apache.brooklyn.rest.resources.ScriptResource;
+                org.apache.brooklyn.rest.resources.SensorResource;
+                org.apache.brooklyn.rest.resources.VersionResource;
             </param-value>
         </init-param>
 

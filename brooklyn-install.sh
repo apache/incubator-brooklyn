@@ -252,7 +252,7 @@ brooklyn.webconsole.security.user.${USER}.salt = ${SALT}
 brooklyn.webconsole.security.user.${USER}.sha256 = ${HASH}
 EOF
     else
-        ssh ${SSH_OPTS} ${USER}@${HOST} "sed -i.bak 's/^# brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/brooklyn.webconsole.security.provider = brooklyn.rest.security.provider.AnyoneSecurityProvider/' .brooklyn/brooklyn.properties"
+        ssh ${SSH_OPTS} ${USER}@${HOST} "sed -i.bak 's/^# brooklyn.webconsole.security.provider = org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider/brooklyn.webconsole.security.provider = org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider/' .brooklyn/brooklyn.properties"
     fi
     log "...done!"
 fi

@@ -37,7 +37,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import org.apache.brooklyn.launcher.BrooklynWebServer;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
+import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import brooklyn.test.Asserts;
 import brooklyn.test.EntityTestUtils;
 import brooklyn.test.HttpTestUtils;

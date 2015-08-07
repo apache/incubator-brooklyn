@@ -48,7 +48,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.rest.BrooklynWebConfig;
+import org.apache.brooklyn.rest.BrooklynWebConfig;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
