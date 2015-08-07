@@ -53,7 +53,7 @@ import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.EnricherSpec;

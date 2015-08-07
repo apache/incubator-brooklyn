@@ -26,7 +26,7 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;

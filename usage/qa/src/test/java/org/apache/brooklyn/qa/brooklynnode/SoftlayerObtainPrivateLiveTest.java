@@ -38,7 +38,7 @@ import brooklyn.entity.brooklynnode.BrooklynEntityMirror;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
 import brooklyn.location.jclouds.JcloudsLocationConfig;
 import brooklyn.management.ManagementContext;
