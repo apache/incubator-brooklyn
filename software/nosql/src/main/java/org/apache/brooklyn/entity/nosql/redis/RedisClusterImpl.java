@@ -19,6 +19,7 @@
 package org.apache.brooklyn.entity.nosql.redis;
 
 import java.util.Collection;
+import java.util.List;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.AbstractEntity;
@@ -32,16 +33,18 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;
+import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
 
-    private static AttributeSensor<RedisStore> MASTER = Sensors.newSensor(RedisStore.class, "redis.master");
-    private static AttributeSensor<DynamicCluster> SLAVES = Sensors.newSensor(DynamicCluster.class, "redis.slaves");
+    private static final AttributeSensor<RedisStore> MASTER = Sensors.newSensor(RedisStore.class, "redis.master");
+    private static final AttributeSensor<DynamicCluster> SLAVES = Sensors.newSensor(DynamicCluster.class, "redis.slaves");
 
     public RedisClusterImpl() {
     }
@@ -119,8 +122,26 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
     }
 
     private void doStop() {
-        getSlaves().invoke(DynamicCluster.STOP, ImmutableMap.<String, Object>of()).getUnchecked();
-        getMaster().invoke(RedisStore.STOP, ImmutableMap.<String, Object>of()).getUnchecked();
+        StringBuilder message = new StringBuilder();
+        List<Exception> exceptions = Lists.newLinkedList();
+
+        try {
+            getSlaves().invoke(DynamicCluster.STOP, ImmutableMap.<String, Object>of()).getUnchecked();
+        } catch (Exception e) {
+            message.append("Failed to stop Redis slaves");
+            exceptions.add(e);
+        }
+
+        try {
+            getMaster().invoke(RedisStore.STOP, ImmutableMap.<String, Object>of()).getUnchecked();
+        } catch (Exception e) {
+            message.append((message.length() == 0) ? "Failed to stop Redis master" : " and master");
+            exceptions.add(e);
+        }
+
+        if (!exceptions.isEmpty()) {
+            throw new CompoundRuntimeException(message.toString(), exceptions);
+        }
     }
 
     @Override
