@@ -26,7 +26,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;

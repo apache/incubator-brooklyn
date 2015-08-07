@@ -105,6 +105,7 @@ public class VogellaExampleAccess {
         preparedStatement.executeUpdate();
 
         writeResultSet(readDataBase());
+        preparedStatement.close();
     }
 
     // Remove again the insert comment added by modifyDataBase()

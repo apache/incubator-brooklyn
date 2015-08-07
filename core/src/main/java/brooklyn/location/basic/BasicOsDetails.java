@@ -106,8 +106,8 @@ public class BasicOsDetails implements OsDetails {
     }
 
     public static class OsVersions {
-        public static final String MAC_10_5 = "10.5";
-        public static final String MAC_10_6 = "10.6";
+        public static final String MAC_10_8 = "10.8";
+        public static final String MAC_10_9 = "10.9";
     }
     
     public static class Factory {

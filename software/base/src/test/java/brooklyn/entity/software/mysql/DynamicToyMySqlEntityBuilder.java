@@ -89,17 +89,18 @@ public class DynamicToyMySqlEntityBuilder {
     public static String getOsTag(Entity e) {
         // e.g. "osx10.6-x86_64"; see http://www.mysql.com/downloads/mysql/#downloads
         OsDetails os = ((SshMachineLocation)Iterables.getOnlyElement(e.getLocations())).getOsDetails();
-        if (os == null) return "linux2.6-i686";
+        if (os == null) return "linux-glibc2.5-x86_64";
         if (os.isMac()) {
-            String osp1 = os.getVersion()==null ? "osx10.5" //lowest common denominator
-                : new ComparableVersion(os.getVersion()).isGreaterThanOrEqualTo(OsVersions.MAC_10_6) ? "osx10.6"
-                : new ComparableVersion(os.getVersion()).isGreaterThanOrEqualTo(OsVersions.MAC_10_5) ? "osx10.5"
-                : "osx10.5";  //lowest common denominator
-            String osp2 = os.is64bit() ? "x86_64" : "x86";
-            return osp1+"-"+osp2;
+            String osp1 = os.getVersion()==null ? "osx10.8" //lowest common denominator
+                : new ComparableVersion(os.getVersion()).isGreaterThanOrEqualTo(OsVersions.MAC_10_9) ? "osx10.9"
+                : "osx10.8";  //lowest common denominator
+            if (!os.is64bit()) {
+                throw new IllegalStateException("Only 64 bit MySQL build is available for OS X");
+            }
+            return osp1+"-x86_64";
         }
         //assume generic linux
-        String osp1 = "linux2.6";
+        String osp1 = "linux-glibc2.5";
         String osp2 = os.is64bit() ? "x86_64" : "i686";
         return osp1+"-"+osp2;
     }
