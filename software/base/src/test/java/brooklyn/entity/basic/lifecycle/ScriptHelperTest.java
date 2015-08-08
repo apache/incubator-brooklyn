@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -42,7 +43,6 @@ import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.test
+package org.apache.brooklyn.test
 
 import static org.testng.Assert.*
 import groovy.time.TimeDuration
@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory
 
 import brooklyn.entity.Entity
 import brooklyn.event.AttributeSensor
+import brooklyn.test.Asserts;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.time.Duration
 

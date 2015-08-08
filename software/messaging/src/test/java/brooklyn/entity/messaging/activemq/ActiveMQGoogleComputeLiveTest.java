@@ -22,9 +22,11 @@ import brooklyn.entity.AbstractGoogleComputeLiveTest;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.test.EntityTestUtils;
+
 import com.google.common.collect.ImmutableList;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
 
 import javax.jms.Connection;

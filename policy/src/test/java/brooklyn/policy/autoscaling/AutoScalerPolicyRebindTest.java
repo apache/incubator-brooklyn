@@ -23,6 +23,7 @@ import static org.testng.Assert.assertEquals;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -35,7 +36,6 @@ import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.time.Duration;

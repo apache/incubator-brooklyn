@@ -21,6 +21,7 @@ package org.apache.brooklyn.entity.nosql.mongodb;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -31,7 +32,6 @@ import com.mongodb.DBObject;
 import brooklyn.entity.AbstractSoftlayerLiveTest;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
-import brooklyn.test.EntityTestUtils;
 
 public class MongoDBSoftLayerLiveTest extends AbstractSoftlayerLiveTest {
 

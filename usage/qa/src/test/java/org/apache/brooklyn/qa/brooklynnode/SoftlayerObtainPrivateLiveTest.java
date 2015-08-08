@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -42,7 +43,6 @@ import org.apache.brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.Location;
 import brooklyn.location.jclouds.JcloudsLocationConfig;
 import brooklyn.management.ManagementContext;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.BrooklynMavenArtifacts;

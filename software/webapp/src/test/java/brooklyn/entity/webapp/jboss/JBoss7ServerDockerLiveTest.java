@@ -22,9 +22,12 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.AbstractDockerLiveTest;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
+
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+
 import com.google.common.collect.ImmutableList;
+
 import org.testng.annotations.Test;
 
 import java.net.URL;

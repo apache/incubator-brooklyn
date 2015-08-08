@@ -34,6 +34,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -82,7 +83,6 @@ import brooklyn.rest.testing.mocks.RestMockApp;
 import brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;

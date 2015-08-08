@@ -28,6 +28,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -44,7 +45,6 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.MachineDetails;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;

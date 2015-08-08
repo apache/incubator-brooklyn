@@ -20,6 +20,7 @@ package brooklyn.entity.database.crate;
 
 import static org.testng.Assert.assertFalse;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -31,7 +32,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 
 public class CrateNodeIntegrationTest {

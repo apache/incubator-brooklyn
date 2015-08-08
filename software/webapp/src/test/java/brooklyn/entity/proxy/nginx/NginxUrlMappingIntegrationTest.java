@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -54,7 +54,6 @@ import brooklyn.entity.webapp.tomcat.Tomcat8ServerImpl;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.EntityManager;
 import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

@@ -19,6 +19,10 @@
 package org.apache.brooklyn.demo;
 
 import org.apache.brooklyn.demo.WebClusterDatabaseExampleApp;
+import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.test.WebAppMonitor;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -55,9 +59,6 @@ import brooklyn.location.Location;
 import brooklyn.policy.Enricher;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.HttpTestUtils;
-import brooklyn.test.WebAppMonitor;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 

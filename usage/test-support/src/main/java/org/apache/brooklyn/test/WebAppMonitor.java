@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.test;
+package org.apache.brooklyn.test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.testng.Assert;
 
+import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 

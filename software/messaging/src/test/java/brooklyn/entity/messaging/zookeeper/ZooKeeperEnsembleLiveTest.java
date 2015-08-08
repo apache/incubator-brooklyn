@@ -27,11 +27,13 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.location.Location;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
+
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Uninterruptibles;
+
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;

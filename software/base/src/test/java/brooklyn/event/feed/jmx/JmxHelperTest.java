@@ -33,6 +33,7 @@ import javax.management.NotificationListener;
 import javax.management.ObjectName;
 import javax.management.StandardEmitterMBean;
 
+import org.apache.brooklyn.test.TestUtils;
 import org.jclouds.util.Throwables2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,6 @@ import org.testng.collections.Lists;
 
 import brooklyn.test.GeneralisedDynamicMBean;
 import brooklyn.test.JmxService;
-import brooklyn.test.TestUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 

@@ -21,6 +21,8 @@ package org.apache.brooklyn.entity.brooklynnode;
 import java.net.URI;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +43,6 @@ import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
 import org.apache.brooklyn.launcher.camp.SimpleYamlLauncher;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.Jsonya;

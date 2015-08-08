@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.network.bind;
 
-import static brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
+import static org.apache.brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
 import static org.testng.Assert.assertEquals;
 
 import org.slf4j.Logger;

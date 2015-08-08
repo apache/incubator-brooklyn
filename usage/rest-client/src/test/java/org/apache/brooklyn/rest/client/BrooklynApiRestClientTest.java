@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,6 @@ import brooklyn.rest.BrooklynRestApiLauncherTest;
 import brooklyn.rest.domain.ApplicationSummary;
 import brooklyn.rest.domain.CatalogLocationSummary;
 import brooklyn.rest.security.provider.TestSecurityProvider;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestEntity;
 
 @Test

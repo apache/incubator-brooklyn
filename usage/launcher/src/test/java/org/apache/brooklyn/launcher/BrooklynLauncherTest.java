@@ -33,6 +33,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Properties;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
@@ -49,7 +50,6 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestApplicationImpl;

@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -51,7 +52,6 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.BrooklynGarbageCollector;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
 import brooklyn.util.collections.MutableList;

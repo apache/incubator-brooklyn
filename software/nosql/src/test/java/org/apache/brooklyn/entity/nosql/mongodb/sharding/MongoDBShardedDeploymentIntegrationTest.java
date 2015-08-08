@@ -28,6 +28,7 @@ import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardCluster;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment;
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -37,7 +38,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.EntityTestUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

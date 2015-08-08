@@ -21,6 +21,8 @@ package org.apache.brooklyn.entity.brooklynnode;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -39,8 +41,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.exceptions.Exceptions;

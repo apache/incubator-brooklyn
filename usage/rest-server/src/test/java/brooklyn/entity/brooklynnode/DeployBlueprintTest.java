@@ -24,6 +24,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.management.EntityManager;
 import brooklyn.rest.BrooklynRestApiLauncherTestFixture;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;

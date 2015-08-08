@@ -26,6 +26,7 @@ import java.io.Reader;
 
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -37,7 +38,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.ManagementContext;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;

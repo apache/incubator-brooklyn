@@ -23,6 +23,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -32,7 +33,6 @@ import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.HttpTestUtils;
 
 import com.google.common.collect.ImmutableList;
 

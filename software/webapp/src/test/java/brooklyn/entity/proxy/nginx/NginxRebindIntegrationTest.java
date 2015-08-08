@@ -18,9 +18,9 @@
  */
 package brooklyn.entity.proxy.nginx;
 
-import static brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
-import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
-import static brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
+import static org.apache.brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
+import static org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEquals;
+import static org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals;
 import static org.testng.Assert.assertEquals;
 
 import java.util.List;
@@ -29,8 +29,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
-
+import org.apache.brooklyn.test.WebAppMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -52,8 +53,6 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.WebAppMonitor;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

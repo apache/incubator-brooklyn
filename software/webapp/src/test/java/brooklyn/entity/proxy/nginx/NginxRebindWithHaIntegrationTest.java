@@ -26,7 +26,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.WebAppMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -51,8 +53,6 @@ import brooklyn.location.basic.SshMachineLocationReuseIntegrationTest.RecordingS
 import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.WebAppMonitor;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Networking;

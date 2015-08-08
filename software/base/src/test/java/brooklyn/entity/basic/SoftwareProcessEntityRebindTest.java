@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -43,7 +44,6 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.ManagementContext;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.flags.SetFromFlag;
 

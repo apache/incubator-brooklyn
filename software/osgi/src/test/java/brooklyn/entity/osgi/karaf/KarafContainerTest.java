@@ -24,6 +24,7 @@ import static org.testng.Assert.assertNull;
 import java.net.URL;
 import java.util.Map;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -37,7 +38,6 @@ import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;
 

@@ -51,7 +51,10 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.Lifecycle;
+
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
+import org.apache.brooklyn.test.EntityTestUtils;
+
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
@@ -61,7 +64,6 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;

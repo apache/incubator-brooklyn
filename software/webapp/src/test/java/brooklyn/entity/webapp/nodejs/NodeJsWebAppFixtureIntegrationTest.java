@@ -29,13 +29,15 @@ import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.time.Duration;
+
 import com.google.common.collect.ImmutableList;
+
+import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;

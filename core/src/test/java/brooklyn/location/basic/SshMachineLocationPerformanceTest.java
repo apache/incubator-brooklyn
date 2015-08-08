@@ -25,13 +25,13 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.test.PerformanceTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.test.PerformanceTestUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Networking;

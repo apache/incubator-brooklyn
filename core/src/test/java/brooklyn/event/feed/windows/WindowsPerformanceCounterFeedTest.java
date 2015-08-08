@@ -26,6 +26,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -39,7 +40,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.text.Strings;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;

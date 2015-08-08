@@ -31,6 +31,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
@@ -62,8 +64,6 @@ import brooklyn.location.basic.Locations;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;

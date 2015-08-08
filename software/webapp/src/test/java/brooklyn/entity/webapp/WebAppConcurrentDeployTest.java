@@ -39,8 +39,10 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.Task;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
+
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.http.HttpTool;

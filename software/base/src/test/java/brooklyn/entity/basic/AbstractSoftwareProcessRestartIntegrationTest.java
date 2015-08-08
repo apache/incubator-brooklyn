@@ -20,6 +20,7 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -30,7 +31,6 @@ import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.util.collections.CollectionFunctionals;
 
 import com.google.common.collect.ImmutableList;

@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.webapp;
 
-import static brooklyn.test.HttpTestUtils.connectToUrl;
+import static org.apache.brooklyn.test.HttpTestUtils.connectToUrl;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 

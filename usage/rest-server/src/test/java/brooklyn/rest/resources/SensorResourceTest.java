@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.brooklyn.test.HttpTestUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -40,7 +41,6 @@ import brooklyn.rest.domain.ApplicationSpec;
 import brooklyn.rest.domain.EntitySpec;
 import brooklyn.rest.testing.BrooklynRestResourceTest;
 import brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-import brooklyn.test.HttpTestUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.StringFunctions;

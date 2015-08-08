@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.brooklyn.entity.nosql.couchbase.CouchbaseCluster;
 import org.apache.brooklyn.entity.nosql.couchbase.CouchbaseNode;
 import org.apache.brooklyn.entity.nosql.couchbase.CouchbaseSyncGateway;
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
@@ -31,7 +32,6 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.test.EntityTestUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

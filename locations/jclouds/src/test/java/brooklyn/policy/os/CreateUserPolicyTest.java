@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -38,7 +39,6 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.policy.PolicySpec;
 import brooklyn.policy.os.CreateUserPolicy;
-import brooklyn.test.EntityTestUtils;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.internal.ssh.SshTool;
 
