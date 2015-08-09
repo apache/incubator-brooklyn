@@ -23,7 +23,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.internal.BrooklynGarbageCollector;
-import brooklyn.rest.BrooklynWebConfig;
+import org.apache.brooklyn.rest.BrooklynWebConfig;
 import brooklyn.util.internal.BrooklynSystemProperties;
 import brooklyn.util.internal.StringSystemProperty;
 import brooklyn.util.time.Duration;

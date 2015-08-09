@@ -36,7 +36,7 @@ import javax.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.rest.apidoc.Apidoc;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.wordnik.swagger.core.ApiOperation;

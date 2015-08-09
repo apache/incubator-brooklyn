@@ -104,17 +104,17 @@ Other security providers available include:
 
 ### No one
 
-`brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.BlackholeSecurityProvider`
+`brooklyn.webconsole.security.provider=org.apache.brooklyn.rest.security.provider.BlackholeSecurityProvider`
 will block all logins (e.g. if not using the web console)
 
 ### No security
 
-`brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.AnyoneSecurityProvider`
+`brooklyn.webconsole.security.provider=org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider`
 will allow logins with no credentials (e.g. in secure dev/test environments) 
 
 ### LDAP
 
-`brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.LdapSecurityProvider`
+`brooklyn.webconsole.security.provider=org.apache.brooklyn.rest.security.provider.LdapSecurityProvider`
 will cause Brooklyn to call to an LDAP server to authenticate users;
 The other things you need to set in `brooklyn.properties` are:
 
@@ -125,13 +125,13 @@ The other things you need to set in `brooklyn.properties` are:
 **brooklyn.properties example configuration:**
 
 ```
-brooklyn.webconsole.security.provider=brooklyn.rest.security.provider.LdapSecurityProvider
+brooklyn.webconsole.security.provider=org.apache.brooklyn.rest.security.provider.LdapSecurityProvider
 brooklyn.webconsole.security.ldap.url=ldap://localhost:10389/????X-BIND-USER=uid=admin%2cou=system,X-BIND-PASSWORD=secret,X-COUNT-LIMIT=1000
 brooklyn.webconsole.security.ldap.realm=example.com
 ```
 
 After you setup the brooklyn connection to your LDAP server, you can authenticate in brooklyn using your cn (e.g. John Smith) and your password.
-`brooklyn.rest.security.provider.LdapSecurityProvider` searches in the LDAP tree in LDAP://cn=John Smith,ou=Users,dc=example,dc=com
+`org.apache.brooklyn.rest.security.provider.LdapSecurityProvider` searches in the LDAP tree in LDAP://cn=John Smith,ou=Users,dc=example,dc=com
 
 If you want to customize the ldap path or something else which is particular to your LDAP setup you can extend `LdapSecurityProvider` class or implement from scratch the `SecurityProvider` interface.
 

@@ -46,21 +46,21 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 
-import brooklyn.rest.api.AccessApi;
-import brooklyn.rest.api.ActivityApi;
-import brooklyn.rest.api.ApplicationApi;
-import brooklyn.rest.api.CatalogApi;
-import brooklyn.rest.api.EffectorApi;
-import brooklyn.rest.api.EntityApi;
-import brooklyn.rest.api.EntityConfigApi;
-import brooklyn.rest.api.LocationApi;
-import brooklyn.rest.api.PolicyApi;
-import brooklyn.rest.api.PolicyConfigApi;
-import brooklyn.rest.api.ScriptApi;
-import brooklyn.rest.api.SensorApi;
-import brooklyn.rest.api.ServerApi;
-import brooklyn.rest.api.UsageApi;
-import brooklyn.rest.api.VersionApi;
+import org.apache.brooklyn.rest.api.AccessApi;
+import org.apache.brooklyn.rest.api.ActivityApi;
+import org.apache.brooklyn.rest.api.ApplicationApi;
+import org.apache.brooklyn.rest.api.CatalogApi;
+import org.apache.brooklyn.rest.api.EffectorApi;
+import org.apache.brooklyn.rest.api.EntityApi;
+import org.apache.brooklyn.rest.api.EntityConfigApi;
+import org.apache.brooklyn.rest.api.LocationApi;
+import org.apache.brooklyn.rest.api.PolicyApi;
+import org.apache.brooklyn.rest.api.PolicyConfigApi;
+import org.apache.brooklyn.rest.api.ScriptApi;
+import org.apache.brooklyn.rest.api.SensorApi;
+import org.apache.brooklyn.rest.api.ServerApi;
+import org.apache.brooklyn.rest.api.UsageApi;
+import org.apache.brooklyn.rest.api.VersionApi;
 import brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.http.BuiltResponsePreservingError;
 

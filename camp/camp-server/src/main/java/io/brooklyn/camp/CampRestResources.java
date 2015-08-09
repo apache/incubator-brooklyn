@@ -31,7 +31,7 @@ import io.brooklyn.camp.rest.resource.PlatformRestResource;
 import java.util.ArrayList;
 import java.util.List;
 
-import brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
+import org.apache.brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.collect.Iterables;
