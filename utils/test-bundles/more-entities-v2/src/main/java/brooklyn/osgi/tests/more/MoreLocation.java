@@ -19,12 +19,9 @@
 package brooklyn.osgi.tests.more;
 
 
-import brooklyn.catalog.Catalog;
-import brooklyn.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.catalog.Catalog;
+import brooklyn.location.basic.AbstractLocation;
 
-@Catalog(name="More Policy", description="Cataliog item OSGi test policy")
-public class MorePolicy extends AbstractPolicy {
-    public String sayHI(String name) {
-        return "HI "+name.toUpperCase()+" FROM V2";
-    }
+@Catalog(name="More Location", description="Cataliog item OSGi test location")
+public class MoreLocation extends AbstractLocation {
 }

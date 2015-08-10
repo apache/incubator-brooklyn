@@ -22,9 +22,9 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
 
-    <groupId>org.apache.brooklyn.test.resources.osgi</groupId>
-    <artifactId>brooklyn-test-osgi-entities</artifactId>
-    <version>0.1.0</version>
+    <groupId>org.apache.brooklyn.test.resources.osgi.evil_twin</groupId>
+    <artifactId>brooklyn-test-osgi-more-entities</artifactId>
+    <version>0.2.0</version>
 
     <name>OSGi bundled test entities</name>
 
@@ -36,7 +36,7 @@
         <groupId>org.apache.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.8.0-SNAPSHOT</version><!-- BROOKLYN_VERSION -->
-        <relativePath>../../../../../../pom.xml</relativePath>
+        <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
     <dependencies>
         <dependency>
@@ -54,28 +54,23 @@
             <artifactId>brooklyn-utils-common</artifactId>
             <version>${brooklyn.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn.test.resources.osgi</groupId>
+            <artifactId>brooklyn-test-osgi-entities</artifactId>
+            <version>0.1.0</version>
+        </dependency>
     </dependencies>
     
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <outputDirectory>../../../resources/brooklyn/osgi</outputDirectory>
-                    <finalName>brooklyn-test-osgi-entities</finalName>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>2.5.3</version>
                 <configuration>
                     <instructions>
+                        <Bundle-SymbolicName>org.apache.brooklyn.test.resources.osgi.brooklyn-test-osgi-more-entities</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Brooklyn-Feature-BuildId>${buildNumber}</Brooklyn-Feature-BuildId>
-                        <Brooklyn-Feature-BuildBranch>${scmBranch}</Brooklyn-Feature-BuildBranch>
                     </instructions>
                 </configuration>
             </plugin>

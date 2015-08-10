@@ -19,9 +19,14 @@
 package brooklyn.osgi.tests.more;
 
 
-import brooklyn.catalog.Catalog;
-import brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.catalog.Catalog;
+import brooklyn.entity.Application;
+import brooklyn.entity.Effector;
+import brooklyn.entity.Entity;
+import brooklyn.entity.basic.AbstractApplication;
+import brooklyn.entity.effector.Effectors;
+import brooklyn.entity.proxying.ImplementedBy;
 
-@Catalog(name="More Location", description="Cataliog item OSGi test location")
-public class MoreLocation extends AbstractLocation {
+@Catalog(name="More Template", description="Cataliog item OSGi test template")
+public class MoreTemplate extends AbstractApplication {
 }

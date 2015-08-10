@@ -19,7 +19,7 @@
 package brooklyn.osgi.tests.more;
 
 
-import brooklyn.catalog.Catalog;
+import org.apache.brooklyn.catalog.Catalog;
 import brooklyn.policy.basic.AbstractPolicy;
 
 public class MorePolicy extends AbstractPolicy {

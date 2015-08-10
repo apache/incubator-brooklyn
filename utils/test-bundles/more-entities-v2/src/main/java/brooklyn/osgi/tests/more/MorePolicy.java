@@ -19,23 +19,12 @@
 package brooklyn.osgi.tests.more;
 
 
-import brooklyn.catalog.Catalog;
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.catalog.Catalog;
+import brooklyn.policy.basic.AbstractPolicy;
 
-@Catalog(name="More Entity v2")
-@ImplementedBy(MoreEntityImpl.class)
-public interface MoreEntity extends Entity {
-
-    public static final Effector<String> SAY_HI = Effectors.effector(String.class, "sayHI")
-        .description("says HI to an uppercased name")
-        .parameter(String.class, "name")
-        .buildAbstract();
-
-    /** Makes a string saying hi to the given name, in uppercase, for testing. 
-     * In contrast to v1, impl here returns HI not Hi. */
-    String sayHI(String name);
-    
+@Catalog(name="More Policy", description="Cataliog item OSGi test policy")
+public class MorePolicy extends AbstractPolicy {
+    public String sayHI(String name) {
+        return "HI "+name.toUpperCase()+" FROM V2";
+    }
 }

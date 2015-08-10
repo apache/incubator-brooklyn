@@ -36,7 +36,7 @@
         <groupId>org.apache.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.8.0-SNAPSHOT</version><!-- BROOKLYN_VERSION -->
-        <relativePath>../../../../../../pom.xml</relativePath>
+        <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
     <dependencies>
         <dependency>
@@ -58,15 +58,6 @@
     
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <outputDirectory>../../../resources/brooklyn/osgi</outputDirectory>
-                    <finalName>brooklyn-test-osgi-more-entities_${version}</finalName>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
