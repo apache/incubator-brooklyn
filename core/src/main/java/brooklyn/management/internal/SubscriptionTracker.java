@@ -37,7 +37,7 @@ import com.google.common.collect.SetMultimap;
  */
 public class SubscriptionTracker {
 
-    // This class is thread-safe. All modifications to subscriptions are synchronized on the 
+    // This class is thread-safe. All modifications to subscriptions are synchronized on the
     // "subscriptions" field. However, calls to alien code (i.e. context.subscribe etc) is
     // done without holding the lock.
     //
@@ -46,15 +46,15 @@ public class SubscriptionTracker {
     // is guaranteed that the internal state of the SubscriptionTracker will be consistent: if
     // the "subscriptions" includes the new subscription then that subscription will really exist,
     // and vice versa.
-    
+
     protected SubscriptionContext context;
-    
+
     private final SetMultimap<Entity, SubscriptionHandle> subscriptions = HashMultimap.create();
 
     public SubscriptionTracker(SubscriptionContext subscriptionContext) {
         this.context = subscriptionContext;
     }
-    
+
     /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
     public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         SubscriptionHandle handle = context.subscribe(producer, sensor, listener);
@@ -63,7 +63,7 @@ public class SubscriptionTracker {
         }
         return handle;
     }
-    
+
     /** @see SubscriptionContext#subscribeToChildren(Entity, Sensor, SensorEventListener) */
     public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         SubscriptionHandle handle = context.subscribeToChildren(parent, sensor, listener);
@@ -82,7 +82,7 @@ public class SubscriptionTracker {
             subscriptions.put(parent, handle);
         }
         return handle;
-    }    
+    }
 
     /**
      * Unsubscribes the given producer.
@@ -104,34 +104,34 @@ public class SubscriptionTracker {
     }
 
     /**
-    * Unsubscribes the given producer.
-    *
-    * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
-    */
-   public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
-       synchronized (subscriptions) {
-           subscriptions.remove(producer, handle);
-       }
-       return context.unsubscribe(handle);
-   }
+     * Unsubscribes the given producer.
+     *
+     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+     */
+    public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
+        synchronized (subscriptions) {
+            subscriptions.remove(producer, handle);
+        }
+        return context.unsubscribe(handle);
+    }
 
     /**
-    * @return an ordered list of all subscription handles
-    */
-   public Collection<SubscriptionHandle> getAllSubscriptions() {
-       synchronized (subscriptions) {
-           return ImmutableList.copyOf(subscriptions.values());
-       }
-   }
-   
-   public void unsubscribeAll() {
-       Collection<SubscriptionHandle> subscriptionsSnapshot;
-       synchronized (subscriptions) {
-           subscriptionsSnapshot = ImmutableList.copyOf(subscriptions.values());
-           subscriptions.clear();
-       }
-       for (SubscriptionHandle s: subscriptionsSnapshot) {
-           context.unsubscribe(s);
-       }
-   }
+     * @return an ordered list of all subscription handles
+     */
+    public Collection<SubscriptionHandle> getAllSubscriptions() {
+        synchronized (subscriptions) {
+            return ImmutableList.copyOf(subscriptions.values());
+        }
+    }
+
+    public void unsubscribeAll() {
+        Collection<SubscriptionHandle> subscriptionsSnapshot;
+        synchronized (subscriptions) {
+            subscriptionsSnapshot = ImmutableList.copyOf(subscriptions.values());
+            subscriptions.clear();
+        }
+        for (SubscriptionHandle s: subscriptionsSnapshot) {
+            context.unsubscribe(s);
+        }
+    }
 }
