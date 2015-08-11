@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal.storage.impl.hazelcast;
+package org.apache.brooklyn.internal.storage.impl.hazelcast;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntityProxyImpl;

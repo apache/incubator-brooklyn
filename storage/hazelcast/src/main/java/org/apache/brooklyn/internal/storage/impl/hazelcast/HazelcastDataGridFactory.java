@@ -16,21 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal.storage.impl.hazelcast;
+package org.apache.brooklyn.internal.storage.impl.hazelcast;
 
-import java.io.Serializable;
+import brooklyn.internal.storage.DataGrid;
+import brooklyn.internal.storage.DataGridFactory;
+import brooklyn.management.internal.ManagementContextInternal;
 
-class EntityId implements Serializable {
+import com.hazelcast.core.HazelcastInstance;
 
-    private static final long serialVersionUID = 1L;
+public class HazelcastDataGridFactory implements DataGridFactory {
 
-    private final String id;
+    private HazelcastInstance hazelcastInstance;
 
-    EntityId(String id) {
-        this.id = id;
+    public HazelcastDataGridFactory() {
     }
 
-    String getId() {
-        return id;
+    public HazelcastDataGridFactory(HazelcastInstance hazelcastInstance) {
+        this.hazelcastInstance = hazelcastInstance;
+    }
+
+    @Override
+    public DataGrid newDataGrid(ManagementContextInternal managementContext) {
+        return new HazelcastDataGrid(managementContext,hazelcastInstance);
     }
 }
