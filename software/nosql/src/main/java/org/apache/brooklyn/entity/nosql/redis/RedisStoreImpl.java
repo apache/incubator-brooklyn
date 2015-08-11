@@ -64,7 +64,8 @@ public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
         if (!location.isPresent()) throw new IllegalStateException("Could not find SshMachineLocation in list of locations");
         SshMachineLocation machine = (SshMachineLocation) location.get();
         String statsCommand = getDriver().getRunDir() + "/bin/redis-cli -p " + getRedisPort() + " info stats";
-
+        boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
+        
         sshFeed = SshFeed.builder()
                 .entity(this)
                 .machine(machine)
@@ -72,31 +73,38 @@ public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
                 .poll(new SshPollConfig<Integer>(UPTIME)
                         .command(getDriver().getRunDir() + "/bin/redis-cli -p " + getRedisPort() + " info server")
                         .onFailureOrException(Functions.constant(-1))
-                        .onSuccess(infoFunction("uptime_in_seconds")))
+                        .onSuccess(infoFunction("uptime_in_seconds"))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new SshPollConfig<Integer>(TOTAL_CONNECTIONS_RECEIVED)
                         .command(statsCommand)
                         .onFailureOrException(Functions.constant(-1))
-                        .onSuccess(infoFunction("total_connections_received")))
+                        .onSuccess(infoFunction("total_connections_received"))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new SshPollConfig<Integer>(TOTAL_COMMANDS_PROCESSED)
                         .command(statsCommand)
                         .onFailureOrException(Functions.constant(-1))
-                        .onSuccess(infoFunction("total_commands_processed")))
+                        .onSuccess(infoFunction("total_commands_processed"))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new SshPollConfig<Integer>(EXPIRED_KEYS)
                         .command(statsCommand)
                         .onFailureOrException(Functions.constant(-1))
-                        .onSuccess(infoFunction("expired_keys")))
+                        .onSuccess(infoFunction("expired_keys"))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new SshPollConfig<Integer>(EVICTED_KEYS)
                         .command(statsCommand)
                         .onFailureOrException(Functions.constant(-1))
-                        .onSuccess(infoFunction("evicted_keys")))
+                        .onSuccess(infoFunction("evicted_keys"))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new SshPollConfig<Integer>(KEYSPACE_HITS)
                         .command(statsCommand)
                         .onFailureOrException(Functions.constant(-1))
-                        .onSuccess(infoFunction("keyspace_hits")))
+                        .onSuccess(infoFunction("keyspace_hits"))
+                        .enabled(retrieveUsageMetrics))
                 .poll(new SshPollConfig<Integer>(KEYSPACE_MISSES)
                         .command(statsCommand)
                         .onFailureOrException(Functions.constant(-1))
-                        .onSuccess(infoFunction("keyspace_misses")))
+                        .onSuccess(infoFunction("keyspace_misses"))
+                        .enabled(retrieveUsageMetrics))
                 .build();
     }
 

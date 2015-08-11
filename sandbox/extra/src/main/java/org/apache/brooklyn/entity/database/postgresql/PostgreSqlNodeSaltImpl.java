@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.entity.database.postgresql;
 
-import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNodeSaltImpl;
 import org.apache.brooklyn.entity.salt.SaltConfig;
 import org.apache.brooklyn.entity.salt.SaltConfigs;
 import org.apache.brooklyn.entity.salt.SaltLifecycleEffectorTasks;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,4 +176,8 @@ public class PostgreSqlNodeSaltImpl extends EffectorStartableImpl implements Pos
                 ConfigBag.newInstance().configure(ExecuteScriptEffectorBody.SCRIPT, commands).getAllConfig()).getUnchecked();
     }
 
+    @Override
+    public void populateServiceNotUpDiagnostics() {
+        // TODO no-op currently; should check ssh'able etc
+    }
 }

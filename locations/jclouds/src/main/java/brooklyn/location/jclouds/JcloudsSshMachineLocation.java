@@ -153,6 +153,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Jcl
         return node.getHostname();
     }
     
+    /** In most clouds, the public hostname is the only way to ensure VMs in different zones can access each other. */
     @Override
     public Set<String> getPublicAddresses() {
         return node.getPublicAddresses();
@@ -163,11 +164,10 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Jcl
         return node.getPrivateAddresses();
     }
 
-    /** In most clouds, the public hostname is the only way to ensure VMs in different zones can access each other. */
     @Override
     public String getSubnetHostname() {
-        String publicHostname = jcloudsParent.getPublicHostname(node, Optional.<HostAndPort>absent(), config().getBag());
-        return publicHostname;
+        String privateHostname = jcloudsParent.getPrivateHostname(node, Optional.<HostAndPort>absent(), config().getBag());
+        return privateHostname;
     }
 
     @Override
@@ -190,9 +190,7 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Jcl
 
     protected Optional<String> getPrivateAddress() {
         if (groovyTruth(node.getPrivateAddresses())) {
-            Iterator<String> pi = node.getPrivateAddresses().iterator();
-            while (pi.hasNext()) {
-                String p = pi.next();
+            for (String p : node.getPrivateAddresses()) {
                 // disallow local only addresses
                 if (Networking.isLocalOnly(p)) continue;
                 // other things may be public or private, but either way, return it

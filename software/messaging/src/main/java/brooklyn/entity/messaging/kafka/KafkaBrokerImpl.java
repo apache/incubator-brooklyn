@@ -91,7 +91,8 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     @Override
     protected void connectSensors() {
         connectServiceUpIsRunning();
-
+        boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
+        
         if (((KafkaBrokerDriver)getDriver()).isJmxEnabled()) {
             jmxFeed = JmxFeed.builder()
                 .entity(this)
@@ -99,35 +100,43 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
                 .pollAttribute(new JmxAttributePollConfig<Long>(FETCH_REQUEST_COUNT)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("NumFetchRequests")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Long>(TOTAL_FETCH_TIME)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalFetchRequestMs")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Double>(MAX_FETCH_TIME)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("MaxFetchRequestMs")
-                        .onException(Functions.constant(-1.0d)))
+                        .onException(Functions.constant(-1.0d))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Long>(PRODUCE_REQUEST_COUNT)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("NumProduceRequests")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Long>(TOTAL_PRODUCE_TIME)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalProduceRequestMs")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Double>(MAX_PRODUCE_TIME)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("MaxProduceRequestMs")
-                        .onException(Functions.constant(-1.0d)))
+                        .onException(Functions.constant(-1.0d))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Long>(BYTES_RECEIVED)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalBytesRead")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l))
+                        .enabled(retrieveUsageMetrics))
                 .pollAttribute(new JmxAttributePollConfig<Long>(BYTES_SENT)
                         .objectName(SOCKET_SERVER_STATS_MBEAN)
                         .attributeName("TotalBytesWritten")
-                        .onException(Functions.constant(-1l)))
+                        .onException(Functions.constant(-1l))
+                        .enabled(retrieveUsageMetrics))
                 .build();
         }
 

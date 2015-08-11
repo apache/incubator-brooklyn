@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.Entity;
@@ -37,6 +38,7 @@ import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
+import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.test.entity.TestEntityNoEnrichersImpl;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -153,19 +155,46 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
     }
     
     @Test
-    public void testSetsDefaultDisplayName() throws Exception {
+    public void testDisplayNameUsesDefault() throws Exception {
         TestEntity entity = app.addChild(EntitySpec.create(TestEntity.class));
         
         assertTrue(entity.getDisplayName().startsWith("TestEntity:"+entity.getId().substring(0,4)), "displayName="+entity.getDisplayName());
     }
     
     @Test
-    public void testUsesCustomDisplayName() throws Exception {
+    public void testDisplayNameUsesCustom() throws Exception {
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class).displayName("entityname"));
         
         assertEquals(entity.getDisplayName(), "entityname");
     }
 
+    @Test
+    public void testDisplayNameUsesOverriddenDefault() throws Exception {
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .impl(TestEntityWithDefaultNameImpl.class)
+                .configure(TestEntityWithDefaultNameImpl.DEFAULT_NAME, "myOverriddenDefaultName"));
+        assertEquals(entity.getDisplayName(), "myOverriddenDefaultName");
+    }        
+
+    @Test
+    public void testDisplayNameUsesCustomWhenOverriddenDefault() throws Exception {
+        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
+                .impl(TestEntityWithDefaultNameImpl.class)
+                .configure(TestEntityWithDefaultNameImpl.DEFAULT_NAME, "myOverriddenDefaultName")
+                .displayName("myEntityName"));
+        assertEquals(entity.getDisplayName(), "myEntityName");
+    }        
+
+    public static class TestEntityWithDefaultNameImpl extends TestEntityImpl {
+        public static final ConfigKey<String> DEFAULT_NAME = ConfigKeys.newStringConfigKey("defaultName");
+        
+        @Override
+        public void init() {
+            super.init();
+            if (getConfig(DEFAULT_NAME) != null) setDefaultDisplayName(getConfig(DEFAULT_NAME));
+        }
+    }
+    
     public static class MyPolicy extends AbstractPolicy {
         public static final BasicConfigKey<String> CONF1 = new BasicConfigKey<String>(String.class, "testpolicy.conf1", "my descr, conf1", "defaultval1");
         public static final BasicConfigKey<Integer> CONF2 = new BasicConfigKey<Integer>(Integer.class, "testpolicy.conf2", "my descr, conf2", 2);

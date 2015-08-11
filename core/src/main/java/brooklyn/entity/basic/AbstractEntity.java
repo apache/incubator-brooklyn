@@ -119,9 +119,6 @@ import com.google.common.collect.Sets;
  * <p>
  * Note that config is typically inherited by children, whereas the fields and attributes are not.
  * <p>
- * Though currently Groovy code, this is very likely to change to pure Java in a future release of 
- * Brooklyn so Groovy'isms should not be relied on.
- * <p>
  * Sub-classes should have a no-argument constructor. When brooklyn creates an entity, it will:
  * <ol>
  *   <li>Construct the entity via the no-argument constructor
@@ -172,6 +169,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     public static final BasicNotificationSensor<Entity> CHILD_REMOVED = new BasicNotificationSensor<Entity>(Entity.class,
             "entity.children.removed", "Child dynamically removed from entity");
 
+    public static final BasicNotificationSensor<Group> GROUP_ADDED = new BasicNotificationSensor<Group>(Group.class,
+            "entity.group.added", "Group dynamically added to entity");
+    public static final BasicNotificationSensor<Group> GROUP_REMOVED = new BasicNotificationSensor<Group>(Group.class,
+            "entity.group.removed", "Group dynamically removed from entity");
+    
     static {
         RendererHints.register(Entity.class, RendererHints.displayValue(EntityFunctions.displayName()));
     }
@@ -673,15 +675,23 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     @Override
-    public void addGroup(Group e) {
-        groups.add(e);
+    public void addGroup(Group group) {
+        boolean changed = groups.add(group);
         getApplication();
+        
+        if (changed) {
+            emit(AbstractEntity.GROUP_ADDED, group);
+        }
     }
 
     @Override
-    public void removeGroup(Group e) {
-        groups.remove(e);
+    public void removeGroup(Group group) {
+        boolean changed = groups.remove(group);
         getApplication();
+        
+        if (changed) {
+            emit(AbstractEntity.GROUP_REMOVED, group);
+        }
     }
 
     @Override

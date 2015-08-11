@@ -162,4 +162,8 @@ public class PostgreSqlNodeChefImplFromScratch extends EffectorStartableImpl imp
                 ConfigBag.newInstance().configure(ExecuteScriptEffectorBody.SCRIPT, commands).getAllConfig()).getUnchecked();
     }
 
+    @Override
+    public void populateServiceNotUpDiagnostics() {
+        // TODO no-op currently; should check ssh'able etc
+    }    
 }

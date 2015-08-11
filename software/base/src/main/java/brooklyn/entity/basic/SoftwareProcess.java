@@ -24,6 +24,7 @@ import java.util.Map;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle.Transition;
+import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
@@ -239,6 +240,11 @@ public interface SoftwareProcess extends Entity, Startable {
             "softwareProcess.lifecycleTasks", "An object that handles lifecycle of an entity's associated machine.",
             new SoftwareProcessDriverLifecycleEffectorTasks());
 
+    ConfigKey<Boolean> RETRIEVE_USAGE_METRICS = ConfigKeys.newBooleanConfigKey(
+            "metrics.usage.retrieve",
+            "Whether to retrieve the usage (e.g. performance) metrics",
+            true);
+
     /** Controls the behavior when starting (stop, restart) {@link Startable} children as part of the start (stop, restart) effector on this entity
      * <p>
      * (NB: restarts are currently not propagated to children in the default {@link SoftwareProcess}
@@ -343,4 +349,10 @@ public interface SoftwareProcess extends Entity, Startable {
     
     // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks
 
+    /**
+     * @since 0.8.0
+     */
+    @Effector(description="Populates the attribute service.notUp.diagnostics, with any available health indicators")
+    @Beta
+    void populateServiceNotUpDiagnostics();
 }

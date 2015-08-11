@@ -169,6 +169,7 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
     protected WindowsPerformanceCounterFeed(Builder builder) {
         List<WindowsPerformanceCounterPollConfig<?>> polls = Lists.newArrayList();
         for (WindowsPerformanceCounterPollConfig<?> config : builder.polls) {
+            if (!config.isEnabled()) continue;
             @SuppressWarnings({ "unchecked", "rawtypes" })
             WindowsPerformanceCounterPollConfig<?> configCopy = new WindowsPerformanceCounterPollConfig(config);
             if (configCopy.getPeriod() < 0) configCopy.period(builder.period);

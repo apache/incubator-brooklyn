@@ -34,11 +34,22 @@ public class HttpValueFunctions {
     private HttpValueFunctions() {} // instead use static utility methods
     
     public static Function<HttpToolResponse, Integer> responseCode() {
+        return new ResponseCode();
+    }
+    
+    /** @deprecated since 0.7.0; only here for deserialization of persisted state */
+    private static Function<HttpToolResponse, Integer> responseCodeLegacy() {
         return new Function<HttpToolResponse, Integer>() {
             @Override public Integer apply(HttpToolResponse input) {
                 return input.getResponseCode();
             }
         };
+    }
+
+    private static class ResponseCode implements Function<HttpToolResponse, Integer> {
+        @Override public Integer apply(HttpToolResponse input) {
+            return input.getResponseCode();
+        }
     }
 
     public static Function<HttpToolResponse, Boolean> responseCodeEquals(final int expected) {
@@ -52,15 +63,26 @@ public class HttpValueFunctions {
         }
         return Functionals.chain(HttpValueFunctions.responseCode(), Functions.forPredicate(Predicates.in(expectedList)));
     }
-    
+
     public static Function<HttpToolResponse, String> stringContentsFunction() {
+        return new StringContents();
+    }
+    
+    /** @deprecated since 0.7.0; only here for deserialization of persisted state */
+    private static Function<HttpToolResponse, String> stringContentsFunctionLegacy() {
         return new Function<HttpToolResponse, String>() {
             @Override public String apply(HttpToolResponse input) {
                 return input.getContentAsString();
             }
         };
     }
-    
+
+    private static class StringContents implements Function<HttpToolResponse, String> {
+        @Override public String apply(HttpToolResponse input) {
+            return input.getContentAsString();
+        }
+    }
+
     public static Function<HttpToolResponse, JsonElement> jsonContents() {
         return Functionals.chain(stringContentsFunction(), JsonFunctions.asJson());
     }
@@ -78,13 +100,42 @@ public class HttpValueFunctions {
     }
     
     public static Function<HttpToolResponse, Long> latency() {
+        return new Latency();
+    }
+
+    /** @deprecated since 0.7.0; only here for deserialization of persisted state */
+    private static Function<HttpToolResponse, Long> latencyLegacy() {
         return new Function<HttpToolResponse, Long>() {
             public Long apply(HttpToolResponse input) {
                 return input.getLatencyFullContent();
             }
         };
     }
+
+    private static class Latency implements Function<HttpToolResponse, Long> {
+        public Long apply(HttpToolResponse input) {
+            return input.getLatencyFullContent();
+        }
+    };
+
+    public static Function<HttpToolResponse, Boolean> containsHeader(String header) {
+        return new ContainsHeader(header);
+    }
+
+    private static class ContainsHeader implements Function<HttpToolResponse, Boolean> {
+        private final String header;
+
+        public ContainsHeader(String header) {
+            this.header = header;
+        }
+        @Override
+        public Boolean apply(HttpToolResponse input) {
+            List<String> actual = input.getHeaderLists().get(header);
+            return actual != null && actual.size() > 0;
+        }
+    }
     
+
     /** @deprecated since 0.7.0 use {@link Functionals#chain(Function, Function)} */ @Deprecated
     public static <A,B,C> Function<A,C> chain(final Function<A,? extends B> f1, final Function<B,C> f2) {
         return Functionals.chain(f1, f2);

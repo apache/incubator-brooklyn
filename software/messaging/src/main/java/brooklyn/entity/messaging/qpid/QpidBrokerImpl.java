@@ -129,7 +129,8 @@ public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implemen
                                     }
                                     return true;
                                 }})
-                        .onException(Functions.constant(false)))
+                        .onException(Functions.constant(false))
+                        .suppressDuplicates(true))
                 .build();
     }
 

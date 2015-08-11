@@ -476,8 +476,6 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         }
         setAttribute(WEB_CONSOLE_URI, webConsoleUri);
 
-        connectServiceUpIsRunning();
-
         if (webConsoleUri != null) {
             httpFeed = HttpFeed.builder()
                     .entity(this)
@@ -505,6 +503,8 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 .from(WEB_CONSOLE_ACCESSIBLE)
                 .computing(Functionals.ifNotEquals(true).value("URL where Brooklyn listens is not answering correctly") )
                 .build());
+        } else {
+            connectServiceUpIsRunning();
         }
     }
     

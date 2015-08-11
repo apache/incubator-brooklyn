@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Objects;
+
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -52,6 +54,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     @SuppressWarnings("rawtypes")
     private final AttributeSensor sensor;
     private final AbstractFeed feed;
+    private final boolean suppressDuplicates;
     
     // allow 30 seconds before logging at WARN, if there has been no success yet;
     // after success WARN immediately
@@ -64,12 +67,14 @@ public class AttributePollHandler<V> implements PollHandler<V> {
     private volatile Long currentProblemStartTime = null;
     private volatile boolean currentProblemLoggedAsWarning = false;
     private volatile boolean lastWasProblem = false;
+
     
     public AttributePollHandler(FeedConfig<V,?,?> config, EntityLocal entity, AbstractFeed feed) {
         this.config = checkNotNull(config, "config");
         this.entity = checkNotNull(entity, "entity");
         this.sensor = checkNotNull(config.getSensor(), "sensor");
         this.feed = checkNotNull(feed, "feed");
+        this.suppressDuplicates = config.getSupressDuplicates();
     }
 
     @Override
@@ -218,7 +223,12 @@ public class AttributePollHandler<V> implements PollHandler<V> {
         } else if (sensor == FeedConfig.NO_SENSOR) {
             // nothing
         } else {
-            entity.setAttribute(sensor, TypeCoercions.coerce(v, sensor.getType()));
+            Object coercedV = TypeCoercions.coerce(v, sensor.getType());
+            if (suppressDuplicates && Objects.equal(coercedV, entity.getAttribute(sensor))) {
+                // no change; nothing
+            } else {
+                entity.setAttribute(sensor, coercedV);
+            }
         }
     }
 

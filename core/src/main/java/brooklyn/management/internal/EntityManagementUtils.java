@@ -287,7 +287,7 @@ public class EntityManagementUtils {
     /** worker method to help determine whether child/children can be promoted */
     @Beta //where should this live long-term?
     public static boolean hasNoNameOrCustomKeysOrRoot(AssemblyTemplate template, EntitySpec<?> spec) {
-        if (!Strings.isEmpty(template.getName())) {
+        if (Strings.isNonEmpty(template.getName())) {
             if (spec.getChildren().size()==1) {
                 String childName = Iterables.getOnlyElement(spec.getChildren()).getDisplayName();
                 if (Strings.isEmpty(childName) || childName.equals(template.getName())) {

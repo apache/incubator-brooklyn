@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.Entity;
+import brooklyn.entity.Group;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.DynamicGroupImpl;
@@ -83,6 +84,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         ConfigToAttributes.apply(this, CONTROLLER);
         ConfigToAttributes.apply(this, CONTROLLER_SPEC);
         ConfigToAttributes.apply(this, WEB_CLUSTER_SPEC);
+        ConfigToAttributes.apply(this, CONTROLLED_GROUP);
         
         ConfigurableEntityFactory<? extends WebAppService> webServerFactory = getAttribute(FACTORY);
         EntitySpec<? extends WebAppService> webServerSpec = getAttribute(MEMBER_SPEC);
@@ -136,6 +138,15 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
             setAttribute(CONTROLLER, controller);
         }
         
+        Group controlledGroup = getAttribute(CONTROLLED_GROUP);
+        if (controlledGroup == null) {
+            log.debug("using cluster as controlledGroup for {}", this);
+            controlledGroup = cluster;
+            setAttribute(CONTROLLED_GROUP, cluster);
+        } else {
+            log.debug("using custom controlledGroup {} for {}", controlledGroup, this);
+        }
+        
         doBind();
     }
 
@@ -183,6 +194,11 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     }
     
     @Override
+    public Group getControlledGroup() {
+        return getAttribute(CONTROLLED_GROUP);
+    }
+    
+    @Override
     public void start(Collection<? extends Location> locations) {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
 
@@ -195,7 +211,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
             addLocations(locations);
 
             LoadBalancer loadBalancer = getController();
-            loadBalancer.bind(MutableMap.of("serverPool", getCluster()));
+            loadBalancer.bind(MutableMap.of("serverPool", getControlledGroup()));
 
             List<Entity> childrenToStart = MutableList.<Entity>of(getCluster());
             // Set controller as child of cluster, if it does not already have a parent

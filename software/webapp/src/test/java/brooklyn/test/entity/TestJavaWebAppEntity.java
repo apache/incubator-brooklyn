@@ -28,6 +28,7 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessDriverLifecycleEffectorTasks;
+import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.VanillaJavaApp;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.webapp.WebAppService;
@@ -38,7 +39,7 @@ import brooklyn.util.config.ConfigBag;
  * Mock web application server entity for testing.
  */
 @ImplementedBy(TestJavaWebAppEntityImpl.class)
-public interface TestJavaWebAppEntity extends VanillaJavaApp, WebAppService {
+public interface TestJavaWebAppEntity extends VanillaJavaApp, WebAppService, EntityLocal {
 
     /**
      * Injects the test entity's customised lifecycle tasks.

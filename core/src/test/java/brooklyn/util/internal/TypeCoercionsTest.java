@@ -335,6 +335,11 @@ public class TypeCoercionsTest {
         TypeCoercions.coerce(new Object(), TypeToken.of(Integer.class));
     }
 
+    @Test
+    public void testCoercionFunction() {
+        assertEquals(TypeCoercions.function(Double.class).apply("1"), Double.valueOf(1));
+    }
+
     public static class WithAs {
         String value;
         public WithAs(Object x) { value = ""+x; }

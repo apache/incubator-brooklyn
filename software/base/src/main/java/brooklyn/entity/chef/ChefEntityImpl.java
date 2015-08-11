@@ -30,7 +30,9 @@ public class ChefEntityImpl extends EffectorStartableImpl implements ChefEntity 
         super.init();
         new ChefLifecycleEffectorTasks().attachLifecycleEffectors(this);
     }
-    
-    
-    
+
+    @Override
+    public void populateServiceNotUpDiagnostics() {
+        // TODO no-op currently; should check ssh'able etc
+    }    
 }
