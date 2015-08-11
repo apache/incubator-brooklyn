@@ -21,6 +21,7 @@ package brooklyn.entity.webapp.tomcat;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
@@ -28,7 +29,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.EntityTestUtils;
 
 import com.google.common.collect.ImmutableList;
 

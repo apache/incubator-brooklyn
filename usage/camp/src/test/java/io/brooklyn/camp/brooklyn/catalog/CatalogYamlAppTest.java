@@ -20,7 +20,7 @@ package io.brooklyn.camp.brooklyn.catalog;
 
 import org.testng.annotations.Test;
 
-import io.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 
 public class CatalogYamlAppTest extends AbstractYamlTest {

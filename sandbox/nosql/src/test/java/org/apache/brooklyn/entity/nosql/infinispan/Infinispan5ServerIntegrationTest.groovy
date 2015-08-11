@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.infinispan
 
-import static brooklyn.test.TestUtils.*
+import static org.apache.brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
 

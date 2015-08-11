@@ -22,6 +22,7 @@ import static brooklyn.entity.java.JavaEntityMethods.javaSysProp
 import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady
 import static brooklyn.event.basic.DependentConfiguration.formatString
 
+import org.apache.brooklyn.launcher.BrooklynLauncher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -31,7 +32,6 @@ import brooklyn.entity.database.mysql.MySqlNode
 import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.launcher.BrooklynLauncher
 import brooklyn.policy.autoscaling.AutoScalerPolicy
 import brooklyn.util.CommandLineUtil
 
