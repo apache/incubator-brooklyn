@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.network.bind;
+package org.apache.brooklyn.entity.network.bind;
 
 import java.util.Map;
 
@@ -75,17 +75,17 @@ public interface BindDnsServer extends SoftwareProcess {
     @SetFromFlag("zoneFileTemplate")
     ConfigKey<String> DOMAIN_ZONE_FILE_TEMPLATE = ConfigKeys.newStringConfigKey(
             "bind.template.domain-zone", "The BIND domain zone file to serve (as FreeMarker template)",
-            "classpath://brooklyn/entity/network/bind/domain.zone");
+            "classpath://org/apache/brooklyn/entity/network/bind/domain.zone");
 
     @SetFromFlag("reverseZoneFileTemplate")
     ConfigKey<String> REVERSE_ZONE_FILE_TEMPLATE = ConfigKeys.newStringConfigKey(
             "bind.template.reverse-zone", "The BIND reverse lookup zone file to serve (as FreeMarker template)",
-            "classpath://brooklyn/entity/network/bind/reverse.zone");
+            "classpath://org/apache/brooklyn/entity/network/bind/reverse.zone");
 
     @SetFromFlag("namedConfTemplate")
     ConfigKey<String> NAMED_CONF_TEMPLATE = ConfigKeys.newStringConfigKey(
             "bind.template.named-conf", "The BIND named configuration file (as FreeMarker template)",
-            "classpath://brooklyn/entity/network/bind/named.conf");
+            "classpath://org/apache/brooklyn/entity/network/bind/named.conf");
 
     @SetFromFlag("updateRootZonesFile")
     ConfigKey<Boolean> UPDATE_ROOT_ZONES_FILE = ConfigKeys.newBooleanConfigKey(
@@ -112,12 +112,12 @@ public interface BindDnsServer extends SoftwareProcess {
     @SetFromFlag("interfaceConfigTemplate")
     ConfigKey<String> INTERFACE_CONFIG_TEMPLATE = ConfigKeys.newStringConfigKey(
             "bind.template.interface-cfg", "The network interface configuration file for clients (as FreeMarker template)",
-            "classpath://brooklyn/entity/network/bind/ifcfg");
+            "classpath://org/apache/brooklyn/entity/network/bind/ifcfg");
 
     @SetFromFlag("interfaceConfigTemplate")
     ConfigKey<String> RESOLV_CONF_TEMPLATE = ConfigKeys.newStringConfigKey(
             "bind.template.resolv-conf", "The resolver configuration file for clients (as FreeMarker template)",
-            "classpath://brooklyn/entity/network/bind/resolv.conf");
+            "classpath://org/apache/brooklyn/entity/network/bind/resolv.conf");
 
     AttributeSensor<DynamicGroup> ENTITIES = Sensors.newSensor(DynamicGroup.class,
             "bind.entities", "The entities being managed by this server");

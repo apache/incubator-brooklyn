@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.network.bind;
+package org.apache.brooklyn.entity.network.bind;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
