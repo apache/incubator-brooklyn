@@ -16,18 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.network.bind;
+package org.apache.brooklyn.entity.network.bind;
 
-import org.testng.annotations.Test;
+import com.google.common.annotations.VisibleForTesting;
 
-import brooklyn.entity.AbstractSoftlayerLiveTest;
-import brooklyn.location.Location;
+import brooklyn.entity.basic.SoftwareProcessDriver;
 
-public class BindDnsServerSoftlayerLiveTest extends AbstractSoftlayerLiveTest {
+public interface BindDnsServerDriver extends SoftwareProcessDriver {
 
-    @Test(groups = "Live")
-    protected void doTest(Location testLocation) throws Exception {
-        BindDnsServerLiveTest.testBindStartsAndUpdates(app, testLocation);
-    }
+    /**
+     * Uploads configuration files and restarts the service.
+     */
+    void updateBindConfiguration();
+
+    /**
+     * @return a support class appropriate for the machine the server is running on.
+     */
+    @VisibleForTesting
+    BindOsSupport getOsSupport();
 
 }

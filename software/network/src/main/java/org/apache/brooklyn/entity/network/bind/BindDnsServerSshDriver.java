@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.network.bind;
+package org.apache.brooklyn.entity.network.bind;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -93,10 +93,10 @@ public class BindDnsServerSshDriver extends AbstractSoftwareProcessSshDriver imp
                 //.failOnNonZeroResultCode()
                 .execute();
 
-        copyAsRoot("classpath://brooklyn/entity/network/bind/rfc1912.zone", getRfc1912ZonesFile());
-        copyAsRoot("classpath://brooklyn/entity/network/bind/named.localhost", Os.mergePathsUnix(getOsSupport().getConfigDirectory(), "named.localhost"));
-        copyAsRoot("classpath://brooklyn/entity/network/bind/named.loopback", Os.mergePathsUnix(getOsSupport().getConfigDirectory(), "named.loopback"));
-        copyAsRoot("classpath://brooklyn/entity/network/bind/named.empty", Os.mergePathsUnix(getOsSupport().getConfigDirectory(), "named.empty"));
+        copyAsRoot("classpath://org/apache/brooklyn/entity/network/bind/rfc1912.zone", getRfc1912ZonesFile());
+        copyAsRoot("classpath://org/apache/brooklyn/entity/network/bind/named.localhost", Os.mergePathsUnix(getOsSupport().getConfigDirectory(), "named.localhost"));
+        copyAsRoot("classpath://org/apache/brooklyn/entity/network/bind/named.loopback", Os.mergePathsUnix(getOsSupport().getConfigDirectory(), "named.loopback"));
+        copyAsRoot("classpath://org/apache/brooklyn/entity/network/bind/named.empty", Os.mergePathsUnix(getOsSupport().getConfigDirectory(), "named.empty"));
 
         newScript("Checking BIND configuration")
                 .body.append(BashCommands.sudo("named-checkconf"))
