@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.monitoring.monit;
+package org.apache.brooklyn.entity.monitoring.monit;
 
 import brooklyn.entity.basic.SoftwareProcessDriver;
 
