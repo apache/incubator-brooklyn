@@ -27,6 +27,8 @@ import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.mementos.Memento;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
@@ -52,8 +54,6 @@ import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.ha.MementoCopyMode;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMementoRawData;
-import brooklyn.mementos.Memento;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;

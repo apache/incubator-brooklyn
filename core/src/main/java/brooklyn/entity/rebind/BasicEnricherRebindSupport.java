@@ -18,8 +18,9 @@
  */
 package brooklyn.entity.rebind;
 
+import org.apache.brooklyn.mementos.EnricherMemento;
+
 import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.mementos.EnricherMemento;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 

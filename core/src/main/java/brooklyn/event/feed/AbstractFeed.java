@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.mementos.FeedMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.BasicFeedRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import brooklyn.mementos.FeedMemento;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Strings;

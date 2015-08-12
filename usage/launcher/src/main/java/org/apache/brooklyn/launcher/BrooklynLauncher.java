@@ -71,7 +71,10 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.entity.trait.Startable;
+
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.PortRange;
@@ -87,11 +90,12 @@ import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMementoRawData;
+
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import org.apache.brooklyn.rest.security.provider.BrooklynUserWithRandomPasswordSecurityProvider;
 import org.apache.brooklyn.rest.util.ShutdownHandler;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;

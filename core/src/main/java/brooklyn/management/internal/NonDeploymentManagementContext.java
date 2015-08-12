@@ -33,7 +33,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
@@ -68,8 +72,6 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecord;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.ha.OsgiManager;
-import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 

@@ -18,7 +18,8 @@
  */
 package brooklyn.entity.rebind;
 
-import brooklyn.mementos.PolicyMemento;
+import org.apache.brooklyn.mementos.PolicyMemento;
+
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;

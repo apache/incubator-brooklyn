@@ -22,15 +22,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import brooklyn.mementos.BrooklynMementoPersister.Delta;
-import brooklyn.mementos.BrooklynMementoPersister.MutableDelta;
-import brooklyn.mementos.CatalogItemMemento;
-import brooklyn.mementos.EnricherMemento;
-import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.FeedMemento;
-import brooklyn.mementos.LocationMemento;
-import brooklyn.mementos.Memento;
-import brooklyn.mementos.PolicyMemento;
+import org.apache.brooklyn.mementos.CatalogItemMemento;
+import org.apache.brooklyn.mementos.EnricherMemento;
+import org.apache.brooklyn.mementos.EntityMemento;
+import org.apache.brooklyn.mementos.FeedMemento;
+import org.apache.brooklyn.mementos.LocationMemento;
+import org.apache.brooklyn.mementos.Memento;
+import org.apache.brooklyn.mementos.PolicyMemento;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister.Delta;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister.MutableDelta;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;

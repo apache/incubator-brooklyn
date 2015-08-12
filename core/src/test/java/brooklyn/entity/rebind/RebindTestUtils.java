@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.brooklyn.mementos.BrooklynMemento;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +50,6 @@ import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.io.FileUtil;
 import brooklyn.util.javalang.Serializers;

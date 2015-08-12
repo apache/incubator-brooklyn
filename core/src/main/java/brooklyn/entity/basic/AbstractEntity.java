@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.mementos.EntityMemento;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.EntityAdjunct;
@@ -80,7 +81,6 @@ import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.SubscriptionTracker;
-import brooklyn.mementos.EntityMemento;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 import brooklyn.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
 import brooklyn.policy.basic.AbstractPolicy;

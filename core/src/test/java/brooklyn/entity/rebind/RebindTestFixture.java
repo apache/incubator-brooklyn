@@ -31,9 +31,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.mementos.BrooklynMementoManifest;
+
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
@@ -48,7 +49,6 @@ import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.util.os.Os;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.BasicExecutionManager;

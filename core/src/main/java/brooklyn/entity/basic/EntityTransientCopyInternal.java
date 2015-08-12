@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.mementos.EntityMemento;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
@@ -44,7 +45,6 @@ import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.EntityManagementSupport;
-import brooklyn.mementos.EntityMemento;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 

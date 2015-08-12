@@ -25,6 +25,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 
+import org.apache.brooklyn.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;
@@ -41,7 +42,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindEnricherTest.MyEnricher;
 import brooklyn.location.Location;
 import brooklyn.location.basic.Locations;
-import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;

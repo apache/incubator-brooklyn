@@ -16,20 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.mementos;
+package org.apache.brooklyn.mementos;
 
 import java.util.Map;
 
 import brooklyn.entity.rebind.RebindSupport;
 
 /**
- * Represents the state of an policy, so that it can be reconstructed (e.g. after restarting brooklyn).
+ * Represents the state of an enricher, so that it can be reconstructed (e.g. after restarting brooklyn).
  * 
  * @see RebindSupport
- * 
- * @author aled
  */
-public interface PolicyMemento extends Memento {
+public interface EnricherMemento extends Memento {
 
     Map<String, Object> getConfig();
 }

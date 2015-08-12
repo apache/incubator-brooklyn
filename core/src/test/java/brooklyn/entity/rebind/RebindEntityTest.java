@@ -35,6 +35,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
+import org.apache.brooklyn.mementos.BrooklynMementoManifest;
+import org.apache.brooklyn.mementos.EntityMemento;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -66,8 +68,6 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocationConfigTest.MyLocation;
 import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.mementos.BrooklynMementoManifest;
-import brooklyn.mementos.EntityMemento;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;

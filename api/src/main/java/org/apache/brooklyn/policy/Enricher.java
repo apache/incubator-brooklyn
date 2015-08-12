@@ -20,11 +20,12 @@ package org.apache.brooklyn.policy;
 
 import java.util.Map;
 
+import org.apache.brooklyn.mementos.EnricherMemento;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.entity.trait.Configurable;
-import brooklyn.mementos.EnricherMemento;
 
 import com.google.common.annotations.Beta;
 

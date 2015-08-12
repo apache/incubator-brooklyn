@@ -30,11 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.mementos.CatalogItemMemento;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.BasicCatalogItemRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;

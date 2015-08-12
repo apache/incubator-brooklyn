@@ -24,15 +24,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.mementos.BrooklynMemento;
+import org.apache.brooklyn.mementos.CatalogItemMemento;
+import org.apache.brooklyn.mementos.EnricherMemento;
+import org.apache.brooklyn.mementos.EntityMemento;
+import org.apache.brooklyn.mementos.FeedMemento;
+import org.apache.brooklyn.mementos.LocationMemento;
+import org.apache.brooklyn.mementos.Memento;
+import org.apache.brooklyn.mementos.PolicyMemento;
+
 import brooklyn.BrooklynVersion;
-import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.CatalogItemMemento;
-import brooklyn.mementos.EnricherMemento;
-import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.FeedMemento;
-import brooklyn.mementos.LocationMemento;
-import brooklyn.mementos.Memento;
-import brooklyn.mementos.PolicyMemento;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

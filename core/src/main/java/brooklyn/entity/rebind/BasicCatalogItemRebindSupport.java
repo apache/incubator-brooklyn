@@ -18,11 +18,11 @@
  */
 package brooklyn.entity.rebind;
 
+import org.apache.brooklyn.mementos.CatalogItemMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;
-import brooklyn.mementos.CatalogItemMemento;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.FlagUtils;
 

@@ -23,9 +23,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.mementos.BrooklynMementoManifest;
+import org.apache.brooklyn.mementos.CatalogItemMemento;
+
 import brooklyn.entity.rebind.BrooklynObjectType;
-import brooklyn.mementos.BrooklynMementoManifest;
-import brooklyn.mementos.CatalogItemMemento;
 
 import com.google.common.collect.Maps;
 

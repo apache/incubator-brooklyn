@@ -32,6 +32,7 @@ import java.util.Set;
 
 import brooklyn.management.osgi.OsgiTestResources;
 
+import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
@@ -57,7 +58,6 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
-import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;

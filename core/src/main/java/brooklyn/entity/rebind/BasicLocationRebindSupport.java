@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.mementos.LocationMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
-import brooklyn.mementos.LocationMemento;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;

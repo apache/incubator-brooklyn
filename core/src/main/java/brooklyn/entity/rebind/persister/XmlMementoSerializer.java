@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.AbstractBrooklynObjectSpec;
 
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
@@ -62,7 +63,6 @@ import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
 import brooklyn.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
-import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 import brooklyn.util.xstream.XmlSerializer;
