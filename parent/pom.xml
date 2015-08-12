@@ -164,6 +164,36 @@
         <commons-logging.version>1.2</commons-logging.version>
     </properties>
 
+    <repositories>
+        <!-- Cloudsoft repositories -->
+        <repository>
+            <id>cloudsoft-releases</id>
+            <url>http://developers.cloudsoftcorp.com/download/maven2/</url>
+        </repository>
+        <repository>
+            <id>cloudsoft-deploy-artifactory-release</id>
+            <url>http://ccweb.cloudsoftcorp.com/maven/libs-release-local/</url>
+        </repository>
+        <repository>
+            <id>libs-snapshot-local</id>
+            <url>http://ccweb.cloudsoftcorp.com/maven/libs-snapshot-local/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>libs-releases-local</id>
+            <url>http://ccweb.cloudsoftcorp.com/maven/libs-releases-local/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
