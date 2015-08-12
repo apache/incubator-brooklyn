@@ -18,6 +18,8 @@
  */
 package brooklyn.entity;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -27,8 +29,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 
 /**
  * To be extended by live tests.

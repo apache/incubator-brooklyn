@@ -23,6 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.entitlement.EntitlementManager;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -35,7 +36,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;
-import brooklyn.test.entity.LocalManagementContextForTests;
 
 @Test
 public class EntitlementsTest {

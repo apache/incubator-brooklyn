@@ -22,13 +22,13 @@ import org.apache.brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss6Server;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.PortRanges;
-import brooklyn.test.entity.TestApplication;
 
 public class JBossServersMultiVersionWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {
 

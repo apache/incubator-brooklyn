@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -35,7 +36,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

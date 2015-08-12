@@ -23,6 +23,8 @@ import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -43,8 +45,6 @@ import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;
 

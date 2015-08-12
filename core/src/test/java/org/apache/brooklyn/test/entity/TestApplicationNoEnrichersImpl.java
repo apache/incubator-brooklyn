@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.test.entity;
+package org.apache.brooklyn.test.entity;
 
-import java.util.Collection;
 
-import brooklyn.entity.trait.Startable;
-
-public class NoopStartable implements Startable {
-   public void start(Collection loc) {}
-   public void stop() {}
-   public void restart() {}
+/**
+ * Mock application for testing.
+ */
+public class TestApplicationNoEnrichersImpl extends TestApplicationImpl {
+    
+    protected void initEnrichers() { /* none */ }
+    
 }

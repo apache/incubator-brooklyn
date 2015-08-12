@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.HttpTestUtils;
-import brooklyn.test.entity.TestEntity;
+
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
 

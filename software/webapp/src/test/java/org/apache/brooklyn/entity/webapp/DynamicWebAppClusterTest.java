@@ -23,6 +23,7 @@ import static org.testng.Assert.assertEquals;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestJavaWebAppEntity;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -35,7 +36,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -43,8 +45,6 @@ import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.UsageListener.ApplicationMetadata;
 import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;

@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -41,7 +42,6 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

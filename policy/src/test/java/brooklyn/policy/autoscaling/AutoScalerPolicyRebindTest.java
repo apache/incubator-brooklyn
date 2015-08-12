@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -36,8 +38,6 @@ import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;

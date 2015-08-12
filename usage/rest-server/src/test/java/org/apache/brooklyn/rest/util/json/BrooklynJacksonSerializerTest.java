@@ -44,10 +44,10 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

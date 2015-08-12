@@ -73,9 +73,9 @@ import org.apache.brooklyn.management.SubscriptionHandle;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
 
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.crypto.FluentKeySigner;
 import brooklyn.util.crypto.SecureKeys;

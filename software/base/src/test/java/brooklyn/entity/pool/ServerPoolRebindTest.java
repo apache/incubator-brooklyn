@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.Collection;
 
 import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -36,7 +37,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;

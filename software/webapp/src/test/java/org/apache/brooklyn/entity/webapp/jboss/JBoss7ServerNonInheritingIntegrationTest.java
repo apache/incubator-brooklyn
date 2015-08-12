@@ -39,8 +39,7 @@ import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
-
-import brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

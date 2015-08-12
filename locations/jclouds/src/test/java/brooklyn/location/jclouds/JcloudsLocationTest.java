@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.jclouds.scriptbuilder.domain.OsFamily;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import org.mockito.Mockito;
@@ -57,7 +58,6 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.location.jclouds.JcloudsLocation.UserCreation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;

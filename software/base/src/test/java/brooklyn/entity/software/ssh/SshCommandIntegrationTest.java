@@ -23,6 +23,8 @@ import static org.testng.Assert.assertTrue;
 import java.io.File;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -38,8 +40,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.time.Duration;

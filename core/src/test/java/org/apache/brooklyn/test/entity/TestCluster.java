@@ -16,17 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.test.entity;
+package org.apache.brooklyn.test.entity;
 
+import brooklyn.entity.basic.EntityLocal;
+import brooklyn.entity.group.DynamicCluster;
+import brooklyn.entity.proxying.ImplementedBy;
 
 /**
- * Mock entity for testing.
- */
-public class TestEntityNoEnrichersImpl extends TestEntityImpl {
-
-    @Override
-    protected void initEnrichers() {
-        // no enrichers here, so we can test the explicit enrichers we set
-    }
-    
+* Mock cluster entity for testing.
+*/
+@ImplementedBy(TestClusterImpl.class)
+public interface TestCluster extends DynamicCluster, EntityLocal {
 }

@@ -20,6 +20,7 @@ package brooklyn.location.jclouds;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -29,7 +30,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 
 import com.google.common.collect.ImmutableSet;
 

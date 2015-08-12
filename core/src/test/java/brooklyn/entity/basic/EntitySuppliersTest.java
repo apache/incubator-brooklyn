@@ -21,6 +21,7 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -29,7 +30,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.entity.TestEntity;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;

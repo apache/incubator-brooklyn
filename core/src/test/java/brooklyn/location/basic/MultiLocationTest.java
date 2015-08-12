@@ -20,6 +20,7 @@ package brooklyn.location.basic;
 
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -33,7 +34,6 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Networking;
 

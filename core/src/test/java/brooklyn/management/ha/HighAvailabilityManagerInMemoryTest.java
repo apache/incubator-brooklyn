@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -37,8 +39,6 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 
 import com.google.common.collect.Iterables;

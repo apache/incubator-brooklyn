@@ -30,6 +30,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -45,7 +46,6 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.UserAndHostAndPort;

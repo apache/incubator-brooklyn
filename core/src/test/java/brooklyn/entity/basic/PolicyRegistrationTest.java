@@ -29,6 +29,8 @@ import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.TestUtils;
+import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.test.entity.TestEntityNoEnrichersImpl;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -37,8 +39,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityNoEnrichersImpl;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

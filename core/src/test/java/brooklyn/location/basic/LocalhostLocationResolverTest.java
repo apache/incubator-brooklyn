@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -36,7 +37,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableList;

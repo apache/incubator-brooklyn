@@ -18,6 +18,9 @@
  */
 package brooklyn.location.cloud;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -27,9 +30,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.cloud.names.CustomMachineNamer;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.collect.ImmutableMap;

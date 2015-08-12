@@ -20,6 +20,7 @@ package brooklyn.policy.loadbalancing;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -32,7 +33,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicate;

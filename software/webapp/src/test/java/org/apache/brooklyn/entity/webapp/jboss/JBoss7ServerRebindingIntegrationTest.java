@@ -30,6 +30,7 @@ import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.WebAppMonitor;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -41,7 +42,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

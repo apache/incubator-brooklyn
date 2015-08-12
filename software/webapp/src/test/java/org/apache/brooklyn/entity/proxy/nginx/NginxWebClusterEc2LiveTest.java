@@ -29,6 +29,7 @@ import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -44,7 +45,6 @@ import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.Machines;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -53,8 +55,6 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;

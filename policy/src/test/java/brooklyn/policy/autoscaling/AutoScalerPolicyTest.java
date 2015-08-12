@@ -33,6 +33,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -46,8 +48,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestCluster;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;

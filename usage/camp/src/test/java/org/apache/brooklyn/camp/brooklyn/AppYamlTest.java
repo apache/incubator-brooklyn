@@ -23,6 +23,8 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.StringReader;
 
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -31,8 +33,6 @@ import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 
 import brooklyn.entity.basic.BasicApplication;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 
 @Test
 public class AppYamlTest extends AbstractYamlTest {

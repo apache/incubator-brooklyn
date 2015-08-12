@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.test.entity;
+package org.apache.brooklyn.test.entity;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;

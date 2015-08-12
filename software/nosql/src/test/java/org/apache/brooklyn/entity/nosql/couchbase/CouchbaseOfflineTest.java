@@ -19,6 +19,7 @@
 package org.apache.brooklyn.entity.nosql.couchbase;
 
 import org.apache.brooklyn.entity.nosql.couchbase.CouchbaseNodeSshDriver;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -28,7 +29,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.BasicOsDetails;
 import brooklyn.location.basic.BasicOsDetails.OsArchs;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 
 public class CouchbaseOfflineTest {
 

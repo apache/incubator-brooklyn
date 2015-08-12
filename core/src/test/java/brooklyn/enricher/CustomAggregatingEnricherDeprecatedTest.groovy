@@ -34,9 +34,9 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
 import org.apache.brooklyn.test.TestUtils
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestEntity
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication
+import org.apache.brooklyn.test.entity.TestEntity
 
 import com.google.common.base.Function
 

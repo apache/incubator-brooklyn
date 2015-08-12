@@ -22,6 +22,7 @@ import java.io.File;
 import java.net.InetAddress;
 
 import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -37,7 +38,6 @@ import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
 

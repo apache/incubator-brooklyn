@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -35,7 +36,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityAdjuncts;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestEnricher;
 import brooklyn.util.collections.MutableMap;
 

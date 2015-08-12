@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -45,7 +46,6 @@ import brooklyn.event.feed.FeedConfig;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Functionals;

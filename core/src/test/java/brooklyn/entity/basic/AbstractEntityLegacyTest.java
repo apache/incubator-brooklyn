@@ -24,6 +24,9 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestApplicationImpl;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -32,9 +35,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
 import brooklyn.util.collections.MutableMap;
 
 /**

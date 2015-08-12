@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.List;
 
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
@@ -32,7 +33,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

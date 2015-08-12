@@ -29,6 +29,8 @@ import org.apache.brooklyn.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -48,8 +50,6 @@ import brooklyn.entity.rebind.RecordingRebindExceptionHandler;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestPolicy;
 
 import com.google.common.collect.Iterables;

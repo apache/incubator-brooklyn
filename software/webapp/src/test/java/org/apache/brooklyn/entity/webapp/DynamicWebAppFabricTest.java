@@ -24,6 +24,7 @@ import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppFabric;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestJavaWebAppEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

@@ -28,6 +28,8 @@ import java.util.Set;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.mementos.EntityMemento;
 import org.apache.brooklyn.mementos.TreeNode;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,8 +40,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.entity.trait.Identifiable;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;

@@ -32,6 +32,7 @@ import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -49,7 +50,6 @@ import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord.Builder;
 import brooklyn.management.ha.HighAvailabilityManagerImpl.PromotionListener;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Ticker;

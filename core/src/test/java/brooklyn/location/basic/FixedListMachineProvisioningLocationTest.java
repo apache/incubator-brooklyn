@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -50,7 +51,6 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.basic.RecordingMachineLocationCustomizer.Call;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;

@@ -21,6 +21,7 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -28,7 +29,6 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.location.Location;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.collect.ImmutableList;

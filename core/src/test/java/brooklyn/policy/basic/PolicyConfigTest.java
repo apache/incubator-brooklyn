@@ -25,13 +25,13 @@ import static org.testng.Assert.fail;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.policy.basic.BasicPolicyTest.MyPolicy;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 

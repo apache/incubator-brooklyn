@@ -16,14 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.test.entity;
+package org.apache.brooklyn.test.entity;
 
 
 /**
- * Mock application for testing.
+ * Mock entity for testing.
  */
-public class TestApplicationNoEnrichersImpl extends TestApplicationImpl {
-    
-    protected void initEnrichers() { /* none */ }
+public class TestEntityNoEnrichersImpl extends TestEntityImpl {
+
+    @Override
+    protected void initEnrichers() {
+        // no enrichers here, so we can test the explicit enrichers we set
+    }
     
 }

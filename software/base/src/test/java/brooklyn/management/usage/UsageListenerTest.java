@@ -22,6 +22,8 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -34,8 +36,6 @@ import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.UsageManager;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

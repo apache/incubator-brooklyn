@@ -27,7 +27,7 @@ import org.testng.annotations.Test
 
 import brooklyn.entity.basic.ConfigMapTest.MyOtherEntity
 import brooklyn.entity.basic.ConfigMapTest.MySubEntity
-import brooklyn.test.entity.TestApplication
+import org.apache.brooklyn.test.entity.TestApplication
 
 public class ConfigMapGroovyTest {
 

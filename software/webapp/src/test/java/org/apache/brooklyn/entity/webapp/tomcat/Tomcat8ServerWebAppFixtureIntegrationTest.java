@@ -43,7 +43,8 @@ import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
-import brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestApplication;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.repeat.Repeater;
 

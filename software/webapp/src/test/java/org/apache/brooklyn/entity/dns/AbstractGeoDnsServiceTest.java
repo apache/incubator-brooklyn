@@ -29,6 +29,8 @@ import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceTest;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -60,8 +62,6 @@ import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.exceptions.Exceptions;
 

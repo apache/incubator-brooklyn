@@ -23,6 +23,8 @@ import static org.testng.Assert.assertEquals;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.management.SubscriptionContext;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -35,8 +37,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.event.basic.Sensors;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 
 public class TimeFractionDeltaEnricherTest {
 

@@ -26,6 +26,7 @@ import java.util.HashSet;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.entity.proxy.nginx.UrlMapping;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -47,7 +48,6 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 

@@ -23,6 +23,8 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +47,6 @@ import org.apache.brooklyn.launcher.camp.SimpleYamlLauncher;
 import org.apache.brooklyn.management.Task;
 
 import brooklyn.location.Location;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

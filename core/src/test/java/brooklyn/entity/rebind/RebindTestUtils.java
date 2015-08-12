@@ -32,6 +32,7 @@ import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.mementos.BrooklynMemento;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,6 @@ import brooklyn.location.Location;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.io.FileUtil;
 import brooklyn.util.javalang.Serializers;
 import brooklyn.util.javalang.Serializers.ObjectReplacer;

@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;

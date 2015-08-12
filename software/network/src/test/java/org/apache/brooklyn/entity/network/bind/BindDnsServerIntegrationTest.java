@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -47,7 +48,6 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixture;
-import brooklyn.test.entity.TestApplication;
 
 public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplication> {
 

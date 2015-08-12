@@ -34,6 +34,7 @@ import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.WebAppMonitor;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -48,7 +49,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;

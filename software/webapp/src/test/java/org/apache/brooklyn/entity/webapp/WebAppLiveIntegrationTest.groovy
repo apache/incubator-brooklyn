@@ -47,7 +47,7 @@ import org.apache.brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import brooklyn.location.Location
 import brooklyn.location.basic.BasicLocationRegistry
 import org.apache.brooklyn.test.TestUtils
-import brooklyn.test.entity.TestApplicationImpl
+import org.apache.brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras
 
 /**

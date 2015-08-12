@@ -20,6 +20,7 @@ package brooklyn.entity;
 
 import java.util.Map;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -27,7 +28,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.location.Location;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsLocationConfig;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

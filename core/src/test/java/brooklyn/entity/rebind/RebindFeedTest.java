@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -52,8 +54,6 @@ import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.BrooklynGarbageCollector;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.http.BetterMockWebServer;
 import brooklyn.util.task.BasicExecutionManager;

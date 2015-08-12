@@ -21,6 +21,7 @@ package brooklyn.entity.rebind.persister.jclouds;
 
 import java.util.List;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -33,7 +34,6 @@ import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;

@@ -23,6 +23,9 @@ import static org.testng.Assert.assertNotNull;
 
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 
 import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
@@ -58,9 +61,6 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.osgi.OsgiStandaloneTest;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

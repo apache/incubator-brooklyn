@@ -21,6 +21,7 @@ package brooklyn.event.feed.windows;
 import java.util.Map;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -32,7 +33,6 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

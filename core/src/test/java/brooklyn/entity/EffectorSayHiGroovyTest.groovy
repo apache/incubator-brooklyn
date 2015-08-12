@@ -39,7 +39,7 @@ import brooklyn.entity.trait.Startable
 import org.apache.brooklyn.management.ManagementContext
 import org.apache.brooklyn.management.Task
 import brooklyn.management.internal.EffectorUtils
-import brooklyn.test.entity.TestApplication
+import org.apache.brooklyn.test.entity.TestApplication
 
 /**
  * Test the operation of the {@link Effector} implementations.

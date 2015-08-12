@@ -16,15 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.test.entity;
+package org.apache.brooklyn.test.entity;
 
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.ImplementedBy;
+import java.util.Collection;
 
-/**
-* Mock cluster entity for testing.
-*/
-@ImplementedBy(TestClusterImpl.class)
-public interface TestCluster extends DynamicCluster, EntityLocal {
+import brooklyn.entity.trait.Startable;
+
+public class NoopStartable implements Startable {
+   public void start(Collection loc) {}
+   public void stop() {}
+   public void restart() {}
 }

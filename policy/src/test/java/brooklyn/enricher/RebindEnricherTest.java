@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -32,7 +33,6 @@ import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.http.BetterMockWebServer;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;

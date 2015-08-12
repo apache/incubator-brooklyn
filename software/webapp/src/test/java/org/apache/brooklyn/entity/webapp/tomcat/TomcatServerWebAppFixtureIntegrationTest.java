@@ -32,6 +32,7 @@ import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -42,7 +43,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.PortRanges;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.repeat.Repeater;
 

@@ -25,14 +25,14 @@ import static org.testng.Assert.fail;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Time;
 

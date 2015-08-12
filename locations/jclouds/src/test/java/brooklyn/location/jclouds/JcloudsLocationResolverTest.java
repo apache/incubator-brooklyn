@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -38,7 +39,6 @@ import brooklyn.event.basic.SetConfigKey;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 

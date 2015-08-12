@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -54,7 +55,6 @@ import org.apache.brooklyn.rest.resources.ServerResourceTest.StopLatchEntity;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.exceptions.Exceptions;
 
 public class ServerShutdownTest extends BrooklynRestResourceTest {

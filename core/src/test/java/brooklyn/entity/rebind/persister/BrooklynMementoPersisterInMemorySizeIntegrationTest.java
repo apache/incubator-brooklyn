@@ -22,13 +22,13 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.persister.ListeningObjectStore.RecordingTransactionListener;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;

@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.management.HasTaskChildren;
 import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -36,7 +37,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
