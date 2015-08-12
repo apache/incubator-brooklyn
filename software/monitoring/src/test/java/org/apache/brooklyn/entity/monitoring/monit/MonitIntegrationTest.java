@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.monitoring.monit;
+package org.apache.brooklyn.entity.monitoring.monit;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static org.testng.Assert.assertEquals;
@@ -80,7 +80,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
     @Test(groups = "Integration")
     public void test_localhost() throws Exception {
         final MonitNode monitNode = app.createAndManageChild(EntitySpec.create(MonitNode.class)
-            .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monit.monitrc"));
+            .configure(MonitNode.CONTROL_FILE_URL, "classpath:///org/apache/brooklyn/entity/monitoring/monit/monit.monitrc"));
         app.start(ImmutableSet.of(loc));
         LOG.info("Monit started");
         EntityTestUtils.assertAttributeEqualsEventually(monitNode, MonitNode.MONIT_TARGET_PROCESS_STATUS, "Running");
@@ -97,7 +97,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
             }
         };
         EntitySpec<MonitNode> monitSpec = EntitySpec.create(MonitNode.class)
-                .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monitmysql.monitrc")
+                .configure(MonitNode.CONTROL_FILE_URL, "classpath:///org/apache/brooklyn/entity/monitoring/monit/monitmysql.monitrc")
                 .configure(MonitNode.CONTROL_FILE_SUBSTITUTIONS, DependentConfiguration.valueWhenAttributeReady(mySqlNode,
                         SoftwareProcess.PID_FILE, controlFileSubstitutionsFunction));
         final MonitNode monitNode = sameServerEntity.addChild(monitSpec);
@@ -161,7 +161,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
         };
         
         EntitySpec<MonitNode> monitSpec = EntitySpec.create(MonitNode.class)
-                .configure(MonitNode.CONTROL_FILE_URL, "classpath:///brooklyn/entity/monitoring/monit/monitmysqlwithrestart.monitrc")
+                .configure(MonitNode.CONTROL_FILE_URL, "classpath:///org/apache/brooklyn/entity/monitoring/monit/monitmysqlwithrestart.monitrc")
                 .configure(MonitNode.CONTROL_FILE_SUBSTITUTIONS, DependentConfiguration.valueWhenAttributeReady(mySqlNode,
                         SoftwareProcess.PID_FILE, controlFileSubstitutionsFunction));
         final MonitNode monitNode = sameServerEntity.addChild(monitSpec);
