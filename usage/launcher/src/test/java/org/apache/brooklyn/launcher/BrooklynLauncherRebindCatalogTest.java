@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
@@ -106,12 +107,19 @@ public class BrooklynLauncherRebindCatalogTest {
                 return catalogItem.getCatalogItemId();
             }
         });
-        Assert.assertTrue(Iterables.elementsEqual(ids, idsFromItems), String.format("Expected %s, found %s", ids, idsFromItems));
+        Assert.assertTrue(compareIterablesWithoutOrderMatters(ids, idsFromItems), String.format("Expected %s, found %s", ids, idsFromItems));
     }
 
     protected String newTempPersistenceContainerName() {
         File persistenceDirF = Files.createTempDir();
         Os.deleteOnExitRecursively(persistenceDirF);
         return persistenceDirF.getAbsolutePath();
+    }
+
+    private static <T> boolean compareIterablesWithoutOrderMatters(Iterable<T> a, Iterable<T> b) {
+        List<T> aList = IteratorUtils.toList(a.iterator());
+        List<T> bList = IteratorUtils.toList(b.iterator());
+
+        return aList.containsAll(bList) && bList.containsAll(aList);
     }
 }
