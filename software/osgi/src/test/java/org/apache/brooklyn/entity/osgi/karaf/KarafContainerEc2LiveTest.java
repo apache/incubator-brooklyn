@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.osgi.karaf;
+package org.apache.brooklyn.entity.osgi.karaf;
 
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
