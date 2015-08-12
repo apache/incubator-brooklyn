@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nonnull;
 
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,6 @@ import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.QuorumCheck;

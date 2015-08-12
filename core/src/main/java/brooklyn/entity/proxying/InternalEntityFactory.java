@@ -26,6 +26,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +43,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

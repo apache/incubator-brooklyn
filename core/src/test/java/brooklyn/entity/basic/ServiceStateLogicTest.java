@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.basic;
 
+import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
-import brooklyn.policy.Enricher;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;

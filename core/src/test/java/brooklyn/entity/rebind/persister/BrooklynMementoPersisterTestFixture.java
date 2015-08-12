@@ -23,6 +23,8 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
 import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -46,8 +48,6 @@ import brooklyn.management.ManagementContext;
 import brooklyn.mementos.BrooklynMemento;
 import brooklyn.mementos.BrooklynMementoPersister;
 import brooklyn.mementos.BrooklynMementoRawData;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestPolicy;

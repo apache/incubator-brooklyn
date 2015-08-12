@@ -26,7 +26,11 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.rebind.BrooklynObjectType;
@@ -35,8 +39,6 @@ import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.Location;
 import brooklyn.management.ManagementContext;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;

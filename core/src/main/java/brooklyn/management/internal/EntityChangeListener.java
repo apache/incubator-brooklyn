@@ -18,12 +18,13 @@
  */
 package brooklyn.management.internal;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Feed;
 import brooklyn.event.AttributeSensor;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 
 public interface EntityChangeListener {
 

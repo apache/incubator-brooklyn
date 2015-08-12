@@ -27,7 +27,12 @@ import java.util.Set;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynTypes;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EntityAdjunct;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.catalog.internal.CatalogItemDo;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
@@ -55,9 +60,6 @@ import brooklyn.mementos.FeedMemento;
 import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EntityAdjunct;
-import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

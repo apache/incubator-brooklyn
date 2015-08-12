@@ -20,6 +20,7 @@ package brooklyn.enricher.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.policy.EnricherSpec;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -33,7 +34,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.management.SubscriptionContext;
-import brooklyn.policy.EnricherSpec;
 import brooklyn.util.time.Duration;
 
 public class YamlRollingTimeWindowMeanEnricherTest {

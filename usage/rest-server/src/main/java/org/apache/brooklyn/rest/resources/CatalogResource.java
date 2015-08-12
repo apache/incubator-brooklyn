@@ -35,9 +35,9 @@ import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
@@ -50,8 +50,9 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
+
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.rest.api.CatalogApi;
 import org.apache.brooklyn.rest.domain.ApiError;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
@@ -61,6 +62,7 @@ import org.apache.brooklyn.rest.domain.CatalogPolicySummary;
 import org.apache.brooklyn.rest.filter.HaHotStateRequired;
 import org.apache.brooklyn.rest.transform.CatalogTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

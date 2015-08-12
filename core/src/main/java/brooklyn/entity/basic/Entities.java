@@ -39,6 +39,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,8 +77,6 @@ import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.NonDeploymentManagementContext;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

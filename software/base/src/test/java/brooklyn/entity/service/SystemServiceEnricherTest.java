@@ -20,6 +20,7 @@ package brooklyn.entity.service;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.policy.EnricherSpec;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -35,7 +36,6 @@ import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.policy.EnricherSpec;
 import brooklyn.test.Asserts;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.time.Duration;

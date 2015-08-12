@@ -18,9 +18,10 @@
  */
 package brooklyn.enricher.basic;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EnricherType;
+
 import brooklyn.basic.BrooklynDynamicType;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherType;
 
 public class EnricherDynamicType extends BrooklynDynamicType<Enricher, AbstractEnricher> {
 

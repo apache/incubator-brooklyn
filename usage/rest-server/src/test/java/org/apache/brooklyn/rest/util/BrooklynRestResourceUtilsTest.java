@@ -27,8 +27,8 @@ import java.util.Map;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogTemplateItemDto;
 import brooklyn.catalog.internal.CatalogUtils;
@@ -40,10 +40,12 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
+
+import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
+
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;

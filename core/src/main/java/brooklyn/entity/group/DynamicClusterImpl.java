@@ -31,6 +31,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.policy.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +56,6 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.Locations;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.management.Task;
-import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

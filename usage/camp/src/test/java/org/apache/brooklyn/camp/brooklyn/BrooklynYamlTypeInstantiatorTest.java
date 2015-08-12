@@ -21,12 +21,12 @@ package org.apache.brooklyn.camp.brooklyn;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.Factory;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
+import org.apache.brooklyn.policy.Policy;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
-import brooklyn.policy.Policy;
 import brooklyn.policy.ha.ServiceRestarter;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.javalang.JavaClassNames;

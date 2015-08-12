@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +45,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;

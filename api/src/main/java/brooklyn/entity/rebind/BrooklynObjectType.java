@@ -19,12 +19,14 @@
 package brooklyn.entity.rebind;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.location.Location;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.CaseFormat;

@@ -32,14 +32,17 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
+
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.text.Strings;
 

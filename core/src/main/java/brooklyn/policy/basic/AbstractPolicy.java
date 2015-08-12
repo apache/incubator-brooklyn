@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,8 +31,6 @@ import brooklyn.entity.rebind.BasicPolicyRebindSupport;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.mementos.PolicyMemento;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicyType;
 
 import com.google.common.base.Objects;
 

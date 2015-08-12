@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.policy.EntityAdjunct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,6 @@ import brooklyn.management.SubscriptionContext;
 import brooklyn.management.SubscriptionHandle;
 import brooklyn.management.Task;
 import brooklyn.management.internal.SubscriptionTracker;
-import brooklyn.policy.EntityAdjunct;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,6 @@ import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.ManagementContext;
-import brooklyn.policy.PolicySpec;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;

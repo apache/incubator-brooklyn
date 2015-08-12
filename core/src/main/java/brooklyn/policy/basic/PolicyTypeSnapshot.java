@@ -20,9 +20,10 @@ package brooklyn.policy.basic;
 
 import java.util.Map;
 
+import org.apache.brooklyn.policy.PolicyType;
+
 import brooklyn.basic.BrooklynTypeSnapshot;
 import brooklyn.config.ConfigKey;
-import brooklyn.policy.PolicyType;
 
 public class PolicyTypeSnapshot extends BrooklynTypeSnapshot implements PolicyType {
     private static final long serialVersionUID = 4670930188951106009L;

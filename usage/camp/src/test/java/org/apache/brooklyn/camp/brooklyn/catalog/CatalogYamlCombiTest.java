@@ -24,12 +24,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.BasicStartable;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.policy.Policy;
 import brooklyn.policy.ha.ServiceRestarter;
 import brooklyn.util.exceptions.Exceptions;
 

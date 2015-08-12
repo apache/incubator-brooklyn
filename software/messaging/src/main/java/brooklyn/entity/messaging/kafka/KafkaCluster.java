@@ -49,7 +49,7 @@ import brooklyn.util.time.Duration;
  * <ul>
  * <li>a {@link brooklyn.entity.group.DynamicCluster} of {@link KafkaBroker}s
  * <li>a {@link KafkaZookeeper} or {@link Zookeeper}
- * <li>a {@link brooklyn.policy.Policy} to resize the broker cluster
+ * <li>a {@link org.apache.brooklyn.policy.Policy} to resize the broker cluster
  * </ul>
  * The {@link Group group} and {@link Resizable} interface methods are delegated to the broker cluster, so calling
  * {@link Resizable#resize(Integer) resize} will change the number of brokers.

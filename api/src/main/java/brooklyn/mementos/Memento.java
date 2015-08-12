@@ -22,9 +22,10 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.brooklyn.policy.EntityAdjunct;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.policy.EntityAdjunct;
 
 /**
  * Represents the internal state of something in brooklyn, so that it can be reconstructed (e.g. after restarting brooklyn).

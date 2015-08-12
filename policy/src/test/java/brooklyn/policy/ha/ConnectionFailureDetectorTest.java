@@ -28,6 +28,7 @@ import java.net.ServerSocket;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.brooklyn.policy.PolicySpec;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,7 +39,6 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
-import brooklyn.policy.PolicySpec;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;

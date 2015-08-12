@@ -31,7 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObjectSpec;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.catalog.internal.CatalogBundleDto;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Effector;
@@ -59,8 +63,6 @@ import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
 import brooklyn.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 import brooklyn.util.xstream.XmlSerializer;

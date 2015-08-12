@@ -39,8 +39,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynTypes;
+
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
+
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
@@ -60,10 +62,12 @@ import brooklyn.management.ManagementContext;
 import brooklyn.management.Task;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;
-import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
+
+import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;

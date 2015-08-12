@@ -18,8 +18,8 @@
  */
 package brooklyn.catalog.internal;
 
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
 
 
 public class CatalogPolicyItemDto extends CatalogItemDtoAbstract<Policy,PolicySpec<?>> {

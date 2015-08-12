@@ -25,12 +25,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.policy.EntityAdjunct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.policy.EntityAdjunct;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;

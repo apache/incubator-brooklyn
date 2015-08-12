@@ -27,6 +27,10 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,10 +41,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.location.Location;
 import brooklyn.management.Task;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
 
 import com.google.common.base.Supplier;

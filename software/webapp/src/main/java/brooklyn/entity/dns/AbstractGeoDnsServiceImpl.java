@@ -33,6 +33,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,6 @@ import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;

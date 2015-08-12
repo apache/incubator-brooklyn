@@ -22,6 +22,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlRebindTest;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.internal.CatalogUtils;
@@ -29,8 +31,6 @@ import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.test.policy.TestEnricher;
 import brooklyn.test.policy.TestPolicy;
 

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,6 @@ import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.management.ManagementContext;
-import brooklyn.policy.EnricherSpec;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;

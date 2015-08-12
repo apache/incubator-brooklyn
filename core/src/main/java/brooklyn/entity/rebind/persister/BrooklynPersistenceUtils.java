@@ -25,7 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.Entity;
@@ -50,8 +54,6 @@ import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.mementos.Memento;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;

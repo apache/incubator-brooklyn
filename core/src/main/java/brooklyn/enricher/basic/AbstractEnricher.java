@@ -22,6 +22,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Map;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EnricherType;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
@@ -32,8 +35,6 @@ import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.mementos.EnricherMemento;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherType;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 import brooklyn.util.flags.TypeCoercions;
 

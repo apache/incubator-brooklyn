@@ -20,16 +20,17 @@ package brooklyn.entity.proxying;
 
 import java.util.Map;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

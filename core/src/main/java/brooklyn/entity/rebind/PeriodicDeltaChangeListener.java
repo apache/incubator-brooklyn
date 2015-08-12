@@ -32,7 +32,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.BrooklynTaskTags;
@@ -44,8 +48,6 @@ import brooklyn.location.Location;
 import brooklyn.management.ExecutionContext;
 import brooklyn.management.Task;
 import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;

@@ -36,8 +36,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
+
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynLogging;
@@ -81,8 +85,6 @@ import brooklyn.mementos.LocationMemento;
 import brooklyn.mementos.Memento;
 import brooklyn.mementos.PolicyMemento;
 import brooklyn.mementos.TreeNode;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

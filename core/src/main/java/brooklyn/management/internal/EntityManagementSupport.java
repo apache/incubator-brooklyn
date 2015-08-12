@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +45,6 @@ import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;

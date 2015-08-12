@@ -34,15 +34,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.cli.lister.ClassFinder;
 import org.apache.brooklyn.cli.lister.ItemDescriptors;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
 import brooklyn.location.LocationResolver;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Urls;

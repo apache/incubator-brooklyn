@@ -22,12 +22,12 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Map;
 
+import org.apache.brooklyn.policy.PolicySpec;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.SetFromFlag;
 

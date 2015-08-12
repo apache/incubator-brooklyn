@@ -25,8 +25,10 @@ import java.util.Set;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynTypes;
+
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
 import brooklyn.entity.Entity;
@@ -36,8 +38,9 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
+
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
@@ -49,6 +52,7 @@ import org.apache.brooklyn.rest.domain.PolicyConfigSummary;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.domain.SummaryComparators;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 
