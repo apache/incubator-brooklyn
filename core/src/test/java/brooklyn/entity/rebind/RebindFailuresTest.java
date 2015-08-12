@@ -33,6 +33,7 @@ import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -51,7 +52,6 @@ import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.os.Os;

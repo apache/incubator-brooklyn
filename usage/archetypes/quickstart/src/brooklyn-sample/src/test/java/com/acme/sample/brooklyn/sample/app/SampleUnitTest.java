@@ -13,8 +13,8 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.webapp.JavaWebAppService;
-import brooklyn.entity.webapp.WebAppService;
+import org.apache.brooklyn.entity.webapp.JavaWebAppService;
+import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 

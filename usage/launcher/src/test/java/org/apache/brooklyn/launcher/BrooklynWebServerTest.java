@@ -49,7 +49,8 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
-import brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.http.HttpTool;

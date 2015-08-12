@@ -26,11 +26,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.entity.webapp.DynamicWebAppCluster;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
+
+import org.apache.brooklyn.entity.proxy.nginx.NginxController;
+import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;

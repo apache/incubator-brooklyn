@@ -22,11 +22,12 @@ import static java.lang.String.format;
 
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl;
+import org.apache.brooklyn.entity.webapp.jboss.JBoss7SshDriver;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.webapp.jboss.JBoss7ServerImpl;
-import brooklyn.entity.webapp.jboss.JBoss7SshDriver;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.http.HttpFeed;

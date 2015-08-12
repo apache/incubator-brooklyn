@@ -19,6 +19,7 @@
 package brooklyn.entity.rebind.persister.jclouds;
 
 import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
@@ -31,7 +32,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsUtil;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.text.Identifiers;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;

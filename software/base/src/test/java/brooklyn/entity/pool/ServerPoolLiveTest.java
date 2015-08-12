@@ -23,6 +23,8 @@ import static org.testng.Assert.assertTrue;
 import java.util.Map;
 
 import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.Test;
 
 import com.google.common.base.CaseFormat;
@@ -32,8 +34,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.location.Location;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
 
 public class ServerPoolLiveTest extends AbstractServerPoolTest {

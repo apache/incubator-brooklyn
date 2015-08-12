@@ -22,6 +22,8 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.List;
 
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -36,8 +38,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

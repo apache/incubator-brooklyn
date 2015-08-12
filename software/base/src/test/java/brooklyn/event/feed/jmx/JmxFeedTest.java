@@ -42,6 +42,10 @@ import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 
 import org.apache.brooklyn.test.TestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestApplicationImpl;
+import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -71,10 +75,6 @@ import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 import brooklyn.test.GeneralisedDynamicMBean;
 import brooklyn.test.JmxService;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationImpl;
-import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityImpl;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

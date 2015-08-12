@@ -28,8 +28,9 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.webapp.JavaWebAppService;
-import brooklyn.entity.webapp.jboss.JBoss7Server;
+
+import org.apache.brooklyn.entity.webapp.JavaWebAppService;
+import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.CommandLineUtil;

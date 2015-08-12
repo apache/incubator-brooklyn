@@ -21,6 +21,7 @@ package brooklyn.entity.group;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -37,7 +38,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
 
 public class GroupTest extends BrooklynAppUnitTestSupport {
 

@@ -21,6 +21,8 @@ package org.apache.brooklyn.launcher;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
 
 import static org.testng.Assert.assertEquals;
 
@@ -34,8 +36,6 @@ import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.jclouds.BlobStoreTest;
 import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;

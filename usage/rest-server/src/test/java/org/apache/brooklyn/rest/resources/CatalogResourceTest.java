@@ -94,7 +94,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "  - url: " + bundleUrl + "\n"+
                 "\n"+
                 "services:\n"+
-                "- type: brooklyn.test.entity.TestEntity\n";
+                "- type: org.apache.brooklyn.test.entity.TestEntity\n";
 
         ClientResponse response = client().resource("/v1/catalog")
                 .post(ClientResponse.class, yaml);
@@ -105,7 +105,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 .get(CatalogEntitySummary.class);
 
         Assert.assertNotNull(entityItem.getPlanYaml());
-        Assert.assertTrue(entityItem.getPlanYaml().contains("brooklyn.test.entity.TestEntity"));
+        Assert.assertTrue(entityItem.getPlanYaml().contains("org.apache.brooklyn.test.entity.TestEntity"));
 
         assertEquals(entityItem.getId(), ver(symbolicName));
         assertEquals(entityItem.getSymbolicName(), symbolicName);
@@ -336,7 +336,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "  version: " + TEST_VERSION + "\n"+
                 "\n"+
                 "services:\n"+
-                "- type: brooklyn.test.entity.TestEntity\n";
+                "- type: org.apache.brooklyn.test.entity.TestEntity\n";
 
         client().resource("/v1/catalog")
                 .post(ClientResponse.class, yaml);
@@ -418,7 +418,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "  - url: " + bundleUrl + "\n"+
                 "\n"+
                 "services:\n"+
-                "- type: brooklyn.test.entity.TestEntity\n";
+                "- type: org.apache.brooklyn.test.entity.TestEntity\n";
 
         ClientResponse response = client().resource("/v1/catalog")
                 .post(ClientResponse.class, yaml);

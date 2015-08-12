@@ -24,6 +24,7 @@ import static org.testng.Assert.assertFalse;
 import java.io.IOException;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -38,7 +39,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

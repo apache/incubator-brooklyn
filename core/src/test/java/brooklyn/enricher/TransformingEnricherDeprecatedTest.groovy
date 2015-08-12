@@ -35,8 +35,8 @@ import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
 import org.apache.brooklyn.test.TestUtils
-import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestEntity
+import org.apache.brooklyn.test.entity.TestApplication
+import org.apache.brooklyn.test.entity.TestEntity
 import brooklyn.util.collections.MutableMap
 
 public class TransformingEnricherDeprecatedTest {

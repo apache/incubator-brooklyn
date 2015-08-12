@@ -25,6 +25,7 @@ import static org.testng.Assert.assertNotNull;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -34,7 +35,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 
 import com.google.common.collect.ImmutableList;

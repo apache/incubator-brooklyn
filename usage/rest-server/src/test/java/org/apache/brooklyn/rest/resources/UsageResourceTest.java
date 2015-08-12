@@ -53,7 +53,8 @@ import org.apache.brooklyn.rest.domain.UsageStatistic;
 import org.apache.brooklyn.rest.domain.UsageStatistics;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-import brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestApplication;
+
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Time;
 

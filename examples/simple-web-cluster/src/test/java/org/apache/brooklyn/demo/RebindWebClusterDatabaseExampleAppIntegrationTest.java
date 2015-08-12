@@ -19,6 +19,10 @@
 package org.apache.brooklyn.demo;
 
 import org.apache.brooklyn.demo.WebClusterDatabaseExampleApp;
+import org.apache.brooklyn.entity.proxy.nginx.NginxController;
+import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
@@ -49,13 +53,9 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
-import brooklyn.entity.proxy.nginx.NginxController;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixture;
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.entity.webapp.DynamicWebAppCluster;
-import brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import brooklyn.location.Location;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;

@@ -20,6 +20,7 @@ package brooklyn.entity.rebind.persister.jclouds;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.PageSet;
@@ -31,7 +32,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.test.entity.LocalManagementContextForTests;
 
 /** Utility for cleaning up after test leaks. Most should not leak of course, but if they do... */
 public class BlobStoreCleaner {

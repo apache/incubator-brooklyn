@@ -21,11 +21,11 @@ package brooklyn.entity.trait;
 import java.util.Collection;
 
 import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.testng.Assert;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;
-import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.Tasks;
 

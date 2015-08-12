@@ -20,6 +20,8 @@ package brooklyn.entity.basic;
 
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -34,8 +36,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
-import brooklyn.test.entity.TestEntity;
-import brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;

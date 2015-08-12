@@ -21,7 +21,7 @@
 name: test-webapp-with-averaging-enricher
 description: Testing many enrichers
 services:
-- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   initialSize: 3
   location: localhost
   
@@ -29,7 +29,7 @@ services:
   # this assumes the test fixture will set the "my.load" sensor on the member-specs in here. 
   webClusterSpec:
     $brooklyn:entitySpec:
-      type: brooklyn.entity.webapp.DynamicWebAppCluster
+      type: org.apache.brooklyn.entity.webapp.DynamicWebAppCluster
       id: cluster
       brooklyn.enrichers:
       - type: brooklyn.enricher.basic.Aggregator

@@ -21,6 +21,8 @@ package org.apache.brooklyn.launcher;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -45,8 +47,6 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.time.Duration;

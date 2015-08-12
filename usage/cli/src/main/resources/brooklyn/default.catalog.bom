@@ -34,7 +34,7 @@ brooklyn.catalog:
       The sensor advertising the port can be configured with the "member.sensor.portNumber" config key,
       defaulting to `http.port`; all member entities which have published "service.up" will then be picked up.
     item:
-      type: brooklyn.entity.proxy.nginx.NginxController
+      type: org.apache.brooklyn.entity.proxy.nginx.NginxController
       name: Load Balancer (nginx)
 
   - id: cluster

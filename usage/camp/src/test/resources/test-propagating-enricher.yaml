@@ -20,7 +20,7 @@ name: test-propagating-enricher
 description: TestEntity with Propagating Enricher at application-level using Brooklyn
 origin: https://github.com/apache/incubator-brooklyn
 services:
-- serviceType: brooklyn.test.entity.TestEntity
+- serviceType: org.apache.brooklyn.test.entity.TestEntity
   id: te1
   name: testentity
   brooklyn.config:

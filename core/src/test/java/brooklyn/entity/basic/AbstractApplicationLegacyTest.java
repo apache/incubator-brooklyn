@@ -24,6 +24,8 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -34,8 +36,6 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 
 /**
  * Tests the deprecated use of AbstractAppliation, where its constructor is called directly.

@@ -29,12 +29,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
+
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.maven.MavenRetriever;
 

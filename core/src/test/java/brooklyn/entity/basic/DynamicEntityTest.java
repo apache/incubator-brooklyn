@@ -21,13 +21,13 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.effector.EffectorTaskTest;
 import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
 public class DynamicEntityTest extends BrooklynAppUnitTestSupport {

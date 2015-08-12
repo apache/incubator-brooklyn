@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.basic;
 
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -30,7 +31,6 @@ import brooklyn.entity.basic.ConfigMapTest.MyOtherEntity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
-import brooklyn.test.entity.TestApplication;
 
 /**
  * There is a bug where:

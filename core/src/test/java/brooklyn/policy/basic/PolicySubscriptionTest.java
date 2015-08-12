@@ -27,12 +27,12 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.apache.brooklyn.management.SubscriptionHandle;
+import org.apache.brooklyn.test.entity.TestEntity;
 
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 

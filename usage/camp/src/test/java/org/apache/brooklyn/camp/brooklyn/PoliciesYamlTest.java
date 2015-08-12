@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -32,7 +33,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestPolicy;
 import brooklyn.util.collections.MutableMap;
 
@@ -94,13 +94,13 @@ public class PoliciesYamlTest extends AbstractYamlTest {
                     "  brooklyn.config:",
                     "    test.confName: parent entity",
                     "  brooklyn.children:",
-                    "  - serviceType: brooklyn.test.entity.TestEntity",
+                    "  - serviceType: org.apache.brooklyn.test.entity.TestEntity",
                     "    name: Child Entity",
                     "    brooklyn.policies:",
                     "    - policyType: brooklyn.test.policy.TestPolicy",
                     "      brooklyn.config:",
                     "        test.confName: Name from YAML",
-                    "        test.attributeSensor: $brooklyn:sensor(\"brooklyn.test.entity.TestEntity\", \"test.name\")"));
+                    "        test.attributeSensor: $brooklyn:sensor(\"org.apache.brooklyn.test.entity.TestEntity\", \"test.name\")"));
         waitForApplicationTasks(app);
 
         Assert.assertEquals(app.getChildren().size(), 1);

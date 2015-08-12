@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,6 @@ import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
 import org.apache.brooklyn.test.HttpTestUtils;
-
-import brooklyn.test.entity.TestEntity;
 
 @Test
 public class BrooklynApiRestClientTest {

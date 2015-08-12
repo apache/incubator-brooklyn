@@ -22,6 +22,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -38,7 +39,6 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;

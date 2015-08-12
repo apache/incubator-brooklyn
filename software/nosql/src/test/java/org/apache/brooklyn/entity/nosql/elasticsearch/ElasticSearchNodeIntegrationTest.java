@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 
 import org.apache.brooklyn.entity.nosql.elasticsearch.ElasticSearchNode;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.http.client.methods.HttpGet;
 import org.bouncycastle.util.Strings;
 import org.testng.annotations.AfterMethod;
@@ -39,7 +40,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.entity.TestApplication;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 

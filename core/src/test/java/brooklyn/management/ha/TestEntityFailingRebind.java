@@ -18,10 +18,9 @@
  */
 package brooklyn.management.ha;
 
+import org.apache.brooklyn.test.entity.TestApplicationImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.test.entity.TestApplicationImpl;
 
 public class TestEntityFailingRebind extends TestApplicationImpl {
     

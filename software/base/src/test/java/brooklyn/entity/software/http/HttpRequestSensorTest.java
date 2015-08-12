@@ -19,6 +19,8 @@
 package brooklyn.entity.software.http;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -32,8 +34,6 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.test.TestHttpRequestHandler;
 import brooklyn.test.TestHttpServer;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.time.Duration;
 

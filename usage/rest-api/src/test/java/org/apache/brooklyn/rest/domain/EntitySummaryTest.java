@@ -37,7 +37,7 @@ public class EntitySummaryTest {
     static {
         links = Maps.newLinkedHashMap();
         links.put("self", URI.create("/v1/applications/tesr/entities/zQsqdXzi"));
-        links.put("catalog", URI.create("/v1/catalog/entities/brooklyn.entity.webapp.tomcat.TomcatServer"));
+        links.put("catalog", URI.create("/v1/catalog/entities/org.apache.brooklyn.entity.webapp.tomcat.TomcatServer"));
         links.put("application", URI.create("/v1/applications/tesr"));
         links.put("children", URI.create("/v1/applications/tesr/entities/zQsqdXzi/children"));
         links.put("effectors", URI.create("fixtures/effector-summary-list.json"));
@@ -46,7 +46,7 @@ public class EntitySummaryTest {
     }
 
     static final EntitySummary entitySummary = new EntitySummary("zQsqdXzi", "MyTomcat",
-            "brooklyn.entity.webapp.tomcat.TomcatServer", null, links);
+            "org.apache.brooklyn.entity.webapp.tomcat.TomcatServer", null, links);
 
     @Test
     public void testSerializeToJSON() throws IOException {

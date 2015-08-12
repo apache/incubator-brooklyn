@@ -45,9 +45,9 @@ import brooklyn.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestEntityImpl;
 
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

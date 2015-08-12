@@ -25,6 +25,7 @@ import static org.testng.Assert.assertNull;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -35,7 +36,6 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.net.Networking;
 
 import com.google.common.base.Predicate;

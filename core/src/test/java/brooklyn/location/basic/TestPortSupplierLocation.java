@@ -20,6 +20,7 @@ package brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -27,7 +28,6 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 

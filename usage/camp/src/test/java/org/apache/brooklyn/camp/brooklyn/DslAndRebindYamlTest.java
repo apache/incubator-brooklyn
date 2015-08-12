@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -40,7 +41,6 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.task.Tasks;
 

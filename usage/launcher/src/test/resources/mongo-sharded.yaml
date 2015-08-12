@@ -29,7 +29,7 @@ services:
     shardReplicaSetSize: 3
     coLocatedRouterGroup: $brooklyn:component("webappcluster").attributeWhenReady("controlleddynamicwebappcluster.cluster")
 
-- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   id: webappcluster
   brooklyn.config:
     memberSpec:
@@ -39,14 +39,14 @@ services:
           - type: brooklyn.enricher.basic.Propagator
             brooklyn.config:
               enricher.propagating.sensorMapping:
-                $brooklyn:sensor("brooklyn.entity.webapp.jboss.JBoss7Server", "http.port"): $brooklyn:sensor("brooklyn.entity.webapp.jboss.JBoss7Server", "http.port") 
+                $brooklyn:sensor("org.apache.brooklyn.entity.webapp.jboss.JBoss7Server", "http.port"): $brooklyn:sensor("org.apache.brooklyn.entity.webapp.jboss.JBoss7Server", "http.port") 
               enricher.producer: $brooklyn:component("child", "appserver")
         brooklyn.config:
           shardedDeployment: $brooklyn:component("mongo")
           siblingSpecs:
           - $brooklyn:entitySpec:
               id: appserver
-              type: brooklyn.entity.webapp.jboss.JBoss7Server
+              type: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
               brooklyn.config:
                 war: "classpath://brooklyn-example-hello-world-sql-webapp.war"
                 java.sysprops:

@@ -28,14 +28,14 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.management.ExecutionContext;
 import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EntityFunctions;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;

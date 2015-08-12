@@ -21,7 +21,7 @@ description: Single JBoss using Brooklyn
 origin: https://github.com/apache/incubator-brooklyn
 location: localhost
 services:
-- serviceType: brooklyn.entity.webapp.tomcat.Tomcat8Server
+- serviceType: org.apache.brooklyn.entity.webapp.tomcat.Tomcat8Server
   name: tomcat1
   brooklyn.config:
     wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-webapp/0.7.0-M1/brooklyn-example-hello-world-webapp-0.7.0-M1.war

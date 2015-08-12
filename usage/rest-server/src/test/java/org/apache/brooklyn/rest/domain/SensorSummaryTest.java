@@ -39,9 +39,8 @@ import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.transform.SensorTransformer;
-
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableMap;
 

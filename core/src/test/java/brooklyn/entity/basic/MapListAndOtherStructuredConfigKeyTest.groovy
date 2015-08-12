@@ -35,8 +35,8 @@ import brooklyn.event.basic.ListConfigKey.ListModifications
 import brooklyn.event.basic.MapConfigKey.MapModifications
 import brooklyn.event.basic.SetConfigKey.SetModifications
 import brooklyn.location.basic.SimulatedLocation
-import brooklyn.test.entity.TestApplication
-import brooklyn.test.entity.TestEntity
+import org.apache.brooklyn.test.entity.TestApplication
+import org.apache.brooklyn.test.entity.TestEntity
 import brooklyn.util.collections.MutableMap
 import brooklyn.util.exceptions.Exceptions
 import brooklyn.util.task.DeferredSupplier

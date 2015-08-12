@@ -27,10 +27,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
+
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.webapp.WebAppServiceMethods;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.feed.http.HttpFeed;

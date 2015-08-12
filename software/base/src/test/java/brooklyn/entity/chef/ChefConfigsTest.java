@@ -20,13 +20,13 @@ package brooklyn.entity.chef;
 
 import java.util.Set;
 
+import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.test.entity.TestApplication;
 
 public class ChefConfigsTest {
 

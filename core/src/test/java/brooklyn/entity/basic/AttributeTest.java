@@ -21,13 +21,13 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
+import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.test.entity.TestEntityImpl;
 
 public class AttributeTest {
     static AttributeSensor<String> COLOR = new BasicAttributeSensor<String>(String.class, "my.color");

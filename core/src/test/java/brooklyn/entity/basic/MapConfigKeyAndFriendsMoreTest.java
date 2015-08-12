@@ -20,6 +20,7 @@ package brooklyn.entity.basic;
 
 import java.util.List;
 
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -36,7 +37,6 @@ import brooklyn.event.basic.SetConfigKey;
 import brooklyn.event.basic.SetConfigKey.SetModifications;
 import brooklyn.event.basic.StructuredConfigKey.StructuredModification;
 import brooklyn.event.basic.SubElementConfigKey;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

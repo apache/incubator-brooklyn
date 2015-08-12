@@ -21,6 +21,7 @@ package brooklyn.management.osgi;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.osgi.framework.BundleException;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -31,7 +32,6 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 

@@ -24,6 +24,7 @@ import static org.testng.Assert.fail;
 
 import java.net.ServerSocket;
 
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -39,7 +40,6 @@ import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.PortRange;
 import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 

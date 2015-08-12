@@ -18,7 +18,7 @@
 #
 name: java-cluster-db-policy-example
 services:
-- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   name: My Web with Policy
   location: localhost
   brooklyn.config:
@@ -31,7 +31,7 @@ services:
   brooklyn.policies:
   - policyType: brooklyn.policy.autoscaling.AutoScalerPolicy
     brooklyn.config:
-      metric: $brooklyn:sensor("brooklyn.entity.webapp.DynamicWebAppCluster", "webapp.reqs.perSec.windowed.perNode")
+      metric: $brooklyn:sensor("org.apache.brooklyn.entity.webapp.DynamicWebAppCluster", "webapp.reqs.perSec.windowed.perNode")
       metricLowerBound: 10
       metricUpperBound: 100
       minPoolSize: 1

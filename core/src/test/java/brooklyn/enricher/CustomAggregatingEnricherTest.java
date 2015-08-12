@@ -21,6 +21,7 @@ package brooklyn.enricher;
 import java.util.Collection;
 
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -35,7 +36,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;

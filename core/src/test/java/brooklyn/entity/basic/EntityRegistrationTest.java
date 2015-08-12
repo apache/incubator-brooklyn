@@ -23,6 +23,7 @@ import static org.testng.Assert.assertEquals;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -32,7 +33,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.test.Asserts;
-import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

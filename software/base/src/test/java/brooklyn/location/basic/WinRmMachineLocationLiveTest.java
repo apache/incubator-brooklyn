@@ -19,6 +19,10 @@
 package brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
+
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.test.entity.TestApplication;
+
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import org.slf4j.Logger;
@@ -33,8 +37,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsWinRmMachineLocation;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.test.entity.LocalManagementContextForTests;
-import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

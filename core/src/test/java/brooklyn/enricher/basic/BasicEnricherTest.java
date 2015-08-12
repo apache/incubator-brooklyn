@@ -24,6 +24,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestApplicationNoEnrichersImpl;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -35,8 +37,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.test.entity.TestApplication;
-import brooklyn.test.entity.TestApplicationNoEnrichersImpl;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.SetFromFlag;
 

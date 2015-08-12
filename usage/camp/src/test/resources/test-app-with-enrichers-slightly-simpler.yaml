@@ -27,7 +27,7 @@ services:
   location: localhost
   memberSpec:
     $brooklyn:entitySpec:
-      type: brooklyn.test.entity.TestEntity
+      type: org.apache.brooklyn.test.entity.TestEntity
       brooklyn.enrichers:
       - type: brooklyn.enricher.basic.Transformer
         # transform "ip" (which we expect a feed, not shown here, to set) to a URL;

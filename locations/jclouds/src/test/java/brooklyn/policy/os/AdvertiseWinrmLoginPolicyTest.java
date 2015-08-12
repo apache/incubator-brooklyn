@@ -20,13 +20,13 @@ package brooklyn.policy.os;
 
 import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.WinRmMachineLocation;
-import brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.ImmutableList;
 
