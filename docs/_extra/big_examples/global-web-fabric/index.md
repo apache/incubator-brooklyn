@@ -209,7 +209,7 @@ import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.webapp.ElasticJavaWebAppService;
+import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService;
 import brooklyn.location.basic.PortRanges;
 {% endhighlight %}
 

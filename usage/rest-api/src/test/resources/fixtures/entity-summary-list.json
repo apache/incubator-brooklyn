@@ -1,9 +1,9 @@
 [
     {
-        "type":"brooklyn.entity.webapp.tomcat.TomcatServer",
+        "type":"org.apache.brooklyn.entity.webapp.tomcat.TomcatServer",
         "links":{
             "self":"/v1/applications/tesr/entities/zQsqdXzi",
-            "catalog":"/v1/catalog/entities/brooklyn.entity.webapp.tomcat.TomcatServer",
+            "catalog":"/v1/catalog/entities/org.apache.brooklyn.entity.webapp.tomcat.TomcatServer",
             "application":"/v1/applications/tesr",
             "children":"/v1/applications/tesr/entities/zQsqdXzi/entities",
             "effectors":"fixtures/effector-summary-list.json",

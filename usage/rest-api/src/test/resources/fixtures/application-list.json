@@ -5,7 +5,7 @@
             "entities":[
                 {
                     "name":"tomcat",
-                    "type":"brooklyn.entity.webapp.tomcat.TomcatServer",
+                    "type":"org.apache.brooklyn.entity.webapp.tomcat.TomcatServer",
                     "config":{ }
                 }
             ],
