@@ -29,6 +29,12 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.catalog.CatalogConfig;
+import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.JavaWebAppService;
+import org.apache.brooklyn.entity.webapp.WebAppService;
+import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.HttpLatencyDetector;
@@ -40,11 +46,6 @@ import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import brooklyn.entity.webapp.DynamicWebAppCluster;
-import brooklyn.entity.webapp.JavaWebAppService;
-import brooklyn.entity.webapp.WebAppService;
-import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import org.apache.brooklyn.launcher.BrooklynLauncher;

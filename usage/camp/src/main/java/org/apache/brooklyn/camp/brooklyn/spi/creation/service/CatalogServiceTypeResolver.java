@@ -52,7 +52,7 @@ public class CatalogServiceTypeResolver extends BrooklynServiceTypeResolver {
             .put("software-process", VanillaSoftwareProcess.class.getName())
             .put("java-app", VanillaJavaApp.class.getName())
             .put("brooklyn-node", BrooklynNode.class.getName())
-            .put("web-app-cluster","brooklyn.entity.webapp.ControlledDynamicWebAppCluster")
+            .put("web-app-cluster","org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster")
             .build();
 
     // Allow catalog-type or CatalogType as service type string

@@ -40,7 +40,7 @@ services:
   brooklyn.config:
     initialSize: 2
     install.version: 2.0.0
-- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   brooklyn.config:
     initialSize: 2
     wars.root: https://s3-eu-west-1.amazonaws.com/brooklyn-clocker/brooklyn-example-hello-world-sql-webapp.war

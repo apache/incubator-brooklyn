@@ -23,7 +23,7 @@ services:
 - type: org.apache.brooklyn.entity.nosql.riak.RiakCluster
   initialSize: 2
   id: cluster
-- type: brooklyn.entity.webapp.jboss.JBoss7Server
+- type: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
   name: Web
   brooklyn.config:
     wars.root: "https://s3-eu-west-1.amazonaws.com/brooklyn-clocker/brooklyn-example-hello-world-sql-webapp.war"

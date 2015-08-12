@@ -19,11 +19,12 @@
 package org.apache.brooklyn.entity.nosql.couchdb;
 
 import org.apache.brooklyn.catalog.Catalog;
+import org.apache.brooklyn.entity.webapp.WebAppService;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.webapp.WebAppService;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 

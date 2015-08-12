@@ -24,7 +24,7 @@ services:
 - type: org.apache.brooklyn.entity.nosql.redis.RedisStore
   id: redis
   name: "Redis"
-- type: brooklyn.entity.webapp.nodejs.NodeJsWebAppService
+- type: org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService
   id: nodejs
   name: "Node.JS"
   brooklyn.config:

@@ -19,14 +19,14 @@
 name: java-cluster-db-example
 location: localhost
 services:
-- serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- serviceType: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   name: My Web
   brooklyn.config:
     proxy.http.port: 9210+
     http.port: 9280+
   memberSpec:
     $brooklyn:entitySpec:
-      type: brooklyn.entity.webapp.jboss.JBoss7Server
+      type: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
       brooklyn.config:
         wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
         java.sysprops: 

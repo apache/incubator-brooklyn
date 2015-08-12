@@ -29,7 +29,7 @@ services:
       osFamily: centos
       minCores: 4
       minRam: 2048
-- type: brooklyn.entity.webapp.nodejs.NodeJsWebAppService
+- type: org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService
   id: nodejs-riak1
   name: "Node.JS"
   brooklyn.config:

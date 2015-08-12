@@ -33,4 +33,4 @@ services:
       enricherLiteralValue2: World
       test.confName: Name from YAML
       test.confFromFunction:  "$brooklyn:formatString(\"%s: is a fun place\", \"$brooklyn\")"
-      test.attributeSensor: $brooklyn:sensor("brooklyn.test.entity.TestEntity", "test.name")
+      test.attributeSensor: $brooklyn:sensor("org.apache.brooklyn.test.entity.TestEntity", "test.name")

@@ -42,7 +42,7 @@ services:
       minPoolSize: 3
       maxPoolSize: 8
 
-- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   name: Web Couchbase Load Gen Cluster
   war: https://github.com/neykov/web-load-gen/raw/master/load-gen.war
   brooklyn.config:

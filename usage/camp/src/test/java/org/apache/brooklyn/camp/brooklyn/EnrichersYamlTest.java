@@ -134,7 +134,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
                     "      enricher.producer: $brooklyn:component(\"childId\")",
                     "      enricher.propagating.propagatingAll: true",
                     "  brooklyn.children:",
-                    "  - serviceType: brooklyn.test.entity.TestEntity",
+                    "  - serviceType: org.apache.brooklyn.test.entity.TestEntity",
                     "    id: childId",
                     "    brooklyn.config:",
                     "      test.confName: Child Name"));

@@ -27,6 +27,6 @@ services:
   initialSize: 2
   memberSpec:
     $brooklyn:entitySpec:
-      type: brooklyn.test.entity.TestEntity
+      type: org.apache.brooklyn.test.entity.TestEntity
       brooklyn.config:
         test.confName: yamlTest

@@ -18,7 +18,7 @@
 #
 name: java-cluster-db-example
 services:
-- serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- serviceType: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   name: My Web
   location: localhost
   brooklyn.config:

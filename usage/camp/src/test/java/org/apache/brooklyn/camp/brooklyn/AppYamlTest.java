@@ -42,7 +42,7 @@ public class AppYamlTest extends AbstractYamlTest {
     public void testAutoWrapsEntityInApp() throws Exception {
         String yaml = Joiner.on("\n").join(
                 "services:",
-                "- serviceType: brooklyn.test.entity.TestEntity");
+                "- serviceType: org.apache.brooklyn.test.entity.TestEntity");
         
         BasicApplication app = (BasicApplication) createStartWaitAndLogApplication(new StringReader(yaml));
         @SuppressWarnings("unused")
@@ -53,7 +53,7 @@ public class AppYamlTest extends AbstractYamlTest {
     public void testDoesNotAutoWrapApp() throws Exception {
         String yaml = Joiner.on("\n").join(
                 "services:",
-                "- serviceType: brooklyn.test.entity.TestApplication");
+                "- serviceType: org.apache.brooklyn.test.entity.TestApplication");
         
         TestApplication app = (TestApplication) createStartWaitAndLogApplication(new StringReader(yaml));
         assertTrue(app.getChildren().isEmpty());
@@ -64,7 +64,7 @@ public class AppYamlTest extends AbstractYamlTest {
         String yaml = Joiner.on("\n").join(
                 "name: myTopLevelName",
                 "services:",
-                "- serviceType: brooklyn.test.entity.TestApplication",
+                "- serviceType: org.apache.brooklyn.test.entity.TestApplication",
                 "  name: myEntityName");
         
         BasicApplication app = (BasicApplication) createStartWaitAndLogApplication(new StringReader(yaml));
@@ -78,7 +78,7 @@ public class AppYamlTest extends AbstractYamlTest {
         String yaml = Joiner.on("\n").join(
                 "name: myTopLevelName",
                 "services:",
-                "- serviceType: brooklyn.test.entity.TestApplication");
+                "- serviceType: org.apache.brooklyn.test.entity.TestApplication");
         
         TestApplication app = (TestApplication) createStartWaitAndLogApplication(new StringReader(yaml));
         assertTrue(app.getChildren().isEmpty());
@@ -90,7 +90,7 @@ public class AppYamlTest extends AbstractYamlTest {
         String yaml = Joiner.on("\n").join(
                 "name: myTopLevelName",
                 "services:",
-                "- serviceType: brooklyn.test.entity.TestApplication",
+                "- serviceType: org.apache.brooklyn.test.entity.TestApplication",
                 "  brooklyn.config:",
                 "    defaultDisplayName: myDefaultEntityName");
         
@@ -103,7 +103,7 @@ public class AppYamlTest extends AbstractYamlTest {
     public void testUsesDefaultDisplayNameIfNoOther() throws Exception {
         String yaml = Joiner.on("\n").join(
                 "services:",
-                "- serviceType: brooklyn.test.entity.TestApplication",
+                "- serviceType: org.apache.brooklyn.test.entity.TestApplication",
                 "  brooklyn.config:",
                 "    defaultDisplayName: myDefaultEntityName");
         

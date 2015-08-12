@@ -29,6 +29,8 @@ import org.apache.brooklyn.catalog.CatalogConfig;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraFabric;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
+import org.apache.brooklyn.entity.webapp.JavaWebAppService;
+import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
@@ -47,8 +49,6 @@ import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.entity.trait.Startable;
-import brooklyn.entity.webapp.JavaWebAppService;
-import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.DependentConfiguration;

@@ -22,7 +22,7 @@ description: |
 origin: https://github.com/apache/incubator-brooklyn
 location: localhost
 services:
-- serviceType: brooklyn.entity.webapp.jboss.JBoss7Server
+- serviceType: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
   brooklyn.config:
     # test the various ways to use literals, either a function
     literalValue1: '$brooklyn:literal("$brooklyn: is a fun place")' 

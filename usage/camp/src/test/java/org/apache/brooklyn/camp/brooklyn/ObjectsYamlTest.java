@@ -21,6 +21,7 @@ package org.apache.brooklyn.camp.brooklyn;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
@@ -33,7 +34,6 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.test.entity.TestEntity;
@@ -182,7 +182,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "          number: 7",
             "          object:",
             "            $brooklyn:object:",
-            "              type: brooklyn.entity.proxy.ProxySslConfig",
+            "              type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
             "          string: \"frog\"");
 
         Object testObject = testEntity.getConfig(TestEntity.CONF_OBJECT);
@@ -210,7 +210,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "          config.number: 7",
             "          object:",
             "            $brooklyn:object:",
-            "              type: brooklyn.entity.proxy.ProxySslConfig");
+            "              type: org.apache.brooklyn.entity.proxy.ProxySslConfig");
 
         Object testObject = testEntity.getConfig(TestEntity.CONF_OBJECT);
 
@@ -232,11 +232,11 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "  brooklyn.config:",
             "    test.confListPlain:",
             "    - $brooklyn:object:",
-            "        objectType: brooklyn.entity.proxy.ProxySslConfig",
+            "        objectType: org.apache.brooklyn.entity.proxy.ProxySslConfig",
             "    - $brooklyn:object:",
-            "        object_type: brooklyn.entity.proxy.ProxySslConfig",
+            "        object_type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
             "    - $brooklyn:object:",
-            "        type: brooklyn.entity.proxy.ProxySslConfig");
+            "        type: org.apache.brooklyn.entity.proxy.ProxySslConfig");
 
         List<?> testList = testEntity.getConfig(TestEntity.CONF_LIST_PLAIN);
 
@@ -257,7 +257,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "          number: 7",
             "          object:",
             "            $brooklyn:object:",
-            "              type: brooklyn.entity.proxy.ProxySslConfig",
+            "              type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
             "          string:",
             "            $brooklyn:formatString(\"%s\", \"frog\")");
 

@@ -85,7 +85,7 @@ public class BrooklynPropertiesSecurityFilterTest extends BrooklynRestApiLaunche
         String blueprint = "name: TestApp\n" +
                 "location: localhost\n" +
                 "services:\n" +
-                "- type: brooklyn.test.entity.TestEntity";
+                "- type: org.apache.brooklyn.test.entity.TestEntity";
         HttpClient client = HttpTool.httpClientBuilder()
                 .uri(getBaseUri(server))
                 .build();

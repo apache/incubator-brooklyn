@@ -21,6 +21,7 @@ package org.apache.brooklyn.camp.brooklyn;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -29,7 +30,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxy.ProxySslConfig;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.task.Tasks;
 
@@ -70,7 +70,7 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
             "      frog: $brooklyn:formatString(\"%s\", \"frog\")",
             "      object:",
             "        $brooklyn:object:",
-            "          type: brooklyn.entity.proxy.ProxySslConfig",
+            "          type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
             "      one: $brooklyn:entity(\"one\")",
             "      two: $brooklyn:entity(\"two\")");
 
@@ -100,7 +100,7 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
             "      frog: $brooklyn:formatString(\"%s\", \"frog\")",
             "      object:",
             "        $brooklyn:object:",
-            "          type: brooklyn.entity.proxy.ProxySslConfig",
+            "          type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
             "      one: $brooklyn:entity(\"one\")",
             "      two: $brooklyn:entity(\"two\")");
 

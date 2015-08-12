@@ -38,7 +38,7 @@ define([
             expect(app1.get("type")).toBe("")
             expect(app1.get("children").length).toBe(1)
             expect(app1.get("children")[0].name).toBe("tomcat1")
-            expect(app1.get("children")[0].type).toBe("brooklyn.entity.webapp.tomcat.TomcatServer")
+            expect(app1.get("children")[0].type).toBe("org.apache.brooklyn.entity.webapp.tomcat.TomcatServer")
             expect(apps.at(1).get("children").length).toBe(2)
         })
 

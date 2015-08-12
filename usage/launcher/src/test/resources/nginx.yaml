@@ -19,7 +19,7 @@
 name: Sample Nginx on SSL
 location: localhost
 services:
-- type: brooklyn.entity.proxy.nginx.NginxController
+- type: org.apache.brooklyn.entity.proxy.nginx.NginxController
   ssl:
     certificateDestination: /tmp/server.crt
     keyDestination: /tmp/server.key
