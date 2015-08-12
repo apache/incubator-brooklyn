@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.brooklyn.management.Task;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -49,7 +50,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.jclouds.BailOutJcloudsLocation;
-import brooklyn.management.Task;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.task.TaskInternal;

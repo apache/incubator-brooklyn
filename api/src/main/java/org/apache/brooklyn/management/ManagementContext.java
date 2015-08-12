@@ -16,14 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management;
+package org.apache.brooklyn.management;
 
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Collection;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.management.entitlement.EntitlementManager;
+import org.apache.brooklyn.management.ha.HighAvailabilityManager;
+
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
@@ -32,8 +36,6 @@ import brooklyn.entity.drivers.EntityDriverManager;
 import brooklyn.entity.drivers.downloads.DownloadResolverManager;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
-import brooklyn.management.entitlement.EntitlementManager;
-import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;

@@ -25,12 +25,12 @@ import java.io.File;
 import java.net.URI;
 import java.util.Map;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 

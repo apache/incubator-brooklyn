@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.mementos.Memento;
@@ -39,7 +40,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
 

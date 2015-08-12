@@ -24,10 +24,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import brooklyn.management.Task;
-import brooklyn.management.TaskAdaptable;
-import brooklyn.management.TaskFactory;
-import brooklyn.management.TaskQueueingContext;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.management.TaskFactory;
+import org.apache.brooklyn.management.TaskQueueingContext;
+
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

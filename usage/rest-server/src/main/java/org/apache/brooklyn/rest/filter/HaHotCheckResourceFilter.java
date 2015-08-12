@@ -28,10 +28,10 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.rest.domain.ApiError;
+
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.VisibleForTesting;

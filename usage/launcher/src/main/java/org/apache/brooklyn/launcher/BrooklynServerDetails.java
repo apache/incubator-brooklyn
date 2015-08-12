@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.launcher;
 
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
 
 public class BrooklynServerDetails {
 

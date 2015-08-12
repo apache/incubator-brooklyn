@@ -21,8 +21,9 @@ package brooklyn.util.mutex;
 import java.util.List;
 import java.util.Set;
 
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
+
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.task.Tasks;

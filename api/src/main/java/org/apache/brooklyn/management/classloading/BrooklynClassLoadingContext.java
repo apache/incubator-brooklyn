@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management.classloading;
+package org.apache.brooklyn.management.classloading;
 
 import java.net.URL;
 
 import javax.annotation.Nullable;
 
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.util.guava.Maybe;
 
 /** 

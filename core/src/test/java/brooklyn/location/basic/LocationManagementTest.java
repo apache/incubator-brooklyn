@@ -24,12 +24,12 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.management.LocationManager;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.LocationManager;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;

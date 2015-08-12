@@ -23,6 +23,7 @@ import java.util.concurrent.Callable;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,6 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;

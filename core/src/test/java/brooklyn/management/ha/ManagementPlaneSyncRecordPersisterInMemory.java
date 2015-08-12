@@ -23,6 +23,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

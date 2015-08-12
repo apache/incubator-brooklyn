@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.management.SubscriptionHandle;
+import org.apache.brooklyn.management.SubscriptionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +33,6 @@ import brooklyn.entity.Group;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.management.SubscriptionHandle;
-import brooklyn.management.SubscriptionManager;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

@@ -31,11 +31,13 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
+
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;

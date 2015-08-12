@@ -20,6 +20,7 @@ package brooklyn.entity.rebind.persister.jclouds;
 
 import java.io.IOException;
 
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -32,7 +33,6 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import brooklyn.entity.rebind.persister.PersistenceStoreObjectAccessorWriterTestFixture;
 import brooklyn.entity.rebind.persister.StoreObjectAccessorLocking;
-import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;

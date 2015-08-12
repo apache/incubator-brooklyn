@@ -21,12 +21,12 @@ package brooklyn.util.task.system;
 import java.io.ByteArrayOutputStream;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.management.Task;
-import brooklyn.management.TaskWrapper;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.ShellTool;
 import brooklyn.util.stream.Streams;

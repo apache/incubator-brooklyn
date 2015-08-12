@@ -21,8 +21,10 @@ package brooklyn.location.jclouds;
 
 import java.util.Collections;
 import java.util.Map;
+
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.Template;
@@ -37,7 +39,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

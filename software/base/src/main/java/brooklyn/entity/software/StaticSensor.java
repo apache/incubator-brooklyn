@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.software;
 
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,6 @@ import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.AddSensor;
-import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;

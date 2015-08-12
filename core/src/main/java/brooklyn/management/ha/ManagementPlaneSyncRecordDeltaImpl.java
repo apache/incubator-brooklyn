@@ -23,7 +23,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Collection;
 
-import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Sets;

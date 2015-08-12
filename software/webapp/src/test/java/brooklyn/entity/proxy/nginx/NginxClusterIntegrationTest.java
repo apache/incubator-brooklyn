@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.brooklyn.management.EntityManager;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
@@ -44,7 +45,6 @@ import brooklyn.entity.webapp.JavaWebAppService;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
-import brooklyn.management.EntityManager;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 

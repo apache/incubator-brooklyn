@@ -18,7 +18,7 @@
  */
 package brooklyn.management.internal;
 
-import brooklyn.management.AccessController;
+import org.apache.brooklyn.management.AccessController;
 
 
 public class NonDeploymentAccessManager implements AccessManager {

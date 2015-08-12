@@ -20,13 +20,13 @@ package brooklyn.util.task;
 
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.Task;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.Task;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;

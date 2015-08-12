@@ -31,6 +31,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.test.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.Task;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.BlockingEntity;
 import brooklyn.test.entity.TestEntity;

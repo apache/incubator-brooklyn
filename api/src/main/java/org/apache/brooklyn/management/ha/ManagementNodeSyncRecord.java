@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management.ha;
+package org.apache.brooklyn.management.ha;
 
 import java.net.URI;
 

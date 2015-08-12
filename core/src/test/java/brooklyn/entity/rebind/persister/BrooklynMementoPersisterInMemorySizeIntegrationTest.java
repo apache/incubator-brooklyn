@@ -21,13 +21,13 @@ package brooklyn.entity.rebind.persister;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.persister.ListeningObjectStore.RecordingTransactionListener;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;

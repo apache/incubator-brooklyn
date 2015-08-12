@@ -21,6 +21,7 @@ package brooklyn.entity.brooklynnode;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,6 @@ import brooklyn.entity.brooklynnode.effector.SelectMasterEffectorBody;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.FluentIterable;

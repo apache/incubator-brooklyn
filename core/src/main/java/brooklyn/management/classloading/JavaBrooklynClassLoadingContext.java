@@ -26,7 +26,8 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
 
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 

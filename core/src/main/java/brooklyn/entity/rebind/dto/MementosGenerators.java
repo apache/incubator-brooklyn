@@ -29,6 +29,8 @@ import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynTypes;
 
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.mementos.BrooklynMemento;
 import org.apache.brooklyn.mementos.CatalogItemMemento;
 import org.apache.brooklyn.mementos.EnricherMemento;
@@ -58,8 +60,6 @@ import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

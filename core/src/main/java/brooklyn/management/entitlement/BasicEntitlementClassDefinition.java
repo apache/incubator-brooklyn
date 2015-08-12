@@ -18,6 +18,8 @@
  */
 package brooklyn.management.entitlement;
 
+import org.apache.brooklyn.management.entitlement.EntitlementClass;
+
 import com.google.common.base.Objects;
 import com.google.common.reflect.TypeToken;
 

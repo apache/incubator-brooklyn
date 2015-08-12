@@ -27,6 +27,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;
@@ -40,7 +41,6 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.location.Location;
-import brooklyn.management.Task;
 import brooklyn.util.collections.MutableList;
 
 import com.google.common.base.Supplier;

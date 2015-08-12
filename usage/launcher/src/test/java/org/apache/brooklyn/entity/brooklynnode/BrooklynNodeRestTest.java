@@ -39,10 +39,12 @@ import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.SameBrooklynNodeImpl;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.BasicConfigKey;
+
 import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
 import org.apache.brooklyn.launcher.camp.SimpleYamlLauncher;
+import org.apache.brooklyn.management.Task;
+
 import brooklyn.location.Location;
-import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.Jsonya;

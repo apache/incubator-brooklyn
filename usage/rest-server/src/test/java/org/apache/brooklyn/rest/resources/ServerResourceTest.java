@@ -44,11 +44,13 @@ import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.EmptySoftwareProcessDriver;
 import brooklyn.entity.basic.EmptySoftwareProcessImpl;
 import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.VersionSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.exceptions.Exceptions;
 

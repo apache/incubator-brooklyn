@@ -27,6 +27,8 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.management.EntityManager;
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;
@@ -47,8 +49,6 @@ import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
-import brooklyn.management.EntityManager;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.entity.LocalManagementContextForTests;

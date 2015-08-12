@@ -23,6 +23,7 @@ import static brooklyn.util.GroovyJavaMethods.elvis;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.management.ExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.event.basic.StructuredConfigKey;
-import brooklyn.management.ExecutionContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ConfigKeySelfExtracting;

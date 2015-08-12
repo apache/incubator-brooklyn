@@ -20,6 +20,9 @@ package brooklyn.management.ha;
 
 import java.util.Map;
 
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
+
 import com.google.common.collect.Maps;
 
 public class MutableManagementPlaneSyncRecord implements ManagementPlaneSyncRecord {

@@ -16,9 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management;
+package org.apache.brooklyn.management;
 
-/** marker interface for something which can be adapted to a task  */
-public interface TaskAdaptable<T> {
-    Task<T> asTask();
+/**
+ * A "receipt" returned by {@link SubscriptionContext} and {@link SubscriptionManager}'s {@code subscribe()} 
+ * methods. It can be used to unsubscribe - see {@link SubscriptionContext#unsubscribe(SubscriptionHandle)} 
+ * and {@link SubscriptionManager#unsubscribe(SubscriptionHandle)}.
+ */
+public interface SubscriptionHandle {
 }

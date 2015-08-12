@@ -20,8 +20,9 @@ package brooklyn.entity.rebind;
 
 import java.io.File;
 
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.management.ManagementContext;
 
 /**
  * See {@link RebindTestFixture#rebind(RebindOptions)} and {@link RebindTestUtils#rebind(RebindOptions)}.

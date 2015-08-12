@@ -20,7 +20,7 @@ package org.apache.brooklyn.rest.util;
 
 import javax.ws.rs.core.Context;
 
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
 
 import com.sun.jersey.spi.inject.SingletonTypeInjectableProvider;
 

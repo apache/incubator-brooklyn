@@ -26,7 +26,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import brooklyn.management.Task;
+import org.apache.brooklyn.management.Task;
+
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;

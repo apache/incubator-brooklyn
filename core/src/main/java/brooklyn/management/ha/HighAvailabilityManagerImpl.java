@@ -29,6 +29,15 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.ha.HighAvailabilityManager;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
+import org.apache.brooklyn.management.ha.MementoCopyMode;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +61,7 @@ import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl.Builder;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
-import brooklyn.management.Task;
 import brooklyn.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
-import brooklyn.management.ha.ManagementPlaneSyncRecordPersister.Delta;
 import brooklyn.management.internal.BrooklynObjectManagementMode;
 import brooklyn.management.internal.LocalEntityManager;
 import brooklyn.management.internal.LocationManagerInternal;

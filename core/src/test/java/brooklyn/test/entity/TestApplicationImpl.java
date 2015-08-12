@@ -20,6 +20,7 @@ package brooklyn.test.entity;
 
 import java.util.Map;
 
+import org.apache.brooklyn.management.SubscriptionHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,6 @@ import brooklyn.event.SensorEventListener;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.SubscriptionHandle;
 import brooklyn.util.logging.LoggingSetup;
 
 /**

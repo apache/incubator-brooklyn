@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,6 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
 import brooklyn.location.dynamic.DynamicLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.Strings;

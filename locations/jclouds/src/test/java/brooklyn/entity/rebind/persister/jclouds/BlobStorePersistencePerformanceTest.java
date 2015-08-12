@@ -21,13 +21,13 @@ package brooklyn.entity.rebind.persister.jclouds;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
-import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.qa.performance.AbstractPerformanceTest;
 import brooklyn.util.text.Identifiers;
 

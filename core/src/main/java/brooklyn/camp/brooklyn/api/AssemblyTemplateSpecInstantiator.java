@@ -24,8 +24,9 @@ import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 import java.util.Set;
 
+import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
 
 public interface AssemblyTemplateSpecInstantiator extends AssemblyTemplateInstantiator {
 

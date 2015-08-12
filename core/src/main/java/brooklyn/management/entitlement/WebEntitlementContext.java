@@ -18,6 +18,8 @@
  */
 package brooklyn.management.entitlement;
 
+import org.apache.brooklyn.management.entitlement.EntitlementContext;
+
 import brooklyn.util.javalang.JavaClassNames;
 
 /**

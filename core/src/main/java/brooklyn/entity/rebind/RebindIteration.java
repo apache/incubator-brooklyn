@@ -39,6 +39,8 @@ import brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.mementos.BrooklynMemento;
 import org.apache.brooklyn.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister;
@@ -77,8 +79,6 @@ import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.BrooklynObjectManagementMode;
 import brooklyn.management.internal.BrooklynObjectManagerInternal;
 import brooklyn.management.internal.EntityManagerInternal;

@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -39,7 +40,6 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
 import brooklyn.test.Asserts;
 import brooklyn.util.task.TaskInternal;
 import brooklyn.util.time.Duration;

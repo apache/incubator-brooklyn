@@ -20,9 +20,10 @@ package brooklyn.util.task.system;
 
 import java.util.Map;
 
+import org.apache.brooklyn.management.TaskFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.TaskFactory;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.task.system.ProcessTaskStub.ScriptReturnType;
 

@@ -21,8 +21,8 @@ package org.apache.brooklyn.rest.transform;
 import java.net.URI;
 import java.util.Map;
 
-import brooklyn.management.ha.ManagementPlaneSyncRecord;
-import brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary.HaNodeSummary;
 

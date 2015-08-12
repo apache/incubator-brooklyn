@@ -18,7 +18,8 @@
  */
 package brooklyn.config;
 
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.util.internal.StringSystemProperty;
 
 /** attributes which callers can set and a service application

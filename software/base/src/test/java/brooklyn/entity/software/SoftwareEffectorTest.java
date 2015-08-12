@@ -20,6 +20,8 @@ package brooklyn.entity.software;
 
 import java.util.Arrays;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -34,8 +36,6 @@ import brooklyn.entity.software.SshEffectorTasks.SshEffectorBody;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.system.ProcessTaskWrapper;

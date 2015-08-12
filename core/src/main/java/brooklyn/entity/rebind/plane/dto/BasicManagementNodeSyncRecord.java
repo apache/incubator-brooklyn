@@ -21,12 +21,12 @@ package brooklyn.entity.rebind.plane.dto;
 import java.io.Serializable;
 import java.net.URI;
 
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.management.ha.ManagementNodeState;
-import brooklyn.management.ha.ManagementNodeSyncRecord;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management.entitlement;
+package org.apache.brooklyn.management.entitlement;
 
 /** @see EntitlementManager */
 public interface EntitlementContext {

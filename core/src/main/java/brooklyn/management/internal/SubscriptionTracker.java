@@ -20,12 +20,13 @@ package brooklyn.management.internal;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.management.SubscriptionContext;
+import org.apache.brooklyn.management.SubscriptionHandle;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.Group;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;
-import brooklyn.management.SubscriptionContext;
-import brooklyn.management.SubscriptionHandle;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;

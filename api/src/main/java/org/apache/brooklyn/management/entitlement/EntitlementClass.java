@@ -16,14 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management.ha;
+package org.apache.brooklyn.management.entitlement;
 
-public enum MementoCopyMode {
-    /** Use items currently managed at this node */ 
-    LOCAL,
-    /** Use items as stored in the remote persistence store */ 
-    REMOTE, 
-    /** Auto-detect whether to use {@link #LOCAL} or {@link #REMOTE} depending on the
-     * HA mode of this management node (usually {@link #LOCAL} for master and {@link #REMOTE} otherwise)*/ 
-    AUTO 
+import com.google.common.reflect.TypeToken;
+
+/** @see EntitlementManager */
+public interface EntitlementClass<T> {
+    String entitlementClassIdentifier();
+    TypeToken<T> entitlementClassArgumentType();
 }

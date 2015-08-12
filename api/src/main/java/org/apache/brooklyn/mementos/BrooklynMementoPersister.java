@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import brooklyn.basic.BrooklynObject;
 
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
@@ -38,7 +39,6 @@ import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;

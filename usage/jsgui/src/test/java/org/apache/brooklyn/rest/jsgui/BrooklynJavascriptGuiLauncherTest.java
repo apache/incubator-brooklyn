@@ -26,8 +26,10 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.ManagementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
+
 import brooklyn.test.Asserts;
 
 /** Convenience and demo for launching programmatically. */

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import brooklyn.management.Task;
+import org.apache.brooklyn.management.Task;
 
 import com.google.common.collect.ImmutableList;
 

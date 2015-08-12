@@ -21,6 +21,7 @@ package brooklyn.location.basic;
 import java.io.File;
 import java.util.List;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -32,7 +33,6 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableSet;

@@ -18,9 +18,10 @@
  */
 package brooklyn.management.internal;
 
+import org.apache.brooklyn.management.EntityManager;
+
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.management.EntityManager;
 
 public interface EntityManagerInternal extends EntityManager, BrooklynObjectManagerInternal<Entity> {
 

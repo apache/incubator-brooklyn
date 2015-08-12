@@ -18,15 +18,16 @@
  */
 package brooklyn.basic;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
+
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigMap;
 import brooklyn.entity.trait.Configurable;
 import brooklyn.entity.trait.Identifiable;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
-import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;

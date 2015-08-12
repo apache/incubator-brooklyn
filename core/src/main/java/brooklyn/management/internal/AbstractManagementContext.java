@@ -36,8 +36,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.SubscriptionContext;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.management.entitlement.EntitlementManager;
+import org.apache.brooklyn.management.ha.HighAvailabilityManager;
+
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.catalog.internal.CatalogUtils;
@@ -61,15 +70,8 @@ import brooklyn.internal.storage.impl.BrooklynStorageImpl;
 import brooklyn.internal.storage.impl.inmemory.InMemoryDataGridFactory;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.SubscriptionContext;
-import brooklyn.management.Task;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
-import brooklyn.management.entitlement.EntitlementManager;
 import brooklyn.management.entitlement.Entitlements;
-import brooklyn.management.ha.HighAvailabilityManager;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.ResourceUtils;

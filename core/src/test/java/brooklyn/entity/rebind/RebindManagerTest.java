@@ -22,11 +22,11 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.Task;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.Task;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.task.BasicTask;

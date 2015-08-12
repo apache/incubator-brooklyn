@@ -31,10 +31,13 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.CharMatcher;
 
 import brooklyn.config.StringConfigMap;
-import brooklyn.management.ManagementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;

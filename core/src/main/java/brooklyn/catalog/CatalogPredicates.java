@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;
 
@@ -31,7 +32,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.entitlement.Entitlements;
 
 import com.google.common.base.Function;

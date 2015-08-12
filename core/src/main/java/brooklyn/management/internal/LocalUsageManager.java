@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.management.entitlement.EntitlementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,6 @@ import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.management.ManagementContextInjectable;
-import brooklyn.management.entitlement.EntitlementContext;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.usage.ApplicationUsage;
 import brooklyn.management.usage.LocationUsage;

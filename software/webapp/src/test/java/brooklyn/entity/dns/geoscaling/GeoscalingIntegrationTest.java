@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.net.InetAddress;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -39,7 +40,6 @@ import brooklyn.location.geo.HostGeoInfo;
 import brooklyn.location.geo.HostGeoLookup;
 import brooklyn.location.geo.MaxMind2HostGeoLookup;
 import brooklyn.location.geo.UtraceHostGeoLookup;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;

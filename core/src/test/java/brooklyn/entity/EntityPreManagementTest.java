@@ -21,6 +21,8 @@ package brooklyn.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.brooklyn.management.EntityManager;
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +38,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.management.EntityManager;
-import brooklyn.management.ManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;

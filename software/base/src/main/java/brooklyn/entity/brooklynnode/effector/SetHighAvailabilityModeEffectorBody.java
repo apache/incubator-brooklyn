@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.brooklynnode.effector;
 
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.http.HttpStatus;
 
 import brooklyn.entity.Effector;
@@ -28,8 +30,6 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
-import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.http.HttpToolResponse;

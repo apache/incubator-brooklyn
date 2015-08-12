@@ -26,6 +26,7 @@ import java.util.Map;
 import brooklyn.basic.BrooklynObject;
 
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
@@ -33,7 +34,6 @@ import org.apache.brooklyn.policy.Policy;
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Maps;

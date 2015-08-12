@@ -18,8 +18,9 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
+import org.apache.brooklyn.management.ManagementContext;
+
 import io.brooklyn.camp.spi.PlatformRootSummary;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.annotations.Beta;

@@ -21,6 +21,7 @@ package brooklyn.management.entitlement;
 import java.io.IOException;
 import java.net.URI;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -35,7 +36,6 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.NotEntitledException;
 import brooklyn.management.entitlement.WebEntitlementContext;

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.mementos.EntityMemento;
 import org.apache.brooklyn.mementos.TreeNode;
 import org.testng.annotations.AfterMethod;
@@ -37,7 +38,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.entity.trait.Identifiable;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableSet;

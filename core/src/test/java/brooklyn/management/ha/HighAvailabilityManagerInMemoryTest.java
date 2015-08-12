@@ -21,6 +21,7 @@ package brooklyn.management.ha;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;

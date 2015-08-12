@@ -35,9 +35,9 @@ import org.apache.brooklyn.camp.brooklyn.spi.lookup.AssemblyBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.AssemblyTemplateBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.PlatformComponentBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.PlatformComponentTemplateBrooklynLookup;
+import org.apache.brooklyn.management.ManagementContext;
 
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
-import brooklyn.management.ManagementContext;
 
 /** Immutable CAMP platform which reflects things in the underlying Brooklyn system */
 public class BrooklynImmutableCampPlatform extends CampPlatform implements HasBrooklynManagementContext {

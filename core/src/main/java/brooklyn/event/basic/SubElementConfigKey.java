@@ -20,8 +20,9 @@ package brooklyn.event.basic;
 
 import java.util.Map;
 
+import org.apache.brooklyn.management.ExecutionContext;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.management.ExecutionContext;
 import brooklyn.util.exceptions.Exceptions;
 
 @SuppressWarnings("rawtypes")

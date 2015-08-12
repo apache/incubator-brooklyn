@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +42,6 @@ import brooklyn.entity.basic.EntityTransientCopyInternal;
 import brooklyn.entity.basic.EntityTransientCopyInternal.SpecialEntityTransientCopyInternal;
 import brooklyn.entity.effector.EffectorWithBody;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.ManagementTransitionMode;

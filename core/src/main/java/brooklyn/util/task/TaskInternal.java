@@ -23,8 +23,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import brooklyn.management.ExecutionManager;
-import brooklyn.management.Task;
+import org.apache.brooklyn.management.ExecutionManager;
+import org.apache.brooklyn.management.Task;
+
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;

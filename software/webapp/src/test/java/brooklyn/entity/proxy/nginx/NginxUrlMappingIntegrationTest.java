@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.management.EntityManager;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
@@ -52,7 +53,6 @@ import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import brooklyn.entity.webapp.tomcat.Tomcat8ServerImpl;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.EntityManager;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;

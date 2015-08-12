@@ -27,7 +27,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.WebAppService;
 import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.collections.MutableMap;
@@ -36,6 +35,7 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.slf4j.Logger;

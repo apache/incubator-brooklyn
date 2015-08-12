@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management;
+package org.apache.brooklyn.management;
 
 import java.util.Set;
 import java.util.concurrent.Callable;

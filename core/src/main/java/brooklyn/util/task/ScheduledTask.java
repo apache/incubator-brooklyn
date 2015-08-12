@@ -28,7 +28,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import brooklyn.management.Task;
+import org.apache.brooklyn.management.Task;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 

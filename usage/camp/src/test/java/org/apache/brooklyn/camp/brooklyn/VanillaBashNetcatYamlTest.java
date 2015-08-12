@@ -19,6 +19,7 @@
 package org.apache.brooklyn.camp.brooklyn;
 
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,6 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
-import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.StringPredicates;

@@ -23,6 +23,8 @@ import static org.testng.Assert.assertNull;
 
 import java.util.List;
 
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

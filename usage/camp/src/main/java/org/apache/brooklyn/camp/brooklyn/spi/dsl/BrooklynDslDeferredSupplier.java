@@ -24,6 +24,8 @@ import io.brooklyn.camp.spi.Assembly;
 import io.brooklyn.camp.spi.AssemblyTemplate;
 import io.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +34,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorTasks;
-import brooklyn.management.Task;
-import brooklyn.management.TaskFactory;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.DeferredSupplier;
 

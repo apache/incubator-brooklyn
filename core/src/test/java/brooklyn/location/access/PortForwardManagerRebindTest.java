@@ -23,6 +23,7 @@ import static org.testng.Assert.assertNotEquals;
 
 import java.io.File;
 
+import org.apache.brooklyn.management.ha.MementoCopyMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -42,7 +43,6 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ha.MementoCopyMode;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.entity.TestEntityImpl;
 import brooklyn.util.net.Networking;

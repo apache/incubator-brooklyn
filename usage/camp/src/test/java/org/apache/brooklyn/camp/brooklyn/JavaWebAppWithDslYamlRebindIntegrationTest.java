@@ -25,6 +25,8 @@ import java.io.File;
 import java.io.Reader;
 import java.util.Set;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -35,8 +37,6 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;

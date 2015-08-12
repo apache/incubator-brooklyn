@@ -25,6 +25,8 @@ import static org.testng.Assert.assertTrue;
 import java.util.Collection;
 import java.util.Set;
 
+import org.apache.brooklyn.management.EntityManager;
+import org.apache.brooklyn.management.Task;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -36,8 +38,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.management.EntityManager;
-import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
