@@ -130,6 +130,7 @@
         <module>utils/groovy</module>
         <module>utils/jmx/jmxmp-ssl-agent</module>
         <module>utils/jmx/jmxrmi-agent</module>
+        <module>utils/test-bundles</module>
         <module>utils/test-support</module>
         <module>utils/rest-swagger</module>
     </modules>
