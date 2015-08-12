@@ -18,9 +18,10 @@
  */
 package brooklyn.policy.basic;
 
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicyType;
+
 import brooklyn.basic.BrooklynDynamicType;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicyType;
 
 public class PolicyDynamicType extends BrooklynDynamicType<Policy, AbstractPolicy> {
 

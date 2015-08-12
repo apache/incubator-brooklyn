@@ -29,6 +29,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.ExecutionManager;
+import org.apache.brooklyn.management.HasTaskChildren;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.management.entitlement.EntitlementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,12 +42,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.WrappedEntity;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.ExecutionManager;
-import brooklyn.management.HasTaskChildren;
-import brooklyn.management.Task;
-import brooklyn.management.TaskAdaptable;
-import brooklyn.management.entitlement.EntitlementContext;
 import brooklyn.management.entitlement.Entitlements;
 
 import com.google.common.base.Function;

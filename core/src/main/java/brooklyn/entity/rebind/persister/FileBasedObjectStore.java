@@ -34,12 +34,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

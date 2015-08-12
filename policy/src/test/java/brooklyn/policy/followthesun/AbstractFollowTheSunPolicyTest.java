@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -40,7 +41,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.policy.loadbalancing.BalanceableContainer;
 import brooklyn.policy.loadbalancing.MockContainerEntity;
 import brooklyn.policy.loadbalancing.MockItemEntity;

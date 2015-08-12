@@ -29,6 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.WebAppMonitor;
@@ -51,7 +52,6 @@ import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 
 import com.google.common.base.Predicates;

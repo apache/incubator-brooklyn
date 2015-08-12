@@ -21,8 +21,10 @@ package org.apache.brooklyn.launcher.camp;
 import io.brooklyn.camp.CampServer;
 import io.brooklyn.camp.spi.PlatformRootSummary;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
+
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.management.internal.LocalManagementContext;
 
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;

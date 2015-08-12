@@ -24,12 +24,12 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;

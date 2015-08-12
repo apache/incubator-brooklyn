@@ -21,12 +21,12 @@ package brooklyn.util.task;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.management.Task;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;

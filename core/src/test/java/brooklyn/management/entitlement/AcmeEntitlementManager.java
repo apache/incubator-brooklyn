@@ -18,6 +18,10 @@
  */
 package brooklyn.management.entitlement;
 
+import org.apache.brooklyn.management.entitlement.EntitlementClass;
+import org.apache.brooklyn.management.entitlement.EntitlementContext;
+import org.apache.brooklyn.management.entitlement.EntitlementManager;
+
 public class AcmeEntitlementManager extends PerUserEntitlementManager {
 
     public AcmeEntitlementManager() {

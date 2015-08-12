@@ -20,8 +20,9 @@ package brooklyn.entity.rebind;
 
 import java.util.Map;
 
+import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+
 import brooklyn.basic.BrooklynObject;
-import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 
 import com.google.common.annotations.Beta;
 

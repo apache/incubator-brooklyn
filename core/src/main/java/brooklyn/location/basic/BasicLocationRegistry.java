@@ -32,9 +32,10 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.ConfigMap;
 import brooklyn.config.ConfigPredicates;
@@ -45,7 +46,6 @@ import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationResolver.EnableableLocationResolver;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

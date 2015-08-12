@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +38,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.Feed;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
-import brooklyn.management.Task;
-import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;

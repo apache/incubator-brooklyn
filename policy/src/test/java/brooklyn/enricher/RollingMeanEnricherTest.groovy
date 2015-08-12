@@ -30,7 +30,7 @@ import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.EntityLocal
 import brooklyn.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
-import brooklyn.management.SubscriptionContext
+import org.apache.brooklyn.management.SubscriptionContext
 
 class RollingMeanEnricherTest {
     

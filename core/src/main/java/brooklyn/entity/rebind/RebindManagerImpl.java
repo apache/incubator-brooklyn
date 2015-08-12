@@ -29,6 +29,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.management.ha.MementoCopyMode;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.mementos.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,15 +53,8 @@ import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils.CreateBackupMod
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.Task;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
-import brooklyn.management.ha.ManagementNodeState;
-import brooklyn.management.ha.MementoCopyMode;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.mementos.BrooklynMementoRawData;
-import brooklyn.mementos.TreeNode;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.QuorumCheck;

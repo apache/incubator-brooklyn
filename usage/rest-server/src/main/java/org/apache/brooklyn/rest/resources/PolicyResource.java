@@ -28,9 +28,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.Policies;
+
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.rest.api.PolicyApi;
 import org.apache.brooklyn.rest.domain.PolicySummary;
 import org.apache.brooklyn.rest.domain.Status;
@@ -39,6 +40,7 @@ import org.apache.brooklyn.rest.filter.HaHotStateRequired;
 import org.apache.brooklyn.rest.transform.ApplicationTransformer;
 import org.apache.brooklyn.rest.transform.PolicyTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
+
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;

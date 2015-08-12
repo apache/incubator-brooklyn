@@ -27,6 +27,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +44,6 @@ import brooklyn.entity.rebind.persister.StoreObjectAccessorLocking;
 import brooklyn.entity.rebind.persister.XmlMementoSerializer;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;

@@ -18,10 +18,11 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.lookup;
 
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.net.Urls;
 
 public class BrooklynUrlLookup {

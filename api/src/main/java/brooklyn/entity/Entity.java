@@ -23,17 +23,18 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
+
 import brooklyn.basic.BrooklynObject;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
-import brooklyn.management.Task;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.guava.Maybe;
 
 /**

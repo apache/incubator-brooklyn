@@ -24,6 +24,8 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.policy.PolicySpec;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Group;
 import brooklyn.entity.proxy.nginx.NginxControllerImpl;
@@ -37,7 +39,6 @@ import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 

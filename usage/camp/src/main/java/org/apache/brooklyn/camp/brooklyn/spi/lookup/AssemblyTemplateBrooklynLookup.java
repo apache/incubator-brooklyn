@@ -27,11 +27,12 @@ import java.util.List;
 
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.ManagementContext;
 
 public class AssemblyTemplateBrooklynLookup extends AbstractTemplateBrooklynLookup<AssemblyTemplate> {
 

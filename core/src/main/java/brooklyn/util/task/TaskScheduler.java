@@ -22,7 +22,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import brooklyn.management.Task;
+import org.apache.brooklyn.management.Task;
 
 /**
  * The scheduler is an internal mechanism to decorate {@link Task}s.

@@ -24,10 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.mementos.Memento;
+
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;
-import brooklyn.mementos.Memento;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;

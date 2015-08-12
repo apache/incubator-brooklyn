@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
 import org.reflections.scanners.SubTypesScanner;
@@ -41,8 +43,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.javalang.UrlClassLoader;

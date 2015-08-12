@@ -33,7 +33,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.BrooklynCatalog;
+import org.apache.brooklyn.management.AccessController;
+import org.apache.brooklyn.management.EntityManager;
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.ExecutionManager;
+import org.apache.brooklyn.management.LocationManager;
+import org.apache.brooklyn.management.SubscriptionContext;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.entitlement.EntitlementManager;
+import org.apache.brooklyn.management.ha.HighAvailabilityManager;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
@@ -53,23 +70,8 @@ import brooklyn.entity.rebind.RebindManager;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
-import brooklyn.management.AccessController;
-import brooklyn.management.EntityManager;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.ExecutionManager;
-import brooklyn.management.LocationManager;
-import brooklyn.management.SubscriptionContext;
-import brooklyn.management.Task;
-import brooklyn.management.entitlement.EntitlementManager;
 import brooklyn.management.entitlement.Entitlements;
-import brooklyn.management.ha.HighAvailabilityManager;
-import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.management.ha.ManagementNodeState;
-import brooklyn.management.ha.ManagementPlaneSyncRecord;
-import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.ha.OsgiManager;
-import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.time.Duration;
 

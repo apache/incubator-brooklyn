@@ -47,10 +47,12 @@ import brooklyn.entity.drivers.BasicEntityDriverManager;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactory;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
-import brooklyn.management.EntityManager;
-import brooklyn.management.Task;
+
+import org.apache.brooklyn.management.EntityManager;
+import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.rest.resources.ServerResourceTest.StopLatchEntity;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
+
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.exceptions.Exceptions;

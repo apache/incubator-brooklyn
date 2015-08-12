@@ -27,8 +27,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.entity.Entity;
-import brooklyn.management.ManagementContext;
 
 
 public class PlatformComponentBrooklynLookup extends AbstractBrooklynResourceLookup<PlatformComponent> {

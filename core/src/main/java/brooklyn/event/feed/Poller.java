@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,6 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
-import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.DynamicSequentialTask;
 import brooklyn.util.task.ScheduledTask;

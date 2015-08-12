@@ -28,6 +28,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.management.HasTaskChildren;
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -35,8 +37,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.management.HasTaskChildren;
-import brooklyn.management.Task;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

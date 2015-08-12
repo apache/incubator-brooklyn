@@ -32,8 +32,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.catalog.Catalog;
+import org.apache.brooklyn.policy.PolicySpec;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
@@ -47,7 +48,6 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.policy.PolicySpec;
 import brooklyn.policy.autoscaling.SizeHistory.WindowSummary;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.loadbalancing.LoadBalancingPolicy;

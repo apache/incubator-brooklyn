@@ -25,6 +25,9 @@ import java.io.File;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -46,10 +49,7 @@ import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.guava.SerializablePredicate;
 import brooklyn.util.os.Os;

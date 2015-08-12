@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.rebind;
 
-import brooklyn.mementos.Memento;
+import org.apache.brooklyn.mementos.Memento;
 
 import com.google.common.annotations.Beta;
 

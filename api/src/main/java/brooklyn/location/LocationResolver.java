@@ -20,9 +20,9 @@ package brooklyn.location;
 
 import java.util.Map;
 
-import com.google.common.annotations.Beta;
+import org.apache.brooklyn.management.ManagementContext;
 
-import brooklyn.management.ManagementContext;
+import com.google.common.annotations.Beta;
 
 /**
  * Provides a way of creating location instances of a particular type.

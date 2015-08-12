@@ -20,6 +20,10 @@ package brooklyn.entity.service;
 
 import java.util.Set;
 
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.policy.Enricher;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Entity;
@@ -32,9 +36,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.Task;
-import brooklyn.policy.Enricher;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.DynamicTasks;

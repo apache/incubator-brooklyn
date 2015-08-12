@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -44,7 +45,6 @@ import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.time.Duration;

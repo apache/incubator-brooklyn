@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.slf4j.Logger;
@@ -49,7 +50,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.Poller;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.time.Duration;
 

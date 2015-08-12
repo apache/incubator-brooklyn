@@ -25,14 +25,15 @@ import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
+
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.ManagementContext;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.config.ConfigBag;
 

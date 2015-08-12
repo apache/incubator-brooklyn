@@ -21,6 +21,7 @@ package brooklyn.entity.chef;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -30,7 +31,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.stream.StreamGobbler;
 import brooklyn.util.task.system.ProcessTaskWrapper;

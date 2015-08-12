@@ -21,9 +21,10 @@ package brooklyn.entity.rebind.dto;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.apache.brooklyn.mementos.EnricherMemento;
+
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;
-import brooklyn.mementos.EnricherMemento;
 
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Maps;

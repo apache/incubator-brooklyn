@@ -31,9 +31,11 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
+
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.PolicySpec;
+
 import brooklyn.policy.ha.ServiceFailureDetector;
 import brooklyn.policy.ha.ServiceRestarter;
 import brooklyn.util.CommandLineUtil;

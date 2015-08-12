@@ -21,6 +21,11 @@ package brooklyn.entity.basic;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.SubscriptionContext;
+import org.apache.brooklyn.mementos.EntityMemento;
+
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Effector;
@@ -29,11 +34,7 @@ import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.SubscriptionContext;
 import brooklyn.management.internal.EntityManagementSupport;
-import brooklyn.mementos.EntityMemento;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.annotations.Beta;

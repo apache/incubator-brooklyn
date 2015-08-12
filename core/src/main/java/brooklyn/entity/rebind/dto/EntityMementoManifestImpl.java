@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.rebind.dto;
 
-import brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
+import org.apache.brooklyn.mementos.BrooklynMementoManifest.EntityMementoManifest;
 
 public class EntityMementoManifestImpl implements EntityMementoManifest {
     private String id;

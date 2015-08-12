@@ -30,9 +30,11 @@ import brooklyn.location.LocationDefinition;
 import brooklyn.location.basic.BasicLocationDefinition;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationInternal;
-import brooklyn.management.ManagementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;

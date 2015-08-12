@@ -22,9 +22,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

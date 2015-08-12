@@ -18,9 +18,9 @@
  */
 package brooklyn.entity.rebind.persister;
 
-import brooklyn.management.ha.ManagementNodeSyncRecord;
-import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.mementos.BrooklynMemento;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 
 /** Serializes the given object; it is often used with {@link BrooklynMemento} for persisting and restoring,
  * though it can be used for any object (and is also used for the {@link ManagementNodeSyncRecord} instances) */

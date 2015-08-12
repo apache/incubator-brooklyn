@@ -24,14 +24,14 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.LocationResolver;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.ManagementContext;
 
 /**
  * Given a location spec in the form {@code brooklyn.catalog:<symbolicName>:<version>}, 

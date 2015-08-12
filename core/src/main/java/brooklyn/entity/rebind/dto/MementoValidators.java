@@ -21,9 +21,9 @@ package brooklyn.entity.rebind.dto;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.TreeNode;
+import org.apache.brooklyn.mementos.BrooklynMemento;
+import org.apache.brooklyn.mementos.EntityMemento;
+import org.apache.brooklyn.mementos.TreeNode;
 
 public class MementoValidators {
 

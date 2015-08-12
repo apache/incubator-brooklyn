@@ -22,8 +22,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import brooklyn.management.Task;
-import brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskAdaptable;
 
 import com.google.common.base.Function;
 

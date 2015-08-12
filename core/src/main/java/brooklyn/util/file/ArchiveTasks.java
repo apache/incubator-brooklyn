@@ -20,9 +20,10 @@ package brooklyn.util.file;
 
 import java.util.Map;
 
+import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.management.TaskFactory;
+
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.TaskAdaptable;
-import brooklyn.management.TaskFactory;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.Tasks;

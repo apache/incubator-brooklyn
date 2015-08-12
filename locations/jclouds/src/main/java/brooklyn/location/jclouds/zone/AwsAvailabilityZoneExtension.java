@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.ec2.domain.AvailabilityZoneInfo;
 
@@ -31,7 +32,6 @@ import brooklyn.location.Location;
 import brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
 import brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.management.ManagementContext;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;

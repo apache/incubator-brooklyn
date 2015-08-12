@@ -20,13 +20,13 @@ package brooklyn.policy.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.policy.EnricherType;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.policy.EnricherType;
 
 import com.google.common.collect.ImmutableSet;
 

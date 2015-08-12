@@ -27,6 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.mementos.BrooklynMemento;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,14 +47,9 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.trait.Identifiable;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.io.FileUtil;
 import brooklyn.util.javalang.Serializers;

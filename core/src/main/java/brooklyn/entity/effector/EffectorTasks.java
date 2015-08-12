@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +36,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.basic.WinRmMachineLocation;
-import brooklyn.management.Task;
-import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.javalang.Reflections;

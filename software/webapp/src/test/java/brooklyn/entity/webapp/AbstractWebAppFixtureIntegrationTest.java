@@ -61,11 +61,11 @@ import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.SubscriptionContext;
-import brooklyn.management.SubscriptionHandle;
 import brooklyn.test.Asserts;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.SubscriptionContext;
+import org.apache.brooklyn.management.SubscriptionHandle;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;

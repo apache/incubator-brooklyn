@@ -26,9 +26,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
-import brooklyn.management.ManagementContext;
 
 
 public class AssemblyBrooklynLookup extends AbstractBrooklynResourceLookup<Assembly> {

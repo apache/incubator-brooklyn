@@ -24,8 +24,9 @@ import static com.google.common.base.Preconditions.checkState;
 import java.io.Serializable;
 import java.util.Map;
 
-import brooklyn.management.ha.ManagementNodeSyncRecord;
-import brooklyn.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
+
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Objects;

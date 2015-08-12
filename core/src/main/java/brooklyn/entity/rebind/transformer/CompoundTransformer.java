@@ -23,11 +23,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+
 import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.transformer.impl.XsltTransformer;
-import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;

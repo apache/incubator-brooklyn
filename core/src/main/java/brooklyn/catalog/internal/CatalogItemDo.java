@@ -24,11 +24,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import brooklyn.basic.BrooklynObjectInternal;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.mementos.CatalogItemMemento;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.management.ManagementContext;
-import brooklyn.mementos.CatalogItemMemento;
 
 import com.google.common.base.Preconditions;
 

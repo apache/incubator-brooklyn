@@ -21,6 +21,8 @@ package brooklyn.management.entitlement;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.entitlement.EntitlementManager;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -31,7 +33,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.test.entity.LocalManagementContextForTests;

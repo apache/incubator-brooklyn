@@ -21,6 +21,8 @@ package brooklyn.entity.effector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.management.HasTaskChildren;
+import org.apache.brooklyn.management.Task;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -34,8 +36,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
-import brooklyn.management.HasTaskChildren;
-import brooklyn.management.Task;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

@@ -18,6 +18,8 @@
  */
 package brooklyn.management.entitlement;
 
+import org.apache.brooklyn.management.entitlement.EntitlementManager;
+
 @Deprecated
 /** @deprecated since 0.7.0 use {@link PerUserEntitlementManager} */
 public class PerUserEntitlementManagerWithDefault extends PerUserEntitlementManager {

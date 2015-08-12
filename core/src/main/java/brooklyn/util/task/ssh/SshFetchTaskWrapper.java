@@ -22,12 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskWrapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
-import brooklyn.management.TaskWrapper;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.os.Os;

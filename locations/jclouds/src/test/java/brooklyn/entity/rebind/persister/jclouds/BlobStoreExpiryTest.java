@@ -27,6 +27,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.http.client.HttpClient;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.PageSet;
@@ -46,7 +47,6 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsUtil;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.http.HttpTool;

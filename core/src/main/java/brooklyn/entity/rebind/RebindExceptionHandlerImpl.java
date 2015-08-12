@@ -28,14 +28,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.entity.Entity;
 import brooklyn.entity.Feed;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.location.Location;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.exceptions.Exceptions;

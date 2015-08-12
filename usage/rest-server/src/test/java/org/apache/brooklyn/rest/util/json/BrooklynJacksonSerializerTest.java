@@ -41,8 +41,10 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.ManagementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
+
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;

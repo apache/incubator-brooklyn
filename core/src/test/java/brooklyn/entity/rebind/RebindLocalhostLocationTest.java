@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Collections;
 
+import org.apache.brooklyn.mementos.BrooklynMementoManifest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -31,7 +32,6 @@ import org.testng.annotations.Test;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.mementos.BrooklynMementoManifest;
 import brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableList;

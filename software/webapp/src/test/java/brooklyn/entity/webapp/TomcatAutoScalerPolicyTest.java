@@ -22,6 +22,7 @@ import static org.apache.brooklyn.test.HttpTestUtils.connectToUrl;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -34,7 +35,6 @@ import brooklyn.entity.webapp.tomcat.TomcatServer;
 import brooklyn.entity.webapp.tomcat.TomcatServerImpl;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;

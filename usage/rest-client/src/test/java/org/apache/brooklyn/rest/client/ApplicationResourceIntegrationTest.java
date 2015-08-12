@@ -38,8 +38,9 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.location.basic.BasicLocationRegistry;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
@@ -47,6 +48,7 @@ import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.SensorSummary;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.time.Duration;
 

@@ -22,12 +22,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Identifiers;
 

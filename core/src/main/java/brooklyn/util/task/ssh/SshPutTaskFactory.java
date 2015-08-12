@@ -21,11 +21,11 @@ package brooklyn.util.task.ssh;
 import java.io.InputStream;
 import java.io.Reader;
 
+import org.apache.brooklyn.management.TaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.TaskFactory;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.stream.ReaderInputStream;
 

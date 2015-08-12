@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

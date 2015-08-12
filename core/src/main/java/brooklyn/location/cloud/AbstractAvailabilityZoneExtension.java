@@ -24,8 +24,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;

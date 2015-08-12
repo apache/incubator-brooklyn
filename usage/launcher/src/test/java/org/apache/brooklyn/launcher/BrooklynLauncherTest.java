@@ -19,6 +19,8 @@
 package org.apache.brooklyn.launcher;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.management.ManagementContext;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
@@ -47,7 +49,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.entity.LocalManagementContextForTests;

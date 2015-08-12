@@ -24,9 +24,10 @@ import java.util.Collections;
 
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.entitlement.EntitlementClass;
+
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.entitlement.EntitlementClass;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.management.internal.ManagementContextInternal;

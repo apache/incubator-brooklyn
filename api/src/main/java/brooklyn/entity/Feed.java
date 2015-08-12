@@ -18,10 +18,11 @@
  */
 package brooklyn.entity;
 
+import org.apache.brooklyn.mementos.FeedMemento;
+import org.apache.brooklyn.policy.EntityAdjunct;
+
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
-import brooklyn.mementos.FeedMemento;
-import brooklyn.policy.EntityAdjunct;
 
 import com.google.common.annotations.Beta;
 

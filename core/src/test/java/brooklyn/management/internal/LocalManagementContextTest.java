@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.management.ManagementContext.PropertiesReloadListener;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -32,7 +33,6 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynProperties.Factory.Builder;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext.PropertiesReloadListener;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.os.Os;
 

@@ -26,6 +26,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +43,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
@@ -156,7 +156,7 @@ public class InternalEntityFactory extends InternalFactory {
      * fully initialized ({@link AbstractEntity#init()} invoked) and ready for
      * management -- commonly the caller will next call 
      * {@link Entities#manage(Entity)} (if it's in a managed application)
-     * or {@link Entities#startManagement(brooklyn.entity.Application, brooklyn.management.ManagementContext)}
+     * or {@link Entities#startManagement(brooklyn.entity.Application, org.apache.brooklyn.management.ManagementContext)}
      * (if it's an application) */
     public <T extends Entity> T createEntity(EntitySpec<T> spec) {
         /* Order is important here. Changed Jul 2014 when supporting children in spec.

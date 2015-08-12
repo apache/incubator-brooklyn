@@ -35,8 +35,11 @@ import org.testng.annotations.Test;
 
 import brooklyn.camp.lite.CampPlatformWithJustBrooklynMgmt;
 import brooklyn.camp.lite.TestAppAssemblyInstantiator;
+
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.config.BrooklynProperties;
@@ -44,7 +47,6 @@ import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.entity.TestEntity;

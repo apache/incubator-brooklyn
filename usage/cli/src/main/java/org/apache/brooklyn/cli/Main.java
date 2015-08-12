@@ -46,6 +46,7 @@ import com.google.common.collect.Iterables;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.basic.BrooklynTypes;
+
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
@@ -61,6 +62,7 @@ import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
 import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
 
 import brooklyn.catalog.internal.CatalogInitialization;
+
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
@@ -71,6 +73,7 @@ import org.apache.brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
 import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
+
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
@@ -83,15 +86,19 @@ import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.entity.trait.Startable;
+
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.launcher.BrooklynServerDetails;
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
-import brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+
 import brooklyn.management.ha.OsgiManager;
+
 import org.apache.brooklyn.rest.security.PasswordHasher;
 import org.apache.brooklyn.rest.util.ShutdownHandler;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;

@@ -22,10 +22,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.management.Task;
+
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.location.Location;
-import brooklyn.management.Task;
 import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicTasks;

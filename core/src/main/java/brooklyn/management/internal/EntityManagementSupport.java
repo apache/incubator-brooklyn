@@ -23,6 +23,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.SubscriptionContext;
+import org.apache.brooklyn.management.entitlement.EntitlementManager;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,16 +41,10 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.AttributeSensor;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.SubscriptionContext;
-import brooklyn.management.entitlement.EntitlementManager;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;

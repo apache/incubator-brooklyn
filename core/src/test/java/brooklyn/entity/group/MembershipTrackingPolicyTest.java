@@ -25,6 +25,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.brooklyn.management.EntityManager;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -37,8 +39,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.Sensor;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.management.EntityManager;
-import brooklyn.policy.PolicySpec;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableMap;

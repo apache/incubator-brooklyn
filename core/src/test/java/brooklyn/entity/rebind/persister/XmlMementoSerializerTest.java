@@ -31,6 +31,11 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import brooklyn.management.osgi.OsgiTestResources;
+
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +43,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;
 import brooklyn.catalog.internal.CatalogTestUtils;
@@ -50,11 +57,7 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
-import brooklyn.mementos.BrooklynMementoPersister.LookupContext;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;

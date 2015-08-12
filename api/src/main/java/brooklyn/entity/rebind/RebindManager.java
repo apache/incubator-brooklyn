@@ -24,10 +24,11 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+
 import brooklyn.entity.Application;
-import brooklyn.management.ha.ManagementNodeState;
-import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.mementos.BrooklynMementoRawData;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;

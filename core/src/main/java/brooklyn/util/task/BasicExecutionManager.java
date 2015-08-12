@@ -45,14 +45,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.brooklyn.management.ExecutionManager;
+import org.apache.brooklyn.management.HasTaskChildren;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.internal.BrooklynFeatureEnablement;
-import brooklyn.management.ExecutionManager;
-import brooklyn.management.HasTaskChildren;
-import brooklyn.management.Task;
-import brooklyn.management.TaskAdaptable;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;

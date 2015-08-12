@@ -27,12 +27,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.TestApplicationImpl;
 
 import com.google.common.collect.ImmutableMap;

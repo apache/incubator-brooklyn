@@ -22,9 +22,9 @@ import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
+
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.Identifiers;
 

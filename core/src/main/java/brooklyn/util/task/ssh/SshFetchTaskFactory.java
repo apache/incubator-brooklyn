@@ -18,11 +18,11 @@
  */
 package brooklyn.util.task.ssh;
 
+import org.apache.brooklyn.management.TaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.TaskFactory;
 import brooklyn.util.config.ConfigBag;
 
 // cannot be (cleanly) instantiated due to nested generic self-referential type; however trivial subclasses do allow it 

@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,6 @@ import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;

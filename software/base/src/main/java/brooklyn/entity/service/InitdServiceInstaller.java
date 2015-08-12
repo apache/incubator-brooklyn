@@ -23,6 +23,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.util.Map;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.policy.Enricher;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
@@ -33,8 +36,6 @@ import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.trait.HasShortName;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.names.AbstractCloudMachineNamer;
-import brooklyn.management.Task;
-import brooklyn.policy.Enricher;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;

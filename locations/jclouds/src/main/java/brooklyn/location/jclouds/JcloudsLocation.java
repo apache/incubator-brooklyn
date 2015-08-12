@@ -50,6 +50,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.AccessController;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
 import org.jclouds.cloudstack.compute.options.CloudStackTemplateOptions;
 import org.jclouds.compute.ComputeService;
@@ -145,7 +146,6 @@ import brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
 import brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import brooklyn.location.jclouds.templates.PortableTemplateBuilder;
 import brooklyn.location.jclouds.zone.AwsAvailabilityZoneExtension;
-import brooklyn.management.AccessController;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

@@ -21,6 +21,7 @@ package org.apache.brooklyn.rest.util.json;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParser;
@@ -34,7 +35,6 @@ import org.codehaus.jackson.map.module.SimpleModule;
 import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
 
 public class BidiSerialization {
 

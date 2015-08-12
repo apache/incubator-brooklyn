@@ -22,11 +22,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.mementos.BrooklynMemento;
+import org.apache.brooklyn.mementos.EntityMemento;
+import org.apache.brooklyn.mementos.LocationMemento;
+
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.transformer.BrooklynMementoTransformer;
-import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.LocationMemento;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

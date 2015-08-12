@@ -28,13 +28,13 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.brooklyn.management.HasTaskChildren;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.management.HasTaskChildren;
-import brooklyn.management.Task;
-import brooklyn.management.TaskAdaptable;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
 

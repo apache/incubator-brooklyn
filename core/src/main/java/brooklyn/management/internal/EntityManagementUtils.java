@@ -30,6 +30,9 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +49,6 @@ import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

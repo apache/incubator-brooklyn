@@ -42,6 +42,9 @@ import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynServerConfig;
@@ -49,8 +52,6 @@ import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplicationImpl;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.util.ResourceUtils;

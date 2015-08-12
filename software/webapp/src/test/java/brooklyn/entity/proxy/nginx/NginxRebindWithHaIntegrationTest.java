@@ -26,6 +26,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.WebAppMonitor;
@@ -50,8 +52,6 @@ import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SshMachineLocationReuseIntegrationTest.RecordingSshjTool;
-import brooklyn.management.Task;
-import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.internal.ssh.SshTool;

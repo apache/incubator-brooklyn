@@ -22,8 +22,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.mementos.Memento;
-import brooklyn.mementos.TreeNode;
+import org.apache.brooklyn.mementos.Memento;
+import org.apache.brooklyn.mementos.TreeNode;
 
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Lists;

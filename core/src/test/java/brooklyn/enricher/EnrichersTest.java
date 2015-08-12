@@ -32,13 +32,13 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityAdjuncts;
 
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
+import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.test.EntityTestUtils;
 
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.Sensors;
-import brooklyn.policy.Enricher;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.CollectionFunctionals;

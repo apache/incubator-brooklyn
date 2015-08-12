@@ -33,9 +33,10 @@ import com.sun.jersey.test.framework.LowLevelAppDescriptor;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.LocationRegistry;
 import brooklyn.location.basic.BasicLocationRegistry;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.internal.LocalManagementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
@@ -44,6 +45,7 @@ import org.apache.brooklyn.rest.util.NullServletConfigProvider;
 import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
 import org.apache.brooklyn.rest.util.TestShutdownHandler;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
+
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.exceptions.Exceptions;
 

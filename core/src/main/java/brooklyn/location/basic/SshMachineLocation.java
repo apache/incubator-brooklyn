@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +85,6 @@ import brooklyn.location.OsDetails;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.location.access.PortForwardManager;
-import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

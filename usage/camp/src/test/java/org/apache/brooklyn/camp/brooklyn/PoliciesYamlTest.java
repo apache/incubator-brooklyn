@@ -21,6 +21,7 @@ package org.apache.brooklyn.camp.brooklyn;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.policy.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -30,7 +31,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.policy.Policy;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestEntity;
 import brooklyn.test.policy.TestPolicy;

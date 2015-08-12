@@ -22,6 +22,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.net.URL;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
@@ -41,7 +42,6 @@ import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.Machines;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.TestApplication;
 

@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
+
 import javax.annotation.Nullable;
 
 import org.osgi.framework.Constants;
@@ -42,7 +43,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import org.apache.brooklyn.catalog.CatalogItem;
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.management.classloading.OsgiBrooklynClassLoadingContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;

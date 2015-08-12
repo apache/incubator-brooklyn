@@ -25,10 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.management.SubscriptionHandle;
+
 import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
-import brooklyn.management.SubscriptionHandle;
 
 import com.google.common.base.Objects;
 

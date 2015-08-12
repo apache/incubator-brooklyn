@@ -18,6 +18,9 @@
  */
 package brooklyn.entity.chef.mysql;
 
+import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.management.TaskFactory;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcessImpl;
@@ -27,8 +30,6 @@ import brooklyn.entity.chef.ChefSoloDriver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.management.TaskAdaptable;
-import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;
 

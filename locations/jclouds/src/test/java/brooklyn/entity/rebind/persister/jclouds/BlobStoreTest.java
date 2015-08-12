@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.PageSet;
@@ -38,7 +39,6 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsUtil;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Identifiers;

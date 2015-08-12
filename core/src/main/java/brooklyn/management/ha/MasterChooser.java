@@ -18,6 +18,9 @@
  */
 package brooklyn.management.ha;
 
+import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
+
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;

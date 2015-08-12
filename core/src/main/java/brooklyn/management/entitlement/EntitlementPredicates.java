@@ -20,6 +20,9 @@ package brooklyn.management.entitlement;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.entitlement.EntitlementClass;
+import org.apache.brooklyn.management.entitlement.EntitlementManager;
+
 import com.google.common.base.Predicate;
 
 public class EntitlementPredicates {

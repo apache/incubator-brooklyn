@@ -36,14 +36,16 @@ import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.location.basic.BasicLocationRegistry;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
 import org.apache.brooklyn.test.HttpTestUtils;
+
 import brooklyn.test.entity.TestEntity;
 
 @Test

@@ -35,10 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServiceAttributes;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.WebEntitlementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
+
 import brooklyn.util.text.Strings;
 
 import com.sun.jersey.core.util.Base64;

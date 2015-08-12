@@ -18,10 +18,11 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.lookup;
 
+import org.apache.brooklyn.management.ManagementContext;
+
 import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.PlatformRootSummary;
 import io.brooklyn.camp.spi.collection.AbstractResourceLookup;
-import brooklyn.management.ManagementContext;
 
 public abstract class AbstractBrooklynResourceLookup<T extends AbstractResource>  extends AbstractResourceLookup<T> {
 

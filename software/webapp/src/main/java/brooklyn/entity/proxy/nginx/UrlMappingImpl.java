@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import org.apache.brooklyn.management.SubscriptionHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +40,6 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.entity.webapp.WebAppServiceConstants;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.management.SubscriptionHandle;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

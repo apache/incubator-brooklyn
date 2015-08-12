@@ -18,7 +18,7 @@
  */
 package brooklyn.entity;
 
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
 
 
 /**

@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.jclouds.apis.ApiMetadata;
 import org.jclouds.apis.Apis;
 import org.jclouds.providers.ProviderMetadata;
@@ -39,7 +40,6 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationConfigUtils;
 import brooklyn.location.basic.LocationInternal;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;

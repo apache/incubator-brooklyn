@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,8 +40,6 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.management.ManagementContext;
-import brooklyn.policy.PolicySpec;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;

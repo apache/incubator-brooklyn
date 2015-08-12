@@ -19,9 +19,10 @@
 package brooklyn.catalog.internal;
 
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
 
 import com.google.common.annotations.Beta;
 

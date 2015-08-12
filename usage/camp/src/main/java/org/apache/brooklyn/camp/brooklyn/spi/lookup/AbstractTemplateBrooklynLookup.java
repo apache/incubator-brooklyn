@@ -24,12 +24,12 @@ import io.brooklyn.camp.spi.collection.ResolvableLink;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.ManagementContext;
 
 public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>  extends AbstractBrooklynResourceLookup<T> {
 

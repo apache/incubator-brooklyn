@@ -19,7 +19,8 @@
 package org.apache.brooklyn.launcher;
 
 import org.apache.brooklyn.launcher.camp.SimpleYamlLauncher;
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.test.entity.LocalManagementContextForTests;
 
 public class SimpleYamlLauncherForTests extends SimpleYamlLauncher {

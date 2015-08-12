@@ -27,6 +27,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +47,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.Machines;
-import brooklyn.management.Task;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;

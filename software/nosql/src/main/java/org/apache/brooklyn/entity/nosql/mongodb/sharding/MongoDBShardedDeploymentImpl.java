@@ -23,6 +23,7 @@ import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,6 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;

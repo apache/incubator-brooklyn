@@ -22,10 +22,11 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.mementos.CatalogItemMemento;
+
 import brooklyn.basic.BrooklynObject;
 import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.entity.rebind.Rebindable;
-import brooklyn.mementos.CatalogItemMemento;
 
 import com.google.common.annotations.Beta;
 

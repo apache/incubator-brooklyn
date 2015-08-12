@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.management.SubscriptionContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -34,7 +35,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.event.basic.Sensors;
-import brooklyn.management.SubscriptionContext;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 

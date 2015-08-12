@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.management.SubscriptionHandle;
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +47,6 @@ import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.management.SubscriptionHandle;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.guava.Functionals;

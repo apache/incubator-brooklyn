@@ -36,8 +36,10 @@ import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.Sensors;
-import brooklyn.management.ManagementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.transform.SensorTransformer;
+
 import brooklyn.test.entity.TestApplication;
 import brooklyn.test.entity.TestEntity;
 

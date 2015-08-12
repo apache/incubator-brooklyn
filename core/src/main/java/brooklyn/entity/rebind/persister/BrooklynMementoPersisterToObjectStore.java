@@ -39,7 +39,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.mementos.BrooklynMemento;
+import org.apache.brooklyn.mementos.BrooklynMementoManifest;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.mementos.CatalogItemMemento;
+import org.apache.brooklyn.mementos.Memento;
+
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
@@ -54,12 +62,6 @@ import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import brooklyn.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
-import brooklyn.mementos.BrooklynMemento;
-import brooklyn.mementos.BrooklynMementoManifest;
-import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.mementos.BrooklynMementoRawData;
-import brooklyn.mementos.CatalogItemMemento;
-import brooklyn.mementos.Memento;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;

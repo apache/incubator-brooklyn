@@ -44,11 +44,12 @@ import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.Location;
-import brooklyn.management.Task;
 import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.internal.EntityManagementUtils;
 import brooklyn.management.internal.EntityManagementUtils.CreationResult;
+
+import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.rest.api.EntityApi;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.LocationSummary;
@@ -59,6 +60,7 @@ import org.apache.brooklyn.rest.transform.LocationTransformer;
 import org.apache.brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import org.apache.brooklyn.rest.transform.TaskTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.time.Duration;

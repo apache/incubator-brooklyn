@@ -33,13 +33,15 @@ import org.eclipse.jetty.server.Server;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+
+import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
 import org.apache.brooklyn.test.HttpTestUtils;
+
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;
 

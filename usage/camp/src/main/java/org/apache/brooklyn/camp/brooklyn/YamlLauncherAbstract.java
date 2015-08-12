@@ -24,6 +24,8 @@ import io.brooklyn.camp.spi.AssemblyTemplate;
 import java.io.Reader;
 import java.util.Set;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +34,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;

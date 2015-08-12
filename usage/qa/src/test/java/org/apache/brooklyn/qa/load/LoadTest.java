@@ -42,10 +42,12 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.trait.Startable;
+
 import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;

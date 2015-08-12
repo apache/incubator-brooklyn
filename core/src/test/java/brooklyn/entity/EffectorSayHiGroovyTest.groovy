@@ -36,8 +36,8 @@ import brooklyn.entity.basic.MethodEffector
 import brooklyn.entity.proxying.EntitySpec
 import brooklyn.entity.proxying.ImplementedBy
 import brooklyn.entity.trait.Startable
-import brooklyn.management.ManagementContext
-import brooklyn.management.Task
+import org.apache.brooklyn.management.ManagementContext
+import org.apache.brooklyn.management.Task
 import brooklyn.management.internal.EffectorUtils
 import brooklyn.test.entity.TestApplication
 

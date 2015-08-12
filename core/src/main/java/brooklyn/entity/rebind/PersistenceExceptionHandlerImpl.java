@@ -21,11 +21,11 @@ package brooklyn.entity.rebind;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.mementos.Memento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynObject;
-import brooklyn.mementos.Memento;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Sets;

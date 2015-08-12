@@ -19,7 +19,6 @@
 package brooklyn.entity.basic.lifecycle;
 
 import static java.lang.String.format;
-
 import brooklyn.util.internal.ssh.ShellTool;
 import groovy.lang.Closure;
 
@@ -33,15 +32,15 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskQueueingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.Task;
-import brooklyn.management.TaskQueueingContext;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.RuntimeInterruptedException;

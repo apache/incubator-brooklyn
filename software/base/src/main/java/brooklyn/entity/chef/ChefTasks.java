@@ -20,14 +20,14 @@ package brooklyn.entity.chef;
 
 import java.util.Map;
 
+import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.management.TaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.Entity;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.management.TaskAdaptable;
-import brooklyn.management.TaskFactory;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveTasks;
 import brooklyn.util.file.ArchiveUtils.ArchiveType;

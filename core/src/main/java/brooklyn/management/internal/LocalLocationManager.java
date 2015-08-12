@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.brooklyn.management.AccessController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,6 @@ import brooklyn.location.LocationSpec;
 import brooklyn.location.ProvisioningLocation;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.location.basic.LocationInternal;
-import brooklyn.management.AccessController;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;

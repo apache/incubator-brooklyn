@@ -41,21 +41,23 @@ import org.yaml.snakeyaml.Yaml;
 import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
+
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.policy.PolicySpec;
+
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.BasicLocationRegistry;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.classloading.BrooklynClassLoadingContext;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.policy.Policy;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

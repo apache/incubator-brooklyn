@@ -24,6 +24,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.blobstore.options.ListContainerOptions;
@@ -37,8 +39,6 @@ import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsUtil;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.text.Strings;
 

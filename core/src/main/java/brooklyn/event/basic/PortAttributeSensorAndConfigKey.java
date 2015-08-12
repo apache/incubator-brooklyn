@@ -21,6 +21,7 @@ package brooklyn.event.basic;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,6 @@ import brooklyn.location.MachineProvisioningLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.PortSupplier;
 import brooklyn.location.basic.Locations;
-import brooklyn.management.ManagementContext;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 

@@ -64,12 +64,15 @@ import brooklyn.config.BrooklynServerPaths;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.internal.BrooklynInitialization;
+
 import org.apache.brooklyn.launcher.config.CustomResourceLocator;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
+
 import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
@@ -81,6 +84,7 @@ import org.apache.brooklyn.rest.filter.RequestTaggingFilter;
 import org.apache.brooklyn.rest.util.ManagementContextProvider;
 import org.apache.brooklyn.rest.util.ShutdownHandler;
 import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
+
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
@@ -97,6 +101,7 @@ import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
+
 import org.apache.brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 /**

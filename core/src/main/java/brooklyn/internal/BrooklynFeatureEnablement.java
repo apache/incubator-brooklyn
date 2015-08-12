@@ -20,12 +20,12 @@ package brooklyn.internal;
 
 import java.util.Map;
 
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.management.ha.HighAvailabilityMode;
 import brooklyn.util.internal.ssh.ShellTool;
 
 import com.google.common.annotations.Beta;

@@ -31,8 +31,10 @@ import brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
+
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.EnricherSpec;
+
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 

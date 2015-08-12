@@ -18,11 +18,12 @@
  */
 package brooklyn.event.feed;
 
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
-import brooklyn.management.ManagementContext;
 
 
 /** Simple config adapter for setting {@link AttributeSensorAndConfigKey} sensor values from the config value or config default */ 

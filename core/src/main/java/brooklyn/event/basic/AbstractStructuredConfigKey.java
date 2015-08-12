@@ -21,8 +21,9 @@ package brooklyn.event.basic;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.brooklyn.management.ExecutionContext;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.management.ExecutionContext;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Maps;

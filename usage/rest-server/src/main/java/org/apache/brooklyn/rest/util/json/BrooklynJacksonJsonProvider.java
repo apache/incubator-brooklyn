@@ -22,6 +22,7 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -35,7 +36,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.management.ManagementContext;
 import brooklyn.management.ManagementContextInjectable;
 
 public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements ManagementContextInjectable {

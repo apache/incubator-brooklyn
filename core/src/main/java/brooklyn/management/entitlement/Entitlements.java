@@ -23,6 +23,11 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.entitlement.EntitlementClass;
+import org.apache.brooklyn.management.entitlement.EntitlementContext;
+import org.apache.brooklyn.management.entitlement.EntitlementManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +46,6 @@ import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;

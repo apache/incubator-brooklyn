@@ -21,10 +21,10 @@ package brooklyn.util.task;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.ExecutionManager;
-import brooklyn.management.Task;
-import brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.ExecutionManager;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskAdaptable;
 
 import com.google.common.collect.Maps;
 

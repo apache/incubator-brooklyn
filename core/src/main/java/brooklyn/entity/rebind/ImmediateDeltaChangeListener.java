@@ -23,19 +23,21 @@ import java.util.Map;
 
 import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
+
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.mementos.CatalogItemMemento;
+import org.apache.brooklyn.mementos.EnricherMemento;
+import org.apache.brooklyn.mementos.EntityMemento;
+import org.apache.brooklyn.mementos.LocationMemento;
+import org.apache.brooklyn.mementos.Memento;
+import org.apache.brooklyn.mementos.PolicyMemento;
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
-import brooklyn.mementos.BrooklynMementoPersister;
-import brooklyn.mementos.CatalogItemMemento;
-import brooklyn.mementos.EnricherMemento;
-import brooklyn.mementos.EntityMemento;
-import brooklyn.mementos.LocationMemento;
-import brooklyn.mementos.Memento;
-import brooklyn.mementos.PolicyMemento;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.Policy;
 
 import com.google.common.collect.Maps;
 

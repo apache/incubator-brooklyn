@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.ExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,6 @@ import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.location.basic.WinRmMachineLocation;
-import brooklyn.management.ExecutionContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.time.Duration;

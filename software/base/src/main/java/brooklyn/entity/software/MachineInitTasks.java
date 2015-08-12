@@ -21,6 +21,7 @@ package brooklyn.entity.software;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,6 @@ import com.google.common.collect.Lists;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
 import brooklyn.util.net.Protocol;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.ssh.IptablesCommands;

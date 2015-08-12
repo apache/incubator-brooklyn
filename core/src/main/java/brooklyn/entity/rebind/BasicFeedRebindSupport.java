@@ -18,8 +18,9 @@
  */
 package brooklyn.entity.rebind;
 
+import org.apache.brooklyn.mementos.FeedMemento;
+
 import brooklyn.event.feed.AbstractFeed;
-import brooklyn.mementos.FeedMemento;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 

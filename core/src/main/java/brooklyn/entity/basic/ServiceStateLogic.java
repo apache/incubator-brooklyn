@@ -26,6 +26,9 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.policy.EnricherSpec.ExtensibleEnricherSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +48,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
-import brooklyn.policy.Enricher;
-import brooklyn.policy.EnricherSpec;
-import brooklyn.policy.EnricherSpec.ExtensibleEnricherSpec;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

@@ -29,6 +29,7 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.Task;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
 import brooklyn.entity.Entity;
@@ -45,7 +46,6 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.location.OsDetails;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;

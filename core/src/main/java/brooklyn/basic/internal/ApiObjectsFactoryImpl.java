@@ -18,10 +18,11 @@
  */
 package brooklyn.basic.internal;
 
+import org.apache.brooklyn.management.Task;
+
 import brooklyn.basic.internal.ApiObjectsFactoryInterface;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.management.Task;
 import brooklyn.util.task.Tasks;
 
 public class ApiObjectsFactoryImpl implements ApiObjectsFactoryInterface {

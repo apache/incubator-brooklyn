@@ -2,7 +2,9 @@ package brooklyn.management.classloading;
 
 import javax.annotation.Nullable;
 
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;

@@ -41,10 +41,12 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.Sensors;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.management.internal.LocalManagementContext;
+
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+
 import brooklyn.util.javalang.UrlClassLoader;
 
 import com.google.common.base.Function;

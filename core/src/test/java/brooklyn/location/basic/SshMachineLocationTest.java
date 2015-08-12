@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.management.ManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -53,7 +54,6 @@ import brooklyn.location.MachineDetails;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges.LinearPortRange;
-import brooklyn.management.ManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;
 import brooklyn.test.entity.TestApplication;

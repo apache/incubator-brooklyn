@@ -18,11 +18,12 @@
  */
 package brooklyn.entity.effector;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.management.TaskFactory;
+
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.management.Task;
-import brooklyn.management.TaskAdaptable;
-import brooklyn.management.TaskFactory;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.DynamicSequentialTask;

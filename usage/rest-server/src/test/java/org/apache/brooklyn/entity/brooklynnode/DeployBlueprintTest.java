@@ -37,9 +37,11 @@ import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.http.JsonFunctions;
-import brooklyn.management.EntityManager;
+
+import org.apache.brooklyn.management.EntityManager;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.test.HttpTestUtils;
+
 import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;

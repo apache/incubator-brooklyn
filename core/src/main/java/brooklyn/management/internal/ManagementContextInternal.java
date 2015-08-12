@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.Task;
+
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.Effector;
@@ -34,8 +37,6 @@ import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.location.Location;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.Task;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.TaskTags;

@@ -37,11 +37,13 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.management.EntityManager;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.management.ha.ManagementNodeState;
+
+import org.apache.brooklyn.management.EntityManager;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;

@@ -20,7 +20,7 @@ package brooklyn.osgi.tests.more;
 
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.effector.EffectorBody;
-import brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.policy.PolicySpec;
 import brooklyn.util.config.ConfigBag;
 
 

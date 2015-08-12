@@ -21,6 +21,7 @@ package org.apache.brooklyn.entity.network.bind;
 import static org.apache.brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.policy.EnricherSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,6 @@ import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
-import brooklyn.policy.EnricherSpec;
 import brooklyn.test.entity.TestApplication;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;

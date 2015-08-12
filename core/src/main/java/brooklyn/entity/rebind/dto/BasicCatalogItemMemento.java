@@ -24,11 +24,11 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonAutoDetect;
-
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.mementos.CatalogItemMemento;
+
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.mementos.CatalogItemMemento;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.management.TaskWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,6 @@ import brooklyn.location.Location;
 import brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.TaskWrapper;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;

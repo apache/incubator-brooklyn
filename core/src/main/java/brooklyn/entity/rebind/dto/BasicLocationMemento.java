@@ -22,10 +22,11 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.mementos.LocationMemento;
+import org.apache.brooklyn.mementos.TreeNode;
+
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;
-import brooklyn.mementos.LocationMemento;
-import brooklyn.mementos.TreeNode;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Objects.ToStringHelper;

@@ -31,6 +31,13 @@ import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.brooklyn.management.AccessController;
+import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.management.ExecutionManager;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.SubscriptionManager;
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,13 +54,6 @@ import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.location.Location;
-import brooklyn.management.AccessController;
-import brooklyn.management.ExecutionContext;
-import brooklyn.management.ExecutionManager;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.SubscriptionManager;
-import brooklyn.management.Task;
-import brooklyn.management.TaskAdaptable;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.util.exceptions.Exceptions;

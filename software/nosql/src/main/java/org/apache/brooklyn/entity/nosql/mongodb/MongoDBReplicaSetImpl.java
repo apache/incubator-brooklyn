@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,6 @@ import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
-import brooklyn.policy.PolicySpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.text.Strings;

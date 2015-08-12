@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,6 @@ import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationInternal;
 import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.Task;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.ssh.BashCommands;

@@ -19,6 +19,10 @@
 package org.apache.brooklyn.launcher;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -37,9 +41,6 @@ import brooklyn.entity.Application;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;
 import brooklyn.test.entity.LocalManagementContextForTests;

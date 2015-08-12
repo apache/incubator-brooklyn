@@ -26,10 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.management.ManagementContext;
+
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.Entity;
 import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.management.ManagementContext;
 
 public class PlatformComponentTemplateBrooklynLookup extends AbstractTemplateBrooklynLookup<PlatformComponentTemplate> {
 

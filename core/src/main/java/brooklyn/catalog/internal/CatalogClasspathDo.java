@@ -31,16 +31,16 @@ import javax.annotation.Nullable;
 import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.policy.Policy;
+
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.policy.Policy;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;

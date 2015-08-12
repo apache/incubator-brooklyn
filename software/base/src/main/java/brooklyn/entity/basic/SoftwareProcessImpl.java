@@ -30,6 +30,8 @@ import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.policy.EnricherSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +53,6 @@ import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.CloudLocationConfig;
-import brooklyn.management.Task;
-import brooklyn.policy.EnricherSpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;

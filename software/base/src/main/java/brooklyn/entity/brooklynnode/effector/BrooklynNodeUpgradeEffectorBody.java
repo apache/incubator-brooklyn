@@ -20,6 +20,8 @@ package brooklyn.entity.brooklynnode.effector;
 
 import java.util.Map;
 
+import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +44,6 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.MapConfigKey;
-import brooklyn.management.ha.HighAvailabilityMode;
-import brooklyn.management.ha.ManagementNodeState;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.DynamicTasks;
