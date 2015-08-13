@@ -27,6 +27,7 @@ import com.google.common.reflect.TypeToken;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.config.ConfigKey;
@@ -34,7 +35,6 @@ import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;

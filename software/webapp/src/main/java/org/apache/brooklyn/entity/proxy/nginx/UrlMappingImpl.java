@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.management.SubscriptionHandle;
@@ -38,8 +40,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

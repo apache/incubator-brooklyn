@@ -25,11 +25,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.event.AttributeSensor;
 import brooklyn.util.collections.MutableList;
 
 

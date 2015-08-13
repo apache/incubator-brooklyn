@@ -19,8 +19,10 @@
 package org.apache.brooklyn.entity.nosql.elasticsearch;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;

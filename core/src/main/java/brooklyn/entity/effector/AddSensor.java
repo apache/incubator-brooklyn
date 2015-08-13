@@ -22,11 +22,11 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;

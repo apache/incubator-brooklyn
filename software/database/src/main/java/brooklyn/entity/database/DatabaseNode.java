@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.database;
 
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 /** @deprecated since 0.7.0 use DatastoreMixins.DatastoreCommon */ @Deprecated 
 public interface DatabaseNode extends DatastoreMixins.DatastoreCommon {

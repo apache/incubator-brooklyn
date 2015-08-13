@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 
 import brooklyn.config.ConfigKey;
@@ -30,7 +31,6 @@ import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;

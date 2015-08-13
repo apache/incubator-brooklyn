@@ -16,32 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.event;
+package org.apache.brooklyn.api.event;
 
-import org.apache.brooklyn.api.entity.Entity;
+import com.google.common.annotations.Beta;
 
 /**
- * A tuple representing a piece of data from a {@link Sensor} on an {@link Entity}.
+ * The interface implemented by attribute sensors.
  */
-public interface SensorEvent<T> {
+public interface AttributeSensor<T> extends Sensor<T> {
+    
     /**
-     * The {@link Entity} where the data originated.
+     * @since 0.7.0
      */
-    Entity getSource();
- 
+    @Beta
+    public enum SensorPersistenceMode {
+        /**
+         * Indicates that this sensor should be persisted, and its value should be read from
+         * persisted state on rebind.
+         */
+        REQUIRED,
+        
+        /**
+         * Indicates that this sensor should not be persisted; therefore its value for any entity
+         * will be null immediately after rebind.
+         */
+        NONE;
+    }
+    
     /**
-     * The {@link Sensor} describing the data.
+     * The persistence mode of this sensor, to determine its behaviour for rebind.
+     * 
+     * @since 0.7.0
      */
-    Sensor<T> getSensor();
- 
-    /**
-     * The value for the {@link Sensor} data.
-     */
-    T getValue();
-
-    /**
-     * The time this data was published, as a UTC time in milliseconds (e.g. as returned
-     * by {@link System#currentTimeMillis()}.
-     */
-    long getTimestamp();
+    SensorPersistenceMode getPersistenceMode();
 }

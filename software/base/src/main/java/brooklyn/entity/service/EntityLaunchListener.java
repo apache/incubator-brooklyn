@@ -24,14 +24,14 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.management.ExecutionManager;
 import org.apache.brooklyn.management.Task;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.EffectorCallTag;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.util.task.Tasks;
 
 public class EntityLaunchListener implements Runnable, SensorEventListener<Lifecycle> {

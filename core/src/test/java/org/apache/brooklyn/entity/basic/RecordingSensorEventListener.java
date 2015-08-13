@@ -25,14 +25,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
+
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
-
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 
 /**
  * An event listener that records each event and allows callers to access all values and

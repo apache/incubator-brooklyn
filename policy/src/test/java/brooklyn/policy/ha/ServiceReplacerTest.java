@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -51,8 +53,6 @@ import brooklyn.entity.basic.QuorumCheck;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.FailingEntity;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;

@@ -28,6 +28,9 @@ import java.net.ServerSocket;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
@@ -38,9 +41,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;

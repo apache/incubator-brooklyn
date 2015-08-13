@@ -27,6 +27,8 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.entity.proxy.AbstractControllerImpl;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController.NginxControllerInternal;
@@ -41,8 +43,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;

@@ -20,13 +20,14 @@ package brooklyn.entity.brooklynnode;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.brooklynnode.CallbackEntityHttpClient.Request;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.location.Location;
 

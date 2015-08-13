@@ -23,12 +23,12 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.management.ManagementContext;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.SimulatedLocation;

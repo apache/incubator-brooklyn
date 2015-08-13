@@ -21,6 +21,7 @@ package brooklyn.event.feed;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.Lifecycle.Transition;
-import brooklyn.event.AttributeSensor;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;

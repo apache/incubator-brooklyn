@@ -18,13 +18,13 @@
  */
 package brooklyn.enricher.basic;
 
+import org.apache.brooklyn.api.event.SensorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractTransformer;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.SensorEvent;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.time.Duration;
 

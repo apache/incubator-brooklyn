@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
@@ -41,7 +42,6 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.zoneaware.BalancingNodePlacementStrategy;
 import brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
 import brooklyn.entity.trait.MemberReplaceable;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;

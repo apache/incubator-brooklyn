@@ -25,13 +25,13 @@ import com.google.common.reflect.TypeToken;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.entity.trait.HasShortName;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;

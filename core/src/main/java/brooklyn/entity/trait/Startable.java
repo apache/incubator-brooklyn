@@ -21,6 +21,7 @@ package brooklyn.entity.trait;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.Tasks;

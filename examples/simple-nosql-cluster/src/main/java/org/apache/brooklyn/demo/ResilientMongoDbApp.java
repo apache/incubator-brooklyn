@@ -24,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
@@ -34,8 +36,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 

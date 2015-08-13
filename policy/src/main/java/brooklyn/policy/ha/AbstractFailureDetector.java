@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.Sensor;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.util.collections.MutableMap;

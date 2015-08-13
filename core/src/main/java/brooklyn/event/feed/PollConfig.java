@@ -22,7 +22,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.concurrent.TimeUnit;
 
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.time.Duration;
 

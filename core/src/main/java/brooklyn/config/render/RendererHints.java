@@ -23,11 +23,11 @@ import groovy.lang.Closure;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.AttributeSensor;
 import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.annotations.Beta;

@@ -24,9 +24,9 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.AttributeSensor;
 
 /**
  * Represents the state of an entity, so that it can be reconstructed (e.g. after restarting brooklyn).

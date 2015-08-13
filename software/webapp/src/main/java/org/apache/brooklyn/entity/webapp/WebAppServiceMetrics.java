@@ -18,8 +18,9 @@
  */
 package org.apache.brooklyn.entity.webapp;
 
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.config.render.RendererHints;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.math.MathFunctions;

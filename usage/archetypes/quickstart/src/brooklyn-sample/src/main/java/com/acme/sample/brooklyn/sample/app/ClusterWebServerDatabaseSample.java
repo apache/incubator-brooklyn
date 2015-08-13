@@ -27,7 +27,7 @@ import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;

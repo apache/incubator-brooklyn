@@ -21,10 +21,10 @@ package brooklyn.location.dynamic;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;

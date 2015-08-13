@@ -23,6 +23,8 @@ import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationNoEnrichersImpl;
@@ -35,8 +37,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEventListener;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;

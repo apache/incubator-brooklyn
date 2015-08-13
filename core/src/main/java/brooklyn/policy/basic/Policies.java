@@ -20,13 +20,13 @@ package brooklyn.policy.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.policy.Policy;
 
 import groovy.lang.Closure;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.policy.basic.AbstractPolicy;
 
 @SuppressWarnings({"rawtypes","unchecked"})

@@ -24,6 +24,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
@@ -38,7 +39,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.event.Sensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableSet;

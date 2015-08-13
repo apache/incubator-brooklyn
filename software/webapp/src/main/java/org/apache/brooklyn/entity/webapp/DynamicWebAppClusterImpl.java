@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.management.TaskAdaptable;
 import org.slf4j.Logger;
@@ -38,7 +39,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.event.AttributeSensor;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;

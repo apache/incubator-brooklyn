@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -34,7 +35,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;

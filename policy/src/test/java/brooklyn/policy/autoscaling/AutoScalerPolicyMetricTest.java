@@ -26,6 +26,9 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestCluster;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -34,9 +37,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.Asserts;

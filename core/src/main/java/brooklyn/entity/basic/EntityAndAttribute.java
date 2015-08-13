@@ -22,8 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Supplier;

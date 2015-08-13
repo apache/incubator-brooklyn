@@ -20,10 +20,10 @@ package brooklyn.enricher.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.event.SensorEventListener;
 
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.BasicSensorEvent;
 import brooklyn.util.flags.SetFromFlag;
 

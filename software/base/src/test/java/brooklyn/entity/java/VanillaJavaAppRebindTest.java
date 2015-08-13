@@ -23,6 +23,7 @@ import static org.testng.Assert.assertTrue;
 import java.io.File;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
@@ -36,7 +37,6 @@ import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JavaOptsTest.TestingJavaOptsVanillaJavaAppImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;

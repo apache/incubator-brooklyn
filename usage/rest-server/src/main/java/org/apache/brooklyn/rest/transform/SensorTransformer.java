@@ -24,10 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.render.RendererHints;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 
 import brooklyn.util.collections.MutableMap;

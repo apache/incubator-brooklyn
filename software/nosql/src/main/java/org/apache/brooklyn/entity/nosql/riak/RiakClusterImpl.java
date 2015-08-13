@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
@@ -43,7 +44,6 @@ import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;

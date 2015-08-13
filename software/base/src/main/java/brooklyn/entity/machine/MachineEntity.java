@@ -19,13 +19,13 @@
 package brooklyn.entity.machine;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.event.AttributeSensor;
 import brooklyn.util.time.Duration;
 
 @Catalog(name="Machine Entity", description="Represents a machine, providing metrics about it (e.g. obtained from ssh)")

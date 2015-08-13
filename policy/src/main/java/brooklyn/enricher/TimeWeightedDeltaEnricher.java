@@ -21,14 +21,14 @@ package brooklyn.enricher;
 import groovy.lang.Closure;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.event.SensorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.enricher.basic.YamlTimeWeightedDeltaEnricher;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEvent;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.javalang.JavaClassNames;

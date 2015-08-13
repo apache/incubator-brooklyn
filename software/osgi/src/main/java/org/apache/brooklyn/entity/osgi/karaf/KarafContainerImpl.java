@@ -33,6 +33,8 @@ import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.osgi.jmx.JmxConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +43,6 @@ import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JmxSupport;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;

@@ -19,8 +19,7 @@
 package brooklyn.enricher.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
-
-import brooklyn.event.Sensor;
+import org.apache.brooklyn.api.event.Sensor;
 
 /**
  * Convenience base for transforming a single sensor into a single new sensor of the same type

@@ -94,7 +94,7 @@ import com.google.common.reflect.TypeToken;
  * <p>
  *  
  * This also supports giving a Supplier for the URL 
- * (e.g. {@link Entities#attributeSupplier(org.apache.brooklyn.api.entity.Entity, brooklyn.event.AttributeSensor)})
+ * (e.g. {@link Entities#attributeSupplier(org.apache.brooklyn.api.entity.Entity, org.apache.brooklyn.api.event.AttributeSensor)})
  * from a sensor.  Note however that if a Supplier-based sensor is *https*,
  * https-specific initialization may not occur if the URL is not available at start time,
  * and it may report errors if that sensor is not available.

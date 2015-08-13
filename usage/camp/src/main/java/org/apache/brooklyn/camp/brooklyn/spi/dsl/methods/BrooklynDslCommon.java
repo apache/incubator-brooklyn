@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.trait.Configurable;
+import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.EntitySpecConfiguration;
@@ -36,7 +37,6 @@ import org.apache.brooklyn.management.TaskFactory;
 import org.apache.commons.beanutils.BeanUtils;
 
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.event.Sensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

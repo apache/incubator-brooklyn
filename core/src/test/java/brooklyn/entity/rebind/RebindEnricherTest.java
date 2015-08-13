@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -47,7 +48,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.SimulatedLocation;

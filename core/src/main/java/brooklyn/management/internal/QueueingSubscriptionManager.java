@@ -26,10 +26,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.management.SubscriptionHandle;
-
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEvent;
 
 import com.google.common.base.Objects;
 

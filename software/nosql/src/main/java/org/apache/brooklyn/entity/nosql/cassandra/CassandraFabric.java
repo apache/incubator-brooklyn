@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.config.ConfigKey;
@@ -29,7 +30,6 @@ import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicFabric;
-import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 
 import com.google.common.base.Function;

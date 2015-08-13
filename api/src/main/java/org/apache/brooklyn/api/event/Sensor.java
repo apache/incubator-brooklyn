@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.event;
+package org.apache.brooklyn.api.event;
 
 import java.io.Serializable;
 import java.util.List;

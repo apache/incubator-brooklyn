@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.AbstractEntity;
@@ -30,7 +31,6 @@ import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;

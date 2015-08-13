@@ -19,9 +19,9 @@
 package org.apache.brooklyn.entity.webapp;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.entity.group.DynamicFabric;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 
 /**

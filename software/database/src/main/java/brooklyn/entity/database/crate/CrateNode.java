@@ -19,6 +19,7 @@
 package brooklyn.entity.database.crate;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
@@ -28,7 +29,6 @@ import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;

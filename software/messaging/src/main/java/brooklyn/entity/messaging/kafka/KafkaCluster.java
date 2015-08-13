@@ -22,6 +22,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.config.ConfigKey;
@@ -32,7 +33,6 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;

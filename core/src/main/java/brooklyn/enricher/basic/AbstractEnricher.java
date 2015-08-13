@@ -24,6 +24,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.mementos.EnricherMemento;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherType;
@@ -33,8 +35,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.BasicEnricherRebindSupport;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 import brooklyn.util.flags.TypeCoercions;
 

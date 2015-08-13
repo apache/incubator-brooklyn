@@ -23,10 +23,9 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
-
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
+import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 
 /**
  * This is the context through which an {@link Entity} can manage its subscriptions.

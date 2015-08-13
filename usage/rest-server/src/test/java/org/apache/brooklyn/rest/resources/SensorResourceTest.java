@@ -34,14 +34,16 @@ import brooklyn.config.render.RendererHints;
 import brooklyn.config.render.TestRendererHints;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
+
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.rest.api.SensorApi;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.HttpTestUtils;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.StringFunctions;

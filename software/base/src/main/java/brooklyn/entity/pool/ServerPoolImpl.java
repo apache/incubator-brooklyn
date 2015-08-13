@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.management.LocationManager;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.policy.PolicySpec;
@@ -38,7 +39,6 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;

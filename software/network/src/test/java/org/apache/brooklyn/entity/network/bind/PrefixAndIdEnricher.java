@@ -19,15 +19,15 @@
 package org.apache.brooklyn.entity.network.bind;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 
 import com.google.common.reflect.TypeToken;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.Sensors;
 
 public class PrefixAndIdEnricher extends AbstractEnricher {

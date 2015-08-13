@@ -24,14 +24,14 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

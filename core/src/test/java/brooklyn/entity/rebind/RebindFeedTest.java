@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
@@ -39,7 +40,6 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;

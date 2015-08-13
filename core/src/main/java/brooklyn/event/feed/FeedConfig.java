@@ -19,8 +19,10 @@
 package brooklyn.event.feed;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.util.collections.MutableList;

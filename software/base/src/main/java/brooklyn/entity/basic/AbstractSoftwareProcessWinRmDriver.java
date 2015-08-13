@@ -26,10 +26,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.python.core.PyException;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.util.exceptions.ReferenceWithError;

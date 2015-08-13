@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.nosql.cassandra.TokenGenerators.PosNeg63TokenGenerator;
 
@@ -34,7 +35,6 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;

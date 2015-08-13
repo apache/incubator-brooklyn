@@ -28,6 +28,7 @@ import java.util.Iterator;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
@@ -37,7 +38,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;

@@ -26,9 +26,10 @@ import java.net.URL;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor.SensorPersistenceMode;
+
 import brooklyn.config.render.RendererHints;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.time.Duration;

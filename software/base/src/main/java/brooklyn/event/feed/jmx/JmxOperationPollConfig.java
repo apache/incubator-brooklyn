@@ -24,7 +24,8 @@ import java.util.List;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.event.feed.PollConfig;
 
 import com.google.common.base.Function;

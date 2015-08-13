@@ -22,10 +22,10 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.AttributeSensor;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Supplier;

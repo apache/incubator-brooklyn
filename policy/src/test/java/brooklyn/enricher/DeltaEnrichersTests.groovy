@@ -28,7 +28,7 @@ import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.AbstractEntity
 import brooklyn.entity.basic.Entities
 import org.apache.brooklyn.api.entity.basic.EntityLocal
-import brooklyn.event.Sensor
+import org.apache.brooklyn.api.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import org.apache.brooklyn.management.SubscriptionContext
 import brooklyn.management.internal.LocalManagementContext

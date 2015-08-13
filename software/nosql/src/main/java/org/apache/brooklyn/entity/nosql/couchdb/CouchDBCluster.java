@@ -19,9 +19,9 @@
 package org.apache.brooklyn.entity.nosql.couchdb;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;

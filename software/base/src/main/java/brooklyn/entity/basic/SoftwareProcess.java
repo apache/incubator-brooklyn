@@ -22,12 +22,12 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.Sensors;

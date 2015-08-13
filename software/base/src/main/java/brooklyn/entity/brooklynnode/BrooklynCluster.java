@@ -23,13 +23,13 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 
 @ImplementedBy(BrooklynClusterImpl.class)

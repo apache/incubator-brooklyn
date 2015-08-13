@@ -23,7 +23,8 @@ import javax.management.Notification;
 import javax.management.NotificationFilter;
 import javax.management.ObjectName;
 
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.event.feed.FeedConfig;
 import brooklyn.util.collections.MutableList;
 

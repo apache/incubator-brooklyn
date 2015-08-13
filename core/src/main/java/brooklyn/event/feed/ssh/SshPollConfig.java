@@ -24,7 +24,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

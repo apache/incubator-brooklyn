@@ -20,11 +20,12 @@ package org.apache.brooklyn.entity.webapp;
 
 import java.util.Set;
 
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import com.google.common.collect.ImmutableSet;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;

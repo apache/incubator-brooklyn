@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.testng.Assert;
 
 import com.google.common.base.Preconditions;
@@ -30,7 +31,6 @@ import com.google.common.base.Preconditions;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.config.ConfigBag;
 

@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
@@ -33,7 +34,6 @@ import org.apache.brooklyn.policy.PolicySpec;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.guava.Maybe;
 

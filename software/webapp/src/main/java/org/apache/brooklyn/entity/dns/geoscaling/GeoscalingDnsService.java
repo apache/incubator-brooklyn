@@ -21,13 +21,13 @@ package org.apache.brooklyn.entity.dns.geoscaling;
 import java.net.URI;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;

@@ -16,37 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.event;
+package org.apache.brooklyn.api.event;
 
-import com.google.common.annotations.Beta;
+import org.apache.brooklyn.api.entity.Entity;
 
 /**
- * The interface implemented by attribute sensors.
+ * A listener for {@link SensorEvent}s on an {@link Entity}.
  */
-public interface AttributeSensor<T> extends Sensor<T> {
+public interface SensorEventListener<T> {
+    
+    public static final SensorEventListener<Object> NOOP = new SensorEventListener<Object>() {
+        @Override public void onEvent(SensorEvent<Object> event) {
+        }
+    };
     
     /**
-     * @since 0.7.0
+     * The {@link SensorEvent} handler method.
      */
-    @Beta
-    public enum SensorPersistenceMode {
-        /**
-         * Indicates that this sensor should be persisted, and its value should be read from
-         * persisted state on rebind.
-         */
-        REQUIRED,
-        
-        /**
-         * Indicates that this sensor should not be persisted; therefore its value for any entity
-         * will be null immediately after rebind.
-         */
-        NONE;
-    }
-    
-    /**
-     * The persistence mode of this sensor, to determine its behaviour for rebind.
-     * 
-     * @since 0.7.0
-     */
-    SensorPersistenceMode getPersistenceMode();
+    void onEvent(SensorEvent<T> event);
 }

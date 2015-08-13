@@ -28,11 +28,11 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.util.collections.MutableMap;

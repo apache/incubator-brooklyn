@@ -27,10 +27,10 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.entity.ParameterType;
+import org.apache.brooklyn.api.event.Sensor;
 
 import brooklyn.basic.BrooklynTypeSnapshot;
 import brooklyn.config.ConfigKey;
-import brooklyn.event.Sensor;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Joiner;

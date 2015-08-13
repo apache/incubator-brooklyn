@@ -19,9 +19,9 @@
 package brooklyn.entity.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.management.Task;
 
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.time.Duration;

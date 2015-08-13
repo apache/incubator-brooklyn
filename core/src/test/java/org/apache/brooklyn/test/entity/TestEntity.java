@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.testng.collections.Lists;
 import org.testng.internal.annotations.Sets;
 
@@ -41,7 +42,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.ListConfigKey;

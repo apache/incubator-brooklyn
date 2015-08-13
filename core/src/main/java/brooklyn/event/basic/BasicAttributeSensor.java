@@ -20,8 +20,8 @@ package brooklyn.event.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.Sensor;
 
 import com.google.common.reflect.TypeToken;
 

@@ -20,12 +20,12 @@ package brooklyn.enricher.basic;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import org.apache.brooklyn.api.event.SensorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.SensorEvent;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ValueResolver;

@@ -27,6 +27,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
@@ -41,8 +43,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.FailingEntity;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.util.config.ConfigBag;

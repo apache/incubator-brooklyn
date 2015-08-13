@@ -20,6 +20,9 @@ package brooklyn.entity.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.event.SensorEvent;
 
 import com.google.common.base.Predicate;
 import com.google.common.reflect.TypeToken;
@@ -27,9 +30,6 @@ import com.google.common.reflect.TypeToken;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.Sensor;
-import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 import groovy.lang.Closure;

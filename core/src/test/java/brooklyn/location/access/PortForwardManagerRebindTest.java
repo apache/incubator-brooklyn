@@ -24,6 +24,7 @@ import static org.testng.Assert.assertNotEquals;
 import java.io.File;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.management.ha.MementoCopyMode;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
@@ -40,7 +41,6 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;

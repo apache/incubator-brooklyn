@@ -26,7 +26,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.event.feed.PollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.util.collections.MutableList;

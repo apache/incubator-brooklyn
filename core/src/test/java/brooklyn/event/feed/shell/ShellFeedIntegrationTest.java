@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
@@ -37,7 +38,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityInternal.FeedSupport;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.function.FunctionFeedTest;
 import brooklyn.event.feed.ssh.SshPollValue;

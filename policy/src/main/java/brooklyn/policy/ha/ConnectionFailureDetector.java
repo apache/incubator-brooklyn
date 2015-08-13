@@ -18,10 +18,11 @@
  */
 package brooklyn.policy.ha;
 
+import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.Sensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;

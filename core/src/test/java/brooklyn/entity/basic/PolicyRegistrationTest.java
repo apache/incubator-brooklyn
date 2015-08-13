@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;
@@ -36,8 +38,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 

@@ -18,7 +18,7 @@
  */
 package brooklyn.event.basic;
 
-import brooklyn.event.Sensor;
+import org.apache.brooklyn.api.event.Sensor;
 
 /**
  * A {@link Sensor} used to notify subscribers about events.

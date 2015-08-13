@@ -22,9 +22,10 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.group.DynamicFabricImpl;
-import brooklyn.event.AttributeSensor;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

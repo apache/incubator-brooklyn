@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.catalog.CatalogConfig;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
@@ -49,8 +51,6 @@ import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.basic.DependentConfiguration;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;

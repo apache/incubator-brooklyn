@@ -25,14 +25,14 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import org.apache.brooklyn.entity.proxy.nginx.NginxSshDriver;
 import org.apache.brooklyn.entity.proxy.nginx.UrlMapping;
 import org.apache.brooklyn.policy.PolicySpec;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;

@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.management.SubscriptionHandle;
 import org.apache.brooklyn.management.SubscriptionManager;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -38,8 +40,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.SensorEvent;
-import brooklyn.event.SensorEventListener;
 
 /**
  * testing the {@link SubscriptionManager} and associated classes.

@@ -24,12 +24,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.event.SensorEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.basic.AbstractAggregatingEnricher;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.SensorEventListener;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.flags.TypeCoercions;
 

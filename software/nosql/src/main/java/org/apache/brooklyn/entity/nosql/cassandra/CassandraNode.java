@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.config.ConfigKey;
@@ -33,7 +34,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;

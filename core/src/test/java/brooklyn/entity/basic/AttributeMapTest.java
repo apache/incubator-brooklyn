@@ -30,6 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
@@ -37,7 +38,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.AttributeMap;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.Asserts;

@@ -22,8 +22,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.config.render.RendererHints;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.math.MathFunctions;

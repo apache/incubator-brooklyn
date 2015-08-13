@@ -20,6 +20,7 @@ package brooklyn.event.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.Sensor;
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;

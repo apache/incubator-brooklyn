@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityInternal.FeedSupport;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.FeedConfig;
 import brooklyn.event.feed.PollConfig;

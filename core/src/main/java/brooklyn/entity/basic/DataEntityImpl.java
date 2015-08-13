@@ -21,7 +21,8 @@ package brooklyn.entity.basic;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.location.Location;

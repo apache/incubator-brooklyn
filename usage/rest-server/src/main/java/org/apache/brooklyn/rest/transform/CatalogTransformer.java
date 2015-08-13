@@ -30,12 +30,12 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.event.Sensor;
 import brooklyn.location.Location;
 import brooklyn.location.LocationSpec;
 

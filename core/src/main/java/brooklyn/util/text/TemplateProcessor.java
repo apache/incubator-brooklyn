@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriver;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;

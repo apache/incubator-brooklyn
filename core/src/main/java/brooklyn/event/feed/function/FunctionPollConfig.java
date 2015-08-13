@@ -23,7 +23,8 @@ import groovy.lang.Closure;
 
 import java.util.concurrent.Callable;
 
-import brooklyn.event.AttributeSensor;
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.event.feed.FeedConfig;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.GroovyJavaMethods;

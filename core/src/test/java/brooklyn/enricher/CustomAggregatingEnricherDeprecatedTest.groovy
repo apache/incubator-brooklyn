@@ -30,7 +30,7 @@ import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.BasicGroup
 import brooklyn.entity.basic.Entities
 import org.apache.brooklyn.api.entity.proxying.EntitySpec
-import brooklyn.event.AttributeSensor
+import org.apache.brooklyn.api.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation
 import org.apache.brooklyn.test.TestUtils

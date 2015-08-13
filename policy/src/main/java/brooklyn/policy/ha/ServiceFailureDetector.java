@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.api.event.SensorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceState;
-import brooklyn.event.SensorEvent;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;

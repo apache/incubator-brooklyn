@@ -24,12 +24,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
@@ -45,8 +45,8 @@ public interface DynamicMultiGroup extends DynamicGroup {
     /**
      * Implements the mapping from {@link Entity} to bucket name.
      *
-     * @see DynamicMultiGroupImpl#bucketFromAttribute(brooklyn.event.AttributeSensor)
-     * @see DynamicMultiGroupImpl#bucketFromAttribute(brooklyn.event.AttributeSensor, String)
+     * @see DynamicMultiGroupImpl#bucketFromAttribute(org.apache.brooklyn.api.event.AttributeSensor)
+     * @see DynamicMultiGroupImpl#bucketFromAttribute(org.apache.brooklyn.api.event.AttributeSensor, String)
      */
     @SetFromFlag("bucketFunction")
     ConfigKey<Function<Entity, String>> BUCKET_FUNCTION = ConfigKeys.newConfigKey(

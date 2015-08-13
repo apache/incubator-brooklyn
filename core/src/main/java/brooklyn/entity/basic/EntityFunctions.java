@@ -27,10 +27,10 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.trait.Identifiable;
+import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.management.ManagementContext;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Functionals;
