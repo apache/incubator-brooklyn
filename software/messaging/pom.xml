@@ -53,11 +53,11 @@
                                 the given components. These are files "without any degree of creativity" from the
                                 perspective of the Brooklyn/Apache contribution.
                             -->
-                            <exclude>src/main/resources/brooklyn/entity/messaging/activemq/activemq.xml</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/messaging/kafka/server.properties</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/messaging/kafka/zookeeper.properties</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/messaging/storm/storm.yaml</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/messaging/rabbit/rabbitmq.config</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/messaging/activemq/activemq.xml</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/messaging/kafka/server.properties</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/messaging/kafka/zookeeper.properties</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/messaging/storm/storm.yaml</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/messaging/rabbit/rabbitmq.config</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
