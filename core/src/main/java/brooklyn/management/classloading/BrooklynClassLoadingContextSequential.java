@@ -22,8 +22,8 @@ import java.net.URL;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

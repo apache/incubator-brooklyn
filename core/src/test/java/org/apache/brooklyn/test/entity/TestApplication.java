@@ -24,7 +24,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.EntityInternal;

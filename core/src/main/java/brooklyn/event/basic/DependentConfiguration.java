@@ -39,11 +39,11 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.management.ExecutionContext;
-import org.apache.brooklyn.management.SubscriptionHandle;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.TaskAdaptable;
-import org.apache.brooklyn.management.TaskFactory;
+import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.api.management.SubscriptionHandle;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.TaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

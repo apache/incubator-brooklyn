@@ -30,7 +30,7 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.management.internal.LocalManagementContext;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 
 import brooklyn.util.exceptions.Exceptions;

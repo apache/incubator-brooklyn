@@ -21,7 +21,7 @@ package brooklyn.event.basic;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.api.management.ExecutionContext;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.util.exceptions.Exceptions;

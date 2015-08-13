@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.EntityTypeRegistry;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;

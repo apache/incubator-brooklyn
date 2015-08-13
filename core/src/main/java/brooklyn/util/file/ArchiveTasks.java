@@ -20,8 +20,8 @@ package brooklyn.util.file;
 
 import java.util.Map;
 
-import org.apache.brooklyn.management.TaskAdaptable;
-import org.apache.brooklyn.management.TaskFactory;
+import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.TaskFactory;
 
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;

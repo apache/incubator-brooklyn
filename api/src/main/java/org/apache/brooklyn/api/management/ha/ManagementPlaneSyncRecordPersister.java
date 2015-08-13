@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.management.ha;
+package org.apache.brooklyn.api.management.ha;
 
 import java.io.IOException;
 import java.util.Collection;

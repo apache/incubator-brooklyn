@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;

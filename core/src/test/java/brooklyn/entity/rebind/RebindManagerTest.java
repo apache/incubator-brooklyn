@@ -24,7 +24,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.testng.annotations.Test;

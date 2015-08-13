@@ -21,7 +21,7 @@ package brooklyn.entity.chef;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

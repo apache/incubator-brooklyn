@@ -20,7 +20,7 @@ package brooklyn.entity.trait;
 
 import java.util.Collection;
 
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.testng.Assert;
 

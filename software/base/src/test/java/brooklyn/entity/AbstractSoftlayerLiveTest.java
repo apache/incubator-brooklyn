@@ -21,7 +21,7 @@ package brooklyn.entity;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

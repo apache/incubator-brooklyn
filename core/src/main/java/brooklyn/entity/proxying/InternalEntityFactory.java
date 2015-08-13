@@ -159,7 +159,7 @@ public class InternalEntityFactory extends InternalFactory {
      * fully initialized ({@link AbstractEntity#init()} invoked) and ready for
      * management -- commonly the caller will next call 
      * {@link Entities#manage(Entity)} (if it's in a managed application)
-     * or {@link Entities#startManagement(org.apache.brooklyn.api.entity.Application, org.apache.brooklyn.management.ManagementContext)}
+     * or {@link Entities#startManagement(org.apache.brooklyn.api.entity.Application, org.apache.brooklyn.api.management.ManagementContext)}
      * (if it's an application) */
     public <T extends Entity> T createEntity(EntitySpec<T> spec) {
         /* Order is important here. Changed Jul 2014 when supporting children in spec.

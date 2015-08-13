@@ -39,8 +39,8 @@ import brooklyn.entity.trait.Startable
 
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ManagementContext
-import org.apache.brooklyn.management.Task
+import org.apache.brooklyn.api.management.ManagementContext
+import org.apache.brooklyn.api.management.Task
 
 import brooklyn.management.internal.EffectorUtils
 

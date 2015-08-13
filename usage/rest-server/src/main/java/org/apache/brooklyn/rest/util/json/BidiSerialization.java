@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParser;

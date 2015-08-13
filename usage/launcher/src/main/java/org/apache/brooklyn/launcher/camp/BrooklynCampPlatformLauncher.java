@@ -23,10 +23,10 @@ import io.brooklyn.camp.spi.PlatformRootSummary;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.management.ManagementContext;
 
 import brooklyn.management.internal.LocalManagementContext;
 
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 

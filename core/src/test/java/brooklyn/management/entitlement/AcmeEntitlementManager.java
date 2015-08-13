@@ -18,9 +18,9 @@
  */
 package brooklyn.management.entitlement;
 
-import org.apache.brooklyn.management.entitlement.EntitlementClass;
-import org.apache.brooklyn.management.entitlement.EntitlementContext;
-import org.apache.brooklyn.management.entitlement.EntitlementManager;
+import org.apache.brooklyn.api.management.entitlement.EntitlementClass;
+import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
+import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 
 public class AcmeEntitlementManager extends PerUserEntitlementManager {
 

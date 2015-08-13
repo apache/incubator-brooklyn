@@ -39,9 +39,9 @@ import brooklyn.entity.brooklynnode.BrooklynEntityMirror;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.launcher.BrooklynWebServer;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 
 import brooklyn.test.Asserts;

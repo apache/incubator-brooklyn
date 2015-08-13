@@ -29,7 +29,7 @@ import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.mementos.Memento;

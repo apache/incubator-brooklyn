@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;

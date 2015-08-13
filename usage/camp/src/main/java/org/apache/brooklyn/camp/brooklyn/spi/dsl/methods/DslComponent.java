@@ -25,9 +25,9 @@ import java.util.concurrent.Callable;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
-import org.apache.brooklyn.management.Task;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;

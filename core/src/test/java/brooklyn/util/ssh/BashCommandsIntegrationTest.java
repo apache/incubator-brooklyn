@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;

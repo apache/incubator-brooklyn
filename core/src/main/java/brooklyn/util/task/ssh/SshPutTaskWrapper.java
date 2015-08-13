@@ -21,8 +21,8 @@ package brooklyn.util.task.ssh;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.TaskWrapper;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.TaskWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

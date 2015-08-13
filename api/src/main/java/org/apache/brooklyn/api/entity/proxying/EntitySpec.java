@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.basic.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;

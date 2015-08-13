@@ -30,7 +30,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;

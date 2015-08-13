@@ -31,7 +31,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.slf4j.Logger;

@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

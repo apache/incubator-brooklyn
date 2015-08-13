@@ -27,11 +27,11 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
-import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
-import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
-import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

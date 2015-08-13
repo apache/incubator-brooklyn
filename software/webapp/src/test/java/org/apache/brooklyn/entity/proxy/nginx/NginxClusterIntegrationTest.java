@@ -26,12 +26,12 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.entity.proxy.LoadBalancerCluster;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.proxy.nginx.UrlMapping;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
-import org.apache.brooklyn.management.EntityManager;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;

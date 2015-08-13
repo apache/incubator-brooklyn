@@ -18,8 +18,8 @@
  */
 package brooklyn.management.ha;
 
-import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
-import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 
 import brooklyn.util.time.Duration;
 

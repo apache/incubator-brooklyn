@@ -16,47 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.management.ha;
+package org.apache.brooklyn.api.management.ha;
 
-import java.net.URI;
+import java.util.Map;
+
+import org.apache.brooklyn.mementos.BrooklynMemento;
+import org.apache.brooklyn.mementos.BrooklynMementoPersister;
 
 import com.google.common.annotations.Beta;
 
 /**
- * Represents the state of a management-node.
- * 
- * @see {@link ManagementPlaneSyncRecord#getManagementNodes()}
+ * Meta-data about the management plane - the management nodes and who is currently master.
+ * Does not contain any data about the entities under management.
+ * <p>
+ * This is very similar to how {@link BrooklynMemento} is used by {@link BrooklynMementoPersister},
+ * but it is not a memento in the sense it does not reconstitute the entire management plane
+ * (so is not called Memento although it can be used by the same memento-serializers).
  * 
  * @since 0.7.0
  * 
  * @author aled
  */
 @Beta
-public interface ManagementNodeSyncRecord {
+public interface ManagementPlaneSyncRecord {
 
-    // TODO Not setting URI currently; ManagementContext doesn't know its URI; only have one if web-console was enabled.
+    // TODO Add getPlaneId(); but first need to set it sensibly on each management node
     
-    // TODO Add getPlaneId(); but first need to set it in a sensible way
+    String getMasterNodeId();
     
-    String getBrooklynVersion();
-    
-    String getNodeId();
-    
-    URI getUri();
-    
-    ManagementNodeState getStatus();
+    /** returns map of {@link ManagementNodeSyncRecord} instances keyed by the nodes' IDs */
+    Map<String, ManagementNodeSyncRecord> getManagementNodes();
 
-    Long getPriority();
-    
-    /** timestamp set by the originating management machine */
-    long getLocalTimestamp();
-
-    /** timestamp set by shared persistent store, if available
-     * <p>
-     * this will not be set on records originating at this machine, nor will it be persisted,
-     * but it will be populated for records being read */
-    Long getRemoteTimestamp();
-    
     String toVerboseString();
-
 }

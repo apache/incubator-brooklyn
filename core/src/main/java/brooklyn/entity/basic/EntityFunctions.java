@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.trait.Identifiable;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.location.Location;

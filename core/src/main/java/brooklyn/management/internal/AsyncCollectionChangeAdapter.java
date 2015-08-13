@@ -20,7 +20,7 @@ package brooklyn.management.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.brooklyn.management.ExecutionManager;
+import org.apache.brooklyn.api.management.ExecutionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

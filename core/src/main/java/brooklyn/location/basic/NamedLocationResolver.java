@@ -23,7 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

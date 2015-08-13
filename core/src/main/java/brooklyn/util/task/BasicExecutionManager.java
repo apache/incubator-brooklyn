@@ -45,10 +45,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.brooklyn.management.ExecutionManager;
-import org.apache.brooklyn.management.HasTaskChildren;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.ExecutionManager;
+import org.apache.brooklyn.api.management.HasTaskChildren;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

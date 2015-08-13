@@ -39,12 +39,12 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;

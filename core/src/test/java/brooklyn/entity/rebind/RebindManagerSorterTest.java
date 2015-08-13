@@ -28,7 +28,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.trait.Identifiable;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.mementos.EntityMemento;
 import org.apache.brooklyn.mementos.TreeNode;
 import org.apache.brooklyn.test.entity.TestApplication;

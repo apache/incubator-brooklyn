@@ -38,7 +38,7 @@ import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.WebEntitlementContext;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
 
 import brooklyn.util.text.Strings;

@@ -27,7 +27,7 @@ import brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.mementos.CatalogItemMemento;
 
 import brooklyn.config.ConfigKey;

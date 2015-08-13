@@ -27,9 +27,9 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.entity.rebind.Rebindable;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.management.ExecutionContext;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.SubscriptionContext;
+import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.mementos.EntityMemento;
 
 import brooklyn.basic.BrooklynObjectInternal;

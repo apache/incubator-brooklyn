@@ -43,9 +43,9 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.trait.Startable;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 
 import brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;

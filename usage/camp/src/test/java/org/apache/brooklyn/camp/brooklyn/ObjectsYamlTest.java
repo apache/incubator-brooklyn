@@ -23,9 +23,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.trait.Configurable;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

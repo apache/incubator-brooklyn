@@ -30,9 +30,9 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ExecutionManager;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.entitlement.EntitlementContext;
+import org.apache.brooklyn.api.management.ExecutionManager;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

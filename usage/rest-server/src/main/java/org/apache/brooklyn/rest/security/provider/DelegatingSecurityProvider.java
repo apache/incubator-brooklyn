@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.StringConfigMap;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 
 import brooklyn.util.text.Strings;

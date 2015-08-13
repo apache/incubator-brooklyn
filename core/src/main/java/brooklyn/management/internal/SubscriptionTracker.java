@@ -24,8 +24,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.management.SubscriptionContext;
-import org.apache.brooklyn.management.SubscriptionHandle;
+import org.apache.brooklyn.api.management.SubscriptionContext;
+import org.apache.brooklyn.api.management.SubscriptionHandle;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;

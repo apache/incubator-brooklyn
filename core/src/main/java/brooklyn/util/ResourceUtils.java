@@ -38,8 +38,8 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.Credentials;

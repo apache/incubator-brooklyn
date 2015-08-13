@@ -29,8 +29,8 @@ import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;

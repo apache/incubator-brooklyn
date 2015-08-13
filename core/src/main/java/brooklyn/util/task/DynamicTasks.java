@@ -22,12 +22,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ExecutionContext;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.TaskAdaptable;
-import org.apache.brooklyn.management.TaskFactory;
-import org.apache.brooklyn.management.TaskQueueingContext;
-import org.apache.brooklyn.management.TaskWrapper;
+import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.api.management.TaskQueueingContext;
+import org.apache.brooklyn.api.management.TaskWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -244,31 +244,31 @@ public class DynamicTasks {
         }
     }
 
-    /** @see #queue(org.apache.brooklyn.management.TaskAdaptable)  */
+    /** @see #queue(org.apache.brooklyn.api.management.TaskAdaptable)  */
     public static void queue(TaskAdaptable<?> task1, TaskAdaptable<?> task2, TaskAdaptable<?> ...tasks) {
         queue(task1);
         queue(task2);
         for (TaskAdaptable<?> task: tasks) queue(task);
     }
 
-    /** @see #queue(org.apache.brooklyn.management.TaskAdaptable)  */
+    /** @see #queue(org.apache.brooklyn.api.management.TaskAdaptable)  */
     public static <T extends TaskAdaptable<?>> T queue(TaskFactory<T> taskFactory) {
         return queue(taskFactory.newTask());
     }
 
-    /** @see #queue(org.apache.brooklyn.management.TaskAdaptable)  */
+    /** @see #queue(org.apache.brooklyn.api.management.TaskAdaptable)  */
     public static void queue(TaskFactory<?> task1, TaskFactory<?> task2, TaskFactory<?> ...tasks) {
         queue(task1.newTask());
         queue(task2.newTask());
         for (TaskFactory<?> task: tasks) queue(task.newTask());
     }
 
-    /** @see #queue(org.apache.brooklyn.management.TaskAdaptable)  */
+    /** @see #queue(org.apache.brooklyn.api.management.TaskAdaptable)  */
     public static <T> Task<T> queue(String name, Callable<T> job) {
         return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
     }
 
-    /** @see #queue(org.apache.brooklyn.management.TaskAdaptable)  */
+    /** @see #queue(org.apache.brooklyn.api.management.TaskAdaptable)  */
     public static <T> Task<T> queue(String name, Runnable job) {
         return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
     }

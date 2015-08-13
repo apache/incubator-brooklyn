@@ -37,9 +37,9 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.management.ExecutionManager;
-import org.apache.brooklyn.management.SubscriptionHandle;
-import org.apache.brooklyn.management.SubscriptionManager;
+import org.apache.brooklyn.api.management.ExecutionManager;
+import org.apache.brooklyn.api.management.SubscriptionHandle;
+import org.apache.brooklyn.api.management.SubscriptionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -20,7 +20,7 @@ package brooklyn.internal;
 
 import java.util.Map;
 
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

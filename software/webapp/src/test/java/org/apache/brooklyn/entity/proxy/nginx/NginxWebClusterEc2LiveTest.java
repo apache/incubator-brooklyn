@@ -24,11 +24,11 @@ import java.net.URL;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
-import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.TestApplication;

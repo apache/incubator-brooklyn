@@ -27,6 +27,10 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.EntityManager;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -38,10 +42,6 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindTestUtils;
 
-import org.apache.brooklyn.management.EntityManager;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 
 import brooklyn.test.Asserts;

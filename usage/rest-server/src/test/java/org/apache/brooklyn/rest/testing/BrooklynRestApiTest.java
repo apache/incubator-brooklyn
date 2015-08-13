@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.testing;
 
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
@@ -36,7 +37,6 @@ import brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.internal.LocalManagementContext;
 
-import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;

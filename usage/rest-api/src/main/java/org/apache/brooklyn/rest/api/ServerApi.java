@@ -32,8 +32,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.rest.apidoc.Apidoc;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.VersionSummary;

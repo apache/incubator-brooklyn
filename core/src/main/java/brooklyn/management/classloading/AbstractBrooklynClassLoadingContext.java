@@ -2,8 +2,8 @@ package brooklyn.management.classloading;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 
 import brooklyn.util.guava.Maybe;
 

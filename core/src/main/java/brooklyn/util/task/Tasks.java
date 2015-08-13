@@ -27,12 +27,12 @@ import java.util.concurrent.FutureTask;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.management.ExecutionContext;
-import org.apache.brooklyn.management.HasTaskChildren;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.TaskAdaptable;
-import org.apache.brooklyn.management.TaskFactory;
-import org.apache.brooklyn.management.TaskQueueingContext;
+import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.api.management.HasTaskChildren;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.api.management.TaskQueueingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

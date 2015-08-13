@@ -39,7 +39,7 @@ import brooklyn.management.internal.EffectorUtils;
 
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.rest.api.EffectorApi;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.SummaryComparators;

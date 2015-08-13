@@ -21,7 +21,7 @@ package brooklyn.entity.rebind;
 import java.io.File;
 
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 

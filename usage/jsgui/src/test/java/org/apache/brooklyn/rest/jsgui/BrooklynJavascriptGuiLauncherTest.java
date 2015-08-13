@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.Entities;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 
 import brooklyn.test.Asserts;

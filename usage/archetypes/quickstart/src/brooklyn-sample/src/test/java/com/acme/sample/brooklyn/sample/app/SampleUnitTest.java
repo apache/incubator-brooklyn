@@ -15,7 +15,7 @@ import brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.base.Predicates;

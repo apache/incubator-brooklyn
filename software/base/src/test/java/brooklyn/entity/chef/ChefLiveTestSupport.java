@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;

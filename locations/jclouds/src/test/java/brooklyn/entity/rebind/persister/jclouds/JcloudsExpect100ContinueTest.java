@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.rebind.persister.jclouds;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;

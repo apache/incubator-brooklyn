@@ -32,8 +32,8 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.ExecutionManager;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.ExecutionManager;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;

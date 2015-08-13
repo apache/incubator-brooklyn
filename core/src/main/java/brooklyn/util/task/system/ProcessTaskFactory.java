@@ -20,7 +20,7 @@ package brooklyn.util.task.system;
 
 import java.util.Map;
 
-import org.apache.brooklyn.management.TaskFactory;
+import org.apache.brooklyn.api.management.TaskFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.location.basic.SshMachineLocation;

@@ -18,7 +18,7 @@
  */
 package brooklyn.util.task;
 
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 
 public interface ExecutionListener {
 

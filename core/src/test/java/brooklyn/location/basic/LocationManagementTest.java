@@ -24,7 +24,7 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
-import org.apache.brooklyn.management.LocationManager;
+import org.apache.brooklyn.api.management.LocationManager;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

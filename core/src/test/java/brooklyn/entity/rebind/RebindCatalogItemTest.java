@@ -39,7 +39,7 @@ import brooklyn.camp.lite.TestAppAssemblyInstantiator;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestEntity;
 
 import brooklyn.catalog.internal.BasicBrooklynCatalog;

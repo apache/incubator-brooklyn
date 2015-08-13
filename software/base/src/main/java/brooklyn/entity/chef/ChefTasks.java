@@ -21,8 +21,8 @@ package brooklyn.entity.chef;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.TaskAdaptable;
-import org.apache.brooklyn.management.TaskFactory;
+import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.TaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

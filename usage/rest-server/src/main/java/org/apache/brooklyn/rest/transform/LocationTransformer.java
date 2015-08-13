@@ -31,7 +31,7 @@ import brooklyn.location.basic.BasicLocationDefinition;
 import brooklyn.location.basic.LocationConfigKeys;
 import brooklyn.location.basic.LocationInternal;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.management;
+package org.apache.brooklyn.api.management;
 
 import java.util.Map;
 import java.util.Set;

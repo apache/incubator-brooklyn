@@ -20,7 +20,7 @@ package brooklyn.management.internal;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.EntityManager;
+import org.apache.brooklyn.api.management.EntityManager;
 
 public interface EntityManagerInternal extends EntityManager, BrooklynObjectManagerInternal<Entity> {
 

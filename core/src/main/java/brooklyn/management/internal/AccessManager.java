@@ -18,7 +18,7 @@
  */
 package brooklyn.management.internal;
 
-import org.apache.brooklyn.management.AccessController;
+import org.apache.brooklyn.api.management.AccessController;
 
 import com.google.common.annotations.Beta;
 

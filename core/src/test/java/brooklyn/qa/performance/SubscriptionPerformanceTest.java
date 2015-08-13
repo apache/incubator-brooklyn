@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.management.SubscriptionManager;
+import org.apache.brooklyn.api.management.SubscriptionManager;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

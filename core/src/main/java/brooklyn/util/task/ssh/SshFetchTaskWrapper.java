@@ -22,8 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.TaskWrapper;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.TaskWrapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 

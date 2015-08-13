@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.api.entity.trait;
 
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;

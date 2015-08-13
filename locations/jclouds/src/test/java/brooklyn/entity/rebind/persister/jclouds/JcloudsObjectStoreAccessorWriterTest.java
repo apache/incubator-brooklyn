@@ -20,7 +20,7 @@ package brooklyn.entity.rebind.persister.jclouds;
 
 import java.io.IOException;
 
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

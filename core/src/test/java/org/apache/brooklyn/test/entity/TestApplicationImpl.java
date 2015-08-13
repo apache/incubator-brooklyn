@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.management.SubscriptionHandle;
+import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

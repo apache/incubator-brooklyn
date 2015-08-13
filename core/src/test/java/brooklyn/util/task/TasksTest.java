@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import org.apache.brooklyn.management.ExecutionContext;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.Assert;

@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 
 public class AssemblyBrooklynLookup extends AbstractBrooklynResourceLookup<Assembly> {

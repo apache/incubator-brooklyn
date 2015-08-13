@@ -28,7 +28,7 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestApplicationImpl;
 import org.testng.Assert;
 import org.testng.annotations.Test;

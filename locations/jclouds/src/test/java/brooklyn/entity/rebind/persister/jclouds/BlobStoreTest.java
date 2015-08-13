@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;

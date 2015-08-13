@@ -26,9 +26,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ExecutionContext;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.brooklyn.management.AccessController;
+import org.apache.brooklyn.api.management.AccessController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

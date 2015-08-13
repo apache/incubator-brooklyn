@@ -34,9 +34,9 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

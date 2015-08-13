@@ -36,7 +36,7 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
