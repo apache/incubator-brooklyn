@@ -34,8 +34,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

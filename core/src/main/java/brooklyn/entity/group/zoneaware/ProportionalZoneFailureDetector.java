@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.group.zoneaware;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Ticker;

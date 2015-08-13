@@ -30,8 +30,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Ticker;

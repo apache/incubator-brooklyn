@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableList;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.test.Asserts;
 
 public class MachineEntityEc2LiveTest extends AbstractEc2LiveTest {

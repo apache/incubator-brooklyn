@@ -32,7 +32,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.Tasks;
 

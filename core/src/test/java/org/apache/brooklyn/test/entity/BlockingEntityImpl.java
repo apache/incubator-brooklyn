@@ -21,7 +21,7 @@ package org.apache.brooklyn.test.entity;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Throwables;
 

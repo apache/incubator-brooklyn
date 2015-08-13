@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.util.collections.CollectionFunctionals;
 
 import com.google.common.collect.ImmutableList;

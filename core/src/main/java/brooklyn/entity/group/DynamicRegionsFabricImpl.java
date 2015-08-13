@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;

@@ -23,9 +23,6 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
-import org.apache.brooklyn.entity.webapp.DynamicWebAppFabric;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestJavaWebAppEntity;
@@ -39,7 +36,7 @@ import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.trait.Changeable;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

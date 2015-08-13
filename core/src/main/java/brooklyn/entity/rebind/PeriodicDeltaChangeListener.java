@@ -50,7 +50,7 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;

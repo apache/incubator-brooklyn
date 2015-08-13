@@ -20,8 +20,8 @@ package brooklyn.entity.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
 
-import brooklyn.location.basic.Machines;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.Machines;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Supplier;
 

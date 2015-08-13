@@ -31,12 +31,12 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.MultiLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineLocation;
+import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.MultiLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;

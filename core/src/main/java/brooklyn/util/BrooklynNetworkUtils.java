@@ -21,7 +21,7 @@ package brooklyn.util;
 import java.net.InetAddress;
 
 import brooklyn.config.BrooklynServiceAttributes;
-import brooklyn.location.geo.LocalhostExternalIpLoader;
+import org.apache.brooklyn.location.geo.LocalhostExternalIpLoader;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.net.Networking;
 

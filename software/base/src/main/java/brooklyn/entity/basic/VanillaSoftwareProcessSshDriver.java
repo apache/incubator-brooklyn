@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
 
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.guava.Maybe;

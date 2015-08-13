@@ -33,7 +33,7 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 

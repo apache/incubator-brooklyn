@@ -37,7 +37,7 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 

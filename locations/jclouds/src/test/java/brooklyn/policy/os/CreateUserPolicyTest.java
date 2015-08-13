@@ -37,9 +37,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.policy.os.CreateUserPolicy;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.internal.ssh.SshTool;
 
 import com.google.common.collect.ImmutableList;

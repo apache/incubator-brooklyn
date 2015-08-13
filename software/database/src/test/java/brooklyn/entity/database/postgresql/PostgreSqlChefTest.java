@@ -31,9 +31,9 @@ import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.location.PortRange;
-import brooklyn.location.basic.PortRanges;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.Duration;
 

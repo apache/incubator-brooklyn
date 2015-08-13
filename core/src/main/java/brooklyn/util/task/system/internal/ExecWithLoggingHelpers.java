@@ -28,7 +28,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.TypeCoercions;

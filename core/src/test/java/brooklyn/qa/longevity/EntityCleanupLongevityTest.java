@@ -20,8 +20,8 @@ package brooklyn.qa.longevity;
 
 import org.testng.annotations.Test;
 
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.javalang.JavaClassNames;
 
 /**

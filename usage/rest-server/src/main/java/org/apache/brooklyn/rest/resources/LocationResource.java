@@ -32,9 +32,9 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.location.Location;
-import brooklyn.location.LocationDefinition;
-import brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationDefinition;
+import org.apache.brooklyn.location.basic.LocationConfigKeys;
 
 import org.apache.brooklyn.rest.api.LocationApi;
 import org.apache.brooklyn.rest.domain.LocationSpec;

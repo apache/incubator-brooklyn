@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.FailingEntity.RecordingEventListener;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.task.Tasks;
 
 import com.google.common.collect.ImmutableList;

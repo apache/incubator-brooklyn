@@ -36,7 +36,7 @@ import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.LocationSpec;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
 
 import org.apache.brooklyn.policy.Policy;

@@ -23,7 +23,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 public class TestBindDnsServerImpl extends BindDnsServerImpl {
 

@@ -30,8 +30,8 @@ import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.location.PortRange;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 public interface UsesJmx extends UsesJava {

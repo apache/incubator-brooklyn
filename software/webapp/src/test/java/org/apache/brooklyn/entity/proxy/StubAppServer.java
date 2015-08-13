@@ -29,10 +29,10 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.NoMachinesAvailableException;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineLocation;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.NoMachinesAvailableException;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Throwables;

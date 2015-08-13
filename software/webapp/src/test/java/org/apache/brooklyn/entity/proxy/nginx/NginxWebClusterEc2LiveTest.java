@@ -24,7 +24,6 @@ import java.net.URL;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -41,9 +40,9 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.basic.Machines;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineLocation;
+import org.apache.brooklyn.location.basic.Machines;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;

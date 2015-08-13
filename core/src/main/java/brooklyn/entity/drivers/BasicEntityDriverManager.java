@@ -24,7 +24,7 @@ import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
 
 import com.google.common.annotations.Beta;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 public class BasicEntityDriverManager implements EntityDriverManager {
 

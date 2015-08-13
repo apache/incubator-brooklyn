@@ -26,8 +26,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.location.PortRange;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 

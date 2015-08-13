@@ -20,7 +20,7 @@ package brooklyn.entity.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 /**
  * dispatch interface to allow an EntityFactory to indicate it might be able to discover

@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.effector.EffectorAndBody;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

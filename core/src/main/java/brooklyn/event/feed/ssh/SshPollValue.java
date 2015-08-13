@@ -20,7 +20,7 @@ package brooklyn.event.feed.ssh;
 
 import javax.annotation.Nullable;
 
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 public class SshPollValue {
 

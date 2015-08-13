@@ -23,11 +23,10 @@ import static org.testng.Assert.assertNotNull;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractSoftlayerLiveTest;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.test.Asserts;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 

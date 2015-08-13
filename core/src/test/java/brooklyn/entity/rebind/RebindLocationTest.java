@@ -38,11 +38,10 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.AbstractLocation;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;

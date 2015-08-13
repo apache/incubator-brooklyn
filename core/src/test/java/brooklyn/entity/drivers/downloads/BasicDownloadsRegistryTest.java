@@ -34,8 +34,8 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.collect.ImmutableList;

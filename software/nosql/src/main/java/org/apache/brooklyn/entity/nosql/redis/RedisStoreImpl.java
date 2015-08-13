@@ -30,9 +30,9 @@ import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.event.feed.ssh.SshValueFunctions;
-import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

@@ -31,7 +31,7 @@ import org.python.core.PyException;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.util.exceptions.ReferenceWithError;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;

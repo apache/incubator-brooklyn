@@ -37,7 +37,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.util.flags.SetFromFlag;

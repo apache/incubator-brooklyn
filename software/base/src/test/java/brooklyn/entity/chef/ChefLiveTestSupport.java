@@ -29,15 +29,14 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.location.Location;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.io.FileUtil;
 import brooklyn.util.stream.InputStreamSupplier;
 
 import com.google.common.base.Throwables;
-import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 
 public class ChefLiveTestSupport extends BrooklynAppLiveTestSupport {

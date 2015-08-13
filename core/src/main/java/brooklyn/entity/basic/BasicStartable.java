@@ -25,8 +25,8 @@ import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
-import brooklyn.location.basic.Locations;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.Locations;
 
 import com.google.common.collect.ImmutableList;
 
@@ -51,6 +51,6 @@ public interface BasicStartable extends Entity, Startable {
         };
     }
 
-    public static final ConfigKey<brooklyn.location.basic.Locations.LocationsFilter> LOCATIONS_FILTER = ConfigKeys.newConfigKey(brooklyn.location.basic.Locations.LocationsFilter.class,
+    public static final ConfigKey<Locations.LocationsFilter> LOCATIONS_FILTER = ConfigKeys.newConfigKey(Locations.LocationsFilter.class,
             "brooklyn.locationsFilter", "Provides a hook for customizing locations to be used for a given context");
 }

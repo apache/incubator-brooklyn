@@ -30,11 +30,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.internal.BrooklynInitialization;
-import brooklyn.location.Location;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.PortRange;
-import brooklyn.location.PortSupplier;
-import brooklyn.location.basic.Locations;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.location.PortSupplier;
+import org.apache.brooklyn.location.basic.Locations;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 

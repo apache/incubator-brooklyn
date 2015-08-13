@@ -57,8 +57,8 @@ import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.PolicySpec;
 
-import brooklyn.location.Location;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.policy.ha.ServiceFailureDetector;
 import brooklyn.policy.ha.ServiceReplacer;
 import brooklyn.policy.ha.ServiceRestarter;

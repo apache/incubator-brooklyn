@@ -20,7 +20,7 @@ package brooklyn.util.task.ssh.internal;
 
 import com.google.common.base.Preconditions;
 
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.system.ProcessTaskFactory;
 import brooklyn.util.task.system.ProcessTaskWrapper;

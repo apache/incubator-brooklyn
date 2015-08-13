@@ -20,13 +20,11 @@ package org.apache.brooklyn.entity.proxy.nginx;
 
 import static org.testng.Assert.assertEquals;
 
-import java.net.URL;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.proxy.StubAppServer;
-import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
@@ -34,7 +32,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;

@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.brooklyn.api.entity.Entity;
 
 import brooklyn.entity.group.DynamicCluster.ZoneFailureDetector;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Ticker;

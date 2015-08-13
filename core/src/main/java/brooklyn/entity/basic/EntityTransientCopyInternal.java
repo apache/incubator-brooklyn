@@ -20,9 +20,7 @@ package brooklyn.entity.basic;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.basic.BrooklynObject.TagSupport;
@@ -43,7 +41,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.entity.proxying.EntityProxyImpl;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;

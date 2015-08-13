@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.trait.Changeable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.text.StringPredicates;
 
 import com.google.common.collect.ImmutableList;

@@ -30,9 +30,9 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineLocation;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

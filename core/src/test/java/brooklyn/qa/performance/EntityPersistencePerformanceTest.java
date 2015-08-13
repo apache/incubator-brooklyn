@@ -30,8 +30,8 @@ import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.policy.TestPolicy;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;

@@ -18,11 +18,11 @@
  */
 package brooklyn.test.location;
 
-import brooklyn.location.basic.AbstractLocation;
-import brooklyn.location.paas.PaasLocation;
+import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.paas.PaasLocation;
 
 /**
- * Mock {@link brooklyn.location.paas.PaasLocation} for test purposes
+ * Mock {@link PaasLocation} for test purposes
  */
 public class TestPaasLocation extends AbstractLocation implements PaasLocation {
     @Override

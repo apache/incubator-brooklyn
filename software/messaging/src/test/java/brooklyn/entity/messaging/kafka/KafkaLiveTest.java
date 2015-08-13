@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 

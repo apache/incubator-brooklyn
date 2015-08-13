@@ -36,9 +36,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.MachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

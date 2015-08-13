@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.Entity;
 
 import brooklyn.entity.group.DynamicCluster.ZoneFailureDetector;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;

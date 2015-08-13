@@ -30,7 +30,7 @@ import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicFabric;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Multimap;

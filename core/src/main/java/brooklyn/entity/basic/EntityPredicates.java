@@ -29,7 +29,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.guava.SerializablePredicate;
 import brooklyn.util.javalang.Reflections;

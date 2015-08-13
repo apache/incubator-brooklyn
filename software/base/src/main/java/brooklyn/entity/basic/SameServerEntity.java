@@ -28,7 +28,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.flags.SetFromFlag;

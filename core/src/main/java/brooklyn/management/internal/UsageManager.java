@@ -29,7 +29,7 @@ import org.apache.brooklyn.api.entity.Application;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.usage.ApplicationUsage;
 import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
 import brooklyn.management.usage.LocationUsage;

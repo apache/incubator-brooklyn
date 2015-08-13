@@ -35,10 +35,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.location.cloud.CloudLocationConfig;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsUtil;
+import org.apache.brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsUtil;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.text.Strings;
 

@@ -32,7 +32,7 @@ import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChild
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;

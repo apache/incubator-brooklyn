@@ -39,7 +39,7 @@ import org.apache.brooklyn.api.event.Sensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.location.LocationResolver;
+import org.apache.brooklyn.location.LocationResolver;
 
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;

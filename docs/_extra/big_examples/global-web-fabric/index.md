@@ -73,7 +73,7 @@ unpack it, and copy it to `~/.brooklyn/GeoLite2-City.mmdb`.
 This will be picked up automatically if it is installed.
 You can instead specify to use an online lookup service, such as 
 [utrace.de](http://www.utrace.de) by specifying
-`-Dbrooklyn.location.geo.HostGeoLookup=brooklyn.location.geo.UtraceHostGeoLookup`;
+`-Dbrooklyn.location.geo.HostGeoLookup=UtraceHostGeoLookup`;
 but note this has a cap of 100 per day.
 
 This information is also used to display locations on the map
@@ -210,7 +210,7 @@ import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;
 import brooklyn.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService;
-import brooklyn.location.basic.PortRanges;
+import PortRanges;
 {% endhighlight %}
 
 

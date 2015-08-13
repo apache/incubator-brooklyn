@@ -27,9 +27,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.location.Location;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;

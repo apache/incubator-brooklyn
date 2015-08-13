@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Predicates;

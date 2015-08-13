@@ -1150,7 +1150,7 @@
                   <exclude>**/*.psd</exclude>
                   <exclude>**/*.json</exclude>
                   <exclude>**/*.plxarc</exclude>
-                  <exclude>**/services/brooklyn.location.LocationResolver</exclude>
+                  <exclude>**/services/org.apache.brooklyn.location.LocationResolver</exclude>
                   <exclude>**/src/test/resources/brooklyn/entity/basic/template_with_extra_substitutions.txt</exclude>
                   <exclude>**/src/main/resources/banner.txt</exclude>
                   <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>

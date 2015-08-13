@@ -31,6 +31,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import org.apache.brooklyn.location.Location;
 
 /**
  * An enumeration representing the status of an {@link org.apache.brooklyn.api.entity.Entity}.
@@ -41,7 +42,7 @@ public enum Lifecycle {
      *
      * This stage encompasses the contruction. Once this stage is
      * complete, the basic set of {@link brooklyn.event.Sensor}s will be available, apart from any that require the entity to be active or
-     * deployed to a {@link brooklyn.location.Location}.
+     * deployed to a {@link Location}.
      */
     CREATED,
 

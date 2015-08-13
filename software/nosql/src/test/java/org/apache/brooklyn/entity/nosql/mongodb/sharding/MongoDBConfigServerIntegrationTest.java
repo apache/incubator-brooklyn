@@ -23,7 +23,6 @@ import static org.testng.Assert.assertFalse;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBTestHelper;
-import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBConfigServer;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;
@@ -33,7 +32,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;

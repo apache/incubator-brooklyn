@@ -1,9 +1,0 @@
-brooklyn.location.basic.DefinedLocationByIdResolver
-brooklyn.location.basic.NamedLocationResolver
-brooklyn.location.basic.CatalogLocationResolver
-brooklyn.location.basic.LocalhostLocationResolver
-brooklyn.location.basic.ByonLocationResolver
-brooklyn.location.basic.SingleMachineLocationResolver
-brooklyn.location.basic.HostLocationResolver
-brooklyn.location.basic.MultiLocationResolver
-brooklyn.location.access.PortForwardManagerLocationResolver

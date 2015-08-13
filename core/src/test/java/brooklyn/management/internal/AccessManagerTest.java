@@ -33,9 +33,9 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableSet;

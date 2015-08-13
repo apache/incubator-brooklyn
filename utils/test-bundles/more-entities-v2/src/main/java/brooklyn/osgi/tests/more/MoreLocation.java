@@ -20,7 +20,7 @@ package brooklyn.osgi.tests.more;
 
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.basic.AbstractLocation;
 
 @Catalog(name="More Location", description="Cataliog item OSGi test location")
 public class MoreLocation extends AbstractLocation {

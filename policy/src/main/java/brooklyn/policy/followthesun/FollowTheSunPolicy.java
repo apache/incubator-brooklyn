@@ -40,8 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.location.Location;
-import brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair;
 import brooklyn.policy.loadbalancing.Movable;

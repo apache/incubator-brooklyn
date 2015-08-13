@@ -35,10 +35,10 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.NoMachinesAvailableException;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;

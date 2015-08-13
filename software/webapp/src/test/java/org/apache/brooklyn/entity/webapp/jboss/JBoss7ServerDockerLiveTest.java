@@ -19,19 +19,16 @@
 package org.apache.brooklyn.entity.webapp.jboss;
 
 import brooklyn.entity.software.AbstractDockerLiveTest;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.test.Asserts;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 import com.google.common.collect.ImmutableList;
 
 import org.testng.annotations.Test;
-
-import java.net.URL;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertNotNull;

@@ -40,9 +40,9 @@ import brooklyn.entity.basic.SoftwareProcessEntityTest.MyServiceImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
