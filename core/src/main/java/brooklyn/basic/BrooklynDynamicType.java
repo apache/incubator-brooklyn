@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.basic.BrooklynType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

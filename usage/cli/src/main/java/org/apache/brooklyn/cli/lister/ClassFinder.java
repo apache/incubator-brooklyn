@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 import org.reflections.Reflections;
@@ -36,7 +37,6 @@ import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.BrooklynObject;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.Application;
 import brooklyn.entity.Entity;

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.policy;
 
-import brooklyn.basic.BrooklynType;
+import org.apache.brooklyn.api.basic.BrooklynType;
 
 import com.google.common.annotations.Beta;
 

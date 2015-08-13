@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.basic.internal;
+package org.apache.brooklyn.api.basic.internal;
 
 /** 
  * Methods from downstream projects used in API classes at runtime. 

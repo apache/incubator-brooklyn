@@ -22,8 +22,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.Collection;
 
-import brooklyn.basic.BrooklynObject;
-
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.management.ha.HighAvailabilityManager;

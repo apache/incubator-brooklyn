@@ -25,8 +25,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
-import brooklyn.basic.BrooklynObject;
-
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.policy.Enricher;

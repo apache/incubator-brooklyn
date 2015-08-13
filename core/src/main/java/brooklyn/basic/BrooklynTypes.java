@@ -20,6 +20,7 @@ package brooklyn.basic;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 

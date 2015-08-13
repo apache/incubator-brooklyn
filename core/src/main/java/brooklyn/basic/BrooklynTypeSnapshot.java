@@ -21,6 +21,8 @@ package brooklyn.basic;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.api.basic.BrooklynType;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.util.text.Strings;
 

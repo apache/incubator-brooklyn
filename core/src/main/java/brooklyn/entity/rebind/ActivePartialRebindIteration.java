@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
@@ -33,7 +34,6 @@ import org.apache.brooklyn.mementos.BrooklynMementoRawData.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;

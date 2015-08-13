@@ -23,11 +23,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.api.basic.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 

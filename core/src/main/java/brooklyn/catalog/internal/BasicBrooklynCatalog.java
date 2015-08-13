@@ -38,10 +38,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import brooklyn.basic.AbstractBrooklynObjectSpec;
 import brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 
+import org.apache.brooklyn.api.basic.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;

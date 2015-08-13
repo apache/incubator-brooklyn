@@ -26,9 +26,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.basic.BrooklynObject;
-
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;

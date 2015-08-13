@@ -25,13 +25,13 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.basic.BrooklynObject.TagSupport;
 import org.apache.brooklyn.management.ExecutionContext;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.mementos.EntityMemento;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
-import brooklyn.basic.BrooklynObject.TagSupport;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.Application;

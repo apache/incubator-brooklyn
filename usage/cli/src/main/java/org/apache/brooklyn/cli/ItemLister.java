@@ -32,9 +32,7 @@ import java.util.ServiceLoader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.basic.BrooklynObject;
-
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.cli.lister.ClassFinder;
 import org.apache.brooklyn.cli.lister.ItemDescriptors;

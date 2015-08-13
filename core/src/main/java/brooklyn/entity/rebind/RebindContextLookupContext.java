@@ -22,9 +22,7 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.basic.BrooklynObject;
-
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;

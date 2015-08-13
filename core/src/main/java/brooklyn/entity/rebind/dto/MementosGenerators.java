@@ -25,9 +25,9 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynTypes;
 
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.Task;

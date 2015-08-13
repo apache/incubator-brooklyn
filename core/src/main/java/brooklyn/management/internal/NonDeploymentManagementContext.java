@@ -31,9 +31,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.basic.BrooklynObject;
-
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.management.AccessController;
 import org.apache.brooklyn.management.EntityManager;

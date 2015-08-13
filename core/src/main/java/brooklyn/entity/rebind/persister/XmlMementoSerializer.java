@@ -29,9 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.basic.AbstractBrooklynObjectSpec;
-
+import org.apache.brooklyn.api.basic.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.Task;

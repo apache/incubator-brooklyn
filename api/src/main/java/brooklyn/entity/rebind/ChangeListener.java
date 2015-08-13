@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.rebind;
 
-import brooklyn.basic.BrooklynObject;
+import org.apache.brooklyn.api.basic.BrooklynObject;
 
 /**
  * Listener to be notified of changes within brooklyn, so that the new state

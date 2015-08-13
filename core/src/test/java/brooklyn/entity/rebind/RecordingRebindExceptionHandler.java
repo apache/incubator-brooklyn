@@ -21,7 +21,8 @@ package brooklyn.entity.rebind;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.basic.BrooklynObject;
+import org.apache.brooklyn.api.basic.BrooklynObject;
+
 import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 

@@ -18,7 +18,7 @@
  */
 package brooklyn.management.internal;
 
-import brooklyn.basic.BrooklynObject;
+import org.apache.brooklyn.api.basic.BrooklynObject;
 
 public interface BrooklynObjectManagerInternal<T extends BrooklynObject> {
 

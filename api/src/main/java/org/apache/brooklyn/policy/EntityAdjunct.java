@@ -20,7 +20,7 @@ package org.apache.brooklyn.policy;
 
 import javax.annotation.Nullable;
 
-import brooklyn.basic.BrooklynObject;
+import org.apache.brooklyn.api.basic.BrooklynObject;
 
 /**
  * EntityAdjuncts are supplementary logic that can be attached to Entities, 

@@ -18,9 +18,9 @@
  */
 package brooklyn.basic.internal;
 
+import org.apache.brooklyn.api.basic.internal.ApiObjectsFactoryInterface;
 import org.apache.brooklyn.management.Task;
 
-import brooklyn.basic.internal.ApiObjectsFactoryInterface;
 import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.util.task.Tasks;

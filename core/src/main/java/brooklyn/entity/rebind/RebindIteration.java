@@ -34,9 +34,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
-import brooklyn.basic.BrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 
+import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;

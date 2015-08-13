@@ -20,6 +20,8 @@ package brooklyn.basic;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.basic.BrooklynObject;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.rebind.RebindSupport;

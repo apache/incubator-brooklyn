@@ -22,11 +22,11 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.api.basic.internal.ApiObjectsFactory;
 import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.internal.ApiObjectsFactory;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.RebindManagerImpl;

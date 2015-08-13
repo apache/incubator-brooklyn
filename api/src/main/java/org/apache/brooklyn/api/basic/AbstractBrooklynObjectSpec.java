@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.basic;
+package org.apache.brooklyn.api.basic;
 
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
-import brooklyn.basic.internal.ApiObjectsFactory;
+import org.apache.brooklyn.api.basic.internal.ApiObjectsFactory;
+
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 

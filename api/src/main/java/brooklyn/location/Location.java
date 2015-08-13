@@ -22,7 +22,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.basic.BrooklynObject;
+import org.apache.brooklyn.api.basic.BrooklynObject;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 
