@@ -114,6 +114,8 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
         super.initEnrichers();
         propagateMasterAttribute(MySqlNode.HOSTNAME);
         propagateMasterAttribute(MySqlNode.ADDRESS);
+        propagateMasterAttribute(MySqlNode.SUBNET_HOSTNAME);
+        propagateMasterAttribute(MySqlNode.SUBNET_ADDRESS);
         propagateMasterAttribute(MySqlNode.MYSQL_PORT);
         propagateMasterAttribute(MySqlNode.DATASTORE_URL);
 
