@@ -41,9 +41,9 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.basic.Machines;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineLocation;
+import org.apache.brooklyn.location.basic.Machines;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;

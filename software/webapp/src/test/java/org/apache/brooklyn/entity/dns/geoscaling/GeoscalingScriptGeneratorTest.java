@@ -25,10 +25,9 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingScriptGenerator;
 import org.testng.annotations.Test;
 
-import brooklyn.location.geo.HostGeoInfo;
+import org.apache.brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.ResourceUtils;
 
 

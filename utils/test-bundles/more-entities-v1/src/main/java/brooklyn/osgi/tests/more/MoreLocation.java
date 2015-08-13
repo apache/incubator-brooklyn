@@ -19,7 +19,7 @@
 package brooklyn.osgi.tests.more;
 
 
-import brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.basic.AbstractLocation;
 
 public class MoreLocation extends AbstractLocation {
 }

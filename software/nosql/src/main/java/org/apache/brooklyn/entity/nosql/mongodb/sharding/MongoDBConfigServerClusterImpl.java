@@ -24,13 +24,11 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.location.Location;
-import brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.net.HostAndPort;
 
 public class MongoDBConfigServerClusterImpl extends DynamicClusterImpl implements MongoDBConfigServerCluster {
     

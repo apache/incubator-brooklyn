@@ -24,8 +24,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
 
 public class NonDeploymentLocationManager implements LocationManagerInternal {
 

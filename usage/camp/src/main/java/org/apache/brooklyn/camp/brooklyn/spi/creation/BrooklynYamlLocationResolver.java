@@ -24,8 +24,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 
-import brooklyn.location.Location;
-import brooklyn.location.LocationDefinition;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationDefinition;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

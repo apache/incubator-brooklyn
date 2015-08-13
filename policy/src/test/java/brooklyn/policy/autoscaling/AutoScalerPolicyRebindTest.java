@@ -36,8 +36,8 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;

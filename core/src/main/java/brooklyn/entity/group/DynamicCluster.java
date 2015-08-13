@@ -45,7 +45,7 @@ import brooklyn.entity.trait.MemberReplaceable;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 

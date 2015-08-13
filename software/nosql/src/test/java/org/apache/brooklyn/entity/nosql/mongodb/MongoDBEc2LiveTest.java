@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.nosql.mongodb;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
 import com.mongodb.DBObject;
@@ -31,7 +31,6 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 import org.apache.brooklyn.test.EntityTestUtils;
 
 public class MongoDBEc2LiveTest extends AbstractEc2LiveTest {

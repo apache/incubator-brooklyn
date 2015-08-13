@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.management.TaskFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.task.system.ProcessTaskStub.ScriptReturnType;
 

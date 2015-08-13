@@ -49,7 +49,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
-import brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.time.Duration;

@@ -81,11 +81,11 @@ import brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.PortRange;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;

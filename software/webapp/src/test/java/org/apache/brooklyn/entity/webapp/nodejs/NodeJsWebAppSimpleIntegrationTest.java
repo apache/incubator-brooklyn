@@ -25,16 +25,14 @@ import java.net.ServerSocket;
 import java.util.Iterator;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService;
-import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppServiceImpl;
 import org.jclouds.util.Throwables2;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.location.PortRange;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;

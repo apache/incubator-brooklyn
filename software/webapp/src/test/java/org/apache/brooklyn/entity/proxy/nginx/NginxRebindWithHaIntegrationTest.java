@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.entity.proxy.nginx;
 
-import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -51,9 +50,9 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocationReuseIntegrationTest.RecordingSshjTool;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocationReuseIntegrationTest.RecordingSshjTool;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Networking;

@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.basic.BrooklynTags.NamedStringTag;
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.entitlement.EntitlementPredicates;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.internal.EntityManagementUtils;

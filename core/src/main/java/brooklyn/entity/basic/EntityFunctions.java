@@ -31,7 +31,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Functionals;
 

@@ -30,9 +30,9 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriver;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriverDependentEntity;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
 public class RegistryEntityDriverFactoryTest {

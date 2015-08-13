@@ -33,8 +33,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.NoMachinesAvailableException;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.BasicExecutionContext;

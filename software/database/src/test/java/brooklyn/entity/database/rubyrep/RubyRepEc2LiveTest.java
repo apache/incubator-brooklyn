@@ -25,8 +25,8 @@ import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import brooklyn.entity.database.postgresql.PostgreSqlNode;
-import brooklyn.location.Location;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.PortRanges;
 
 public class RubyRepEc2LiveTest extends AbstractEc2LiveTest {
 

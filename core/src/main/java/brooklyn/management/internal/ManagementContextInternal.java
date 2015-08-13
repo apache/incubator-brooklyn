@@ -36,7 +36,7 @@ import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.ha.OsgiManager;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.TaskTags;

@@ -52,7 +52,7 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.IfFunctions;

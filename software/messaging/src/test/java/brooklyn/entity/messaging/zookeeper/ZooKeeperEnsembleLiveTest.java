@@ -24,7 +24,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;

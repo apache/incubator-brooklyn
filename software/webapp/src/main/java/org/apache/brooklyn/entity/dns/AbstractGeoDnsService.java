@@ -30,7 +30,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.location.geo.HostGeoInfo;
+import org.apache.brooklyn.location.geo.HostGeoInfo;
 
 import com.google.common.reflect.TypeToken;
 

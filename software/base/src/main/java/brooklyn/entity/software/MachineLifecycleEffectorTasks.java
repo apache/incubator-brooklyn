@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.location.MachineManagementMixins;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,17 +63,17 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineManagementMixins.SuspendsMachines;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.location.basic.AbstractLocation;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.Locations;
-import brooklyn.location.basic.Machines;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.MachineLocation;
+import org.apache.brooklyn.location.MachineManagementMixins.SuspendsMachines;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.NoMachinesAvailableException;
+import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.Locations;
+import org.apache.brooklyn.location.basic.Machines;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
@@ -898,7 +899,7 @@ public abstract class MachineLifecycleEffectorTasks {
      * {@link SuspendsMachines suspending machines}.
      *
      * @throws java.lang.UnsupportedOperationException if the entity's provisioner cannot suspend machines.
-     * @see brooklyn.location.MachineManagementMixins.SuspendsMachines
+     * @see MachineManagementMixins.SuspendsMachines
      */
     protected StopMachineDetails<Integer> suspendAnyProvisionedMachines() {
         @SuppressWarnings("unchecked")

@@ -37,7 +37,7 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;

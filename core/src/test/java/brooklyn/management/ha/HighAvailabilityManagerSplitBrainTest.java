@@ -50,7 +50,7 @@ import brooklyn.entity.rebind.persister.ListeningObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.ha.TestEntityFailingRebind.RebindException;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;

@@ -32,8 +32,8 @@ import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.LowLevelAppDescriptor;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.LocationRegistry;
-import brooklyn.location.basic.BasicLocationRegistry;
+import org.apache.brooklyn.location.LocationRegistry;
+import org.apache.brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.internal.LocalManagementContext;
 

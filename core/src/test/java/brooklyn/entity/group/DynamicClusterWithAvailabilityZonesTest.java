@@ -40,12 +40,12 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
 import brooklyn.entity.trait.FailingEntity;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocationInternal;
-import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
-import brooklyn.location.cloud.AvailabilityZoneExtension;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.LocationInternal;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
+import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
 import brooklyn.test.Asserts;
 import brooklyn.util.time.Duration;
 

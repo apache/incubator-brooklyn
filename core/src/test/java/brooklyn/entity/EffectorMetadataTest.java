@@ -38,7 +38,7 @@ import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.internal.EffectorUtils;
 
 import com.google.common.collect.ImmutableList;

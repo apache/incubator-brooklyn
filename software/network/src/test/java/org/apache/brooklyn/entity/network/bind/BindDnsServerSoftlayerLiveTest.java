@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.network.bind;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractSoftlayerLiveTest;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 public class BindDnsServerSoftlayerLiveTest extends AbstractSoftlayerLiveTest {
 

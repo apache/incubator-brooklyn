@@ -29,9 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.location.cloud.CloudLocationConfig;
-import brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 
 /** Utility for cleaning up after test leaks. Most should not leak of course, but if they do... */
 public class BlobStoreCleaner {

@@ -24,12 +24,13 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.location.basic.Locations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicates;
@@ -51,7 +52,7 @@ public class BasicStartableImpl extends AbstractEntity implements BasicStartable
             // essentially does StartableMethods.start(this, locations),
             // but optionally filters locations for each child
 
-            brooklyn.location.basic.Locations.LocationsFilter filter = getConfig(LOCATIONS_FILTER);
+            Locations.LocationsFilter filter = getConfig(LOCATIONS_FILTER);
             Iterable<Entity> startables = filterStartableManagedEntities(getChildren());
             if (!Iterables.isEmpty(startables)) {
                 List<Task<?>> tasks = Lists.newArrayListWithCapacity(Iterables.size(startables));

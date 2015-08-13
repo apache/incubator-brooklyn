@@ -22,7 +22,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.EntityDriver;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 public class MyEntityDriver implements EntityDriver {
     private final Entity entity;

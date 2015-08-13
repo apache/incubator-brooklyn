@@ -40,7 +40,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntityProxy;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.UsageListener.ApplicationMetadata;
 import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;

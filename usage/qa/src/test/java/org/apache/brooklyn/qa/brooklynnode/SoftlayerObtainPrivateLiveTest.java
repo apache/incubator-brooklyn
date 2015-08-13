@@ -45,8 +45,8 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 
-import brooklyn.location.Location;
-import brooklyn.location.jclouds.JcloudsLocationConfig;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
 import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

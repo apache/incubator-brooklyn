@@ -25,11 +25,10 @@ import java.util.Map.Entry;
 import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.AbstractLocation;
-import brooklyn.location.basic.LocationInternal;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.basic.LocationInternal;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.config.ConfigBag;

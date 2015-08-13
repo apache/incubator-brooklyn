@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.management.TaskFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.task.DynamicTasks;
 
 import com.google.common.annotations.Beta;

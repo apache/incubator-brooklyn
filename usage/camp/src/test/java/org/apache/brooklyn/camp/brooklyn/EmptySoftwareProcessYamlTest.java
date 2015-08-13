@@ -29,8 +29,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.Jsonya;
 
 @Test

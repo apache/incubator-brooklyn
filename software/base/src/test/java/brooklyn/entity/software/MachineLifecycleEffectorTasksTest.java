@@ -50,7 +50,7 @@ import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.jclouds.BailOutJcloudsLocation;
+import org.apache.brooklyn.location.jclouds.BailOutJcloudsLocation;
 import brooklyn.test.Asserts;
 import brooklyn.util.task.TaskInternal;
 import brooklyn.util.time.Duration;

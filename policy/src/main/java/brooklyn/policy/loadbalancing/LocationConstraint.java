@@ -18,7 +18,7 @@
  */
 package brooklyn.policy.loadbalancing;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 /**
  * Temporary stub to resolve dependencies in ported LoadBalancingPolicy.

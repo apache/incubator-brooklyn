@@ -39,12 +39,12 @@ import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.options.TemplateOptions;
 
-import brooklyn.location.Location;
-import brooklyn.location.LocationDefinition;
-import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.location.cloud.CloudLocationConfig;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsUtil;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationDefinition;
+import org.apache.brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsUtil;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.stream.Streams;

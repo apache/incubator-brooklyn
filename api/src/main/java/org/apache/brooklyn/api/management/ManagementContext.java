@@ -34,7 +34,7 @@ import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityManager;
 
 import brooklyn.config.StringConfigMap;
-import brooklyn.location.LocationRegistry;
+import org.apache.brooklyn.location.LocationRegistry;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;

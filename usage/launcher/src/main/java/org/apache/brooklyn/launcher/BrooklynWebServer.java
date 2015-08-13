@@ -68,9 +68,9 @@ import brooklyn.internal.BrooklynInitialization;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.launcher.config.CustomResourceLocator;
 
-import brooklyn.location.PortRange;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.management.internal.ManagementContextInternal;
 
 import org.apache.brooklyn.rest.BrooklynRestApi;

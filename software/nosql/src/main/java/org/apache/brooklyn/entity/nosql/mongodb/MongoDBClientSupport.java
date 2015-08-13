@@ -36,8 +36,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
 
-import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.util.BrooklynNetworkUtils;
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 
 /**
  * Manages connections to standalone MongoDB servers.

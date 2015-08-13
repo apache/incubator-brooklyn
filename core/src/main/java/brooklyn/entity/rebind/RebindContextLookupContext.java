@@ -35,7 +35,7 @@ import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 /** Looks in {@link RebindContext} <i>and</i> {@link ManagementContext} to find entities, locations, etc. */
 public class RebindContextLookupContext implements LookupContext {

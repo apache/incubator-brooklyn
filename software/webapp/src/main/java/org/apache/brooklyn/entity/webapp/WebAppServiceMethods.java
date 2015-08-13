@@ -29,7 +29,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.enricher.TimeWeightedDeltaEnricher;
-import brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.util.time.Duration;
 
 import com.google.common.net.HostAndPort;

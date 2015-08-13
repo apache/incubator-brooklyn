@@ -32,6 +32,8 @@ import java.util.Set;
 
 import brooklyn.management.osgi.OsgiTestResources;
 
+import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
@@ -56,8 +58,8 @@ import brooklyn.catalog.internal.CatalogItemDtoAbstract;
 import brooklyn.catalog.internal.CatalogTestUtils;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
@@ -176,7 +178,7 @@ public class XmlMementoSerializerTest {
         ManagementContext managementContext = app.getManagementContext();
         try {
             @SuppressWarnings("deprecation")
-            final Location loc = managementContext.getLocationManager().createLocation(LocationSpec.create(brooklyn.location.basic.SimulatedLocation.class));
+            final Location loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.<Entity>of(), ImmutableList.of(loc), ImmutableList.<Policy>of(),
                     ImmutableList.<Enricher>of(), ImmutableList.<Feed>of(), ImmutableList.<CatalogItem<?, ?>>of(), true));

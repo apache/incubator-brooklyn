@@ -22,7 +22,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigMap;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.location.PortRange;
+import org.apache.brooklyn.location.PortRange;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
 import org.apache.brooklyn.rest.security.provider.ExplicitUsersSecurityProvider;
 

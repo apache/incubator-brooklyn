@@ -37,7 +37,7 @@ import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;
 

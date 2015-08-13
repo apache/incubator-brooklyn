@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
-import brooklyn.location.geo.HostGeoInfo;
+import org.apache.brooklyn.location.geo.HostGeoInfo;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.text.Identifiers;

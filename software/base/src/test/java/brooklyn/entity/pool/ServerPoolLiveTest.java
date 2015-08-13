@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableList;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 
 public class ServerPoolLiveTest extends AbstractServerPoolTest {

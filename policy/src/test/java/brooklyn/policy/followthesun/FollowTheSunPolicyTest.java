@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.policy.loadbalancing.MockContainerEntity;
 import brooklyn.policy.loadbalancing.MockItemEntity;
 import brooklyn.policy.loadbalancing.Movable;

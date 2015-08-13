@@ -24,12 +24,6 @@ import org.apache.brooklyn.entity.nosql.mongodb.AbstractMongoDBServer;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBTestHelper;
-import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBConfigServer;
-import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBConfigServerCluster;
-import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
-import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
-import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardCluster;
-import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -37,7 +31,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

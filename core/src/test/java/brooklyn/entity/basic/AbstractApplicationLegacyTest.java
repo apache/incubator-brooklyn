@@ -34,8 +34,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 /**
  * Tests the deprecated use of AbstractAppliation, where its constructor is called directly.

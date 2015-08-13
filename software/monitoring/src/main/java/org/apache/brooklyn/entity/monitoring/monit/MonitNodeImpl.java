@@ -28,8 +28,8 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 
