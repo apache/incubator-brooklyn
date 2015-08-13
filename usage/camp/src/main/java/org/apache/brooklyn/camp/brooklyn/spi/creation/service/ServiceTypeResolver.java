@@ -20,10 +20,10 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
 import java.util.ServiceLoader;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
 import org.apache.brooklyn.catalog.CatalogItem;
-import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.EntitySpec;
 
 /**
  * Resolves and decorates {@link EntitySpec entity specifications} based on the {@code serviceType} in a template.

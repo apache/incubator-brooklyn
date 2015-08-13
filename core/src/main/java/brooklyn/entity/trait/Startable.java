@@ -20,11 +20,11 @@ package brooklyn.entity.trait;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.api.entity.Effector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
@@ -37,7 +37,7 @@ import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.Tasks;
 
 /**
- * This interface describes an {@link brooklyn.entity.Entity} that can be started and stopped.
+ * This interface describes an {@link org.apache.brooklyn.api.entity.Entity} that can be started and stopped.
  *
  * The {@link Effector}s are {@link #START}, {@link #STOP} and {@link #RESTART}. The start effector takes
  * a collection of {@link Location} objects as an argument which will cause the entity to be started or stopped in all
@@ -81,17 +81,17 @@ public interface Startable {
         }
     }
 
-    brooklyn.entity.Effector<Void> START = Effectors.effector(new MethodEffector<Void>(Startable.class, "start"))
+    org.apache.brooklyn.api.entity.Effector<Void> START = Effectors.effector(new MethodEffector<Void>(Startable.class, "start"))
         // override start to take strings etc
         .parameter(StartEffectorBody.LOCATIONS)
         .impl(new StartEffectorBody())
         .build();
     
-    brooklyn.entity.Effector<Void> STOP = Effectors.effector(new MethodEffector<Void>(Startable.class, "stop"))
+    org.apache.brooklyn.api.entity.Effector<Void> STOP = Effectors.effector(new MethodEffector<Void>(Startable.class, "stop"))
         .impl(new StopEffectorBody())
         .build();
     
-    brooklyn.entity.Effector<Void> RESTART = Effectors.effector(new MethodEffector<Void>(Startable.class, "restart"))
+    org.apache.brooklyn.api.entity.Effector<Void> RESTART = Effectors.effector(new MethodEffector<Void>(Startable.class, "restart"))
         .impl(new RestartEffectorBody())
         .build();
 

@@ -29,7 +29,7 @@ import org.codehaus.groovy.runtime.InvokerInvocationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import brooklyn.entity.Entity
+import org.apache.brooklyn.api.entity.Entity
 import brooklyn.event.AttributeSensor
 import brooklyn.test.Asserts;
 import brooklyn.util.text.StringFunctions;

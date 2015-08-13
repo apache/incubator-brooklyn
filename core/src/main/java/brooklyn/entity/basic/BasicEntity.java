@@ -18,8 +18,8 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 
 /**
  * This is the most basic entity possible - does nothing beyond AbstractEntity.

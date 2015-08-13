@@ -35,7 +35,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Jetty instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Jetty instance.
  */
 public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements Jetty6Server {
 

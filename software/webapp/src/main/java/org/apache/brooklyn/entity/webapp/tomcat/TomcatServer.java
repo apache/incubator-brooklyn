@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.entity.webapp.tomcat;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.trait.HasShortName;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 
@@ -25,8 +27,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.entity.trait.HasShortName;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -37,7 +37,7 @@ import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Tomcat instance.
  */
 @Catalog(name="Tomcat Server",
         description="Apache Tomcat is an open source software implementation of the Java Servlet and JavaServer Pages technologies",

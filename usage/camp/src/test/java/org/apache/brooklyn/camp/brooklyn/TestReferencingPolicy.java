@@ -18,8 +18,9 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.policy.basic.AbstractPolicy;
 

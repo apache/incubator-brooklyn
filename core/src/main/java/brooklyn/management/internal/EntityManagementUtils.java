@@ -30,6 +30,10 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
@@ -39,15 +43,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableList;

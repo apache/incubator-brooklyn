@@ -21,11 +21,11 @@ package org.apache.brooklyn.entity.proxy;
 import java.net.URI;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.MethodEffector;

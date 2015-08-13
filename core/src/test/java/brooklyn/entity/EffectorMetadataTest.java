@@ -23,6 +23,11 @@ import static org.testng.Assert.assertEquals;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.ParameterType;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -32,8 +37,6 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.management.internal.EffectorUtils;
@@ -140,7 +143,7 @@ public class EffectorMetadataTest extends BrooklynAppUnitTestSupport {
     
     @ImplementedBy(MyOverridingEntityImpl.class)
     public interface MyOverridingEntity extends Entity, Startable {
-        brooklyn.entity.Effector<Void> START = Effectors.effector(Startable.START)
+        org.apache.brooklyn.api.entity.Effector<Void> START = Effectors.effector(Startable.START)
             .description("My overridden start description")
             .parameter(Collection.class, "locations", "my overridden param description")
             .build();

@@ -24,8 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.drivers.EntityDriver;
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager;
+
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.drivers.EntityDriver;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;

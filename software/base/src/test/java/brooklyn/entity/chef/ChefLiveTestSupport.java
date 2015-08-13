@@ -21,13 +21,13 @@ package brooklyn.entity.chef;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.location.Location;
 import brooklyn.location.MachineProvisioningLocation;

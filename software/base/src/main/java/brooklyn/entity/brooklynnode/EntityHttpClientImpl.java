@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.net.URI;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
@@ -32,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.collections.MutableMap;

@@ -18,7 +18,8 @@
  */
 package brooklyn.entity.messaging;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 

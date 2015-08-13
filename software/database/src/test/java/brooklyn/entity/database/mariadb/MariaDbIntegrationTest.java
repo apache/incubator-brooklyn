@@ -21,6 +21,7 @@ package brooklyn.entity.database.mariadb;
 import java.io.File;
 import java.net.InetAddress;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
@@ -35,7 +36,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;

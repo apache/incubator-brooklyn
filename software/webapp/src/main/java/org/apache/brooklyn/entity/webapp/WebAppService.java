@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.webapp;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
 
 public interface WebAppService extends WebAppServiceConstants, Entity {
 }

@@ -18,7 +18,8 @@
  */
 package brooklyn.entity.group;
 
-import brooklyn.entity.Group;
+import org.apache.brooklyn.api.entity.Group;
+
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicConfigKey;

@@ -18,11 +18,12 @@
  */
 package brooklyn.entity.messaging.kafka;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
@@ -30,7 +31,7 @@ import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Kafka zookeeper instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Kafka zookeeper instance.
  */
 @ImplementedBy(KafkaZooKeeperImpl.class)
 public interface KafkaZooKeeper extends ZooKeeperNode, Kafka {

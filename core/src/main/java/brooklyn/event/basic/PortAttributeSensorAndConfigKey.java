@@ -21,12 +21,12 @@ package brooklyn.event.basic;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.event.Sensor;
 import brooklyn.internal.BrooklynInitialization;

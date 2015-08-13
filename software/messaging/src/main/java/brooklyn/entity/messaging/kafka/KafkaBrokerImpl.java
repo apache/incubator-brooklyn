@@ -23,13 +23,13 @@ import java.util.concurrent.TimeUnit;
 
 import javax.management.ObjectName;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.messaging.MessageBroker;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
@@ -39,7 +39,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Kafka broker instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Kafka broker instance.
  */
 public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroker, KafkaBroker {
 

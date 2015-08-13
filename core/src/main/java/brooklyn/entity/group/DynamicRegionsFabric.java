@@ -18,10 +18,11 @@
  */
 package brooklyn.entity.group;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.proxying.ImplementedBy;
 
 @ImplementedBy(DynamicRegionsFabricImpl.class)
 public interface DynamicRegionsFabric extends DynamicFabric {

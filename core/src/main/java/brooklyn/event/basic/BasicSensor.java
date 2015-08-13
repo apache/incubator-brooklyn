@@ -22,7 +22,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.util.guava.TypeTokens;

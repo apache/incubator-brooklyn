@@ -22,15 +22,15 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.ParameterType;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
-import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.basic.Machines;
@@ -70,7 +70,7 @@ public class EffectorTasks {
         }
         
         @Override
-        public Task<T> newTask(final Entity entity, final brooklyn.entity.Effector<T> effector, final ConfigBag parameters) {
+        public Task<T> newTask(final Entity entity, final org.apache.brooklyn.api.entity.Effector<T> effector, final ConfigBag parameters) {
             final AtomicReference<DynamicSequentialTask<T>> dst = new AtomicReference<DynamicSequentialTask<T>>();
 
             dst.set(new DynamicSequentialTask<T>(
@@ -119,7 +119,7 @@ public class EffectorTasks {
         }
         
         @Override
-        public Task<T> newTask(final Entity entity, final brooklyn.entity.Effector<T> effector, final ConfigBag parameters) {
+        public Task<T> newTask(final Entity entity, final org.apache.brooklyn.api.entity.Effector<T> effector, final ConfigBag parameters) {
             if (effectorTaskFactory instanceof EffectorBodyTaskFactory)
                 return effectorTaskFactory.newTask(entity, effector, parameters).asTask();
             // if we're in an effector context for this effector already, then also pass through

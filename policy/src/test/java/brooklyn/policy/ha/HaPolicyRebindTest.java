@@ -25,6 +25,8 @@ import static org.testng.Assert.fail;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.entity.TestApplication;
@@ -32,12 +34,10 @@ import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;

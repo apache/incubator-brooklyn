@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 
 @ImplementedBy(EmptySoftwareProcessImpl.class)
 public interface EmptySoftwareProcess extends SoftwareProcess {

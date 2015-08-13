@@ -21,12 +21,12 @@ package brooklyn.entity.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 
 import com.google.common.base.Predicates;

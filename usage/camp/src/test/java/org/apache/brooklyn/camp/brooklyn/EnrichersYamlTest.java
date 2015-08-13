@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
@@ -31,7 +32,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.Propagator;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityAdjuncts;
 import brooklyn.entity.basic.EntityInternal;

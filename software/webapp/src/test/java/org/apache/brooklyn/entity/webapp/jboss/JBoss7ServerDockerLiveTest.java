@@ -18,11 +18,11 @@
  */
 package org.apache.brooklyn.entity.webapp.jboss;
 
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.AbstractDockerLiveTest;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;

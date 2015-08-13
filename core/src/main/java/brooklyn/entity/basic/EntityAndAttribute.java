@@ -19,7 +19,10 @@
 package brooklyn.entity.basic;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import brooklyn.entity.Entity;
+
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+
 import brooklyn.event.AttributeSensor;
 
 import com.google.common.base.Objects;

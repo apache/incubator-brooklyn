@@ -20,6 +20,7 @@ package brooklyn.entity.database.mysql;
 
 import java.io.File;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -27,7 +28,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;

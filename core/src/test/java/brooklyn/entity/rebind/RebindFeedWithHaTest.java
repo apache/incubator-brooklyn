@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.api.entity.Feed;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -37,8 +39,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Feed;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.http.BetterMockWebServer;

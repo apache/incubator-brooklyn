@@ -20,7 +20,9 @@ package org.apache.brooklyn.entity.nosql.couchbase;
 
 import java.net.URI;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.annotation.Effector;
@@ -30,7 +32,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
@@ -134,7 +135,7 @@ public interface CouchbaseNode extends SoftwareProcess {
     MethodEffector<Void> SERVER_ADD_AND_REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "serverAddAndRebalance");
     MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
     MethodEffector<Void> BUCKET_CREATE = new MethodEffector<Void>(CouchbaseNode.class, "bucketCreate");
-    brooklyn.entity.Effector<Void> ADD_REPLICATION_RULE = Effectors.effector(Void.class, "addReplicationRule")
+    org.apache.brooklyn.api.entity.Effector<Void> ADD_REPLICATION_RULE = Effectors.effector(Void.class, "addReplicationRule")
         .description("Adds a replication rule from the indicated bucket on the cluster where this node is located "
             + "to the indicated cluster and optional destination bucket")
         .parameter(String.class, "fromBucket", "Bucket to be replicated")

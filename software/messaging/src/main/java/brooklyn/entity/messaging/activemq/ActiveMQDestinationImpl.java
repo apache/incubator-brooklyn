@@ -21,10 +21,11 @@ package brooklyn.entity.messaging.activemq;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+
 import com.google.common.base.Preconditions;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.messaging.jms.JMSDestinationImpl;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;

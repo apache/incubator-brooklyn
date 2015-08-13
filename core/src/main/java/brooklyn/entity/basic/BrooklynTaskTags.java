@@ -28,6 +28,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.ExecutionManager;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.management.entitlement.EntitlementContext;
@@ -35,8 +37,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.MemoryUsageTracker;

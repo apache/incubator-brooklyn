@@ -31,6 +31,9 @@ import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.AccessController;
 import org.apache.brooklyn.management.ExecutionContext;
 import org.apache.brooklyn.management.ExecutionManager;
@@ -43,9 +46,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynProperties.Factory.Builder;
-import brooklyn.entity.Application;
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
 import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.InternalEntityFactory;

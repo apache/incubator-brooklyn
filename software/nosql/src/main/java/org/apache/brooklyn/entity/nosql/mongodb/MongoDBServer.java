@@ -19,11 +19,11 @@
 package org.apache.brooklyn.entity.nosql.mongodb;
 
 import org.bson.BasicBSONObject;
-
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.AttributeSensor.SensorPersistenceMode;
 import brooklyn.event.basic.BasicConfigKey;

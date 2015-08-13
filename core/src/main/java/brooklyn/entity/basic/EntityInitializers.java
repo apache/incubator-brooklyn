@@ -20,7 +20,8 @@ package brooklyn.entity.basic;
 
 import java.util.List;
 
-import brooklyn.entity.proxying.EntityInitializer;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
 
 import com.google.common.collect.ImmutableList;
 

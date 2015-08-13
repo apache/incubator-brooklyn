@@ -18,9 +18,8 @@
  */
 package brooklyn.entity.service;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.policy.Enricher;
-
-import brooklyn.entity.Entity;
 
 public class SystemServiceInstallerFactory {
     public static SystemServiceInstaller of(Entity entity, Enricher systemServiceEnricher) {

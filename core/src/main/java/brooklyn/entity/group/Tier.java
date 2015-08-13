@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.group;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
 
 /**
  * Intended to represent a "layer" of an application; this could be within a single location

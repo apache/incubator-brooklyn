@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.AbstractEntity;

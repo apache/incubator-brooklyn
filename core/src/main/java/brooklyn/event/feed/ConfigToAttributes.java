@@ -18,9 +18,9 @@
  */
 package brooklyn.event.feed;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.management.ManagementContext;
 
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;

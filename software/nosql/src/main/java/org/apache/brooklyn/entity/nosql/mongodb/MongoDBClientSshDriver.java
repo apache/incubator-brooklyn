@@ -23,11 +23,11 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment;
+
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.basic.SshMachineLocation;

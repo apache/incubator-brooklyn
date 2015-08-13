@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
 import org.apache.brooklyn.entity.proxy.AbstractController;
 import org.apache.brooklyn.management.ManagementContext;
 import org.slf4j.Logger;
@@ -34,7 +35,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;

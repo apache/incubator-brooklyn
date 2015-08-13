@@ -23,14 +23,14 @@ import static org.testng.Assert.fail;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.basic.SimulatedLocation;
 

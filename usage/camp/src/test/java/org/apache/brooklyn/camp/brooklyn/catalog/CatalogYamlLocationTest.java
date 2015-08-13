@@ -26,18 +26,21 @@ import java.util.List;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
+
 import brooklyn.catalog.CatalogPredicates;
-import brooklyn.entity.Entity;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.LocationSpec;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.osgi.OsgiStandaloneTest;
+
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+
 import brooklyn.util.text.StringFunctions;
 
 import com.google.common.collect.ImmutableList;

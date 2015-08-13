@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.mementos.LocationMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

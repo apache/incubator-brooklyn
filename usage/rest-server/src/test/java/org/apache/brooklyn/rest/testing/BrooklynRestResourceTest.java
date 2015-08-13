@@ -35,11 +35,13 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
-import brooklyn.entity.Application;
 import brooklyn.entity.basic.Entities;
+
+import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.Status;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;

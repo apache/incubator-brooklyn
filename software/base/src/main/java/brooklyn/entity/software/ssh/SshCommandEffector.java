@@ -20,9 +20,10 @@ package brooklyn.entity.software.ssh;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.ParameterType;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
-import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.AddEffector;

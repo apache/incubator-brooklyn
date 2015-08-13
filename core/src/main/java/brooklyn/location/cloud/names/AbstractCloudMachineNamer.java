@@ -18,8 +18,9 @@
  */
 package brooklyn.location.cloud.names;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.trait.HasShortName;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.trait.HasShortName;
+
 import brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Identifiers;

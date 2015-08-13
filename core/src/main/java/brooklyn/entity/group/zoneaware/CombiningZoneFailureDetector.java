@@ -20,7 +20,8 @@ package brooklyn.entity.group.zoneaware;
 
 import java.util.List;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.entity.group.DynamicCluster.ZoneFailureDetector;
 import brooklyn.location.Location;
 

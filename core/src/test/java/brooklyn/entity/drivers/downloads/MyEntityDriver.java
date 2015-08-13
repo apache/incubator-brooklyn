@@ -18,9 +18,10 @@
  */
 package brooklyn.entity.drivers.downloads;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.drivers.EntityDriver;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.drivers.EntityDriver;
+
 import brooklyn.location.Location;
 
 public class MyEntityDriver implements EntityDriver {

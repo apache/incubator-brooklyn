@@ -18,12 +18,12 @@
  */
 package brooklyn.event.basic;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.ManagementContext;
 
 import com.google.common.reflect.TypeToken;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.event.Sensor;
 
 /**

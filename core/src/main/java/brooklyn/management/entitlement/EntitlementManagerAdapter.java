@@ -18,6 +18,7 @@
  */
 package brooklyn.management.entitlement;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.entitlement.EntitlementClass;
 import org.apache.brooklyn.management.entitlement.EntitlementContext;
 import org.apache.brooklyn.management.entitlement.EntitlementManager;
@@ -26,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
 
-import brooklyn.entity.Entity;
 import brooklyn.management.entitlement.Entitlements.EntitlementClassesHandler;
 import brooklyn.management.entitlement.Entitlements.EntityAndItem;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;

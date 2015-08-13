@@ -23,12 +23,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.trait.Identifiable;
 import org.apache.brooklyn.management.ManagementContext;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
-import brooklyn.entity.trait.Identifiable;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.flags.TypeCoercions;

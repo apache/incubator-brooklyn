@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.demo;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.nosql.couchdb.CouchDBCluster;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.proxying.EntitySpec;
 
 /** CouchDB cluster. */
 public class SimpleCouchDBCluster extends ApplicationBuilder {

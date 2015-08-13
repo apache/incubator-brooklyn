@@ -22,12 +22,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.catalog.CatalogItem;
+
 import brooklyn.catalog.internal.CatalogTestUtils;
-import brooklyn.entity.Entity;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;

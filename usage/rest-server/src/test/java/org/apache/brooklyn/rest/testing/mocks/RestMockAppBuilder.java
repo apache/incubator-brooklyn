@@ -18,10 +18,11 @@
  */
 package org.apache.brooklyn.rest.testing.mocks;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.util.javalang.Reflections;
 
 public class RestMockAppBuilder extends ApplicationBuilder {

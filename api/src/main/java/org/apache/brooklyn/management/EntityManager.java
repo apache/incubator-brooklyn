@@ -23,15 +23,14 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.proxying.EntityTypeRegistry;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;
-
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntityTypeRegistry;
 
 import com.google.common.base.Predicate;
 

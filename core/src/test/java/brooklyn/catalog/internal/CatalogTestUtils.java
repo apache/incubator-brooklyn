@@ -18,11 +18,10 @@
  */
 package brooklyn.catalog.internal;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
-
-import brooklyn.entity.proxying.EntitySpec;
 
 import com.google.common.annotations.Beta;
 

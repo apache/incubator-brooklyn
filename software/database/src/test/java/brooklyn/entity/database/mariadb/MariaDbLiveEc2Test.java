@@ -18,12 +18,12 @@
  */
 package brooklyn.entity.database.mariadb;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.jclouds.JcloudsLocation;
 

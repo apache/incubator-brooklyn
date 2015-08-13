@@ -20,8 +20,9 @@ package brooklyn.location.cloud.names;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.location.cloud.CloudLocationConfig;

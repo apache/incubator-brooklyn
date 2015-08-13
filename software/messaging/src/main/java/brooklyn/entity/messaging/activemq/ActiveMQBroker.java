@@ -18,7 +18,9 @@
  */
 package brooklyn.entity.messaging.activemq;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
@@ -26,7 +28,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.jms.JMSBroker;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
@@ -35,7 +36,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.time.Duration;
 /**
- * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single ActiveMQ broker instance.
  */
 @Catalog(name="ActiveMQ Broker", description="ActiveMQ is an open source message broker which fully implements the Java Message Service 1.1 (JMS)", iconUrl="classpath:///activemq-logo.png")
 @ImplementedBy(ActiveMQBrokerImpl.class)

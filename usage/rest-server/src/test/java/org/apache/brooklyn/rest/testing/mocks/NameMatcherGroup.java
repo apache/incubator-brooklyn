@@ -18,10 +18,11 @@
  */
 package org.apache.brooklyn.rest.testing.mocks;
 
+import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Group;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.proxying.ImplementedBy;
 
 @ImplementedBy(NameMatcherGroupImpl.class)
 public interface NameMatcherGroup extends Group {

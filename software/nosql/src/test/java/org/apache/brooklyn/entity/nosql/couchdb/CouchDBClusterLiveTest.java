@@ -20,6 +20,7 @@ package org.apache.brooklyn.entity.nosql.couchdb;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.nosql.couchdb.CouchDBCluster;
 import org.apache.brooklyn.entity.nosql.couchdb.CouchDBNode;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -30,7 +31,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 

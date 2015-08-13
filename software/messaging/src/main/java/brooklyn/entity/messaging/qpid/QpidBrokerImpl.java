@@ -27,13 +27,13 @@ import java.util.concurrent.TimeUnit;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JmxSupport;
 import brooklyn.entity.messaging.jms.JMSBrokerImpl;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
@@ -44,7 +44,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Qpid broker instance, using AMQP 0-10.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Qpid broker instance, using AMQP 0-10.
  */
 public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implements QpidBroker {
     private static final Logger log = LoggerFactory.getLogger(QpidBrokerImpl.class);

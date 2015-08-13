@@ -20,16 +20,16 @@ package brooklyn.entity.software.mysql;
 
 import java.io.File;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicStartable;
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntityInitializer;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.location.MachineLocation;

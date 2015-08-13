@@ -18,10 +18,11 @@
  */
 package brooklyn.location.dynamic;
 
+import org.apache.brooklyn.api.entity.Entity;
+
 import com.google.common.annotations.Beta;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.location.Location;
 import brooklyn.util.flags.SetFromFlag;

@@ -20,8 +20,9 @@ package brooklyn.entity.effector;
 
 import java.util.List;
 
-import brooklyn.entity.Effector;
-import brooklyn.entity.ParameterType;
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.ParameterType;
+
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 
 import com.google.common.annotations.Beta;

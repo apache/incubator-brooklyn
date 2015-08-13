@@ -21,6 +21,8 @@ package org.apache.brooklyn.camp.brooklyn;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.Task;
@@ -32,10 +34,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.trait.Configurable;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;

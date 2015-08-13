@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,6 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.trait.Configurable;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

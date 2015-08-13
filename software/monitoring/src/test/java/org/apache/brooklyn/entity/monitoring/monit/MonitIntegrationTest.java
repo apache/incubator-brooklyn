@@ -28,6 +28,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.MachineDetails;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;

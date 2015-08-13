@@ -18,11 +18,11 @@
  */
 package brooklyn.policy.loadbalancing;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.Group;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.event.Sensor;

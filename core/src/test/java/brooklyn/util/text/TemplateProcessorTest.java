@@ -20,6 +20,7 @@ package brooklyn.util.text;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.Assert;
@@ -28,7 +29,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.FixedLocaleTest;

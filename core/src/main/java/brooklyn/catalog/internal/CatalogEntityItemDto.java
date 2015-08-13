@@ -18,8 +18,8 @@
  */
 package brooklyn.catalog.internal;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 
 
 public class CatalogEntityItemDto extends CatalogItemDtoAbstract<Entity,EntitySpec<?>> {

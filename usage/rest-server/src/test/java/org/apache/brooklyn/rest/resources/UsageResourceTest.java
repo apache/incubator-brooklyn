@@ -241,7 +241,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     public void testListAndGetMachineUsage() throws Exception {
         Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
         TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, getManagementContext());
-        SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(brooklyn.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
+        SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(org.apache.brooklyn.api.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
         
         Calendar preStart = new GregorianCalendar();
         app.start(ImmutableList.of(location));
@@ -267,7 +267,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     public void testListMachinesUsageForApp() throws Exception {
         Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
         TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, getManagementContext());
-        SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(brooklyn.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
+        SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(org.apache.brooklyn.api.entity.proxying.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
         String appId = app.getId();
         
         Calendar preStart = new GregorianCalendar();

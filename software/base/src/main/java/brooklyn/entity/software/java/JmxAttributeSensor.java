@@ -23,13 +23,13 @@ import java.util.concurrent.Callable;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.AddSensor;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.software.http.HttpRequestSensor;
@@ -48,7 +48,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 
 /**
- * Configurable {@link brooklyn.entity.proxying.EntityInitializer} which adds a JMX sensor feed to retrieve an
+ * Configurable {@link org.apache.brooklyn.api.entity.proxying.EntityInitializer} which adds a JMX sensor feed to retrieve an
  * <code>attribute</code> from a JMX <code>objectName</code>.
  *
  * @see SshCommandSensor

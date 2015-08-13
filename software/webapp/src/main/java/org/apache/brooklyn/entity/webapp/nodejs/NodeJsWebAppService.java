@@ -20,6 +20,7 @@ package org.apache.brooklyn.entity.webapp.nodejs;
 
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 
@@ -27,7 +28,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;

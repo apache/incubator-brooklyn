@@ -25,12 +25,12 @@ import static org.testng.Assert.assertTrue;
 import java.io.StringReader;
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.FixedListMachineProvisioningLocation;

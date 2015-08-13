@@ -35,7 +35,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Apache ZooKeeper instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Apache ZooKeeper instance.
  */
 public abstract class AbstractZooKeeperImpl extends SoftwareProcessImpl implements ZooKeeperNode {
 

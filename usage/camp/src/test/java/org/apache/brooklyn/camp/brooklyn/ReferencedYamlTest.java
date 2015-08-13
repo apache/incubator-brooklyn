@@ -20,11 +20,11 @@ package org.apache.brooklyn.camp.brooklyn;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.management.osgi.OsgiStandaloneTest;

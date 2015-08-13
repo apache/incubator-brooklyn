@@ -23,10 +23,10 @@ import java.net.InetAddress;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.location.AddressableLocation;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;

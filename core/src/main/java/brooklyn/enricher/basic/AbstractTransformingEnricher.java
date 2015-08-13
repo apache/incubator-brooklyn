@@ -18,7 +18,8 @@
  */
 package brooklyn.enricher.basic;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.event.Sensor;
 
 /**

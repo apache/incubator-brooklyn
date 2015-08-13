@@ -18,8 +18,9 @@
  */
 package brooklyn.entity.basic;
 
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.enricher.Enrichers;
-import brooklyn.entity.Entity;
 
 import com.google.common.base.Preconditions;
 

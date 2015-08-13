@@ -22,9 +22,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.rebind.RebindSupport;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
-import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 
 /**

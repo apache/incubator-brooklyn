@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
 
 /** 
  * This class manages the execution of a number of jobs with tags.

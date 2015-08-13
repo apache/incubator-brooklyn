@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.basic;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -26,9 +28,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigMapTest.MyOtherEntity;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
 

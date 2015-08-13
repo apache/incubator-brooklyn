@@ -23,8 +23,8 @@ import groovy.lang.Closure;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.ParameterType;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.ParameterType;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

@@ -20,16 +20,16 @@ package org.apache.brooklyn.camp.brooklyn;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
 import org.testng.Assert;
 
 import com.google.common.base.Preconditions;
 
-import brooklyn.entity.Effector;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.config.ConfigBag;

@@ -25,6 +25,8 @@ import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -32,10 +34,8 @@ import org.eclipse.jetty.server.Server;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.rebind.RebindTestUtils;
 
 import org.apache.brooklyn.management.EntityManager;

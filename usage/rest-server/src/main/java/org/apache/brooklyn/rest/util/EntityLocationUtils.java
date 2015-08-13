@@ -21,9 +21,9 @@ package org.apache.brooklyn.rest.util;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.ManagementContext;
 
-import brooklyn.entity.Entity;
 import brooklyn.location.Location;
 import brooklyn.location.basic.LocationConfigKeys;
 

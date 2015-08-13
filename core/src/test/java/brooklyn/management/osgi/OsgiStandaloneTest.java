@@ -26,8 +26,11 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarInputStream;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+
 import brooklyn.util.exceptions.Exceptions;
+
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -40,7 +43,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.maven.MavenArtifact;

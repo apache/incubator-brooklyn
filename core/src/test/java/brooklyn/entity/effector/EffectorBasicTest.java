@@ -21,6 +21,8 @@ package brooklyn.entity.effector;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.management.HasTaskChildren;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.test.TestUtils;
@@ -33,8 +35,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.FailingEntity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.basic.SimulatedLocation;

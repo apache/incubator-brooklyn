@@ -50,6 +50,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.AccessController;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
 import org.jclouds.cloudstack.compute.options.CloudStackTemplateOptions;
@@ -117,7 +118,6 @@ import com.google.common.primitives.Ints;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.entity.rebind.persister.LocationWithObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;

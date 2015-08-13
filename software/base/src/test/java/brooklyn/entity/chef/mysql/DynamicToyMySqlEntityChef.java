@@ -18,14 +18,14 @@
  */
 package brooklyn.entity.chef.mysql;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefConfigs;
 import brooklyn.entity.chef.ChefEntity;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.util.collections.MutableMap;
 
 /** Builds up a MySql entity via chef using specs only */

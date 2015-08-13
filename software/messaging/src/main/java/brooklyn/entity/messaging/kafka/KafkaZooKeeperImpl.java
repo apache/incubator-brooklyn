@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.zookeeper.AbstractZooKeeperImpl;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Kafka zookeeper instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Kafka zookeeper instance.
  */
 public class KafkaZooKeeperImpl extends AbstractZooKeeperImpl implements KafkaZooKeeper {
 

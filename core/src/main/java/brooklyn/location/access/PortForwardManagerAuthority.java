@@ -19,7 +19,8 @@
 package brooklyn.location.access;
 
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.entity.basic.EntityInternal;
 
 /**

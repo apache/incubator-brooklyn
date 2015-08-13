@@ -26,10 +26,12 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntityTypeRegistry;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.BiMap;
@@ -104,7 +106,7 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
     }
 
     private <T extends Entity> Class<? extends T> getFromAnnotation(Class<T> type) {
-        ImplementedBy annotation = type.getAnnotation(brooklyn.entity.proxying.ImplementedBy.class);
+        ImplementedBy annotation = type.getAnnotation(org.apache.brooklyn.api.entity.proxying.ImplementedBy.class);
         if (annotation == null) 
             return null;
         Class<? extends Entity> value = annotation.value();
@@ -126,7 +128,7 @@ public class BasicEntityTypeRegistry implements EntityTypeRegistry {
             visited.add(contender);
             
             if (contender.isInterface()) {
-                ImplementedBy annotation = contender.getAnnotation(brooklyn.entity.proxying.ImplementedBy.class);
+                ImplementedBy annotation = contender.getAnnotation(org.apache.brooklyn.api.entity.proxying.ImplementedBy.class);
                 Class<? extends Entity> value = (annotation == null) ? null : annotation.value();
                 if (implClazz.equals(value)) return (Class<? super T>) contender;
             }

@@ -20,6 +20,7 @@ package org.apache.brooklyn.entity.nosql.cassandra;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
 import org.apache.brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -28,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
 

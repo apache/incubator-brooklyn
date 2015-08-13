@@ -20,9 +20,9 @@ package brooklyn.policy.autoscaling;
 
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.test.entity.TestCluster;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;

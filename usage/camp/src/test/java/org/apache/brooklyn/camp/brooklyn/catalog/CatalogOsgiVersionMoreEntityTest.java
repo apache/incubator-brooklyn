@@ -27,6 +27,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.basic.BrooklynTypes;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
@@ -34,8 +36,6 @@ import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.LocationSpec;
 import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
 

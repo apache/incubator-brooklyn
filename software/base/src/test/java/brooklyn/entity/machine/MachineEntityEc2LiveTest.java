@@ -21,12 +21,12 @@ package brooklyn.entity.machine;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 

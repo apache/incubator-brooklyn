@@ -18,8 +18,9 @@
  */
 package brooklyn.entity.basic;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.proxying.ImplementedBy;
 
 @ImplementedBy(DoNothingSoftwareProcessImpl.class)
 public interface DoNothingSoftwareProcess extends SoftwareProcess {

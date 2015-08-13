@@ -21,14 +21,15 @@ package brooklyn.entity.effector;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.ParameterType;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
-import brooklyn.entity.ParameterType;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.Effectors.EffectorBuilder;
-import brooklyn.entity.proxying.EntityInitializer;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;

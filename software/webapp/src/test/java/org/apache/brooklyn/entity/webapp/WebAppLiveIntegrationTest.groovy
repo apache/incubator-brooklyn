@@ -34,7 +34,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import brooklyn.config.BrooklynProperties
-import brooklyn.entity.Application
+import org.apache.brooklyn.api.entity.Application
 import brooklyn.entity.basic.SoftwareProcess
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.trait.Startable

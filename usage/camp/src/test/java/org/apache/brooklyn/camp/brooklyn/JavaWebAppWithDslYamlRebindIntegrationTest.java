@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.Reader;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.Task;
 import org.slf4j.Logger;
@@ -33,7 +34,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Application;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindTestUtils;

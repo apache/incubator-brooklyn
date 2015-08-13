@@ -18,10 +18,11 @@
  */
 package org.apache.brooklyn.entity.nosql.redis;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
-import brooklyn.entity.Entity;
+
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.trait.Startable;
 
 /**

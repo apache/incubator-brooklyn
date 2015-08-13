@@ -21,9 +21,10 @@ package brooklyn.location.access;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;

@@ -18,7 +18,8 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.entity.Application;
+import org.apache.brooklyn.api.entity.Application;
+
 import brooklyn.entity.trait.Startable;
 
 public interface StartableApplication extends Application, Startable {

@@ -26,8 +26,10 @@ import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
+
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment;
-import brooklyn.entity.proxying.ImplementedBy;
+
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.reflect.TypeToken;

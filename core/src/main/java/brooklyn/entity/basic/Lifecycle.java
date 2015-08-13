@@ -33,7 +33,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 /**
- * An enumeration representing the status of an {@link brooklyn.entity.Entity}.
+ * An enumeration representing the status of an {@link org.apache.brooklyn.api.entity.Entity}.
  */
 public enum Lifecycle {
     /**

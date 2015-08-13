@@ -21,10 +21,10 @@ package brooklyn.policy.loadbalancing;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 

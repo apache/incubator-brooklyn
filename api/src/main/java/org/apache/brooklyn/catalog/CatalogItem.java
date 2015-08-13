@@ -23,10 +23,9 @@ import java.util.Collection;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.entity.rebind.RebindSupport;
+import org.apache.brooklyn.api.entity.rebind.Rebindable;
 import org.apache.brooklyn.mementos.CatalogItemMemento;
-
-import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.entity.rebind.Rebindable;
 
 import com.google.common.annotations.Beta;
 

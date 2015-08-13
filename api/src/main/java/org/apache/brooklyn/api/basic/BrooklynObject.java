@@ -22,8 +22,8 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import brooklyn.entity.trait.Configurable;
-import brooklyn.entity.trait.Identifiable;
+import org.apache.brooklyn.api.entity.trait.Configurable;
+import org.apache.brooklyn.api.entity.trait.Identifiable;
 
 import com.google.common.collect.ImmutableMap;
 

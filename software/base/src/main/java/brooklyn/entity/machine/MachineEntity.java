@@ -18,12 +18,13 @@
  */
 package brooklyn.entity.machine;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.util.time.Duration;
 

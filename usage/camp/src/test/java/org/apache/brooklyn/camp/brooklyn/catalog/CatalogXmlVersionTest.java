@@ -20,10 +20,9 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.Entity;
 
 public class CatalogXmlVersionTest extends AbstractCatalogXmlTest {
 

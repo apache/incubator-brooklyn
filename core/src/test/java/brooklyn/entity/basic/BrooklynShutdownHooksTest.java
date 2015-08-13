@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.entity.BlockingEntity;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
@@ -31,7 +32,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BrooklynShutdownHooks.BrooklynShutdownHookJob;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.util.time.Duration;
 
 public class BrooklynShutdownHooksTest extends BrooklynAppUnitTestSupport {

@@ -27,10 +27,11 @@ import java.util.Map;
 
 import com.google.common.base.Strings;
 import com.google.common.net.HostAndPort;
+
+import org.apache.brooklyn.api.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.Jsonya;

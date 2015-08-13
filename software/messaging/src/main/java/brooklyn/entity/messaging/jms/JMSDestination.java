@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.messaging.jms;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
 
 public interface JMSDestination extends Entity {
     public String getName();

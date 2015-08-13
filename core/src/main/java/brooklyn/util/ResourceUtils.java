@@ -192,7 +192,7 @@ public class ResourceUtils {
     }
     
     /** This should not be exposed as it risks it leaking into places where it would be serialized.
-     * Better for callers use {@link CatalogUtils#getClassLoadingContext(brooklyn.entity.Entity)} or similar. }.
+     * Better for callers use {@link CatalogUtils#getClassLoadingContext(org.apache.brooklyn.api.entity.Entity)} or similar. }.
      */
     private BrooklynClassLoadingContext getLoader() {
         return (loader!=null ? loader : getClassLoadingContextInternal(null, contextObject!=null ? contextObject : this));

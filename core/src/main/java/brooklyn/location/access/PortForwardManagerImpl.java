@@ -29,13 +29,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.api.entity.rebind.RebindContext;
+import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.mementos.LocationMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
-import brooklyn.entity.rebind.RebindContext;
-import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.location.Location;
 import brooklyn.location.basic.AbstractLocation;
 import brooklyn.util.collections.MutableMap;

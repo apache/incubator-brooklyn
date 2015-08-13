@@ -18,11 +18,11 @@
  */
 package brooklyn.entity.brooklynnode.effector;
 
+import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.http.HttpStatus;
 
-import brooklyn.entity.Effector;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityModeEffector;
 import brooklyn.entity.brooklynnode.EntityHttpClient;

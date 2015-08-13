@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.messaging.activemq;
 
-import brooklyn.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 
 public class ActiveMQSpecs {
 

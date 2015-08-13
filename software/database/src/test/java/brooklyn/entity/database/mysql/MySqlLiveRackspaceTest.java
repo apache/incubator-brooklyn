@@ -20,12 +20,12 @@ package brooklyn.entity.database.mysql;
 
 import java.util.Arrays;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.util.net.Protocol;

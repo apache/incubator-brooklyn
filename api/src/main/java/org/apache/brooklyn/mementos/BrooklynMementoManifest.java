@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.entity.trait.Identifiable;
+import org.apache.brooklyn.api.entity.trait.Identifiable;
 
 /**
  * Represents a manifest of the entities etc in the overall memento.

@@ -18,7 +18,8 @@
  */
 package brooklyn.entity.effector;
 
-import brooklyn.entity.Effector;
+import org.apache.brooklyn.api.entity.Effector;
+
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 
 import com.google.common.annotations.Beta;

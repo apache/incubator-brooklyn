@@ -20,9 +20,10 @@ package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
 import java.util.Collection;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 import brooklyn.location.access.BrooklynAccessUtils;
 

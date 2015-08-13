@@ -25,6 +25,11 @@ import java.io.File;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
+import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
+import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
+import org.apache.brooklyn.api.entity.rebind.RebindManager.RebindFailureMode;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
@@ -36,12 +41,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
-import brooklyn.entity.rebind.BrooklynObjectType;
-import brooklyn.entity.rebind.PersistenceExceptionHandler;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
-import brooklyn.entity.rebind.RebindExceptionHandler;
-import brooklyn.entity.rebind.RebindManager.RebindFailureMode;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.rebind.RebindTestUtils;

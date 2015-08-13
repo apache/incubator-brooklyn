@@ -18,7 +18,8 @@
  */
 package org.apache.brooklyn.entity.nosql.couchbase;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.entity.basic.SoftwareProcessDriver;
 
 public interface CouchbaseNodeDriver extends SoftwareProcessDriver {

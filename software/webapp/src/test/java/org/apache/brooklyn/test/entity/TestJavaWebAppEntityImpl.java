@@ -20,9 +20,9 @@ package org.apache.brooklyn.test.entity;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.java.VanillaJavaAppImpl;
 import brooklyn.util.flags.SetFromFlag;
 

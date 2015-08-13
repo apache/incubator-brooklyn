@@ -18,11 +18,11 @@
  */
 package brooklyn.policy.basic;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.policy.Policy;
 
 import groovy.lang.Closure;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;

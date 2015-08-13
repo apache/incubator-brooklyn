@@ -29,6 +29,9 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.rebind.RebindManager;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.management.ha.HighAvailabilityManager;
 import org.apache.brooklyn.management.ha.HighAvailabilityMode;
@@ -46,12 +49,9 @@ import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.rebind.RebindManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils.CreateBackupMode;
@@ -102,7 +102,7 @@ import com.google.common.collect.Iterables;
  * Promotion to master involves:
  * <ol>
  *   <li>notifying the other management-nodes that it is now master
- *   <li>calling {@link RebindManager#rebind(ClassLoader, brooklyn.entity.rebind.RebindExceptionHandler, ManagementNodeState)} to read all persisted entity state, and thus reconstitute the entities.
+ *   <li>calling {@link RebindManager#rebind(ClassLoader, org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler, ManagementNodeState)} to read all persisted entity state, and thus reconstitute the entities.
  * </ol>
  * <p>
  * Future improvements in this area will include brooklyn-managing-brooklyn to decide + promote

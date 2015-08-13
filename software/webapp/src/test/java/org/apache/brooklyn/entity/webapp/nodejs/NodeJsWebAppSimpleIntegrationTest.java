@@ -24,6 +24,7 @@ import static org.testng.Assert.fail;
 import java.net.ServerSocket;
 import java.util.Iterator;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService;
 import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppServiceImpl;
 import org.jclouds.util.Throwables2;
@@ -31,7 +32,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.PortRange;
 import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.location.basic.PortRanges;

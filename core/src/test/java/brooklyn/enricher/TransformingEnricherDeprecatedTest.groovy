@@ -30,7 +30,7 @@ import org.testng.annotations.Test
 import brooklyn.enricher.basic.SensorTransformingEnricher
 import brooklyn.entity.basic.ApplicationBuilder
 import brooklyn.entity.basic.Entities
-import brooklyn.entity.proxying.EntitySpec
+import org.apache.brooklyn.api.entity.proxying.EntitySpec
 import brooklyn.event.AttributeSensor
 import brooklyn.event.basic.BasicAttributeSensor
 import brooklyn.location.basic.SimulatedLocation

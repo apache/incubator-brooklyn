@@ -26,6 +26,10 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.EnricherSpec.ExtensibleEnricherSpec;
@@ -40,9 +44,6 @@ import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.enricher.basic.AbstractMultipleSensorAggregator;
 import brooklyn.enricher.basic.UpdatingMap;
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;

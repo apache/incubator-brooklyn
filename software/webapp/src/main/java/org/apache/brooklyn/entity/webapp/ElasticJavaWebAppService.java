@@ -20,11 +20,12 @@ package org.apache.brooklyn.entity.webapp;
 
 import java.util.Map;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+
 import brooklyn.entity.basic.AbstractConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.MachineProvisioningLocation;

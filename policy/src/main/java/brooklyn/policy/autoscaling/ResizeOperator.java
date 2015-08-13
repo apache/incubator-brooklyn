@@ -18,7 +18,7 @@
  */
 package brooklyn.policy.autoscaling;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
 
 public interface ResizeOperator {
 

@@ -60,10 +60,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.java.JmxSupport;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.util.crypto.SecureKeys;

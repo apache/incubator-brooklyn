@@ -21,12 +21,12 @@ package brooklyn.basic;
 import java.util.Map;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.entity.rebind.RebindSupport;
+import org.apache.brooklyn.api.entity.rebind.Rebindable;
+import org.apache.brooklyn.api.entity.trait.Configurable;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.entity.rebind.Rebindable;
-import brooklyn.entity.trait.Configurable;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 

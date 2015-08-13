@@ -18,10 +18,10 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.entity.Entity;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.brooklyn.api.entity.Entity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

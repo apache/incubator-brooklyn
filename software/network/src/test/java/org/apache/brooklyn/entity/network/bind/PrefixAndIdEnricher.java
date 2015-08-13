@@ -18,12 +18,13 @@
  */
 package org.apache.brooklyn.entity.network.bind;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+
 import com.google.common.reflect.TypeToken;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;

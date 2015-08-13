@@ -23,7 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.management.internal.ManagementContextInternal;
 

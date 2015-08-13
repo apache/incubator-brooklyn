@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 
 /**
  * The most basic implementation of an application possible.

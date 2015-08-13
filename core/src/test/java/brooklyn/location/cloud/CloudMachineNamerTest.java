@@ -21,6 +21,7 @@ package brooklyn.location.cloud;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -32,7 +33,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.cloud.names.AbstractCloudMachineNamer;
 import brooklyn.location.cloud.names.BasicCloudMachineNamer;
 import brooklyn.location.cloud.names.CloudMachineNamer;

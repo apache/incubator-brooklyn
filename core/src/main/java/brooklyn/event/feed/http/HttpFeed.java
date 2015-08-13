@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
@@ -37,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
@@ -94,7 +94,7 @@ import com.google.common.reflect.TypeToken;
  * <p>
  *  
  * This also supports giving a Supplier for the URL 
- * (e.g. {@link Entities#attributeSupplier(brooklyn.entity.Entity, brooklyn.event.AttributeSensor)})
+ * (e.g. {@link Entities#attributeSupplier(org.apache.brooklyn.api.entity.Entity, brooklyn.event.AttributeSensor)})
  * from a sensor.  Note however that if a Supplier-based sensor is *https*,
  * https-specific initialization may not occur if the URL is not available at start time,
  * and it may report errors if that sensor is not available.

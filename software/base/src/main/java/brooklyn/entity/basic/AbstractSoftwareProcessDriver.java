@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -483,7 +484,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     }
 
     /**
-     * @deprecated since 0.5.0; instead rely on {@link brooklyn.entity.drivers.downloads.DownloadResolverManager} to include local-repo, such as:
+     * @deprecated since 0.5.0; instead rely on {@link org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager} to include local-repo, such as:
      *
      * <pre>
      * {@code
@@ -497,7 +498,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     }
 
     /**
-     * @deprecated since 0.5.0; instead rely on {@link brooklyn.entity.drivers.downloads.DownloadResolverManager} to include local-repo
+     * @deprecated since 0.5.0; instead rely on {@link org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager} to include local-repo
      */
     protected String getEntityVersionLabel(String separator) {
         return elvis(entity.getEntityType().getSimpleName(),

@@ -20,6 +20,7 @@ package brooklyn.enricher.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.management.SubscriptionContext;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.testng.annotations.AfterMethod;
@@ -29,7 +30,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicSensorEvent;

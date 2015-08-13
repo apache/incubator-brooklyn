@@ -46,9 +46,9 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.drivers.BasicEntityDriverManager;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactory;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.management.EntityManager;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.rest.resources.ServerResourceTest.StopLatchEntity;

@@ -21,12 +21,12 @@ package org.apache.brooklyn.camp.brooklyn;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
 import brooklyn.location.Location;

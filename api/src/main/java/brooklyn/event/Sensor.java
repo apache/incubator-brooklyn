@@ -21,9 +21,9 @@ package brooklyn.event;
 import java.io.Serializable;
 import java.util.List;
 
-import com.google.common.reflect.TypeToken;
+import org.apache.brooklyn.api.entity.Entity;
 
-import brooklyn.entity.Entity;
+import com.google.common.reflect.TypeToken;
 
 /**
  * The interface implemented by concrete sensors.

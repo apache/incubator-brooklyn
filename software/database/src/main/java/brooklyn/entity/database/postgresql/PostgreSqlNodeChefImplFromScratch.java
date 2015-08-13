@@ -18,11 +18,11 @@
  */
 package brooklyn.entity.database.postgresql;
 
+import org.apache.brooklyn.api.entity.Effector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EffectorStartableImpl;
 import brooklyn.entity.basic.Entities;

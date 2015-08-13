@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.catalog.CatalogConfig;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
@@ -40,9 +40,10 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.group.DynamicRegionsFabric;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+
 import org.apache.brooklyn.launcher.BrooklynLauncher;
+
 import brooklyn.location.basic.PortRanges;
 import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.CommandLineUtil;

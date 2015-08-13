@@ -21,12 +21,12 @@ package brooklyn.entity.brooklynnode;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.enricher.Enrichers;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.ServiceStateLogic;

@@ -21,13 +21,13 @@ package brooklyn.entity.messaging.activemq;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.messaging.jms.JMSBrokerImpl;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 
@@ -35,7 +35,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Predicates;
 /**
- * An {@link brooklyn.entity.Entity} that represents a single ActiveMQ broker instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single ActiveMQ broker instance.
  */
 public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTopic> implements ActiveMQBroker {
     private static final Logger log = LoggerFactory.getLogger(ActiveMQBrokerImpl.class);

@@ -23,6 +23,7 @@ import static brooklyn.entity.messaging.storm.Storm.Role.NIMBUS;
 import static brooklyn.entity.messaging.storm.Storm.Role.SUPERVISOR;
 import static brooklyn.entity.messaging.storm.Storm.Role.UI;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,6 @@ import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicStartableImpl;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 import brooklyn.util.ResourceUtils;
 

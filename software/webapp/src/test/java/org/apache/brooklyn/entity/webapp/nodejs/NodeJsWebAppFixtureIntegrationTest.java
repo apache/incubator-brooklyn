@@ -18,11 +18,8 @@
  */
 package org.apache.brooklyn.entity.webapp.nodejs;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessDriver;
-import brooklyn.entity.drivers.DriverDependentEntity;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.basic.PortRanges;
@@ -33,6 +30,9 @@ import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService;
 import org.apache.brooklyn.management.ManagementContext;

@@ -20,13 +20,13 @@ package brooklyn.entity.drivers.downloads;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
-import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
 import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.Function;

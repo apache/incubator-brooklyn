@@ -21,9 +21,8 @@ package org.apache.brooklyn.entity.proxy;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.entity.proxy.AbstractController;
-
-import brooklyn.entity.proxying.ImplementedBy;
 
 @ImplementedBy(TrackingAbstractControllerImpl.class)
 public interface TrackingAbstractController extends AbstractController {

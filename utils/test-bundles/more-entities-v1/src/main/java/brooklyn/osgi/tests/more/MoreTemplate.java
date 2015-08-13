@@ -19,12 +19,13 @@
 package brooklyn.osgi.tests.more;
 
 
-import brooklyn.entity.Application;
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.proxying.ImplementedBy;
 
 public class MoreTemplate extends AbstractApplication {
 }

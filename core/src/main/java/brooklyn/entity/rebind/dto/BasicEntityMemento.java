@@ -23,6 +23,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.mementos.EntityMemento;
 import org.apache.brooklyn.mementos.TreeNode;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
@@ -32,13 +35,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynTypes;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;
-import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.basic.Sensors;
@@ -52,7 +52,7 @@ import com.google.common.collect.Maps;
  * 
  * @see AbstractEntity#getRebindSupport()
  * @see RebindSupport#getMemento()
- * @see RebindSupport#reconstruct(brooklyn.entity.rebind.RebindContext, org.apache.brooklyn.mementos.Memento)
+ * @see RebindSupport#reconstruct(org.apache.brooklyn.api.entity.rebind.RebindContext, org.apache.brooklyn.mementos.Memento)
  * 
  * @author aled
  */

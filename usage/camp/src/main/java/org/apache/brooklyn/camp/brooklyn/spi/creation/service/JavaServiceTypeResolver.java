@@ -20,10 +20,9 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
 import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.proxying.EntitySpec;
 
 /**
  * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code java:}

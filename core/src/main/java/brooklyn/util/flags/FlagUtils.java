@@ -34,12 +34,12 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.trait.Configurable;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;

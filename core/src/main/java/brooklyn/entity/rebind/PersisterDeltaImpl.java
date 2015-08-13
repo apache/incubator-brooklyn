@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.mementos.CatalogItemMemento;
 import org.apache.brooklyn.mementos.EnricherMemento;
 import org.apache.brooklyn.mementos.EntityMemento;

@@ -18,11 +18,11 @@
  */
 package brooklyn.entity.rebind;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationNoEnrichersImpl;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.proxying.EntitySpec;
 
 public class RebindTestFixtureWithApp extends RebindTestFixture<TestApplication> {
 

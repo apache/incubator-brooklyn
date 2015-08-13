@@ -18,8 +18,9 @@
  */
 package org.apache.brooklyn.entity.network.bind;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.basic.SshMachineLocation;
 
 /**

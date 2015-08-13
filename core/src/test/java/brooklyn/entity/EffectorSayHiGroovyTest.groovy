@@ -33,12 +33,17 @@ import brooklyn.entity.basic.BrooklynTaskTags
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.basic.ExplicitEffector
 import brooklyn.entity.basic.MethodEffector
-import brooklyn.entity.proxying.EntitySpec
-import brooklyn.entity.proxying.ImplementedBy
+import org.apache.brooklyn.api.entity.proxying.EntitySpec
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy
 import brooklyn.entity.trait.Startable
+
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.ManagementContext
 import org.apache.brooklyn.management.Task
+
 import brooklyn.management.internal.EffectorUtils
+
 import org.apache.brooklyn.test.entity.TestApplication
 
 /**

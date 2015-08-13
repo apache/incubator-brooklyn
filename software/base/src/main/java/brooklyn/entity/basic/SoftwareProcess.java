@@ -21,8 +21,9 @@ package brooklyn.entity.basic;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.trait.Startable;

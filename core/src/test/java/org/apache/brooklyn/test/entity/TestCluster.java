@@ -18,9 +18,10 @@
  */
 package org.apache.brooklyn.test.entity;
 
-import brooklyn.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.ImplementedBy;
 
 /**
 * Mock cluster entity for testing.

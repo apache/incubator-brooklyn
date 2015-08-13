@@ -18,8 +18,9 @@
  */
 package brooklyn.enricher.basic;
 
+import org.apache.brooklyn.api.entity.Entity;
+
 import groovy.lang.Closure;
-import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;

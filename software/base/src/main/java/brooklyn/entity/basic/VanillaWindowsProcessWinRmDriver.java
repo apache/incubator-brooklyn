@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.basic;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+
 import brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.util.net.UserAndHostAndPort;
 

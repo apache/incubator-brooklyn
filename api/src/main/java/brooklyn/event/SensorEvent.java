@@ -18,7 +18,7 @@
  */
 package brooklyn.event;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
 
 /**
  * A tuple representing a piece of data from a {@link Sensor} on an {@link Entity}.

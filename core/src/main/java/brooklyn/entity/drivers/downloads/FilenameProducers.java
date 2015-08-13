@@ -22,8 +22,9 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
-import brooklyn.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
+
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;

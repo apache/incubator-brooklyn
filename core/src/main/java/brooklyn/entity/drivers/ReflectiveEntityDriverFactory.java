@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
+import org.apache.brooklyn.api.entity.drivers.EntityDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

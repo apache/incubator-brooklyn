@@ -20,6 +20,7 @@ package brooklyn.entity.messaging.rabbit;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.location.Location;
 
 import com.google.common.base.Charsets;

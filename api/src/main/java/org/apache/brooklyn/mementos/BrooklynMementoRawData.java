@@ -21,7 +21,7 @@ package org.apache.brooklyn.mementos;
 import java.util.Collections;
 import java.util.Map;
 
-import brooklyn.entity.rebind.BrooklynObjectType;
+import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;

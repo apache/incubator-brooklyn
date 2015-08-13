@@ -18,7 +18,8 @@
  */
 package org.apache.brooklyn.management;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.location.Location;
 
 import com.google.common.annotations.Beta;

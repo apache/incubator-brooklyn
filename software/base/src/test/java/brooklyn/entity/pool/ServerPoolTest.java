@@ -25,13 +25,13 @@ import static org.testng.Assert.assertTrue;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.LocationSpec;

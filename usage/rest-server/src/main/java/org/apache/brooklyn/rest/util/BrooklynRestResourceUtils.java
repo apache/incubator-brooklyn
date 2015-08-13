@@ -40,21 +40,21 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynTypes;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.catalog.CatalogItem;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;
 import brooklyn.location.LocationRegistry;
@@ -266,7 +266,7 @@ public class BrooklynRestResourceUtils {
                     instance = appBuilder.manage(mgmt);
 
                 } else if (Application.class.isAssignableFrom(clazz)) {
-                    brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO, catalogItemId);
+                    org.apache.brooklyn.api.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO, catalogItemId);
                     configureRenderingMetadata(spec, coreSpec);
                     instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
                     for (EntitySpec entitySpec : entities) {
@@ -281,7 +281,7 @@ public class BrooklynRestResourceUtils {
                     if (entities.size() > 0)
                         log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
 
-                    brooklyn.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO, catalogItemId);
+                    org.apache.brooklyn.api.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO, catalogItemId);
                     configureRenderingMetadata(spec, coreSpec);
 
                     instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
@@ -337,7 +337,7 @@ public class BrooklynRestResourceUtils {
     }
 
     @SuppressWarnings({ "unchecked", "deprecation" })
-    private brooklyn.entity.proxying.EntitySpec<? extends Entity> toCoreEntitySpec(org.apache.brooklyn.rest.domain.EntitySpec spec) {
+    private org.apache.brooklyn.api.entity.proxying.EntitySpec<? extends Entity> toCoreEntitySpec(org.apache.brooklyn.rest.domain.EntitySpec spec) {
         String type = spec.getType();
         String name = spec.getName();
         Map<String, String> config = (spec.getConfig() == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(spec.getConfig());
@@ -360,11 +360,11 @@ public class BrooklynRestResourceUtils {
             }
         }
         final Class<? extends Entity> clazz = tempclazz;
-        brooklyn.entity.proxying.EntitySpec<? extends Entity> result;
+        org.apache.brooklyn.api.entity.proxying.EntitySpec<? extends Entity> result;
         if (clazz.isInterface()) {
-            result = brooklyn.entity.proxying.EntitySpec.create(clazz);
+            result = org.apache.brooklyn.api.entity.proxying.EntitySpec.create(clazz);
         } else {
-            result = brooklyn.entity.proxying.EntitySpec.create(Entity.class).impl(clazz).additionalInterfaces(Reflections.getAllInterfaces(clazz));
+            result = org.apache.brooklyn.api.entity.proxying.EntitySpec.create(Entity.class).impl(clazz).additionalInterfaces(Reflections.getAllInterfaces(clazz));
         }
         result.catalogItemId(catalogItemId);
         if (!Strings.isEmpty(name)) result.displayName(name);
@@ -377,11 +377,11 @@ public class BrooklynRestResourceUtils {
         appBuilder.configure(getRenderingConfigurationFor(spec.getType()));
     }
 
-    protected void configureRenderingMetadata(ApplicationSpec input, brooklyn.entity.proxying.EntitySpec<?> entity) {
+    protected void configureRenderingMetadata(ApplicationSpec input, org.apache.brooklyn.api.entity.proxying.EntitySpec<?> entity) {
         entity.configure(getRenderingConfigurationFor(input.getType()));
     }
 
-    protected void configureRenderingMetadata(EntitySpec input, brooklyn.entity.proxying.EntitySpec<?> entity) {
+    protected void configureRenderingMetadata(EntitySpec input, org.apache.brooklyn.api.entity.proxying.EntitySpec<?> entity) {
         entity.configure(getRenderingConfigurationFor(input.getType()));
     }
 
@@ -395,18 +395,18 @@ public class BrooklynRestResourceUtils {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T extends Entity> brooklyn.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO, String catalogItemId) {
+    private <T extends Entity> org.apache.brooklyn.api.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO, String catalogItemId) {
         Map<String, String> config = (configO == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
-        brooklyn.entity.proxying.EntitySpec<? extends Entity> result;
+        org.apache.brooklyn.api.entity.proxying.EntitySpec<? extends Entity> result;
         if (clazz.isInterface()) {
-            result = brooklyn.entity.proxying.EntitySpec.create(clazz);
+            result = org.apache.brooklyn.api.entity.proxying.EntitySpec.create(clazz);
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
             Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
             Set<Class<?>> additionalInterfaceClazzes = Reflections.getInterfacesIncludingClassAncestors(clazz);
-            result = brooklyn.entity.proxying.EntitySpec.create(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
+            result = org.apache.brooklyn.api.entity.proxying.EntitySpec.create(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
         }
         
         result.catalogItemId(catalogItemId);

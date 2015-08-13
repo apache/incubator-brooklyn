@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.rebind;
 
+import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.mementos.CatalogItemMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

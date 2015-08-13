@@ -20,8 +20,9 @@ package org.apache.brooklyn.test.entity;
 
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 

@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
 
 public class BasicGroupImpl extends AbstractGroupImpl implements BasicGroup {
     

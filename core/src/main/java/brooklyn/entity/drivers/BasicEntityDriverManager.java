@@ -18,6 +18,10 @@
  */
 package brooklyn.entity.drivers;
 
+import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
+import org.apache.brooklyn.api.entity.drivers.EntityDriver;
+import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
+
 import com.google.common.annotations.Beta;
 
 import brooklyn.location.Location;

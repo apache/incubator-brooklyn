@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.elasticsearch;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 
@@ -25,7 +26,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.DatastoreMixins;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
@@ -35,7 +35,7 @@ import brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents an ElasticSearch node
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents an ElasticSearch node
  */
 @Catalog(name="Elastic Search Node", description="Elasticsearch is an open-source search server based on Lucene. "
         + "It provides a distributed, multitenant-capable full-text search engine with a RESTful web interface and "

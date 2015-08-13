@@ -18,11 +18,12 @@
  */
 package brooklyn.entity.zookeeper;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -30,7 +31,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Apache ZooKeeper instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Apache ZooKeeper instance.
  */
 @Catalog(name="ZooKeeper Node", description="Apache ZooKeeper is a server which enables "
         + "highly reliable distributed coordination.")

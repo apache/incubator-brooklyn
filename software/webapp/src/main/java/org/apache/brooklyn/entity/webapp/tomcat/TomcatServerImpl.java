@@ -34,7 +34,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Tomcat instance.
  */
 public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements TomcatServer {
 

@@ -20,7 +20,9 @@ package org.apache.brooklyn.entity.nosql.solr;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
@@ -28,7 +30,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.location.basic.PortRanges;
@@ -39,7 +40,7 @@ import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a Solr node.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a Solr node.
  */
 @Catalog(name="Apache Solr Node", description="Solr is the popular, blazing fast open source enterprise search " +
         "platform from the Apache Lucene project.", iconUrl="classpath:///solr-logo.jpeg")

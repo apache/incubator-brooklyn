@@ -20,7 +20,7 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
 
 /**
  * A Factory for creating entities.

@@ -22,12 +22,12 @@ import java.net.URI;
 
 import net.minidev.json.JSONObject;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.effector.AddSensor;
 import brooklyn.entity.software.java.JmxAttributeSensor;
 import brooklyn.entity.software.ssh.SshCommandSensor;
@@ -41,7 +41,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Supplier;
 
 /**
- * Configurable {@link brooklyn.entity.proxying.EntityInitializer} which adds an HTTP sensor feed to retrieve the
+ * Configurable {@link org.apache.brooklyn.api.entity.proxying.EntityInitializer} which adds an HTTP sensor feed to retrieve the
  * {@link JSONObject} from a JSON response in order to populate the sensor with the data at the {@code jsonPath}.
  *
  * @see SshCommandSensor

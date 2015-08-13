@@ -23,10 +23,11 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.Group;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.event.AttributeSensor;
 import brooklyn.location.Location;
 import brooklyn.util.collections.CollectionFunctionals;

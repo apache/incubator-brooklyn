@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessRestartIntegrationTest;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.EntitySpec;
 
 /**
  * Tests restart of the software *process* (as opposed to the VM).

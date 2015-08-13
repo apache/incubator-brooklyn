@@ -32,6 +32,11 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.proxying.EntityTypeRegistry;
 import org.apache.brooklyn.management.AccessController;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.policy.Enricher;
@@ -42,9 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
-import brooklyn.entity.Group;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
@@ -53,8 +55,6 @@ import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.proxying.BasicEntityTypeRegistry;
 import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.proxying.EntityProxyImpl;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.proxying.EntityTypeRegistry;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.trait.Startable;

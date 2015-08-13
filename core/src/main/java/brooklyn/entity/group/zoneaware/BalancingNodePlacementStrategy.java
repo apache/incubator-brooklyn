@@ -24,10 +24,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.group.DynamicCluster.NodePlacementStrategy;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.Location;

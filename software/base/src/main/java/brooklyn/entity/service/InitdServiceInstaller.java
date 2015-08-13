@@ -23,17 +23,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.File;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.trait.HasShortName;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.policy.Enricher;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorTasks;
-import brooklyn.entity.trait.HasShortName;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.cloud.names.AbstractCloudMachineNamer;
 import brooklyn.util.ResourceUtils;

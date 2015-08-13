@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.api.entity.rebind.RebindSupport;
+import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.mementos.LocationMemento;
 import org.slf4j.Logger;
@@ -40,8 +42,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
-import brooklyn.entity.rebind.RebindSupport;
-import brooklyn.entity.trait.Configurable;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.internal.storage.BrooklynStorage;

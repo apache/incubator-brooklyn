@@ -21,11 +21,11 @@ package brooklyn.entity.effector;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.ParameterType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Effector;
-import brooklyn.entity.ParameterType;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 
 import com.google.common.base.Joiner;

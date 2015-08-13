@@ -40,8 +40,8 @@ import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.brooklynnode.BrooklynEntityMirror;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
-import brooklyn.entity.proxying.EntitySpec;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.management.ManagementContext;
 

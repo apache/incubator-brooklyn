@@ -20,8 +20,9 @@ package brooklyn.policy.loadbalancing;
 
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicNotificationSensor;

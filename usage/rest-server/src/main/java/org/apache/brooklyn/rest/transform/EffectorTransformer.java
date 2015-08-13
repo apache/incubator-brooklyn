@@ -23,13 +23,14 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
-import brooklyn.entity.ParameterType;
-import brooklyn.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.ParameterType;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.EffectorSummary.ParameterSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.Tasks;

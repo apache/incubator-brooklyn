@@ -20,6 +20,7 @@ package brooklyn.entity.proxying;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
@@ -28,7 +29,6 @@ import org.apache.brooklyn.policy.PolicySpec;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.entity.Feed;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.policy.basic.AbstractPolicy;

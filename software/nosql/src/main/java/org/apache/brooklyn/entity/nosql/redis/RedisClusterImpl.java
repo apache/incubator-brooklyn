@@ -21,6 +21,8 @@ package org.apache.brooklyn.entity.nosql.redis;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Lifecycle;
@@ -28,7 +30,6 @@ import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.location.Location;

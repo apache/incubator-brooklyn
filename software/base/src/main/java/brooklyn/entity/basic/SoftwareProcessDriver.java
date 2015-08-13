@@ -18,7 +18,9 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.entity.drivers.EntityDriver;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.drivers.EntityDriver;
+
 import brooklyn.entity.trait.Startable;
 
 /**

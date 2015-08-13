@@ -20,11 +20,11 @@ package brooklyn.location.access;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.location.Location;

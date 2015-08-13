@@ -18,9 +18,10 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.entity.Entity;
 import brooklyn.event.basic.BasicConfigKey;
 
 public class TestReferencingEnricher extends AbstractEnricher {

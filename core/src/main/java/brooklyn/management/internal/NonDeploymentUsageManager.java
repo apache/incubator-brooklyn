@@ -20,7 +20,8 @@ package brooklyn.management.internal;
 
 import java.util.Set;
 
-import brooklyn.entity.Application;
+import org.apache.brooklyn.api.entity.Application;
+
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.location.Location;
 import brooklyn.management.usage.ApplicationUsage;

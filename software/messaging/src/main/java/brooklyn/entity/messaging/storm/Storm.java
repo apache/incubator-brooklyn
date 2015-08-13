@@ -18,14 +18,15 @@
  */
 package brooklyn.entity.messaging.storm;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
@@ -34,7 +35,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a Storm node (UI, Nimbus or Supervisor).
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a Storm node (UI, Nimbus or Supervisor).
  */
 @Catalog(name="Storm Node", description="Apache Storm is a distributed realtime computation system. "
         + "Storm makes it easy to reliably process unbounded streams of data, doing for realtime processing "

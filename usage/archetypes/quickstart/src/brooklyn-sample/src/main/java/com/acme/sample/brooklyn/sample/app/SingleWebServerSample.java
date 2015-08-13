@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import brooklyn.location.basic.PortRanges;

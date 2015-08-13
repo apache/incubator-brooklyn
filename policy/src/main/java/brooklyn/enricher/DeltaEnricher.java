@@ -19,9 +19,11 @@
 package brooklyn.enricher;
 
 import static brooklyn.util.JavaGroovyEquivalents.elvis;
+
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.catalog.Catalog;
+
 import brooklyn.enricher.basic.AbstractTransformingEnricher;
-import brooklyn.entity.Entity;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEvent;

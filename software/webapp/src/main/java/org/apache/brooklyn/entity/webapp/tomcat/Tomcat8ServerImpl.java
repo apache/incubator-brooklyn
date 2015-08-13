@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.webapp.tomcat;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a single Tomcat instance.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Tomcat instance.
  */
 public class Tomcat8ServerImpl extends TomcatServerImpl implements Tomcat8Server {
 }

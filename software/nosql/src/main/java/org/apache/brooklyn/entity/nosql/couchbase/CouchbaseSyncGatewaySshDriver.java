@@ -26,12 +26,13 @@ import static java.lang.String.format;
 
 import java.util.List;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
+
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.entity.drivers.downloads.DownloadResolver;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.location.OsDetails;
 import brooklyn.location.basic.SshMachineLocation;

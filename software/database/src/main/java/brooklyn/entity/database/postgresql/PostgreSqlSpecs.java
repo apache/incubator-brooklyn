@@ -18,9 +18,10 @@
  */
 package brooklyn.entity.database.postgresql;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefConfig.ChefModes;
-import brooklyn.entity.proxying.EntitySpec;
 
 /**
  * Utiltiy for creating specs for {@link PostgreSqlNode} instances.

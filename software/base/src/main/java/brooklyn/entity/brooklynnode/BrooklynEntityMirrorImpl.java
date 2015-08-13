@@ -24,9 +24,9 @@ import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Effector;
 import org.apache.http.HttpStatus;
 
-import brooklyn.entity.Effector;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;

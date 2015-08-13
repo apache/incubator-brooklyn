@@ -21,7 +21,7 @@ package brooklyn.entity.basic;
 import java.util.Collections;
 import java.util.Map;
 
-import brooklyn.entity.ParameterType;
+import org.apache.brooklyn.api.entity.ParameterType;
 
 import com.google.common.base.Objects;
 

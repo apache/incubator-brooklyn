@@ -20,6 +20,7 @@ package brooklyn.enricher;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -28,7 +29,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.SensorEvent;
 import brooklyn.event.SensorEventListener;

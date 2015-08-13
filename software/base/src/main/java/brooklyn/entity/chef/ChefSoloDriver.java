@@ -18,13 +18,13 @@
  */
 package brooklyn.entity.chef;
 
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.management.TaskAdaptable;
 import org.apache.brooklyn.management.TaskFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.task.DynamicTasks;
 

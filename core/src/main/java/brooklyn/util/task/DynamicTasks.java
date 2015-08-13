@@ -21,6 +21,7 @@ package brooklyn.util.task;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.ExecutionContext;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.management.TaskAdaptable;
@@ -30,7 +31,6 @@ import org.apache.brooklyn.management.TaskWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.time.Duration;

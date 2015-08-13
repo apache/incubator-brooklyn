@@ -33,6 +33,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.Feed;
+import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
+import org.apache.brooklyn.api.entity.rebind.ChangeListener;
+import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
 import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ExecutionContext;
 import org.apache.brooklyn.management.Task;
@@ -40,8 +45,6 @@ import org.apache.brooklyn.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.Feed;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;

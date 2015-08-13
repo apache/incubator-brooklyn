@@ -22,9 +22,9 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.rebind.BrooklynObjectType;
 import brooklyn.entity.rebind.transformer.impl.XsltTransformer;
 
 import com.google.common.collect.Iterables;

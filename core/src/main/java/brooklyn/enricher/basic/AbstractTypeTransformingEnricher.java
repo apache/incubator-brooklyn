@@ -18,8 +18,9 @@
  */
 package brooklyn.enricher.basic;
 
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+
 import brooklyn.event.AttributeSensor;
 import brooklyn.event.Sensor;
 import brooklyn.event.SensorEventListener;

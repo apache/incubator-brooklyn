@@ -18,8 +18,9 @@
  */
 package brooklyn.entity.messaging.activemq;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+
 import brooklyn.entity.messaging.Topic;
-import brooklyn.entity.proxying.ImplementedBy;
 
 @ImplementedBy(ActiveMQTopicImpl.class)
 public interface ActiveMQTopic extends ActiveMQDestination, Topic {

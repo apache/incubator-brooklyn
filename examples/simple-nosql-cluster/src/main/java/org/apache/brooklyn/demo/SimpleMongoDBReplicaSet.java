@@ -18,11 +18,11 @@
  */
 package org.apache.brooklyn.demo;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.proxying.EntitySpec;
 
 public class SimpleMongoDBReplicaSet extends ApplicationBuilder {
 

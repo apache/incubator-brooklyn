@@ -20,10 +20,11 @@ package brooklyn.entity.chef;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.MapConfigKey.MapModifications;
 import brooklyn.event.basic.SetConfigKey.SetModifications;
 import brooklyn.util.git.GithubUrls;

@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.brooklynnode;
 
-import brooklyn.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 
 /**
  * A {@link BrooklynNode} entity that represents the local Brooklyn service.

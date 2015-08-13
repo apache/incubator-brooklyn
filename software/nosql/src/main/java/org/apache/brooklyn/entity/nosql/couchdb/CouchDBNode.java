@@ -18,18 +18,18 @@
  */
 package org.apache.brooklyn.entity.nosql.couchdb;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.proxying.ImplementedBy;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
- * An {@link brooklyn.entity.Entity} that represents a CouchDB node in a {@link CouchDBCluster}.
+ * An {@link org.apache.brooklyn.api.entity.Entity} that represents a CouchDB node in a {@link CouchDBCluster}.
  */
 @Catalog(name="CouchDB Node",
         description="Apache CouchDB is a database that uses JSON for documents, JavaScript for MapReduce queries, " +

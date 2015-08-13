@@ -23,10 +23,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
+import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 
-import brooklyn.entity.rebind.BrooklynObjectType;
-import brooklyn.entity.rebind.RebindExceptionHandler;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.transformer.impl.XsltTransformer;
 import brooklyn.util.ResourceUtils;

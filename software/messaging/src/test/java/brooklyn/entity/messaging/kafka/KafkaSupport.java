@@ -18,7 +18,6 @@
  */
 package brooklyn.entity.messaging.kafka;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
 
@@ -26,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;

@@ -23,17 +23,17 @@ import java.net.URI;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
+import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
+import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager;
+import org.apache.brooklyn.api.entity.rebind.RebindManager;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.management.ha.HighAvailabilityManager;
 
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.Application;
-import brooklyn.entity.Entity;
-import brooklyn.entity.drivers.DriverDependentEntity;
-import brooklyn.entity.drivers.EntityDriverManager;
-import brooklyn.entity.drivers.downloads.DownloadResolverManager;
-import brooklyn.entity.rebind.RebindManager;
 import brooklyn.location.LocationRegistry;
 import brooklyn.util.guava.Maybe;
 

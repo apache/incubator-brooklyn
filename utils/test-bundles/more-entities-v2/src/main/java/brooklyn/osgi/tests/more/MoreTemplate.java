@@ -20,12 +20,12 @@ package brooklyn.osgi.tests.more;
 
 
 import org.apache.brooklyn.catalog.Catalog;
-import brooklyn.entity.Application;
-import brooklyn.entity.Effector;
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.Entity;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 
 @Catalog(name="More Template", description="Cataliog item OSGi test template")
 public class MoreTemplate extends AbstractApplication {

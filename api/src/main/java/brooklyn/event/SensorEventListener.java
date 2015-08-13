@@ -18,7 +18,7 @@
  */
 package brooklyn.event;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
 
 /**
  * A listener for {@link SensorEvent}s on an {@link Entity}.

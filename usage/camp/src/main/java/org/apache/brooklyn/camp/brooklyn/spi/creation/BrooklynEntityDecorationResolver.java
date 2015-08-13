@@ -21,6 +21,8 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
 import org.apache.brooklyn.catalog.BrooklynCatalog;
@@ -32,8 +34,6 @@ import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.entity.proxying.EntityInitializer;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.config.ConfigBag;
 

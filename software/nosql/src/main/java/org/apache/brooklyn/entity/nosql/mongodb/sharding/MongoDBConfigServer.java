@@ -18,9 +18,8 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.entity.nosql.mongodb.AbstractMongoDBServer;
-
-import brooklyn.entity.proxying.ImplementedBy;
 
 @ImplementedBy(MongoDBConfigServerImpl.class)
 public interface MongoDBConfigServer extends AbstractMongoDBServer {

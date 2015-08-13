@@ -24,11 +24,12 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.EntityType;
+import org.apache.brooklyn.api.entity.ParameterType;
+
 import brooklyn.basic.BrooklynTypeSnapshot;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
-import brooklyn.entity.EntityType;
-import brooklyn.entity.ParameterType;
 import brooklyn.event.Sensor;
 import brooklyn.util.guava.Maybe;
 

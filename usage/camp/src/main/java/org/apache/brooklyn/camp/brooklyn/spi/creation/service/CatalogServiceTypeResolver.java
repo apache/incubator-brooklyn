@@ -22,6 +22,7 @@ import io.brooklyn.camp.spi.PlatformComponentTemplate;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,6 @@ import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.group.DynamicRegionsFabric;
 import brooklyn.entity.java.VanillaJavaApp;
-import brooklyn.entity.proxying.EntitySpec;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;

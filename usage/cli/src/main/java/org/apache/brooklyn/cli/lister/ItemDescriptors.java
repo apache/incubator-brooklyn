@@ -32,11 +32,11 @@ import brooklyn.basic.BrooklynTypes;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.basic.BrooklynType;
+import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
-import brooklyn.entity.EntityType;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.event.Sensor;
 import brooklyn.location.LocationResolver;

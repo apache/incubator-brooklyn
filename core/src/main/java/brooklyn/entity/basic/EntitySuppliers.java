@@ -18,7 +18,8 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.entity.Entity;
+import org.apache.brooklyn.api.entity.Entity;
+
 import brooklyn.location.basic.Machines;
 import brooklyn.location.basic.SshMachineLocation;
 

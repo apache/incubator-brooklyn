@@ -32,17 +32,17 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.internal.CatalogInitialization;
-import brooklyn.entity.Application;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.proxying.EntitySpec;
 import brooklyn.event.basic.Sensors;
 import brooklyn.management.internal.LocalManagementContext;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.test.TestResourceUnavailableException;

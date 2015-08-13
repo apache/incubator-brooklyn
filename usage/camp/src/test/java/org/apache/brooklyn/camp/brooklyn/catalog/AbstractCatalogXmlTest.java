@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.camp.brooklyn.catalog;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
@@ -30,7 +31,6 @@ import java.io.StringReader;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.entity.Entity;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.osgi.OsgiTestResources;
 import brooklyn.util.ResourceUtils;

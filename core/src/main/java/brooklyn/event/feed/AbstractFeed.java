@@ -22,17 +22,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.api.entity.Feed;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.mementos.FeedMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Feed;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.rebind.BasicFeedRebindSupport;
-import brooklyn.entity.rebind.RebindSupport;
 import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 import brooklyn.util.javalang.JavaClassNames;

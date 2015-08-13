@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.cassandra;
 
-import brooklyn.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 
 /**
  * @deprecated since 0.7.0; use {@link CassandraDatacenter} which is equivalent but has

@@ -18,9 +18,9 @@
  */
 package brooklyn.config;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.slf4j.Logger;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.basic.EntityInternal;
 
 /** contains common logging categories */

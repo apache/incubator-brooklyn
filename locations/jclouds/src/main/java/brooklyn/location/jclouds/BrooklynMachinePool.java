@@ -25,12 +25,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.management.Task;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.Entity;
 import brooklyn.entity.trait.Startable;
 import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SshMachineLocation;

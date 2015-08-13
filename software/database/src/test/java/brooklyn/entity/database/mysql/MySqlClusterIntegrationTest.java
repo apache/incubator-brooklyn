@@ -18,12 +18,12 @@
  */
 package brooklyn.entity.database.mysql;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.entity.Entity;
 import brooklyn.util.os.Os;
 
 public class MySqlClusterIntegrationTest extends BrooklynAppLiveTestSupport {

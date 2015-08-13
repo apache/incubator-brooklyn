@@ -20,6 +20,7 @@ package brooklyn.entity.software;
 
 import java.util.Arrays;
 
+import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.test.entity.TestApplication;
@@ -30,7 +31,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.Effector;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.SshEffectorTasks.SshEffectorBody;

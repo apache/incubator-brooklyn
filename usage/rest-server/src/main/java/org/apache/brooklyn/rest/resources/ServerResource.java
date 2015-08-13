@@ -42,11 +42,9 @@ import com.google.common.collect.FluentIterable;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Application;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityLocal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
@@ -55,6 +53,8 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.internal.ManagementContextInternal;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.management.entitlement.EntitlementContext;
