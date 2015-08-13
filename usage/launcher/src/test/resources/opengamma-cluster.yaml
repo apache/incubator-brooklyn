@@ -28,7 +28,7 @@ services:
       attributes:
         postgresql:
           sql: io/cloudsoft/opengamma/config/create-brooklyn-db.sql
-  - type: brooklyn.entity.messaging.activemq.ActiveMQBroker
+  - type: org.apache.brooklyn.entity.messaging.activemq.ActiveMQBroker
     id: og-amq
 - type: Fabric
   id: web-fabric
