@@ -26,8 +26,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
-import org.apache.brooklyn.management.SubscriptionHandle;
 import org.apache.brooklyn.test.entity.TestEntity;
 
 import brooklyn.event.basic.BasicSensorEvent;

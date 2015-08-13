@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -22,8 +22,8 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.management.ExecutionContext;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.policy.Enricher;
 
 import brooklyn.config.ConfigKey;

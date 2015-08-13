@@ -20,7 +20,7 @@ package brooklyn.event.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.Sensor;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import com.google.common.reflect.TypeToken;
 

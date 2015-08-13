@@ -25,7 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.brooklyn.management.ManagementContext.PropertiesReloadListener;
+import org.apache.brooklyn.api.management.ManagementContext.PropertiesReloadListener;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

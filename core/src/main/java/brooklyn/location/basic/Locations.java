@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.LocationManager;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.LocationManager;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -28,9 +28,9 @@ import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.brooklyn.management.HasTaskChildren;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.TaskQueueingContext;
+import org.apache.brooklyn.api.management.HasTaskChildren;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.TaskQueueingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -32,7 +32,7 @@ import com.google.common.base.CharMatcher;
 
 import brooklyn.config.StringConfigMap;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 
 import brooklyn.util.exceptions.Exceptions;

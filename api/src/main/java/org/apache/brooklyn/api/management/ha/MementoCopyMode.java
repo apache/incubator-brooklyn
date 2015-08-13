@@ -16,12 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.management;
+package org.apache.brooklyn.api.management.ha;
 
-/**
- * A "receipt" returned by {@link SubscriptionContext} and {@link SubscriptionManager}'s {@code subscribe()} 
- * methods. It can be used to unsubscribe - see {@link SubscriptionContext#unsubscribe(SubscriptionHandle)} 
- * and {@link SubscriptionManager#unsubscribe(SubscriptionHandle)}.
- */
-public interface SubscriptionHandle {
+public enum MementoCopyMode {
+    /** Use items currently managed at this node */ 
+    LOCAL,
+    /** Use items as stored in the remote persistence store */ 
+    REMOTE, 
+    /** Auto-detect whether to use {@link #LOCAL} or {@link #REMOTE} depending on the
+     * HA mode of this management node (usually {@link #LOCAL} for master and {@link #REMOTE} otherwise)*/ 
+    AUTO 
 }

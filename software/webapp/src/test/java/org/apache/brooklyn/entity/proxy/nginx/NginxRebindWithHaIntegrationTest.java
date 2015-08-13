@@ -28,10 +28,10 @@ import java.util.concurrent.Executors;
 
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.WebAppMonitor;

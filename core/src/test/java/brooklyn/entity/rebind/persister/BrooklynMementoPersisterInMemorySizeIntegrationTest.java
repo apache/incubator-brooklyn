@@ -21,7 +21,7 @@ package brooklyn.entity.rebind.persister;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.Assert;
 import org.testng.annotations.Test;

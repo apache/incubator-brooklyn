@@ -25,7 +25,7 @@ import java.io.File;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.management.ha.MementoCopyMode;
+import org.apache.brooklyn.api.management.ha.MementoCopyMode;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.slf4j.Logger;

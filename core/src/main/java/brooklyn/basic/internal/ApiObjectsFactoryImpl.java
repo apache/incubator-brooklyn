@@ -20,7 +20,7 @@ package brooklyn.basic.internal;
 
 import org.apache.brooklyn.api.basic.internal.ApiObjectsFactoryInterface;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.util.task.Tasks;

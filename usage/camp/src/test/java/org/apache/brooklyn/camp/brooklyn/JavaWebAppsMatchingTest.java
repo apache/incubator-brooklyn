@@ -29,9 +29,9 @@ import java.io.Reader;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
-import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

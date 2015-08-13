@@ -31,11 +31,11 @@ import io.brooklyn.camp.spi.collection.BasicResourceLookup;
 import io.brooklyn.camp.spi.collection.ResourceLookup;
 import io.brooklyn.camp.spi.collection.ResourceLookup.EmptyResourceLookup;
 
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.AssemblyBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.AssemblyTemplateBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.PlatformComponentBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.PlatformComponentTemplateBrooklynLookup;
-import org.apache.brooklyn.management.ManagementContext;
 
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 

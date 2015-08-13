@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

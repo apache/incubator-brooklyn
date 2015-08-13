@@ -20,7 +20,7 @@ package brooklyn.entity.basic;
 
 import java.util.Map;
 
-import org.apache.brooklyn.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

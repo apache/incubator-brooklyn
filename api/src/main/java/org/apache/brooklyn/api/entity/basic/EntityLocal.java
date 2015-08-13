@@ -27,10 +27,10 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.management.SubscriptionContext;
-import org.apache.brooklyn.management.SubscriptionHandle;
-import org.apache.brooklyn.management.SubscriptionManager;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.SubscriptionContext;
+import org.apache.brooklyn.api.management.SubscriptionHandle;
+import org.apache.brooklyn.api.management.SubscriptionManager;
+import org.apache.brooklyn.api.management.Task;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;

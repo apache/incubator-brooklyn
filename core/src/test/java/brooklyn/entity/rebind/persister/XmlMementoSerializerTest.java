@@ -32,7 +32,6 @@ import java.util.Set;
 
 import brooklyn.management.osgi.OsgiTestResources;
 
-import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
@@ -50,6 +49,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;

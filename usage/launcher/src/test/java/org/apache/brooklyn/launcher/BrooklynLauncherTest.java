@@ -20,8 +20,8 @@ package org.apache.brooklyn.launcher;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.management.ManagementContext;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;

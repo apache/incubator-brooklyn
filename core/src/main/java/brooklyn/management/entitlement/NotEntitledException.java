@@ -18,8 +18,8 @@
  */
 package brooklyn.management.entitlement;
 
-import org.apache.brooklyn.management.entitlement.EntitlementClass;
-import org.apache.brooklyn.management.entitlement.EntitlementContext;
+import org.apache.brooklyn.api.management.entitlement.EntitlementClass;
+import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
 
 
 public class NotEntitledException extends RuntimeException {

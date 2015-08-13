@@ -27,12 +27,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
-import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
-import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
-import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecordPersister;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

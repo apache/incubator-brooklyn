@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.service;
 
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 
 public interface SystemServiceInstaller {
     Task<?> getServiceInstallTask();

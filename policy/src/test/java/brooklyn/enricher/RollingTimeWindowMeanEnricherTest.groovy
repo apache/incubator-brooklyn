@@ -31,7 +31,7 @@ import brooklyn.entity.basic.Entities
 import org.apache.brooklyn.api.entity.basic.EntityLocal
 import org.apache.brooklyn.api.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
-import org.apache.brooklyn.management.SubscriptionContext
+import org.apache.brooklyn.api.management.SubscriptionContext
 
 class RollingTimeWindowMeanEnricherTest {
     

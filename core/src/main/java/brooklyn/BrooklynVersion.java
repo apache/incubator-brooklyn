@@ -43,7 +43,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.management.classloading.OsgiBrooklynClassLoadingContext;
 import brooklyn.util.ResourceUtils;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.management.ha;
+package org.apache.brooklyn.api.management.ha;
 
 /** Specifies the HA mode that a mgmt node should run in */
 public enum HighAvailabilityMode {

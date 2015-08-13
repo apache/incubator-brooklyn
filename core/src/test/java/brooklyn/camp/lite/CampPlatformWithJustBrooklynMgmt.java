@@ -18,7 +18,7 @@
  */
 package brooklyn.camp.lite;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import io.brooklyn.camp.BasicCampPlatform;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;

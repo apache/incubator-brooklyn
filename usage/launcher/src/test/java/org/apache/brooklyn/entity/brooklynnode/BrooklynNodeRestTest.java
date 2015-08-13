@@ -42,9 +42,9 @@ import brooklyn.event.basic.BasicConfigKey;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
 import org.apache.brooklyn.launcher.camp.SimpleYamlLauncher;
-import org.apache.brooklyn.management.Task;
 
 import brooklyn.location.Location;
 import brooklyn.util.collections.Jsonya;

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.lookup;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import io.brooklyn.camp.spi.AbstractResource;
 import io.brooklyn.camp.spi.PlatformRootSummary;

@@ -36,9 +36,9 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.entity.rebind.RebindManager;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.mementos.BrooklynMementoManifest;
 
 import brooklyn.catalog.internal.CatalogUtils;

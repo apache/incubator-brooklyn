@@ -21,7 +21,7 @@ package brooklyn.entity.software;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

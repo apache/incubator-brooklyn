@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.rebind.persister;
 
-import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.mementos.BrooklynMemento;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 

@@ -18,7 +18,7 @@
  */
 package brooklyn.management.internal;
 
-import org.apache.brooklyn.management.LocationManager;
+import org.apache.brooklyn.api.management.LocationManager;
 
 import brooklyn.location.Location;
 

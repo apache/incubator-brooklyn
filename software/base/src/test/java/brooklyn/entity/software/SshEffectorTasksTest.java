@@ -22,9 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.TaskAdaptable;
-import org.apache.brooklyn.management.TaskFactory;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.TaskFactory;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;

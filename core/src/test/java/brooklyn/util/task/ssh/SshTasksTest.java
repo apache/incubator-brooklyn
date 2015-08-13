@@ -21,7 +21,7 @@ package brooklyn.util.task.ssh;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

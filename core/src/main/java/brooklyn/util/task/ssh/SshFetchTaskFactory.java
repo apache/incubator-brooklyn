@@ -18,7 +18,7 @@
  */
 package brooklyn.util.task.ssh;
 
-import org.apache.brooklyn.management.TaskFactory;
+import org.apache.brooklyn.api.management.TaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

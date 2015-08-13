@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.management.ExecutionContext;
+import org.apache.brooklyn.api.management.ExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

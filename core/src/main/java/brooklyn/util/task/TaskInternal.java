@@ -23,8 +23,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import org.apache.brooklyn.management.ExecutionManager;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.ExecutionManager;
+import org.apache.brooklyn.api.management.Task;
 
 import brooklyn.util.time.Duration;
 

@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.management;
+package org.apache.brooklyn.api.management;
 
-
-/** Interface for something which can generate tasks (or task wrappers) */
-public interface TaskFactory<T extends TaskAdaptable<?>> {
-    T newTask();
+/** marker interface for something which can be adapted to a task  */
+public interface TaskAdaptable<T> {
+    Task<T> asTask();
 }

@@ -21,7 +21,7 @@ package brooklyn.util.task.ssh;
 import java.io.InputStream;
 import java.io.Reader;
 
-import org.apache.brooklyn.management.TaskFactory;
+import org.apache.brooklyn.api.management.TaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

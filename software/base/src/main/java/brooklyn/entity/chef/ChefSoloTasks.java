@@ -20,7 +20,7 @@ package brooklyn.entity.chef;
 
 import java.util.Map;
 
-import org.apache.brooklyn.management.TaskFactory;
+import org.apache.brooklyn.api.management.TaskFactory;
 
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.util.ssh.BashCommands;

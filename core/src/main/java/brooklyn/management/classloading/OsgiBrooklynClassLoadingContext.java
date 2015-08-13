@@ -24,8 +24,8 @@ import java.util.Collections;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.entitlement.EntitlementClass;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.entitlement.EntitlementClass;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.management.entitlement.Entitlements;

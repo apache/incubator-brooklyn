@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.test.TestUtils;
 import org.apache.brooklyn.test.entity.BlockingEntity;
 import org.apache.brooklyn.test.entity.TestEntity;

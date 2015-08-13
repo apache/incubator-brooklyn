@@ -20,8 +20,8 @@ package brooklyn.basic;
 
 import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.entity.trait.Identifiable;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.Task;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.Task;
 
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.config.ConfigKey;

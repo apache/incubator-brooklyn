@@ -18,7 +18,7 @@
  */
 package brooklyn.management.internal;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 /** Stores a management transition mode, and the management context. */
 // TODO does this class really pull its weight?

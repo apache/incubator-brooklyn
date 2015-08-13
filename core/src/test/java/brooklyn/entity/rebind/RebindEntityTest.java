@@ -47,7 +47,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.event.AttributeSensor.SensorPersistenceMode;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.mementos.EntityMemento;
 import org.apache.brooklyn.test.entity.TestApplication;

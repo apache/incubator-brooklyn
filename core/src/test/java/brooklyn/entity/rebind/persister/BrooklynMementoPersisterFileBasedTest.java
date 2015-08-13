@@ -20,7 +20,7 @@ package brooklyn.entity.rebind.persister;
 
 import java.io.File;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 

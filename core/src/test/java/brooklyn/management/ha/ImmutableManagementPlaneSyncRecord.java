@@ -20,8 +20,8 @@ package brooklyn.management.ha;
 
 import java.util.Map;
 
-import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
-import org.apache.brooklyn.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;

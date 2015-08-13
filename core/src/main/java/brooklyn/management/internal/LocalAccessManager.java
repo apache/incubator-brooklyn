@@ -21,7 +21,7 @@ package brooklyn.management.internal;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.AccessController;
+import org.apache.brooklyn.api.management.AccessController;
 
 import brooklyn.location.Location;
 

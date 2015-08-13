@@ -30,12 +30,12 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.management.ExecutionContext;
-import org.apache.brooklyn.management.ExecutionManager;
-import org.apache.brooklyn.management.HasTaskChildren;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.TaskAdaptable;
-import org.apache.brooklyn.management.entitlement.EntitlementContext;
+import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.api.management.ExecutionManager;
+import org.apache.brooklyn.api.management.HasTaskChildren;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

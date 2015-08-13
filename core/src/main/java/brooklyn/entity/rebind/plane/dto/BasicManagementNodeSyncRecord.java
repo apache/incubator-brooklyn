@@ -21,8 +21,8 @@ package brooklyn.entity.rebind.plane.dto;
 import java.io.Serializable;
 import java.net.URI;
 
-import org.apache.brooklyn.management.ha.ManagementNodeState;
-import org.apache.brooklyn.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 

@@ -18,7 +18,7 @@
  */
 package brooklyn.config;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.util.internal.StringSystemProperty;
 

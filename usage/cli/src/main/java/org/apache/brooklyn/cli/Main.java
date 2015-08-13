@@ -53,6 +53,9 @@ import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
@@ -90,9 +93,6 @@ import brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.launcher.BrooklynServerDetails;
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
-import org.apache.brooklyn.management.ManagementContext;
-import org.apache.brooklyn.management.Task;
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 
 import brooklyn.management.ha.OsgiManager;
 

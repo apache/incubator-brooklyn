@@ -38,7 +38,7 @@ import brooklyn.event.feed.http.JsonFunctions;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.management.EntityManager;
+import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.test.HttpTestUtils;
 

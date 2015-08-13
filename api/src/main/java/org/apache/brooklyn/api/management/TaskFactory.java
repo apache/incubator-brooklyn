@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.management.entitlement;
+package org.apache.brooklyn.api.management;
 
-/** @see EntitlementManager */
-public interface EntitlementContext {
-    String user();
+
+/** Interface for something which can generate tasks (or task wrappers) */
+public interface TaskFactory<T extends TaskAdaptable<?>> {
+    T newTask();
 }

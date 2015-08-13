@@ -34,7 +34,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.management.SubscriptionHandle;
+import org.apache.brooklyn.api.management.SubscriptionHandle;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.test.Asserts;

@@ -27,7 +27,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.http.client.HttpClient;
 import org.jclouds.blobstore.BlobStoreContext;

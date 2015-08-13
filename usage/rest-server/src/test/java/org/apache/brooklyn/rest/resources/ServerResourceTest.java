@@ -46,7 +46,7 @@ import brooklyn.entity.basic.EmptySoftwareProcessImpl;
 import brooklyn.management.internal.ManagementContextInternal;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.VersionSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;

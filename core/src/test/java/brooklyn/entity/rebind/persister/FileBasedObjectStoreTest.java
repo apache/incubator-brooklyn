@@ -25,7 +25,7 @@ import static org.testng.Assert.assertTrue;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

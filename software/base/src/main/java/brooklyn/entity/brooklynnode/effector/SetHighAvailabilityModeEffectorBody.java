@@ -19,8 +19,8 @@
 package brooklyn.entity.brooklynnode.effector;
 
 import org.apache.brooklyn.api.entity.Effector;
-import org.apache.brooklyn.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.http.HttpStatus;
 
 import brooklyn.entity.brooklynnode.BrooklynNode;

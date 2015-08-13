@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.management.ManagementContext;
 import org.jclouds.apis.ApiMetadata;
 import org.jclouds.apis.Apis;
 import org.jclouds.providers.ProviderMetadata;
