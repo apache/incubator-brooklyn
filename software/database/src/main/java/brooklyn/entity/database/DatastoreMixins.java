@@ -62,10 +62,16 @@ public class DatastoreMixins {
 
     public static interface CanGiveCreationScript {
         @SetFromFlag("creationScriptContents")
-        public static final ConfigKey<String> CREATION_SCRIPT_CONTENTS = ConfigKeys.newStringConfigKey("datastore.creation.script.contents", "Contensts of creation script to initialize the datastore", "");
+        public static final ConfigKey<String> CREATION_SCRIPT_CONTENTS = ConfigKeys.newStringConfigKey(
+                "datastore.creation.script.contents",
+                "Contents of creation script to initialize the datastore",
+                "");
         
         @SetFromFlag("creationScriptUrl")
-        public static final ConfigKey<String> CREATION_SCRIPT_URL = ConfigKeys.newStringConfigKey("datastore.creation.script.url", "URL of creation script to use to initialize the datastore (ignored if contents are specified)", "");
+        public static final ConfigKey<String> CREATION_SCRIPT_URL = ConfigKeys.newStringConfigKey(
+                "datastore.creation.script.url",
+                "URL of creation script to use to initialize the datastore (ignored if creationScriptContents is specified)",
+                "");
     }
 
     /** returns the creation script contents, if it exists, or null if none is defined (error if it cannot be loaded) */
