@@ -25,9 +25,9 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.api.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.catalog.Catalog;
-import org.apache.brooklyn.catalog.CatalogConfig;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import org.apache.brooklyn.entity.proxy.AbstractController;
 import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService;

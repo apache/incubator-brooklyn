@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.mementos.CatalogItemMemento;
 
 import brooklyn.catalog.internal.BasicBrooklynCatalog;

@@ -18,9 +18,9 @@
  */
 package brooklyn.entity.messaging.storm;
 
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;

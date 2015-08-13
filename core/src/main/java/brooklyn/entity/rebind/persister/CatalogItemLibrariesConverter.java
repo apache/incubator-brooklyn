@@ -21,8 +21,9 @@ package brooklyn.entity.rebind.persister;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
-import org.apache.brooklyn.catalog.CatalogItem.CatalogItemLibraries;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemLibraries;
+
 import brooklyn.catalog.internal.CatalogBundleDto;
 
 import com.thoughtworks.xstream.converters.Converter;

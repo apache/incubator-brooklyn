@@ -26,13 +26,13 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynTypes;
 
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.Sensor;
-import org.apache.brooklyn.catalog.CatalogItem;
-import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.EntityDynamicType;

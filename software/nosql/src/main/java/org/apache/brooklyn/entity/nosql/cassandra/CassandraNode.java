@@ -21,11 +21,11 @@ package org.apache.brooklyn.entity.nosql.cassandra;
 import java.math.BigInteger;
 import java.util.Set;
 
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;

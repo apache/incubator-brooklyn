@@ -24,11 +24,13 @@ import org.testng.Assert;
 import org.testng.TestListenerAdapter;
 import org.testng.TestNG;
 import org.testng.annotations.Test;
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
-import org.apache.brooklyn.catalog.CatalogItem;
-import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+
 import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.management.osgi.OsgiTestResources;
+
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 

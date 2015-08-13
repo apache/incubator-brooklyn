@@ -25,10 +25,10 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.catalog.CatalogConfig;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;

@@ -24,11 +24,11 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver;
-import org.apache.brooklyn.catalog.CatalogItem;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.util.text.Strings;

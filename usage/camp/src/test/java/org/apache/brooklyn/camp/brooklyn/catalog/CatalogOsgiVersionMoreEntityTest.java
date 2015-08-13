@@ -27,13 +27,13 @@ import org.testng.annotations.Test;
 
 import brooklyn.basic.BrooklynTypes;
 
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
-import org.apache.brooklyn.catalog.BrooklynCatalog;
-import org.apache.brooklyn.catalog.CatalogItem;
-import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.location.LocationSpec;

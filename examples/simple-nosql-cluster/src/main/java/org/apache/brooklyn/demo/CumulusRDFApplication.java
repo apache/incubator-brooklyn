@@ -24,13 +24,13 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.api.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.catalog.Catalog;
-import org.apache.brooklyn.catalog.CatalogConfig;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraFabric;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;

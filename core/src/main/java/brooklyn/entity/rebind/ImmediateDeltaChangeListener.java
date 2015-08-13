@@ -24,10 +24,10 @@ import java.util.Map;
 import brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.rebind.ChangeListener;
 import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
-import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.mementos.CatalogItemMemento;
 import org.apache.brooklyn.mementos.EnricherMemento;

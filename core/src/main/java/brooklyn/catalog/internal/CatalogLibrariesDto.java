@@ -21,7 +21,7 @@ package brooklyn.catalog.internal;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 
 import com.google.common.collect.ImmutableList;
 

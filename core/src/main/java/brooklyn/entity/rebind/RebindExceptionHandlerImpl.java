@@ -27,6 +27,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
@@ -35,7 +36,6 @@ import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.entity.rebind.RebindManager;
 import org.apache.brooklyn.api.entity.rebind.RebindManager.RebindFailureMode;
-import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 

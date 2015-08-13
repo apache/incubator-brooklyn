@@ -36,9 +36,9 @@ import org.testng.annotations.Test;
 import brooklyn.camp.lite.CampPlatformWithJustBrooklynMgmt;
 import brooklyn.camp.lite.TestAppAssemblyInstantiator;
 
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.catalog.CatalogItem;
-import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestEntity;
 

@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
 
-import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.management.ManagementContext;
 
 import brooklyn.config.BrooklynServerConfig;

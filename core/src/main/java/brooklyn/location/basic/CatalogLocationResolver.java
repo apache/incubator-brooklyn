@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 
 import brooklyn.catalog.internal.CatalogUtils;

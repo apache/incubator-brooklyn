@@ -18,7 +18,8 @@
  */
 package brooklyn.catalog.internal;
 
-import org.apache.brooklyn.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.Catalog;
+
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ApplicationBuilder;
 

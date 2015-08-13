@@ -21,10 +21,10 @@ package org.apache.brooklyn.api.entity.rebind;
 import java.util.List;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 

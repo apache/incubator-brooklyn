@@ -23,13 +23,13 @@ import java.net.URI;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager;
 import org.apache.brooklyn.api.entity.rebind.RebindManager;
-import org.apache.brooklyn.catalog.BrooklynCatalog;
 import org.apache.brooklyn.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.management.ha.HighAvailabilityManager;
 

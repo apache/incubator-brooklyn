@@ -18,12 +18,12 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 

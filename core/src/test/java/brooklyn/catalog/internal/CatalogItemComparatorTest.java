@@ -22,8 +22,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import org.testng.annotations.Test;
-
-import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 
 public class CatalogItemComparatorTest {
     private static final String RC2 = "10.5.8-rc2";

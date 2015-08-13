@@ -26,10 +26,10 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.catalog.BrooklynCatalog;
-import org.apache.brooklyn.catalog.CatalogItem;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.MyCatalogItems.MySillyAppTemplate;

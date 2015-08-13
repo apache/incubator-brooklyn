@@ -34,8 +34,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-import org.apache.brooklyn.catalog.BrooklynCatalog;
-import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 
 import brooklyn.catalog.internal.CatalogInitialization;

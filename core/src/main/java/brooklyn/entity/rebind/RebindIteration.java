@@ -37,6 +37,8 @@ import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Feed;
@@ -44,8 +46,6 @@ import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
-import org.apache.brooklyn.catalog.BrooklynCatalog;
-import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.management.ha.ManagementNodeState;
 import org.apache.brooklyn.mementos.BrooklynMemento;

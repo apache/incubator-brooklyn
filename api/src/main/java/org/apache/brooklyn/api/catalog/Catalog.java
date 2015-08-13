@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.catalog;
+package org.apache.brooklyn.api.catalog;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

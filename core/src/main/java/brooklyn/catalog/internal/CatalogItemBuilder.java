@@ -21,7 +21,7 @@ package brooklyn.catalog.internal;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 
 import com.google.common.base.Preconditions;
 

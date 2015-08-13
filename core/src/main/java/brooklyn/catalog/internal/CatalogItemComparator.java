@@ -23,7 +23,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 
-import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem;
+
 import brooklyn.util.text.NaturalOrderComparator;
 
 /**

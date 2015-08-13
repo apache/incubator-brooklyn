@@ -29,12 +29,13 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 
-import org.apache.brooklyn.catalog.CatalogItem;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.location.Location;
 import brooklyn.location.LocationDefinition;
 import brooklyn.location.basic.LocationConfigKeys;
+
 import org.apache.brooklyn.rest.api.LocationApi;
 import org.apache.brooklyn.rest.domain.LocationSpec;
 import org.apache.brooklyn.rest.domain.LocationSummary;
@@ -43,6 +44,7 @@ import org.apache.brooklyn.rest.transform.LocationTransformer;
 import org.apache.brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import org.apache.brooklyn.rest.util.EntityLocationUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.NaturalOrderComparator;

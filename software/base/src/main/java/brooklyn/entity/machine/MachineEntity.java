@@ -18,9 +18,9 @@
  */
 package brooklyn.entity.machine;
 
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;

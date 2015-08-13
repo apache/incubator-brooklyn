@@ -35,6 +35,7 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
@@ -42,7 +43,6 @@ import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
-import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
 

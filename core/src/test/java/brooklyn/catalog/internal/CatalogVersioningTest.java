@@ -26,9 +26,8 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import org.apache.brooklyn.catalog.BrooklynCatalog;
-import org.apache.brooklyn.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 
 import brooklyn.catalog.CatalogPredicates;

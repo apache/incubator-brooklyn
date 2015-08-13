@@ -28,10 +28,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.catalog.BrooklynCatalog;
-import org.apache.brooklyn.catalog.CatalogItem;
-import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
 

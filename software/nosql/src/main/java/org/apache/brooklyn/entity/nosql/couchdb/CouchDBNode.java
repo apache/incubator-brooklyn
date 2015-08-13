@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.entity.nosql.couchdb;
 
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 
 import brooklyn.config.ConfigKey;

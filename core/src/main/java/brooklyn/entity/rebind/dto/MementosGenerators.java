@@ -28,13 +28,13 @@ import java.util.Set;
 import brooklyn.basic.BrooklynTypes;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.AttributeSensor.SensorPersistenceMode;
-import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.Task;
 import org.apache.brooklyn.mementos.BrooklynMemento;

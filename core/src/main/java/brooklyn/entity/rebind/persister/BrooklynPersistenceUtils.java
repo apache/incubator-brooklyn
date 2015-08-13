@@ -26,11 +26,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
-import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.management.ha.ManagementNodeState;

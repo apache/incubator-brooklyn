@@ -22,8 +22,8 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.brooklyn.catalog.CatalogItem;
-import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.entitlement.EntitlementClass;
 

@@ -20,8 +20,8 @@ package org.apache.brooklyn.demo;
 
 import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.nosql.redis.RedisStore;
 import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService;
 

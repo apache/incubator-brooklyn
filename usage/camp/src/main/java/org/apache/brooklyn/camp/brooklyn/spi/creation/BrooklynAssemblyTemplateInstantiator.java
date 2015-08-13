@@ -40,11 +40,11 @@ import org.slf4j.LoggerFactory;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
-import org.apache.brooklyn.catalog.CatalogItem;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
 

@@ -42,10 +42,10 @@ import brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 
 import org.apache.brooklyn.api.basic.AbstractBrooklynObjectSpec;
-import org.apache.brooklyn.catalog.BrooklynCatalog;
-import org.apache.brooklyn.catalog.CatalogItem;
-import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
-import org.apache.brooklyn.catalog.CatalogItem.CatalogItemType;
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.policy.Policy;

@@ -21,9 +21,9 @@ package org.apache.brooklyn.demo;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.brooklyn.api.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.catalog.Catalog;
-import org.apache.brooklyn.catalog.CatalogConfig;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraFabric;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;

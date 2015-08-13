@@ -27,10 +27,10 @@ import java.util.Map;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogTemplateItemDto;

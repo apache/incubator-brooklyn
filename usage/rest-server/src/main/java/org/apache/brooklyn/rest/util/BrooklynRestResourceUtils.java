@@ -40,11 +40,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.BrooklynTypes;
 
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.catalog.BrooklynCatalog;
-import org.apache.brooklyn.catalog.CatalogItem;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;

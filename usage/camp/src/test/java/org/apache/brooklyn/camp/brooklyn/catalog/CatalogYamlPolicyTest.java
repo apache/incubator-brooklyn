@@ -21,9 +21,9 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 import static org.testng.Assert.assertEquals;
 
 import org.testng.annotations.Test;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
-import org.apache.brooklyn.catalog.CatalogItem;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.event.basic.BasicConfigKey;

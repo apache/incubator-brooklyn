@@ -19,7 +19,7 @@
 package brooklyn.osgi.tests.more;
 
 
-import org.apache.brooklyn.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;

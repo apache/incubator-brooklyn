@@ -19,7 +19,7 @@
 package brooklyn.osgi.tests.more;
 
 
-import org.apache.brooklyn.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.Catalog;
 import brooklyn.policy.basic.AbstractPolicy;
 
 @Catalog(name="More Policy", description="Cataliog item OSGi test policy")

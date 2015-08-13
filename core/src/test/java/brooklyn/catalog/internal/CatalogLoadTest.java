@@ -24,8 +24,8 @@ import static org.testng.Assert.assertTrue;
 
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 
-import org.apache.brooklyn.catalog.CatalogItem.CatalogBundle;
 import brooklyn.util.ResourceUtils;
 
 import com.google.common.base.Joiner;

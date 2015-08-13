@@ -32,13 +32,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.policy.PolicySpec;
 
 import brooklyn.config.ConfigKey;

@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.entity.webapp.jboss;
 
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.catalog.Catalog;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 
 import brooklyn.config.ConfigKey;

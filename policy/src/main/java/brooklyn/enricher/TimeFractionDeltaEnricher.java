@@ -22,11 +22,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
-import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.util.flags.SetFromFlag;

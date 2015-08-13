@@ -18,10 +18,10 @@
  */
 package brooklyn.entity.database.mysql;
 
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.entity.trait.HasShortName;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.catalog.Catalog;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
