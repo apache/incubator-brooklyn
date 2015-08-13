@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.nosql.mongodb;
 
 import static com.google.common.base.Preconditions.checkState;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;

@@ -21,7 +21,6 @@ package org.apache.brooklyn.entity.nosql.redis;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.nosql.redis.RedisStore;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;
@@ -30,8 +29,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicate;

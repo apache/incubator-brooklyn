@@ -18,13 +18,9 @@
  */
 package org.apache.brooklyn.entity.webapp
 
-import static brooklyn.entity.basic.ConfigKeys.*
-import static org.apache.brooklyn.entity.webapp.jboss.JBoss6Server.*
 import static org.apache.brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-
-import java.util.concurrent.TimeUnit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -44,8 +40,8 @@ import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServerImpl
-import brooklyn.location.Location
-import brooklyn.location.basic.BasicLocationRegistry
+import org.apache.brooklyn.location.Location
+import org.apache.brooklyn.location.basic.BasicLocationRegistry
 import org.apache.brooklyn.test.TestUtils
 import org.apache.brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras

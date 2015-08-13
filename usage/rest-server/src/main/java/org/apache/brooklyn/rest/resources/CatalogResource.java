@@ -46,8 +46,8 @@ import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.catalog.internal.CatalogItemComparator;
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 

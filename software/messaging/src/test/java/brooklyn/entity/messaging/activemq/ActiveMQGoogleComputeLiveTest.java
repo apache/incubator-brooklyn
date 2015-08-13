@@ -20,7 +20,7 @@ package brooklyn.entity.messaging.activemq;
 
 import brooklyn.entity.AbstractGoogleComputeLiveTest;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
 

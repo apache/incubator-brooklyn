@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.time.Time;
 

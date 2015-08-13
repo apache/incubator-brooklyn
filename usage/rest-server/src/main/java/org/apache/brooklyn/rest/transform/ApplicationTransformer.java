@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;

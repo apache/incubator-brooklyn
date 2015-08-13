@@ -32,7 +32,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.os.Os;
 

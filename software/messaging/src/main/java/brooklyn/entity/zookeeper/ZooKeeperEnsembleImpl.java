@@ -32,8 +32,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.Lists;
 

@@ -21,7 +21,7 @@ package org.apache.brooklyn.launcher.config;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.management.internal.BrooklynGarbageCollector;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import brooklyn.util.internal.BrooklynSystemProperties;

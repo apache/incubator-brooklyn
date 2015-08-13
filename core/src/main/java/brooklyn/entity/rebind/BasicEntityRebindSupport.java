@@ -40,7 +40,7 @@ import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.event.feed.AbstractFeed;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.exceptions.Exceptions;
 

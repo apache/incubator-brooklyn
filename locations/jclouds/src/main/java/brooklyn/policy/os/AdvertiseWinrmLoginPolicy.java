@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.Location;
-import brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.WinRmMachineLocation;
 import brooklyn.policy.basic.AbstractPolicy;
 
 import com.google.common.annotations.Beta;

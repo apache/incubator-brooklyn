@@ -41,11 +41,11 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.basic.SoftwareProcessEntityTest.MyService;
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.location.basic.AbstractLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.NoMachinesAvailableException;
+import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;

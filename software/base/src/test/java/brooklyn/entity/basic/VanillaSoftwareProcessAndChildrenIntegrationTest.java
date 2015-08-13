@@ -32,7 +32,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcess.ChildStartableMode;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.os.Os;

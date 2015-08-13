@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.dto.MementosGenerators;
-import brooklyn.location.Location;
-import brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.AbstractLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.TypeCoercions;

@@ -21,7 +21,7 @@ package brooklyn.entity.basic;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 
 public class EmptySoftwareProcessSshDriver extends AbstractSoftwareProcessSshDriver implements EmptySoftwareProcessDriver {

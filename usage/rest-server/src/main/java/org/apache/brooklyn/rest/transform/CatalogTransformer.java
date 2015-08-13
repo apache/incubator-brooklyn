@@ -36,8 +36,8 @@ import org.apache.brooklyn.api.event.Sensor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
 
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;

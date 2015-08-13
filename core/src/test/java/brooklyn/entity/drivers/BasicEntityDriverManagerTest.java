@@ -29,8 +29,8 @@ import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriver;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriverDependentEntity;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MySshDriver;
 import brooklyn.entity.drivers.RegistryEntityDriverFactoryTest.MyOtherSshDriver;
-import brooklyn.location.basic.SimulatedLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
 public class BasicEntityDriverManagerTest {

@@ -1,0 +1,9 @@
+org.apache.brooklyn.location.basic.DefinedLocationByIdResolver
+org.apache.brooklyn.location.basic.NamedLocationResolver
+org.apache.brooklyn.location.basic.CatalogLocationResolver
+org.apache.brooklyn.location.basic.LocalhostLocationResolver
+org.apache.brooklyn.location.basic.ByonLocationResolver
+org.apache.brooklyn.location.basic.SingleMachineLocationResolver
+org.apache.brooklyn.location.basic.HostLocationResolver
+org.apache.brooklyn.location.basic.MultiLocationResolver
+org.apache.brooklyn.location.access.PortForwardManagerLocationResolver

@@ -28,8 +28,8 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.location.PortRange;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;

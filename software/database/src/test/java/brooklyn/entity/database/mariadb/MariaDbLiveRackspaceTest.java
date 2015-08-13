@@ -25,8 +25,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.util.net.Protocol;
 import brooklyn.util.ssh.IptablesCommands;
 import brooklyn.util.ssh.IptablesCommands.Chain;

@@ -38,9 +38,8 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 

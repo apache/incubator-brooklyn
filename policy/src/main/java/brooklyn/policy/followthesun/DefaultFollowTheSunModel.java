@@ -33,8 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.location.Location;
-import brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.AbstractLocation;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;

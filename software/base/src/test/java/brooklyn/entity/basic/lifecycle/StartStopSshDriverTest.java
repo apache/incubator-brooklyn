@@ -41,7 +41,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;

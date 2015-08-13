@@ -53,7 +53,7 @@ import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.InternalEntityFactory;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.ManagementContextInjectable;
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.internal.ManagementContextInternal;

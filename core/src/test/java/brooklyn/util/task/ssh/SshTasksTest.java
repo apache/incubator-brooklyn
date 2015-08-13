@@ -32,9 +32,9 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;

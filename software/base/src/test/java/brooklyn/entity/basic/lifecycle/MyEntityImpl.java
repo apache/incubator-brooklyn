@@ -26,7 +26,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessDriver;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

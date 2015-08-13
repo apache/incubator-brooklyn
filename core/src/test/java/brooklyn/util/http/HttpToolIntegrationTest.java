@@ -27,7 +27,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.test.HttpService;
 
 import com.google.common.collect.ImmutableMap;

@@ -47,9 +47,9 @@ import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindContextImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.RecordingRebindExceptionHandler;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.test.policy.TestPolicy;
 
 import com.google.common.collect.Iterables;

@@ -25,8 +25,8 @@ import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.basic.WinRmMachineLocation;
 
 import com.google.common.collect.ImmutableList;
 

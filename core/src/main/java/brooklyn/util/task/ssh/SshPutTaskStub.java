@@ -20,7 +20,7 @@ package brooklyn.util.task.ssh;
 
 import java.io.InputStream;
 
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Supplier;

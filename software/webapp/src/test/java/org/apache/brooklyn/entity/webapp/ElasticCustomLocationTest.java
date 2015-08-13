@@ -21,7 +21,6 @@ package org.apache.brooklyn.entity.webapp;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService;
 import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
@@ -34,7 +33,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

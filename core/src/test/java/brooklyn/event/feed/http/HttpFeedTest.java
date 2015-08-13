@@ -44,7 +44,7 @@ import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.FeedConfig;
 import brooklyn.event.feed.PollConfig;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

@@ -30,8 +30,8 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 /**
  * Mock application for testing.

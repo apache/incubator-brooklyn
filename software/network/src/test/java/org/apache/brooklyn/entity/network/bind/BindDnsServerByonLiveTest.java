@@ -25,7 +25,7 @@ import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.text.Strings;
 
 public class BindDnsServerByonLiveTest extends BrooklynAppLiveTestSupport {

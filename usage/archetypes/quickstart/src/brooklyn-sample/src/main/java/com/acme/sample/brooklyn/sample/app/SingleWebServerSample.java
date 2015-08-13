@@ -8,7 +8,7 @@ import brooklyn.entity.basic.Attributes;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;
 

@@ -28,9 +28,9 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.EmptySoftwareProcessImpl;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.collect.ImmutableList;
 

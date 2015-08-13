@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.entity.nosql.couchdb;
 
-import org.apache.brooklyn.entity.nosql.couchdb.CouchDBNode;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +26,8 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.util.internal.TimeExtras;
 
 /**

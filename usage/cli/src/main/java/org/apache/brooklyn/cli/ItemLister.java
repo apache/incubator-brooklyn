@@ -41,8 +41,8 @@ import org.apache.brooklyn.cli.lister.ItemDescriptors;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
-import brooklyn.location.Location;
-import brooklyn.location.LocationResolver;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationResolver;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Urls;

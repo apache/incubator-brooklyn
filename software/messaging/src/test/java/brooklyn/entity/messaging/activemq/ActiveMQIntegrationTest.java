@@ -46,7 +46,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

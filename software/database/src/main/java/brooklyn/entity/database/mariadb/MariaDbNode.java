@@ -34,7 +34,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSens
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MariaDB Node", description="MariaDB is an open source relational database management system (RDBMS)", iconUrl="classpath:///mariadb-logo-180x119.png")

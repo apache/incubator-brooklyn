@@ -36,7 +36,7 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;

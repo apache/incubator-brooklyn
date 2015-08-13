@@ -31,7 +31,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.test.TestHttpRequestHandler;
 import brooklyn.test.TestHttpServer;
 import brooklyn.util.config.ConfigBag;

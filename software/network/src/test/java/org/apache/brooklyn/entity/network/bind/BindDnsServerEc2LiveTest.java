@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 public class BindDnsServerEc2LiveTest extends AbstractEc2LiveTest {
     private static final Logger LOG = LoggerFactory.getLogger(BindDnsServerEc2LiveTest.class);

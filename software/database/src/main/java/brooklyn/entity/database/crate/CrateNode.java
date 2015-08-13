@@ -33,7 +33,7 @@ import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 @ImplementedBy(CrateNodeImpl.class)

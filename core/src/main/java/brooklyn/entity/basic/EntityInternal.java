@@ -34,7 +34,7 @@ import org.apache.brooklyn.mementos.EntityMemento;
 
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.util.config.ConfigBag;
 

@@ -34,7 +34,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
 

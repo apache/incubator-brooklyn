@@ -22,7 +22,7 @@ import org.apache.brooklyn.entity.nosql.mongodb.AbstractMongoDBSshDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

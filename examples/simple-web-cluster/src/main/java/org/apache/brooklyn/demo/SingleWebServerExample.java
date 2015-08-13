@@ -33,7 +33,7 @@ import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;

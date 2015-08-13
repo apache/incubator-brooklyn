@@ -48,8 +48,8 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 
 import com.google.common.base.Function;

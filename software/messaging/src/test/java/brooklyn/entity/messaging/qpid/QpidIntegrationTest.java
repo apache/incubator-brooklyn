@@ -50,7 +50,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

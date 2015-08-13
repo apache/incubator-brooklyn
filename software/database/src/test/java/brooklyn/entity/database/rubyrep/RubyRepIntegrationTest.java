@@ -41,9 +41,9 @@ import brooklyn.entity.database.mysql.MySqlIntegrationTest;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import brooklyn.entity.database.postgresql.PostgreSqlNode;
-import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.management.internal.LocalManagementContext;
 
 public class RubyRepIntegrationTest {

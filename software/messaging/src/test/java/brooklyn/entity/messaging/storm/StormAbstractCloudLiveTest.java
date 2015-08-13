@@ -50,7 +50,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.storm.topologies.ExclamationBolt;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;

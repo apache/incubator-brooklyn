@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.location.basic.BasicLocationRegistry;
+import org.apache.brooklyn.location.basic.BasicLocationRegistry;
 import brooklyn.management.internal.LocalManagementContext;
 
 import org.apache.brooklyn.api.entity.Application;
@@ -45,7 +45,6 @@ import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
-import org.apache.brooklyn.test.HttpTestUtils;
 
 @Test
 public class BrooklynApiRestClientTest {

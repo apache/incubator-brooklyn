@@ -20,7 +20,7 @@ package org.apache.brooklyn.api.entity.drivers;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.annotations.Beta;
 

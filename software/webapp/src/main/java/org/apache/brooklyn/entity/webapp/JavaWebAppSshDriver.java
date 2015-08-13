@@ -26,7 +26,7 @@ import java.util.Set;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.task.Tasks;
 import brooklyn.util.task.ssh.SshTasks;

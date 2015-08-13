@@ -29,7 +29,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.math.MathFunctions;
 
 import com.google.common.base.Function;

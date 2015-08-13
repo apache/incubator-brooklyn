@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.annotations.Beta;
 

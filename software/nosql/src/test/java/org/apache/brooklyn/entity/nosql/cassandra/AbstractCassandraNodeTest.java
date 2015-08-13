@@ -18,11 +18,10 @@
  */
 package org.apache.brooklyn.entity.nosql.cassandra;
 
-import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
 import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 /**
  * Cassandra test framework for integration and live tests.

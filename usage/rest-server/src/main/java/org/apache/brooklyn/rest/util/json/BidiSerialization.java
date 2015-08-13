@@ -34,7 +34,7 @@ import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.module.SimpleModule;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 public class BidiSerialization {
 

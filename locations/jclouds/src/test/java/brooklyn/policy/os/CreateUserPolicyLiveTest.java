@@ -33,12 +33,11 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.policy.os.CreateUserPolicy;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.text.Identifiers;
 

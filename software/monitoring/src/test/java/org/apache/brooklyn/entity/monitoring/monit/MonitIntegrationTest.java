@@ -42,8 +42,8 @@ import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.MachineDetails;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.MachineDetails;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 
 import com.google.common.base.Function;

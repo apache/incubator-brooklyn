@@ -44,10 +44,10 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.location.cloud.CloudLocationConfig;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsUtil;
+import org.apache.brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsUtil;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;

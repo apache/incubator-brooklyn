@@ -49,7 +49,7 @@ import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;

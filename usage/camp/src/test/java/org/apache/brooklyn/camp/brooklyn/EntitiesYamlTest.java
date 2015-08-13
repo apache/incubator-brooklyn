@@ -59,7 +59,7 @@ import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

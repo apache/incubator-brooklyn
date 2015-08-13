@@ -50,7 +50,7 @@ import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.CommandLineUtil;

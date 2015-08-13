@@ -21,7 +21,7 @@ package brooklyn.entity.database.postgresql;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.software.AbstractDockerLiveTest;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
 

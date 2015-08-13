@@ -22,7 +22,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriver;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 /**
  * A registry of the entity implementations to be used when creating an entity of a given type.

@@ -30,8 +30,8 @@ import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
 import brooklyn.management.entitlement.Entitlements;
 
 import com.google.common.base.Function;

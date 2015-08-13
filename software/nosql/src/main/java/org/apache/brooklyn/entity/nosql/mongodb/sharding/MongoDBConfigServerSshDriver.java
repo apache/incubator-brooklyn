@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 import org.apache.brooklyn.entity.nosql.mongodb.AbstractMongoDBSshDriver;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBDriver;
 
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 public class MongoDBConfigServerSshDriver extends AbstractMongoDBSshDriver implements MongoDBDriver {
     

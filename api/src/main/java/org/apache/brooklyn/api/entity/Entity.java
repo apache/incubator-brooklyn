@@ -34,7 +34,7 @@ import org.apache.brooklyn.policy.PolicySpec;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.guava.Maybe;
 
 /**

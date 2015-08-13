@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.RebindManager;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

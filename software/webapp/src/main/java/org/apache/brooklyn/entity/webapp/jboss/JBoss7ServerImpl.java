@@ -31,7 +31,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Functions;

@@ -33,12 +33,12 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.MultiLocation;
+import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.location.MachineLocation;
+import org.apache.brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.MultiLocation;
 import brooklyn.test.Asserts;
 
 import com.google.common.base.Predicate;

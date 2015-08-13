@@ -20,7 +20,6 @@ package org.apache.brooklyn.launcher;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.management.ManagementContext;
 import org.apache.brooklyn.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
@@ -45,7 +44,7 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;

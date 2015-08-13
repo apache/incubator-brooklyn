@@ -34,7 +34,7 @@ import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Maps;

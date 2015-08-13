@@ -44,7 +44,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.CommandLineUtil;
 import brooklyn.util.ResourceUtils;

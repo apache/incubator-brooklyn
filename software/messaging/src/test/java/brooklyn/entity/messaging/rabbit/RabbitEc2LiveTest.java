@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
-import brooklyn.location.Location;
+import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

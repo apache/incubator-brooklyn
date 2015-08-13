@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.network.bind;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 /**
  * Implements methods in {@link brooklyn.entity.basic.AbstractSoftwareProcessSshDriver}.
