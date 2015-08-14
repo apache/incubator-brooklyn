@@ -34,7 +34,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.mementos.EntityMemento;
+import org.apache.brooklyn.api.mementos.EntityMemento;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 

@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.mementos.LocationMemento;
+import org.apache.brooklyn.api.mementos.LocationMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -30,7 +30,7 @@ import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.mementos.EntityMemento;
+import org.apache.brooklyn.api.mementos.EntityMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

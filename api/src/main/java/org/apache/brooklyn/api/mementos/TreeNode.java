@@ -16,34 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.mementos;
+package org.apache.brooklyn.api.mementos;
 
-import java.util.Collection;
+import java.util.List;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
+/**
+ * A simple tree structure, where a node references a parent and children using their ids.
+ * 
+ * e.g. could be used to represent the entity hierarchy within mementos, where the 
+ * String is the id of parent/child entities.
+ * 
+ * @author aled
+ */
+public interface TreeNode {
 
-public interface CatalogItemMemento extends Memento {
-
-    String getDescription();
-
-    String getSymbolicName();
-
-    String getIconUrl();
-
-    String getVersion();
-
-    String getPlanYaml();
-
-    String getJavaType();
-
-    Collection<CatalogItem.CatalogBundle> getLibraries();
-
-    CatalogItem.CatalogItemType getCatalogItemType();
-
-    Class<?> getCatalogItemJavaType();
-
-    Class<?> getSpecType();
-
-    boolean isDeprecated();
-
+    /**
+     * The id of this node in the tree. This id will be used by the parent's getChildren(), 
+     * and by each child's getParent().
+     */
+    String getId();
+    
+    /**
+     * The id of the parent entity, or null if none.
+     */
+    String getParent();
+    
+    /**
+     * The ids of the children.
+     */
+    List<String> getChildren();
 }

@@ -34,7 +34,7 @@ import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.mementos.LocationMemento;
+import org.apache.brooklyn.api.mementos.LocationMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

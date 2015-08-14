@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.transformer.impl.XsltTransformer;

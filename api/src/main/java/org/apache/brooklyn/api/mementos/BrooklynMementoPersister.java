@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.mementos;
+package org.apache.brooklyn.api.mementos;
 
 import java.io.IOException;
 import java.util.Collection;

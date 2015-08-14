@@ -22,9 +22,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.brooklyn.mementos.BrooklynMemento;
-import org.apache.brooklyn.mementos.EntityMemento;
-import org.apache.brooklyn.mementos.LocationMemento;
+import org.apache.brooklyn.api.mementos.BrooklynMemento;
+import org.apache.brooklyn.api.mementos.EntityMemento;
+import org.apache.brooklyn.api.mementos.LocationMemento;
 
 import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.transformer.BrooklynMementoTransformer;

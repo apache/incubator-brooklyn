@@ -32,7 +32,7 @@ import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.mementos.LocationMemento;
+import org.apache.brooklyn.api.mementos.LocationMemento;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;

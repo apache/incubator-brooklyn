@@ -47,7 +47,7 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.mementos.EntityMemento;
+import org.apache.brooklyn.api.mementos.EntityMemento;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.EntityAdjunct;

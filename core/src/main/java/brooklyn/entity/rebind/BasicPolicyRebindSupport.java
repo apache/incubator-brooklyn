@@ -19,7 +19,7 @@
 package brooklyn.entity.rebind;
 
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
-import org.apache.brooklyn.mementos.PolicyMemento;
+import org.apache.brooklyn.api.mementos.PolicyMemento;
 
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.config.ConfigBag;

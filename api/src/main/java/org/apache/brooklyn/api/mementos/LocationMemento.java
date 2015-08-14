@@ -16,18 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.mementos;
+package org.apache.brooklyn.api.mementos;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 
 /**
- * Represents the state of a feed, so that it can be reconstructed (e.g. after restarting brooklyn).
+ * Represents the state of a location, so that it can be reconstructed (e.g. after restarting brooklyn).
  * 
  * @see RebindSupport
+ * 
+ * @author aled
  */
-public interface FeedMemento extends Memento {
+public interface LocationMemento extends TreeNode, Memento {
 
-    Map<String, Object> getConfig();
+    Map<String, Object> getLocationConfig();
+    Set<String> getLocationConfigUnused();
+    String getLocationConfigDescription();
 }

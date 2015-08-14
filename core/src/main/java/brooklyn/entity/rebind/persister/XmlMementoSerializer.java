@@ -39,7 +39,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 

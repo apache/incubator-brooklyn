@@ -16,33 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.mementos;
+package org.apache.brooklyn.api.mementos;
 
-import java.util.List;
+import java.util.Map;
+
+import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 
 /**
- * A simple tree structure, where a node references a parent and children using their ids.
+ * Represents the state of an policy, so that it can be reconstructed (e.g. after restarting brooklyn).
  * 
- * e.g. could be used to represent the entity hierarchy within mementos, where the 
- * String is the id of parent/child entities.
+ * @see RebindSupport
  * 
  * @author aled
  */
-public interface TreeNode {
+public interface PolicyMemento extends Memento {
 
-    /**
-     * The id of this node in the tree. This id will be used by the parent's getChildren(), 
-     * and by each child's getParent().
-     */
-    String getId();
-    
-    /**
-     * The id of the parent entity, or null if none.
-     */
-    String getParent();
-    
-    /**
-     * The ids of the children.
-     */
-    List<String> getChildren();
+    Map<String, Object> getConfig();
 }

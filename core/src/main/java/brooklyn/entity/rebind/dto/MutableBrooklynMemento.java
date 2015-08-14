@@ -24,13 +24,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.brooklyn.mementos.BrooklynMemento;
-import org.apache.brooklyn.mementos.CatalogItemMemento;
-import org.apache.brooklyn.mementos.EnricherMemento;
-import org.apache.brooklyn.mementos.EntityMemento;
-import org.apache.brooklyn.mementos.FeedMemento;
-import org.apache.brooklyn.mementos.LocationMemento;
-import org.apache.brooklyn.mementos.PolicyMemento;
+import org.apache.brooklyn.api.mementos.BrooklynMemento;
+import org.apache.brooklyn.api.mementos.CatalogItemMemento;
+import org.apache.brooklyn.api.mementos.EnricherMemento;
+import org.apache.brooklyn.api.mementos.EntityMemento;
+import org.apache.brooklyn.api.mementos.FeedMemento;
+import org.apache.brooklyn.api.mementos.LocationMemento;
+import org.apache.brooklyn.api.mementos.PolicyMemento;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 

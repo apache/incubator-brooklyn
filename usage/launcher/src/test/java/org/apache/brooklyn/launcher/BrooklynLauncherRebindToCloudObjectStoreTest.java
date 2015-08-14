@@ -20,8 +20,8 @@ package org.apache.brooklyn.launcher;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 

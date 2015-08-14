@@ -16,23 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.mementos;
+package org.apache.brooklyn.api.mementos;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.Collection;
 
-import org.apache.brooklyn.api.entity.rebind.RebindSupport;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 
-/**
- * Represents the state of a location, so that it can be reconstructed (e.g. after restarting brooklyn).
- * 
- * @see RebindSupport
- * 
- * @author aled
- */
-public interface LocationMemento extends TreeNode, Memento {
+public interface CatalogItemMemento extends Memento {
 
-    Map<String, Object> getLocationConfig();
-    Set<String> getLocationConfigUnused();
-    String getLocationConfigDescription();
+    String getDescription();
+
+    String getSymbolicName();
+
+    String getIconUrl();
+
+    String getVersion();
+
+    String getPlanYaml();
+
+    String getJavaType();
+
+    Collection<CatalogItem.CatalogBundle> getLibraries();
+
+    CatalogItem.CatalogItemType getCatalogItemType();
+
+    Class<?> getCatalogItemJavaType();
+
+    Class<?> getSpecType();
+
+    boolean isDeprecated();
+
 }

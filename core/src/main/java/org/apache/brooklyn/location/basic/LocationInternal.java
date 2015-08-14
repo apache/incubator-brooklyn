@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.mementos.LocationMemento;
+import org.apache.brooklyn.api.mementos.LocationMemento;
 
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigInheritance;

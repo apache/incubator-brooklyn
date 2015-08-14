@@ -32,7 +32,7 @@ import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.entity.rebind.RebindManager.RebindFailureMode;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

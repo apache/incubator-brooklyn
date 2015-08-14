@@ -42,7 +42,7 @@ import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 

@@ -29,7 +29,7 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.mementos.BrooklynMementoManifest;
+import org.apache.brooklyn.api.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.policy.PolicySpec;

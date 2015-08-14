@@ -46,6 +46,7 @@ import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
 import org.slf4j.Logger;
@@ -82,7 +83,6 @@ import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.entity.trait.Startable;
 
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import org.apache.brooklyn.location.basic.PortRanges;
 

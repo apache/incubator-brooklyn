@@ -42,12 +42,12 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
-import org.apache.brooklyn.mementos.BrooklynMemento;
-import org.apache.brooklyn.mementos.BrooklynMementoManifest;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
-import org.apache.brooklyn.mementos.CatalogItemMemento;
-import org.apache.brooklyn.mementos.Memento;
+import org.apache.brooklyn.api.mementos.BrooklynMemento;
+import org.apache.brooklyn.api.mementos.BrooklynMementoManifest;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.mementos.CatalogItemMemento;
+import org.apache.brooklyn.api.mementos.Memento;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;

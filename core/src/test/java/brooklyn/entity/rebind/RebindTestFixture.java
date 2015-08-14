@@ -39,7 +39,7 @@ import org.apache.brooklyn.api.entity.rebind.RebindManager;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.mementos.BrooklynMementoManifest;
+import org.apache.brooklyn.api.mementos.BrooklynMementoManifest;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.basic.Entities;

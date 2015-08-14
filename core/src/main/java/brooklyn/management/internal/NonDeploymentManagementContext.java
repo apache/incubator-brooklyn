@@ -57,8 +57,8 @@ import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.config.BrooklynProperties;

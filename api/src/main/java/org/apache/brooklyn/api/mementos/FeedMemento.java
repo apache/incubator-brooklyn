@@ -16,20 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.mementos;
+package org.apache.brooklyn.api.mementos;
 
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 
 /**
- * Represents the state of an policy, so that it can be reconstructed (e.g. after restarting brooklyn).
+ * Represents the state of a feed, so that it can be reconstructed (e.g. after restarting brooklyn).
  * 
  * @see RebindSupport
- * 
- * @author aled
  */
-public interface PolicyMemento extends Memento {
+public interface FeedMemento extends Memento {
 
     Map<String, Object> getConfig();
 }

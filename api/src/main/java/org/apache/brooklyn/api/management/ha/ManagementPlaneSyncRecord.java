@@ -20,8 +20,8 @@ package org.apache.brooklyn.api.management.ha;
 
 import java.util.Map;
 
-import org.apache.brooklyn.mementos.BrooklynMemento;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMemento;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 
 import com.google.common.annotations.Beta;
 

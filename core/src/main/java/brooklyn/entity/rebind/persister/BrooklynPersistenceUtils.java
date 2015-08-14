@@ -38,8 +38,8 @@ import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.management.ha.MementoCopyMode;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
-import org.apache.brooklyn.mementos.Memento;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.mementos.Memento;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 

@@ -19,7 +19,7 @@
 package brooklyn.entity.rebind;
 
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
-import org.apache.brooklyn.mementos.EnricherMemento;
+import org.apache.brooklyn.api.mementos.EnricherMemento;
 
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.util.config.ConfigBag;

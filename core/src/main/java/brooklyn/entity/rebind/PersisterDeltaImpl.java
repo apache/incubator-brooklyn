@@ -23,15 +23,15 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
-import org.apache.brooklyn.mementos.CatalogItemMemento;
-import org.apache.brooklyn.mementos.EnricherMemento;
-import org.apache.brooklyn.mementos.EntityMemento;
-import org.apache.brooklyn.mementos.FeedMemento;
-import org.apache.brooklyn.mementos.LocationMemento;
-import org.apache.brooklyn.mementos.Memento;
-import org.apache.brooklyn.mementos.PolicyMemento;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister.Delta;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister.MutableDelta;
+import org.apache.brooklyn.api.mementos.CatalogItemMemento;
+import org.apache.brooklyn.api.mementos.EnricherMemento;
+import org.apache.brooklyn.api.mementos.EntityMemento;
+import org.apache.brooklyn.api.mementos.FeedMemento;
+import org.apache.brooklyn.api.mementos.LocationMemento;
+import org.apache.brooklyn.api.mementos.Memento;
+import org.apache.brooklyn.api.mementos.PolicyMemento;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister.Delta;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister.MutableDelta;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;

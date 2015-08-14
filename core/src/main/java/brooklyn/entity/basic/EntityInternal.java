@@ -31,7 +31,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.SubscriptionContext;
-import org.apache.brooklyn.mementos.EntityMemento;
+import org.apache.brooklyn.api.mementos.EntityMemento;
 
 import brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
