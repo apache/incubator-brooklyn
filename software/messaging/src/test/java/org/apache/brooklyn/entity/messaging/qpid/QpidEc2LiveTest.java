@@ -24,7 +24,7 @@ import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 
 import com.google.common.collect.ImmutableList;
 

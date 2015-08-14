@@ -38,8 +38,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

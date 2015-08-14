@@ -31,7 +31,7 @@ import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

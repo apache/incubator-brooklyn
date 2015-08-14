@@ -51,7 +51,7 @@ import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;

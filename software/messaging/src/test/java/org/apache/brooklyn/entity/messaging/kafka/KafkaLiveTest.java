@@ -29,7 +29,7 @@ import org.apache.brooklyn.entity.messaging.kafka.KafkaCluster;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 
