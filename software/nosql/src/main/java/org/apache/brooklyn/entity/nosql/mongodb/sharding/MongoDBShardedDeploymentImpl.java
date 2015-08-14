@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.entity.AbstractEntity;
@@ -42,10 +41,12 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.brooklyn.entity.nosql.mongodb.MongoDBAuthenticationMixins;
+import org.apache.brooklyn.entity.nosql.mongodb.MongoDBAuthenticationUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class MongoDBShardedDeploymentImpl extends AbstractEntity implements MongoDBShardedDeployment {
+public class MongoDBShardedDeploymentImpl extends AbstractEntity implements MongoDBShardedDeployment, MongoDBAuthenticationMixins {
     
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBShardedDeploymentImpl.class);
@@ -53,22 +54,36 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
     @Override
     public void init() {
         super.init();
-        
-        setAttribute(CONFIG_SERVER_CLUSTER, addChild(EntitySpec.create(MongoDBConfigServerCluster.class)
+
+        EntitySpec<MongoDBConfigServerCluster> configServerClusterSpec = EntitySpec.create(MongoDBConfigServerCluster.class)
                 .configure(MongoDBConfigServerCluster.MEMBER_SPEC, getConfig(MONGODB_CONFIG_SERVER_SPEC))
-                .configure(DynamicCluster.INITIAL_SIZE, getConfig(CONFIG_CLUSTER_SIZE))));
-        setAttribute(ROUTER_CLUSTER, addChild(EntitySpec.create(MongoDBRouterCluster.class)
+                .configure(DynamicCluster.INITIAL_SIZE, getConfig(CONFIG_CLUSTER_SIZE));
+        MongoDBAuthenticationUtils.setAuthenticationConfig(configServerClusterSpec, this);
+        sensors().set(CONFIG_SERVER_CLUSTER, addChild(configServerClusterSpec));
+
+        EntitySpec<MongoDBRouterCluster> routerClusterSpec = EntitySpec.create(MongoDBRouterCluster.class)
                 .configure(MongoDBRouterCluster.MEMBER_SPEC, getConfig(MONGODB_ROUTER_SPEC))
                 .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_ROUTER_CLUSTER_SIZE))
-                .configure(MongoDBRouter.CONFIG_SERVERS, attributeWhenReady(getAttribute(CONFIG_SERVER_CLUSTER), MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES))));
-        setAttribute(SHARD_CLUSTER, addChild(EntitySpec.create(MongoDBShardCluster.class)
+                .configure(MongoDBRouter.CONFIG_SERVERS, attributeWhenReady(getAttribute(CONFIG_SERVER_CLUSTER), MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES));
+        MongoDBAuthenticationUtils.setAuthenticationConfig(routerClusterSpec, this);
+        sensors().set(ROUTER_CLUSTER, addChild(routerClusterSpec));
+
+        EntitySpec<MongoDBShardCluster> shardClusterSpec = EntitySpec.create(MongoDBShardCluster.class)
                 .configure(MongoDBShardCluster.MEMBER_SPEC, getConfig(MONGODB_REPLICA_SET_SPEC))
-                .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_SHARD_CLUSTER_SIZE))));
+                .configure(DynamicCluster.INITIAL_SIZE, getConfig(INITIAL_SHARD_CLUSTER_SIZE));
+        MongoDBAuthenticationUtils.setAuthenticationConfig(shardClusterSpec, this);
+        sensors().set(SHARD_CLUSTER, addChild(shardClusterSpec));
+
         addEnricher(Enrichers.builder()
                 .propagating(MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES)
                 .from(getAttribute(CONFIG_SERVER_CLUSTER))
                 .build());
-        
+
+        // Advertise even if default are used (root password is set in MongoDBAuthenticationUtils)
+        sensors().set(MongoDBAuthenticationMixins.AUTHENTICATION_DATABASE, config().get(MongoDBAuthenticationMixins.AUTHENTICATION_DATABASE));
+        sensors().set(MongoDBAuthenticationMixins.ROOT_USERNAME, config().get(MongoDBAuthenticationMixins.ROOT_USERNAME));
+        sensors().set(MongoDBAuthenticationMixins.MONGODB_KEYFILE_DESTINATION, config().get(MongoDBAuthenticationMixins.MONGODB_KEYFILE_CONTENTS));
+
         ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "stopped");
     }
 
@@ -85,7 +100,7 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
             if (getConfigRaw(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP, true).isPresent()) {
                 addPolicy(PolicySpec.create(ColocatedRouterTrackingPolicy.class)
                         .displayName("Co-located router tracker")
-                        .configure("group", (Group)getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP)));
+                        .configure("group", getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP)));
             }
             ServiceNotUpLogic.clearNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
@@ -99,6 +114,7 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
     public static class ColocatedRouterTrackingPolicy extends AbstractMembershipTrackingPolicy {
         @Override
         protected void onEntityAdded(Entity member) {
+            MongoDBAuthenticationUtils.setAuthenticationConfig(member, entity);
             MongoDBRouterCluster cluster = entity.getAttribute(ROUTER_CLUSTER);
             cluster.addMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
         }
@@ -107,7 +123,7 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
             MongoDBRouterCluster cluster = entity.getAttribute(ROUTER_CLUSTER);
             cluster.removeMember(member.getAttribute(CoLocatedMongoDBRouter.ROUTER));
         }
-    };
+    }
 
     @Override
     public void stop() {

@@ -1,0 +1,45 @@
+name: Sharded MongoDB With Web App
+description: Auto-scaling web app backed by MongoDB
+location: softlayer:ams01
+services:
+- type: org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment
+  id: mongo
+  name: Mongo DB Backend
+  brooklyn.config:
+    initialShardClusterSize: 5
+    shardReplicaSetSize: 3
+    coLocatedRouterGroup: $brooklyn:component("webappcluster").attributeWhenReady("controlleddynamicwebappcluster.cluster")
+    mongodb.keyfile.url: classpath://mongo.key
+    mongodb.root.username: mongouser
+
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  id: webappcluster
+  brooklyn.config:
+    memberSpec:
+      $brooklyn:entitySpec:
+        type: org.apache.brooklyn.entity.nosql.mongodb.sharding.CoLocatedMongoDBRouter
+        brooklyn.enrichers:
+          - type: brooklyn.enricher.basic.Propagator
+            brooklyn.config:
+              enricher.propagating.sensorMapping:
+                $brooklyn:sensor("org.apache.brooklyn.entity.webapp.tomcat.TomcatServer", "http.port"): $brooklyn:sensor("org.apache.brooklyn.entity.webapp.tomcat.TomcatServer", "http.port")
+              enricher.producer: $brooklyn:component("child", "appserver")
+        brooklyn.config:
+          mongodb.keyfile.url: classpath://mongo.key
+          brooklyn.example.mongodb.username: $brooklyn:component("mongo").attributeWhenReady("mongodb.root.username")
+          brooklyn.example.mongodb.password: $brooklyn:component("mongo").attributeWhenReady("mongodb.root.password")
+          brooklyn.example.mongodb.authenticationDatabase: $brooklyn:component("mongo").attributeWhenReady("mongodb.authentication.database")
+          shardedDeployment: $brooklyn:component("mongo")
+          siblingSpecs:
+          - $brooklyn:entitySpec:
+              id: appserver
+              type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
+              brooklyn.config:
+                war: "classpath://brooklyn-example-hello-world-sql-webapp.war"
+                java.sysprops:
+                  brooklyn.example.mongodb.port: $brooklyn:component("parent", "").attributeWhenReady("mongodb.server.port")
+                  brooklyn.example.mongodb.username: $brooklyn:component("mongo").attributeWhenReady("mongodb.root.username")
+                  brooklyn.example.mongodb.password: $brooklyn:component("mongo").attributeWhenReady("mongodb.root.password")
+                  brooklyn.example.mongodb.authenticationDatabase: $brooklyn:component("mongo").attributeWhenReady("mongodb.authentication.database")
+          - $brooklyn:entitySpec:
+              type: brooklyn.entity.basic.EmptySoftwareProcess

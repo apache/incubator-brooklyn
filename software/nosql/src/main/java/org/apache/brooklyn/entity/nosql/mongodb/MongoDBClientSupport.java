@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
@@ -34,6 +35,7 @@ import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
 
@@ -45,11 +47,20 @@ import com.mongodb.ServerAddress;
 public class MongoDBClientSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoDBClientSupport.class);
-
     private ServerAddress address;
-    
+
+    private boolean usesAuthentication;
+    private String username;
+    private String password;
+    private String authenticationDatabase;
+
     private MongoClient client() {
-        return new MongoClient(address, connectionOptions);
+        if (usesAuthentication) {
+            MongoCredential credential = MongoCredential.createMongoCRCredential(username, authenticationDatabase, password.toCharArray());
+            return new MongoClient(address, ImmutableList.of(credential), connectionOptions);
+        } else {
+            return new MongoClient(address, connectionOptions);
+        }
     }
 
     // Set client to automatically reconnect to servers.
@@ -60,9 +71,13 @@ public class MongoDBClientSupport {
 
     private static final BasicBSONObject EMPTY_RESPONSE = new BasicBSONObject();
 
-    public MongoDBClientSupport(ServerAddress standalone) {
+    public MongoDBClientSupport(ServerAddress standalone, boolean usesAuthentication, String username, String password, String authenticationDatabase) {
         // We could also use a MongoClient to access an entire replica set. See MongoClient(List<ServerAddress>).
         address = standalone;
+        this.usesAuthentication = usesAuthentication;
+        this.username = username;
+        this.password = password;
+        this.authenticationDatabase = authenticationDatabase;
     }
 
     /**
@@ -71,7 +86,8 @@ public class MongoDBClientSupport {
     public static MongoDBClientSupport forServer(AbstractMongoDBServer standalone) throws UnknownHostException {
         HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(standalone, standalone.getAttribute(MongoDBServer.PORT));
         ServerAddress address = new ServerAddress(hostAndPort.getHostText(), hostAndPort.getPort());
-        return new MongoDBClientSupport(address);
+        return new MongoDBClientSupport(address, MongoDBAuthenticationUtils.usesAuthentication(standalone), standalone.sensors().get(MongoDBAuthenticationMixins.ROOT_USERNAME),
+                standalone.sensors().get(MongoDBAuthenticationMixins.ROOT_PASSWORD), standalone.sensors().get(MongoDBAuthenticationMixins.AUTHENTICATION_DATABASE));
     }
 
     private ServerAddress getServerAddress() {

@@ -141,7 +141,12 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
 
     @Override
     protected EntitySpec<?> getMemberSpec() {
-        return getConfig(MEMBER_SPEC, EntitySpec.create(MongoDBServer.class));
+        EntitySpec<?> spec = config().get(MEMBER_SPEC);
+        if (spec == null) {
+            spec = EntitySpec.create(MongoDBServer.class);
+        }
+        MongoDBAuthenticationUtils.setAuthenticationConfig(spec, this);
+        return spec;
     }
 
     /**
@@ -200,6 +205,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 setAttribute(PRIMARY_ENTITY, server);
                 setAttribute(Startable.SERVICE_UP, true);
             } else {
+                ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, "initialization", "replicaset failed to initialize");
                 ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             }
         } else {

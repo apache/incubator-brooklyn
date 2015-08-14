@@ -27,7 +27,7 @@ import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
-public interface AbstractMongoDBServer extends SoftwareProcess, Entity {
+public interface AbstractMongoDBServer extends SoftwareProcess, Entity, MongoDBAuthenticationMixins {
 
     // TODO Need to properly test v2.4.x and v2.5.x support.
     // I think the v2.5.x were dev releases.
@@ -58,4 +58,5 @@ public interface AbstractMongoDBServer extends SoftwareProcess, Entity {
     @SetFromFlag("port")
     PortAttributeSensorAndConfigKey PORT =
             new PortAttributeSensorAndConfigKey("mongodb.server.port", "Server port", "27017+");
+
 }

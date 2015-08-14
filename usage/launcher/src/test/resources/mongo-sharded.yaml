@@ -24,10 +24,11 @@ services:
   id: mongo
   name: Mongo DB Backend
   brooklyn.config:
-    initialRouterClusterSize: 1
     initialShardClusterSize: 5
     shardReplicaSetSize: 3
     coLocatedRouterGroup: $brooklyn:component("webappcluster").attributeWhenReady("controlleddynamicwebappcluster.cluster")
+    mongodb.keyfile.url: classpath://mongo.key
+    mongodb.root.user: mongouser
 
 - type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   id: webappcluster
@@ -51,5 +52,8 @@ services:
                 war: "classpath://brooklyn-example-hello-world-sql-webapp.war"
                 java.sysprops:
                   brooklyn.example.mongodb.port: $brooklyn:component("parent", "").attributeWhenReady("mongodb.server.port")
+                  brooklyn.example.mongodb.username: $brooklyn:component("parent", "").attributeWhenReady("mongodb.root.username")
+                  brooklyn.example.mongodb.password: $brooklyn:component("parent", "").attributeWhenReady("mongodb.root.password")
+                  brooklyn.example.mongodb.authenticationDatabase: $brooklyn:component("parent", "").attributeWhenReady("mongodb.root.password")
           - $brooklyn:entitySpec:
               type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess

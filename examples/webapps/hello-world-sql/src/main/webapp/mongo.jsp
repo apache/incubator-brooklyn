@@ -1,4 +1,5 @@
 <%@ page language="java" import="java.sql.*,com.mongodb.*"%>
+<%@ page import="java.util.Arrays" %>
 
 <html>
 <!--
@@ -39,6 +40,9 @@
 
 <%
 String port=System.getProperty("brooklyn.example.mongodb.port");
+String username=System.getProperty("brooklyn.example.mongodb.username");
+String password=System.getProperty("brooklyn.example.mongodb.password");
+String authenticationDatabase=System.getProperty("brooklyn.example.mongodb.authenticationDatabase");
 //URL should be supplied e.g. ""-Dbrooklyn.example.db.url=jdbc:mysql://localhost/visitors?user=brooklyn&password=br00k11n"
 //(note quoting needed due to ampersand)
 if (port==null) {
@@ -51,7 +55,13 @@ if (port==null) {
 
 <%
 /* begin database-enabled block */ }
-MongoClient client = new MongoClient("localhost", new Integer(port));
+MongoCredential credential = MongoCredential.createMongoCRCredential(username, authenticationDatabase, password.toCharArray());
+ServerAddress address = new ServerAddress("localhost", new Integer(port));
+MongoClientOptions connectionOptions = MongoClientOptions.builder()
+    .autoConnectRetry(true)
+    .socketKeepAlive(true)
+    .build();
+MongoClient client = new MongoClient(address, Arrays.asList(credential),connectionOptions);
 DB database = client.getDB("visitors");
 DBCollection messages =  database.getCollection("messages");
 int i=0;

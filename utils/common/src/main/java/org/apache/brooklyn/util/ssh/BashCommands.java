@@ -625,6 +625,13 @@ public class BashCommands {
                 +"\n"+"EOF_"+id+"\n";
     }
 
+    public static String pipeTextToFile(String text, String filepath) {
+        String id = Identifiers.makeRandomId(8);
+        return "cat > " + filepath + " << EOL_" + id + "\n"
+                + text
+                + "EOL_" + id + "\n";
+    }
+
     public static String prependToEtcHosts(String ip, String... hostnames) {
         String tempFileId = "bak"+Identifiers.makeRandomId(4);
         return sudo(String.format("sed -i."+tempFileId+" -e '1i\\\n%s %s' /etc/hosts", ip, Joiner.on(" ").join(hostnames)));
