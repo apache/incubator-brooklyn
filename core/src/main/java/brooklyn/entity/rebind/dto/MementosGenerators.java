@@ -35,6 +35,7 @@ import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.AttributeSensor.SensorPersistenceMode;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.mementos.BrooklynMemento;
@@ -58,8 +59,9 @@ import brooklyn.entity.rebind.AbstractBrooklynObjectRebindSupport;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.event.feed.AbstractFeed;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.LocationInternal;
+
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

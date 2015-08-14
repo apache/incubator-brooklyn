@@ -24,6 +24,10 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationDefinition;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.LocationManager;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.policy.PolicySpec;
@@ -40,13 +44,11 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.Sensors;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationDefinition;
-import org.apache.brooklyn.location.MachineLocation;
-import org.apache.brooklyn.location.NoMachinesAvailableException;
+
 import org.apache.brooklyn.location.basic.BasicLocationDefinition;
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.dynamic.DynamicLocation;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.DynamicTasks;

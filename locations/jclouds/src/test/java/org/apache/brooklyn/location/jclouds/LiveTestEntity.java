@@ -21,15 +21,16 @@ package org.apache.brooklyn.location.jclouds;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.NoMachinesAvailableException;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Lifecycle;
-import org.apache.brooklyn.location.MachineProvisioningLocation;
+
 import org.apache.brooklyn.location.basic.LocationInternal;
 
 import com.google.common.base.Predicates;

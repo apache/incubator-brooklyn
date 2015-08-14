@@ -42,11 +42,11 @@ import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-
-import org.apache.brooklyn.location.Location;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
+
 import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

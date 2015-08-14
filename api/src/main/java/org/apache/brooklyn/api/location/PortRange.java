@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.location;
+package org.apache.brooklyn.api.location;
 
 /**
  * A range of ports (indicator for Location and other APIs).

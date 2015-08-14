@@ -27,11 +27,11 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.location.AddressableLocation;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.MachineProvisioningLocation;
-import org.apache.brooklyn.location.OsDetails;
-import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.api.location.AddressableLocation;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

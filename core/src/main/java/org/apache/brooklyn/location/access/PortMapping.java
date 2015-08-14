@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;

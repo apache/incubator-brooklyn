@@ -28,7 +28,7 @@ import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.slf4j.Logger;

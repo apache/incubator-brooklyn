@@ -30,9 +30,9 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.location.MachineLocation;
-import org.apache.brooklyn.location.MachineProvisioningLocation;
-import org.apache.brooklyn.location.NoMachinesAvailableException;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

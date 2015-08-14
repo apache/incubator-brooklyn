@@ -23,6 +23,9 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
@@ -30,9 +33,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.event.basic.Sensors;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.MachineLocation;
-import org.apache.brooklyn.location.MachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.location.NoMachinesAvailableException;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

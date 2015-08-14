@@ -51,10 +51,12 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineLocationCustomizer;
+import org.apache.brooklyn.api.location.MachineManagementMixins;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.AccessController;
-import org.apache.brooklyn.location.MachineLocationCustomizer;
-import org.apache.brooklyn.location.MachineManagementMixins;
-import org.apache.brooklyn.location.NoMachinesAvailableException;
 import org.apache.brooklyn.location.access.PortMapping;
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.cloud.AbstractCloudMachineProvisioningLocation;
@@ -131,8 +133,7 @@ import brooklyn.entity.basic.Sanitizer;
 import brooklyn.entity.rebind.persister.LocationWithObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.MachineLocation;
+
 import org.apache.brooklyn.location.access.PortForwardManager;
 import org.apache.brooklyn.location.basic.BasicMachineMetadata;
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
@@ -144,6 +145,7 @@ import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
 import org.apache.brooklyn.location.cloud.names.CloudMachineNamer;
 import org.apache.brooklyn.location.jclouds.JcloudsPredicates.NodeInLocation;
 import org.apache.brooklyn.location.jclouds.templates.PortableTemplateBuilder;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

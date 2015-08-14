@@ -23,11 +23,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationDefinition;
+import org.apache.brooklyn.api.location.LocationRegistry;
+import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationDefinition;
-import org.apache.brooklyn.location.LocationRegistry;
-import org.apache.brooklyn.location.LocationResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

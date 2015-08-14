@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.entity.proxy.LoadBalancerCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
@@ -43,8 +44,9 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.PortRanges;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 

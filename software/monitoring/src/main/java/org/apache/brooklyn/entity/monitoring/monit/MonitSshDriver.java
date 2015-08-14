@@ -26,8 +26,10 @@ import java.util.Map;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import org.apache.brooklyn.location.OsDetails;
+
+import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;

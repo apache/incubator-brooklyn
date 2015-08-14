@@ -16,20 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.location;
+package org.apache.brooklyn.api.location;
 
+import javax.annotation.Nullable;
 
 /**
- * Indicates that a {@link ProvisioningLocation} is not able to provision a requested location
+ * @since 0.7.0
  */
-public class LocationNotAvailableException extends Exception {
-    private static final long serialVersionUID = 1079817235289265761L;
-    
-    public LocationNotAvailableException(String s) {
-        super(s);
-    }
+public interface HardwareDetails {
 
-    public LocationNotAvailableException(String s, Throwable throwable) {
-        super(s, throwable);
-    }
+    /**
+     * The number of CPUs on the machine
+     */
+    @Nullable
+    Integer getCpuCount();
+
+    /**
+     * Amount of RAM in megabytes
+     */
+    @Nullable
+    Integer getRam();
+
 }

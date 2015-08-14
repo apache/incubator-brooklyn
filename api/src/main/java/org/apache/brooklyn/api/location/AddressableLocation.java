@@ -16,31 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.location;
+package org.apache.brooklyn.api.location;
 
 import java.net.InetAddress;
 
-import brooklyn.util.net.HasNetworkAddresses;
-
-/**
- * A location that is a machine.
- *
- * This interface marks a {@link Location} being a network node with an IP address, 
- * and supports appropriate operations on the node.
+/** A location that has an IP address.
+ * <p>
+ * This IP address may be a machine (usually the MachineLocation sub-interface), 
+ * or often an entry point for a service.
  */
-public interface MachineLocation extends AddressableLocation, HasNetworkAddresses {
+public interface AddressableLocation extends Location {
+
     /**
-     * @return the machine's network address.
+     * Return the single most appropriate address for this location.
+     * (An implementation or sub-interface definition may supply more information
+     * on the precise semantics of the address.)
+     * 
+     * Should not return null, but in some "special cases" (e.g. CloudFoundryLocation it
+     * may return null if the location is not configured correctly). Users should expect
+     * a non-null result and treat null as a programming error or misconfiguration. 
+     * Implementors of this interface should strive to not return null (and then we'll
+     * remove this caveat from the javadoc!).
      */
     InetAddress getAddress();
-
-    /** @deprecated since 0.7.0. Use getMachineDetails().getOsDetails() instead. */
-    @Deprecated
-    OsDetails getOsDetails();
-
-    /*
-     * @return hardware and operating system-specific details for the machine.
-     */
-    MachineDetails getMachineDetails();
 
 }

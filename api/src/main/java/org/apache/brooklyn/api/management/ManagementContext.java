@@ -30,11 +30,11 @@ import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager;
 import org.apache.brooklyn.api.entity.rebind.RebindManager;
+import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityManager;
 
 import brooklyn.config.StringConfigMap;
-import org.apache.brooklyn.location.LocationRegistry;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;

@@ -21,17 +21,19 @@ package org.apache.brooklyn.location.access;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.event.basic.BasicConfigKey;
-import org.apache.brooklyn.location.MachineLocation;
+
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.basic.SupportsPortForwarding;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Cidr;

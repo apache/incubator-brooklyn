@@ -24,6 +24,7 @@ import static org.testng.Assert.assertFalse;
 import java.io.IOException;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.messaging.MessageBroker;
 import brooklyn.entity.messaging.amqp.AmqpExchange;
 import brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
 import com.google.common.base.Charsets;

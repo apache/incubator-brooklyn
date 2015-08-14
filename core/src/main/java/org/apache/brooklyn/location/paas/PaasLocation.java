@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.paas;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 
 /**
  * {@link Location} representing an application container on a PaaS provider.

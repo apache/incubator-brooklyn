@@ -25,13 +25,14 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BrooklynConfigKeys;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import com.google.common.base.Functions;

@@ -25,12 +25,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.group.DynamicCluster.NodePlacementStrategy;
 import brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

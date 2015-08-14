@@ -23,11 +23,13 @@ import static org.testng.Assert.assertEquals;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.PortRange;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.AbstractEntity;
-import org.apache.brooklyn.location.PortRange;
+
 import org.apache.brooklyn.location.basic.PortRanges;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;
 

@@ -18,9 +18,8 @@
  */
 package brooklyn.management.internal;
 
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.LocationManager;
-
-import org.apache.brooklyn.location.Location;
 
 public interface LocationManagerInternal extends LocationManager, BrooklynObjectManagerInternal<Location> {
 

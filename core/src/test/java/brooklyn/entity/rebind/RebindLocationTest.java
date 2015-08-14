@@ -30,6 +30,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.mementos.LocationMemento;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
@@ -39,9 +41,9 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
+
 import org.apache.brooklyn.location.basic.AbstractLocation;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.flags.SetFromFlag;

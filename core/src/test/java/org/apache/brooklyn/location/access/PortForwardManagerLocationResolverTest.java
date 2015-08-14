@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.access;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;

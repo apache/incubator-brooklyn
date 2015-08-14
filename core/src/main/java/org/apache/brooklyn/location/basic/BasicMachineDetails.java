@@ -28,13 +28,13 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
+import org.apache.brooklyn.api.location.HardwareDetails;
+import org.apache.brooklyn.api.location.MachineDetails;
+import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.location.MachineDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.brooklyn.location.HardwareDetails;
-import org.apache.brooklyn.location.OsDetails;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.DynamicTasks;

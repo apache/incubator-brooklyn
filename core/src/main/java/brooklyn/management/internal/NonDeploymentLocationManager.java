@@ -22,10 +22,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
-
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
 
 public class NonDeploymentLocationManager implements LocationManagerInternal {
 

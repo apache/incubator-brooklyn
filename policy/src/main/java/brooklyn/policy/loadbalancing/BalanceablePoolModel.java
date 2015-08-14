@@ -21,7 +21,7 @@ package brooklyn.policy.loadbalancing;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 
 /**
  * Captures the state of a balanceable cluster of containers and all their constituent items, including workrates,

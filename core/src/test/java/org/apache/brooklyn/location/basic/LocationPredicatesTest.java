@@ -21,8 +21,8 @@ package org.apache.brooklyn.location.basic;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.AfterMethod;

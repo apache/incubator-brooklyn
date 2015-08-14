@@ -34,8 +34,10 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.LocationSpec;
+
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.net.Networking;
 
 import com.google.common.base.Predicate;

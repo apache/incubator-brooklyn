@@ -26,10 +26,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.brooklyn.location.Location;
 
 /**
  * Represents an abstract algorithm for optimally balancing worker "items" among several "containers" based on the workloads

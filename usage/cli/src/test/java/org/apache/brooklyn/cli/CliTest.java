@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.cli.AbstractMain.BrooklynCommand;
 import org.apache.brooklyn.cli.AbstractMain.BrooklynCommandCollectingArgs;
 import org.apache.brooklyn.cli.AbstractMain.HelpCommand;
@@ -65,8 +66,9 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.proxying.EntityProxy;
 import brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.SimulatedLocation;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;

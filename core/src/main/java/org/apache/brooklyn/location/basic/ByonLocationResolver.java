@@ -24,9 +24,10 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationRegistry;
-import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationRegistry;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +40,6 @@ import com.google.common.net.HostAndPort;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Sanitizer;
-import org.apache.brooklyn.location.MachineLocation;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

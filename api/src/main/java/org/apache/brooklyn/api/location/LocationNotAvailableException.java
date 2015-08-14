@@ -16,20 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.location;
+package org.apache.brooklyn.api.location;
 
 
 /**
- * Indicates no machines are available in a given location.
+ * Indicates that a {@link ProvisioningLocation} is not able to provision a requested location
  */
-public class NoMachinesAvailableException extends LocationNotAvailableException {
+public class LocationNotAvailableException extends Exception {
     private static final long serialVersionUID = 1079817235289265761L;
     
-    public NoMachinesAvailableException(String s) {
+    public LocationNotAvailableException(String s) {
         super(s);
     }
 
-    public NoMachinesAvailableException(String s, Throwable throwable) {
+    public LocationNotAvailableException(String s, Throwable throwable) {
         super(s, throwable);
     }
 }

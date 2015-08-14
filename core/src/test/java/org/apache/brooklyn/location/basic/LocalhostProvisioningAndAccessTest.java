@@ -23,7 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Arrays;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

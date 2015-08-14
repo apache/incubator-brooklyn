@@ -22,13 +22,13 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationDefinition;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationDefinition;
 import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.annotations.Beta;

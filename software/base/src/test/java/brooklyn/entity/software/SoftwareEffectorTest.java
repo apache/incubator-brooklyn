@@ -21,6 +21,7 @@ package brooklyn.entity.software;
 import java.util.Arrays;
 
 import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.test.entity.TestApplication;
@@ -34,9 +35,10 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.SshEffectorTasks.SshEffectorBody;
-import org.apache.brooklyn.location.LocationSpec;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 

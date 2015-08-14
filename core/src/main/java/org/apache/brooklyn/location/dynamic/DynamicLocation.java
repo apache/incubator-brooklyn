@@ -19,12 +19,12 @@
 package org.apache.brooklyn.location.dynamic;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.Location;
 
 import com.google.common.annotations.Beta;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import org.apache.brooklyn.location.Location;
 import brooklyn.util.flags.SetFromFlag;
 
 /**

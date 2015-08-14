@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -32,7 +33,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.effector.EffectorAndBody;
-import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

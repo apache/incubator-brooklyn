@@ -22,7 +22,7 @@ import javax.annotation.concurrent.Immutable;
 
 import com.google.common.base.Objects;
 
-import org.apache.brooklyn.location.HardwareDetails;
+import org.apache.brooklyn.api.location.HardwareDetails;
 
 @Immutable
 public class BasicHardwareDetails implements HardwareDetails {

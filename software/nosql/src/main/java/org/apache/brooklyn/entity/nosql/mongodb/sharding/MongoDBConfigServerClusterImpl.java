@@ -22,9 +22,9 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 
 import brooklyn.entity.group.DynamicClusterImpl;
-import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

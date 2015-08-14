@@ -25,8 +25,9 @@ import java.io.File;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ha.MementoCopyMode;
-import org.apache.brooklyn.location.Location;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.slf4j.Logger;
@@ -43,8 +44,9 @@ import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.event.basic.Sensors;
-import org.apache.brooklyn.location.LocationSpec;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;

@@ -23,14 +23,15 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.location.HardwareDetails;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.MachineDetails;
-import org.apache.brooklyn.location.MachineLocation;
-import org.apache.brooklyn.location.MachineProvisioningLocation;
-import org.apache.brooklyn.location.OsDetails;
-import org.apache.brooklyn.location.PortRange;
-import org.apache.brooklyn.location.PortSupplier;
+import org.apache.brooklyn.api.location.HardwareDetails;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineDetails;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.api.location.PortRange;
+import org.apache.brooklyn.api.location.PortSupplier;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 

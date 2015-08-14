@@ -26,15 +26,15 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationRegistry;
+import org.apache.brooklyn.api.location.LocationResolver;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationRegistry;
-import org.apache.brooklyn.location.LocationResolver;
-import org.apache.brooklyn.location.LocationSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.location.basic.AbstractLocationResolver.SpecParser.ParsedSpec;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.KeyValueParser;

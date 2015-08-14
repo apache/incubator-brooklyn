@@ -32,7 +32,9 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.Location;
+
+import org.apache.brooklyn.api.location.Location;
+
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.UsageManager;
 import brooklyn.test.Asserts;

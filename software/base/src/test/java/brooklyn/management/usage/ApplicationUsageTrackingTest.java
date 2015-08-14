@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
@@ -40,7 +41,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.EntityProxy;
-import org.apache.brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.management.internal.UsageListener.ApplicationMetadata;
 import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;

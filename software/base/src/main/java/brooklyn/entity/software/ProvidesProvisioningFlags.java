@@ -18,7 +18,8 @@
  */
 package brooklyn.entity.software;
 
-import org.apache.brooklyn.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.annotations.Beta;

@@ -54,6 +54,7 @@ import brooklyn.entity.basic.Lifecycle;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -63,8 +64,9 @@ import org.apache.brooklyn.test.entity.TestEntityImpl;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.FailingEntity;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.SimulatedLocation;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

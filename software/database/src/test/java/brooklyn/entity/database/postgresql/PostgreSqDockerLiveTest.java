@@ -21,11 +21,11 @@ package brooklyn.entity.database.postgresql;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
 import brooklyn.entity.software.AbstractDockerLiveTest;
-import org.apache.brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.testng.annotations.Test;
 
 public class PostgreSqDockerLiveTest extends AbstractDockerLiveTest {

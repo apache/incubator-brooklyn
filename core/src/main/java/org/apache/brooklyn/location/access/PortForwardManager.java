@@ -20,7 +20,9 @@ package org.apache.brooklyn.location.access;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import org.apache.brooklyn.location.Location;
+
+import org.apache.brooklyn.api.location.Location;
+
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

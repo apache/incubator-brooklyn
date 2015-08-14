@@ -16,27 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.location;
+package org.apache.brooklyn.api.location;
 
-import java.util.Map;
+import java.net.InetAddress;
 
-import org.apache.brooklyn.api.management.ManagementContext;
+import brooklyn.util.net.HasNetworkAddresses;
 
 /**
- * Defines a location, where the {@link #getSpec()} is like a serialized representation
- * of the location so that Brooklyn can create a corresponding location.
- * 
- * Examples include a complete description (e.g. giving a list of machines in a pool), or
- * a name that matches a named location defined in the brooklyn poperties.
- * 
- * Users are not expected to implement this, or to use the interface directly. See
- * {@link LocationRegistry#resolve(String)} and {@link ManagementContext#getLocationRegistry()}.
+ * A location that is a machine.
+ *
+ * This interface marks a {@link Location} being a network node with an IP address, 
+ * and supports appropriate operations on the node.
  */
-public interface LocationDefinition {
+public interface MachineLocation extends AddressableLocation, HasNetworkAddresses {
+    /**
+     * @return the machine's network address.
+     */
+    InetAddress getAddress();
 
-    public String getId();
-    public String getName();
-    public String getSpec();
-    public Map<String,Object> getConfig();
+    /** @deprecated since 0.7.0. Use getMachineDetails().getOsDetails() instead. */
+    @Deprecated
+    OsDetails getOsDetails();
+
+    /*
+     * @return hardware and operating system-specific details for the machine.
+     */
+    MachineDetails getMachineDetails();
 
 }

@@ -19,12 +19,13 @@
 package org.apache.brooklyn.location.basic;
 
 import java.util.regex.Pattern;
+
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import com.google.common.base.Objects;
 
-import org.apache.brooklyn.location.OsDetails;
+import org.apache.brooklyn.api.location.OsDetails;
 
 @Immutable
 public class BasicOsDetails implements OsDetails {

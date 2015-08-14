@@ -27,7 +27,9 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.location.Location;
+
+import org.apache.brooklyn.api.location.Location;
+
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.reflect.TypeToken;

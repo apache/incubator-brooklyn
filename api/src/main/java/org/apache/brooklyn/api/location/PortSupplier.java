@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.location;
+package org.apache.brooklyn.api.location;
 
 /** Mixin interface for location which allows it to supply ports from a given range */
 public interface PortSupplier {

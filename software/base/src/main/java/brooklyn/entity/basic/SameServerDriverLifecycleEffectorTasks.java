@@ -23,6 +23,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +39,9 @@ import com.google.common.reflect.TypeToken;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.trait.StartableMethods;
-import org.apache.brooklyn.location.MachineLocation;
-import org.apache.brooklyn.location.MachineProvisioningLocation;
-import org.apache.brooklyn.location.PortRange;
+
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
+
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;

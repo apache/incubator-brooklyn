@@ -25,15 +25,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.management.LocationManager;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.MachineLocation;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.yaml.Yamls;

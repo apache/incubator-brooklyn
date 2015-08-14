@@ -20,7 +20,7 @@ package org.apache.brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
 
-import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;

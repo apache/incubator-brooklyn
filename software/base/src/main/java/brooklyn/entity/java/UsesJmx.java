@@ -23,6 +23,7 @@ import java.security.cert.Certificate;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.location.PortRange;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -30,8 +31,9 @@ import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import org.apache.brooklyn.location.PortRange;
+
 import org.apache.brooklyn.location.basic.PortRanges;
+
 import brooklyn.util.flags.SetFromFlag;
 
 public interface UsesJmx extends UsesJava {

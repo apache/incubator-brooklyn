@@ -16,26 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.location;
+package org.apache.brooklyn.api.location;
 
-import com.google.common.annotations.Beta;
+import javax.annotation.Nullable;
 
-/**
- * A default no-op implementation, which can be extended to override the appropriate methods.
- * 
- * Sub-classing will give the user some protection against future API changes - note that 
- * {@link MachineLocationCustomizer} is marked {@link Beta}.
- */
-@Beta
-public class BasicMachineLocationCustomizer implements MachineLocationCustomizer {
+public interface OsDetails {
 
-    @Override
-    public void customize(MachineLocation machine) {
-        // no-op
-    }
-    
-    @Override
-    public void preRelease(MachineLocation machine) {
-        // no-op
-    }
+    /** The name of the operating system, e.g. "Debian" or "Red Hat Enterprise Linux Server" */
+    @Nullable
+    String getName();
+
+    /**
+     * The version of the operating system. Generally numeric (e.g. "6.3") but occasionally
+     * alphabetic (e.g. Debian's "Squeeze").
+     */
+    @Nullable
+    String getVersion();
+
+    /** The operating system's architecture, e.g. "x86" or "x86_64" */
+    @Nullable
+    String getArch();
+
+    boolean is64bit();
+
+    boolean isWindows();
+    boolean isLinux();
+    boolean isMac();
+
 }

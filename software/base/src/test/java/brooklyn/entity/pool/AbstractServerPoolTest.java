@@ -23,6 +23,9 @@ import static org.testng.Assert.fail;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
@@ -35,10 +38,9 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.NoMachinesAvailableException;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;

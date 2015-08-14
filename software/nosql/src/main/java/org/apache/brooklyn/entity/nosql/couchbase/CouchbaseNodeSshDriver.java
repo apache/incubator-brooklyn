@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
@@ -43,9 +44,10 @@ import brooklyn.entity.drivers.downloads.DownloadProducerFromUrlAttribute;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.http.HttpValueFunctions;
-import org.apache.brooklyn.location.OsDetails;
+
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.http.HttpTool;
 import brooklyn.util.http.HttpToolResponse;

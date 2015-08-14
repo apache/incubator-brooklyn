@@ -19,12 +19,13 @@
 package brooklyn.entity.database.mariadb;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.database.VogellaExampleAccess;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 
 import com.google.common.collect.ImmutableList;

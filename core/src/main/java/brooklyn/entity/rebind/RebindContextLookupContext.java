@@ -29,13 +29,13 @@ import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.location.Location;
 
 /** Looks in {@link RebindContext} <i>and</i> {@link ManagementContext} to find entities, locations, etc. */
 public class RebindContextLookupContext implements LookupContext {

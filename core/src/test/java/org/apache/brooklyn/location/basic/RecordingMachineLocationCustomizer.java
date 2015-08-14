@@ -26,8 +26,8 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.apache.brooklyn.location.MachineLocation;
-import org.apache.brooklyn.location.MachineLocationCustomizer;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineLocationCustomizer;
 
 public class RecordingMachineLocationCustomizer implements MachineLocationCustomizer {
     public static class Call {

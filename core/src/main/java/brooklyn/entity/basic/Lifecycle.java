@@ -31,7 +31,8 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import org.apache.brooklyn.location.Location;
+
+import org.apache.brooklyn.api.location.Location;
 
 /**
  * An enumeration representing the status of an {@link org.apache.brooklyn.api.entity.Entity}.

@@ -21,8 +21,8 @@ package brooklyn.management.internal;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.location.Location;
 
-import org.apache.brooklyn.location.Location;
 import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
 import brooklyn.management.usage.LocationUsage.LocationEvent;
 

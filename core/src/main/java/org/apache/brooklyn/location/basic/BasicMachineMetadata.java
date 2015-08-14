@@ -19,7 +19,8 @@
 package org.apache.brooklyn.location.basic;
 
 import com.google.common.base.Objects;
-import org.apache.brooklyn.location.MachineManagementMixins;
+
+import org.apache.brooklyn.api.location.MachineManagementMixins;
 
 public class BasicMachineMetadata implements MachineManagementMixins.MachineMetadata {
 

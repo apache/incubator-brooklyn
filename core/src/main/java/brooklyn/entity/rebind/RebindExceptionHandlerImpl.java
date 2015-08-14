@@ -36,10 +36,10 @@ import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.entity.rebind.RebindManager;
 import org.apache.brooklyn.api.entity.rebind.RebindManager.RebindFailureMode;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.policy.Policy;
 
-import org.apache.brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.exceptions.Exceptions;

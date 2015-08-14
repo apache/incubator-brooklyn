@@ -29,9 +29,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.NoMachinesAvailableException;
+
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
+
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableSet;

@@ -36,10 +36,10 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.policy.Policy;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import org.apache.brooklyn.location.Location;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;

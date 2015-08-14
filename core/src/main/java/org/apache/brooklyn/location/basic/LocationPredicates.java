@@ -22,7 +22,8 @@ import javax.annotation.Nullable;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import org.apache.brooklyn.location.Location;
+
+import org.apache.brooklyn.api.location.Location;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

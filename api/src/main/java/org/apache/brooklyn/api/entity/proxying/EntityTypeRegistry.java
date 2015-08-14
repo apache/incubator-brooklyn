@@ -21,8 +21,7 @@ package org.apache.brooklyn.api.entity.proxying;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriver;
-
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 
 /**
  * A registry of the entity implementations to be used when creating an entity of a given type.

@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
@@ -40,12 +42,12 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
 import brooklyn.entity.trait.FailingEntity;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
+
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 import org.apache.brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
 import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.time.Duration;
 

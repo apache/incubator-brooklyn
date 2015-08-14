@@ -22,9 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
-
-import org.apache.brooklyn.location.Location;
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 
 public class EntityLocationUtils {

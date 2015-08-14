@@ -22,9 +22,9 @@ import java.io.File;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
 import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;

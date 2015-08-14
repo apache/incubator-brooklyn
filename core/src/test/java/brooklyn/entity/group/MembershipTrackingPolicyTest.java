@@ -28,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -38,8 +39,9 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.location.LocationSpec;
+
 import org.apache.brooklyn.location.basic.SimulatedLocation;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 

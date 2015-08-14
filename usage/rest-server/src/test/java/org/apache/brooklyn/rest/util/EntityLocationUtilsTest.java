@@ -31,12 +31,12 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
-
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 
 import com.google.common.collect.ImmutableList;

@@ -23,6 +23,7 @@ import static org.testng.Assert.fail;
 
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.AfterMethod;
@@ -34,8 +35,9 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.SimulatedLocation;
+
 import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.collect.ImmutableList;

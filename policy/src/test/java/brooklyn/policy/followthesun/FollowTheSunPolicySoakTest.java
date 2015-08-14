@@ -29,13 +29,15 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.SimulatedLocation;
+
 import brooklyn.policy.loadbalancing.BalanceableContainer;
 import brooklyn.policy.loadbalancing.MockContainerEntity;
 import brooklyn.policy.loadbalancing.MockItemEntity;

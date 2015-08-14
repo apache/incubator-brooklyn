@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.api.entity.drivers;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 
 /**
  * Responsible for creating a driver for a given entity/location. Also used for customizing which 

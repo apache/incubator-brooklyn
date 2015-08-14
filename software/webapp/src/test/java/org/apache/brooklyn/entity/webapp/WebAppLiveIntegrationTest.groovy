@@ -40,7 +40,7 @@ import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServerImpl
-import org.apache.brooklyn.location.Location
+import org.apache.brooklyn.api.location.Location
 import org.apache.brooklyn.location.basic.BasicLocationRegistry
 import org.apache.brooklyn.test.TestUtils
 import org.apache.brooklyn.test.entity.TestApplicationImpl

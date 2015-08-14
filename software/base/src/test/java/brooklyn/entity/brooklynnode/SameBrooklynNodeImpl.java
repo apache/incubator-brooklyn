@@ -26,7 +26,8 @@ import brooklyn.entity.brooklynnode.BrooklynNodeImpl.DeployBlueprintEffectorBody
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
-import org.apache.brooklyn.location.Location;
+
+import org.apache.brooklyn.api.location.Location;
 
 /** Implementation of BrooklynNode which just presents the node where this is running, for convenience;
  * 

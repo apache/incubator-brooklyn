@@ -23,6 +23,10 @@ import java.util.Iterator;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.PortRange;
+import org.apache.brooklyn.api.location.PortSupplier;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +34,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.internal.BrooklynInitialization;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.MachineProvisioningLocation;
-import org.apache.brooklyn.location.PortRange;
-import org.apache.brooklyn.location.PortSupplier;
+
 import org.apache.brooklyn.location.basic.Locations;
+
 import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 

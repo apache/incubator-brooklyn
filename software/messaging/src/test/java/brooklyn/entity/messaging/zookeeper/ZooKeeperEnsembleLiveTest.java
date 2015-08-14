@@ -24,7 +24,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
-import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -32,6 +31,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;

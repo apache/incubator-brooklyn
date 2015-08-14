@@ -37,6 +37,9 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
 import org.apache.brooklyn.api.entity.rebind.RebindManager;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityManager;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
@@ -80,12 +83,9 @@ import brooklyn.entity.trait.Startable;
 
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import org.apache.brooklyn.mementos.BrooklynMementoRawData;
-
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.PortRange;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import org.apache.brooklyn.location.basic.PortRanges;
+
 import brooklyn.management.ha.HighAvailabilityManagerImpl;
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalManagementContext;

@@ -21,8 +21,8 @@ package org.apache.brooklyn.api.management;
 import java.util.Collection;
 import java.util.Map;
 
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 
 /**
  * For managing and querying entities.

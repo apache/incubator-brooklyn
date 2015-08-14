@@ -23,11 +23,11 @@ import static org.testng.Assert.assertNotNull;
 
 import java.util.Arrays;
 
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineDetails;
+import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.MachineDetails;
-import org.apache.brooklyn.location.OsDetails;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

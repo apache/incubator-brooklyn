@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.Set;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 
 import com.google.common.collect.Sets;
 

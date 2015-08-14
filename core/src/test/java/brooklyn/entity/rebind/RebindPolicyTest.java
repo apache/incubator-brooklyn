@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.policy.EnricherSpec;
 import org.apache.brooklyn.policy.Policy;
@@ -42,8 +43,9 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindEnricherTest.MyEnricher;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.Locations;
+
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;

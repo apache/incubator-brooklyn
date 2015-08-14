@@ -21,7 +21,7 @@ package org.apache.brooklyn.location.geo;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 import org.testng.annotations.Test;
 

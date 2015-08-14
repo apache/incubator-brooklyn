@@ -18,8 +18,8 @@
  */
 package brooklyn.catalog.internal;
 
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 
 
 public class CatalogLocationItemDto extends CatalogItemDtoAbstract<Location,LocationSpec<?>> {

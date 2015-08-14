@@ -31,9 +31,9 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.location.HardwareDetails;
-import org.apache.brooklyn.location.MachineDetails;
-import org.apache.brooklyn.location.OsDetails;
+import org.apache.brooklyn.api.location.HardwareDetails;
+import org.apache.brooklyn.api.location.MachineDetails;
+import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.location.basic.BasicHardwareDetails;
 import org.apache.brooklyn.location.basic.BasicMachineDetails;
 import org.apache.brooklyn.location.basic.BasicOsDetails;

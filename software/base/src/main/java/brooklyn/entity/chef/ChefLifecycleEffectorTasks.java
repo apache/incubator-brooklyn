@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +31,9 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
-import org.apache.brooklyn.location.MachineLocation;
+
 import org.apache.brooklyn.location.basic.Machines;
+
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.Jsonya.Navigator;
 import brooklyn.util.collections.MutableMap;

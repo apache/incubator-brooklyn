@@ -19,9 +19,9 @@
 package org.apache.brooklyn.location.cloud.names;
 
 import org.apache.brooklyn.api.entity.Entity;
-
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+
 import brooklyn.util.config.ConfigBag;
 
 /**

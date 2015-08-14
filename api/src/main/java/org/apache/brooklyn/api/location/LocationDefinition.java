@@ -16,27 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.location;
+package org.apache.brooklyn.api.location;
 
-import com.google.common.annotations.Beta;
+import java.util.Map;
+
+import org.apache.brooklyn.api.management.ManagementContext;
 
 /**
- * Customization hooks to allow apps to perform specific customisation of obtained machines.
- * <p>
- * Users are strongly encouraged to sub-class {@link BasicMachineLocationCustomizer}, to give
- * some protection against this {@link Beta} API changing in future releases.
+ * Defines a location, where the {@link #getSpec()} is like a serialized representation
+ * of the location so that Brooklyn can create a corresponding location.
+ * 
+ * Examples include a complete description (e.g. giving a list of machines in a pool), or
+ * a name that matches a named location defined in the brooklyn poperties.
+ * 
+ * Users are not expected to implement this, or to use the interface directly. See
+ * {@link LocationRegistry#resolve(String)} and {@link ManagementContext#getLocationRegistry()}.
  */
-@Beta
-public interface MachineLocationCustomizer {
+public interface LocationDefinition {
 
-    /**
-     * Override to configure the given machine once it has been created (prior to any use).
-     */
-    void customize(MachineLocation machine);
-    
-    /**
-     * Override to handle machine-related cleanup prior to {@link MachineProvisioningLocation} 
-     * releasing the machine.
-     */
-    void preRelease(MachineLocation machine);
+    public String getId();
+    public String getName();
+    public String getSpec();
+    public Map<String,Object> getConfig();
+
 }

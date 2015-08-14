@@ -27,6 +27,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
@@ -50,9 +51,10 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import org.apache.brooklyn.location.LocationSpec;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocationReuseIntegrationTest.RecordingSshjTool;
+
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Networking;

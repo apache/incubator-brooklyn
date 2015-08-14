@@ -19,6 +19,7 @@
 package brooklyn.test;
 
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+
 import java.io.File;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -38,9 +39,9 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.javalang.Threads;

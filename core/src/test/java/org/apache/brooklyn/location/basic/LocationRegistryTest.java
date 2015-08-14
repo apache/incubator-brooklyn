@@ -18,7 +18,8 @@
  */
 package org.apache.brooklyn.location.basic;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationDefinition;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.LocationDefinition;
 import brooklyn.management.internal.LocalManagementContext;
 
 public class LocationRegistryTest {

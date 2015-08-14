@@ -21,6 +21,7 @@ package brooklyn.entity.brooklynnode;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.location.Location;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
@@ -29,7 +30,6 @@ import brooklyn.entity.brooklynnode.CallbackEntityHttpClient.Request;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
 import brooklyn.event.basic.BasicAttributeSensor;
-import org.apache.brooklyn.location.Location;
 
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;

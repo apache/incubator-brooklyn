@@ -30,12 +30,12 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationDefinition;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationDefinition;
-import org.apache.brooklyn.location.basic.LocationConfigKeys;
 
+import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.rest.api.LocationApi;
 import org.apache.brooklyn.rest.domain.LocationSpec;
 import org.apache.brooklyn.rest.domain.LocationSummary;

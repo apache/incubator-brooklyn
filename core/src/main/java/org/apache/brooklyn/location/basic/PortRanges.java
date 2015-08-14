@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.brooklyn.location.PortRange;
+import org.apache.brooklyn.api.location.PortRange;
+
 import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;

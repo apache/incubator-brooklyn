@@ -21,6 +21,7 @@ package org.apache.brooklyn.entity.monitoring.monit;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +29,9 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 

@@ -27,7 +27,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.location.MachineLocationCustomizer;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineLocationCustomizer;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.location.cloud.names.CustomMachineNamer;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.jclouds.scriptbuilder.domain.OsFamily;
@@ -50,12 +53,11 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.MachineLocation;
-import org.apache.brooklyn.location.NoMachinesAvailableException;
+
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation.UserCreation;
+
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;

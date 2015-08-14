@@ -16,25 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.location;
+package org.apache.brooklyn.api.location;
 
-import javax.annotation.Nullable;
+import com.google.common.annotations.Beta;
 
 /**
- * @since 0.7.0
+ * A default no-op implementation, which can be extended to override the appropriate methods.
+ * 
+ * Sub-classing will give the user some protection against future API changes - note that 
+ * {@link MachineLocationCustomizer} is marked {@link Beta}.
  */
-public interface HardwareDetails {
+@Beta
+public class BasicMachineLocationCustomizer implements MachineLocationCustomizer {
 
-    /**
-     * The number of CPUs on the machine
-     */
-    @Nullable
-    Integer getCpuCount();
-
-    /**
-     * Amount of RAM in megabytes
-     */
-    @Nullable
-    Integer getRam();
-
+    @Override
+    public void customize(MachineLocation machine) {
+        // no-op
+    }
+    
+    @Override
+    public void preRelease(MachineLocation machine) {
+        // no-op
+    }
 }

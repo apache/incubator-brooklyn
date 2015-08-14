@@ -25,9 +25,9 @@ import static org.testng.Assert.assertTrue;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
+
 import brooklyn.policy.loadbalancing.MockContainerEntity;
 import brooklyn.policy.loadbalancing.MockContainerEntityImpl;
 import brooklyn.policy.loadbalancing.MockItemEntity;

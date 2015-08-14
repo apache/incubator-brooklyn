@@ -19,8 +19,9 @@
 package org.apache.brooklyn.location.basic;
 
 import brooklyn.basic.BrooklynDynamicType;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationType;
+
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationType;
 
 public class LocationDynamicType extends BrooklynDynamicType<Location, AbstractLocation> {
 

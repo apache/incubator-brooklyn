@@ -40,6 +40,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.ManagementContext;
@@ -76,8 +77,9 @@ import brooklyn.internal.BrooklynInitialization;
 import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.internal.storage.Reference;
 import brooklyn.internal.storage.impl.BasicReference;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.Locations;
+
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.management.internal.ManagementContextInternal;

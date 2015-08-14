@@ -25,6 +25,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.ProvisioningLocation;
 import org.apache.brooklyn.api.management.AccessController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,11 +39,10 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.internal.storage.BrooklynStorage;
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
-import org.apache.brooklyn.location.ProvisioningLocation;
+
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationInternal;
+
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;

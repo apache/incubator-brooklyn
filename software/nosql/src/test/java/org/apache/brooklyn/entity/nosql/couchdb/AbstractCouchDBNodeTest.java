@@ -26,8 +26,10 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import org.apache.brooklyn.location.Location;
+
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
 import brooklyn.util.internal.TimeExtras;
 
 /**

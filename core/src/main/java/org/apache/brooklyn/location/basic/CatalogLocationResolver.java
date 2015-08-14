@@ -22,13 +22,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationRegistry;
-import org.apache.brooklyn.location.LocationResolver;
-import org.apache.brooklyn.location.LocationSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationRegistry;
+import org.apache.brooklyn.api.location.LocationResolver;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 
 import brooklyn.catalog.internal.CatalogUtils;

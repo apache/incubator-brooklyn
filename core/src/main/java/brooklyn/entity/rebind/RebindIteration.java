@@ -46,6 +46,7 @@ import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.mementos.BrooklynMemento;
@@ -80,9 +81,10 @@ import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationInternal;
+
 import brooklyn.management.internal.BrooklynObjectManagementMode;
 import brooklyn.management.internal.BrooklynObjectManagerInternal;
 import brooklyn.management.internal.EntityManagerInternal;

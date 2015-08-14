@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
@@ -50,7 +51,6 @@ import brooklyn.entity.rebind.persister.ListeningObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import org.apache.brooklyn.location.Location;
 import brooklyn.management.ha.TestEntityFailingRebind.RebindException;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.test.Asserts;

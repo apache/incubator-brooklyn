@@ -20,8 +20,8 @@ package org.apache.brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.location.LocationSpec;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;

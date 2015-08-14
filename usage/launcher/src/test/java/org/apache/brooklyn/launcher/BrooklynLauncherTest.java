@@ -20,6 +20,7 @@ package org.apache.brooklyn.launcher;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 
@@ -51,8 +52,9 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.rebind.RebindTestUtils;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.FatalRuntimeException;

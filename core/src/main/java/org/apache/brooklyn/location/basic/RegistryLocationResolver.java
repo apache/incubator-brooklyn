@@ -20,9 +20,9 @@ package org.apache.brooklyn.location.basic;
 
 import java.util.Map;
 
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationResolver;
-import org.apache.brooklyn.location.LocationRegistry;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationRegistry;
+import org.apache.brooklyn.api.location.LocationResolver;
 
 /**
  * Extension to LocationResolver which can take a registry.

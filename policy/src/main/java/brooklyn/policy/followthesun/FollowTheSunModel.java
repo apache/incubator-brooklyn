@@ -21,7 +21,7 @@ package brooklyn.policy.followthesun;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
 
 /**
  * Captures the state of items, containers and locations for the purpose of moving items around

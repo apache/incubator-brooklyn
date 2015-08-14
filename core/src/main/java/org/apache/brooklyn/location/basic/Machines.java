@@ -24,15 +24,17 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
 
 import brooklyn.entity.basic.Attributes;
-import org.apache.brooklyn.location.MachineLocation;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.HasNetworkAddresses;
 

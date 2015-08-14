@@ -24,8 +24,8 @@ import java.net.InetAddress;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.location.AddressableLocation;
-import org.apache.brooklyn.location.Location;
+import org.apache.brooklyn.api.location.AddressableLocation;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.slf4j.Logger;

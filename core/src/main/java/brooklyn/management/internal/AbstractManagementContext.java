@@ -42,6 +42,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager;
 import org.apache.brooklyn.api.entity.rebind.RebindManager;
+import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.SubscriptionContext;
@@ -66,8 +67,9 @@ import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.internal.storage.impl.BrooklynStorageImpl;
 import brooklyn.internal.storage.impl.inmemory.InMemoryDataGridFactory;
-import org.apache.brooklyn.location.LocationRegistry;
+
 import org.apache.brooklyn.location.basic.BasicLocationRegistry;
+
 import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.management.entitlement.Entitlements;
 import brooklyn.management.ha.HighAvailabilityManagerImpl;

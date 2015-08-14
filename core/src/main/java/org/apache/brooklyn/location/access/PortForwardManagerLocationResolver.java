@@ -20,16 +20,16 @@ package org.apache.brooklyn.location.access;
 
 import java.util.Map;
 
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationRegistry;
-import org.apache.brooklyn.location.LocationSpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationRegistry;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.location.basic.LocationConfigUtils;
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.LocationPredicates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.location.basic.AbstractLocationResolver;
+
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Optional;

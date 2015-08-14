@@ -18,11 +18,10 @@
  */
 package org.apache.brooklyn.location.jclouds;
 
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.location.basic.HasSubnetHostname;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
-
-import org.apache.brooklyn.location.MachineLocation;
 
 public interface JcloudsMachineLocation extends MachineLocation, HasSubnetHostname {
     

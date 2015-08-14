@@ -27,6 +27,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
@@ -41,10 +43,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import org.apache.brooklyn.location.Location;
-import org.apache.brooklyn.location.LocationSpec;
 import org.apache.brooklyn.location.basic.Locations.LocationsFilter;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
+
 import brooklyn.util.collections.MutableSet;
 
 public class BasicStartableTest {

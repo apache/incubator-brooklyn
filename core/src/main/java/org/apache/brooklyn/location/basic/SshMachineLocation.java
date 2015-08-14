@@ -45,10 +45,12 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.location.MachineDetails;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.api.location.PortRange;
+import org.apache.brooklyn.api.location.PortSupplier;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.location.MachineDetails;
-import org.apache.brooklyn.location.OsDetails;
-import org.apache.brooklyn.location.PortRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,9 +84,9 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
-import org.apache.brooklyn.location.MachineLocation;
-import org.apache.brooklyn.location.PortSupplier;
+
 import org.apache.brooklyn.location.access.PortForwardManager;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

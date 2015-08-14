@@ -19,13 +19,13 @@
 package org.apache.brooklyn.entity.nosql.riak;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.common.collect.ImmutableList;
 
 import brooklyn.entity.AbstractSoftlayerLiveTest;
-import org.apache.brooklyn.location.Location;
 
 public class RiakNodeSoftlayerLiveTest extends AbstractSoftlayerLiveTest {
 

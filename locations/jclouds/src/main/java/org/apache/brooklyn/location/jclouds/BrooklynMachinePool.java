@@ -26,17 +26,19 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.management.Task;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.location.MachineLocation;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.jclouds.pool.MachinePool;
 import org.apache.brooklyn.location.jclouds.pool.MachineSet;
 import org.apache.brooklyn.location.jclouds.pool.ReusableMachineTemplate;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.task.BasicExecutionContext;
 

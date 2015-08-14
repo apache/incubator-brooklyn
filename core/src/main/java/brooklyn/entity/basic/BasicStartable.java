@@ -22,10 +22,11 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.location.Location;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.location.Location;
+
 import org.apache.brooklyn.location.basic.Locations;
 
 import com.google.common.collect.ImmutableList;
