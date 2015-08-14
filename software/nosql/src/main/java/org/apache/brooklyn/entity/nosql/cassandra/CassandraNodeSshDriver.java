@@ -44,7 +44,7 @@ import com.google.common.collect.ImmutableSet;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.database.DatastoreMixins;
+import org.apache.brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.software.SshEffectorTasks;

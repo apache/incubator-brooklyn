@@ -33,7 +33,7 @@ import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;

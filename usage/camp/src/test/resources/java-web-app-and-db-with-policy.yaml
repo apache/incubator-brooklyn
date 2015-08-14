@@ -37,7 +37,7 @@ services:
       minPoolSize: 1
       maxPoolSize: 5
       
-- type: brooklyn.entity.database.mysql.MySqlNode
+- type: org.apache.brooklyn.entity.database.mysql.MySqlNode
   id: db
   name: My DB
   location: localhost

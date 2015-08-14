@@ -36,9 +36,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
-import brooklyn.entity.database.postgresql.PostgreSqlNode;
+import org.apache.brooklyn.entity.database.VogellaExampleAccess;
+import org.apache.brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
+import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.util.time.Duration;
