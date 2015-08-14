@@ -28,6 +28,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
@@ -37,9 +39,9 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.machine.MachineEntity;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.location.dynamic.LocationOwner;
+
+import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.dynamic.LocationOwner;
 
 /**
  * A preallocated server pool is an entity that other applications can deploy to.
@@ -51,7 +53,7 @@ import brooklyn.location.dynamic.LocationOwner;
  *         The pool does not configure ports appropriately for applications subsequently
  *         deployed. If an entity that is to be run in the pool requires any ports open
  *         other than port 22 then thoses port should be configured with the
- *         {@link brooklyn.location.cloud.CloudLocationConfig#INBOUND_PORTS INBOUND_PORTS}
+ *         {@link CloudLocationConfig#INBOUND_PORTS INBOUND_PORTS}
  *         config key as part of the pool's
  *         {@link brooklyn.entity.basic.SoftwareProcess#PROVISIONING_PROPERTIES PROVISIONING_PROPERTIES}.
  *         For example, in YAML:

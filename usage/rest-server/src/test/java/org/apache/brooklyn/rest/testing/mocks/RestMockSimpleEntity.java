@@ -34,7 +34,7 @@ import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.flags.SetFromFlag;
 
 public class RestMockSimpleEntity extends SoftwareProcessImpl {

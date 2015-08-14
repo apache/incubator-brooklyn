@@ -21,7 +21,6 @@ package org.apache.brooklyn.entity.nosql.mongodb;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;
@@ -31,8 +30,7 @@ import com.mongodb.DBObject;
 import groovy.time.TimeDuration;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
-import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
+import org.apache.brooklyn.api.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;

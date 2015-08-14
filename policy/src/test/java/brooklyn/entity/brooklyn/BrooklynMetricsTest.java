@@ -35,9 +35,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;

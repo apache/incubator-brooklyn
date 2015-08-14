@@ -38,7 +38,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JavaOptsTest.TestingJavaOptsVanillaJavaAppImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;

@@ -31,7 +31,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
-// FIXME change name, due to confusion with brooklyn.location.LocationSpec <- no need, as we can kill the class instead soon!
+// FIXME change name, due to confusion with LocationSpec <- no need, as we can kill the class instead soon!
 /** @deprecated since 0.7.0 location spec objects will not be used from the client, instead pass yaml location spec strings */
 public class LocationSpec implements HasName, HasConfig, Serializable {
 

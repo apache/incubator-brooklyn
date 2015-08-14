@@ -21,7 +21,8 @@ package brooklyn.entity.database.mysql;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.location.Location;
+
+import org.apache.brooklyn.api.location.Location;
 
 @Test(groups = { "Live" })
 public class MySqlClusterLiveEc2Test extends AbstractEc2LiveTest {

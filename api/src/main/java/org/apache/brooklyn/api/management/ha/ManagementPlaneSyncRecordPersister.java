@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 
 import brooklyn.util.time.Duration;
 
@@ -41,7 +41,7 @@ import com.google.common.annotations.VisibleForTesting;
 public interface ManagementPlaneSyncRecordPersister {
 
     /**
-     * Analogue to {@link BrooklynMementoPersister#loadMemento(org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext)}
+     * Analogue to {@link BrooklynMementoPersister#loadMemento(org.apache.brooklyn.api.mementos.BrooklynMementoPersister.LookupContext)}
      * <p>
      * Note that this method is *not* thread safe.
      */

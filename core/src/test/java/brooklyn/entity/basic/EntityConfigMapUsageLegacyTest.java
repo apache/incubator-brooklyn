@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Time;
 

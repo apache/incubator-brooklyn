@@ -31,7 +31,7 @@ import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.apache.brooklyn.test.entity.TestEntity;
 
 import brooklyn.event.basic.BasicSensorEvent;
-import brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;

@@ -23,13 +23,13 @@ import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.management.osgi.OsgiStandaloneTest;
 
-import org.apache.brooklyn.policy.Policy;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 import com.google.common.collect.Iterables;

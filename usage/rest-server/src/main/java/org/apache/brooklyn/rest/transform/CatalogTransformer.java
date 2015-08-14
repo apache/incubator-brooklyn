@@ -33,14 +33,14 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicySpec;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
 
-import org.apache.brooklyn.policy.Policy;
-import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;

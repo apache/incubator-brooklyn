@@ -39,9 +39,7 @@ import org.apache.brooklyn.entity.proxy.nginx.UrlMapping;
 import org.apache.brooklyn.entity.proxy.nginx.UrlRewriteRule;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
-import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.entity.webapp.tomcat.Tomcat8Server;
-import org.apache.brooklyn.entity.webapp.tomcat.Tomcat8ServerImpl;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.slf4j.Logger;
@@ -55,7 +53,7 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;

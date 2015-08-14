@@ -35,8 +35,8 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.entity.webapp.WebAppService;
-import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,9 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.location.geo.HostGeoInfo;
+
+import org.apache.brooklyn.location.geo.HostGeoInfo;
+
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.SetFromFlag;

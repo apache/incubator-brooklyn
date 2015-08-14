@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.system.ProcessTaskFactory;

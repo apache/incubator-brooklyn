@@ -34,7 +34,7 @@ import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import brooklyn.entity.drivers.downloads.DownloadSubstituters;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveBuilder;
 import brooklyn.util.file.ArchiveUtils;

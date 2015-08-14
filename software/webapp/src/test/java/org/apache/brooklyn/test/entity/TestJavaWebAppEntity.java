@@ -20,6 +20,7 @@ package org.apache.brooklyn.test.entity;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,6 @@ import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessDriverLifecycleEffectorTasks;
 import brooklyn.entity.java.VanillaJavaApp;
-import brooklyn.location.Location;
 import brooklyn.util.config.ConfigBag;
 
 /**

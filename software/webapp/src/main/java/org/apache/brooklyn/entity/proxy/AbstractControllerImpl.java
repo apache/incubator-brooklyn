@@ -31,8 +31,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.policy.Policy;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +45,10 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.location.basic.Machines;
+
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.basic.Machines;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;

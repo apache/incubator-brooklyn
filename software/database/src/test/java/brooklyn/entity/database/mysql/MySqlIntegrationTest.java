@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.database.VogellaExampleAccess;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;

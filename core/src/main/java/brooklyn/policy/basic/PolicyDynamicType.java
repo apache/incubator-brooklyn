@@ -18,8 +18,8 @@
  */
 package brooklyn.policy.basic;
 
-import org.apache.brooklyn.policy.Policy;
-import org.apache.brooklyn.policy.PolicyType;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicyType;
 
 import brooklyn.basic.BrooklynDynamicType;
 

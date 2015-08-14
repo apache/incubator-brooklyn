@@ -34,8 +34,10 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,10 +54,10 @@ import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.location.Location;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.Locations;
-import brooklyn.location.cloud.AvailabilityZoneExtension;
+
+import org.apache.brooklyn.location.basic.Locations;
+import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
+
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

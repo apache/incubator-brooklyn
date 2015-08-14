@@ -22,7 +22,8 @@ import static org.apache.brooklyn.test.EntityTestUtils.assertAttributeEqualsEven
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,6 @@ import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SameServerEntity;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.location.Location;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.time.Duration;
 

@@ -32,7 +32,7 @@ import com.google.common.collect.Lists;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.net.Protocol;
 import brooklyn.util.ssh.BashCommands;
 import brooklyn.util.ssh.IptablesCommands;

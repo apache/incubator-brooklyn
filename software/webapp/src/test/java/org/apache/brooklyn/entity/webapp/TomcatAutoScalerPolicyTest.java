@@ -23,6 +23,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
@@ -35,8 +36,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;

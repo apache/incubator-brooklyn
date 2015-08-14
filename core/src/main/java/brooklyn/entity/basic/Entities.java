@@ -49,14 +49,16 @@ import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.LocationManager;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,10 +71,10 @@ import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocationInternal;
-import brooklyn.location.basic.Locations;
+
+import org.apache.brooklyn.location.basic.LocationInternal;
+import org.apache.brooklyn.location.basic.Locations;
+
 import brooklyn.management.internal.EffectorUtils;
 import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.management.internal.LocalManagementContext;

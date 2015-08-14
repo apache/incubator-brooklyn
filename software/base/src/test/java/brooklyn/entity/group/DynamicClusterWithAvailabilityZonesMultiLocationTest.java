@@ -26,6 +26,10 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -33,12 +37,10 @@ import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.MultiLocation;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.MultiLocation;
+
 import brooklyn.test.Asserts;
 
 import com.google.common.base.Predicate;

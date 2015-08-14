@@ -32,6 +32,7 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
@@ -46,7 +47,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -33,7 +33,7 @@ import brooklyn.basic.AbstractBrooklynObject;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
-import org.apache.brooklyn.mementos.CatalogItemMemento;
+import org.apache.brooklyn.api.mementos.CatalogItemMemento;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.BasicCatalogItemRebindSupport;

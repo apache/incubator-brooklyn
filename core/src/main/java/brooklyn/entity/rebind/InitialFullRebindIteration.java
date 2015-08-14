@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

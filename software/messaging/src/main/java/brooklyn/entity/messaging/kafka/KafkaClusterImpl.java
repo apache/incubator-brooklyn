@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,6 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.location.Location;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 

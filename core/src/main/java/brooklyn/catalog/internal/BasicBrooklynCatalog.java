@@ -46,17 +46,19 @@ import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
-import org.apache.brooklyn.policy.Policy;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicySpec;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.BasicLocationRegistry;
+
+import org.apache.brooklyn.location.basic.BasicLocationRegistry;
+
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

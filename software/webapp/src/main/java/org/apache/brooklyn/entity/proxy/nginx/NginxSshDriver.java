@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.entity.proxy.AbstractController;
 import org.slf4j.Logger;
@@ -35,8 +37,9 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.location.OsDetails;
-import brooklyn.location.basic.SshMachineLocation;
+
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
@@ -54,7 +57,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 /**
- * Start a {@link NginxController} in a {@link brooklyn.location.Location} accessible over ssh.
+ * Start a {@link NginxController} in a {@link Location} accessible over ssh.
  */
 public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements NginxDriver {
 

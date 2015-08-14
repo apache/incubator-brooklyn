@@ -25,7 +25,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
@@ -33,12 +36,10 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.policy.os.CreateUserPolicy;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.text.Identifiers;
 

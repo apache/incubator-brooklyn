@@ -21,7 +21,7 @@ package brooklyn.entity.rebind.dto;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.brooklyn.mementos.FeedMemento;
+import org.apache.brooklyn.api.mementos.FeedMemento;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;

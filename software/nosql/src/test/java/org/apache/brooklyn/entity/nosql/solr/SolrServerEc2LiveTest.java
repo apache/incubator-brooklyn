@@ -22,7 +22,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.nosql.solr.SolrServer;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.solr.common.SolrDocument;
 import org.slf4j.Logger;
@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

@@ -34,6 +34,8 @@ import javax.management.ObjectName;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,10 +54,10 @@ import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.event.feed.jmx.JmxOperationPollConfig;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.Machines;
-import brooklyn.location.cloud.CloudLocationConfig;
+
+import org.apache.brooklyn.location.basic.Machines;
+import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;

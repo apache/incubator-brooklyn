@@ -37,6 +37,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.policy.PolicySpec;
 
 import brooklyn.catalog.internal.CatalogEntityItemDto;
 import brooklyn.catalog.internal.CatalogItemBuilder;
@@ -50,7 +51,6 @@ import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 
-import org.apache.brooklyn.policy.PolicySpec;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;

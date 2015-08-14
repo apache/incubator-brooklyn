@@ -28,8 +28,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
-import org.apache.brooklyn.mementos.EntityMemento;
-import org.apache.brooklyn.mementos.TreeNode;
+import org.apache.brooklyn.api.mementos.EntityMemento;
+import org.apache.brooklyn.api.mementos.TreeNode;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.slf4j.Logger;
@@ -52,7 +52,7 @@ import com.google.common.collect.Maps;
  * 
  * @see AbstractEntity#getRebindSupport()
  * @see RebindSupport#getMemento()
- * @see RebindSupport#reconstruct(org.apache.brooklyn.api.entity.rebind.RebindContext, org.apache.brooklyn.mementos.Memento)
+ * @see RebindSupport#reconstruct(org.apache.brooklyn.api.entity.rebind.RebindContext, org.apache.brooklyn.api.mementos.Memento)
  * 
  * @author aled
  */

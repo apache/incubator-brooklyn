@@ -23,14 +23,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.location.OsDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
-import brooklyn.location.OsDetails;
-import brooklyn.location.basic.SshMachineLocation;
+
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;

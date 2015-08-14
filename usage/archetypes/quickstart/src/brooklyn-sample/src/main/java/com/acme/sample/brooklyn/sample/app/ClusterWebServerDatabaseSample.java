@@ -29,7 +29,7 @@ import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.maven.MavenArtifact;
 import brooklyn.util.maven.MavenRetriever;

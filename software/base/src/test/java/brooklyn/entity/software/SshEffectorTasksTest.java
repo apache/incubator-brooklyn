@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
@@ -34,11 +35,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.ssh.SshFetchTaskWrapper;

@@ -27,7 +27,7 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
-import brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.guava.MaybeFunctions;

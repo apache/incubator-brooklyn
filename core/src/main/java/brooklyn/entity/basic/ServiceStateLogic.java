@@ -34,9 +34,9 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.EnricherSpec;
-import org.apache.brooklyn.policy.EnricherSpec.ExtensibleEnricherSpec;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.api.policy.EnricherSpec.ExtensibleEnricherSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

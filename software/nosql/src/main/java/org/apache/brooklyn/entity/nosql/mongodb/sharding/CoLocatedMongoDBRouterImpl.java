@@ -21,13 +21,13 @@ package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SameServerEntityImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.Location;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

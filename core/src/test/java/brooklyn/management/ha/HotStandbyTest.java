@@ -33,6 +33,8 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
@@ -58,9 +60,9 @@ import brooklyn.entity.rebind.persister.InMemoryObjectStore;
 import brooklyn.entity.rebind.persister.ListeningObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+
 import brooklyn.management.internal.AbstractManagementContext;
 import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;

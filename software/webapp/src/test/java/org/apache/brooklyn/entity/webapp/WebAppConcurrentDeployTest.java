@@ -31,12 +31,14 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
 import brooklyn.test.Asserts;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;

@@ -22,7 +22,7 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
 import static brooklyn.util.text.StringEscapes.BashStringEscapes.escapeLiteralForDoubleQuotedBash;

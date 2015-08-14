@@ -23,7 +23,7 @@ import static org.testng.Assert.assertEquals;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.management.SubscriptionContext;
-import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

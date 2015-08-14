@@ -22,8 +22,8 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.mementos.LocationMemento;
-import org.apache.brooklyn.mementos.TreeNode;
+import org.apache.brooklyn.api.mementos.LocationMemento;
+import org.apache.brooklyn.api.mementos.TreeNode;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;

@@ -24,6 +24,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
@@ -37,10 +39,10 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.dynamic.DynamicLocation;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.dynamic.DynamicLocation;
+
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 

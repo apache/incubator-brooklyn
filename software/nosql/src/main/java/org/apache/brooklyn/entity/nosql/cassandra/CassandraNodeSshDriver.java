@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.TaskWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +45,11 @@ import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.location.Location;
-import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.location.basic.Machines;
-import brooklyn.location.basic.SshMachineLocation;
+
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.basic.Machines;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;

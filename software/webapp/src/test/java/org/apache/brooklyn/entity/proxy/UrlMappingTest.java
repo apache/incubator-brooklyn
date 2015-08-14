@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.entity.proxy.nginx.UrlMapping;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
@@ -44,8 +45,9 @@ import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
 import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;

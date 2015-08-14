@@ -30,11 +30,13 @@ import com.google.common.collect.Maps;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.location.basic.AbstractLocation;
-import brooklyn.location.dynamic.DynamicLocation;
+
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
+import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.dynamic.DynamicLocation;
+
 import brooklyn.util.flags.SetFromFlag;
 
 public class ServerPoolLocation extends AbstractLocation implements MachineProvisioningLocation<MachineLocation>,

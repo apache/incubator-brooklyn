@@ -24,11 +24,11 @@ import static org.testng.Assert.assertTrue;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 

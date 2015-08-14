@@ -31,8 +31,7 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
-import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
@@ -46,7 +45,6 @@ import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Identifiers;

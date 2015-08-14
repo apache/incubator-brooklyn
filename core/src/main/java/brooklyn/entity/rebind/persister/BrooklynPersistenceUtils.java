@@ -31,15 +31,17 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.management.ha.MementoCopyMode;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
-import org.apache.brooklyn.mementos.Memento;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.mementos.Memento;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.Policy;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
@@ -48,9 +50,9 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.entity.rebind.transformer.CompoundTransformerLoader;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+
 import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.management.internal.ManagementContextInternal;

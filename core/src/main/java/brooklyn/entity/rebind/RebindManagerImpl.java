@@ -40,9 +40,9 @@ import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.MementoCopyMode;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
-import org.apache.brooklyn.mementos.TreeNode;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.mementos.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -30,8 +30,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsUtil;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsUtil;
 import brooklyn.util.text.Identifiers;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;

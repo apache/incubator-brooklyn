@@ -20,7 +20,7 @@ package brooklyn.entity.rebind.persister;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister.LookupContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

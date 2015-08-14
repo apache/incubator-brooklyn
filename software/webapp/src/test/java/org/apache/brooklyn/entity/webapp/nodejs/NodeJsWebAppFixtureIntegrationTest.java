@@ -21,8 +21,9 @@ package org.apache.brooklyn.entity.webapp.nodejs;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessDriver;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
-import brooklyn.location.basic.PortRanges;
+
+import org.apache.brooklyn.location.basic.PortRanges;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
@@ -33,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService;

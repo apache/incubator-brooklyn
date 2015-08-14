@@ -39,7 +39,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.api.policy.PolicySpec;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;

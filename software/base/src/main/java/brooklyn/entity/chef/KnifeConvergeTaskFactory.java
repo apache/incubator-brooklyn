@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.effector.EffectorTasks;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

@@ -31,6 +31,9 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraFabric;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
@@ -54,11 +57,8 @@ import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.policy.EnricherSpec;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.location.basic.PortRanges;
 
-import brooklyn.location.Location;
-import brooklyn.location.basic.PortRanges;
 import brooklyn.policy.ha.ServiceFailureDetector;
 import brooklyn.policy.ha.ServiceReplacer;
 import brooklyn.policy.ha.ServiceRestarter;

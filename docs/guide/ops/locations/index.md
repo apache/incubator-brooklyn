@@ -133,7 +133,7 @@ For more keys and more detail on the keys below, see
   For more sophisticated control over host naming, you can supply a custom 
   {% include java_link.html class_name="CloudMachineNamer" package_path="brooklyn/location/cloud/names" project_subpath="core" %},
   for example
-  `cloudMachineNamer: brooklyn.location.cloud.names.CustomMachineNamer`.
+  `cloudMachineNamer: CustomMachineNamer`.
   {% include java_link.html class_name="CustomMachineNamer" package_path="brooklyn/location/cloud/names" project_subpath="core" %}
   will use the entity's name or following a template you supply.
   On many clouds, a random suffix will be appended to help guarantee uniqueness;
@@ -425,7 +425,7 @@ The BYON location also supports a machine chooser, using the config key `byon.ma
 This allows one to plugin logic to choose from the set of available machines in the pool. For
 example, additional config could be supplied for each machine. This could be used (during the call
 to `location.obtain()`) to find the config that matches the requirements of the entity being
-provisioned. See `brooklyn.location.basic.FixedListMachineProvisioningLocation.MACHINE_CHOOSER`.
+provisioned. See `FixedListMachineProvisioningLocation.MACHINE_CHOOSER`.
 
 
 ### Other Location Topics

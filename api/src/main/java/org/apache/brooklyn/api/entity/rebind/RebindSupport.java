@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.api.entity.rebind;
 
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
-import org.apache.brooklyn.mementos.Memento;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.Memento;
 
 /**
  * Supporter instance for behaviour related to rebinding a given entity/location/policy.

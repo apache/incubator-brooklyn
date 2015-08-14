@@ -30,10 +30,10 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
-import org.apache.brooklyn.mementos.Memento;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData.Builder;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.mementos.Memento;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

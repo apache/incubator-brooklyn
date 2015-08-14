@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +45,10 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.location.OsDetails;
-import brooklyn.location.basic.SshMachineLocation;
+
+import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;

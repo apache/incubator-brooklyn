@@ -32,7 +32,7 @@ import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
-import brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;

@@ -30,8 +30,10 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.policy.EnricherSpec;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
@@ -42,9 +44,9 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SimulatedLocation;
+
+import org.apache.brooklyn.location.basic.SimulatedLocation;
+
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;

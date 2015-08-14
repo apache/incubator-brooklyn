@@ -42,7 +42,7 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.function.FunctionFeedTest;
 import brooklyn.event.feed.ssh.SshPollValue;
 import brooklyn.event.feed.ssh.SshValueFunctions;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 import brooklyn.util.stream.Streams;
 

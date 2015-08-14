@@ -28,7 +28,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.Sensor;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +57,10 @@ import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.location.basic.Machines;
-import brooklyn.location.basic.SshMachineLocation;
+
+import org.apache.brooklyn.location.basic.Machines;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Cidr;
 import brooklyn.util.ssh.BashCommands;

@@ -23,8 +23,8 @@ import static org.testng.Assert.assertEquals;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationNoEnrichersImpl;
 import org.testng.Assert;

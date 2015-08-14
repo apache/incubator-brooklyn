@@ -22,13 +22,13 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 
 import brooklyn.entity.basic.AbstractConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.EntityFactoryForLocation;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
-import brooklyn.location.MachineProvisioningLocation;
 
 public interface ElasticJavaWebAppService extends JavaWebAppService, Startable {
 

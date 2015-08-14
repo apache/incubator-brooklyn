@@ -29,11 +29,11 @@ import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.policy.EnricherSpec;
 
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;

@@ -26,8 +26,8 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 
 import brooklyn.util.time.Duration;
 

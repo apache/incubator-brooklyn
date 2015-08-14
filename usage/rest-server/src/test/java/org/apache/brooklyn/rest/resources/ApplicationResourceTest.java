@@ -59,10 +59,10 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.location.basic.AbstractLocation;
-import brooklyn.location.basic.LocationConfigKeys;
-import brooklyn.location.basic.LocationInternal;
-import brooklyn.location.geo.HostGeoInfo;
+import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.location.basic.LocationInternal;
+import org.apache.brooklyn.location.geo.HostGeoInfo;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;

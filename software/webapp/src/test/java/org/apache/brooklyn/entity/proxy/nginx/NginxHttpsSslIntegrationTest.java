@@ -25,9 +25,9 @@ import java.io.File;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.proxy.LoadBalancer;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
-import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -44,8 +44,9 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.location.Location;
-import brooklyn.location.basic.PortRanges;
+
+import org.apache.brooklyn.location.basic.PortRanges;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.exceptions.Exceptions;
 

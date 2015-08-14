@@ -21,7 +21,7 @@ package org.apache.brooklyn.api.entity.rebind;
 import java.util.Map;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister.LookupContext;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister.LookupContext;
 
 import com.google.common.annotations.Beta;
 

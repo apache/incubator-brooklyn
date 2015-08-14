@@ -25,7 +25,7 @@ import java.util.Collection;
 import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
-import org.apache.brooklyn.mementos.FeedMemento;
+import org.apache.brooklyn.api.mementos.FeedMemento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

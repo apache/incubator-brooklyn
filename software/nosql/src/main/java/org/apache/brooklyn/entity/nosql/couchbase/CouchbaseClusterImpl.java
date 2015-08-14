@@ -32,7 +32,7 @@ import javax.annotation.Nonnull;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +52,9 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
-import brooklyn.location.access.BrooklynAccessUtils;
+
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
+
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.QuorumCheck;

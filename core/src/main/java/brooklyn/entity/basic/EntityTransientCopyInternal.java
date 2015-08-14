@@ -20,9 +20,7 @@ package brooklyn.entity.basic;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.basic.BrooklynObject.TagSupport;
@@ -33,17 +31,17 @@ import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.mementos.EntityMemento;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.mementos.EntityMemento;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.Policy;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.entity.proxying.EntityProxyImpl;
-import brooklyn.location.Location;
 import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;

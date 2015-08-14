@@ -36,7 +36,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSens
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
-import brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MySql Node", description="MySql is an open source relational database management system (RDBMS)", iconUrl="classpath:///mysql-logo-110x57.png")

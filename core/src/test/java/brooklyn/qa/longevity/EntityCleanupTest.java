@@ -19,9 +19,9 @@
 package brooklyn.qa.longevity;
 
 import org.testng.annotations.Test;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
 
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.util.javalang.JavaClassNames;
 
 public class EntityCleanupTest extends EntityCleanupLongevityTestFixture {

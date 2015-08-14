@@ -20,7 +20,7 @@ package brooklyn.policy.basic;
 
 import java.util.Map;
 
-import org.apache.brooklyn.policy.PolicyType;
+import org.apache.brooklyn.api.policy.PolicyType;
 
 import brooklyn.basic.BrooklynTypeSnapshot;
 import brooklyn.config.ConfigKey;

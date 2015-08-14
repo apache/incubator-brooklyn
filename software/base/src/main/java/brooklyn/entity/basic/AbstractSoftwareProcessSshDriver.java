@@ -45,7 +45,7 @@ import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.internal.ssh.SshTool;

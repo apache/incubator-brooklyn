@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.policy.EntityAdjunct;
+import org.apache.brooklyn.api.policy.EntityAdjunct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -30,8 +30,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.EnricherSpec;
 
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.enricher.basic.Aggregator;

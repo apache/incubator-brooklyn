@@ -21,10 +21,7 @@ package org.apache.brooklyn.entity.webapp.jboss;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import java.net.URL;
-
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.webapp.jboss.JBoss6Server;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.testng.annotations.BeforeMethod;
@@ -32,7 +29,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;

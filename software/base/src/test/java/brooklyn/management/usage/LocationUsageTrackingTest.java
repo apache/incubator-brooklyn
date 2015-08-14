@@ -28,17 +28,19 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.NoMachinesAvailableException;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
+
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.management.internal.UsageListener.LocationMetadata;
 import brooklyn.management.usage.LocationUsage.LocationEvent;
 import brooklyn.test.Asserts;

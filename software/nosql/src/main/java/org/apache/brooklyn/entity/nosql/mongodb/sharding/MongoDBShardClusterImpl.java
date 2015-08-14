@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBClientSupport;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
@@ -38,9 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.Location;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 

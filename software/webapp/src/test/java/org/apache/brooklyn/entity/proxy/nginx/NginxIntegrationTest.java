@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.proxy.nginx.NginxController;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -45,7 +45,6 @@ import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.EntityFactory;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.location.Location;
 import brooklyn.test.Asserts;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;

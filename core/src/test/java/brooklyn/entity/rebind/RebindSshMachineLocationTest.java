@@ -27,10 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

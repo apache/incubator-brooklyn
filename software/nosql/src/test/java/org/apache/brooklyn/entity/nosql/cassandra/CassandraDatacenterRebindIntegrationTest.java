@@ -24,8 +24,6 @@ import java.math.BigInteger;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
-import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
@@ -37,7 +35,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

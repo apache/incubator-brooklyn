@@ -22,7 +22,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -30,10 +30,10 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.entity.proxy.AbstractControllerImpl;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController.NginxControllerInternal;
-import org.apache.brooklyn.policy.PolicySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

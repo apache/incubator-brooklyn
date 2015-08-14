@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.net.Networking;
 import brooklyn.util.os.Os;

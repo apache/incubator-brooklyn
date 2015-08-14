@@ -26,13 +26,15 @@ import java.util.Set;
 
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.java.UsesJmx;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
+
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.net.Networking;

@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.net.HostAndPort;
 
-import brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 
 /**
  * Simplifies the creation of configuration objects for Mongo DB replica sets.

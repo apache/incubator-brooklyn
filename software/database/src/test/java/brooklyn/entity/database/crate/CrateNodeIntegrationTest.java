@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
 public class CrateNodeIntegrationTest {
 

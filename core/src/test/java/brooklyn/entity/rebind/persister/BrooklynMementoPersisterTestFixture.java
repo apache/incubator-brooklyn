@@ -27,12 +27,14 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
 import org.apache.brooklyn.api.entity.rebind.RebindManager.RebindFailureMode;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.mementos.BrooklynMemento;
-import org.apache.brooklyn.mementos.BrooklynMementoPersister;
-import org.apache.brooklyn.mementos.BrooklynMementoRawData;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.mementos.BrooklynMemento;
+import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.SkipException;
@@ -47,9 +49,9 @@ import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;
 import brooklyn.entity.rebind.RebindContextImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.RecordingRebindExceptionHandler;
-import brooklyn.location.Location;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SshMachineLocation;
+
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.test.policy.TestPolicy;
 
 import com.google.common.collect.Iterables;

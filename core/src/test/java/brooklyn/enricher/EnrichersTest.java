@@ -34,8 +34,8 @@ import brooklyn.entity.basic.EntityAdjuncts;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
-import org.apache.brooklyn.policy.Enricher;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 

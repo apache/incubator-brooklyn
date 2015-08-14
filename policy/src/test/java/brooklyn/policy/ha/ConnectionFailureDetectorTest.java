@@ -32,7 +32,7 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;

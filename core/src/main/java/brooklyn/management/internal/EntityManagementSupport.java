@@ -32,8 +32,8 @@ import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.Policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

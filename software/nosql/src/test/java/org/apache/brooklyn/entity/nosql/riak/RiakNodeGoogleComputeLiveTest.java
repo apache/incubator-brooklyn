@@ -19,8 +19,7 @@
 package org.apache.brooklyn.entity.nosql.riak;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.entity.nosql.riak.RiakCluster;
-import org.apache.brooklyn.entity.nosql.riak.RiakNode;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
 
@@ -28,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import brooklyn.entity.AbstractGoogleComputeLiveTest;
-import brooklyn.location.Location;
 
 public class RiakNodeGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {
     @Override

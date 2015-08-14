@@ -24,6 +24,7 @@ import java.net.InetAddress;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingScriptGenerator;
@@ -38,12 +39,13 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
-import brooklyn.location.LocationSpec;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.geo.HostGeoInfo;
-import brooklyn.location.geo.HostGeoLookup;
-import brooklyn.location.geo.MaxMind2HostGeoLookup;
-import brooklyn.location.geo.UtraceHostGeoLookup;
+
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.geo.HostGeoInfo;
+import org.apache.brooklyn.location.geo.HostGeoLookup;
+import org.apache.brooklyn.location.geo.MaxMind2HostGeoLookup;
+import org.apache.brooklyn.location.geo.UtraceHostGeoLookup;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

@@ -19,10 +19,10 @@
 package org.apache.brooklyn.camp.brooklyn;
 
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.Factory;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
-import org.apache.brooklyn.policy.Policy;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.KeyPair;
 
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.crypto.SecureKeys;
 
 import com.google.common.base.Throwables;

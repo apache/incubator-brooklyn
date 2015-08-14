@@ -22,8 +22,6 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.entity.nosql.mongodb.AbstractMongoDBServer;
-import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +36,7 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 
-import brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 
 public class MongoDBTestHelper {
 

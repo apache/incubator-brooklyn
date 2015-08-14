@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.mementos.Memento;
+import org.apache.brooklyn.api.mementos.Memento;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.Entities;
