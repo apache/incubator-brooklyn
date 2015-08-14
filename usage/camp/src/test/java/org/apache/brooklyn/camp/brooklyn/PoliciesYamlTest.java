@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

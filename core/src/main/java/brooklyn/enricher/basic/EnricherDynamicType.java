@@ -18,8 +18,8 @@
  */
 package brooklyn.enricher.basic;
 
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.EnricherType;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.EnricherType;
 
 import brooklyn.basic.BrooklynDynamicType;
 

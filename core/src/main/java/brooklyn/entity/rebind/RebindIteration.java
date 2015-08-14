@@ -62,8 +62,8 @@ import org.apache.brooklyn.api.mementos.Memento;
 import org.apache.brooklyn.api.mementos.PolicyMemento;
 import org.apache.brooklyn.api.mementos.TreeNode;
 import org.apache.brooklyn.api.mementos.BrooklynMementoManifest.EntityMementoManifest;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.Policy;
 
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.catalog.internal.CatalogUtils;

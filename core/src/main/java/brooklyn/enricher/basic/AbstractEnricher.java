@@ -27,8 +27,8 @@ import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.mementos.EnricherMemento;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.EnricherType;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.EnricherType;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;

@@ -24,7 +24,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.api.policy.Enricher;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
@@ -35,7 +35,9 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorTasks;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.net.Urls;
 import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.task.DynamicTasks;

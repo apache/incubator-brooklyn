@@ -22,8 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.EntityAdjunct;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.EntityAdjunct;
 
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceState;

@@ -23,7 +23,7 @@ import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

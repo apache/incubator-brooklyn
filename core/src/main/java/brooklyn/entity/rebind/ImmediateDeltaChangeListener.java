@@ -36,8 +36,8 @@ import org.apache.brooklyn.api.mementos.EntityMemento;
 import org.apache.brooklyn.api.mementos.LocationMemento;
 import org.apache.brooklyn.api.mementos.Memento;
 import org.apache.brooklyn.api.mementos.PolicyMemento;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.location.basic.LocationInternal;
 
 import com.google.common.collect.Maps;

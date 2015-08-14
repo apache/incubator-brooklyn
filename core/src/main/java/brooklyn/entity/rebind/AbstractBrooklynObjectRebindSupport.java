@@ -21,7 +21,7 @@ package brooklyn.entity.rebind;
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.mementos.Memento;
-import org.apache.brooklyn.policy.EntityAdjunct;
+import org.apache.brooklyn.api.policy.EntityAdjunct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

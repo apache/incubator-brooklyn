@@ -24,8 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.policy.Policy;
-import org.apache.brooklyn.policy.PolicySpec;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.test.PerformanceTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.Test;

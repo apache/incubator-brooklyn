@@ -27,10 +27,10 @@ import java.util.concurrent.Callable;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import org.apache.brooklyn.entity.proxy.nginx.NginxSshDriver;
 import org.apache.brooklyn.entity.proxy.nginx.UrlMapping;
-import org.apache.brooklyn.policy.PolicySpec;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.feed.ConfigToAttributes;
@@ -38,7 +38,9 @@ import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 

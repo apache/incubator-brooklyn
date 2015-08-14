@@ -29,7 +29,7 @@ import brooklyn.management.entitlement.Entitlements;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.rest.api.PolicyConfigApi;
 import org.apache.brooklyn.rest.domain.PolicyConfigSummary;
 import org.apache.brooklyn.rest.filter.HaHotStateRequired;

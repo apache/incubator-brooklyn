@@ -26,7 +26,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.trait.HasShortName;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.policy.Enricher;
+import org.apache.brooklyn.api.policy.Enricher;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
@@ -34,8 +34,10 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorTasks;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.cloud.names.AbstractCloudMachineNamer;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;

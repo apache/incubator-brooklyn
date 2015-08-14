@@ -37,7 +37,7 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Policy;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.management.internal.ManagementContextInternal;

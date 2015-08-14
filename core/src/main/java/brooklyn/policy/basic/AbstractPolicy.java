@@ -25,8 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.mementos.PolicyMemento;
-import org.apache.brooklyn.policy.Policy;
-import org.apache.brooklyn.policy.PolicyType;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

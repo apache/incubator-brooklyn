@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.basic;
 
-import org.apache.brooklyn.policy.Policy;
+import org.apache.brooklyn.api.policy.Policy;
 
 import com.google.common.base.Objects;
 

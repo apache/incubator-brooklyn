@@ -20,7 +20,7 @@ package brooklyn.enricher.basic;
 
 import java.util.Map;
 
-import org.apache.brooklyn.policy.EnricherType;
+import org.apache.brooklyn.api.policy.EnricherType;
 
 import brooklyn.basic.BrooklynTypeSnapshot;
 import brooklyn.config.ConfigKey;

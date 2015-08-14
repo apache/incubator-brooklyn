@@ -39,7 +39,7 @@ import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.policy.EntityAdjunct;
+import org.apache.brooklyn.api.policy.EntityAdjunct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

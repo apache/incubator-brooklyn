@@ -41,7 +41,7 @@ import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.policy.EnricherSpec;
+import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -21,9 +21,9 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
+import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlRebindTest;
-import org.apache.brooklyn.policy.Enricher;
-import org.apache.brooklyn.policy.Policy;
 import org.testng.annotations.Test;
 
 import brooklyn.catalog.internal.CatalogUtils;

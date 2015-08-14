@@ -21,7 +21,7 @@ package org.apache.brooklyn.api.entity;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.entity.rebind.Rebindable;
 import org.apache.brooklyn.api.mementos.FeedMemento;
-import org.apache.brooklyn.policy.EntityAdjunct;
+import org.apache.brooklyn.api.policy.EntityAdjunct;
 
 import com.google.common.annotations.Beta;
 

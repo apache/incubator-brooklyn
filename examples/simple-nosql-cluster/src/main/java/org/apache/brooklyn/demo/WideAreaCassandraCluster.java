@@ -24,6 +24,8 @@ import java.util.List;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraFabric;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
@@ -35,8 +37,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.policy.EnricherSpec;
-import org.apache.brooklyn.policy.PolicySpec;
 
 import brooklyn.policy.ha.ServiceFailureDetector;
 import brooklyn.policy.ha.ServiceReplacer;

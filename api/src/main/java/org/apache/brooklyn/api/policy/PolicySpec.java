@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.policy;
+package org.apache.brooklyn.api.policy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
