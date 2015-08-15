@@ -28,6 +28,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
 
+import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -42,7 +43,6 @@ import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.internal.BrooklynInitialization;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.stream.Streams;
 

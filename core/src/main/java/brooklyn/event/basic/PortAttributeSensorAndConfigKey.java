@@ -28,12 +28,12 @@ import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.location.PortSupplier;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.internal.BrooklynInitialization;
 
 import org.apache.brooklyn.location.basic.Locations;
 

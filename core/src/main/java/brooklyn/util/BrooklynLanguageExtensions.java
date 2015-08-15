@@ -20,7 +20,8 @@ package brooklyn.util;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import brooklyn.internal.BrooklynInitialization;
+import org.apache.brooklyn.core.internal.BrooklynInitialization;
+
 import brooklyn.util.internal.TimeExtras;
 
 /** @deprecated since 0.7.0 use {@link BrooklynInitialization} */

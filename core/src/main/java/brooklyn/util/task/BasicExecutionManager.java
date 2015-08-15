@@ -49,10 +49,10 @@ import org.apache.brooklyn.api.management.ExecutionManager;
 import org.apache.brooklyn.api.management.HasTaskChildren;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Identifiers;

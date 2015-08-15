@@ -36,9 +36,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import net.schmizz.sshj.connection.channel.direct.Session;
 
+import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.testng.annotations.Test;
 
-import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.test.Asserts;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeTimeoutException;

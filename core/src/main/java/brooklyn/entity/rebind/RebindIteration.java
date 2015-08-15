@@ -64,6 +64,7 @@ import org.apache.brooklyn.api.mementos.TreeNode;
 import org.apache.brooklyn.api.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagementMode;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagerInternal;
 import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
@@ -86,7 +87,6 @@ import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.event.feed.AbstractFeed;
-import brooklyn.internal.BrooklynFeatureEnablement;
 
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationInternal;

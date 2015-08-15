@@ -49,11 +49,11 @@ import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 
+import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.commons.io.input.ProxyInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeTimeoutException;
 import brooklyn.util.internal.ssh.BackoffLimitedRetryHandler;

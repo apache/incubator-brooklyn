@@ -45,12 +45,12 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
-import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;

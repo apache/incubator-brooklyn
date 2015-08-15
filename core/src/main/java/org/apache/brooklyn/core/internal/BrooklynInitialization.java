@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal;
+package org.apache.brooklyn.core.internal;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

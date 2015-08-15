@@ -25,11 +25,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.internal.BrooklynFeatureEnablement;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.ssh.SshAbstractTool.SshAction;
 import brooklyn.util.internal.ssh.sshj.SshjTool.ShellAction;

@@ -31,13 +31,15 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.internal.BrooklynFeatureEnablement;
+
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

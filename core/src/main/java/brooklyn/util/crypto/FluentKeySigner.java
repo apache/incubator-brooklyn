@@ -28,11 +28,11 @@ import java.util.Date;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.X509Extension;
 import org.bouncycastle.jce.X509Principal;
 
-import brooklyn.internal.BrooklynInitialization;
 import brooklyn.util.exceptions.Exceptions;
 
 /** A fluent API which simplifies generating certificates (signed keys) */

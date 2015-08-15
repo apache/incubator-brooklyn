@@ -45,6 +45,7 @@ import javax.annotation.concurrent.GuardedBy;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +54,6 @@ import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.event.basic.Sensors;
-import brooklyn.internal.BrooklynInitialization;
 import brooklyn.util.JavaGroovyEquivalents;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.QuorumCheck;
