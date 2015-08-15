@@ -35,6 +35,8 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.mementos.LocationMemento;
+import org.apache.brooklyn.core.management.internal.LocalLocationManager;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +55,6 @@ import brooklyn.internal.storage.impl.BasicReference;
 import org.apache.brooklyn.location.geo.HasHostGeoInfo;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 
-import brooklyn.management.internal.LocalLocationManager;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;

@@ -20,7 +20,7 @@ package org.apache.brooklyn.rest.transform;
 
 import java.net.URI;
 
-import brooklyn.management.internal.AccessManager;
+import org.apache.brooklyn.core.management.internal.AccessManager;
 import org.apache.brooklyn.rest.domain.AccessSummary;
 
 import com.google.common.collect.ImmutableMap;

@@ -40,12 +40,12 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.LocalLocationManager;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.ConfigMap;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.config.ConfigUtils;
-import brooklyn.management.internal.LocalLocationManager;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;

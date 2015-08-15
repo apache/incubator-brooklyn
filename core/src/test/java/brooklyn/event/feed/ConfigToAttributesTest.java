@@ -21,6 +21,8 @@ package brooklyn.event.feed;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.AfterMethod;
@@ -30,8 +32,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.internal.ManagementContextInternal;
 
 public class ConfigToAttributesTest {
 

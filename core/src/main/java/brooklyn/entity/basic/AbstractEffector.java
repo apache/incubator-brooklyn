@@ -26,13 +26,13 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ParameterType;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.effector.EffectorBase;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.effector.EffectorWithBody;
-import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.task.DynamicSequentialTask;
 

@@ -25,14 +25,14 @@ import java.util.Map.Entry;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.LocalLocationManager;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 
 import brooklyn.config.ConfigKey;
 
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationInternal;
 
-import brooklyn.management.internal.LocalLocationManager;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.FlagUtils;

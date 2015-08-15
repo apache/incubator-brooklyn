@@ -24,11 +24,11 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;

@@ -20,14 +20,15 @@ package brooklyn.management.usage;
 
 import java.util.List;
 
-import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
-import brooklyn.management.usage.LocationUsage.LocationEvent;
+import org.apache.brooklyn.core.management.usage.ApplicationUsage.ApplicationEvent;
+import org.apache.brooklyn.core.management.usage.LocationUsage.LocationEvent;
+
 import brooklyn.util.collections.MutableList;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class RecordingUsageListener implements brooklyn.management.internal.UsageListener {
+public class RecordingUsageListener implements org.apache.brooklyn.core.management.internal.UsageListener {
 
     private final List<List<?>> events = Lists.newCopyOnWriteArrayList();
     

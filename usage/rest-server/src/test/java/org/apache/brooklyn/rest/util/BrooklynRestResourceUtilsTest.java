@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogTemplateItemDto;
@@ -40,7 +41,6 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.proxying.EntityProxy;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.policy.basic.AbstractPolicy;
 
 import org.apache.brooklyn.rest.domain.ApplicationSpec;

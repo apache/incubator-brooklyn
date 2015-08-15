@@ -25,10 +25,10 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.management.osgi.OsgiStandaloneTest;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.management.osgi.OsgiStandaloneTest;
 
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 

@@ -31,11 +31,11 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
+import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;

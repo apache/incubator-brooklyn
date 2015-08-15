@@ -30,10 +30,10 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.management.entitlement.Entitlements;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.rest.api.EntityConfigApi;
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;
 import org.apache.brooklyn.rest.filter.HaHotStateRequired;

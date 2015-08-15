@@ -31,6 +31,9 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
+import org.apache.brooklyn.core.management.internal.UsageListener.LocationMetadata;
+import org.apache.brooklyn.core.management.usage.LocationUsage;
+import org.apache.brooklyn.core.management.usage.LocationUsage.LocationEvent;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -41,8 +44,6 @@ import brooklyn.entity.basic.SoftwareProcessEntityTest;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
-import brooklyn.management.internal.UsageListener.LocationMetadata;
-import brooklyn.management.usage.LocationUsage.LocationEvent;
 import brooklyn.test.Asserts;
 import brooklyn.util.time.Time;
 

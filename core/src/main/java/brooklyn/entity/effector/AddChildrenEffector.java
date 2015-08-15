@@ -23,14 +23,14 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.management.internal.EntityManagementUtils;
+import org.apache.brooklyn.core.management.internal.EntityManagementUtils.CreationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.effector.Effectors.EffectorBuilder;
-import brooklyn.management.internal.EntityManagementUtils;
-import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.util.config.ConfigBag;
 
 import com.google.common.annotations.Beta;

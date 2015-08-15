@@ -79,6 +79,7 @@ import org.apache.brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
 import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
+import org.apache.brooklyn.core.management.ha.OsgiManager;
 
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
@@ -93,9 +94,6 @@ import brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.launcher.BrooklynServerDetails;
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
-
-import brooklyn.management.ha.OsgiManager;
-
 import org.apache.brooklyn.rest.security.PasswordHasher;
 import org.apache.brooklyn.rest.util.ShutdownHandler;
 

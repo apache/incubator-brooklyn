@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,6 @@ import brooklyn.entity.database.postgresql.PostgreSqlNode;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.PortRanges;
-
-import brooklyn.management.internal.LocalManagementContext;
 
 public class RubyRepIntegrationTest {
 

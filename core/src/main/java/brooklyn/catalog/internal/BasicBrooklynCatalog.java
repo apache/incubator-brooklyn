@@ -52,6 +52,7 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
@@ -59,7 +60,6 @@ import brooklyn.config.BrooklynServerConfig;
 
 import org.apache.brooklyn.location.basic.BasicLocationRegistry;
 
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

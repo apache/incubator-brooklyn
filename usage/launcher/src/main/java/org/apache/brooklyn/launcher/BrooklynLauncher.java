@@ -49,6 +49,10 @@ import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
+import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl;
+import org.apache.brooklyn.core.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,12 +89,6 @@ import brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import org.apache.brooklyn.location.basic.PortRanges;
-
-import brooklyn.management.ha.HighAvailabilityManagerImpl;
-import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.internal.ManagementContextInternal;
-
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import org.apache.brooklyn.rest.security.provider.BrooklynUserWithRandomPasswordSecurityProvider;

@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -55,7 +56,6 @@ import brooklyn.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocationReuseIntegrationTest.RecordingSshjTool;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Networking;
 import brooklyn.util.repeat.Repeater;

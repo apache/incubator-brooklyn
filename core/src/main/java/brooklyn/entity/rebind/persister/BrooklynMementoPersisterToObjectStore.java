@@ -48,6 +48,7 @@ import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.mementos.Memento;
+import org.apache.brooklyn.core.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
@@ -59,7 +60,6 @@ import brooklyn.entity.rebind.dto.BrooklynMementoImpl;
 import brooklyn.entity.rebind.dto.BrooklynMementoManifestImpl;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
-import brooklyn.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;

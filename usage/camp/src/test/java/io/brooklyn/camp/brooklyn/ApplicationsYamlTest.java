@@ -24,13 +24,13 @@ import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.management.internal.EntityManagementUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicEntity;
-import brooklyn.management.internal.EntityManagementUtils;
 
 import com.google.common.collect.Iterables;
 

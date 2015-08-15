@@ -26,11 +26,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.trait.Startable;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;

@@ -48,7 +48,7 @@ public class BrooklynLeakListener extends TestListenerAdapter {
      * depend on brooklyn-core, so LocalManagementContext may not be on the classpath.
      */
     private void tryTerminateAll(String context, ITestContext testContext) {
-        String clazzName = "brooklyn.management.internal.LocalManagementContext";
+        String clazzName = "org.apache.brooklyn.core.management.internal.LocalManagementContext";
         String message;
         int level;
         try {

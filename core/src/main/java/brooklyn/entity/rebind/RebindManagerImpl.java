@@ -43,6 +43,8 @@ import org.apache.brooklyn.api.management.ha.MementoCopyMode;
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.mementos.TreeNode;
+import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +59,6 @@ import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils.CreateBackupMod
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.internal.BrooklynFeatureEnablement;
-import brooklyn.management.ha.HighAvailabilityManagerImpl;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.QuorumCheck;

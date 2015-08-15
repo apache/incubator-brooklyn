@@ -23,7 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
-import brooklyn.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;

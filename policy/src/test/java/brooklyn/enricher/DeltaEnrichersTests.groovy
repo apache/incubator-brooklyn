@@ -31,7 +31,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal
 import org.apache.brooklyn.api.event.Sensor
 import brooklyn.event.basic.BasicAttributeSensor
 import org.apache.brooklyn.api.management.SubscriptionContext
-import brooklyn.management.internal.LocalManagementContext
+import org.apache.brooklyn.core.management.internal.LocalManagementContext
 
 class DeltaEnrichersTests {
     

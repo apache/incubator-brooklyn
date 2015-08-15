@@ -18,7 +18,9 @@
  */
 package org.apache.brooklyn.launcher;
 
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.launcher.BrooklynWebServer;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -47,7 +49,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.internal.LocalManagementContext;
+
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 

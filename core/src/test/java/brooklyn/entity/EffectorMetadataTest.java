@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.entity.ParameterType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -39,7 +40,6 @@ import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
-import brooklyn.management.internal.EffectorUtils;
 
 import com.google.common.collect.ImmutableList;
 

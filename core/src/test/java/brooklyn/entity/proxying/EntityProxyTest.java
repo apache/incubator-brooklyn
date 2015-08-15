@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -40,7 +41,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

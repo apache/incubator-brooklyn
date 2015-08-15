@@ -36,11 +36,11 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.StartableApplication;
-import org.apache.brooklyn.location.basic.BasicLocationRegistry;
-import brooklyn.management.internal.LocalManagementContext;
 
+import org.apache.brooklyn.location.basic.BasicLocationRegistry;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;

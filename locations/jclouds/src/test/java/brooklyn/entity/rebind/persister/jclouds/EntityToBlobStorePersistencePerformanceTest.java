@@ -18,11 +18,11 @@
 */
 package brooklyn.entity.rebind.persister.jclouds;
 
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.qa.performance.EntityPersistencePerformanceTest;
 
 public class EntityToBlobStorePersistencePerformanceTest extends EntityPersistencePerformanceTest {

@@ -42,7 +42,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext
 import org.apache.brooklyn.api.management.Task
 
-import brooklyn.management.internal.EffectorUtils
+import org.apache.brooklyn.core.management.internal.EffectorUtils
 
 import org.apache.brooklyn.test.entity.TestApplication
 

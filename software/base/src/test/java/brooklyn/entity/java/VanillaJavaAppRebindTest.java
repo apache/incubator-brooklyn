@@ -24,6 +24,7 @@ import java.io.File;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
@@ -38,8 +39,9 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JavaOptsTest.TestingJavaOptsVanillaJavaAppImpl;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.event.basic.Sensors;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.internal.LocalManagementContext;
+
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.time.Duration;

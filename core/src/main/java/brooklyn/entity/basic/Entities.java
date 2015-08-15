@@ -59,6 +59,11 @@ import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.management.internal.EffectorUtils;
+import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.management.internal.NonDeploymentManagementContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,11 +80,6 @@ import brooklyn.event.basic.DependentConfiguration;
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.Locations;
 
-import brooklyn.management.internal.EffectorUtils;
-import brooklyn.management.internal.EntityManagerInternal;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.management.internal.NonDeploymentManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;

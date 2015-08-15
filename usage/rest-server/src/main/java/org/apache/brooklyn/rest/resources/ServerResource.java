@@ -50,8 +50,6 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.management.entitlement.Entitlements;
-import brooklyn.management.internal.ManagementContextInternal;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
@@ -63,6 +61,8 @@ import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.management.ha.MementoCopyMode;
+import org.apache.brooklyn.core.management.entitlement.Entitlements;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.rest.api.ServerApi;
 import org.apache.brooklyn.rest.domain.BrooklynFeatureSummary;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;

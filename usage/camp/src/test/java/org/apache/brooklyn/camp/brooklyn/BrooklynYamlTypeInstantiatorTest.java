@@ -23,10 +23,10 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.Factory;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
+import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.policy.ha.ServiceRestarter;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.javalang.JavaClassNames;

@@ -64,6 +64,12 @@ import org.apache.brooklyn.api.mementos.TreeNode;
 import org.apache.brooklyn.api.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.management.internal.BrooklynObjectManagementMode;
+import org.apache.brooklyn.core.management.internal.BrooklynObjectManagerInternal;
+import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
+import org.apache.brooklyn.core.management.internal.LocationManagerInternal;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.management.internal.ManagementTransitionMode;
 
 import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.catalog.internal.CatalogUtils;
@@ -85,12 +91,6 @@ import brooklyn.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationInternal;
 
-import brooklyn.management.internal.BrooklynObjectManagementMode;
-import brooklyn.management.internal.BrooklynObjectManagerInternal;
-import brooklyn.management.internal.EntityManagerInternal;
-import brooklyn.management.internal.LocationManagerInternal;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.management.internal.ManagementTransitionMode;
 import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;

@@ -25,9 +25,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
+
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.basic.BasicOsDetails;
 import org.apache.brooklyn.location.basic.BasicOsDetails.OsArchs;
-import brooklyn.management.internal.LocalManagementContext;
 
 public class CouchbaseOfflineTest {
 

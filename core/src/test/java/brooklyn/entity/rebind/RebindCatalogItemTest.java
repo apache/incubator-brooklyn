@@ -40,6 +40,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.TestEntity;
 
 import brooklyn.catalog.internal.BasicBrooklynCatalog;
@@ -47,8 +48,9 @@ import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.internal.BrooklynFeatureEnablement;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.internal.LocalManagementContext;
+
 import brooklyn.policy.basic.AbstractPolicy;
 
 import com.google.common.base.Joiner;

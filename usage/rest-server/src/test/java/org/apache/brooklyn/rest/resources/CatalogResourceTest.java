@@ -42,9 +42,9 @@ import org.testng.annotations.Test;
 import org.testng.reporters.Files;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.core.management.osgi.OsgiStandaloneTest;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.management.osgi.OsgiStandaloneTest;
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
 
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;

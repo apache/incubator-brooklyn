@@ -22,12 +22,12 @@ import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.entity.trait.Identifiable;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.management.ManagementContextInjectable;
 
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigMap;
-import brooklyn.management.ManagementContextInjectable;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;

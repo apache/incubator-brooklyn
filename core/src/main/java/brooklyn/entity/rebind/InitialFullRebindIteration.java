@@ -26,16 +26,16 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.core.management.internal.BrooklynObjectManagementMode;
+import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
+import org.apache.brooklyn.core.management.internal.LocationManagerInternal;
+import org.apache.brooklyn.core.management.internal.ManagementTransitionMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
-import brooklyn.management.internal.BrooklynObjectManagementMode;
-import brooklyn.management.internal.EntityManagerInternal;
-import brooklyn.management.internal.LocationManagerInternal;
-import brooklyn.management.internal.ManagementTransitionMode;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Preconditions;

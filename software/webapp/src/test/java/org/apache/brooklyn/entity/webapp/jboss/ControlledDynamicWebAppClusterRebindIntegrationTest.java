@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
@@ -46,8 +47,9 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.rebind.RebindTestUtils;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.management.internal.LocalManagementContext;
+
 import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Predicates;

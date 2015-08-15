@@ -40,6 +40,7 @@ import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.EntityAdjunct;
+import org.apache.brooklyn.core.management.internal.SubscriptionTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,6 @@ import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.management.internal.SubscriptionTracker;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.flags.SetFromFlag;

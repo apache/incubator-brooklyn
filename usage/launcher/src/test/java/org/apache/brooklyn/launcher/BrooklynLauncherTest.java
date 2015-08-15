@@ -22,6 +22,8 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 
 import static org.testng.Assert.assertEquals;
@@ -55,8 +57,6 @@ import brooklyn.entity.rebind.RebindTestUtils;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.exceptions.FatalRuntimeException;
 import brooklyn.util.io.FileUtil;
 import brooklyn.util.net.Urls;

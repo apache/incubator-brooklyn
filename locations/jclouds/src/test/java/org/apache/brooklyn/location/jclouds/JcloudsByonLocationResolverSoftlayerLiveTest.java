@@ -23,12 +23,12 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Set;
 
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

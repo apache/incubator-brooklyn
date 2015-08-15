@@ -34,8 +34,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.internal.ssh.SshTool;

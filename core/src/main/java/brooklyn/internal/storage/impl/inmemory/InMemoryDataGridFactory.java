@@ -18,9 +18,10 @@
  */
 package brooklyn.internal.storage.impl.inmemory;
 
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+
 import brooklyn.internal.storage.DataGrid;
 import brooklyn.internal.storage.DataGridFactory;
-import brooklyn.management.internal.ManagementContextInternal;
 
 public class InMemoryDataGridFactory implements DataGridFactory {
     

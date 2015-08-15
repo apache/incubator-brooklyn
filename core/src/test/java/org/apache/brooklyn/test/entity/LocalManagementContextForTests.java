@@ -18,11 +18,12 @@
  */
 package org.apache.brooklyn.test.entity;
 
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.internal.ManagementContextInternal;
 
 /** management context which allows disabling common time-consuming tasks.
  * most instances have:

@@ -36,13 +36,13 @@ import org.apache.brooklyn.api.management.HasTaskChildren;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
+import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.WrappedEntity;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.management.entitlement.Entitlements;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;

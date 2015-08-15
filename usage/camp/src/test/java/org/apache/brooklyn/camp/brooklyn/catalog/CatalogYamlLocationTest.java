@@ -33,14 +33,12 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationDefinition;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.management.osgi.OsgiStandaloneTest;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.event.basic.BasicConfigKey;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.management.osgi.OsgiStandaloneTest;
-
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 import brooklyn.util.text.StringFunctions;

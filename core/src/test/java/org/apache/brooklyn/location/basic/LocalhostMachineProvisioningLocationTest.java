@@ -39,9 +39,9 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.location.PortRange;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 

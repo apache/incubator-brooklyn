@@ -29,11 +29,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.render.RendererHints;
-import brooklyn.management.ManagementContextInjectable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;

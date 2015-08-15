@@ -33,6 +33,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -44,7 +45,6 @@ import brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.BrooklynNetworkUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;

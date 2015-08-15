@@ -40,12 +40,12 @@ import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.options.TemplateOptions;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationDefinition;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsUtil;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.stream.Streams;
 

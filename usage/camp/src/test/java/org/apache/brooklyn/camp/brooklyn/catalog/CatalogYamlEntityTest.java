@@ -32,11 +32,11 @@ import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.management.osgi.OsgiStandaloneTest;
+import org.apache.brooklyn.core.management.osgi.OsgiTestResources;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.basic.BasicEntity;
-import brooklyn.management.osgi.OsgiStandaloneTest;
-import brooklyn.management.osgi.OsgiTestResources;
 
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.TestEntity;

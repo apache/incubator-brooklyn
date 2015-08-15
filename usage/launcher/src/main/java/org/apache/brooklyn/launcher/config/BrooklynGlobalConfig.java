@@ -21,9 +21,11 @@ package org.apache.brooklyn.launcher.config;
 import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
+
+import org.apache.brooklyn.core.management.internal.BrooklynGarbageCollector;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-import brooklyn.management.internal.BrooklynGarbageCollector;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
+
 import brooklyn.util.internal.BrooklynSystemProperties;
 import brooklyn.util.internal.StringSystemProperty;
 import brooklyn.util.time.Duration;

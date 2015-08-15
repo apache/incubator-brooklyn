@@ -20,6 +20,7 @@ package org.apache.brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
@@ -35,8 +36,8 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Entities;
+
 import org.apache.brooklyn.location.jclouds.JcloudsWinRmMachineLocation;
-import brooklyn.management.internal.ManagementContextInternal;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

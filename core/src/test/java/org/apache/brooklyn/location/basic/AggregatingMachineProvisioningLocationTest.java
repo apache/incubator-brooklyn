@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -35,8 +36,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
-
-import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

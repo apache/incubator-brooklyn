@@ -50,6 +50,8 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.management.entitlement.Entitlements;
+import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArgument;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
@@ -61,8 +63,6 @@ import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.trait.Startable;
-import brooklyn.management.entitlement.Entitlements;
-import brooklyn.management.entitlement.Entitlements.StringAndArgument;
 import brooklyn.policy.basic.AbstractPolicy;
 
 import org.apache.brooklyn.rest.domain.ApplicationSpec;

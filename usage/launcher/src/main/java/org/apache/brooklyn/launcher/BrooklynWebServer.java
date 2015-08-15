@@ -67,12 +67,10 @@ import brooklyn.internal.BrooklynInitialization;
 
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.launcher.config.CustomResourceLocator;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.PortRanges;
-
-import brooklyn.management.internal.ManagementContextInternal;
-
 import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;

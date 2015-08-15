@@ -27,16 +27,18 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ParameterType;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
+
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
-import brooklyn.management.internal.EffectorUtils;
+
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.task.DynamicSequentialTask;

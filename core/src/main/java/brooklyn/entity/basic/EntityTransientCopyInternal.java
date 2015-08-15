@@ -37,12 +37,12 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.mementos.EntityMemento;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.management.internal.EntityManagementSupport;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.EntityInternal.FeedSupport;
 import brooklyn.entity.proxying.EntityProxyImpl;
-import brooklyn.management.internal.EntityManagementSupport;
 import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 

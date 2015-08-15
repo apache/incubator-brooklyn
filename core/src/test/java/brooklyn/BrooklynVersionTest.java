@@ -37,8 +37,9 @@ import com.google.common.collect.Lists;
 import brooklyn.catalog.internal.CatalogEntityItemDto;
 import brooklyn.catalog.internal.CatalogItemBuilder;
 import brooklyn.catalog.internal.CatalogItemDtoAbstract;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.osgi.OsgiTestResources;
+
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.management.osgi.OsgiTestResources;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 

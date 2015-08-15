@@ -19,13 +19,13 @@
 package brooklyn.entity.rebind.persister.jclouds;
 
 
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterTestFixture;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 

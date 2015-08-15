@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.Credentials;
@@ -53,8 +54,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.internal.BrooklynInitialization;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
+
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.http.HttpTool;

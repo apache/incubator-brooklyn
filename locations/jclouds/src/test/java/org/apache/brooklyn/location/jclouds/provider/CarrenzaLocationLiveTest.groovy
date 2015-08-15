@@ -30,7 +30,7 @@ import brooklyn.config.BrooklynProperties
 import org.apache.brooklyn.location.basic.SshMachineLocation
 import org.apache.brooklyn.location.jclouds.JcloudsLocation
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation
-import brooklyn.management.internal.LocalManagementContext
+import org.apache.brooklyn.core.management.internal.LocalManagementContext
 import brooklyn.util.collections.MutableMap
 
 import com.google.common.collect.ImmutableList

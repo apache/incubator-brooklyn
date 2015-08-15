@@ -42,6 +42,9 @@ import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingConte
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.management.classloading.BrooklynClassLoadingContextSequential;
+import org.apache.brooklyn.core.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
+import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 
 import brooklyn.catalog.internal.CatalogBundleDto;
 import brooklyn.catalog.internal.CatalogUtils;
@@ -58,9 +61,6 @@ import brooklyn.entity.rebind.dto.BasicPolicyMemento;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.management.classloading.BrooklynClassLoadingContextSequential;
-import brooklyn.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
-import brooklyn.management.classloading.JavaBrooklynClassLoadingContext;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 import brooklyn.util.xstream.XmlSerializer;

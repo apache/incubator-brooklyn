@@ -37,9 +37,9 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
+import org.apache.brooklyn.core.management.osgi.OsgiVersionMoreEntityTest;
 
 import brooklyn.catalog.internal.CatalogUtils;
-import brooklyn.management.osgi.OsgiVersionMoreEntityTest;
 
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 

@@ -38,9 +38,9 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;

@@ -45,9 +45,9 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 

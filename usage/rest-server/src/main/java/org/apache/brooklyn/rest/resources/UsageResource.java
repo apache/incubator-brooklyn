@@ -31,14 +31,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.management.usage.ApplicationUsage;
-import brooklyn.management.usage.ApplicationUsage.ApplicationEvent;
-import brooklyn.management.usage.LocationUsage;
+
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.management.usage.ApplicationUsage;
+import org.apache.brooklyn.core.management.usage.LocationUsage;
+import org.apache.brooklyn.core.management.usage.ApplicationUsage.ApplicationEvent;
 import org.apache.brooklyn.rest.api.UsageApi;
 import org.apache.brooklyn.rest.domain.UsageStatistic;
 import org.apache.brooklyn.rest.domain.UsageStatistics;
 import org.apache.brooklyn.rest.transform.ApplicationTransformer;
+
 import brooklyn.util.exceptions.UserFacingException;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;

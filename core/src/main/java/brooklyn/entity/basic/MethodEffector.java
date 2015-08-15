@@ -27,12 +27,12 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ParameterType;
+import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.codehaus.groovy.runtime.MethodClosure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.annotation.EffectorParam;
-import brooklyn.management.internal.EffectorUtils;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;

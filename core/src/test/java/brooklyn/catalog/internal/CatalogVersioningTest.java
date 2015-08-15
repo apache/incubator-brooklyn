@@ -28,11 +28,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.internal.LocalManagementContext;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

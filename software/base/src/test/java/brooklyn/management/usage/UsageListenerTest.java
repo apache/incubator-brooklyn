@@ -34,9 +34,9 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.management.internal.UsageManager;
 
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.management.internal.UsageManager;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;
@@ -107,7 +107,7 @@ public class UsageListenerTest {
             }});
     }
     
-    public static class RecordingStaticLegacyUsageListener extends RecordingLegacyUsageListener implements brooklyn.management.internal.UsageManager.UsageListener {
+    public static class RecordingStaticLegacyUsageListener extends RecordingLegacyUsageListener implements org.apache.brooklyn.core.management.internal.UsageManager.UsageListener {
         private static final List<RecordingStaticLegacyUsageListener> STATIC_INSTANCES = Lists.newCopyOnWriteArrayList();
         
         public static RecordingStaticLegacyUsageListener getInstance() {
@@ -125,7 +125,7 @@ public class UsageListenerTest {
         }
     }
     
-    public static class RecordingStaticUsageListener extends RecordingUsageListener implements brooklyn.management.internal.UsageListener {
+    public static class RecordingStaticUsageListener extends RecordingUsageListener implements org.apache.brooklyn.core.management.internal.UsageListener {
         private static final List<RecordingStaticUsageListener> STATIC_INSTANCES = Lists.newCopyOnWriteArrayList();
         
         public static RecordingStaticUsageListener getInstance() {

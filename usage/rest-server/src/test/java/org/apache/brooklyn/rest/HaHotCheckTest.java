@@ -25,13 +25,11 @@ import javax.ws.rs.core.MediaType;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.internal.ManagementContextInternal;
-
 import org.apache.brooklyn.api.management.ha.HighAvailabilityManager;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.rest.filter.HaHotCheckResourceFilter;
 import org.apache.brooklyn.rest.filter.HaMasterCheckFilter;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;

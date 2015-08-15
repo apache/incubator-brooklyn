@@ -40,6 +40,8 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.mementos.BrooklynMementoManifest;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.basic.Entities;
@@ -49,8 +51,6 @@ import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.trait.Startable;
-import brooklyn.management.internal.LocalManagementContext;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.os.Os;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.task.BasicExecutionManager;

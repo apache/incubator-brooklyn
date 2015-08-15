@@ -52,6 +52,7 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.api.mementos.EntityMemento;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
@@ -74,7 +75,6 @@ import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.LocationConfigTest.MyLocation;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

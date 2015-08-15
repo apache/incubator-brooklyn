@@ -16,7 +16,7 @@ import brooklyn.entity.basic.StartableApplication;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.api.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.text.Strings;
 

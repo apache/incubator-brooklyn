@@ -44,8 +44,8 @@ import com.google.common.collect.Maps;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.classloading.OsgiBrooklynClassLoadingContext;
 
-import brooklyn.management.classloading.OsgiBrooklynClassLoadingContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.osgi.Osgis;

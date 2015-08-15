@@ -24,10 +24,10 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.LocalSubscriptionManager;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.management.internal.LocalSubscriptionManager;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.task.BasicExecutionManager;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;

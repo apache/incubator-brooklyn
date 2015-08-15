@@ -39,12 +39,12 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.event.basic.Sensors;
-import brooklyn.management.internal.LocalManagementContext;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 import brooklyn.util.javalang.UrlClassLoader;

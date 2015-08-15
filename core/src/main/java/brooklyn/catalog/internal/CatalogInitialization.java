@@ -27,10 +27,10 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.core.management.ManagementContextInjectable;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.management.ManagementContextInjectable;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.exceptions.Exceptions;

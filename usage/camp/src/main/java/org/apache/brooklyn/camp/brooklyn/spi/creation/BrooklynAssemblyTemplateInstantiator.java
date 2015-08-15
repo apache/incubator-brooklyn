@@ -47,13 +47,13 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import org.apache.brooklyn.core.management.internal.EntityManagementUtils;
+import org.apache.brooklyn.core.management.internal.EntityManagementUtils.CreationResult;
 
 import brooklyn.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.BasicApplicationImpl;
-import brooklyn.management.internal.EntityManagementUtils;
-import brooklyn.management.internal.EntityManagementUtils.CreationResult;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.flags.TypeCoercions;

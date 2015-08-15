@@ -28,6 +28,7 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
+import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
@@ -36,7 +37,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
-import brooklyn.management.internal.EntityManagerInternal;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.task.Tasks;

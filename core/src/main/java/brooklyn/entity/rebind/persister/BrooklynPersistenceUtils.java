@@ -42,6 +42,9 @@ import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.mementos.Memento;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
+import org.apache.brooklyn.core.management.internal.LocalLocationManager;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
@@ -53,9 +56,6 @@ import brooklyn.entity.rebind.transformer.CompoundTransformerLoader;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
-import brooklyn.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
-import brooklyn.management.internal.LocalLocationManager;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;

@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,6 @@ import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
 import org.apache.brooklyn.launcher.camp.BrooklynCampPlatformLauncher;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.test.Asserts;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.os.Os;

@@ -53,6 +53,10 @@ import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.management.internal.EffectorUtils;
+import org.apache.brooklyn.core.management.internal.EntityManagementSupport;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.management.internal.SubscriptionTracker;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,10 +84,6 @@ import brooklyn.internal.storage.impl.BasicReference;
 
 import org.apache.brooklyn.location.basic.Locations;
 
-import brooklyn.management.internal.EffectorUtils;
-import brooklyn.management.internal.EntityManagementSupport;
-import brooklyn.management.internal.ManagementContextInternal;
-import brooklyn.management.internal.SubscriptionTracker;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
 import brooklyn.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
 import brooklyn.policy.basic.AbstractPolicy;

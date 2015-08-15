@@ -28,13 +28,13 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.management.internal.CollectionChangeListener;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.BrooklynLogging.LoggingLevel;
-import brooklyn.management.internal.CollectionChangeListener;
-import brooklyn.management.internal.ManagementContextInternal;
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.task.Tasks;

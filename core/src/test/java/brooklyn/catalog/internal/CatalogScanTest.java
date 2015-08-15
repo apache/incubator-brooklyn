@@ -30,13 +30,13 @@ import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 
 import brooklyn.catalog.CatalogPredicates;
 import brooklyn.catalog.internal.MyCatalogItems.MySillyAppTemplate;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.Entities;
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;

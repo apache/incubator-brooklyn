@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceTest;
@@ -63,7 +64,6 @@ import org.apache.brooklyn.location.basic.SimulatedLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 
-import brooklyn.management.internal.LocalManagementContext;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.exceptions.Exceptions;
 

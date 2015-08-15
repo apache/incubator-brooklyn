@@ -42,12 +42,10 @@ import brooklyn.entity.basic.SoftwareProcessEntityTest;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
+import org.apache.brooklyn.core.management.internal.LocalUsageManager;
+import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.management.internal.LocalUsageManager;
-import brooklyn.management.internal.ManagementContextInternal;
-
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.domain.Status;

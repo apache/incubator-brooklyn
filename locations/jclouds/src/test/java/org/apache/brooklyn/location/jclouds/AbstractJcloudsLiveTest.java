@@ -33,8 +33,10 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
+
+import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.internal.LocalManagementContext;
+
 import brooklyn.util.exceptions.CompoundRuntimeException;
 
 import com.google.common.collect.ImmutableList;

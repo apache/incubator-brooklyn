@@ -33,13 +33,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 
-import brooklyn.management.entitlement.Entitlements;
-import brooklyn.management.entitlement.Entitlements.StringAndArgument;
-import brooklyn.management.internal.EffectorUtils;
-
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.management.entitlement.Entitlements;
+import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArgument;
+import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.apache.brooklyn.rest.api.EffectorApi;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.SummaryComparators;
