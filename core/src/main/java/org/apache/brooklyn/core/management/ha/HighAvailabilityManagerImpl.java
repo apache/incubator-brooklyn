@@ -42,6 +42,8 @@ import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
 import org.apache.brooklyn.api.management.ha.MementoCopyMode;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister.Delta;
+import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
+import org.apache.brooklyn.core.catalog.internal.CatalogDto;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagementMode;
@@ -53,8 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.catalog.internal.BasicBrooklynCatalog;
-import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;

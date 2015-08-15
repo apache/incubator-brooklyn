@@ -32,8 +32,8 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.config.ConfigBag;
 

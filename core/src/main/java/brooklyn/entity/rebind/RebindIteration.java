@@ -64,6 +64,8 @@ import org.apache.brooklyn.api.mementos.TreeNode;
 import org.apache.brooklyn.api.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagementMode;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagerInternal;
@@ -72,8 +74,6 @@ import org.apache.brooklyn.core.management.internal.LocationManagerInternal;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.management.internal.ManagementTransitionMode;
 
-import brooklyn.catalog.internal.CatalogInitialization;
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.enricher.basic.AbstractEnricher;

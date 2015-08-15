@@ -26,10 +26,10 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
@@ -103,7 +103,7 @@ public class BrooklynServerConfig {
     /** @deprecated since 0.7.0 replaced by {@link CatalogInitialization}; also note, default removed 
      * (it was overridden anyway, and in almost all cases the new behaviour is still the default behaviour) */
     @Deprecated
-    public static final ConfigKey<brooklyn.catalog.CatalogLoadMode> CATALOG_LOAD_MODE = ConfigKeys.newConfigKey(brooklyn.catalog.CatalogLoadMode.class,
+    public static final ConfigKey<org.apache.brooklyn.core.catalog.CatalogLoadMode> CATALOG_LOAD_MODE = ConfigKeys.newConfigKey(org.apache.brooklyn.core.catalog.CatalogLoadMode.class,
             "brooklyn.catalog.mode",
             "The mode the management context should use to load the catalog when first starting");
 

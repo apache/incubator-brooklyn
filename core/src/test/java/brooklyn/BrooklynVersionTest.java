@@ -34,10 +34,9 @@ import org.testng.annotations.Test;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import brooklyn.catalog.internal.CatalogEntityItemDto;
-import brooklyn.catalog.internal.CatalogItemBuilder;
-import brooklyn.catalog.internal.CatalogItemDtoAbstract;
-
+import org.apache.brooklyn.core.catalog.internal.CatalogEntityItemDto;
+import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
+import org.apache.brooklyn.core.catalog.internal.CatalogItemDtoAbstract;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.osgi.OsgiTestResources;
 import org.apache.brooklyn.test.TestResourceUnavailableException;

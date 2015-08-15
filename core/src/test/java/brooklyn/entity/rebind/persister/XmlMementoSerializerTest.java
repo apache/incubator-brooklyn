@@ -52,12 +52,12 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
+import org.apache.brooklyn.core.catalog.internal.CatalogItemDtoAbstract;
+import org.apache.brooklyn.core.catalog.internal.CatalogTestUtils;
 import org.apache.brooklyn.core.management.osgi.OsgiTestResources;
 import org.apache.brooklyn.core.management.osgi.OsgiVersionMoreEntityTest;
 
-import brooklyn.catalog.internal.CatalogItemBuilder;
-import brooklyn.catalog.internal.CatalogItemDtoAbstract;
-import brooklyn.catalog.internal.CatalogTestUtils;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.util.collections.MutableList;

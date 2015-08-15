@@ -30,9 +30,9 @@ import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.catalog.CatalogPredicates;
+import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 
-import brooklyn.catalog.CatalogPredicates;
-import brooklyn.catalog.internal.BasicBrooklynCatalog;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.ConfigKeys;

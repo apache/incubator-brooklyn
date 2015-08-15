@@ -25,10 +25,10 @@ import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.catalog.internal.CatalogTestUtils;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.osgi.OsgiVersionMoreEntityTest;
 
-import brooklyn.catalog.internal.CatalogTestUtils;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
 import brooklyn.util.collections.MutableList;

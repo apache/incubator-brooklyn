@@ -42,12 +42,12 @@ import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingConte
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.catalog.internal.CatalogBundleDto;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.classloading.BrooklynClassLoadingContextSequential;
 import org.apache.brooklyn.core.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 
-import brooklyn.catalog.internal.CatalogBundleDto;
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;

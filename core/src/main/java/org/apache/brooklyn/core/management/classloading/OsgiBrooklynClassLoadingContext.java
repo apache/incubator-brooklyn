@@ -26,11 +26,11 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.entitlement.EntitlementClass;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.ha.OsgiManager;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;

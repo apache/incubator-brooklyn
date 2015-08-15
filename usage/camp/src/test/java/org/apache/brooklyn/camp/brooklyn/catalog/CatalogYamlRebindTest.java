@@ -24,10 +24,10 @@ import static org.testng.Assert.assertFalse;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlRebindTest;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.testng.annotations.Test;
 
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;

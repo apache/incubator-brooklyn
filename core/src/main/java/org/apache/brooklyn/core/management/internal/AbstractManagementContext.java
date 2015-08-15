@@ -50,13 +50,13 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityManager;
+import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
+import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl;
 
-import brooklyn.catalog.internal.BasicBrooklynCatalog;
-import brooklyn.catalog.internal.CatalogInitialization;
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.AbstractEntity;

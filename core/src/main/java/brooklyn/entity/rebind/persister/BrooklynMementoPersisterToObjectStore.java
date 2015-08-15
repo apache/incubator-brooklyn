@@ -48,9 +48,9 @@ import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.mementos.Memento;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.ConfigKeys;

@@ -30,8 +30,7 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
-
-import brooklyn.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 
 /**
  * Given a location spec in the form {@code brooklyn.catalog:<symbolicName>:<version>}, 

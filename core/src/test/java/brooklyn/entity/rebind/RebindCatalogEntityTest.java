@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.ConfigKeys;
@@ -44,6 +43,7 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 

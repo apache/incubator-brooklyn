@@ -40,9 +40,9 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.management.internal.LocalLocationManager;
 
-import brooklyn.catalog.CatalogPredicates;
 import brooklyn.config.ConfigMap;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.config.ConfigUtils;

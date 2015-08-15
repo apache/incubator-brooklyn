@@ -44,15 +44,13 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.catalog.CatalogPredicates;
+import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
+import org.apache.brooklyn.core.catalog.internal.CatalogDto;
+import org.apache.brooklyn.core.catalog.internal.CatalogItemComparator;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArgument;
-
-import brooklyn.catalog.CatalogPredicates;
-import brooklyn.catalog.internal.BasicBrooklynCatalog;
-import brooklyn.catalog.internal.CatalogDto;
-import brooklyn.catalog.internal.CatalogItemComparator;
-import brooklyn.catalog.internal.CatalogUtils;
-
 import org.apache.brooklyn.rest.api.CatalogApi;
 import org.apache.brooklyn.rest.domain.ApiError;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;

@@ -40,12 +40,12 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
+import org.apache.brooklyn.core.catalog.internal.CatalogDto;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.TestEntity;
 
-import brooklyn.catalog.internal.BasicBrooklynCatalog;
-import brooklyn.catalog.internal.CatalogDto;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 
@@ -88,7 +88,7 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
     protected LocalManagementContext createOrigManagementContext() {
         BrooklynProperties properties = BrooklynProperties.Factory.newDefault();
         properties.put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, "classpath://brooklyn/entity/rebind/rebind-catalog-item-test-catalog.xml");
-        properties.put(BrooklynServerConfig.CATALOG_LOAD_MODE, brooklyn.catalog.CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL);
+        properties.put(BrooklynServerConfig.CATALOG_LOAD_MODE, org.apache.brooklyn.core.catalog.CatalogLoadMode.LOAD_BROOKLYN_CATALOG_URL);
         return RebindTestUtils.managementContextBuilder(mementoDir, classLoader)
                 .properties(properties)
                 .persistPeriodMillis(getPersistPeriodMillis())

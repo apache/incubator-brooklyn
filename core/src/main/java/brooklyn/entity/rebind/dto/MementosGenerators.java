@@ -49,8 +49,8 @@ import org.apache.brooklyn.api.mementos.PolicyMemento;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.catalog.internal.CatalogItemDo;
 
-import brooklyn.catalog.internal.CatalogItemDo;
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.EntityDynamicType;

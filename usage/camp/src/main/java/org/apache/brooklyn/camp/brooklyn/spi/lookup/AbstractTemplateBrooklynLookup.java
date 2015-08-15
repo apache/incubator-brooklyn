@@ -28,8 +28,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
-
-import brooklyn.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 
 public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>  extends AbstractBrooklynResourceLookup<T> {
 

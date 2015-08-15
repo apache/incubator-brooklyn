@@ -66,9 +66,6 @@ import org.apache.brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
 import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
-
-import brooklyn.catalog.internal.CatalogInitialization;
-
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
@@ -79,6 +76,7 @@ import org.apache.brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
 import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
+import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.management.ha.OsgiManager;
 
 import brooklyn.entity.basic.AbstractApplication;

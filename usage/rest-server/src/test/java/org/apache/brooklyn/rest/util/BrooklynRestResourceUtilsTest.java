@@ -32,11 +32,11 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
+import org.apache.brooklyn.core.catalog.internal.CatalogTemplateItemDto;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 
-import brooklyn.catalog.internal.CatalogItemBuilder;
-import brooklyn.catalog.internal.CatalogTemplateItemDto;
-import brooklyn.catalog.internal.CatalogUtils;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;

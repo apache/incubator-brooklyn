@@ -36,9 +36,9 @@ import com.google.common.io.Files;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 
-import brooklyn.catalog.internal.CatalogInitialization;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.util.ResourceUtils;
 import brooklyn.util.os.Os;
