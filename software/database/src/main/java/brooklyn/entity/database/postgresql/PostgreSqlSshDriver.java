@@ -62,6 +62,7 @@ import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.task.ssh.SshTasks.OnFailingTask;
 import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.StringEscapes;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
 
@@ -297,12 +298,13 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         DynamicTasks.waitForLast();
         String createUserCommand = String.format(
                 "\"CREATE USER %s WITH PASSWORD '%s'; \"",
-                entity.getConfig(PostgreSqlNode.USERNAME), getUserPassword()
+                StringEscapes.escapeSql(entity.getConfig(PostgreSqlNode.USERNAME)), 
+                StringEscapes.escapeSql(getUserPassword())
         );
         String createDatabaseCommand = String.format(
                 "\"CREATE DATABASE %s OWNER %s\"",
-                entity.getConfig(PostgreSqlNode.DATABASE),
-                entity.getConfig(PostgreSqlNode.USERNAME));
+                StringEscapes.escapeSql(entity.getConfig(PostgreSqlNode.DATABASE)),
+                StringEscapes.escapeSql(entity.getConfig(PostgreSqlNode.USERNAME)));
         newScript("initializing user and database")
         .body.append(
                 "cd " + getInstallDir(),
