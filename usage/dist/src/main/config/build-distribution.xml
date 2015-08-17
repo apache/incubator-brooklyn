@@ -34,7 +34,7 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/src/main/license</directory>
+            <directory>${project.basedir}/src/main/license/files</directory>
             <outputDirectory></outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
