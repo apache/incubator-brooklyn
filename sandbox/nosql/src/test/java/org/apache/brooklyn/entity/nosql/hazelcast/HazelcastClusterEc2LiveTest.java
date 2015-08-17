@@ -27,8 +27,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.location.Location;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
