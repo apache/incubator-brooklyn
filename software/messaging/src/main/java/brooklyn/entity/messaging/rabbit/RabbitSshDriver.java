@@ -100,7 +100,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
 
         List<String> commands = ImmutableList.<String>builder()
                 // EPEL repository for erlang install required on some Centos distributions
-                .add(chainGroup("which yum", sudo("yum -y update ca-certificates"), sudo("rpm -Uvh " +
+                .add(chainGroup("which yum", sudo("yum -y update ca-certificates"), sudo("rpm -Uvh --replacepkgs " +
                         format("http://download.fedoraproject.org/pub/epel/%s/%s/epel-release-%s.noarch.rpm", osMajorVersion, osArchitecture, epelVersion))))
                 .add(ifExecutableElse0("zypper", chainGroup(
                         ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/SLE_11_SP3 erlang_sles_11")),
