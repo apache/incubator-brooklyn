@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.mementos.FeedMemento;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
+import org.apache.brooklyn.core.policy.basic.AbstractEntityAdjunct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.BasicFeedRebindSupport;
-import brooklyn.policy.basic.AbstractEntityAdjunct;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.text.Strings;
 

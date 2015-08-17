@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy.basic;
+package org.apache.brooklyn.core.policy.basic;
 
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.policy.PolicyType;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
@@ -41,7 +42,6 @@ import brooklyn.event.basic.BasicConfigKey;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableSet;

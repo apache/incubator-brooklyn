@@ -50,6 +50,7 @@ import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemDo;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 
@@ -64,7 +65,6 @@ import brooklyn.event.feed.AbstractFeed;
 
 import org.apache.brooklyn.location.basic.LocationInternal;
 
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
 
 import com.google.common.annotations.Beta;
