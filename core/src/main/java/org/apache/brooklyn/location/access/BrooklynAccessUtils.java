@@ -33,6 +33,8 @@ import brooklyn.event.basic.BasicConfigKey;
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.basic.SupportsPortForwarding;
+import org.python.google.common.base.Predicates;
+import org.python.google.common.collect.Iterables;
 
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
@@ -66,27 +68,37 @@ public class BrooklynAccessUtils {
         PortForwardManager pfw = entity.getConfig(PORT_FORWARDING_MANAGER);
         if (pfw!=null) {
             Collection<Location> ll = entity.getLocations();
-            Maybe<SupportsPortForwarding> machine = Machines.findUniqueElement(ll, SupportsPortForwarding.class);
-            if (machine.isPresent()) {
-                synchronized (BrooklynAccessUtils.class) {
-                    // TODO finer-grained synchronization
-                    
-                    HostAndPort hp = pfw.lookup((MachineLocation)machine.get(), port);
-                    if (hp!=null) return hp;
-                    
-                    Location l = (Location) machine.get();
-                    if (l instanceof SupportsPortForwarding) {
-                        Cidr source = entity.getConfig(MANAGEMENT_ACCESS_CIDR);
-                        if (source!=null) {
-                            log.debug("BrooklynAccessUtils requesting new port-forwarding rule to access "+port+" on "+entity+" (at "+l+", enabled for "+source+")");
-                            // TODO discuss, is this the best way to do it
-                            // (will probably _create_ the port forwarding rule!)
-                            hp = ((SupportsPortForwarding) l).getSocketEndpointFor(source, port);
-                            if (hp!=null) return hp;
-                        } else {
-                            log.warn("No "+MANAGEMENT_ACCESS_CIDR.getName()+" configured for "+entity+", so cannot forward port "+port+" " +
-                                    "even though "+PORT_FORWARDING_MANAGER.getName()+" was supplied");
+            
+            synchronized (BrooklynAccessUtils.class) {
+                // TODO finer-grained synchronization
+                
+                for (MachineLocation machine : Iterables.filter(ll, MachineLocation.class)) {
+                    HostAndPort hp = pfw.lookup(machine, port);
+                    if (hp!=null) {
+                        log.debug("BrooklynAccessUtils found port-forwarded address {} for entity {}, port {}, using machine {}",
+                                new Object[] {hp, entity, port, machine});
+                        return hp;
+                    }
+                }
+                
+                Maybe<SupportsPortForwarding> supportPortForwardingLoc = Machines.findUniqueElement(ll, SupportsPortForwarding.class);
+                if (supportPortForwardingLoc.isPresent()) {
+                    Cidr source = entity.getConfig(MANAGEMENT_ACCESS_CIDR);
+                    SupportsPortForwarding loc = supportPortForwardingLoc.get();
+                    if (source!=null) {
+                        log.debug("BrooklynAccessUtils requesting new port-forwarding rule to access "+port+" on "+entity+" (at "+loc+", enabled for "+source+")");
+                        // TODO discuss, is this the best way to do it
+                        // (will probably _create_ the port forwarding rule!)
+                        HostAndPort hp = loc.getSocketEndpointFor(source, port);
+                        if (hp!=null) {
+                            log.debug("BrooklynAccessUtils created port-forwarded address {} for entity {}, port {}, using {}",
+                                    new Object[] {hp, entity, port, loc});
+                            return hp;
                         }
+                    } else {
+                        log.warn("No "+MANAGEMENT_ACCESS_CIDR.getName()+" configured for "+entity+", so cannot forward "
+                                +"port "+port+" "+"even though "+PORT_FORWARDING_MANAGER.getName()+" was supplied, and "
+                                +"have location supporting port forwarding "+loc);
                     }
                 }
             }
