@@ -26,6 +26,8 @@ import java.util.NoSuchElementException;
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mementos.LocationMemento;
+import org.apache.brooklyn.core.util.flags.FlagUtils;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +37,6 @@ import brooklyn.entity.rebind.dto.MementosGenerators;
 import org.apache.brooklyn.location.basic.AbstractLocation;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.Sets;
 

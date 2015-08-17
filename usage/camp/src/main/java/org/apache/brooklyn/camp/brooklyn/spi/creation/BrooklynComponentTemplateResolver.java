@@ -50,6 +50,11 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.FlagUtils;
+import org.apache.brooklyn.core.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
+import org.apache.brooklyn.core.util.task.Tasks;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
@@ -57,15 +62,10 @@ import brooklyn.entity.basic.BrooklynTags;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.proxying.InternalEntityFactory;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Reflections;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;

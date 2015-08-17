@@ -23,13 +23,13 @@ import static org.testng.Assert.assertEquals;
 import java.util.Map;
 
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.testng.annotations.Test;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Test that policy can be created and accessed, by construction and by spec

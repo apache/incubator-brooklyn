@@ -18,14 +18,13 @@
  */
 package org.apache.brooklyn.location.jclouds;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
 
 import com.google.common.annotations.Beta;
-
-import brooklyn.util.config.ConfigBag;
 
 /**
  * Customization hooks to allow apps to perform specific customisation at each stage of jclouds machine provisioning.

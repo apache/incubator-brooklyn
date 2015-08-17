@@ -26,6 +26,9 @@ import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.management.ManagementContextInjectable;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
@@ -37,9 +40,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.Lists;
 

@@ -26,8 +26,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
+
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.net.HostAndPort;
 

@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
@@ -32,8 +33,9 @@ import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+
 import org.apache.brooklyn.location.basic.PortRanges;
-import brooklyn.util.flags.SetFromFlag;
+
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.Maps;

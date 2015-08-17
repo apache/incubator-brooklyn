@@ -21,6 +21,7 @@ package brooklyn.entity.database.mysql;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,10 +30,11 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
+
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;

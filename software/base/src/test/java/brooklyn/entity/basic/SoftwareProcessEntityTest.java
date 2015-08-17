@@ -40,6 +40,9 @@ import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.jclouds.util.Throwables2;
@@ -74,13 +77,10 @@ import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.PropagatedRuntimeException;
 import brooklyn.util.net.UserAndHostAndPort;
 import brooklyn.util.os.Os;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 

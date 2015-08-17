@@ -22,10 +22,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 
 public class CatalogDtoUtils {

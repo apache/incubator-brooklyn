@@ -28,6 +28,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.testng.collections.Lists;
 import org.testng.internal.annotations.Sets;
 
@@ -49,7 +50,6 @@ import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.basic.SetConfigKey;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Mock entity for testing.

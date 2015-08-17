@@ -42,12 +42,12 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.management.internal.LocalLocationManager;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 
 import brooklyn.config.ConfigMap;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.config.ConfigUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.guava.Maybe.Absent;

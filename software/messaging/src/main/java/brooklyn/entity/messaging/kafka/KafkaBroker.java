@@ -20,6 +20,7 @@ package brooklyn.entity.messaging.kafka;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -30,8 +31,9 @@ import brooklyn.entity.zookeeper.ZooKeeperNode;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
+
 import org.apache.brooklyn.location.basic.PortRanges;
-import brooklyn.util.flags.SetFromFlag;
+
 import brooklyn.util.time.Duration;
 
 /**

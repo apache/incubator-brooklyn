@@ -42,13 +42,13 @@ import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.cli.lister.ClassFinder;
 import org.apache.brooklyn.cli.lister.ItemDescriptors;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.text.TemplateProcessor;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
-import brooklyn.util.text.TemplateProcessor;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -18,8 +18,9 @@
  */
 package brooklyn.entity.database.mysql;
 
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+
 import brooklyn.entity.basic.SoftwareProcessDriver;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 
 /**
  * The {@link SoftwareProcessDriver} for MySQL.

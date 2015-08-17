@@ -29,6 +29,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskFactory;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.core.util.task.system.internal.SystemProcessTaskFactory.ConcreteSystemProcessTaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,9 +45,6 @@ import brooklyn.event.feed.Poller;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollValue;
-import brooklyn.util.task.system.ProcessTaskFactory;
-import brooklyn.util.task.system.ProcessTaskWrapper;
-import brooklyn.util.task.system.internal.SystemProcessTaskFactory.ConcreteSystemProcessTaskFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;

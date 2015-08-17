@@ -32,15 +32,15 @@ import org.apache.brooklyn.api.location.HardwareDetails;
 import org.apache.brooklyn.api.location.MachineDetails;
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.TaskTags;
+import org.apache.brooklyn.core.util.task.ssh.internal.PlainSshExecTaskFactory;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.TaskTags;
-import brooklyn.util.task.ssh.internal.PlainSshExecTaskFactory;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;

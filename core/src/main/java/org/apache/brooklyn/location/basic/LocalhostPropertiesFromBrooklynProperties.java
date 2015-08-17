@@ -20,10 +20,9 @@ package org.apache.brooklyn.location.basic;
 
 import java.util.Map;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Strings;
 

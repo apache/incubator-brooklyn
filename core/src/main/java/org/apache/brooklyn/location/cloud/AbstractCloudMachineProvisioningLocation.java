@@ -24,11 +24,11 @@ import java.util.Map;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.location.basic.AbstractLocation;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.internal.ssh.SshTool;
 
 public abstract class AbstractCloudMachineProvisioningLocation extends AbstractLocation
 implements MachineProvisioningLocation<MachineLocation>, CloudLocationConfig

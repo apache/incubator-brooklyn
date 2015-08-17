@@ -18,9 +18,8 @@
  */
 package org.apache.brooklyn.location.jclouds;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.jclouds.compute.ComputeService;
-
-import brooklyn.util.config.ConfigBag;
 
 public interface ComputeServiceRegistry {
     

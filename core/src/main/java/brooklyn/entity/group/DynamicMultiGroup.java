@@ -25,13 +25,13 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

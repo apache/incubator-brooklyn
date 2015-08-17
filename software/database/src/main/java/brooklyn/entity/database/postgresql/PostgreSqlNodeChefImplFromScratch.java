@@ -19,6 +19,9 @@
 package brooklyn.entity.database.postgresql;
 
 import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,14 +37,13 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
+
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
+
 import brooklyn.util.collections.Jsonya;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.DynamicTasks;
 
 public class PostgreSqlNodeChefImplFromScratch extends EffectorStartableImpl implements PostgreSqlNode {
 

@@ -45,6 +45,7 @@ import org.apache.brooklyn.core.catalog.internal.CatalogTestUtils;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.osgi.Osgis;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.effector.Effectors;
@@ -57,7 +58,6 @@ import org.apache.brooklyn.test.entity.TestApplication;
 
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
-import brooklyn.util.osgi.Osgis;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

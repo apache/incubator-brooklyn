@@ -24,6 +24,7 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.entity.proxy.LoadBalancer;
 
 import brooklyn.config.ConfigKey;
@@ -39,7 +40,6 @@ import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.util.flags.SetFromFlag;
 
 /**
  * This entity contains the sub-groups and entities that go in to a single location (e.g. datacenter)

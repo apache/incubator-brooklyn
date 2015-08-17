@@ -31,6 +31,8 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.TaskBuilder;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -56,8 +58,6 @@ import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.IfFunctions;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.TaskBuilder;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.time.Duration;

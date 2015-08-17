@@ -23,6 +23,7 @@ import static org.testng.Assert.fail;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -30,8 +31,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.FailingEntity.RecordingEventListener;
+
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-import brooklyn.util.task.Tasks;
 
 import com.google.common.collect.ImmutableList;
 

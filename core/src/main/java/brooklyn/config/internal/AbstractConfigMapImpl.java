@@ -23,6 +23,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.core.util.task.DeferredSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +33,6 @@ import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigMap;
 import brooklyn.entity.basic.ConfigMapViewWithStringKeys;
 import brooklyn.event.basic.StructuredConfigKey;
-import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.task.DeferredSupplier;
 
 public abstract class AbstractConfigMapImpl implements ConfigMap {
 

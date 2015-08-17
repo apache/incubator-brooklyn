@@ -25,8 +25,7 @@ import java.util.Iterator;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.PortRange;
-
-import brooklyn.util.flags.TypeCoercions;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

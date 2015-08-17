@@ -22,6 +22,7 @@ import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.entity.trait.HasShortName;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
@@ -36,8 +37,8 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSens
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
+
 import org.apache.brooklyn.location.basic.PortRanges;
-import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="MySql Node", description="MySql is an open source relational database management system (RDBMS)", iconUrl="classpath:///mysql-logo-110x57.png")
 @ImplementedBy(MySqlNodeImpl.class)

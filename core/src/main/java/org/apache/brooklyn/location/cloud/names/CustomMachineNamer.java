@@ -21,14 +21,16 @@ package org.apache.brooklyn.location.cloud.names;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.text.TemplateProcessor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
+
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-import brooklyn.util.config.ConfigBag;
+
 import brooklyn.util.text.Strings;
-import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;

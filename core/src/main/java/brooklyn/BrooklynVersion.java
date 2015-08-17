@@ -45,11 +45,11 @@ import com.google.common.collect.Maps;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.management.classloading.OsgiBrooklynClassLoadingContext;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.osgi.Osgis;
+import org.apache.brooklyn.core.util.osgi.Osgis.ManifestHelper;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.osgi.Osgis;
-import brooklyn.util.osgi.Osgis.ManifestHelper;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 

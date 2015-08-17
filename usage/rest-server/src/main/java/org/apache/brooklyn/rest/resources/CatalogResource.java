@@ -51,6 +51,7 @@ import org.apache.brooklyn.core.catalog.internal.CatalogItemComparator;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArgument;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.rest.api.CatalogApi;
 import org.apache.brooklyn.rest.domain.ApiError;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
@@ -61,7 +62,6 @@ import org.apache.brooklyn.rest.filter.HaHotStateRequired;
 import org.apache.brooklyn.rest.transform.CatalogTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;

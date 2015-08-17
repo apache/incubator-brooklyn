@@ -61,12 +61,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.java.JmxSupport;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;

@@ -30,6 +30,10 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,15 +51,11 @@ import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.MaybeFunctions;
 import brooklyn.util.guava.TypeTokens;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 

@@ -21,11 +21,11 @@ package brooklyn.entity.messaging.storm;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.trait.Startable;
-import brooklyn.util.flags.SetFromFlag;
 
 @Catalog(name="Storm Deployment", description="A Storm cluster. Apache Storm is a distributed realtime computation system. "
         + "Storm makes it easy to reliably process unbounded streams of data, doing for realtime processing "

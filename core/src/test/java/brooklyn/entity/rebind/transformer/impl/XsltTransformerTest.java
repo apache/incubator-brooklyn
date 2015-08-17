@@ -20,11 +20,11 @@ package brooklyn.entity.rebind.transformer.impl;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.testng.annotations.Test;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.os.Os;
-import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
 

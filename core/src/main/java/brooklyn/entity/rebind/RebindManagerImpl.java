@@ -46,6 +46,9 @@ import org.apache.brooklyn.api.mementos.TreeNode;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.task.BasicExecutionContext;
+import org.apache.brooklyn.core.util.task.ScheduledTask;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +68,6 @@ import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.task.BasicExecutionContext;
-import brooklyn.util.task.ScheduledTask;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;

@@ -35,14 +35,14 @@ import brooklyn.entity.basic.EntityPredicates;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.HttpTestUtils;
 
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
 
 import com.google.common.collect.ImmutableMap;

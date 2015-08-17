@@ -25,6 +25,9 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
@@ -37,11 +40,8 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.task.Tasks;
 
 public class EntityHttpClientImpl implements EntityHttpClient {
     private static final Logger LOG = LoggerFactory.getLogger(EntityHttpClientImpl.class);

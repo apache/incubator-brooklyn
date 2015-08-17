@@ -21,6 +21,7 @@ package brooklyn.entity.software.mysql;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,6 @@ import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 

@@ -30,8 +30,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.api.location.PortRange;
-
-import brooklyn.util.flags.TypeCoercions;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;

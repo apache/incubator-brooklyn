@@ -17,25 +17,25 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<brooklyn.util.xstream.CompilerCompatibilityTest>
-  <enclosingClass/>
+<org.apache.brooklyn.core.util.xstream.CompilerCompatibilityTest>
+  <enclosingClass />
   <dynamicClass>
-    <outer-class reference="../../enclosingClass"/>
+    <outer-class reference="../../enclosingClass" />
   </dynamicClass>
   <dynamicExtendingClass>
-    <outer-class defined-in="brooklyn.util.xstream.CompilerCompatibilityTest$EnclosingClass$DynamicClass" reference="../../enclosingClass"/>
+    <outer-class defined-in="org.apache.brooklyn.core.util.xstream.CompilerCompatibilityTest$EnclosingClass$DynamicClass" reference="../../enclosingClass" />
     <outer-class reference="../../enclosingClass"/>
   </dynamicExtendingClass>
   <enclosingDynamicClass>
-    <outer-class reference="../../enclosingClass"/>
+    <outer-class reference="../../enclosingClass" />
   </enclosingDynamicClass>
   <nestedDynamicClass>
-    <this_-1 reference="../../enclosingDynamicClass"/>
+    <this_-1 reference="../../enclosingDynamicClass" />
   </nestedDynamicClass>
 <!-- NOT SUPPORTED
   <dynamicExtendingClassWithDifferentScope>
-    <this_-1 reference="../../enclosingDynamicClass"/>
-    <outer-class reference="../../enclosingClass"/>
+    <this_-1 reference="../../enclosingDynamicClass" />
+    <outer-class reference="../../enclosingClass" />
   </dynamicExtendingClassWithDifferentScope>
 -->
-</brooklyn.util.xstream.CompilerCompatibilityTest>
+</org.apache.brooklyn.core.util.xstream.CompilerCompatibilityTest>

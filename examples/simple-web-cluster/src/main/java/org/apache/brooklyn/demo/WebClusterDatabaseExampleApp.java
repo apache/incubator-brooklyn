@@ -30,6 +30,8 @@ import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.BrooklynMavenArtifacts;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
@@ -49,12 +51,10 @@ import brooklyn.entity.java.JavaEntityMethods;
 import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-
 import org.apache.brooklyn.location.basic.PortRanges;
+
 import brooklyn.policy.autoscaling.AutoScalerPolicy;
-import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.CommandLineUtil;
-import brooklyn.util.ResourceUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

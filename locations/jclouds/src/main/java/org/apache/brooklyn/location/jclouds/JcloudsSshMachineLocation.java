@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.location.HardwareDetails;
 import org.apache.brooklyn.api.location.MachineDetails;
 import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.location.basic.BasicHardwareDetails;
 import org.apache.brooklyn.location.basic.BasicMachineDetails;
 import org.apache.brooklyn.location.basic.BasicOsDetails;
@@ -55,7 +56,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Networking;
 import brooklyn.util.text.Strings;
 

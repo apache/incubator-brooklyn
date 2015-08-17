@@ -25,6 +25,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.core.util.internal.ConfigKeySelfExtracting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,9 +40,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.event.basic.StructuredConfigKey;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.internal.ConfigKeySelfExtracting;
 
 public class ConfigMapImpl extends AbstractConfigMapImpl {
 

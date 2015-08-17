@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -43,7 +44,6 @@ import brooklyn.event.basic.Sensors;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;

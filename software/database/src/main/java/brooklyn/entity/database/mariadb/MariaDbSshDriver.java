@@ -41,14 +41,14 @@ import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.software.SshEffectorTasks;
 
 import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.CountdownTimer;

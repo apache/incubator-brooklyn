@@ -32,6 +32,10 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.crypto.SecureKeys;
+import org.apache.brooklyn.core.util.crypto.SecureKeys.PassphraseProblem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,13 +44,9 @@ import brooklyn.entity.basic.ConfigKeys;
 
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.crypto.AuthorizedKeysParser;
-import brooklyn.util.crypto.SecureKeys;
-import brooklyn.util.crypto.SecureKeys.PassphraseProblem;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.StringFunctions;

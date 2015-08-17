@@ -39,9 +39,9 @@ import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.osgi.OsgiVersionMoreEntityTest;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.Iterables;

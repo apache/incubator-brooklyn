@@ -39,7 +39,7 @@ import org.apache.brooklyn.test.entity.TestApplication
 import org.apache.brooklyn.test.entity.TestEntity
 import brooklyn.util.collections.MutableMap
 import brooklyn.util.exceptions.Exceptions
-import brooklyn.util.task.DeferredSupplier
+import org.apache.brooklyn.core.util.task.DeferredSupplier
 
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet

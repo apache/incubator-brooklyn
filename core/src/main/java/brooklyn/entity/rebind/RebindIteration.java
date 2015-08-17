@@ -73,6 +73,7 @@ import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.management.internal.LocationManagerInternal;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.management.internal.ManagementTransitionMode;
+import org.apache.brooklyn.core.util.flags.FlagUtils;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.BrooklynLogging.LoggingLevel;
@@ -95,7 +96,6 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.text.Strings;

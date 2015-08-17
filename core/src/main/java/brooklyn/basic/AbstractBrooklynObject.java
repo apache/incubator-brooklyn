@@ -25,14 +25,14 @@ import java.util.Set;
 import org.apache.brooklyn.api.basic.internal.ApiObjectsFactory;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.proxying.InternalFactory;
 import brooklyn.entity.rebind.RebindManagerImpl;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.ImmutableSet;

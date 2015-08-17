@@ -27,6 +27,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.trait.HasShortName;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.util.task.ssh.SshPutTaskWrapper;
+import org.apache.brooklyn.core.util.task.ssh.SshTasks;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.core.util.text.TemplateProcessor;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
@@ -38,15 +44,9 @@ import brooklyn.entity.effector.EffectorTasks;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.cloud.names.AbstractCloudMachineNamer;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.Tasks;
-import brooklyn.util.task.ssh.SshPutTaskWrapper;
-import brooklyn.util.task.ssh.SshTasks;
-import brooklyn.util.task.system.ProcessTaskWrapper;
-import brooklyn.util.text.TemplateProcessor;
 
 
 public class InitdServiceInstaller implements SystemServiceInstaller {

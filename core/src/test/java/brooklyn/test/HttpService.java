@@ -40,10 +40,10 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.location.PortRange;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.javalang.Threads;
 import brooklyn.util.os.Os;
 

@@ -27,14 +27,14 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ParameterType;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.util.task.ValueResolver;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.EffectorSummary.ParameterSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.task.Tasks;
-import brooklyn.util.task.ValueResolver;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;

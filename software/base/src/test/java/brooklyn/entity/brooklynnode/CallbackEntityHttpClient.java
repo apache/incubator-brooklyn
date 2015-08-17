@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.core.util.http.HttpTool.HttpClientBuilder;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
 import brooklyn.entity.brooklynnode.EntityHttpClient;
-import brooklyn.util.http.HttpTool.HttpClientBuilder;
-import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;

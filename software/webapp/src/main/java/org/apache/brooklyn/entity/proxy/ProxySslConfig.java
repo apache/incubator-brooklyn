@@ -21,11 +21,10 @@ package org.apache.brooklyn.entity.proxy;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.apache.brooklyn.core.util.flags.FlagUtils;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Objects;
 

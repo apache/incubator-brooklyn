@@ -24,6 +24,7 @@ import static brooklyn.entity.messaging.storm.Storm.Role.SUPERVISOR;
 import static brooklyn.entity.messaging.storm.Storm.Role.UI;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BasicStartableImpl;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.zookeeper.ZooKeeperEnsemble;
-import brooklyn.util.ResourceUtils;
 
 public class StormDeploymentImpl extends BasicStartableImpl implements StormDeployment {
 

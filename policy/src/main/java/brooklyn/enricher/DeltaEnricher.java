@@ -25,9 +25,9 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 
 import brooklyn.enricher.basic.AbstractTransformingEnricher;
-import brooklyn.util.flags.TypeCoercions;
 
 /**
  * Converts an absolute sensor into a delta sensor (i.e. the diff between the current and previous value)

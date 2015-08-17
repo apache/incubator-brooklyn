@@ -34,12 +34,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.management.ManagementContextInjectable;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.time.Duration;
 
 public abstract class AbstractBrooklynRestResource implements ManagementContextInjectable {

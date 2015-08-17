@@ -38,6 +38,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +50,10 @@ import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
+
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
+
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;

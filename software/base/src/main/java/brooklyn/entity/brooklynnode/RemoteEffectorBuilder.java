@@ -23,11 +23,11 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 
 import brooklyn.entity.brooklynnode.BrooklynEntityMirrorImpl.RemoteEffector;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.effector.Effectors.EffectorBuilder;
-import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 

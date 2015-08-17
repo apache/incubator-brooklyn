@@ -20,8 +20,9 @@ package brooklyn.osgi.tests;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
+
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.location.basic.AbstractLocation;
-import brooklyn.util.flags.SetFromFlag;
 
 public class SimpleLocation extends AbstractLocation {
     @SetFromFlag("config1")

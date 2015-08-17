@@ -33,6 +33,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.TaskBuilder;
+import org.apache.brooklyn.core.util.task.TaskTags;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.http.auth.UsernamePasswordCredentials;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
@@ -49,14 +55,8 @@ import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.TaskBuilder;
-import brooklyn.util.task.TaskTags;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.NaturalOrderComparator;
 import brooklyn.util.text.StringEscapes.BashStringEscapes;
 import brooklyn.util.text.Strings;

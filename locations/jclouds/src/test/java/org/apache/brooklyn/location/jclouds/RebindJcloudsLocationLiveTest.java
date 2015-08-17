@@ -27,6 +27,7 @@ import java.io.File;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -35,7 +36,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

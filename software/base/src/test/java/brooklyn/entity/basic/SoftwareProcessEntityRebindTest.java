@@ -34,6 +34,7 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.AfterMethod;
@@ -47,8 +48,6 @@ import brooklyn.entity.rebind.RebindTestUtils;
 
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

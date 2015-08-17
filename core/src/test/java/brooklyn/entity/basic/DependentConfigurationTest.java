@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.BasicTask;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
@@ -46,7 +47,6 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.task.BasicTask;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.time.Duration;
 

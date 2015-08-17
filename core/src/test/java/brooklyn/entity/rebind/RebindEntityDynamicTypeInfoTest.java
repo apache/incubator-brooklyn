@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
@@ -38,7 +39,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.stream.Streams;
 
 public class RebindEntityDynamicTypeInfoTest extends RebindTestFixtureWithApp {
