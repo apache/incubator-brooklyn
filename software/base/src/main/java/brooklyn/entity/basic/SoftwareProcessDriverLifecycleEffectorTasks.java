@@ -23,6 +23,8 @@ import java.util.Map;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +33,6 @@ import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.task.DynamicTasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;

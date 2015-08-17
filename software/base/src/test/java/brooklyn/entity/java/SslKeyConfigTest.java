@@ -24,11 +24,10 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 
+import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
+import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.crypto.FluentKeySigner;
-import brooklyn.util.crypto.SecureKeys;
 
 public class SslKeyConfigTest {
 

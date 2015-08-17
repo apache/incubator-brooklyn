@@ -21,18 +21,20 @@ package org.apache.brooklyn.entity.nosql.elasticsearch;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
+
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
+
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.guava.MaybeFunctions;
 import brooklyn.util.guava.TypeTokens;
-import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

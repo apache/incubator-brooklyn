@@ -22,12 +22,12 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.testng.Assert;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.task.Tasks;
 
 public class FailingEntityImpl extends TestEntityImpl implements FailingEntity {
 

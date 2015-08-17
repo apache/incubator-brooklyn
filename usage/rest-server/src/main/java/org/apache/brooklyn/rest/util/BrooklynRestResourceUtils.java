@@ -53,6 +53,7 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArgument;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
@@ -70,7 +71,6 @@ import org.apache.brooklyn.rest.domain.EntitySpec;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;

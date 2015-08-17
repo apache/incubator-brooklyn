@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.java;
 
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
@@ -25,7 +27,6 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.MapConfigKey;
 import brooklyn.event.basic.SetConfigKey;
-import brooklyn.util.flags.SetFromFlag;
 
 public interface UsesJava {
 

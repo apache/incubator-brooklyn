@@ -24,6 +24,8 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +40,6 @@ import brooklyn.entity.software.SshEffectorTasks.SshEffectorBody;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 
 import com.google.common.base.Throwables;
 

@@ -35,6 +35,8 @@ import org.apache.brooklyn.api.location.MachineLocationCustomizer;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.LocationManager;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +58,6 @@ import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import brooklyn.util.collections.CollectionFunctionals;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.WildcardGlobs;
 import brooklyn.util.text.WildcardGlobs.PhraseTreatment;

@@ -64,6 +64,15 @@ import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.management.internal.NonDeploymentManagementContext;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.FlagUtils;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.ParallelTask;
+import org.apache.brooklyn.core.util.task.TaskTags;
+import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.core.util.task.system.SystemTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,20 +89,11 @@ import brooklyn.event.basic.DependentConfiguration;
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.Locations;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.FlagUtils;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.ParallelTask;
-import brooklyn.util.task.TaskTags;
-import brooklyn.util.task.Tasks;
-import brooklyn.util.task.system.ProcessTaskWrapper;
-import brooklyn.util.task.system.SystemTasks;
 import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;

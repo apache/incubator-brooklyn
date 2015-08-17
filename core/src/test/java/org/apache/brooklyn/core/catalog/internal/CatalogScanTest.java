@@ -34,11 +34,11 @@ import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.MyCatalogItems.MySillyAppTemplate;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.util.ResourceUtils;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.net.Urls;
 import brooklyn.util.text.Strings;
 

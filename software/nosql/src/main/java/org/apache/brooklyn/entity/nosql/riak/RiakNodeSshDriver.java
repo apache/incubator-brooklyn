@@ -47,14 +47,14 @@ import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.software.SshEffectorTasks;
 
 import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.ssh.SshTasks;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.ssh.SshTasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;

@@ -22,9 +22,8 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Map;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.testng.annotations.Test;
-
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.collect.ImmutableMap;
 

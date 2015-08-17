@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.mementos.EnricherMemento;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherType;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -36,7 +37,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.BasicEnricherRebindSupport;
 import brooklyn.policy.basic.AbstractEntityAdjunct;
-import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;

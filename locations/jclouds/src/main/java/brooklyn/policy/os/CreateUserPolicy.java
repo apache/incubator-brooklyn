@@ -26,6 +26,8 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.jclouds.compute.config.AdminAccessConfiguration;
 import org.jclouds.scriptbuilder.functions.InitAdminAccess;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
@@ -42,8 +44,6 @@ import brooklyn.event.basic.Sensors;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.util.flags.SetFromFlag;
-import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.annotations.Beta;

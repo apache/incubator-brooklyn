@@ -56,6 +56,10 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.task.BasicExecutionContext;
+import org.apache.brooklyn.core.util.task.Tasks;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.StringConfigMap;
@@ -74,13 +78,9 @@ import brooklyn.internal.storage.impl.inmemory.InMemoryDataGridFactory;
 import org.apache.brooklyn.location.basic.BasicLocationRegistry;
 
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.task.BasicExecutionContext;
-import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;

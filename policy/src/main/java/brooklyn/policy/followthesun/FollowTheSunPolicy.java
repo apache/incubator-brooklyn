@@ -38,6 +38,7 @@ import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,6 @@ import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair;
 import brooklyn.policy.loadbalancing.Movable;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;

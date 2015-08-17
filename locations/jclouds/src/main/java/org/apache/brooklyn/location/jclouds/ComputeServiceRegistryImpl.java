@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
@@ -41,7 +42,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;

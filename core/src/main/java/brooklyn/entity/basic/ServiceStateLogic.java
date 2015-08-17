@@ -37,6 +37,7 @@ import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.EnricherSpec.ExtensibleEnricherSpec;
+import org.apache.brooklyn.core.util.task.ValueResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,6 @@ import brooklyn.util.collections.QuorumCheck;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.repeat.Repeater;
-import brooklyn.util.task.ValueResolver;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 

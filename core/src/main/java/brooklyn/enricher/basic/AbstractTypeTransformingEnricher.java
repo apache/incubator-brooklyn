@@ -23,9 +23,9 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.event.basic.BasicSensorEvent;
-import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Convenience base for transforming a single sensor into a single new sensor of the same type

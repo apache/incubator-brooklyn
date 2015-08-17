@@ -36,6 +36,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,6 @@ import org.apache.brooklyn.location.geo.HostGeoInfo;
 
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;

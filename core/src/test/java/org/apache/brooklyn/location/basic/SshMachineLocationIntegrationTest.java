@@ -23,12 +23,14 @@ import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Map;
 
-import brooklyn.util.internal.ssh.SshTool;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.crypto.SecureKeys;
+import org.apache.brooklyn.core.util.internal.ssh.SshTool;
+import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool;
+import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool.SshjToolBuilder;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
@@ -38,9 +40,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.crypto.SecureKeys;
-import brooklyn.util.internal.ssh.sshj.SshjTool;
-import brooklyn.util.internal.ssh.sshj.SshjTool.SshjToolBuilder;
 
 import com.google.common.base.Preconditions;
 

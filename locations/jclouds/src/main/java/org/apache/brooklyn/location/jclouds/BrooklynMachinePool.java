@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.BasicExecutionContext;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,6 @@ import org.apache.brooklyn.location.jclouds.pool.MachineSet;
 import org.apache.brooklyn.location.jclouds.pool.ReusableMachineTemplate;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.task.BasicExecutionContext;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;

@@ -32,6 +32,8 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jetty.server.Server;
@@ -45,8 +47,6 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 
 import brooklyn.test.Asserts;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.os.Os;
 import brooklyn.util.time.Duration;
 

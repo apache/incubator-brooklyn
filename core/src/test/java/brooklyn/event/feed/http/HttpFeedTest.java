@@ -29,6 +29,8 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.util.http.BetterMockWebServer;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +51,6 @@ import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Functionals;
-import brooklyn.util.http.BetterMockWebServer;
-import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;
 

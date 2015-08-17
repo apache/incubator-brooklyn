@@ -45,6 +45,11 @@ import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.ha.OsgiManager;
+import org.apache.brooklyn.core.util.task.BasicExecutionContext;
+import org.apache.brooklyn.core.util.task.BasicExecutionManager;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.TaskTags;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,11 +63,6 @@ import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.internal.storage.DataGridFactory;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.task.BasicExecutionContext;
-import brooklyn.util.task.BasicExecutionManager;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.TaskTags;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;

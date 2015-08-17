@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.io.File;
 import java.util.Map;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +32,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigUtils;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.os.Os;
 
 import com.google.common.base.Predicates;

@@ -34,6 +34,7 @@ import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.task.BasicTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -45,7 +46,6 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.trait.Startable;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.task.BasicTask;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

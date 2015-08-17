@@ -32,6 +32,8 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.util.internal.ssh.SshTool;
+import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -56,10 +58,8 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocationReuseIntegrationTest.RecordingSshjTool;
 
-import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.net.Networking;
 import brooklyn.util.repeat.Repeater;
-import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;

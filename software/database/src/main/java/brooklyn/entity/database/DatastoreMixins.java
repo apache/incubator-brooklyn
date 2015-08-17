@@ -25,13 +25,13 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.stream.KnownSizeInputStream;
 import brooklyn.util.text.Strings;
 

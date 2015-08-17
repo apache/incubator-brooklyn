@@ -18,15 +18,14 @@
  */
 package org.apache.brooklyn.location.jclouds;
 
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.ssh.SshTasks;
+import org.apache.brooklyn.core.util.task.ssh.SshTasks.OnFailingTask;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.jclouds.compute.ComputeService;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
-
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.ssh.SshTasks;
-import brooklyn.util.task.ssh.SshTasks.OnFailingTask;
 
 /**
  * Wraps Brooklyn's sudo-tty mitigations in a {@link JcloudsLocationCustomizer} for easy(-ish) consumption

@@ -25,6 +25,10 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.http.HttpStatus;
 
 import brooklyn.entity.basic.AbstractEntity;
@@ -39,11 +43,7 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.util.collections.Jsonya;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.net.Urls;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

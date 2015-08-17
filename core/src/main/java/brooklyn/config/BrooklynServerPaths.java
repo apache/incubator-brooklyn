@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,6 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
-import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;

@@ -20,10 +20,10 @@ package brooklyn.entity.rebind;
 
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.mementos.EnricherMemento;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.FlagUtils;
 
 import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.FlagUtils;
 
 public class BasicEnricherRebindSupport extends AbstractBrooklynObjectRebindSupport<EnricherMemento> {
 

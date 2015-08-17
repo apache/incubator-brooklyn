@@ -18,12 +18,12 @@
  */
 package org.apache.brooklyn.entity.proxy;
 
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.TypeCoercions;
 
 @Test
 public class ProxySslConfigTest {

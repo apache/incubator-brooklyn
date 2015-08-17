@@ -19,10 +19,11 @@
 package brooklyn.osgi.tests;
 
 
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
+
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.config.ConfigKey;
 import brooklyn.policy.basic.AbstractPolicy;
-import brooklyn.util.flags.SetFromFlag;
 
 public class SimplePolicy extends AbstractPolicy {
     @SetFromFlag("config1")

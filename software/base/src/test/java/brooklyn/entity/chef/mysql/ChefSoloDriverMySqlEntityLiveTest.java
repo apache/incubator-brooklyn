@@ -20,12 +20,12 @@ package brooklyn.entity.chef.mysql;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 
 public class ChefSoloDriverMySqlEntityLiveTest extends AbstractChefToyMySqlEntityLiveTest {
 

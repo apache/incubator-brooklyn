@@ -21,6 +21,7 @@ package org.apache.brooklyn.location.jclouds;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -29,8 +30,6 @@ import org.jclouds.compute.options.TemplateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
-
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;

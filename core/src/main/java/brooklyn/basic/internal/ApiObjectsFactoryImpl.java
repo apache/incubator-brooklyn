@@ -21,9 +21,9 @@ package brooklyn.basic.internal;
 import org.apache.brooklyn.api.basic.internal.ApiObjectsFactoryInterface;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.Tasks;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.util.task.Tasks;
 
 public class ApiObjectsFactoryImpl implements ApiObjectsFactoryInterface {
 

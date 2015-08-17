@@ -23,10 +23,9 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.config.ConfigBag;
 
 @Test
 public class LocationConfigUtilsTest {

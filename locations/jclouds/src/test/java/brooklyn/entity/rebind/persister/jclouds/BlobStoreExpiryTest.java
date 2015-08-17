@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.http.client.HttpClient;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -44,13 +46,13 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
+
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsUtil;
+
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;

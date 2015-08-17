@@ -24,10 +24,10 @@ import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.entity.rebind.Rebindable;
 import org.apache.brooklyn.api.entity.trait.Configurable;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;

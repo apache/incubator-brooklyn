@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,6 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 

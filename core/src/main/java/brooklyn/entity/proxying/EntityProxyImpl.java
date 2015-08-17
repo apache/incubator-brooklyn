@@ -36,6 +36,9 @@ import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.management.internal.ManagementTransitionMode;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.TaskTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +48,6 @@ import brooklyn.entity.basic.EntityTransientCopyInternal;
 import brooklyn.entity.basic.EntityTransientCopyInternal.SpecialEntityTransientCopyInternal;
 import brooklyn.entity.effector.EffectorWithBody;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.TaskTags;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;

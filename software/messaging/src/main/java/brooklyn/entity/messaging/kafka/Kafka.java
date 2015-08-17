@@ -18,12 +18,13 @@
  */
 package brooklyn.entity.messaging.kafka;
 
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
+
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.util.flags.SetFromFlag;
 
 /**
  * Shared Kafka broker and zookeeper properties.

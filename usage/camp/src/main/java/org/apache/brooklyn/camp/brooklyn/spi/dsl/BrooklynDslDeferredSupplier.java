@@ -27,6 +27,7 @@ import io.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.core.util.task.DeferredSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.task.DeferredSupplier;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

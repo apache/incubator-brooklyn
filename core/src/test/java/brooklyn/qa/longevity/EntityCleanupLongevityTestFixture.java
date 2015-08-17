@@ -29,6 +29,8 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.management.internal.AbstractManagementContext;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.task.BasicExecutionManager;
+import org.apache.brooklyn.core.util.task.TaskScheduler;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -46,8 +48,6 @@ import brooklyn.internal.storage.impl.BrooklynStorageImpl;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
-import brooklyn.util.task.BasicExecutionManager;
-import brooklyn.util.task.TaskScheduler;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Time;
 

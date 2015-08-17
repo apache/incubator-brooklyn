@@ -51,12 +51,12 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils.CreationResult;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.BasicApplicationImpl;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.net.Urls;
 
 import com.google.common.collect.Iterables;

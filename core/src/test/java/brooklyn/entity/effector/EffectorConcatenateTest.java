@@ -30,6 +30,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ExecutionManager;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.BasicExecutionContext;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationImpl;
 import org.slf4j.Logger;
@@ -45,8 +47,6 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.task.BasicExecutionContext;
-import brooklyn.util.task.Tasks;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;

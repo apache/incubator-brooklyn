@@ -23,6 +23,8 @@ import java.util.Collection;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +35,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.task.Tasks;
 
 /**
  * This interface describes an {@link org.apache.brooklyn.api.entity.Entity} that can be started and stopped.

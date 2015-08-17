@@ -21,14 +21,14 @@ package brooklyn.enricher.basic;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.util.task.ValueResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.task.Tasks;
-import brooklyn.util.task.ValueResolver;
 
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;

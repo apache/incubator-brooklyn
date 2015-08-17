@@ -30,14 +30,13 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.rest.api.PolicyConfigApi;
 import org.apache.brooklyn.rest.domain.PolicyConfigSummary;
 import org.apache.brooklyn.rest.filter.HaHotStateRequired;
 import org.apache.brooklyn.rest.transform.PolicyTransformer;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
-
-import brooklyn.util.flags.TypeCoercions;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
 import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
 
@@ -41,7 +42,6 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.CompoundRuntimeException;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicate;

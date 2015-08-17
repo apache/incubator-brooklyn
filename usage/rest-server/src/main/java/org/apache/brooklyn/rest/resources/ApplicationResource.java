@@ -66,6 +66,7 @@ import org.apache.brooklyn.core.management.entitlement.Entitlements.EntityAndIte
 import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArgument;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils.CreationResult;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.rest.api.ApplicationApi;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
@@ -79,7 +80,6 @@ import org.apache.brooklyn.rest.transform.TaskTransformer;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 

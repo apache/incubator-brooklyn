@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.TaskInternal;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -50,9 +51,10 @@ import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
+
 import org.apache.brooklyn.location.jclouds.BailOutJcloudsLocation;
+
 import brooklyn.test.Asserts;
-import brooklyn.util.task.TaskInternal;
 import brooklyn.util.time.Duration;
 
 public class MachineLifecycleEffectorTasksTest {

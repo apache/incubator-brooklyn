@@ -23,19 +23,19 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.core.util.file.ArchiveTasks;
+import org.apache.brooklyn.core.util.file.ArchiveUtils.ArchiveType;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.TaskBuilder;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.file.ArchiveTasks;
-import brooklyn.util.file.ArchiveUtils.ArchiveType;
 import brooklyn.util.net.Urls;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.TaskBuilder;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 
