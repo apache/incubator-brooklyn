@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.software.SshEffectorTasks;
@@ -174,6 +175,23 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
             setInstallDir(altInstallDir);
             setRunDir(newRunDir);
         }
+        
+        DynamicTasks.queue(SshEffectorTasks.ssh(
+            sudo("mkdir -p " + getDataDir()),
+            sudo("chown postgres:postgres " + getDataDir()),
+            sudo("chmod 700 " + getDataDir()),
+            sudo("touch " + getLogFile()),
+            sudo("chown postgres:postgres " + getLogFile()),
+            sudo("touch " + getPidFile()),
+            sudo("chown postgres:postgres " + getPidFile()),
+            alternativesGroup(
+                chainGroup(format("test -e %s", getInstallDir() + "/bin/initdb"),
+                    sudoAsUser("postgres", getInstallDir() + "/bin/initdb -D " + getDataDir())),
+                    callPgctl("initdb", true)))
+                    .requiringExitCodeZero());
+        DynamicTasks.waitForLast();
+
+        getEntity().setConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION, true);
     }
 
     private String getYumRepository(String version, String majorMinorVersion, String shortVersion) {
@@ -243,22 +261,6 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
     public void customize() {
         // Some OSes start postgres during package installation
         DynamicTasks.queue(SshEffectorTasks.ssh(sudoAsUser("postgres", "/etc/init.d/postgresql stop")).allowingNonZeroExitCode()).get();
-
-        newScript(CUSTOMIZING)
-        .body.append(
-            sudo("mkdir -p " + getDataDir()),
-            sudo("chown postgres:postgres " + getDataDir()),
-            sudo("chmod 700 " + getDataDir()),
-            sudo("touch " + getLogFile()),
-            sudo("chown postgres:postgres " + getLogFile()),
-            sudo("touch " + getPidFile()),
-            sudo("chown postgres:postgres " + getPidFile()),
-            alternativesGroup(
-                chainGroup(format("test -e %s", getInstallDir() + "/bin/initdb"),
-                    sudoAsUser("postgres", getInstallDir() + "/bin/initdb -D " + getDataDir())),
-                    callPgctl("initdb", true)))
-                    .failOnNonZeroResultCode()
-                    .execute();
 
         String configUrl = getEntity().getConfig(PostgreSqlNode.CONFIGURATION_FILE_URL);
         if (Strings.isBlank(configUrl)) {

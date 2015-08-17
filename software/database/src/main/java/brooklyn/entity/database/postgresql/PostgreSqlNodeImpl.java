@@ -23,7 +23,11 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
+import brooklyn.entity.effector.Effectors;
+import brooklyn.entity.trait.Startable;
 import brooklyn.util.config.ConfigBag;
+import brooklyn.entity.Effector;
+import brooklyn.entity.basic.SoftwareProcessDriverLifecycleEffectorTasks;
 
 public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSqlNode {
 
@@ -55,6 +59,8 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
                 return executeScript((String) parameters.getStringKey("commands"));
             }
         });
+
+        new PostgreSqlMachineLifeCyclyEffectorTasks().attachLifecycleEffectors(this);
     }
 
     @Override
@@ -81,5 +87,16 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
                 .executeScriptAsync(commands)
                 .block()
                 .getStdout();
+    }
+
+    private class PostgreSqlMachineLifeCyclyEffectorTasks extends SoftwareProcessDriverLifecycleEffectorTasks {
+        @Override
+        public Effector<Void> newStopEffector() {
+            return Effectors.effector(Startable.STOP)
+                    .parameter(StopSoftwareParameters.STOP_PROCESS_MODE)
+                    .parameter(STOP_MACHINE_MODE)
+                    .impl(newStopEffectorTask())
+                    .build();
+        }
     }
 }

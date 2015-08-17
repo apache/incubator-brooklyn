@@ -91,4 +91,6 @@ public interface PostgreSqlNode extends SoftwareProcess, HasShortName, Datastore
 
     String executeScript(String commands);
 
+    ConfigKey<StopSoftwareParameters.StopMode> STOP_MACHINE_MODE = ConfigKeys.newConfigKeyWithDefault(StopSoftwareParameters.STOP_MACHINE_MODE, StopSoftwareParameters.StopMode.NEVER);
+
 }
