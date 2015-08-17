@@ -51,7 +51,7 @@
 - id: dom4j:dom4j:1.6.1
   url: "http://dom4j.sourceforge.net/"
   license:
-  - name: BSD style
+  - name: MetaStuff BSD style license (3-clause)
     url: http://dom4j.sourceforge.net/dom4j-1.6.1/license.html
 - id: org.python:jython-standalone:2.7-b3
   license:
