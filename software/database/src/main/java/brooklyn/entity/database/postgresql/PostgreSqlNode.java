@@ -22,6 +22,7 @@ import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.entity.trait.HasShortName;
+import org.apache.brooklyn.location.basic.PortRanges;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -30,8 +31,8 @@ import brooklyn.entity.database.DatabaseNode;
 import brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.effector.Effectors;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import org.apache.brooklyn.location.basic.PortRanges;
 import brooklyn.util.flags.SetFromFlag;
 
 /**
@@ -80,6 +81,20 @@ public interface PostgreSqlNode extends SoftwareProcess, HasShortName, Datastore
     @SetFromFlag("pollPeriod")
     ConfigKey<Long> POLL_PERIOD = ConfigKeys.newLongConfigKey(
             "postgresql.sensorpoll", "Poll period (in milliseconds)", 1000L);
+    
+    @SetFromFlag("username")
+    BasicAttributeSensorAndConfigKey<String> USERNAME = new BasicAttributeSensorAndConfigKey<>(
+            String.class, "postgresql.username", "Username of the database user",
+            "postgresuser");
+    
+    @SetFromFlag("password")
+    BasicAttributeSensorAndConfigKey<String> PASSWORD = new BasicAttributeSensorAndConfigKey<>(
+            String.class, "postgresql.password",
+            "Password for the database user, auto-generated if not set");
+
+    @SetFromFlag("database")
+    BasicAttributeSensorAndConfigKey<String> DATABASE = new BasicAttributeSensorAndConfigKey<>(
+            String.class, "postgresql.database", "Database to be used", "db");
 
     Effector<String> EXECUTE_SCRIPT = Effectors.effector(DatastoreMixins.EXECUTE_SCRIPT)
             .description("Executes the given script contents using psql")
