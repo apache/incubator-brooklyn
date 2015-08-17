@@ -225,6 +225,10 @@ This project includes the software: ch.qos.logback
   Developed by: QOS.ch (http://www.qos.ch)
   Used under the following license: Eclipse Public License, version 1.0 (http://www.eclipse.org/legal/epl-v10.html)
 
+This project includes the software: com.beust
+  Available at: http://beust.com/jcommander
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
 This project includes the software: com.fasterxml.jackson
   Available at: http://wiki.fasterxml.com/JacksonHome http://wiki.fasterxml.com/JacksonJAXBAnnotations
   Developed by: FasterXML (http://fasterxml.com/)
@@ -263,7 +267,7 @@ This project includes the software: com.googlecode.concurrentlinkedhashmap
   Used under the following license: Apache License (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.jamesmurty.utils
-  Available at: http://code.google.com/p/java-xmlbuilder/
+  Available at: https://github.com/jmurty/java-xmlbuilder
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 
 This project includes the software: com.jayway.jsonpath
@@ -418,6 +422,10 @@ This project includes the software: moment.js
   Developed by: Tim Wood (http://momentjs.com)
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Tim Wood, Iskren Chernev, Moment.js contributors (2011-2014)
+
+This project includes the software: net.iharder
+  Available at: http://iharder.net/base64/
+  Used under the following license: Public domain
 
 This project includes the software: net.java.dev.jna
   Available at: https://github.com/twall/jna
