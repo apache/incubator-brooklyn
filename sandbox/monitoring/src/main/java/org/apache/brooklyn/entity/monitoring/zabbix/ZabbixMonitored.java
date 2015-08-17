@@ -18,8 +18,9 @@
  */
 package org.apache.brooklyn.entity.monitoring.zabbix;
 
+import org.apache.brooklyn.api.event.AttributeSensor;
+
 import brooklyn.config.ConfigKey;
-import brooklyn.event.AttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;

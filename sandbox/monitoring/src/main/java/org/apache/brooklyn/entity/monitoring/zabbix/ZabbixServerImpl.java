@@ -20,21 +20,13 @@ package org.apache.brooklyn.entity.monitoring.zabbix;
 
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.proxying.EntitySpec;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.policy.PolicySpec;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -45,6 +37,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+
+import brooklyn.entity.basic.AbstractEntity;
+import brooklyn.entity.basic.DynamicGroup;
+import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
+import brooklyn.entity.trait.Startable;
+import brooklyn.event.feed.http.HttpFeed;
+import brooklyn.event.feed.http.HttpPollConfig;
+import brooklyn.event.feed.http.HttpValueFunctions;
 
 public class ZabbixServerImpl extends AbstractEntity implements ZabbixServer {
 

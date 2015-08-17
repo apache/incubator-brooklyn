@@ -29,30 +29,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.location.basic.SupportsPortForwarding;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityFunctions;
-import brooklyn.entity.basic.EntityLocal;
-import brooklyn.event.feed.AbstractFeed;
-import brooklyn.event.feed.AttributePollHandler;
-import brooklyn.event.feed.PollHandler;
-import brooklyn.event.feed.Poller;
-import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.location.Location;
-import brooklyn.location.MachineLocation;
-import brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.location.basic.SupportsPortForwarding;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
-import brooklyn.util.net.Cidr;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -69,6 +56,19 @@ import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.JsonObject;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.entity.basic.Attributes;
+import brooklyn.entity.basic.ConfigKeys;
+import brooklyn.entity.basic.EntityFunctions;
+import brooklyn.event.feed.AbstractFeed;
+import brooklyn.event.feed.AttributePollHandler;
+import brooklyn.event.feed.PollHandler;
+import brooklyn.event.feed.Poller;
+import brooklyn.event.feed.http.HttpValueFunctions;
+import brooklyn.util.http.HttpTool;
+import brooklyn.util.http.HttpToolResponse;
+import brooklyn.util.net.Cidr;
 
 public class ZabbixFeed extends AbstractFeed {
 

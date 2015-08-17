@@ -18,16 +18,17 @@
  */
 package org.apache.brooklyn.entity.monitoring.zabbix;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.Entity;
-import brooklyn.entity.proxying.ImplementedBy;
-import brooklyn.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.flags.SetFromFlag;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.event.AttributeSensor;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+
+import brooklyn.config.ConfigKey;
+import brooklyn.event.basic.BasicAttributeSensor;
+import brooklyn.event.basic.BasicConfigKey;
+import brooklyn.util.flags.SetFromFlag;
 
 @ImplementedBy(ZabbixServerImpl.class)
 public interface ZabbixServer extends Entity {
