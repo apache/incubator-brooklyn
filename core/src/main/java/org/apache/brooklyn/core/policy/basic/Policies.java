@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy.basic;
+package org.apache.brooklyn.core.policy.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
@@ -24,10 +24,10 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 
 import groovy.lang.Closure;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.policy.basic.AbstractPolicy;
 
 @SuppressWarnings({"rawtypes","unchecked"})
 public class Policies {

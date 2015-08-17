@@ -60,6 +60,9 @@ import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagementSupport;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.management.internal.SubscriptionTracker;
+import org.apache.brooklyn.core.policy.basic.AbstractEntityAdjunct;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.core.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
@@ -88,9 +91,6 @@ import brooklyn.internal.storage.impl.BasicReference;
 
 import org.apache.brooklyn.location.basic.Locations;
 
-import brooklyn.policy.basic.AbstractEntityAdjunct;
-import brooklyn.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

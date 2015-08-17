@@ -16,21 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy.basic;
+package org.apache.brooklyn.core.policy.basic;
 
-import java.util.Collections;
 import java.util.Map;
 
-/**
- * @deprecated since 0.7.0; will be either deleted or moved to tests
- */
-@Deprecated
-public class GeneralPurposePolicy extends AbstractPolicy {
-    public GeneralPurposePolicy() {
-        this(Collections.emptyMap());
+import org.apache.brooklyn.api.policy.PolicyType;
+
+import brooklyn.basic.BrooklynTypeSnapshot;
+import brooklyn.config.ConfigKey;
+
+public class PolicyTypeSnapshot extends BrooklynTypeSnapshot implements PolicyType {
+    private static final long serialVersionUID = 4670930188951106009L;
+    
+    PolicyTypeSnapshot(String name, Map<String, ConfigKey<?>> configKeys) {
+        super(name, configKeys);
     }
-    public GeneralPurposePolicy(Map properties) {
-        super(properties);
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        return (obj instanceof PolicyTypeSnapshot) && super.equals(obj);
     }
 }
-

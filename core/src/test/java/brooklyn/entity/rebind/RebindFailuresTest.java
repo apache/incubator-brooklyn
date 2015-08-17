@@ -40,6 +40,7 @@ import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.Assert;
@@ -53,7 +54,6 @@ import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.os.Os;
 

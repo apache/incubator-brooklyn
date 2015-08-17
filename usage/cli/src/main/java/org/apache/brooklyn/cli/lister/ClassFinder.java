@@ -31,6 +31,7 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.javalang.UrlClassLoader;
 import org.reflections.Reflections;
@@ -45,7 +46,6 @@ import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 

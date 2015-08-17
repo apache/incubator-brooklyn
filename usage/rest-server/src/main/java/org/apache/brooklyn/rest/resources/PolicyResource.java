@@ -25,13 +25,11 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.policy.basic.Policies;
-
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.policy.basic.Policies;
 import org.apache.brooklyn.rest.api.PolicyApi;
 import org.apache.brooklyn.rest.domain.PolicySummary;
 import org.apache.brooklyn.rest.domain.Status;

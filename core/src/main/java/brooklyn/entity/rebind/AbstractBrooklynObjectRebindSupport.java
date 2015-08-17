@@ -22,12 +22,12 @@ import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.mementos.Memento;
 import org.apache.brooklyn.api.policy.EntityAdjunct;
+import org.apache.brooklyn.core.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.entity.rebind.dto.MementosGenerators;
-import brooklyn.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
 import brooklyn.util.text.Strings;
 
 public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> implements RebindSupport<T> {

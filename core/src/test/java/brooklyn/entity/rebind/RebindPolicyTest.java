@@ -33,6 +33,7 @@ import org.apache.brooklyn.api.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -47,7 +48,6 @@ import brooklyn.entity.rebind.RebindEnricherTest.MyEnricher;
 
 import org.apache.brooklyn.location.basic.Locations;
 
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;

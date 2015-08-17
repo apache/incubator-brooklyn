@@ -16,29 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy.basic;
+package org.apache.brooklyn.core.policy.basic;
 
-import org.apache.brooklyn.api.policy.Policy;
-import org.apache.brooklyn.api.policy.PolicyType;
+import java.util.Collections;
+import java.util.Map;
 
-import brooklyn.basic.BrooklynDynamicType;
-
-public class PolicyDynamicType extends BrooklynDynamicType<Policy, AbstractPolicy> {
-
-    public PolicyDynamicType(Class<? extends Policy> type) {
-        super(type);
+/**
+ * @deprecated since 0.7.0; will be either deleted or moved to tests
+ */
+@Deprecated
+public class GeneralPurposePolicy extends AbstractPolicy {
+    public GeneralPurposePolicy() {
+        this(Collections.emptyMap());
     }
-    
-    public PolicyDynamicType(AbstractPolicy policy) {
-        super(policy);
-    }
-    
-    public PolicyType getSnapshot() {
-        return (PolicyType) super.getSnapshot();
-    }
-
-    @Override
-    protected PolicyTypeSnapshot newSnapshot() {
-        return new PolicyTypeSnapshot(name, value(configKeys));
+    public GeneralPurposePolicy(Map properties) {
+        super(properties);
     }
 }
+

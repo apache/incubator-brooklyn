@@ -20,10 +20,9 @@ package brooklyn.entity.rebind;
 
 import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.mementos.PolicyMemento;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
-
-import brooklyn.policy.basic.AbstractPolicy;
 
 public class BasicPolicyRebindSupport extends AbstractBrooklynObjectRebindSupport<PolicyMemento> {
 
