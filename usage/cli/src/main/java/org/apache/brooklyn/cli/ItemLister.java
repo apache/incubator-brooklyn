@@ -142,7 +142,7 @@ public class ItemLister {
                 copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "items.css");
                 copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/underscore-min.js");
                 copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/underscore-min.map");
-                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/catalog/bloodhound.js");
+                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/catalog/typeahead.js");
 
                 // now make pages for each item
                 
