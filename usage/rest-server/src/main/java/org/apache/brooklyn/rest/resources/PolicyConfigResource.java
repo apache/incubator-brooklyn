@@ -23,7 +23,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import brooklyn.basic.BrooklynObjectInternal;
+import org.apache.brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 
 import org.apache.brooklyn.api.entity.Entity;

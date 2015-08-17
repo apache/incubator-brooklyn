@@ -34,7 +34,7 @@ import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.mementos.EntityMemento;
 import org.apache.brooklyn.core.management.internal.EntityManagementSupport;
 
-import brooklyn.basic.BrooklynObjectInternal;
+import org.apache.brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.util.config.ConfigBag;
 

@@ -44,8 +44,8 @@ import org.apache.brooklyn.core.management.internal.SubscriptionTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.AbstractBrooklynObject;
-import brooklyn.basic.BrooklynObjectInternal;
+import org.apache.brooklyn.basic.AbstractBrooklynObject;
+import org.apache.brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigMap;

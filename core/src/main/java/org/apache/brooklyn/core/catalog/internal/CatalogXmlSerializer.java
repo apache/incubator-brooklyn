@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 
-import brooklyn.basic.AbstractBrooklynObject;
+import org.apache.brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.util.xstream.EnumCaseForgivingSingleValueConverter;
 import brooklyn.util.xstream.XmlSerializer;
 

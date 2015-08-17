@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.basic;
+package org.apache.brooklyn.basic;
 
 import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.entity.trait.Identifiable;

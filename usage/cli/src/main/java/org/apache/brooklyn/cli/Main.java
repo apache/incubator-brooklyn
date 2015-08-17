@@ -31,7 +31,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.basic.BrooklynTypes;
+import org.apache.brooklyn.basic.BrooklynTypes;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -56,16 +55,6 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
-import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
-import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeDefaultTemplateCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeGetImageCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeListHardwareProfilesCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
-import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
 import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;

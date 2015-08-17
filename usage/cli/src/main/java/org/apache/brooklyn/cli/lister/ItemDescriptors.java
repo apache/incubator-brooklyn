@@ -27,8 +27,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.BrooklynDynamicType;
-import brooklyn.basic.BrooklynTypes;
+import org.apache.brooklyn.basic.BrooklynDynamicType;
+import org.apache.brooklyn.basic.BrooklynTypes;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.basic.BrooklynType;

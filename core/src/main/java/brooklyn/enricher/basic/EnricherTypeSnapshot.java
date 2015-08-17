@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.policy.EnricherType;
 
-import brooklyn.basic.BrooklynTypeSnapshot;
+import org.apache.brooklyn.basic.BrooklynTypeSnapshot;
 import brooklyn.config.ConfigKey;
 
 public class EnricherTypeSnapshot extends BrooklynTypeSnapshot implements EnricherType {
