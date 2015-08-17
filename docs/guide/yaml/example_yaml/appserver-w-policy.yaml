@@ -12,7 +12,7 @@ services:
           brooklyn.example.db.url: $brooklyn:formatString("jdbc:%s%s?user=%s\\&password=%s",
               component("db").attributeWhenReady("datastore.url"), "visitors", "brooklyn", "br00k11n")
   brooklyn.policies:
-  - policyType: brooklyn.policy.autoscaling.AutoScalerPolicy
+  - policyType: org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
     brooklyn.config:
       metric: $brooklyn:sensor("brooklyn.entity.webapp.DynamicWebAppCluster", "webapp.reqs.perSec.windowed.perNode")
       metricLowerBound: 10

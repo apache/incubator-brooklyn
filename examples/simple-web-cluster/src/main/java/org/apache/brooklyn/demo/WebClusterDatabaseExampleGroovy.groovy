@@ -29,10 +29,13 @@ import org.slf4j.LoggerFactory
 import brooklyn.entity.basic.AbstractApplication
 import brooklyn.entity.basic.Entities
 import brooklyn.entity.database.mysql.MySqlNode
+
 import org.apache.brooklyn.api.entity.proxying.EntitySpec
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster
-import brooklyn.policy.autoscaling.AutoScalerPolicy
+
+import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
+
 import brooklyn.util.CommandLineUtil
 
 import com.google.common.collect.Lists

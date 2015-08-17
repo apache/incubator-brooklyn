@@ -34,8 +34,8 @@ services:
       $brooklyn:entitySpec:
         type: org.apache.brooklyn.entity.nosql.cassandra.CassandraNode
         brookyn.policies:
-        - type: brooklyn.policy.ha.ServiceRestarter
+        - type: org.apache.brooklyn.policy.ha.ServiceRestarter
         brooklyn.enrichers:
-        - type: brooklyn.policy.ha.ServiceFailureDetector
+        - type: org.apache.brooklyn.policy.ha.ServiceFailureDetector
     brooklyn.policies:
-    - type: brooklyn.policy.ha.ServiceReplacer
+    - type: org.apache.brooklyn.policy.ha.ServiceReplacer

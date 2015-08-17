@@ -188,7 +188,7 @@ brooklyn.catalog:
         initialSize:    3
         # and add a policy to scale based on ops per minute
         brooklyn.policies:
-        - type: brooklyn.policy.autoscaling.AutoScalerPolicy
+        - type: org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
           brooklyn.config:
             metric: riak.node.ops.1m.perNode
             # more than 100 ops per second (6k/min) scales out, less than 50 scales back
@@ -274,13 +274,13 @@ brooklyn.catalog:
                   enricher.window.duration: 30s
               
               # emit failure sensor if a failure connecting to the service is sustained for 30s
-              - type: brooklyn.policy.ha.ServiceFailureDetector
+              - type: org.apache.brooklyn.policy.ha.ServiceFailureDetector
                 brooklyn.config:
                   entityFailed.stabilizationDelay: 30s
             
               brooklyn.policies:
               # restart if a failure is detected (with a max of one restart in 2m, sensor will propagate otherwise) 
-              - type: brooklyn.policy.ha.ServiceRestarter
+              - type: org.apache.brooklyn.policy.ha.ServiceRestarter
                 brooklyn.config:
                   failOnRecurringFailuresInThisDuration: 2m
         
@@ -305,10 +305,10 @@ brooklyn.catalog:
         brooklyn.policies:
         # resilience: if a per-node restart policy fails,
         # just throw that node away and create a new one
-        - type: brooklyn.policy.ha.ServiceReplacer
+        - type: org.apache.brooklyn.policy.ha.ServiceReplacer
         
         # and scale based on reqs/sec
-        - type: brooklyn.policy.autoscaling.AutoScalerPolicy
+        - type: org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
           brooklyn.config:
             # scale based on reqs/sec (though in a real-world situation, 
             # reqs.per_sec.windowed_30s.per_node might be a better choice) 

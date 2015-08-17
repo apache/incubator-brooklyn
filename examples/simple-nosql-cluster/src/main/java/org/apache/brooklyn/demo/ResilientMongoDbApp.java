@@ -39,9 +39,9 @@ import brooklyn.entity.group.DynamicCluster;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 
-import brooklyn.policy.ha.ServiceFailureDetector;
-import brooklyn.policy.ha.ServiceReplacer;
-import brooklyn.policy.ha.ServiceRestarter;
+import org.apache.brooklyn.policy.ha.ServiceFailureDetector;
+import org.apache.brooklyn.policy.ha.ServiceReplacer;
+import org.apache.brooklyn.policy.ha.ServiceRestarter;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
