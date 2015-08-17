@@ -23,10 +23,10 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.location.Location;
-import brooklyn.location.MachineProvisioningLocation;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 public class SaltLiveTestSupport extends BrooklynAppLiveTestSupport {
 

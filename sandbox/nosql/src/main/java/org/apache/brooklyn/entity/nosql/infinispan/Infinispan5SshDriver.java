@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.net.Networking;
 import brooklyn.util.ssh.BashCommands;

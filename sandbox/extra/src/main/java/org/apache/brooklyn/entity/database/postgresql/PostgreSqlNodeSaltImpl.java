@@ -18,15 +18,20 @@
  */
 package org.apache.brooklyn.entity.database.postgresql;
 
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.entity.salt.SaltConfig;
 import org.apache.brooklyn.entity.salt.SaltConfigs;
 import org.apache.brooklyn.entity.salt.SaltLifecycleEffectorTasks;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.Effector;
+import org.apache.brooklyn.api.entity.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EffectorStartableImpl;
 import brooklyn.entity.basic.Entities;
@@ -38,12 +43,7 @@ import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.DynamicTasks;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
