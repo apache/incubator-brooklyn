@@ -78,6 +78,11 @@ When the Brooklyn project makes a release, we produce and release the following 
 Therefore, our source release, our binary release, and every one of our Maven release artifacts, must **each** have
 their own, individually-tailored, `LICENSE` and `NOTICE` files.
 
+To some extent, this is automated, using scripts in `usage/dist/licensing`;
+but this must be manually run, and wherever source code is included or a project has insufficient information in its POM,
+you'll need to add project-specific metadata (with a project-specific `source-inclusions.yaml` file and/or in the 
+dist project's `overrides.yaml` file).  See the README.md in that project's folder for more information.
+
 ### Maven artifacts
 
 Each Maven module will generally produce a JAR file from code under `src/main`, and a JAR file from code under
@@ -114,3 +119,4 @@ each of which have their own license, and which will therefore impact on `LICENS
 
 Therefore you must inspect every file that is present in the binary distribution, ascertain its license status, and
 ensure that `LICENSE` and `NOTICE` are correct.
+
