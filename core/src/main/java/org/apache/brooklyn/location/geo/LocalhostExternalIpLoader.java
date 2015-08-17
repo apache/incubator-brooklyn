@@ -80,7 +80,7 @@ public class LocalhostExternalIpLoader {
     @VisibleForTesting
     static List<String> getIpAddressWebsites() {
         String file = new ResourceUtils(LocalhostExternalIpLoader.class)
-                .getResourceAsString("classpath://brooklyn/location/geo/external-ip-address-resolvers.txt");
+                .getResourceAsString("classpath://org/apache/brooklyn/location/geo/external-ip-address-resolvers.txt");
         Iterable<String> lines = Splitter.on('\n')
                 .omitEmptyStrings()
                 .trimResults()
