@@ -1861,16 +1861,41 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
 
-    // ----------------- rebinding to existing machine ------------------------
+    // ----------------- registering existing machines ------------------------
 
+    /**
+     * @deprecated since 0.8.0 use {@link #registerMachine(NodeMetadata)} instead.
+     */
+    @Deprecated
     public JcloudsSshMachineLocation rebindMachine(NodeMetadata metadata) throws NoMachinesAvailableException {
-        return rebindMachine(MutableMap.of(), metadata);
+        return (JcloudsSshMachineLocation) registerMachine(metadata);
     }
+
+    public MachineLocation registerMachine(NodeMetadata metadata) throws NoMachinesAvailableException {
+        return registerMachine(MutableMap.of(), metadata);
+    }
+
+    /**
+     * @deprecated since 0.8.0 use {@link #registerMachine(Map, NodeMetadata)} instead.
+     */
+    @Deprecated
     public JcloudsSshMachineLocation rebindMachine(Map<?,?> flags, NodeMetadata metadata) throws NoMachinesAvailableException {
+        return (JcloudsSshMachineLocation) registerMachine(flags, metadata);
+    }
+
+    public MachineLocation registerMachine(Map<?, ?> flags, NodeMetadata metadata) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(config().getBag(), flags);
         if (!setup.containsKey("id")) setup.putStringKey("id", metadata.getId());
         setHostnameUpdatingCredentials(setup, metadata);
-        return rebindMachine(setup);
+        return registerMachine(setup);
+    }
+
+    /**
+     * @deprecated since 0.8.0 use {@link #registerMachine(ConfigBag)} instead.
+     */
+    @Deprecated
+    public JcloudsSshMachineLocation rebindMachine(ConfigBag setup) throws NoMachinesAvailableException {
+        return (JcloudsSshMachineLocation) registerMachine(setup);
     }
 
     /**
@@ -1883,7 +1908,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      *   <li>userName: the username for ssh'ing into the machine
      * <ul>
      */
-    public JcloudsSshMachineLocation rebindMachine(ConfigBag setup) throws NoMachinesAvailableException {
+    public MachineLocation registerMachine(ConfigBag setup) throws NoMachinesAvailableException {
         try {
             if (setup.getDescription() == null) setCreationString(setup);
             String user = checkNotNull(getUser(setup), "user");
@@ -1923,9 +1948,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    public JcloudsSshMachineLocation rebindMachine(Map<?,?> flags) throws NoMachinesAvailableException {
+    /**
+     * @deprecated since 0.8.0 use {@link #registerMachine(Map)} instead.
+     */
+    @Deprecated
+    public JcloudsSshMachineLocation rebindMachine(Map<?, ?> flags) throws NoMachinesAvailableException {
+        return (JcloudsSshMachineLocation) registerMachine(flags);
+    }
+
+    public MachineLocation registerMachine(Map<?,?> flags) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(config().getBag(), flags);
-        return rebindMachine(setup);
+        return registerMachine(setup);
     }
 
     /**
