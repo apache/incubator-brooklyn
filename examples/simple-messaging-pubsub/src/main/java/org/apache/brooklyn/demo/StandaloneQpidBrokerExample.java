@@ -23,8 +23,8 @@ import java.util.List;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.messaging.amqp.AmqpServer;
-import brooklyn.entity.messaging.qpid.QpidBroker;
+import org.apache.brooklyn.entity.messaging.amqp.AmqpServer;
+import org.apache.brooklyn.entity.messaging.qpid.QpidBroker;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.launcher.BrooklynLauncher;

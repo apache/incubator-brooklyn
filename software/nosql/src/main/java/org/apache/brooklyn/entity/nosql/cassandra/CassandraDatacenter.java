@@ -33,7 +33,7 @@ import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.database.DatastoreMixins;
+import org.apache.brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;

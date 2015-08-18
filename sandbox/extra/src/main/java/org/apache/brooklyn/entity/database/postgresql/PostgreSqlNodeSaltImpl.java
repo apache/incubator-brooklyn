@@ -36,7 +36,7 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EffectorStartableImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.database.postgresql.PostgreSqlNode;
+import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.SshEffectorTasks;

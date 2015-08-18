@@ -24,10 +24,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.core.internal.storage.impl.ConcurrentMapAcceptingNullVals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.internal.storage.impl.ConcurrentMapAcceptingNullVals;
 import brooklyn.util.collections.MutableList;
 
 /** A config key representing a list of values. 

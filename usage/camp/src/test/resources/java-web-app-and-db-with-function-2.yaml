@@ -34,7 +34,7 @@ services:
         - visitors
         - brooklyn
         - br00k11n
-- serviceType: brooklyn.entity.database.mysql.MySqlNode
+- serviceType: org.apache.brooklyn.entity.database.mysql.MySqlNode
   name: My DB
   id: db
   brooklyn.config:

@@ -22,7 +22,7 @@ import java.util.List;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.entity.messaging.kafka.KafkaCluster;
+import org.apache.brooklyn.entity.messaging.kafka.KafkaCluster;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
