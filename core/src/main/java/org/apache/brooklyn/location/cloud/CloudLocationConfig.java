@@ -24,10 +24,10 @@ import com.google.common.annotations.Beta;
 import com.google.common.reflect.TypeToken;
 
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicConfigKey;
 
 import org.apache.brooklyn.api.location.MachineLocationCustomizer;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 

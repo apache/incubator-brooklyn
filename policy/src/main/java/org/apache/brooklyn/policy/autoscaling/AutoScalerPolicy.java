@@ -41,6 +41,8 @@ import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicNotificationSensor;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
@@ -50,8 +52,6 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicNotificationSensor;
 
 import org.apache.brooklyn.policy.autoscaling.SizeHistory.WindowSummary;
 import org.apache.brooklyn.policy.loadbalancing.LoadBalancingPolicy;

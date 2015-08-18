@@ -18,16 +18,17 @@
  */
 package org.apache.brooklyn.entity.webapp.nodejs;
 
+import org.apache.brooklyn.core.event.feed.ConfigToAttributes;
+import org.apache.brooklyn.core.event.feed.http.HttpFeed;
+import org.apache.brooklyn.core.event.feed.http.HttpPollConfig;
+import org.apache.brooklyn.core.event.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
+
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 
 import com.google.common.base.Predicates;

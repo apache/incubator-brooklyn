@@ -44,12 +44,12 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.brooklynnode.BrooklynEntityMirror;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.SameBrooklynNodeImpl;
-import brooklyn.event.basic.BasicConfigKey;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;

@@ -1,7 +1,7 @@
 package com.acme.sample.brooklyn.sample.app;
 
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
-import static brooklyn.event.basic.DependentConfiguration.formatString;
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.formatString;
 
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +28,7 @@ import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.api.event.AttributeSensor;
-import brooklyn.event.basic.Sensors;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 import org.apache.brooklyn.util.maven.MavenArtifact;

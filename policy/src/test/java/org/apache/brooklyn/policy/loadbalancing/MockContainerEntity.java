@@ -24,13 +24,13 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.BasicConfigKey;
 
 @ImplementedBy(MockContainerEntityImpl.class)
 public interface MockContainerEntity extends AbstractGroup, BalanceableContainer<Movable>, Startable {

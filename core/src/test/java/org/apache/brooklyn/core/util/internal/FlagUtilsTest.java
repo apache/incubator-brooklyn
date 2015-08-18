@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
@@ -41,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

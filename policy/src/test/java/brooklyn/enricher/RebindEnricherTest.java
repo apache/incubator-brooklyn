@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.util.http.BetterMockWebServer;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -35,7 +36,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-import brooklyn.event.basic.Sensors;
 
 import com.google.mockwebserver.MockResponse;
 

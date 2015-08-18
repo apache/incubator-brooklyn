@@ -30,6 +30,8 @@ import org.apache.brooklyn.api.entity.drivers.EntityDriver;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -40,8 +42,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;

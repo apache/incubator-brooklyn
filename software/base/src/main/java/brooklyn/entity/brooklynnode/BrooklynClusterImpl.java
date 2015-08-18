@@ -23,6 +23,8 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.core.event.feed.function.FunctionFeed;
+import org.apache.brooklyn.core.event.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +37,6 @@ import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.brooklynnode.effector.BrooklynClusterUpgradeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SelectMasterEffectorBody;
 import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;

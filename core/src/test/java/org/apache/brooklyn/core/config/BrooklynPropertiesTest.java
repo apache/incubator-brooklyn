@@ -25,11 +25,10 @@ import java.util.NoSuchElementException;
 
 import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.config.ConfigPredicates;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.collect.ImmutableMap;
 

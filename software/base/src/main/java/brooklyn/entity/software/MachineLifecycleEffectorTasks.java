@@ -38,6 +38,7 @@ import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.location.MachineManagementMixins.SuspendsMachines;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.feed.ConfigToAttributes;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
@@ -71,7 +72,6 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.event.feed.ConfigToAttributes;
 
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;

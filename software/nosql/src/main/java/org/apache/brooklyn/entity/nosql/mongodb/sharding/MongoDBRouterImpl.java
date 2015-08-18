@@ -21,11 +21,11 @@ package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.core.event.feed.function.FunctionFeed;
+import org.apache.brooklyn.core.event.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBClientSupport;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 
 import com.google.common.base.Functions;
 

@@ -27,6 +27,8 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
+import org.apache.brooklyn.core.event.feed.ConfigToAttributes;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
@@ -42,8 +44,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-import brooklyn.event.basic.Sensors;
-import brooklyn.event.feed.ConfigToAttributes;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.PortRanges;

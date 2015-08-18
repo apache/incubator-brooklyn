@@ -22,9 +22,8 @@ import java.util.concurrent.CountDownLatch;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
-
-import brooklyn.event.basic.BasicConfigKey;
 
 /**
  * Mock entity that blocks on startup via the {@link CountDownLatch} argument.

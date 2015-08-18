@@ -22,10 +22,10 @@ import java.io.File;
 import java.util.Set;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.util.os.Os;
 
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.reflect.TypeToken;

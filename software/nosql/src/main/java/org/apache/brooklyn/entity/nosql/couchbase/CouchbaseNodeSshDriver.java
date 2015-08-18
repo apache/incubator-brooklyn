@@ -33,6 +33,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
+import org.apache.brooklyn.core.event.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
@@ -48,8 +50,6 @@ import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.drivers.downloads.BasicDownloadRequirement;
 import brooklyn.entity.drivers.downloads.DownloadProducerFromUrlAttribute;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.event.feed.http.HttpValueFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.basic.SshMachineLocation;

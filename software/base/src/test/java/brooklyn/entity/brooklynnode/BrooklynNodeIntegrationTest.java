@@ -36,6 +36,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.event.feed.http.JsonFunctions;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
@@ -70,7 +71,6 @@ import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import brooklyn.entity.brooklynnode.BrooklynNode.StopNodeAndKillAppsEffector;
 import brooklyn.entity.proxying.EntityProxyImpl;
-import brooklyn.event.feed.http.JsonFunctions;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.Locations;

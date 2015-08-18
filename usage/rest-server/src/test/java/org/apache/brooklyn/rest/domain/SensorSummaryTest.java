@@ -31,13 +31,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.config.render.RendererHints;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.rest.transform.SensorTransformer;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;

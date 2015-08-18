@@ -34,6 +34,7 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.EntitySpecConfiguration;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.DslUtils;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent.Scope;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.ClassCoercionException;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
@@ -47,7 +48,6 @@ import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import org.apache.commons.beanutils.BeanUtils;
 
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.event.basic.DependentConfiguration;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;

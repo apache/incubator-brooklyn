@@ -20,9 +20,8 @@ package org.apache.brooklyn.entity.nosql.redis;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
-
-import brooklyn.event.basic.BasicConfigKey;
 
 /**
  * A {@link RedisStore} configured as a slave.

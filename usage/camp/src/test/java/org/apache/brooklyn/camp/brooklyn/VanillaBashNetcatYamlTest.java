@@ -23,6 +23,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Networking;
@@ -37,7 +38,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;

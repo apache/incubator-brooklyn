@@ -26,6 +26,8 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.event.basic.MapConfigKey;
+import org.apache.brooklyn.core.event.basic.SetConfigKey;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
@@ -38,9 +40,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.event.basic.MapConfigKey;
-import brooklyn.event.basic.SetConfigKey;
 
 public class JcloudsLocationResolverTest {
 

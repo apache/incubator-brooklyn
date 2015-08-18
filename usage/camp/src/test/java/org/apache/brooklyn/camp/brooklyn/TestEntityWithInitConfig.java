@@ -22,10 +22,10 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.BasicConfigKey;
 
 @ImplementedBy(TestEntityWithInitConfigImpl.class)
 public interface TestEntityWithInitConfig extends Entity, Startable, EntityLocal, EntityInternal {

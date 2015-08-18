@@ -50,6 +50,7 @@ import org.apache.brooklyn.api.policy.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemDo;
+import org.apache.brooklyn.core.event.feed.AbstractFeed;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
@@ -60,7 +61,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.AbstractBrooklynObjectRebindSupport;
 import brooklyn.entity.rebind.TreeUtils;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
-import brooklyn.event.feed.AbstractFeed;
 
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.util.collections.MutableMap;

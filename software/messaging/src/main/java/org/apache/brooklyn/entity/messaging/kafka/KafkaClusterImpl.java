@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.event.feed.ConfigToAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +37,6 @@ import brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
-
-import brooklyn.event.feed.ConfigToAttributes;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;

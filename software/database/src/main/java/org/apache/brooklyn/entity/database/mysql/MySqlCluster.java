@@ -24,6 +24,8 @@ import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 
 import com.google.common.reflect.TypeToken;
 
@@ -32,8 +34,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import org.apache.brooklyn.entity.database.DatastoreMixins.HasDatastoreUrl;
 
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 
 @ImplementedBy(MySqlClusterImpl.class)
 @Catalog(name="MySql Master-Slave cluster", description="Sets up a cluster of MySQL nodes using master-slave relation and binary logging", iconUrl="classpath:///mysql-logo-110x57.png")

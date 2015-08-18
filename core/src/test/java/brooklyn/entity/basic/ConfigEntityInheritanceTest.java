@@ -22,6 +22,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.config.ConfigInheritance;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.AttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -29,8 +31,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ConfigMapTest.MyOtherEntity;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
 
 /**
  * There is a bug where:

@@ -23,9 +23,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
-
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
+import org.apache.brooklyn.core.event.feed.function.FunctionFeed;
+import org.apache.brooklyn.core.event.feed.function.FunctionPollConfig;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Supplier;

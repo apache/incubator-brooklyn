@@ -29,6 +29,8 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.core.event.basic.BasicNotificationSensor;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestCluster;
@@ -38,8 +40,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

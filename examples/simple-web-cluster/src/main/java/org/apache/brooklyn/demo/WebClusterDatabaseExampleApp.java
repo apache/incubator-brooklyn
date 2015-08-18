@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.demo;
 
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
-import static brooklyn.event.basic.DependentConfiguration.formatString;
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.formatString;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +31,7 @@ import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.util.BrooklynMavenArtifacts;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
@@ -50,7 +51,6 @@ import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;

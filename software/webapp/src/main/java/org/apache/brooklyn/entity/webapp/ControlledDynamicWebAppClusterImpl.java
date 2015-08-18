@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.event.feed.ConfigToAttributes;
 import org.apache.brooklyn.entity.proxy.LoadBalancer;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
@@ -49,7 +50,6 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.event.feed.ConfigToAttributes;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

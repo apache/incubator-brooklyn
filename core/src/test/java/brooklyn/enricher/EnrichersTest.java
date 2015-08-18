@@ -35,6 +35,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -45,8 +46,6 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.text.StringFunctions;
-
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

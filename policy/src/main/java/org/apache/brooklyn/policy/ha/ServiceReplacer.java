@@ -36,6 +36,8 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicNotificationSensor;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
@@ -46,8 +48,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.group.StopFailedRuntimeException;
 import brooklyn.entity.trait.MemberReplaceable;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicNotificationSensor;
 
 import org.apache.brooklyn.policy.ha.HASensors.FailureDescriptor;
 import org.apache.brooklyn.util.collections.MutableMap;

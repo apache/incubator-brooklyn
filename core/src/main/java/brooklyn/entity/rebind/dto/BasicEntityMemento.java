@@ -36,11 +36,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.basic.BrooklynTypes;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
 
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Sanitizer;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Lists;

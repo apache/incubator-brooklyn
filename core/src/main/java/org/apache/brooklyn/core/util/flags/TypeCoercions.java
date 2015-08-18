@@ -45,6 +45,7 @@ import javax.annotation.concurrent.GuardedBy;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.util.JavaGroovyEquivalents;
@@ -69,7 +70,6 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;

@@ -32,6 +32,10 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.feed.AbstractFeed;
+import org.apache.brooklyn.core.event.feed.PollHandler;
+import org.apache.brooklyn.core.event.feed.Poller;
+import org.apache.brooklyn.core.event.feed.ssh.SshPollValue;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.time.Duration;
@@ -40,10 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.feed.AbstractFeed;
-import brooklyn.event.feed.PollHandler;
-import brooklyn.event.feed.Poller;
-import brooklyn.event.feed.ssh.SshPollValue;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

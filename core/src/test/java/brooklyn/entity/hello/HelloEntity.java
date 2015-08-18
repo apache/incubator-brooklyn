@@ -22,14 +22,14 @@ import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicSensor;
+import org.apache.brooklyn.core.event.basic.Sensors;
 
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.event.basic.BasicSensor;
-import brooklyn.event.basic.Sensors;
 
 @ImplementedBy(HelloEntityImpl.class)
 public interface HelloEntity extends AbstractGroup {

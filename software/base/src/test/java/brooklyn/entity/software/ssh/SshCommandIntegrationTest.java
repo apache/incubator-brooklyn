@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
@@ -41,7 +42,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 

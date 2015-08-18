@@ -20,9 +20,9 @@ package org.apache.brooklyn.entity.webapp;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensor;
 
 import brooklyn.entity.group.DynamicFabric;
-import brooklyn.event.basic.BasicAttributeSensor;
 
 /**
  * DynamicWebAppFabric provide a fabric of clusters, aggregating the entity attributes.  Currently totals and averages:

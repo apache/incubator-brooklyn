@@ -25,6 +25,8 @@ import java.util.concurrent.Callable;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.event.feed.function.FunctionFeed;
+import org.apache.brooklyn.core.event.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
@@ -40,8 +42,6 @@ import brooklyn.entity.basic.SoftwareProcessEntityTest;
 import brooklyn.entity.basic.SoftwareProcessEntityTest.MyService;
 import brooklyn.entity.basic.SoftwareProcessEntityTest.MyServiceImpl;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 
 import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;

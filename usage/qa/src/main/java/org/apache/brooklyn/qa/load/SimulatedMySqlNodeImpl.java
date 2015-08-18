@@ -23,6 +23,8 @@ import static java.lang.String.format;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.feed.function.FunctionFeed;
+import org.apache.brooklyn.core.event.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
@@ -35,8 +37,6 @@ import org.apache.brooklyn.util.time.Duration;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 
 /**
  * @see SimulatedJBoss7ServerImpl for description of purpose and configuration options.

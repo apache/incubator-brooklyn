@@ -29,14 +29,14 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.DependentConfiguration;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 

@@ -27,6 +27,7 @@ import java.net.URISyntaxException;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.event.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.test.Asserts;
@@ -42,7 +43,6 @@ import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.feed.http.HttpValueFunctions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

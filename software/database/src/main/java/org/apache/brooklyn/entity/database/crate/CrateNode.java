@@ -21,6 +21,10 @@ package org.apache.brooklyn.entity.database.crate;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.AttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.event.basic.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.entity.basic.Attributes;
@@ -32,10 +36,6 @@ import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJavaMXBeans;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.PortRanges;
 

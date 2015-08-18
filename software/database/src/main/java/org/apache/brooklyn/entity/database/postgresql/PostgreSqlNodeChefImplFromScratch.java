@@ -20,6 +20,8 @@ package org.apache.brooklyn.entity.database.postgresql;
 
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.feed.ssh.SshFeed;
+import org.apache.brooklyn.core.event.feed.ssh.SshPollConfig;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
@@ -35,8 +37,6 @@ import brooklyn.entity.chef.ChefServerTasks;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.feed.ssh.SshFeed;
-import brooklyn.event.feed.ssh.SshPollConfig;
 
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;

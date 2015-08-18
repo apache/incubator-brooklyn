@@ -23,12 +23,12 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
 
 import com.google.common.reflect.TypeToken;
 
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.Sensors;
 
 public class PrefixAndIdEnricher extends AbstractEnricher {
 

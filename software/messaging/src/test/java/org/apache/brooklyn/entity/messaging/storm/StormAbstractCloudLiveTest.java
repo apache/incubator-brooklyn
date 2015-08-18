@@ -18,12 +18,12 @@
  */
 package org.apache.brooklyn.entity.messaging.storm;
 
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.attributeWhenReady;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.NIMBUS_HOSTNAME;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.ZOOKEEPER_ENSEMBLE;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.NIMBUS;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.SUPERVISOR;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.UI;
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
 
 import java.io.File;
 import java.util.Map;
@@ -52,7 +52,6 @@ import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.testing.TestWordSpout;
 import backtype.storm.topology.TopologyBuilder;
-
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;

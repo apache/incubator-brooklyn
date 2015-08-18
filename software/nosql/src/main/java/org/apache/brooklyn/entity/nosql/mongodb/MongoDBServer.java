@@ -24,12 +24,12 @@ import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.AttributeSensor.SensorPersistenceMode;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.event.basic.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 
 @Catalog(name="MongoDB Server",
     description="MongoDB (from \"humongous\") is a scalable, high-performance, open source NoSQL database",

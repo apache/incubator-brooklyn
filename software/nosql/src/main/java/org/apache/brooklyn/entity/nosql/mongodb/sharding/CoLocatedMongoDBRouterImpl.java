@@ -22,12 +22,12 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SameServerEntityImpl;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.DependentConfiguration;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

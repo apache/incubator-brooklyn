@@ -29,6 +29,12 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicNotificationSensor;
+import org.apache.brooklyn.core.event.basic.ListConfigKey;
+import org.apache.brooklyn.core.event.basic.MapConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
+import org.apache.brooklyn.core.event.basic.SetConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.collections.Lists;
@@ -44,12 +50,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.event.basic.ListConfigKey;
-import brooklyn.event.basic.MapConfigKey;
-import brooklyn.event.basic.Sensors;
-import brooklyn.event.basic.SetConfigKey;
 
 /**
  * Mock entity for testing.

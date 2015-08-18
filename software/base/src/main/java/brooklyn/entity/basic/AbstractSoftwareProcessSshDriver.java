@@ -30,6 +30,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
 import org.apache.brooklyn.core.config.BrooklynLogging;
+import org.apache.brooklyn.core.event.feed.ConfigToAttributes;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
@@ -49,7 +50,6 @@ import brooklyn.entity.basic.lifecycle.NaiveScriptRunner;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.feed.ConfigToAttributes;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.exceptions.Exceptions;

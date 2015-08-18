@@ -19,11 +19,11 @@
 package brooklyn.entity.chef;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.MapConfigKey;
+import org.apache.brooklyn.core.event.basic.SetConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.MapConfigKey;
-import brooklyn.event.basic.SetConfigKey;
 
 import com.google.common.annotations.Beta;
 

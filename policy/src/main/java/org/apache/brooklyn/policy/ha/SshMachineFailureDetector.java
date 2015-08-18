@@ -24,10 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicNotificationSensor;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicNotificationSensor;
 
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;

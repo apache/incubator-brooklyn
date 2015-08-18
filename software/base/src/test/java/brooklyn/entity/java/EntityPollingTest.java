@@ -23,6 +23,7 @@ import javax.management.ObjectName;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensor;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -36,7 +37,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx.JmxAgentModes;
-import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 

@@ -25,6 +25,9 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.core.event.basic.Sensors;
+import org.apache.brooklyn.core.event.feed.http.HttpFeed;
+import org.apache.brooklyn.core.event.feed.http.HttpPollConfig;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
@@ -41,9 +44,6 @@ import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.effector.EffectorBody;
-import brooklyn.event.basic.Sensors;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

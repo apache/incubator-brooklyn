@@ -24,8 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.config.ConfigKey;
-
-import brooklyn.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Sets;

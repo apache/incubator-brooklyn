@@ -55,6 +55,8 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.config.BrooklynLogging;
 import org.apache.brooklyn.core.config.ConfigUtils;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.event.basic.MapConfigKey;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
@@ -98,8 +100,6 @@ import com.google.common.reflect.TypeToken;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.MapConfigKey;
 
 import org.apache.brooklyn.location.access.PortForwardManager;
 import org.apache.brooklyn.util.collections.MutableMap;

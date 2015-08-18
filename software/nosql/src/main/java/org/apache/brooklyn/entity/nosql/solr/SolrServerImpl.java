@@ -20,10 +20,12 @@ package org.apache.brooklyn.entity.nosql.solr;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
+
+import org.apache.brooklyn.core.event.feed.http.HttpFeed;
+import org.apache.brooklyn.core.event.feed.http.HttpPollConfig;
+import org.apache.brooklyn.core.event.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
+
 import com.google.common.base.Functions;
 import com.google.common.net.HostAndPort;
 

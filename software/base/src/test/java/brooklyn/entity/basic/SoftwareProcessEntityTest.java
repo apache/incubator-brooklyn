@@ -41,6 +41,7 @@ import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
@@ -76,7 +77,6 @@ import brooklyn.entity.drivers.ReflectiveEntityDriverFactory;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.MachineLifecycleEffectorTasksTest;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 
 import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.Locations;

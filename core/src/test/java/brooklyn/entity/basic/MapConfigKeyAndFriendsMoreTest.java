@@ -21,6 +21,14 @@ package brooklyn.entity.basic;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.event.basic.ListConfigKey;
+import org.apache.brooklyn.core.event.basic.MapConfigKey;
+import org.apache.brooklyn.core.event.basic.SetConfigKey;
+import org.apache.brooklyn.core.event.basic.SubElementConfigKey;
+import org.apache.brooklyn.core.event.basic.ListConfigKey.ListModifications;
+import org.apache.brooklyn.core.event.basic.MapConfigKey.MapModifications;
+import org.apache.brooklyn.core.event.basic.SetConfigKey.SetModifications;
+import org.apache.brooklyn.core.event.basic.StructuredConfigKey.StructuredModification;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -32,14 +40,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.event.basic.ListConfigKey;
-import brooklyn.event.basic.ListConfigKey.ListModifications;
-import brooklyn.event.basic.MapConfigKey;
-import brooklyn.event.basic.MapConfigKey.MapModifications;
-import brooklyn.event.basic.SetConfigKey;
-import brooklyn.event.basic.SetConfigKey.SetModifications;
-import brooklyn.event.basic.StructuredConfigKey.StructuredModification;
-import brooklyn.event.basic.SubElementConfigKey;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -21,6 +21,7 @@ package org.apache.brooklyn.core.util.text;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.apache.brooklyn.test.FixedLocaleTest;
@@ -32,7 +33,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.event.basic.DependentConfiguration;
 
 import com.google.common.collect.ImmutableMap;
 

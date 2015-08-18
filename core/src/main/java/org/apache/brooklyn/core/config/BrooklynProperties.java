@@ -36,6 +36,7 @@ import java.util.Properties;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.config.StringConfigMap;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
@@ -53,8 +54,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
-
-import brooklyn.event.basic.BasicConfigKey;
 
 /** utils for accessing command-line and system-env properties;
  * doesn't resolve anything (unless an execution context is supplied)

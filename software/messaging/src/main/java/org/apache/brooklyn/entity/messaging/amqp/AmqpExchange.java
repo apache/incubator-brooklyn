@@ -19,9 +19,8 @@
 package org.apache.brooklyn.entity.messaging.amqp;
 
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
-
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 
 /**
  * An interface that describes an AMQP exchange.

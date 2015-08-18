@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
-
 import brooklyn.entity.basic.EntityPredicates;
 
 import java.io.StringReader;
@@ -49,7 +48,6 @@ import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
@@ -60,6 +58,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.management.entitlement.EntitlementPredicates;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.entitlement.Entitlements.EntityAndItem;

@@ -66,6 +66,7 @@ import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.BrooklynLogging;
 import org.apache.brooklyn.core.config.BrooklynLogging.LoggingLevel;
+import org.apache.brooklyn.core.event.feed.AbstractFeed;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagementMode;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagerInternal;
@@ -86,7 +87,6 @@ import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
-import brooklyn.event.feed.AbstractFeed;
 
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationInternal;

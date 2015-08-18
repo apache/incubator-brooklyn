@@ -28,11 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.basic.BasicAttributeSensor;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensor;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.util.task.ValueResolver;
 import org.apache.brooklyn.rest.api.SensorApi;

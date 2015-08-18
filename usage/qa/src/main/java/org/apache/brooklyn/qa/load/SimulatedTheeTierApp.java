@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.qa.load;
 
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
-import static brooklyn.event.basic.DependentConfiguration.formatString;
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.formatString;
 
 import java.util.Collection;
 import java.util.List;

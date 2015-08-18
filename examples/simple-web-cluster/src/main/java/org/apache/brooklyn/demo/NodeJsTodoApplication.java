@@ -18,10 +18,11 @@
  */
 package org.apache.brooklyn.demo;
 
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.attributeWhenReady;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
 import org.apache.brooklyn.entity.nosql.redis.RedisStore;
 import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService;
 
@@ -30,7 +31,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.DependentConfiguration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

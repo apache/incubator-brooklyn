@@ -24,12 +24,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment;
 
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.DependentConfiguration;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.exceptions.Exceptions;

@@ -22,6 +22,9 @@ import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.entity.basic.Attributes;
@@ -30,10 +33,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 
 import org.apache.brooklyn.entity.database.DatastoreMixins;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
-
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 
 @Catalog(name = "RubyRep Node", description = "RubyRep is a database replication system", iconUrl = "classpath:///rubyrep-logo.jpeg")
 @ImplementedBy(RubyRepNodeImpl.class)
