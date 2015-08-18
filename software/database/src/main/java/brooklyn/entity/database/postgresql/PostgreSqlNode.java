@@ -82,10 +82,15 @@ public interface PostgreSqlNode extends SoftwareProcess, HasShortName, Datastore
     ConfigKey<Long> POLL_PERIOD = ConfigKeys.newLongConfigKey(
             "postgresql.sensorpoll", "Poll period (in milliseconds)", 1000L);
     
+    @SetFromFlag("initializeDB")
+    ConfigKey<Boolean> INITIALIZE_DB = ConfigKeys.newBooleanConfigKey(
+            "postgresql.initialize", "If true, PostgreSQL will create a new user and database", false);
+
     @SetFromFlag("username")
     BasicAttributeSensorAndConfigKey<String> USERNAME = new BasicAttributeSensorAndConfigKey<>(
-            String.class, "postgresql.username", "Username of the database user",
-            "postgresuser");
+            String.class, "postgresql.username", "Username of the database user");
+    
+    String DEFAULT_USERNAME = "postgresqluser";
     
     @SetFromFlag("password")
     BasicAttributeSensorAndConfigKey<String> PASSWORD = new BasicAttributeSensorAndConfigKey<>(
@@ -94,7 +99,9 @@ public interface PostgreSqlNode extends SoftwareProcess, HasShortName, Datastore
 
     @SetFromFlag("database")
     BasicAttributeSensorAndConfigKey<String> DATABASE = new BasicAttributeSensorAndConfigKey<>(
-            String.class, "postgresql.database", "Database to be used", "db");
+            String.class, "postgresql.database", "Database to be used");
+    
+    String DEFAULT_DB_NAME = "db";
 
     Effector<String> EXECUTE_SCRIPT = Effectors.effector(DatastoreMixins.EXECUTE_SCRIPT)
             .description("Executes the given script contents using psql")
