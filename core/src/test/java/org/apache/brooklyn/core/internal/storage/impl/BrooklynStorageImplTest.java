@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal.storage.impl;
+package org.apache.brooklyn.core.internal.storage.impl;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -28,13 +28,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
+import org.apache.brooklyn.core.internal.storage.DataGrid;
+import org.apache.brooklyn.core.internal.storage.Reference;
+import org.apache.brooklyn.core.internal.storage.impl.BrooklynStorageImpl;
+import org.apache.brooklyn.core.internal.storage.impl.inmemory.InmemoryDatagrid;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.internal.storage.DataGrid;
-import brooklyn.internal.storage.Reference;
-import brooklyn.internal.storage.impl.inmemory.InmemoryDatagrid;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

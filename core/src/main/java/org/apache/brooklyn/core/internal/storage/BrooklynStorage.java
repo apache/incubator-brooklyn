@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal.storage;
+package org.apache.brooklyn.core.internal.storage;
 
 import java.util.List;
 import java.util.Map;

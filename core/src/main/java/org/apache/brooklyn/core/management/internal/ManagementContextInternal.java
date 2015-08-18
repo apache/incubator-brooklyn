@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
+import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.management.ha.OsgiManager;
 import org.apache.brooklyn.core.util.task.TaskTags;
 
@@ -38,7 +39,6 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
-import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;

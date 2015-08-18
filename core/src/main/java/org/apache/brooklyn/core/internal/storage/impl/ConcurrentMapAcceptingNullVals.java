@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal.storage.impl;
+package org.apache.brooklyn.core.internal.storage.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

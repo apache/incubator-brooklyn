@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal.storage;
+package org.apache.brooklyn.core.internal.storage;
 
 /**
  * A reference to a value, backed by the storage-medium.

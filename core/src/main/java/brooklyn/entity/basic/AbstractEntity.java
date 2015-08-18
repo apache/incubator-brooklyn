@@ -56,6 +56,9 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
+import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
+import org.apache.brooklyn.core.internal.storage.Reference;
+import org.apache.brooklyn.core.internal.storage.impl.BasicReference;
 import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagementSupport;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
@@ -70,8 +73,8 @@ import org.apache.brooklyn.core.util.task.DeferredSupplier;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.basic.AbstractBrooklynObject;
+
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
@@ -85,9 +88,6 @@ import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.internal.storage.Reference;
-import brooklyn.internal.storage.impl.BasicReference;
 
 import org.apache.brooklyn.location.basic.Locations;
 
