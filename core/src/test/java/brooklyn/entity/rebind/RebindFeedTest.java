@@ -29,6 +29,8 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.management.internal.BrooklynGarbageCollector;
+import org.apache.brooklyn.core.util.http.BetterMockWebServer;
+import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
@@ -57,8 +59,6 @@ import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.http.BetterMockWebServer;
-import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;

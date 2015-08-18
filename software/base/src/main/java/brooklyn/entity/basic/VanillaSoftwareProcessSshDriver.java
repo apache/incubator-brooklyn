@@ -24,11 +24,13 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
+import org.apache.brooklyn.core.util.file.ArchiveUtils;
 
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;

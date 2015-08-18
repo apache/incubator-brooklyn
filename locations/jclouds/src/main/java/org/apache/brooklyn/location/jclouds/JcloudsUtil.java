@@ -36,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.aws.ec2.AWSEC2Api;
@@ -80,7 +81,6 @@ import com.google.inject.Module;
 
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Protocol;
 import brooklyn.util.ssh.BashCommands;

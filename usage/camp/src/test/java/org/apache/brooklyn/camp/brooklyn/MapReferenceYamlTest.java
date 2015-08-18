@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.slf4j.Logger;
@@ -31,7 +32,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.task.Tasks;
 
 import com.google.common.collect.Iterables;
 

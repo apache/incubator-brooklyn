@@ -21,14 +21,14 @@ package brooklyn.entity.effector;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.core.util.task.DynamicSequentialTask;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.Tasks;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.task.DynamicSequentialTask;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
 

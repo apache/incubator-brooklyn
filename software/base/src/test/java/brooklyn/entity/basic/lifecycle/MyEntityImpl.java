@@ -26,11 +26,13 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcessDriver;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.ResourceUtils;
+
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;
 
 public class MyEntityImpl extends SoftwareProcessImpl implements MyEntity {

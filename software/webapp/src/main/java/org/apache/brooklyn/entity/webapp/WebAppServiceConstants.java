@@ -21,6 +21,7 @@ package org.apache.brooklyn.entity.webapp;
 import java.util.Set;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -29,7 +30,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.flags.SetFromFlag;
 
 public interface WebAppServiceConstants extends WebAppServiceMetrics {
 

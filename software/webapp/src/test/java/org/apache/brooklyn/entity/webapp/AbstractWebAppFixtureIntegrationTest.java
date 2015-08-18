@@ -68,6 +68,8 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
+import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
+import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.entity.webapp.WebAppService;
@@ -79,8 +81,6 @@ import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.crypto.FluentKeySigner;
-import brooklyn.util.crypto.SecureKeys;
 import brooklyn.util.net.Urls;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Time;

@@ -21,7 +21,7 @@ package brooklyn.entity.rebind;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.basic.BrooklynObjectInternal;
+import org.apache.brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.catalog.CatalogItem;

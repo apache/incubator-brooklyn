@@ -47,6 +47,7 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.classloading.BrooklynClassLoadingContextSequential;
 import org.apache.brooklyn.core.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
+import org.apache.brooklyn.core.util.xstream.XmlSerializer;
 
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.effector.EffectorAndBody;
@@ -63,7 +64,6 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
-import brooklyn.util.xstream.XmlSerializer;
 
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;

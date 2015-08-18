@@ -39,13 +39,13 @@ import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.javalang.ReflectionScanner;
+import org.apache.brooklyn.core.util.javalang.UrlClassLoader;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.AggregateClassLoader;
-import brooklyn.util.javalang.ReflectionScanner;
-import brooklyn.util.javalang.UrlClassLoader;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;

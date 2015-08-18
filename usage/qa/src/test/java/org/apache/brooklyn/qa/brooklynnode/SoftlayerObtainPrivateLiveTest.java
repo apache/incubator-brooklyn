@@ -32,7 +32,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
+import org.apache.brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
@@ -44,10 +44,10 @@ import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.BrooklynMavenArtifacts;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
 
-import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.maven.MavenRetriever;

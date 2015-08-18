@@ -31,6 +31,7 @@ import org.apache.brooklyn.api.entity.rebind.RebindContext;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mementos.EntityMemento;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,6 @@ import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.event.feed.AbstractFeed;
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Throwables;

@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.basic.BrooklynTypes;
+import org.apache.brooklyn.basic.BrooklynTypes;
 
 /**
  * @deprecated since 0.7.0; use {@link BrooklynTypes}

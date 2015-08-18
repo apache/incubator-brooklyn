@@ -43,6 +43,7 @@ import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +63,6 @@ import brooklyn.internal.storage.BrooklynStorage;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.SetFromLiveMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 

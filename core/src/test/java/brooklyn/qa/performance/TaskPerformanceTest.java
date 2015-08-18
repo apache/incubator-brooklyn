@@ -26,6 +26,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.brooklyn.core.util.task.BasicExecutionManager;
+import org.apache.brooklyn.core.util.task.SingleThreadedScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -33,8 +35,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.task.BasicExecutionManager;
-import brooklyn.util.task.SingleThreadedScheduler;
 import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;

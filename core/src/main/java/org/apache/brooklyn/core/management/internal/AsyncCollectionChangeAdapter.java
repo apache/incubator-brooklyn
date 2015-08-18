@@ -21,13 +21,13 @@ package org.apache.brooklyn.core.management.internal;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.brooklyn.api.management.ExecutionManager;
+import org.apache.brooklyn.core.util.task.BasicExecutionManager;
+import org.apache.brooklyn.core.util.task.SingleThreadedScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.task.BasicExecutionManager;
-import brooklyn.util.task.SingleThreadedScheduler;
 
 public class AsyncCollectionChangeAdapter<Item> implements CollectionChangeListener<Item> {
     

@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
 import org.slf4j.Logger;
@@ -31,7 +32,6 @@ import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;

@@ -26,9 +26,9 @@ import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.util.internal.ssh.ShellTool;
+import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 
-import brooklyn.util.internal.ssh.ShellTool;
-import brooklyn.util.internal.ssh.SshTool;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;

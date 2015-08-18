@@ -20,6 +20,7 @@ package brooklyn.entity.database.crate;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
@@ -33,8 +34,8 @@ import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
+
 import org.apache.brooklyn.location.basic.PortRanges;
-import brooklyn.util.flags.SetFromFlag;
 
 @ImplementedBy(CrateNodeImpl.class)
 public interface CrateNode extends SoftwareProcess, UsesJava,UsesJmx, UsesJavaMXBeans, DatastoreCommon {

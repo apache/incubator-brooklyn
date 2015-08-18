@@ -26,9 +26,9 @@ import java.util.concurrent.TimeUnit;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.management.internal.LocalSubscriptionManager;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.util.task.BasicExecutionManager;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 

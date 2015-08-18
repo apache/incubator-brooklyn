@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineLocationCustomizer;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.cloud.names.CustomMachineNamer;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.jclouds.scriptbuilder.domain.OsFamily;
@@ -61,7 +62,6 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocation.UserCreation;
 
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 
 /**

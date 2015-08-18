@@ -21,7 +21,7 @@ package brooklyn.event.feed.http;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.util.http.HttpToolResponse;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 
 /** @deprecated since 0.7.0, use {@link HttpToolResponse}.
  * the old {@link HttpPollValue} concrete class has been renamed {@link HttpToolResponse}

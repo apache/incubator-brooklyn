@@ -16,4 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-brooklyn.basic.internal.ApiObjectsFactoryImpl
+org.apache.brooklyn.basic.internal.ApiObjectsFactoryImpl

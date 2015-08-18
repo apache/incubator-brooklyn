@@ -22,6 +22,7 @@ import java.net.URI;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 
@@ -30,7 +31,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.flags.SetFromFlag;
 
 @ImplementedBy(GeoscalingDnsServiceImpl.class)
 public interface GeoscalingDnsService extends AbstractGeoDnsService {

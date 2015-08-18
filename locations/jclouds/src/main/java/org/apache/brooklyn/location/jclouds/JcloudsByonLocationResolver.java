@@ -31,6 +31,7 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.basic.BasicLocationRegistry;
@@ -41,7 +42,6 @@ import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.KeyValueParser;
 import brooklyn.util.text.Strings;

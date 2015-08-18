@@ -38,10 +38,13 @@ import org.apache.brooklyn.api.mementos.LocationMemento;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.internal.LocalLocationManager;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.FlagUtils;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.AbstractBrooklynObject;
+import org.apache.brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
@@ -56,9 +59,6 @@ import org.apache.brooklyn.location.geo.HasHostGeoInfo;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 
 import brooklyn.util.collections.SetFromLiveMap;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.stream.Streams;
 

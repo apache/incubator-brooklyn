@@ -27,6 +27,8 @@ import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,9 +45,7 @@ import brooklyn.entity.trait.StartableMethods;
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.task.DynamicTasks;
 
 public class SameServerDriverLifecycleEffectorTasks extends MachineLifecycleEffectorTasks {
 

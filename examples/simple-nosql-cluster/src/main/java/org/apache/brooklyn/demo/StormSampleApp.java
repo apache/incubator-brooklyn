@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.messaging.storm.StormDeployment;
+import org.apache.brooklyn.entity.messaging.storm.StormDeployment;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 

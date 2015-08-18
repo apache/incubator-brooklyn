@@ -30,9 +30,9 @@ import org.apache.brooklyn.api.entity.trait.Identifiable;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;

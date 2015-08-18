@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.basic;
 
-import brooklyn.basic.BrooklynDynamicType;
+import org.apache.brooklyn.basic.BrooklynDynamicType;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationType;

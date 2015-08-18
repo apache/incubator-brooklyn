@@ -60,11 +60,18 @@ import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagementSupport;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.management.internal.SubscriptionTracker;
+import org.apache.brooklyn.core.policy.basic.AbstractEntityAdjunct;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.core.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.FlagUtils;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.core.util.task.DeferredSupplier;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.AbstractBrooklynObject;
+import org.apache.brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
@@ -84,19 +91,12 @@ import brooklyn.internal.storage.impl.BasicReference;
 
 import org.apache.brooklyn.location.basic.Locations;
 
-import brooklyn.policy.basic.AbstractEntityAdjunct;
-import brooklyn.policy.basic.AbstractEntityAdjunct.AdjunctTagSupport;
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
 import brooklyn.util.collections.SetFromLiveMap;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.FlagUtils;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.javalang.Equals;
-import brooklyn.util.task.DeferredSupplier;
 import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;

@@ -30,6 +30,7 @@ import org.apache.brooklyn.core.management.entitlement.NotEntitledException;
 import org.apache.brooklyn.core.management.entitlement.WebEntitlementContext;
 import org.apache.brooklyn.core.management.entitlement.Entitlements.EntityAndItem;
 import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArgument;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -42,7 +43,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 
 public abstract class AcmeEntitlementManagerTestFixture {

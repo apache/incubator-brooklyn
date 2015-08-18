@@ -20,13 +20,13 @@ package brooklyn.policy.ha;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.event.Sensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.policy.ha.HASensors.FailureDescriptor;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.net.Networking;
 import brooklyn.util.time.Duration;

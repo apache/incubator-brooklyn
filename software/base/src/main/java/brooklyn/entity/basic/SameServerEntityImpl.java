@@ -24,13 +24,13 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.Tasks;
 
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.util.collections.QuorumCheck;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.Tasks;
 
 public class SameServerEntityImpl extends AbstractEntity implements SameServerEntity {
 

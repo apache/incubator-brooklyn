@@ -20,9 +20,9 @@ package org.apache.brooklyn.location.cloud.names;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.trait.HasShortName;
-
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-import brooklyn.util.config.ConfigBag;
+
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 

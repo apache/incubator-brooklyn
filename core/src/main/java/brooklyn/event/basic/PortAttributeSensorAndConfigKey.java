@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.location.PortSupplier;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,6 @@ import brooklyn.entity.basic.BrooklynConfigKeys;
 
 import org.apache.brooklyn.location.basic.Locations;
 
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Optional;

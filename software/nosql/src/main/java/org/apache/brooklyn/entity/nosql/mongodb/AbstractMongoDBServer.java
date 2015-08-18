@@ -19,6 +19,7 @@
 package org.apache.brooklyn.entity.nosql.mongodb;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
@@ -26,7 +27,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.util.flags.SetFromFlag;
 
 public interface AbstractMongoDBServer extends SoftwareProcess, Entity {
 

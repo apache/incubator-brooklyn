@@ -18,12 +18,12 @@
  */
 package brooklyn.entity.database.postgresql;
 
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
-import brooklyn.util.config.ConfigBag;
 
 public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSqlNode {
 

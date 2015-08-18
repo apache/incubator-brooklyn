@@ -36,6 +36,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,11 +61,9 @@ import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Strings;
-import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;

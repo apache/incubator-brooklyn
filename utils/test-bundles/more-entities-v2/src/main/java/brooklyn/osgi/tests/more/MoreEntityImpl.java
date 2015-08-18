@@ -21,7 +21,7 @@ package brooklyn.osgi.tests.more;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.effector.EffectorBody;
 import org.apache.brooklyn.api.policy.PolicySpec;
-import brooklyn.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 
 
 public class MoreEntityImpl extends AbstractEntity implements MoreEntity {

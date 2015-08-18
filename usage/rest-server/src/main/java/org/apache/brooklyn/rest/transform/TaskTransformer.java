@@ -36,13 +36,13 @@ import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.HasTaskChildren;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.TaskInternal;
 import org.apache.brooklyn.rest.domain.LinkWithMetadata;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.task.TaskInternal;
 import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;

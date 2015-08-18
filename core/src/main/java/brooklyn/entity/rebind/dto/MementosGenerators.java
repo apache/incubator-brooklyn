@@ -25,7 +25,7 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.basic.BrooklynTypes;
+import org.apache.brooklyn.basic.BrooklynTypes;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -50,6 +50,9 @@ import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemDo;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.flags.FlagUtils;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
@@ -62,10 +65,7 @@ import brooklyn.event.feed.AbstractFeed;
 
 import org.apache.brooklyn.location.basic.LocationInternal;
 
-import brooklyn.policy.basic.AbstractPolicy;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
-import brooklyn.util.flags.FlagUtils;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Set;
 
+import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
@@ -33,9 +34,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
+
 import org.apache.brooklyn.location.geo.HostGeoInfo;
+
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.http.HttpTool;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 

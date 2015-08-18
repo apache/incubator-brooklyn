@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.EffectorParam;
@@ -30,7 +31,6 @@ import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.flags.SetFromFlag;
 
 @ImplementedBy(MockContainerEntityImpl.class)
 public interface MockContainerEntity extends AbstractGroup, BalanceableContainer<Movable>, Startable {

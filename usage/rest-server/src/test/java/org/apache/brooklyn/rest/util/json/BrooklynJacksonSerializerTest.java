@@ -43,6 +43,7 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
@@ -51,7 +52,6 @@ import org.apache.brooklyn.test.entity.TestEntity;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.http.HttpTool;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 

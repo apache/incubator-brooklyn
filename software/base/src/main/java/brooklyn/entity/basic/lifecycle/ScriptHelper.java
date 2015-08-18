@@ -19,7 +19,6 @@
 package brooklyn.entity.basic.lifecycle;
 
 import static java.lang.String.format;
-import brooklyn.util.internal.ssh.ShellTool;
 import groovy.lang.Closure;
 
 import java.io.ByteArrayOutputStream;
@@ -35,20 +34,23 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskQueueingContext;
+import org.apache.brooklyn.core.util.internal.ssh.ShellTool;
+import org.apache.brooklyn.core.util.mutex.WithMutexes;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.TaskBuilder;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.GroovyJavaMethods;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.mutex.WithMutexes;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.TaskBuilder;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
 

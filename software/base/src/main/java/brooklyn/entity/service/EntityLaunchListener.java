@@ -28,11 +28,11 @@ import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.management.ExecutionManager;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.Tasks;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.EffectorCallTag;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.util.task.Tasks;
 
 public class EntityLaunchListener implements Runnable, SensorEventListener<Lifecycle> {
     private static final String SSH_LAUNCH_TASK_PREFIX = "ssh: launching";

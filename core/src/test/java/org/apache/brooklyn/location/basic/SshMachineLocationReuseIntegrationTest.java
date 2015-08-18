@@ -35,11 +35,11 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.util.internal.ssh.SshTool;
+import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool;
 
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.internal.ssh.sshj.SshjTool;
 import brooklyn.util.net.Networking;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.time.Duration;

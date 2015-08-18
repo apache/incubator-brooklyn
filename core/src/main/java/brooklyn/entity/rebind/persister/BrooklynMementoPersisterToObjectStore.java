@@ -50,6 +50,7 @@ import org.apache.brooklyn.api.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.mementos.Memento;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
+import org.apache.brooklyn.core.util.xstream.XmlUtil;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.config.StringConfigMap;
@@ -66,7 +67,6 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
-import brooklyn.util.xstream.XmlUtil;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
