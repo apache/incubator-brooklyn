@@ -22,13 +22,12 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ManagementContext.PropertiesReloadListener;
 import org.apache.brooklyn.camp.AggregatingCampPlatform;
 import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslInterpreter;
 import org.apache.brooklyn.camp.brooklyn.spi.platform.BrooklynImmutableCampPlatform;
 import org.apache.brooklyn.camp.spi.PlatformRootSummary;
 import org.apache.brooklyn.core.config.BrooklynProperties;
-
-import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 
 /** {@link CampPlatform} implementation which includes Brooklyn entities 
  * (via {@link BrooklynImmutableCampPlatform})

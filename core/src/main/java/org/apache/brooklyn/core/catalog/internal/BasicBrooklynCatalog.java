@@ -34,9 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 import org.apache.brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
-
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
-
 import org.apache.brooklyn.api.basic.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -49,6 +46,7 @@ import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingConte
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;

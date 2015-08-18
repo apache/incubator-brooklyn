@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.lite;
+package org.apache.brooklyn.core.test.camp.brooklyn.lite;
 
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +25,8 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
+import org.apache.brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import org.apache.brooklyn.camp.spi.AbstractResource;
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
@@ -35,9 +37,6 @@ import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.util.collections.MutableMap;
-
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
-import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 
 /** simple illustrative instantiator which always makes a {@link TestApplication}, populated with {@link TestEntity} children,
  * all setting {@link TestEntity#CONF_NAME} for the name in the plan and in the service specs

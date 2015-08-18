@@ -33,6 +33,7 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
@@ -50,7 +51,6 @@ import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;

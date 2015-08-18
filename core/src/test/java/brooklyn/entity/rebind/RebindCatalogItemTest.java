@@ -30,10 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.camp.lite.CampPlatformWithJustBrooklynMgmt;
-import brooklyn.camp.lite.TestAppAssemblyInstantiator;
-
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
@@ -47,6 +43,8 @@ import org.apache.brooklyn.core.config.BrooklynServerConfig;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.core.test.camp.brooklyn.lite.CampPlatformWithJustBrooklynMgmt;
+import org.apache.brooklyn.core.test.camp.brooklyn.lite.TestAppAssemblyInstantiator;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 

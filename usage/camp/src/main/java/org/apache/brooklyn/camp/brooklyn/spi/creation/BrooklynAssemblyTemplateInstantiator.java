@@ -28,10 +28,6 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
-import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
-
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
@@ -40,6 +36,8 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
+import org.apache.brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;

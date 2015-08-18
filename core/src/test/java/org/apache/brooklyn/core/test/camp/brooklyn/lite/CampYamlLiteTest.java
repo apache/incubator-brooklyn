@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.lite;
+package org.apache.brooklyn.core.test.camp.brooklyn.lite;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;

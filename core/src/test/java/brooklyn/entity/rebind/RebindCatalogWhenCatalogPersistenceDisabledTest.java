@@ -25,15 +25,13 @@ import java.io.File;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.camp.lite.CampPlatformWithJustBrooklynMgmt;
-
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.config.BrooklynServerConfig;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.camp.brooklyn.lite.CampPlatformWithJustBrooklynMgmt;
 import org.apache.brooklyn.test.entity.TestEntity;
 
 import com.google.common.collect.Iterables;

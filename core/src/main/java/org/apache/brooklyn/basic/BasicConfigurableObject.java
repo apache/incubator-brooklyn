@@ -22,6 +22,7 @@ import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.entity.trait.Identifiable;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigMap;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
@@ -29,8 +30,6 @@ import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.util.text.Identifiers;
-
-import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 
 /**
  * A parent class for ancilliary objects that do not require the full heavy lifting of {@link AbstractBrooklynObject}

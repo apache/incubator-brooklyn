@@ -16,12 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.brooklyn.api;
+package org.apache.brooklyn.core.test.camp.brooklyn.lite;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.camp.BasicCampPlatform;
+import org.apache.brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
 
-public interface HasBrooklynManagementContext {
+public class CampPlatformWithJustBrooklynMgmt extends BasicCampPlatform implements HasBrooklynManagementContext {
 
-    public ManagementContext getBrooklynManagementContext();
+    private ManagementContext mgmt;
+
+    public CampPlatformWithJustBrooklynMgmt(ManagementContext mgmt) {
+        this.mgmt = mgmt;
+        ((BrooklynProperties)mgmt.getConfig()).put(BrooklynServerConfig.CAMP_PLATFORM, this);
+    }
     
+    @Override
+    public ManagementContext getBrooklynManagementContext() {
+        return mgmt;
+    }
+
 }

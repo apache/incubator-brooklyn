@@ -20,6 +20,7 @@ package org.apache.brooklyn.camp.brooklyn.spi.platform;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.AssemblyBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.AssemblyTemplateBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.PlatformComponentBrooklynLookup;
@@ -35,8 +36,6 @@ import org.apache.brooklyn.camp.spi.PlatformTransaction;
 import org.apache.brooklyn.camp.spi.collection.BasicResourceLookup;
 import org.apache.brooklyn.camp.spi.collection.ResourceLookup;
 import org.apache.brooklyn.camp.spi.collection.ResourceLookup.EmptyResourceLookup;
-
-import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 
 /** Immutable CAMP platform which reflects things in the underlying Brooklyn system */
 public class BrooklynImmutableCampPlatform extends CampPlatform implements HasBrooklynManagementContext {

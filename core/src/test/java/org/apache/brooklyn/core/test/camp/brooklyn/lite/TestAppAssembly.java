@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.lite;
+package org.apache.brooklyn.core.test.camp.brooklyn.lite;
 
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.test.entity.TestApplication;
