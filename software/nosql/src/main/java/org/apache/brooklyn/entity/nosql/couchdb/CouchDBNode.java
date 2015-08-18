@@ -19,14 +19,14 @@
 package org.apache.brooklyn.entity.nosql.couchdb;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.webapp.WebAppService;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 
 /**
  * An {@link org.apache.brooklyn.api.entity.Entity} that represents a CouchDB node in a {@link CouchDBCluster}.

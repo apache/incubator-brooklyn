@@ -25,16 +25,15 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.internal.ssh.process.ProcessTool;
-import org.apache.brooklyn.core.util.task.Tasks;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskFactory;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
-import org.apache.brooklyn.core.util.task.system.internal.SystemProcessTaskFactory;
+import org.apache.brooklyn.core.BrooklynTaskTags;
 import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.core.internal.ssh.process.ProcessTool;
+import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskFactory;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.util.core.task.system.internal.SystemProcessTaskFactory;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.text.StringEscapes.BashStringEscapes;
-
-import brooklyn.entity.basic.BrooklynTaskTags;
 
 import com.google.common.base.Function;
 

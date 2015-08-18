@@ -24,11 +24,11 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.entity.core.Entities;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;

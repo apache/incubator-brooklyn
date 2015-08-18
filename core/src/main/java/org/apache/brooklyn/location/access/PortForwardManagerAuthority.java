@@ -20,8 +20,7 @@ package org.apache.brooklyn.location.access;
 
 
 import org.apache.brooklyn.api.entity.Entity;
-
-import brooklyn.entity.basic.EntityInternal;
+import org.apache.brooklyn.entity.core.EntityInternal;
 
 /**
  * @deprecated since 0.7.0; use {@link PortForwardManagerImpl}

@@ -20,12 +20,13 @@ package brooklyn.entity;
 
 import java.util.Map;
 
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
 

@@ -31,18 +31,17 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
 import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Strings;
-
-import brooklyn.entity.basic.ConfigKeys;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;

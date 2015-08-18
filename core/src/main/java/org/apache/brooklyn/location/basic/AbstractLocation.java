@@ -29,35 +29,33 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.brooklyn.api.entity.rebind.RebindSupport;
-import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.api.mementos.LocationMemento;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.LocationMemento;
+import org.apache.brooklyn.api.objs.Configurable;
 import org.apache.brooklyn.config.ConfigInheritance;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.internal.storage.Reference;
 import org.apache.brooklyn.core.internal.storage.impl.BasicReference;
-import org.apache.brooklyn.core.management.internal.LocalLocationManager;
-import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.util.config.ConfigBag;
-import org.apache.brooklyn.core.util.flags.FlagUtils;
-import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.core.mgmt.internal.LocalLocationManager;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.rebind.BasicLocationRebindSupport;
+import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.basic.AbstractBrooklynObject;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.rebind.BasicLocationRebindSupport;
-import brooklyn.event.basic.BasicConfigKey;
-
 import org.apache.brooklyn.location.geo.HasHostGeoInfo;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 import org.apache.brooklyn.util.collections.SetFromLiveMap;
+import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.flags.FlagUtils;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
 

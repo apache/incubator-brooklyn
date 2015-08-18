@@ -29,18 +29,17 @@ import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.BrooklynServerConfig;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.MyCatalogItems.MySillyAppTemplate;
-import org.apache.brooklyn.core.config.BrooklynProperties;
-import org.apache.brooklyn.core.config.BrooklynServerConfig;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
-import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.Strings;
-
-import brooklyn.entity.basic.Entities;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

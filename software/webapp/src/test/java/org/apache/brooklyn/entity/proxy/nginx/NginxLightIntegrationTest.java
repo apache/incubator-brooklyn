@@ -23,16 +23,14 @@ import static org.testng.Assert.assertEquals;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.factory.BasicConfigurableEntityFactory;
+import org.apache.brooklyn.entity.factory.EntityFactory;
+import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.proxy.StubAppServer;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BasicConfigurableEntityFactory;
-import brooklyn.entity.basic.EntityFactory;
-import brooklyn.entity.group.DynamicCluster;
-
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.Asserts;
 

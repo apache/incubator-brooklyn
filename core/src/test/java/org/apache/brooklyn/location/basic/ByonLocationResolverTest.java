@@ -33,10 +33,12 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.core.config.BrooklynProperties;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.net.UserAndHostAndPort;
@@ -48,9 +50,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

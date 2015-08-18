@@ -21,23 +21,22 @@ package org.apache.brooklyn.location.basic;
 import java.io.File;
 import java.util.List;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.os.Os;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.rebind.RebindTestUtils;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;

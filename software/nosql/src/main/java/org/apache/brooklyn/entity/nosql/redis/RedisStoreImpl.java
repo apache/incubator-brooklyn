@@ -26,14 +26,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.feed.ssh.SshFeed;
-import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.event.feed.ssh.SshPollValue;
-import brooklyn.event.feed.ssh.SshValueFunctions;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
+import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.sensor.feed.ssh.SshPollValue;
+import org.apache.brooklyn.sensor.feed.ssh.SshValueFunctions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

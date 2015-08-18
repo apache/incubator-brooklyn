@@ -26,26 +26,24 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.management.EntityManager;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.EntityManager;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
-import org.apache.brooklyn.core.util.http.HttpTool;
-import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jetty.server.Server;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.BasicApplication;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.rebind.RebindTestUtils;
-
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.core.http.HttpTool;
+import org.apache.brooklyn.util.core.http.HttpToolResponse;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.time.Duration;
 

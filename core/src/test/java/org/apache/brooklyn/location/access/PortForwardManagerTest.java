@@ -25,18 +25,16 @@ import static org.testng.Assert.assertNull;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.net.Networking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.basic.Entities;
-
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Predicate;

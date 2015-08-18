@@ -23,12 +23,12 @@ import java.util.Collection;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.basic.BrooklynObjectInternal;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.entity.rebind.RebindSupport;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.api.mementos.CatalogItemMemento;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 
 import com.google.common.base.Preconditions;
 

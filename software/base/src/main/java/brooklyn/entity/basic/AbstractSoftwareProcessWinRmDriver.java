@@ -25,14 +25,12 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.python.core.PyException;
-
-import brooklyn.event.basic.Sensors;
-
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.exceptions.ReferenceWithError;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;

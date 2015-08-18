@@ -22,13 +22,16 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
-import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.test.EntityTestUtils;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,10 +41,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JavaOptsTest.TestingJavaOptsVanillaJavaAppImpl;
-import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 

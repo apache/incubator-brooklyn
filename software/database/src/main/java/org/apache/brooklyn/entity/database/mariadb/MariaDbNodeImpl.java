@@ -22,14 +22,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.effector.EffectorBody;
-import brooklyn.event.feed.ssh.SshFeed;
-import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.event.feed.ssh.SshPollValue;
 
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.effector.core.EffectorBody;
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
+import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.sensor.feed.ssh.SshPollValue;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;

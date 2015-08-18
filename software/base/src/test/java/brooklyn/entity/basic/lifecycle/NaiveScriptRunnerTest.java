@@ -25,21 +25,19 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.core.util.task.BasicExecutionContext;
-import org.apache.brooklyn.core.util.task.BasicExecutionManager;
-import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.BrooklynTaskTags;
+import org.apache.brooklyn.core.BrooklynTaskTags.WrappedStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
-
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.task.BasicExecutionContext;
+import org.apache.brooklyn.util.core.task.BasicExecutionManager;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
 

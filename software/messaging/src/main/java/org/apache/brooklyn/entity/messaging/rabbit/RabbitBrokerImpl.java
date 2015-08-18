@@ -22,13 +22,13 @@ import static java.lang.String.format;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.core.Entities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects.ToStringHelper;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 
 /**

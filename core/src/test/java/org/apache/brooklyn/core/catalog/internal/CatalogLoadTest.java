@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.core.catalog.internal.CatalogDto;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemDtoAbstract;
 import org.apache.brooklyn.core.catalog.internal.CatalogXmlSerializer;
-import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.util.core.ResourceUtils;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;

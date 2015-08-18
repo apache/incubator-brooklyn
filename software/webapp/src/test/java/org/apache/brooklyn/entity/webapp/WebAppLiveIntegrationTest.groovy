@@ -18,10 +18,25 @@
  */
 package org.apache.brooklyn.entity.webapp
 
-import static org.apache.brooklyn.test.TestUtils.*
 import static java.util.concurrent.TimeUnit.*
+import static org.apache.brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
+import org.apache.brooklyn.api.entity.Application
+import org.apache.brooklyn.api.location.Location
+import org.apache.brooklyn.core.internal.BrooklynProperties
+import org.apache.brooklyn.core.test.entity.TestApplicationImpl
+import org.apache.brooklyn.entity.core.Entities
+import org.apache.brooklyn.entity.trait.Startable
+import org.apache.brooklyn.entity.webapp.jboss.JBoss6Server
+import org.apache.brooklyn.entity.webapp.jboss.JBoss6ServerImpl
+import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
+import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl
+import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
+import org.apache.brooklyn.entity.webapp.tomcat.TomcatServerImpl
+import org.apache.brooklyn.location.basic.BasicLocationRegistry
+import org.apache.brooklyn.test.TestUtils
+import org.apache.brooklyn.util.internal.TimeExtras
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -29,22 +44,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
-import org.apache.brooklyn.core.config.BrooklynProperties
-import org.apache.brooklyn.api.entity.Application
 import brooklyn.entity.basic.SoftwareProcess
-import brooklyn.entity.basic.Entities
-import brooklyn.entity.trait.Startable
-import org.apache.brooklyn.entity.webapp.jboss.JBoss6Server
-import org.apache.brooklyn.entity.webapp.jboss.JBoss6ServerImpl
-import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
-import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl
-import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
-import org.apache.brooklyn.entity.webapp.tomcat.TomcatServerImpl
-import org.apache.brooklyn.api.location.Location
-import org.apache.brooklyn.location.basic.BasicLocationRegistry
-import org.apache.brooklyn.test.TestUtils
-import org.apache.brooklyn.test.entity.TestApplicationImpl
-import org.apache.brooklyn.util.internal.TimeExtras
 
 /**
  * This tests that we can run jboss entity on AWS.

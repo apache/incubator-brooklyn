@@ -23,33 +23,31 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationDefinition;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.api.management.LocationManager;
-import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.mgmt.LocationManager;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.entity.group.AbstractMembershipTrackingPolicy;
+import org.apache.brooklyn.entity.group.DynamicClusterImpl;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.Sensors;
-
 import org.apache.brooklyn.location.basic.BasicLocationDefinition;
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.dynamic.DynamicLocation;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Function;

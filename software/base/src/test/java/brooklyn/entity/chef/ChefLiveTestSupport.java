@@ -24,16 +24,14 @@ import java.io.IOException;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
+import org.apache.brooklyn.entity.core.EntityInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
-
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.entity.basic.EntityInternal;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.io.FileUtil;
 import org.apache.brooklyn.util.stream.InputStreamSupplier;
 

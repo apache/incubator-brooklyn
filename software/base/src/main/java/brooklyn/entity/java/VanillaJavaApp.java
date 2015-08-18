@@ -21,15 +21,15 @@ package brooklyn.entity.java;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

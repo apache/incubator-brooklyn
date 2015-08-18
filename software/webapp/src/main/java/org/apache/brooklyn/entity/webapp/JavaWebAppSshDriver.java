@@ -24,13 +24,13 @@ import java.io.File;
 import java.net.URI;
 import java.util.Set;
 
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.Tasks;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks;
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;

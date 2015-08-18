@@ -26,14 +26,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.policy.Policy;
-import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.javalang.UrlClassLoader;
+import org.apache.brooklyn.api.sensor.Enricher;
+import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.policy.core.AbstractPolicy;
+import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.javalang.UrlClassLoader;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.os.Os;
 import org.reflections.Reflections;
@@ -44,9 +47,6 @@ import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 
 import com.google.common.annotations.Beta;

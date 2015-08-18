@@ -20,19 +20,19 @@ package brooklyn.entity.software.ssh;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.Effector;
-import org.apache.brooklyn.api.entity.ParameterType;
+import org.apache.brooklyn.api.effector.Effector;
+import org.apache.brooklyn.api.effector.ParameterType;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.effector.core.AddEffector;
+import org.apache.brooklyn.effector.core.EffectorBody;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.effector.core.Effectors.EffectorBuilder;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.text.Strings;
 
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.effector.AddEffector;
-import brooklyn.entity.effector.EffectorBody;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.effector.Effectors.EffectorBuilder;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks.SshEffectorTaskFactory;
 

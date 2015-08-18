@@ -22,7 +22,7 @@ services:
 - serviceType: brooklyn.entity.basic.SameServerEntity
   name: Entities
   brooklyn.children:
-  - serviceType: brooklyn.entity.basic.BasicEntity
+  - serviceType: org.apache.brooklyn.entity.stock.BasicEntity
     name: a
-  - serviceType: brooklyn.entity.basic.BasicEntity
+  - serviceType: org.apache.brooklyn.entity.stock.BasicEntity
     name: b

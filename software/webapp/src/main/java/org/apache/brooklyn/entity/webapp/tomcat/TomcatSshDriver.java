@@ -25,10 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSshDriver;
-
-import brooklyn.entity.basic.Entities;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;

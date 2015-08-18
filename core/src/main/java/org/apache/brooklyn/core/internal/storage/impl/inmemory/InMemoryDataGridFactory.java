@@ -20,7 +20,7 @@ package org.apache.brooklyn.core.internal.storage.impl.inmemory;
 
 import org.apache.brooklyn.core.internal.storage.DataGrid;
 import org.apache.brooklyn.core.internal.storage.DataGridFactory;
-import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 
 public class InMemoryDataGridFactory implements DataGridFactory {
     

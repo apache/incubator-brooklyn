@@ -29,36 +29,40 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
-import org.apache.brooklyn.api.event.SensorEvent;
-import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.PortRange;
-import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.sensor.EnricherSpec;
+import org.apache.brooklyn.api.sensor.SensorEvent;
+import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.config.ConfigBag;
-import org.apache.brooklyn.core.util.flags.TypeCoercions;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle.Transition;
+import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic.ServiceNotUpLogic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.entity.basic.Lifecycle.Transition;
-import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
-
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
+import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
+import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.CountdownTimer;
@@ -480,7 +484,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
     /** returns the ports that this entity wants to use;
      * default implementation returns {@link SoftwareProcess#REQUIRED_OPEN_LOGIN_PORTS} plus first value 
-     * for each {@link brooklyn.event.basic.PortAttributeSensorAndConfigKey} config key {@link PortRange}
+     * for each {@link org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey} config key {@link PortRange}
      * plus any ports defined with a config keys ending in {@code .port}.
      */
     protected Collection<Integer> getRequiredOpenPorts() {

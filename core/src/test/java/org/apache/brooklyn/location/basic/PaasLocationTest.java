@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.location.basic;
 
+import org.apache.brooklyn.core.test.location.TestPaasLocation;
 import org.apache.brooklyn.location.paas.PaasLocation;
-import brooklyn.test.location.TestPaasLocation;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

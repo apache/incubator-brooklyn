@@ -24,14 +24,12 @@ import static org.testng.Assert.fail;
 import java.net.ServerSocket;
 import java.util.Iterator;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.PortRange;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.jclouds.util.Throwables2;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.util.net.Networking;

@@ -24,10 +24,9 @@ import java.io.Serializable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
-import brooklyn.entity.trait.Resizable;
-import brooklyn.event.basic.BasicNotificationSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.entity.trait.Resizable;
+import org.apache.brooklyn.sensor.core.BasicNotificationSensor;
 
 /**
  * Represents an elastic group of "container" entities, each of which is capable of hosting "item" entities that perform

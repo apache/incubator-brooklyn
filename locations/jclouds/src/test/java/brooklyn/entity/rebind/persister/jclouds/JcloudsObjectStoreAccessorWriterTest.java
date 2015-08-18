@@ -20,9 +20,14 @@ package brooklyn.entity.rebind.persister.jclouds;
 
 import java.io.IOException;
 
-import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.core.config.BrooklynProperties;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceStoreObjectAccessorWriterTestFixture;
+import org.apache.brooklyn.core.mgmt.rebind.persister.StoreObjectAccessorLocking;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.Identifiers;
@@ -32,12 +37,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
-import brooklyn.entity.rebind.persister.PersistenceStoreObjectAccessorWriterTestFixture;
-import brooklyn.entity.rebind.persister.StoreObjectAccessorLocking;
 
 @Test(groups={"Live", "Live-sanity"})
 public class JcloudsObjectStoreAccessorWriterTest extends PersistenceStoreObjectAccessorWriterTestFixture {

@@ -30,14 +30,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.http.HttpTool;
-import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.EntityFunctions;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.basic.SupportsPortForwarding;
+import org.apache.brooklyn.sensor.feed.AbstractFeed;
+import org.apache.brooklyn.sensor.feed.AttributePollHandler;
+import org.apache.brooklyn.sensor.feed.PollHandler;
+import org.apache.brooklyn.sensor.feed.Poller;
+import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.util.core.http.HttpTool;
+import org.apache.brooklyn.util.core.http.HttpToolResponse;
 import org.apache.brooklyn.util.net.Cidr;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.NoConnectionReuseStrategy;
@@ -60,15 +68,6 @@ import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.JsonObject;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityFunctions;
-import brooklyn.event.feed.AbstractFeed;
-import brooklyn.event.feed.AttributePollHandler;
-import brooklyn.event.feed.PollHandler;
-import brooklyn.event.feed.Poller;
-import brooklyn.event.feed.http.HttpValueFunctions;
 
 public class ZabbixFeed extends AbstractFeed {
 

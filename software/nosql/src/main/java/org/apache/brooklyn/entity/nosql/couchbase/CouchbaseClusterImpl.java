@@ -30,36 +30,36 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nonnull;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.config.render.RendererHints;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.TaskBuilder;
-import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.entity.group.AbstractMembershipTrackingPolicy;
+import org.apache.brooklyn.entity.group.DynamicClusterImpl;
+import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.Enrichers;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.event.feed.http.JsonFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.sensor.core.DependentConfiguration;
+import org.apache.brooklyn.sensor.enricher.Enrichers;
+import org.apache.brooklyn.sensor.feed.http.HttpFeed;
+import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
+import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.sensor.feed.http.JsonFunctions;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.collections.QuorumCheck;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.TaskBuilder;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.IfFunctions;
@@ -564,8 +564,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                                         .onFailureOrException(new Function<Object, Boolean>() {
                                             @Override
                                             public Boolean apply(Object input) {
-                                                if (input instanceof org.apache.brooklyn.core.util.http.HttpToolResponse) {
-                                                    if (((org.apache.brooklyn.core.util.http.HttpToolResponse) input).getResponseCode() == 404) {
+                                                if (input instanceof org.apache.brooklyn.util.core.http.HttpToolResponse) {
+                                                    if (((org.apache.brooklyn.util.core.http.HttpToolResponse) input).getResponseCode() == 404) {
                                                         return true;
                                                     }
                                                 }

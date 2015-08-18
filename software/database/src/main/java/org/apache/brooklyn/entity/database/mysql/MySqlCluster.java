@@ -21,19 +21,17 @@ package org.apache.brooklyn.entity.database.mysql;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 
 import com.google.common.reflect.TypeToken;
 
-import brooklyn.entity.basic.ConfigKeys;
-
 import org.apache.brooklyn.entity.database.DatastoreMixins.HasDatastoreUrl;
-
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 
 @ImplementedBy(MySqlClusterImpl.class)
 @Catalog(name="MySql Master-Slave cluster", description="Sets up a cluster of MySQL nodes using master-slave relation and binary logging", iconUrl="classpath:///mysql-logo-110x57.png")

@@ -21,10 +21,9 @@ package brooklyn.entity.software;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.Tasks;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.BrooklynTaskTags;
+import org.apache.brooklyn.entity.core.EntityInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +32,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.entity.basic.EntityInternal;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.net.Protocol;
 import org.apache.brooklyn.util.ssh.BashCommands;
 import org.apache.brooklyn.util.ssh.IptablesCommands;

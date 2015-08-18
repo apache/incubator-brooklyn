@@ -39,13 +39,14 @@ import java.io.InputStream;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.location.OsDetails;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks.OnFailingTask;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks.OnFailingTask;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.os.Os;
@@ -58,13 +59,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
 
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;

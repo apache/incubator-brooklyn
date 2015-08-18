@@ -22,23 +22,23 @@ import static org.testng.Assert.fail;
 
 import java.util.List;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.test.EntityTestUtils;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.EmptySoftwareProcess;
-import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 

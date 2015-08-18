@@ -28,12 +28,11 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.test.entity.TestApplicationImpl;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.test.entity.TestApplicationImpl;
+import org.apache.brooklyn.entity.core.Entities;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

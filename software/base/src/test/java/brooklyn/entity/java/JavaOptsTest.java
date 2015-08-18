@@ -28,24 +28,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineLocation;
-import org.apache.brooklyn.core.util.internal.ssh.RecordingSshTool;
-import org.apache.brooklyn.core.util.internal.ssh.SshTool;
-import org.apache.brooklyn.core.util.internal.ssh.RecordingSshTool.ExecCmd;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.core.internal.ssh.RecordingSshTool;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
+import org.apache.brooklyn.util.core.internal.ssh.RecordingSshTool.ExecCmd;
 import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.apache.brooklyn.util.text.Strings;
 

@@ -21,18 +21,17 @@ package brooklyn.enricher;
 import groovy.lang.Closure;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.event.Sensor;
-import org.apache.brooklyn.api.event.SensorEvent;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.api.sensor.SensorEvent;
+import org.apache.brooklyn.sensor.enricher.AbstractTypeTransformingEnricher;
+import org.apache.brooklyn.sensor.enricher.YamlTimeWeightedDeltaEnricher;
 import org.apache.brooklyn.util.GroovyJavaMethods;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
-import brooklyn.enricher.basic.YamlTimeWeightedDeltaEnricher;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

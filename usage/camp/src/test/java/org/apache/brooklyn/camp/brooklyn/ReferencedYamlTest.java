@@ -21,13 +21,12 @@ package org.apache.brooklyn.camp.brooklyn;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.core.management.osgi.OsgiStandaloneTest;
+import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
+import org.apache.brooklyn.entity.stock.BasicApplication;
+import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.BasicApplication;
-import brooklyn.entity.basic.BasicEntity;
 
 import com.google.common.collect.Iterables;
 

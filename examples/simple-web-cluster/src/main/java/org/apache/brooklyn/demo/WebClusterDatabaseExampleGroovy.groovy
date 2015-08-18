@@ -19,24 +19,20 @@
 package org.apache.brooklyn.demo;
 
 import static brooklyn.entity.java.JavaEntityMethods.javaSysProp
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady
-import static brooklyn.event.basic.DependentConfiguration.formatString
+import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady
+import static org.apache.brooklyn.sensor.core.DependentConfiguration.formatString
 
-import org.apache.brooklyn.launcher.BrooklynLauncher
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.Entities
+import org.apache.brooklyn.api.entity.EntitySpec
+import org.apache.brooklyn.entity.core.AbstractApplication
+import org.apache.brooklyn.entity.core.Entities
 import org.apache.brooklyn.entity.database.mysql.MySqlNode
-
-import org.apache.brooklyn.api.entity.proxying.EntitySpec
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster
-
+import org.apache.brooklyn.launcher.BrooklynLauncher
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
-
 import org.apache.brooklyn.util.CommandLineUtil
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import com.google.common.collect.Lists
 

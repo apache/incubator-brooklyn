@@ -23,13 +23,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.commons.io.Charsets;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.util.Strings2;
-
-import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.ByteSource;

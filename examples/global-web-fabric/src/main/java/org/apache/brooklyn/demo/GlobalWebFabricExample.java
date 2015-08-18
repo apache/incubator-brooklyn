@@ -27,26 +27,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.catalog.CatalogConfig;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.StringConfigMap;
-import org.apache.brooklyn.core.util.BrooklynMavenArtifacts;
-import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
+import org.apache.brooklyn.entity.group.DynamicRegionsFabric;
 import org.apache.brooklyn.entity.proxy.AbstractController;
 import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
-
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.group.DynamicRegionsFabric;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.util.core.BrooklynMavenArtifacts;
+import org.apache.brooklyn.util.core.ResourceUtils;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

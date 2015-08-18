@@ -22,14 +22,19 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Collection;
 
-import org.apache.brooklyn.api.entity.Feed;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.Feed;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.core.test.entity.TestEntityImpl;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
 import org.apache.brooklyn.test.EntityTestUtils;
-import org.apache.brooklyn.test.entity.TestEntity;
-import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,13 +42,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.java.UsesJmx.JmxAgentModes;
-import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-import brooklyn.event.basic.Sensors;
-import brooklyn.event.feed.ConfigToAttributes;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.PortRanges;

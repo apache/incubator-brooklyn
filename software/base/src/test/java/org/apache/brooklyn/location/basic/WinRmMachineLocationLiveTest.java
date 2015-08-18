@@ -20,11 +20,13 @@ package org.apache.brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
 
-import org.apache.brooklyn.core.config.BrooklynProperties;
-import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.test.entity.TestApplication;
 
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
@@ -33,10 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.entity.basic.Entities;
-
 import org.apache.brooklyn.location.jclouds.JcloudsWinRmMachineLocation;
 
 import com.google.common.collect.ImmutableList;

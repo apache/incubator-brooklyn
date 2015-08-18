@@ -19,9 +19,8 @@
 package org.apache.brooklyn.entity.messaging;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
-
-import brooklyn.event.basic.Sensors;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.sensor.core.Sensors;
 
 /**
  * Marker interface identifying message brokers.

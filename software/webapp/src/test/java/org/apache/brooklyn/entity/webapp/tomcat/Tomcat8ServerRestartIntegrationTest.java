@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.webapp.tomcat;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.entity.webapp.tomcat.Tomcat8Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -18,24 +18,23 @@
  */
 package brooklyn.entity.software.http;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.test.TestHttpRequestHandler;
+import org.apache.brooklyn.core.test.TestHttpServer;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.test.EntityTestUtils;
-import org.apache.brooklyn.test.entity.TestApplication;
-import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
-import brooklyn.event.basic.Sensors;
-import brooklyn.test.TestHttpRequestHandler;
-import brooklyn.test.TestHttpServer;
 
 import com.google.common.collect.ImmutableList;
 

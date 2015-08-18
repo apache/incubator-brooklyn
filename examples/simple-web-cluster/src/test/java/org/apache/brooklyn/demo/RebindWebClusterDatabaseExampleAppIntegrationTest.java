@@ -19,13 +19,16 @@
 package org.apache.brooklyn.demo;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.sensor.Enricher;
+import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixture;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.tomcat.Tomcat8Server;
+import org.apache.brooklyn.sensor.enricher.Propagator;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
@@ -51,16 +54,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.enricher.HttpLatencyDetector;
-import brooklyn.enricher.basic.Propagator;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
 
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.entity.group.DynamicCluster;
 
-import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
-import brooklyn.entity.rebind.RebindOptions;
-import brooklyn.entity.rebind.RebindTestFixture;
 
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 

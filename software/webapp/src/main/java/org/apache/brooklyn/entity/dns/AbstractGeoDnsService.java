@@ -22,16 +22,14 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.BasicAttributeSensor;
-
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
 
 import com.google.common.reflect.TypeToken;
 

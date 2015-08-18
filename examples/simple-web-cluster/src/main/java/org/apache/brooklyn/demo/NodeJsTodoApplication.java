@@ -18,19 +18,19 @@
  */
 package org.apache.brooklyn.demo;
 
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.nosql.redis.RedisStore;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService;
+import org.apache.brooklyn.sensor.core.DependentConfiguration;
 
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.DependentConfiguration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

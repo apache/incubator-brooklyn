@@ -19,11 +19,11 @@
 package brooklyn.entity.chef.mysql;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.software.SshEffectorTasks;
 

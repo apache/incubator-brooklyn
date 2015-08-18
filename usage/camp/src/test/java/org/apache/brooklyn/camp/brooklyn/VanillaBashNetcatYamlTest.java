@@ -18,11 +18,17 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
-import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Networking;
@@ -31,13 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;

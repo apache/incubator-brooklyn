@@ -25,13 +25,22 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.core.util.task.TaskInternal;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.BrooklynTaskTags;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.entity.stock.BasicEntity;
+import org.apache.brooklyn.entity.stock.BasicEntityImpl;
+import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.sensor.core.DependentConfiguration;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.core.task.TaskInternal;
 import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -41,18 +50,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import brooklyn.entity.basic.BasicEntity;
-import brooklyn.entity.basic.BasicEntityImpl;
-import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EmptySoftwareProcess;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters.StopMode;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.jclouds.BailOutJcloudsLocation;
 

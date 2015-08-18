@@ -23,13 +23,14 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.api.management.TaskAdaptable;
-import org.apache.brooklyn.api.management.TaskFactory;
-import org.apache.brooklyn.core.util.task.ssh.SshFetchTaskWrapper;
-import org.apache.brooklyn.core.util.task.ssh.SshPutTaskWrapper;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.TaskAdaptable;
+import org.apache.brooklyn.api.mgmt.TaskFactory;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.util.core.task.ssh.SshFetchTaskWrapper;
+import org.apache.brooklyn.util.core.task.ssh.SshPutTaskWrapper;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.commons.io.FileUtils;
@@ -39,9 +40,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 

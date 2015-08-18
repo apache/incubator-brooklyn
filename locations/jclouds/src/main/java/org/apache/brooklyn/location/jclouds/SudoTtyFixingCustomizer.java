@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.location.jclouds;
 
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks.OnFailingTask;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks.OnFailingTask;
 import org.jclouds.compute.ComputeService;
 
 import com.google.common.annotations.Beta;

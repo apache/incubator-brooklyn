@@ -24,26 +24,26 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.trait.HasShortName;
-import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.objs.HasShortName;
+import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.task.Tasks;
-import org.apache.brooklyn.core.util.task.ssh.SshPutTaskWrapper;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
-import org.apache.brooklyn.core.util.text.TemplateProcessor;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.effector.core.EffectorTasks;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.EntityInternal;
 
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.effector.EffectorTasks;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.cloud.names.AbstractCloudMachineNamer;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.core.task.ssh.SshPutTaskWrapper;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.util.core.text.TemplateProcessor;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.ssh.BashCommands;
 

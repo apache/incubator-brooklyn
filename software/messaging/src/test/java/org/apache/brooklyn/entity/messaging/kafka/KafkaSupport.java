@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.messaging.kafka;
 
-import brooklyn.entity.basic.EntityPredicates;
+import org.apache.brooklyn.entity.core.EntityPredicates;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
 
 import com.google.common.base.Optional;

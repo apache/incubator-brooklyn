@@ -22,18 +22,17 @@ import java.io.InputStream;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.stream.KnownSizeInputStream;
 import org.apache.brooklyn.util.text.Strings;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.event.basic.Sensors;
 
 public class DatastoreMixins {
 

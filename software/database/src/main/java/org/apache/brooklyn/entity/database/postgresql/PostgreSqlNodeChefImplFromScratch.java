@@ -18,29 +18,29 @@
  */
 package org.apache.brooklyn.entity.database.postgresql;
 
-import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.config.ConfigBag;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.effector.core.EffectorBody;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.stock.EffectorStartableImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EffectorStartableImpl;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefLifecycleEffectorTasks;
 import brooklyn.entity.chef.ChefServerTasks;
-import brooklyn.entity.effector.EffectorBody;
-import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.feed.ssh.SshFeed;
-import brooklyn.event.feed.ssh.SshPollConfig;
 
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
+import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
 import org.apache.brooklyn.util.collections.Jsonya;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.ssh.BashCommands;
 

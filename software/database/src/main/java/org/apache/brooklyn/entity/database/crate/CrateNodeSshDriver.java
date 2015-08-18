@@ -22,11 +22,11 @@ import static java.lang.String.format;
 
 import java.util.List;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.entity.core.Entities;
 
 import com.google.common.collect.ImmutableList;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;

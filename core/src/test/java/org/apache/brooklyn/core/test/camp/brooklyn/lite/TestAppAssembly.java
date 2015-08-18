@@ -19,7 +19,7 @@
 package org.apache.brooklyn.core.test.camp.brooklyn.lite;
 
 import org.apache.brooklyn.camp.spi.Assembly;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestApplication;
 
 public class TestAppAssembly extends Assembly {
 

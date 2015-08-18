@@ -22,21 +22,20 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.event.Sensor;
-import org.apache.brooklyn.api.management.SubscriptionContext;
-import org.apache.brooklyn.test.entity.TestApplication;
-import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.mgmt.SubscriptionContext;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.sensor.core.BasicSensorEvent;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
-import brooklyn.event.basic.BasicSensorEvent;
-import brooklyn.event.basic.Sensors;
 
 public class TimeFractionDeltaEnricherTest {
 

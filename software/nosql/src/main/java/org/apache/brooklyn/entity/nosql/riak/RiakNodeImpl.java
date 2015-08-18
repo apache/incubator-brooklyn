@@ -27,22 +27,22 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
 
-import brooklyn.enricher.Enrichers;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.enricher.Enrichers;
+import org.apache.brooklyn.sensor.feed.http.HttpFeed;
+import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
+import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.time.Duration;
 

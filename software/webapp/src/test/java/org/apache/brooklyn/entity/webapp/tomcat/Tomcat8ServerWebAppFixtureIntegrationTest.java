@@ -37,12 +37,12 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.SoftwareProcess;
 
 import org.apache.brooklyn.location.basic.PortRanges;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.repeat.Repeater;
 

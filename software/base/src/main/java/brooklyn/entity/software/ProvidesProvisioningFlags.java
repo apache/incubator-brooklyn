@@ -19,7 +19,7 @@
 package brooklyn.entity.software;
 
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 
 import com.google.common.annotations.Beta;
 

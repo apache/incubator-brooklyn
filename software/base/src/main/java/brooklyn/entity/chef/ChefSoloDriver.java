@@ -18,16 +18,16 @@
  */
 package brooklyn.entity.chef;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.management.TaskAdaptable;
-import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.mgmt.TaskAdaptable;
+import org.apache.brooklyn.api.mgmt.TaskFactory;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.config.ConfigKeys;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.ConfigKeys;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
 
 import com.google.common.annotations.Beta;
 import com.google.common.reflect.TypeToken;

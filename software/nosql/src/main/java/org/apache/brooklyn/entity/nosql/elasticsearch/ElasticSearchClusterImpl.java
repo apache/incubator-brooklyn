@@ -20,9 +20,8 @@ package org.apache.brooklyn.entity.nosql.elasticsearch;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-
-import brooklyn.entity.group.DynamicClusterImpl;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.group.DynamicClusterImpl;
 
 public class ElasticSearchClusterImpl extends DynamicClusterImpl implements ElasticSearchCluster {
     

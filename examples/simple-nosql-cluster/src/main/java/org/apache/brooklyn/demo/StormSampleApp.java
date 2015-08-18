@@ -23,12 +23,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.messaging.storm.StormDeployment;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.util.CommandLineUtil;

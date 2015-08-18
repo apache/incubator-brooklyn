@@ -30,23 +30,21 @@ import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
 import org.apache.brooklyn.core.catalog.internal.CatalogTemplateItemDto;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
-import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
-
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.BasicEntity;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.proxying.EntityProxy;
-
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.objs.proxy.EntityProxy;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestEntityImpl;
+import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.stock.BasicEntity;
+import org.apache.brooklyn.policy.core.AbstractPolicy;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;

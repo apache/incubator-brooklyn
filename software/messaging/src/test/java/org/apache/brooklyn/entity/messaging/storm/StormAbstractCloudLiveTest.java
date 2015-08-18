@@ -23,18 +23,19 @@ import static org.apache.brooklyn.entity.messaging.storm.Storm.ZOOKEEPER_ENSEMBL
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.NIMBUS;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.SUPERVISOR;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.UI;
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
 
 import java.io.File;
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.file.ArchiveBuilder;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.file.ArchiveBuilder;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
@@ -53,14 +54,10 @@ import backtype.storm.generated.StormTopology;
 import backtype.storm.testing.TestWordSpout;
 import backtype.storm.topology.TopologyBuilder;
 
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
-
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.messaging.storm.topologies.ExclamationBolt;
-
-import brooklyn.entity.trait.Startable;
-
+import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 
 import com.google.common.base.Throwables;

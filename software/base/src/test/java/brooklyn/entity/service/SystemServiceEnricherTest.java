@@ -20,20 +20,20 @@ package brooklyn.entity.service;
 
 import static org.testng.Assert.assertEquals;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.sensor.EnricherSpec;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
+import org.apache.brooklyn.effector.core.EffectorTasks;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.VanillaSoftwareProcess;
 import brooklyn.entity.basic.VanillaSoftwareProcessImpl;
 import brooklyn.entity.basic.VanillaSoftwareProcessSshDriver;
-import brooklyn.entity.effector.EffectorTasks;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;

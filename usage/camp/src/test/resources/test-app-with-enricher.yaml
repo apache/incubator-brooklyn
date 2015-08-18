@@ -20,14 +20,14 @@ name: test-app-with-enricher
 description: TestEntity with Enricher at application-level using Brooklyn
 origin: https://github.com/apache/incubator-brooklyn
 services:
-- serviceType: brooklyn.entity.basic.BasicEntity
+- type: brooklyn.entity.basic.BasicEntity
   id: be1
   name: testentity
   brooklyn.config:
     serviceLiteralValue1: Foo
     serviceLiteralValue2: Bar
 brooklyn.enrichers:
-- enricherType: brooklyn.test.policy.TestEnricher
+- type: org.apache.brooklyn.core.test.policy.TestEnricher
   brooklyn.config:
     test.targetEntity: $brooklyn:component("be1")
     test.targetEntity.from.flag: $brooklyn:component("be1")

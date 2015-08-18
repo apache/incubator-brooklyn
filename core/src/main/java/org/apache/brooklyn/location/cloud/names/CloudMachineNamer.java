@@ -20,8 +20,8 @@ package org.apache.brooklyn.location.cloud.names;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 
 /**
  * Interface used to construct names for individual cloud machines and for groups of machines.

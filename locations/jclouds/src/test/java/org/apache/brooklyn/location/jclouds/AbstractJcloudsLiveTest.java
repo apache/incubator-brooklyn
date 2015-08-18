@@ -25,17 +25,15 @@ import static org.testng.Assert.assertNotNull;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-
-import brooklyn.entity.basic.Entities;
-
-import org.apache.brooklyn.core.config.BrooklynProperties;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.collect.ImmutableList;

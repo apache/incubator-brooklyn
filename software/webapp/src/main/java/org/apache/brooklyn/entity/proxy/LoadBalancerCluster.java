@@ -18,9 +18,8 @@
  */
 package org.apache.brooklyn.entity.proxy;
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
-import brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.entity.group.DynamicCluster;
 
 /**
  * A cluster of load balancers, where configuring the cluster (through the LoadBalancer interface)

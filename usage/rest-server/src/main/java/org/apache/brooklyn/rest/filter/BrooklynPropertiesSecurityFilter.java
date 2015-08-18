@@ -33,10 +33,10 @@ import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.core.config.BrooklynServiceAttributes;
-import org.apache.brooklyn.core.management.entitlement.Entitlements;
-import org.apache.brooklyn.core.management.entitlement.WebEntitlementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.BrooklynServiceAttributes;
+import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
+import org.apache.brooklyn.core.mgmt.entitlement.WebEntitlementContext;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
 import org.apache.brooklyn.util.text.Strings;
 

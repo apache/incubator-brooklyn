@@ -21,10 +21,16 @@ package org.apache.brooklyn.policy.loadbalancing;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.entity.group.AbstractGroup;
+import org.apache.brooklyn.entity.group.AbstractGroupImpl;
+import org.apache.brooklyn.entity.group.DynamicGroup;
+import org.apache.brooklyn.entity.trait.Resizable;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
@@ -32,14 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.AbstractGroup;
-import brooklyn.entity.basic.AbstractGroupImpl;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.trait.Resizable;
-
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import com.google.common.base.Predicates;

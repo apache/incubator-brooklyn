@@ -27,15 +27,13 @@ import java.util.Iterator;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.test.EntityTestUtils;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Lifecycle;
-
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 
 import com.google.common.base.Joiner;

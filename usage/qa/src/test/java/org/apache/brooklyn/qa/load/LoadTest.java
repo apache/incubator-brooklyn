@@ -28,11 +28,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.StartableApplication;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.test.PerformanceTestUtils;
 import org.apache.brooklyn.util.os.Os;
@@ -51,11 +55,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.entity.trait.Startable;
 
 /**
  * Customers ask about the scalability of Brooklyn. These load tests investigate how many 

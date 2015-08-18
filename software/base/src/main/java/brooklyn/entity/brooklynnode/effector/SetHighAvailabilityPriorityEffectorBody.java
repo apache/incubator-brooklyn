@@ -18,16 +18,16 @@
  */
 package brooklyn.entity.brooklynnode.effector;
 
-import org.apache.brooklyn.api.entity.Effector;
-import org.apache.brooklyn.core.util.config.ConfigBag;
-import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.api.effector.Effector;
+import org.apache.brooklyn.effector.core.EffectorBody;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.http.HttpToolResponse;
 import org.apache.http.HttpStatus;
 
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityPriorityEffector;
 import brooklyn.entity.brooklynnode.EntityHttpClient;
-import brooklyn.entity.effector.EffectorBody;
-import brooklyn.entity.effector.Effectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

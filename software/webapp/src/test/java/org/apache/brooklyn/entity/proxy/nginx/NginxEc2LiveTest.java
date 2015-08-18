@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.proxy.nginx;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.test.EntityTestUtils;

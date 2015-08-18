@@ -18,10 +18,9 @@
  */
 package brooklyn.entity.basic;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.EntityDriver;
-
-import brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.entity.trait.Startable;
 
 /**
  * The {@link EntityDriver} for a {@link SoftwareProcess}.

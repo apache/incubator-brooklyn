@@ -23,7 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Set;
 
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.AfterClass;

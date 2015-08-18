@@ -39,16 +39,18 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.SensorEvent;
-import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
-import org.apache.brooklyn.core.util.crypto.SecureKeys;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.sensor.SensorEvent;
+import org.apache.brooklyn.api.sensor.SensorEventListener;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.crypto.FluentKeySigner;
+import org.apache.brooklyn.util.core.crypto.SecureKeys;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.slf4j.Logger;
@@ -57,8 +59,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.Lifecycle;
 import brooklyn.event.feed.jmx.JmxHelper;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;

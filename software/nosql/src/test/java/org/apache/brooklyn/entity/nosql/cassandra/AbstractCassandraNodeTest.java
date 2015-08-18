@@ -19,10 +19,8 @@
 package org.apache.brooklyn.entity.nosql.cassandra;
 
 import org.testng.annotations.BeforeMethod;
-
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 
 /**
  * Cassandra test framework for integration and live tests.

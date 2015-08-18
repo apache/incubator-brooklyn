@@ -24,8 +24,8 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 
-import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
-import org.apache.brooklyn.core.util.crypto.SecureKeys;
+import org.apache.brooklyn.util.core.crypto.FluentKeySigner;
+import org.apache.brooklyn.util.core.crypto.SecureKeys;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

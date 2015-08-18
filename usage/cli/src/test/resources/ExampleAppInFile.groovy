@@ -1,3 +1,5 @@
+import org.apache.brooklyn.entity.core.AbstractApplication
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,6 +18,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import brooklyn.entity.basic.AbstractApplication
 
 class ExampleAppInFile extends AbstractApplication { }

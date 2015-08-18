@@ -21,10 +21,14 @@ package org.apache.brooklyn.entity.webapp;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.entity.group.DynamicGroup;
+import org.apache.brooklyn.entity.trait.Changeable;
 import org.apache.brooklyn.test.EntityTestUtils;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestJavaWebAppEntity;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
@@ -32,12 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.trait.Changeable;
-
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import com.google.common.collect.ImmutableList;

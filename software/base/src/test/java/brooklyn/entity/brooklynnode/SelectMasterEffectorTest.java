@@ -28,10 +28,17 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.sensor.feed.AttributePollHandler;
+import org.apache.brooklyn.sensor.feed.DelegatingPollHandler;
+import org.apache.brooklyn.sensor.feed.Poller;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.time.Duration;
@@ -43,15 +50,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynCluster.SelectMasterEffector;
 import brooklyn.entity.brooklynnode.CallbackEntityHttpClient.Request;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.feed.AttributePollHandler;
-import brooklyn.event.feed.DelegatingPollHandler;
-import brooklyn.event.feed.Poller;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;

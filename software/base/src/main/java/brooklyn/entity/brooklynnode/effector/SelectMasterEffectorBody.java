@@ -22,27 +22,27 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.api.management.ha.ManagementNodeState;
-import org.apache.brooklyn.core.util.config.ConfigBag;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
+import org.apache.brooklyn.effector.core.EffectorBody;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.core.EntityPredicates;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.brooklynnode.BrooklynCluster;
 import brooklyn.entity.brooklynnode.BrooklynCluster.SelectMasterEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityModeEffector;
 import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityPriorityEffector;
-import brooklyn.entity.effector.EffectorBody;
-import brooklyn.entity.effector.Effectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Objects;

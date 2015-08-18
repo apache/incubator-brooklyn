@@ -26,10 +26,10 @@ import static org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROV
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
-import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
+import org.apache.brooklyn.util.core.http.HttpTool;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.http.client.HttpClient;
 import org.testng.annotations.AfterMethod;

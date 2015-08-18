@@ -19,14 +19,13 @@
 package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.nosql.mongodb.AbstractMongoDBServer;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.time.Duration;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.reflect.TypeToken;
 

@@ -26,19 +26,17 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.basic.BrooklynDynamicType;
-import org.apache.brooklyn.basic.BrooklynTypes;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.api.basic.BrooklynObject;
-import org.apache.brooklyn.api.basic.BrooklynType;
+import org.apache.brooklyn.core.objs.BrooklynDynamicType;
+import org.apache.brooklyn.core.objs.BrooklynTypes;
+import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.EntityType;
-import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.location.LocationResolver;
-
-import brooklyn.entity.basic.BrooklynConfigKeys;
-
+import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.objs.BrooklynType;
+import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;
 import org.apache.brooklyn.rest.domain.SensorSummary;

@@ -22,26 +22,26 @@ import java.net.URI;
 
 import net.minidev.json.JSONObject;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.effector.core.AddSensor;
+import org.apache.brooklyn.sensor.feed.http.HttpFeed;
+import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
+import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.effector.AddSensor;
 import brooklyn.entity.software.java.JmxAttributeSensor;
 import brooklyn.entity.software.ssh.SshCommandSensor;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Functions;
 import com.google.common.base.Supplier;
 
 /**
- * Configurable {@link org.apache.brooklyn.api.entity.proxying.EntityInitializer} which adds an HTTP sensor feed to retrieve the
+ * Configurable {@link org.apache.brooklyn.api.entity.EntityInitializer} which adds an HTTP sensor feed to retrieve the
  * {@link JSONObject} from a JSON response in order to populate the sensor with the data at the {@code jsonPath}.
  *
  * @see SshCommandSensor

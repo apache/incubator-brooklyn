@@ -21,12 +21,12 @@ package org.apache.brooklyn.entity.webapp.tomcat;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.SoftwareProcess;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;

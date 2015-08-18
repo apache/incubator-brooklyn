@@ -24,8 +24,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
 
-import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
+import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.text.Strings;

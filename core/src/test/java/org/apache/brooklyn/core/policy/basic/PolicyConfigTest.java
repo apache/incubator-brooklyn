@@ -25,15 +25,14 @@ import static org.testng.Assert.fail;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.policy.basic.BasicPolicyTest.MyPolicy;
-import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.DependentConfiguration;
 
 import com.google.common.util.concurrent.Callables;
 

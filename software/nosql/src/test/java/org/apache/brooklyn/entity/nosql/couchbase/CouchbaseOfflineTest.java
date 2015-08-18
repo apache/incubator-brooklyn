@@ -18,15 +18,13 @@
  */
 package org.apache.brooklyn.entity.nosql.couchbase;
 
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.basic.BasicOsDetails;
 import org.apache.brooklyn.location.basic.BasicOsDetails.OsArchs;
 

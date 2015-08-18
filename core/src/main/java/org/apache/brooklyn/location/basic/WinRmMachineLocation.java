@@ -37,6 +37,7 @@ import org.apache.brooklyn.api.location.MachineDetails;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +49,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
-
-import brooklyn.entity.basic.ConfigKeys;
 
 import org.apache.brooklyn.location.access.PortForwardManager;
 import org.apache.brooklyn.util.exceptions.Exceptions;

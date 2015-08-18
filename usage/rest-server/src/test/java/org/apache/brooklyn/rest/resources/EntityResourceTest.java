@@ -26,13 +26,16 @@ import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -47,10 +50,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
-
-import brooklyn.entity.basic.BasicApplication;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
 
 @Test(singleThreaded = true)
 public class EntityResourceTest extends BrooklynRestResourceTest {

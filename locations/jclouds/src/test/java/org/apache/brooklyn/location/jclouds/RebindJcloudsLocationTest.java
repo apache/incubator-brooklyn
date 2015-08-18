@@ -24,11 +24,9 @@ import static org.testng.Assert.assertNull;
 import org.jclouds.domain.LoginCredentials;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 
 import com.google.common.net.HostAndPort;
 

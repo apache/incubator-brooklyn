@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

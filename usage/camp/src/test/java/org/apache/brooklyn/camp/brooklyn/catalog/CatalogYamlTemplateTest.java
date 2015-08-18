@@ -27,8 +27,8 @@ import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
-import org.apache.brooklyn.core.management.osgi.OsgiStandaloneTest;
-import org.apache.brooklyn.core.management.osgi.OsgiTestResources;
+import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
+import org.apache.brooklyn.core.mgmt.osgi.OsgiTestResources;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 
 

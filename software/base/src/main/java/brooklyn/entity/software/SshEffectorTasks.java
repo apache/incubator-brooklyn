@@ -23,38 +23,38 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.StringConfigMap;
+import org.apache.brooklyn.core.BrooklynTaskTags;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.ConfigUtils;
-import org.apache.brooklyn.core.util.config.ConfigBag;
-import org.apache.brooklyn.core.util.internal.ssh.SshTool;
-import org.apache.brooklyn.core.util.task.Tasks;
-import org.apache.brooklyn.core.util.task.ssh.SshFetchTaskFactory;
-import org.apache.brooklyn.core.util.task.ssh.SshFetchTaskWrapper;
-import org.apache.brooklyn.core.util.task.ssh.SshPutTaskFactory;
-import org.apache.brooklyn.core.util.task.ssh.SshPutTaskWrapper;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks;
-import org.apache.brooklyn.core.util.task.ssh.internal.AbstractSshExecTaskFactory;
-import org.apache.brooklyn.core.util.task.ssh.internal.PlainSshExecTaskFactory;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskFactory;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.effector.core.EffectorBody;
+import org.apache.brooklyn.effector.core.EffectorTasks;
+import org.apache.brooklyn.effector.core.EffectorTasks.EffectorTaskFactory;
+import org.apache.brooklyn.entity.core.EntityInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.effector.EffectorBody;
-import brooklyn.entity.effector.EffectorTasks;
-import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
+import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.core.task.ssh.SshFetchTaskFactory;
+import org.apache.brooklyn.util.core.task.ssh.SshFetchTaskWrapper;
+import org.apache.brooklyn.util.core.task.ssh.SshPutTaskFactory;
+import org.apache.brooklyn.util.core.task.ssh.SshPutTaskWrapper;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks;
+import org.apache.brooklyn.util.core.task.ssh.internal.AbstractSshExecTaskFactory;
+import org.apache.brooklyn.util.core.task.ssh.internal.PlainSshExecTaskFactory;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskFactory;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.annotations.Beta;

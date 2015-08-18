@@ -20,9 +20,8 @@ package org.apache.brooklyn.location.cloud;
 
 import java.util.List;
 
-import brooklyn.entity.group.DynamicCluster;
-
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.location.basic.MultiLocation;
 
 import com.google.common.annotations.Beta;

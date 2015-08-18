@@ -20,9 +20,9 @@ package org.apache.brooklyn.core.internal;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.brooklyn.core.util.crypto.SecureKeys;
-import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.util.core.crypto.SecureKeys;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.net.Networking;
 
 import com.google.common.annotations.Beta;
@@ -52,7 +52,7 @@ public class BrooklynInitialization {
 
     @SuppressWarnings("deprecation")
     public static void initLegacyLanguageExtensions() {
-        org.apache.brooklyn.core.util.BrooklynLanguageExtensions.init();
+        org.apache.brooklyn.util.core.BrooklynLanguageExtensions.init();
     }
 
     /* other things:
@@ -74,7 +74,7 @@ public class BrooklynInitialization {
     @SuppressWarnings("deprecation")
     public synchronized static void reinitAll() {
         done.set(false);
-        org.apache.brooklyn.core.util.BrooklynLanguageExtensions.reinit();
+        org.apache.brooklyn.util.core.BrooklynLanguageExtensions.reinit();
         initAll();
     }
 

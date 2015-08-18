@@ -24,17 +24,16 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.core.config.BrooklynProperties;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.Test;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
-
-import brooklyn.entity.basic.Attributes;
 
 public class ServerPoolLiveTest extends AbstractServerPoolTest {
 

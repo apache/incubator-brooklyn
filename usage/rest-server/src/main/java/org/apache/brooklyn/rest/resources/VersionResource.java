@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import brooklyn.BrooklynVersion;
+import org.apache.brooklyn.core.BrooklynVersion;
 import org.apache.brooklyn.rest.api.VersionApi;
 
 /** @deprecated since 0.7.0; use /v1/server/version */

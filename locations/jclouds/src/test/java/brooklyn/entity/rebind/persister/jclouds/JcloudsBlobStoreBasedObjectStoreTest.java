@@ -21,8 +21,12 @@ package brooklyn.entity.rebind.persister.jclouds;
 
 import java.util.List;
 
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.mgmt.rebind.persister.BrooklynPersistenceUtils;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.time.Duration;
@@ -32,11 +36,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
-import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 
 import com.google.common.base.Stopwatch;
 

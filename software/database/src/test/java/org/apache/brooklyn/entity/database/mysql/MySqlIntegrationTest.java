@@ -20,14 +20,12 @@ package org.apache.brooklyn.entity.database.mysql;
 
 import java.io.File;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.util.collections.MutableMap;

@@ -21,11 +21,19 @@ package org.apache.brooklyn.entity.network.bind;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.sensor.EnricherSpec;
+import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixture;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.test.EntityTestUtils;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -39,15 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
-import brooklyn.enricher.Enrichers;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EmptySoftwareProcess;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.rebind.RebindOptions;
-import brooklyn.entity.rebind.RebindTestFixture;
 
 public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplication> {
 

@@ -21,9 +21,11 @@ package brooklyn.entity.chef;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.stream.StreamGobbler;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
@@ -33,9 +35,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Entities;
 
 /** Many tests expect knife on the path, but none require any configuration beyond that.
  * They will use the Brooklyn registered account (which has been set up with mysql cookbooks and more).

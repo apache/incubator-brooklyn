@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;

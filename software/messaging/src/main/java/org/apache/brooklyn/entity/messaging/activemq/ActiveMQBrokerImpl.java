@@ -21,13 +21,15 @@ package org.apache.brooklyn.entity.messaging.activemq;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.UsesJmx;
+
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.messaging.jms.JMSBrokerImpl;
+
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 

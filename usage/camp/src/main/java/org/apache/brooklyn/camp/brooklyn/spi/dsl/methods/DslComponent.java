@@ -23,24 +23,23 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.event.Sensor;
-import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
-import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
-import org.apache.brooklyn.core.util.task.TaskBuilder;
-import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.BrooklynTaskTags;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.mgmt.internal.EntityManagerInternal;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.sensor.core.DependentConfiguration;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.util.core.task.TaskBuilder;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
-
-import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

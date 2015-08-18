@@ -26,10 +26,10 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
-import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
-import org.apache.brooklyn.core.util.crypto.SecureKeys;
-import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.util.collections.MutableMap.Builder;
+import org.apache.brooklyn.util.core.crypto.FluentKeySigner;
+import org.apache.brooklyn.util.core.crypto.SecureKeys;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.apache.brooklyn.util.net.Urls;

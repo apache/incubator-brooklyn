@@ -20,14 +20,13 @@ package org.apache.brooklyn.location.basic;
 
 import static org.testng.Assert.assertEquals;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.event.feed.ConfigToAttributes;
 
 import com.google.common.collect.ImmutableList;
 

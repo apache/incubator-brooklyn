@@ -30,24 +30,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.core.util.internal.ssh.SshTool;
-import org.apache.brooklyn.core.util.internal.ssh.cli.SshCliTool;
-import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestApplicationImpl;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.core.test.entity.TestEntityImpl;
+import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.entity.TestApplication;
-import org.apache.brooklyn.test.entity.TestApplicationImpl;
-import org.apache.brooklyn.test.entity.TestEntity;
-import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
+import org.apache.brooklyn.util.core.internal.ssh.cli.SshCliTool;
+import org.apache.brooklyn.util.core.internal.ssh.sshj.SshjTool;
 import org.apache.brooklyn.util.stream.StreamGobbler;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 

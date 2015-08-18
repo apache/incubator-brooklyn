@@ -23,16 +23,16 @@ import static org.testng.Assert.assertEquals;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.effector.core.EffectorAndBody;
+import org.apache.brooklyn.effector.core.MethodEffector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.effector.EffectorAndBody;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

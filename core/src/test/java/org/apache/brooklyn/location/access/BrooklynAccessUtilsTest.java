@@ -25,11 +25,13 @@ import static org.testng.Assert.fail;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.basic.SupportsPortForwarding;
-import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.util.net.Cidr;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -37,9 +39,6 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.net.HostAndPort;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.basic.Attributes;
 
 public class BrooklynAccessUtilsTest extends BrooklynAppUnitTestSupport {
 

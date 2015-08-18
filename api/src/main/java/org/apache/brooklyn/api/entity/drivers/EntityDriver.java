@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.api.entity.drivers;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 
 import com.google.common.annotations.Beta;

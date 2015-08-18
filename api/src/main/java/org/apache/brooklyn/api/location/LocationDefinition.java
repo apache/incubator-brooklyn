@@ -20,7 +20,7 @@ package org.apache.brooklyn.api.location;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
 
 /**
  * Defines a location, where the {@link #getSpec()} is like a serialized representation

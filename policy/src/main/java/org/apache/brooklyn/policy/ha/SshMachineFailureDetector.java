@@ -24,14 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.internal.ssh.SshTool;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicNotificationSensor;
-
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.policy.ha.HASensors.FailureDescriptor;
+import org.apache.brooklyn.sensor.core.BasicNotificationSensor;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.Duration;

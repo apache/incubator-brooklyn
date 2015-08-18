@@ -21,7 +21,7 @@ package org.apache.brooklyn.location.jclouds;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.NodeMetadata;

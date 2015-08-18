@@ -22,13 +22,12 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.text.TemplateProcessor;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.text.TemplateProcessor;
 import org.apache.brooklyn.util.text.Strings;
-
-import brooklyn.entity.basic.ConfigKeys;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;

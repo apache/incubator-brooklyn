@@ -28,22 +28,21 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.mgmt.ExecutionContext;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.TypeCoercions;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.sensor.feed.AbstractFeed;
+import org.apache.brooklyn.sensor.feed.PollHandler;
+import org.apache.brooklyn.sensor.feed.Poller;
+import org.apache.brooklyn.sensor.feed.ssh.SshPollValue;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.feed.AbstractFeed;
-import brooklyn.event.feed.PollHandler;
-import brooklyn.event.feed.Poller;
-import brooklyn.event.feed.ssh.SshPollValue;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

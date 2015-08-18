@@ -23,7 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

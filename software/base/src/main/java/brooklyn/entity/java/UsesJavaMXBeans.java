@@ -20,13 +20,12 @@ package brooklyn.entity.java;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.Sensors;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 public interface UsesJavaMXBeans {
 

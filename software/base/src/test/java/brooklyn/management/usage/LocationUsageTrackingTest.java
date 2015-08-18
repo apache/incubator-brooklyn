@@ -27,18 +27,18 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.core.management.internal.UsageListener.LocationMetadata;
-import org.apache.brooklyn.core.management.usage.LocationUsage;
-import org.apache.brooklyn.core.management.usage.LocationUsage.LocationEvent;
+import org.apache.brooklyn.core.mgmt.internal.UsageListener.LocationMetadata;
+import org.apache.brooklyn.core.mgmt.usage.LocationUsage;
+import org.apache.brooklyn.core.mgmt.usage.LocationUsage.LocationEvent;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessEntityTest;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;

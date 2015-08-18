@@ -21,15 +21,15 @@ package brooklyn.management.usage;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.core.management.usage.ApplicationUsage.ApplicationEvent;
-import org.apache.brooklyn.core.management.usage.LocationUsage.LocationEvent;
+import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage.ApplicationEvent;
+import org.apache.brooklyn.core.mgmt.usage.LocationUsage.LocationEvent;
 import org.apache.brooklyn.util.collections.MutableList;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 @Deprecated
-public class RecordingLegacyUsageListener implements org.apache.brooklyn.core.management.internal.UsageManager.UsageListener {
+public class RecordingLegacyUsageListener implements org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener {
 
     private final List<List<?>> events = Lists.newCopyOnWriteArrayList();
     

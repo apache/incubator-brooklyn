@@ -37,36 +37,34 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.basic.BrooklynTypes;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationRegistry;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.management.entitlement.Entitlements;
-import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArgument;
-import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
-import org.apache.brooklyn.core.util.flags.TypeCoercions;
-
-import brooklyn.enricher.Enrichers;
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BasicApplication;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.trait.Startable;
-
+import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
+import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.StringAndArgument;
+import org.apache.brooklyn.core.objs.BrooklynTypes;
+import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.entity.stock.BasicApplication;
+import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.policy.core.AbstractPolicy;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
+import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.net.Urls;
@@ -263,7 +261,7 @@ public class BrooklynRestResourceUtils {
                     instance = appBuilder.manage(mgmt);
 
                 } else if (Application.class.isAssignableFrom(clazz)) {
-                    org.apache.brooklyn.api.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO, catalogItemId);
+                    org.apache.brooklyn.api.entity.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO, catalogItemId);
                     configureRenderingMetadata(spec, coreSpec);
                     instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
                     for (EntitySpec entitySpec : entities) {
@@ -278,7 +276,7 @@ public class BrooklynRestResourceUtils {
                     if (entities.size() > 0)
                         log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
 
-                    org.apache.brooklyn.api.entity.proxying.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO, catalogItemId);
+                    org.apache.brooklyn.api.entity.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO, catalogItemId);
                     configureRenderingMetadata(spec, coreSpec);
 
                     instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
@@ -334,7 +332,7 @@ public class BrooklynRestResourceUtils {
     }
 
     @SuppressWarnings({ "unchecked", "deprecation" })
-    private org.apache.brooklyn.api.entity.proxying.EntitySpec<? extends Entity> toCoreEntitySpec(org.apache.brooklyn.rest.domain.EntitySpec spec) {
+    private org.apache.brooklyn.api.entity.EntitySpec<? extends Entity> toCoreEntitySpec(org.apache.brooklyn.rest.domain.EntitySpec spec) {
         String type = spec.getType();
         String name = spec.getName();
         Map<String, String> config = (spec.getConfig() == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(spec.getConfig());
@@ -357,11 +355,11 @@ public class BrooklynRestResourceUtils {
             }
         }
         final Class<? extends Entity> clazz = tempclazz;
-        org.apache.brooklyn.api.entity.proxying.EntitySpec<? extends Entity> result;
+        org.apache.brooklyn.api.entity.EntitySpec<? extends Entity> result;
         if (clazz.isInterface()) {
-            result = org.apache.brooklyn.api.entity.proxying.EntitySpec.create(clazz);
+            result = org.apache.brooklyn.api.entity.EntitySpec.create(clazz);
         } else {
-            result = org.apache.brooklyn.api.entity.proxying.EntitySpec.create(Entity.class).impl(clazz).additionalInterfaces(Reflections.getAllInterfaces(clazz));
+            result = org.apache.brooklyn.api.entity.EntitySpec.create(Entity.class).impl(clazz).additionalInterfaces(Reflections.getAllInterfaces(clazz));
         }
         result.catalogItemId(catalogItemId);
         if (!Strings.isEmpty(name)) result.displayName(name);
@@ -374,11 +372,11 @@ public class BrooklynRestResourceUtils {
         appBuilder.configure(getRenderingConfigurationFor(spec.getType()));
     }
 
-    protected void configureRenderingMetadata(ApplicationSpec input, org.apache.brooklyn.api.entity.proxying.EntitySpec<?> entity) {
+    protected void configureRenderingMetadata(ApplicationSpec input, org.apache.brooklyn.api.entity.EntitySpec<?> entity) {
         entity.configure(getRenderingConfigurationFor(input.getType()));
     }
 
-    protected void configureRenderingMetadata(EntitySpec input, org.apache.brooklyn.api.entity.proxying.EntitySpec<?> entity) {
+    protected void configureRenderingMetadata(EntitySpec input, org.apache.brooklyn.api.entity.EntitySpec<?> entity) {
         entity.configure(getRenderingConfigurationFor(input.getType()));
     }
 
@@ -392,18 +390,18 @@ public class BrooklynRestResourceUtils {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T extends Entity> org.apache.brooklyn.api.entity.proxying.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO, String catalogItemId) {
+    private <T extends Entity> org.apache.brooklyn.api.entity.EntitySpec<?> toCoreEntitySpec(Class<T> clazz, String name, Map<String,String> configO, String catalogItemId) {
         Map<String, String> config = (configO == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(configO);
         
-        org.apache.brooklyn.api.entity.proxying.EntitySpec<? extends Entity> result;
+        org.apache.brooklyn.api.entity.EntitySpec<? extends Entity> result;
         if (clazz.isInterface()) {
-            result = org.apache.brooklyn.api.entity.proxying.EntitySpec.create(clazz);
+            result = org.apache.brooklyn.api.entity.EntitySpec.create(clazz);
         } else {
             // If this is a concrete class, particularly for an Application class, we want the proxy
             // to expose all interfaces it implements.
             Class interfaceclazz = (Application.class.isAssignableFrom(clazz)) ? Application.class : Entity.class;
             Set<Class<?>> additionalInterfaceClazzes = Reflections.getInterfacesIncludingClassAncestors(clazz);
-            result = org.apache.brooklyn.api.entity.proxying.EntitySpec.create(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
+            result = org.apache.brooklyn.api.entity.EntitySpec.create(interfaceclazz).impl(clazz).additionalInterfaces(additionalInterfaceClazzes);
         }
         
         result.catalogItemId(catalogItemId);

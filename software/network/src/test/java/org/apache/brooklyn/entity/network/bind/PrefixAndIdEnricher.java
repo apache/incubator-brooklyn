@@ -18,17 +18,16 @@
  */
 package org.apache.brooklyn.entity.network.bind;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.event.SensorEvent;
-import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.SensorEvent;
+import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
 
 import com.google.common.reflect.TypeToken;
-
-import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.Sensors;
 
 public class PrefixAndIdEnricher extends AbstractEnricher {
 

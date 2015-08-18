@@ -26,20 +26,19 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.core.util.crypto.SecureKeys;
-import org.apache.brooklyn.core.util.internal.ssh.SshTool;
-import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool;
-import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool.SshjToolBuilder;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.crypto.SecureKeys;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
+import org.apache.brooklyn.util.core.internal.ssh.sshj.SshjTool;
+import org.apache.brooklyn.util.core.internal.ssh.sshj.SshjTool.SshjToolBuilder;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
 
 import com.google.common.base.Preconditions;
 

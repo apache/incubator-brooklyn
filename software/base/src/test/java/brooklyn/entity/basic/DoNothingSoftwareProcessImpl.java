@@ -18,6 +18,8 @@
  */
 package brooklyn.entity.basic;
 
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+
 public class DoNothingSoftwareProcessImpl extends SoftwareProcessImpl implements DoNothingSoftwareProcess {
 
     @Override

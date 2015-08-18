@@ -18,13 +18,12 @@
  */
 package org.apache.brooklyn.entity.monitoring.zabbix;
 
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
-
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
+import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 public interface ZabbixMonitored {
 

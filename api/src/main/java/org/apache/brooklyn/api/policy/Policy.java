@@ -18,12 +18,11 @@
  */
 package org.apache.brooklyn.api.policy;
 
-import java.util.Map;
-
-import org.apache.brooklyn.api.entity.rebind.RebindSupport;
-import org.apache.brooklyn.api.entity.rebind.Rebindable;
-import org.apache.brooklyn.api.entity.trait.Configurable;
-import org.apache.brooklyn.api.mementos.PolicyMemento;
+import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
+import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.PolicyMemento;
+import org.apache.brooklyn.api.objs.Configurable;
+import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.config.ConfigKey;
 
 import com.google.common.annotations.Beta;

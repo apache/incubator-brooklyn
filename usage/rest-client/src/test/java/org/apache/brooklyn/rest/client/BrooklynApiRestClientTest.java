@@ -24,7 +24,6 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.entity.TestEntity;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,14 +31,13 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-
 import org.apache.brooklyn.location.basic.BasicLocationRegistry;
 import org.apache.brooklyn.api.entity.Application;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;

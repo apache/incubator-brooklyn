@@ -24,11 +24,16 @@ import static org.testng.Assert.assertTrue;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.EntityManager;
+import org.apache.brooklyn.api.mgmt.EntityManager;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.group.BasicGroup;
+import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.proxy.LoadBalancerCluster;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.test.Asserts;
@@ -40,13 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.entity.basic.BasicGroup;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.trait.Startable;
-
 import org.apache.brooklyn.location.basic.PortRanges;
 
 import com.google.common.base.Predicates;

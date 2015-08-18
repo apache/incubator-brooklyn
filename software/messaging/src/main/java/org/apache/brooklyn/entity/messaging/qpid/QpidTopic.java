@@ -18,8 +18,7 @@
  */
 package org.apache.brooklyn.entity.messaging.qpid;
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.entity.messaging.Topic;
 
 @ImplementedBy(QpidTopicImpl.class)

@@ -23,12 +23,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.core.management.internal.LocalSubscriptionManager;
-import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.util.task.BasicExecutionManager;
-
-import brooklyn.entity.basic.AbstractEntity;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.mgmt.internal.LocalSubscriptionManager;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.util.core.task.BasicExecutionManager;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 

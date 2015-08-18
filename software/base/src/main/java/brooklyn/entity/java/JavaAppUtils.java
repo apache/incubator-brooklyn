@@ -30,8 +30,9 @@ import javax.annotation.Nullable;
 import javax.management.openmbean.CompositeData;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.core.config.render.RendererHints;
+import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.util.math.MathFunctions;
 import org.apache.brooklyn.util.text.ByteSizeStrings;
 import org.apache.brooklyn.util.time.Duration;
@@ -39,7 +40,6 @@ import org.apache.brooklyn.util.time.Time;
 
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.enricher.TimeFractionDeltaEnricher;
-import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 

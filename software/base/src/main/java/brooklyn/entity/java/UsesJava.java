@@ -19,14 +19,13 @@
 package brooklyn.entity.java;
 
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.config.MapConfigKey;
+import org.apache.brooklyn.core.config.SetConfigKey;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.MapConfigKey;
-import brooklyn.event.basic.SetConfigKey;
 
 public interface UsesJava {
 

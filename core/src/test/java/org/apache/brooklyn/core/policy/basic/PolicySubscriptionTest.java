@@ -20,21 +20,17 @@ package org.apache.brooklyn.core.policy.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.entity.core.RecordingSensorEventListener;
+import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.policy.core.AbstractPolicy;
+import org.apache.brooklyn.sensor.core.BasicSensorEvent;
+import org.apache.brooklyn.test.Asserts;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.management.SubscriptionHandle;
-import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
-import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
-import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.entity.TestEntity;
-
-import brooklyn.event.basic.BasicSensorEvent;
-
-import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import com.google.common.collect.ImmutableList;
 

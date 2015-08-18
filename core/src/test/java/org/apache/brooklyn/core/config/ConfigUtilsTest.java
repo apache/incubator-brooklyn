@@ -26,8 +26,6 @@ import org.apache.brooklyn.core.config.ConfigUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.ConfigKeys;
-
 public class ConfigUtilsTest {
 
     public static final ConfigKey<String> S1 = ConfigKeys.newStringConfigKey("s1");

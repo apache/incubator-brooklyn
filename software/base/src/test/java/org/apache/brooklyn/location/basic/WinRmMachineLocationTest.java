@@ -21,11 +21,10 @@ package org.apache.brooklyn.location.basic;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
 import org.apache.brooklyn.util.net.Networking;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.basic.BrooklynConfigKeys;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

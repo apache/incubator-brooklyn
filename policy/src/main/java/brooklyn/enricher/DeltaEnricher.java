@@ -22,12 +22,11 @@ import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.event.Sensor;
-import org.apache.brooklyn.api.event.SensorEvent;
-import org.apache.brooklyn.core.util.flags.TypeCoercions;
-
-import brooklyn.enricher.basic.AbstractTransformingEnricher;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.api.sensor.SensorEvent;
+import org.apache.brooklyn.sensor.enricher.AbstractTransformingEnricher;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
 
 /**
  * Converts an absolute sensor into a delta sensor (i.e. the diff between the current and previous value)

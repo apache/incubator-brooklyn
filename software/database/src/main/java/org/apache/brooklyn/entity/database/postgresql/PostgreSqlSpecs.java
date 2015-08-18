@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.database.postgresql;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefConfig.ChefModes;

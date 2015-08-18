@@ -24,13 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.brooklyn.config.ConfigMap;
-import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.BrooklynVersion;
+import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.os.Os;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.BrooklynVersion;
 
 /** class which allows non-standard locators to be registered for URL's being loaded */
 public class CustomResourceLocator {

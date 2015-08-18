@@ -21,10 +21,9 @@ package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-
-import brooklyn.entity.group.DynamicClusterImpl;
+import org.apache.brooklyn.entity.group.DynamicClusterImpl;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

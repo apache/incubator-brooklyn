@@ -21,7 +21,7 @@ package brooklyn.entity.basic.lifecycle;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.core.util.task.ssh.SshTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 
 /** Marks something which can run scripts. Called "Naive" because it hides too much of the complexity,
  * about script execution and other ssh-related tasks (put, etc). The {@link SshTasks} approach seems better.

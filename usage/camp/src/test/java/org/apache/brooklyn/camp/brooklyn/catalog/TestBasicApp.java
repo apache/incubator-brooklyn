@@ -18,9 +18,8 @@
  */
 package org.apache.brooklyn.camp.brooklyn.catalog;
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
-import brooklyn.entity.basic.BasicApplication;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.entity.stock.BasicApplication;
 
 @ImplementedBy(TestBasicAppImpl.class)
 public interface TestBasicApp extends BasicApplication {

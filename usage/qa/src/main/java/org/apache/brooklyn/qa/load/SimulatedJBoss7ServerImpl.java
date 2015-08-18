@@ -23,23 +23,22 @@ import static java.lang.String.format;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7SshDriver;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.sensor.enricher.Enrichers;
+import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
+import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
+import org.apache.brooklyn.sensor.feed.http.HttpFeed;
+import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
+import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.os.Os;
 
 import com.google.common.net.HostAndPort;
-
-import brooklyn.enricher.Enrichers;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
 
 /**
  * For simulating various aspects of the JBoss 7 app-server entity.

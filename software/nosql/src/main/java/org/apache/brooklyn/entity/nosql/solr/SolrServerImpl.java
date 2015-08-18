@@ -18,12 +18,14 @@
  */
 package org.apache.brooklyn.entity.nosql.solr;
 
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
+
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.sensor.feed.http.HttpFeed;
+import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
+import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
+
 import com.google.common.base.Functions;
 import com.google.common.net.HostAndPort;
 

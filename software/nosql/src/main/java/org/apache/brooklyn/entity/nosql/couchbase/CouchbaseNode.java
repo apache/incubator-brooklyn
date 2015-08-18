@@ -21,23 +21,23 @@ package org.apache.brooklyn.entity.nosql.couchbase;
 import java.net.URI;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.render.RendererHints;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.effector.core.MethodEffector;
+import org.apache.brooklyn.entity.annotation.Effector;
+import org.apache.brooklyn.entity.annotation.EffectorParam;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.text.ByteSizeStrings;
 
-import brooklyn.entity.annotation.Effector;
-import brooklyn.entity.annotation.EffectorParam;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.MethodEffector;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 
 @Catalog(name="CouchBase Node", description="Couchbase Server is an open source, distributed (shared-nothing architecture) "
         + "NoSQL document-oriented database that is optimized for interactive applications.")
@@ -135,7 +135,7 @@ public interface CouchbaseNode extends SoftwareProcess {
     MethodEffector<Void> SERVER_ADD_AND_REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "serverAddAndRebalance");
     MethodEffector<Void> REBALANCE = new MethodEffector<Void>(CouchbaseNode.class, "rebalance");
     MethodEffector<Void> BUCKET_CREATE = new MethodEffector<Void>(CouchbaseNode.class, "bucketCreate");
-    org.apache.brooklyn.api.entity.Effector<Void> ADD_REPLICATION_RULE = Effectors.effector(Void.class, "addReplicationRule")
+    org.apache.brooklyn.api.effector.Effector<Void> ADD_REPLICATION_RULE = Effectors.effector(Void.class, "addReplicationRule")
         .description("Adds a replication rule from the indicated bucket on the cluster where this node is located "
             + "to the indicated cluster and optional destination bucket")
         .parameter(String.class, "fromBucket", "Bucket to be replicated")

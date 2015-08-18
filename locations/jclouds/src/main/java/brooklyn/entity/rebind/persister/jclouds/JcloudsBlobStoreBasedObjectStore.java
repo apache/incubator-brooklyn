@@ -24,18 +24,16 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.core.config.BrooklynServerConfig;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.BrooklynServerConfig;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.blobstore.options.ListContainerOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;

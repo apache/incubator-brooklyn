@@ -24,16 +24,14 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.jclouds.AbstractJcloudsLiveTest;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.jclouds.domain.LocationScope;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
 import com.google.common.base.Predicates;

@@ -21,7 +21,8 @@ package org.apache.brooklyn.camp.brooklyn;
 import static org.testng.Assert.*;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
@@ -31,8 +32,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
-
-import brooklyn.entity.group.DynamicCluster;
 
 public class EntitiesYamlIntegrationTest extends AbstractYamlTest {
 

@@ -29,18 +29,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
-import brooklyn.entity.drivers.downloads.DownloadSubstituters;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
 
-import org.apache.brooklyn.core.util.file.ArchiveBuilder;
-import org.apache.brooklyn.core.util.file.ArchiveUtils;
-import org.apache.brooklyn.core.util.internal.ssh.SshTool;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.drivers.downloads.DownloadSubstituters;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.file.ArchiveBuilder;
+import org.apache.brooklyn.util.core.file.ArchiveUtils;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.os.Os;

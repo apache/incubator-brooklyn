@@ -22,21 +22,21 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
+import org.apache.brooklyn.entity.core.EntityFunctions;
+import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.entity.group.DynamicClusterImpl;
+import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic.ServiceProblemsLogic;
+import org.apache.brooklyn.sensor.enricher.Enrichers;
+import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
+import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.Enrichers;
-import brooklyn.entity.basic.EntityFunctions;
-import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.entity.basic.ServiceStateLogic;
-import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.brooklynnode.effector.BrooklynClusterUpgradeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SelectMasterEffectorBody;
-import brooklyn.entity.group.DynamicClusterImpl;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;

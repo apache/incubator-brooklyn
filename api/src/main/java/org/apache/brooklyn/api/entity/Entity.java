@@ -23,15 +23,16 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.basic.BrooklynObject;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.api.policy.Enricher;
-import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.Enricher;
+import org.apache.brooklyn.api.sensor.EnricherSpec;
+import org.apache.brooklyn.api.sensor.Feed;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -44,7 +45,7 @@ import org.apache.brooklyn.util.guava.Maybe;
  * To instantiate an entity, see {@code managementContext.getEntityManager().createEntity(entitySpec)}.
  * Also see {@link brooklyn.entity.basic.ApplicationBuilder}, 
  * {@link brooklyn.entity.basic.AbstractEntity#addChild(EntitySpec)}, and
- * {@link org.apache.brooklyn.api.entity.proxying.EntitySpec}.
+ * {@link org.apache.brooklyn.api.entity.EntitySpec}.
  * <p>
  * 
  * @see brooklyn.entity.basic.AbstractEntity

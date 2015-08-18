@@ -20,9 +20,9 @@ package org.apache.brooklyn.location.basic;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.policy.EnricherType;
-import org.apache.brooklyn.basic.BrooklynTypeSnapshot;
+import org.apache.brooklyn.api.sensor.EnricherType;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.objs.BrooklynTypeSnapshot;
 
 public class LocationTypeSnapshot extends BrooklynTypeSnapshot implements EnricherType {
     

@@ -27,7 +27,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;

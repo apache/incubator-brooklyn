@@ -18,25 +18,25 @@
  */
 package org.apache.brooklyn.entity.webapp.nodejs;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessDriver;
-import brooklyn.entity.trait.Startable;
 
 import org.apache.brooklyn.location.basic.PortRanges;
 
 import com.google.common.collect.ImmutableList;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.time.Duration;

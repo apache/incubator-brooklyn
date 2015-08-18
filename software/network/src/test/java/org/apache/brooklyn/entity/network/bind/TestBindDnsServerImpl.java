@@ -19,10 +19,9 @@
 package org.apache.brooklyn.entity.network.bind;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 public class TestBindDnsServerImpl extends BindDnsServerImpl {

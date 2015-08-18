@@ -19,9 +19,8 @@
 package org.apache.brooklyn.core.catalog;
 
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.rebind.persister.PersistMode;
 
 /** @deprecated since 0.7.0 replaced by {@link CatalogInitialization} */
 @Deprecated

@@ -30,23 +30,22 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.management.internal.UsageListener.ApplicationMetadata;
-import org.apache.brooklyn.core.management.usage.ApplicationUsage;
-import org.apache.brooklyn.core.management.usage.ApplicationUsage.ApplicationEvent;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.internal.UsageListener.ApplicationMetadata;
+import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage;
+import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage.ApplicationEvent;
+import org.apache.brooklyn.core.objs.proxy.EntityProxy;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.proxying.EntityProxy;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

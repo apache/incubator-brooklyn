@@ -18,10 +18,9 @@
  */
 package org.apache.brooklyn.demo;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.entity.nosql.redis.RedisCluster;
-
-import brooklyn.entity.basic.ApplicationBuilder;
 
 /** Redis cluster. */
 public class SimpleRedisCluster extends ApplicationBuilder {

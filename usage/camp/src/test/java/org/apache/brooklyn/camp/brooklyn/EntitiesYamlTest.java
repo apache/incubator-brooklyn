@@ -29,22 +29,33 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Application;
-import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.BrooklynDslCommon;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent.Scope;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
-import org.apache.brooklyn.core.util.task.Tasks;
-import org.apache.brooklyn.test.entity.TestEntity;
-import org.apache.brooklyn.test.entity.TestEntityImpl;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.mgmt.internal.EntityManagerInternal;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.core.test.entity.TestEntityImpl;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityFunctions;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.entity.stock.BasicEntity;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -55,18 +66,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.BasicEntity;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityFunctions;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SameServerEntity;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -270,7 +270,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     public void testSensor() throws Exception {
         Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml", 
             "  brooklyn.config:",
-            "    test.confObject: $brooklyn:sensor(\"org.apache.brooklyn.test.entity.TestEntity\", \"test.sequence\")"));
+            "    test.confObject: $brooklyn:sensor(\"org.apache.brooklyn.core.test.entity.TestEntity\", \"test.sequence\")"));
         waitForApplicationTasks(app);
 
         Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");
@@ -312,7 +312,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             "  brooklyn.config:",
             "    test.confName: first entity",
             "  id: te1",
-            "- serviceType: org.apache.brooklyn.test.entity.TestEntity",
+            "- serviceType: org.apache.brooklyn.core.test.entity.TestEntity",
             "  name: second entity",
             "  brooklyn.config:",
             "    test.confObject: $brooklyn:component(\"te1\")"));
@@ -343,16 +343,16 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             "  brooklyn.config:",
             "    test.confName: first entity",
             "  brooklyn.children:",
-            "  - serviceType: org.apache.brooklyn.test.entity.TestEntity",
+            "  - serviceType: org.apache.brooklyn.core.test.entity.TestEntity",
             "    name: Child Entity",
             "    brooklyn.config:",
             "      test.confName: Name of the first Child",
             "    brooklyn.children:",
-            "    - serviceType: org.apache.brooklyn.test.entity.TestEntity",
+            "    - serviceType: org.apache.brooklyn.core.test.entity.TestEntity",
             "      name: Grandchild Entity",
             "      brooklyn.config:",
             "        test.confName: Name of the Grandchild",
-            "  - serviceType: org.apache.brooklyn.test.entity.TestEntity",
+            "  - serviceType: org.apache.brooklyn.core.test.entity.TestEntity",
             "    name: Second Child",
             "    brooklyn.config:",
             "      test.confName: Name of the second Child"));
@@ -624,11 +624,11 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     public void testEntitySpecConfig() throws Exception {
         String yaml =
                 "services:\n"+
-                "- serviceType: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "- serviceType: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "  brooklyn.config:\n"+
                 "   test.childSpec:\n"+
                 "     $brooklyn:entitySpec:\n"+
-                "       type: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "       type: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "       brooklyn.config:\n"+
                 "         test.confName: inchildspec\n";
         
@@ -643,12 +643,12 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     public void testEntitySpecFlags() throws Exception {
         String yaml =
                 "services:\n"+
-                "- serviceType: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "- serviceType: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "  confName: inParent\n"+
                 "  brooklyn.config:\n"+
                 "   test.childSpec:\n"+
                 "     $brooklyn:entitySpec:\n"+
-                "       type: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "       type: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "       confName: inchildspec\n";
         
         Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
@@ -662,13 +662,13 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     public void testEntitySpecExplicitFlags() throws Exception {
         String yaml =
                 "services:\n"+
-                "- serviceType: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "- serviceType: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "  brooklyn.flags:\n"+
                 "    confName: inParent\n"+
                 "  brooklyn.config:\n"+
                 "   test.childSpec:\n"+
                 "     $brooklyn:entitySpec:\n"+
-                "       type: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "       type: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "       brooklyn.flags:\n"+
                 "         confName: inchildspec\n";
         
@@ -683,19 +683,19 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     public void testEntitySpecWithChildren() throws Exception {
         String yaml =
                 "services:\n"+
-                "- serviceType: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "- serviceType: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "  brooklyn.config:\n"+
                 "   test.childSpec:\n"+
                 "     $brooklyn:entitySpec:\n"+
-                "       type: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "       type: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "       brooklyn.config:\n"+
                 "         test.confName: child\n"+
                 "       brooklyn.children:\n"+
-                "       - type: org.apache.brooklyn.test.entity.TestEntity\n" +
+                "       - type: org.apache.brooklyn.core.test.entity.TestEntity\n" +
                 "         brooklyn.config:\n" +
                 "           test.confName: grandchild\n" +
                 "         brooklyn.children:\n"+
-                "         - type: org.apache.brooklyn.test.entity.TestEntity\n" +
+                "         - type: org.apache.brooklyn.core.test.entity.TestEntity\n" +
                 "           brooklyn.config:\n" +
                 "             test.confName: greatgrandchild\n";
         
@@ -718,16 +718,16 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     public void testNestedEntitySpecConfigs() throws Exception {
         String yaml =
                 "services:\n"+
-                "- serviceType: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "- serviceType: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "  brooklyn.config:\n"+
                 "   test.childSpec:\n"+
                 "     $brooklyn:entitySpec:\n"+
-                "       type: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "       type: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "       brooklyn.config:\n"+
                 "         test.confName: inchildspec\n"+
                 "         test.childSpec:\n"+
                 "           $brooklyn:entitySpec:\n"+
-                "             type: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "             type: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "             brooklyn.config:\n"+
                 "               test.confName: ingrandchildspec\n";
         
@@ -745,11 +745,11 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     public void testEntitySpecInUnmatchedConfig() throws Exception {
         String yaml =
                 "services:\n"+
-                "- serviceType: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "- serviceType: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "  brooklyn.config:\n"+
                 "   key.does.not.match:\n"+
                 "     $brooklyn:entitySpec:\n"+
-                "       type: org.apache.brooklyn.test.entity.TestEntity\n"+
+                "       type: org.apache.brooklyn.core.test.entity.TestEntity\n"+
                 "       brooklyn.config:\n"+
                 "         test.confName: inchildspec\n";
         
@@ -783,7 +783,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     public void testEntityImplExposesAllInterfacesIncludingStartable() throws Exception {
         String yaml =
                 "services:\n"+
-                "- serviceType: org.apache.brooklyn.test.entity.TestEntityImpl\n";
+                "- serviceType: org.apache.brooklyn.core.test.entity.TestEntityImpl\n";
         
         Application app = (Application) createStartWaitAndLogApplication(new StringReader(yaml));
         TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());

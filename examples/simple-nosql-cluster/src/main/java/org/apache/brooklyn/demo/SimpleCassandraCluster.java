@@ -20,13 +20,11 @@ package org.apache.brooklyn.demo;
 
 import java.util.List;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
-
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.util.CommandLineUtil;
 

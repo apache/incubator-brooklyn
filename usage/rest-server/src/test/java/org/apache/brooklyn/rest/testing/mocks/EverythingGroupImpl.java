@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.testing.mocks;
 
-import brooklyn.entity.basic.DynamicGroupImpl;
+import org.apache.brooklyn.entity.group.DynamicGroupImpl;
 
 import com.google.common.base.Predicates;
 

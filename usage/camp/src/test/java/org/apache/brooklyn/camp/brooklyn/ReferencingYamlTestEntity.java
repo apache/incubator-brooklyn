@@ -19,10 +19,9 @@
 package org.apache.brooklyn.camp.brooklyn;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
-
-import brooklyn.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.config.BasicConfigKey;
 
 import com.google.common.reflect.TypeToken;
 

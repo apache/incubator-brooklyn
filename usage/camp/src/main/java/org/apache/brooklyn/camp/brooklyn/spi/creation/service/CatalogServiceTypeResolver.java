@@ -20,15 +20,15 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.group.DynamicRegionsFabric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.VanillaSoftwareProcess;
 import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.group.DynamicRegionsFabric;
 import brooklyn.entity.java.VanillaJavaApp;
 
 import com.google.common.base.CaseFormat;

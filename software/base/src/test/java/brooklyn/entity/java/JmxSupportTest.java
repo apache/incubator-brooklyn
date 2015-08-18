@@ -20,9 +20,10 @@ package brooklyn.entity.java;
 
 import static org.testng.Assert.assertEquals;
 
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.flags.TypeCoercions;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.maven.MavenRetriever;
@@ -34,7 +35,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 
 @Test

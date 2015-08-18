@@ -26,9 +26,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.messaging.Queue;
 import org.apache.brooklyn.entity.messaging.Topic;
 import org.apache.brooklyn.util.collections.MutableMap;

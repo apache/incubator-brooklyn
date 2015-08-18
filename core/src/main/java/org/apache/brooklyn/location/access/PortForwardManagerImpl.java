@@ -29,17 +29,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.brooklyn.api.entity.rebind.RebindContext;
-import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.mementos.LocationMemento;
+import org.apache.brooklyn.api.mgmt.rebind.RebindContext;
+import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.LocationMemento;
+import org.apache.brooklyn.core.mgmt.rebind.BasicLocationRebindSupport;
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.rebind.BasicLocationRebindSupport;
 
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Preconditions;

@@ -23,22 +23,20 @@ import static org.testng.Assert.assertEquals;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.sensor.core.BasicNotificationSensor;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.test.EntityTestUtils;
-import org.apache.brooklyn.test.entity.TestApplication;
-import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.event.basic.Sensors;
-
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import com.google.common.collect.ImmutableList;

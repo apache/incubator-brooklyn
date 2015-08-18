@@ -23,32 +23,31 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.BrooklynVersion;
-
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.Effector;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.api.effector.Effector;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
+import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.BrooklynVersion;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.config.MapConfigKey;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.ssh.BashCommands;
 import org.apache.brooklyn.util.time.Duration;
 
-import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.java.UsesJava;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
-import brooklyn.event.basic.MapConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;

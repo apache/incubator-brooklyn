@@ -18,15 +18,15 @@
  */
 package org.apache.brooklyn.entity.database.rubyrep;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.AbstractEc2LiveTest;
+
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;
-
 import org.apache.brooklyn.location.basic.PortRanges;
 
 public class RubyRepEc2LiveTest extends AbstractEc2LiveTest {

@@ -21,17 +21,17 @@ package org.apache.brooklyn.entity.webapp.nodejs;
 import java.util.List;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 
 import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;

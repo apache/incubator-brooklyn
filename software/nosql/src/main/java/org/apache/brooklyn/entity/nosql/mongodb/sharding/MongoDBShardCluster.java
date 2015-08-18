@@ -18,9 +18,8 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
-import brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.entity.group.DynamicCluster;
 
 @ImplementedBy(MongoDBShardClusterImpl.class)
 public interface MongoDBShardCluster extends DynamicCluster {

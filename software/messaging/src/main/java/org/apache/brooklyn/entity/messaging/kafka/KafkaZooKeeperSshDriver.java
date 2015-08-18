@@ -20,9 +20,8 @@ package org.apache.brooklyn.entity.messaging.kafka;
 
 import java.util.Map;
 
-import brooklyn.entity.basic.Attributes;
-
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 

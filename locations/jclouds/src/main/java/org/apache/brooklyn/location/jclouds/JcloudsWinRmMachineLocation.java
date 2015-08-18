@@ -25,8 +25,8 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.net.Networking;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;

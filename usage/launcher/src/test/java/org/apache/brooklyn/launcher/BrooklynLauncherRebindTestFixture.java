@@ -19,16 +19,21 @@
 package org.apache.brooklyn.launcher;
 
 import org.apache.brooklyn.api.entity.Application;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-import org.apache.brooklyn.core.config.BrooklynProperties;
-import org.apache.brooklyn.core.config.BrooklynServerConfig;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.BrooklynServerConfig;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.rebind.persister.BrooklynMementoPersisterToObjectStore;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import org.apache.brooklyn.util.time.Duration;
@@ -44,12 +49,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
-import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

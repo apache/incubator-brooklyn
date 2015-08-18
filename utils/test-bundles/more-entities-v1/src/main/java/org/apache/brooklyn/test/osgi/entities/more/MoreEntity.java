@@ -19,11 +19,10 @@
 package org.apache.brooklyn.test.osgi.entities.more;
 
 
-import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
-import brooklyn.entity.effector.Effectors;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.effector.core.Effectors;
 
 @ImplementedBy(MoreEntityImpl.class)
 public interface MoreEntity extends Entity {

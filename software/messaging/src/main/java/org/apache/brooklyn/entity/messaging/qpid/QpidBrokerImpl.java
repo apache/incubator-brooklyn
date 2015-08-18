@@ -27,13 +27,13 @@ import java.util.concurrent.TimeUnit;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JmxSupport;
 
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.messaging.jms.JMSBrokerImpl;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 

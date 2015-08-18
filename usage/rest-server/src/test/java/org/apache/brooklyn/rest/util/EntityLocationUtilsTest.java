@@ -28,15 +28,15 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcess;
 
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 
 import com.google.common.collect.ImmutableList;

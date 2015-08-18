@@ -27,15 +27,14 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.group.AbstractGroupImpl;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.AbstractGroupImpl;
-import brooklyn.entity.basic.Attributes;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

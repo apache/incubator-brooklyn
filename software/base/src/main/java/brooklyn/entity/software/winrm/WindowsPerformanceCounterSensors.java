@@ -21,18 +21,17 @@ package brooklyn.entity.software.winrm;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
+import org.apache.brooklyn.api.entity.EntityInitializer;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.sensor.feed.windows.WindowsPerformanceCounterFeed;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.basic.Sensors;
-import brooklyn.event.feed.windows.WindowsPerformanceCounterFeed;
 
 import com.google.common.reflect.TypeToken;
 

@@ -23,6 +23,9 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
+import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.sensor.feed.ssh.SshPollValue;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
@@ -32,9 +35,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.feed.ssh.SshFeed;
-import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.event.feed.ssh.SshPollValue;
 
 public class MonitNodeImpl extends SoftwareProcessImpl implements MonitNode {
     

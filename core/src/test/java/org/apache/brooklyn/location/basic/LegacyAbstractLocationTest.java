@@ -26,8 +26,8 @@ import static org.testng.Assert.assertTrue;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 

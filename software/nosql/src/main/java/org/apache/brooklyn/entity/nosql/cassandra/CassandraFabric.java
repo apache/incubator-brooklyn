@@ -22,15 +22,14 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-
-import brooklyn.entity.annotation.Effector;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.MethodEffector;
-import brooklyn.entity.group.DynamicFabric;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.effector.core.MethodEffector;
+import org.apache.brooklyn.entity.annotation.Effector;
+import org.apache.brooklyn.entity.group.DynamicFabric;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Multimap;

@@ -22,10 +22,11 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineDetails;
 import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 
 import brooklyn.entity.AbstractGoogleComputeLiveTest;
 import brooklyn.entity.basic.EmptySoftwareProcess;
-import brooklyn.entity.trait.Startable;
 
 // This test really belongs in brooklyn-location but depends on AbstractGoogleComputeLiveTest in brooklyn-software-base
 public class MachineDetailsGoogleComputeLiveTest extends AbstractGoogleComputeLiveTest {

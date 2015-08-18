@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.driver;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 
 import brooklyn.entity.basic.SoftwareProcessDriver;

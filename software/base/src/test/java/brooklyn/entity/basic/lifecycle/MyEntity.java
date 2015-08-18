@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.basic.lifecycle;
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 
 import brooklyn.entity.basic.SoftwareProcess;
 

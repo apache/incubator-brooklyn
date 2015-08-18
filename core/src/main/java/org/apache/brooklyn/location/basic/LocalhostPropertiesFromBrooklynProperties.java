@@ -20,7 +20,7 @@ package org.apache.brooklyn.location.basic;
 
 import java.util.Map;
 
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

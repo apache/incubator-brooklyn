@@ -19,10 +19,9 @@
 package org.apache.brooklyn.entity.messaging.amqp;
 
 import org.apache.brooklyn.api.entity.Entity;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 
 /**
  * Marker interface identifying AMQP servers.

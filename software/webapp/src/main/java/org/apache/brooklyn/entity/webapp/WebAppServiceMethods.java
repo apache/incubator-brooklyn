@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.api.internal.EntityLocal;
 
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.enricher.TimeFractionDeltaEnricher;

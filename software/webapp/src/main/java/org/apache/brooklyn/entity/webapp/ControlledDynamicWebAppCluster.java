@@ -20,26 +20,25 @@ package org.apache.brooklyn.entity.webapp;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.factory.ConfigurableEntityFactory;
+import org.apache.brooklyn.entity.group.Cluster;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.group.DynamicGroup;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.proxy.LoadBalancer;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.ConfigurableEntityFactory;
-import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.entity.basic.Lifecycle;
-import brooklyn.entity.group.Cluster;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.trait.MemberReplaceable;
-import brooklyn.entity.trait.Resizable;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.entity.trait.MemberReplaceable;
+import org.apache.brooklyn.entity.trait.Resizable;
+import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 /**
  * This entity contains the sub-groups and entities that go in to a single location (e.g. datacenter)
@@ -49,13 +48,13 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
  * <p>
  * The children of this entity are:
  * <ul>
- * <li>a {@link brooklyn.entity.group.DynamicCluster} of {@link WebAppService}s (defaults to JBoss7Server)
+ * <li>a {@link org.apache.brooklyn.entity.group.DynamicCluster} of {@link WebAppService}s (defaults to JBoss7Server)
  * <li>a cluster controller (defaulting to Nginx if none supplied)
  * </ul>
  * 
  * This entity is also a group whose members mirror those of the child DynamicCluster (so do not include the load balancer).
  * This is convenient for associating policies such as ServiceReplacer with this entity, rather 
- * than with the child {@link brooklyn.entity.group.DynamicCluster}. However, note that changing this entity's
+ * than with the child {@link org.apache.brooklyn.entity.group.DynamicCluster}. However, note that changing this entity's
  * members has no effect on the members of the underlying DynamicCluster - treat this as a read-only view.
  */
 @Catalog(name="Controlled Dynamic Web-app Cluster", description="A cluster of load-balanced web-apps, which can be dynamically re-sized")

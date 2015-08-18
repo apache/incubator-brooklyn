@@ -25,11 +25,10 @@ import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.api.management.LocationManager;
+import org.apache.brooklyn.api.mgmt.LocationManager;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.BrooklynAppUnitTestSupport;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;

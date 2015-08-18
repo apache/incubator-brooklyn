@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.nosql.redis;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 
 @ImplementedBy(RedisShardImpl.class)
 public interface RedisShard extends Entity {

@@ -21,13 +21,12 @@ package brooklyn.entity.chef;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.MapConfigKey.MapModifications;
+import org.apache.brooklyn.core.config.SetConfigKey.SetModifications;
+import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.util.git.GithubUrls;
-
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.basic.MapConfigKey.MapModifications;
-import brooklyn.event.basic.SetConfigKey.SetModifications;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;

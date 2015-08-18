@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.internal.storage.DataGrid;
-import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 
 import com.google.common.collect.ImmutableMap;
 import com.hazelcast.config.Config;

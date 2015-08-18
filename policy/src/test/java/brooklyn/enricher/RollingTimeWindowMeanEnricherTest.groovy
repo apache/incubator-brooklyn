@@ -20,18 +20,18 @@ package brooklyn.enricher
 
 import static org.testng.Assert.*
 
+import org.apache.brooklyn.api.internal.EntityLocal
+import org.apache.brooklyn.api.mgmt.SubscriptionContext
+import org.apache.brooklyn.api.sensor.Sensor
+import org.apache.brooklyn.entity.core.AbstractApplication
+import org.apache.brooklyn.entity.core.AbstractEntity
+import org.apache.brooklyn.entity.core.Entities
+import org.apache.brooklyn.sensor.core.BasicAttributeSensor
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import brooklyn.enricher.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
-import brooklyn.entity.basic.AbstractApplication
-import brooklyn.entity.basic.AbstractEntity
-import brooklyn.entity.basic.Entities
-import org.apache.brooklyn.api.entity.basic.EntityLocal
-import org.apache.brooklyn.api.event.Sensor
-import brooklyn.event.basic.BasicAttributeSensor
-import org.apache.brooklyn.api.management.SubscriptionContext
 
 class RollingTimeWindowMeanEnricherTest {
     

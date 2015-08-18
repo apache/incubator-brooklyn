@@ -24,10 +24,12 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.management.EntityManager;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.mgmt.EntityManager;
+import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
+import org.apache.brooklyn.sensor.feed.http.JsonFunctions;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.eclipse.jetty.server.Server;
@@ -40,10 +42,8 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.brooklynnode.BrooklynNode;
 import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
-import brooklyn.event.feed.http.JsonFunctions;
 
 public class DeployBlueprintTest extends BrooklynRestApiLauncherTestFixture {
 

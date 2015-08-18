@@ -24,12 +24,13 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.http.HttpTool;
-import org.apache.brooklyn.core.util.http.HttpToolResponse;
-import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.BrooklynTaskTags;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.http.HttpTool;
+import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.stream.Streams;
@@ -40,8 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-
-import brooklyn.entity.basic.BrooklynTaskTags;
 
 public class EntityHttpClientImpl implements EntityHttpClient {
     private static final Logger LOG = LoggerFactory.getLogger(EntityHttpClientImpl.class);

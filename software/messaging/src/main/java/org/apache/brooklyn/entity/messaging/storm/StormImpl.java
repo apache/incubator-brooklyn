@@ -20,12 +20,12 @@ package org.apache.brooklyn.entity.messaging.storm;
 
 import javax.management.ObjectName;
 
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.entity.java.JavaSoftwareProcessDriver;

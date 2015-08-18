@@ -22,14 +22,14 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.time.Duration;
 
-import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.event.basic.Sensors;
 
 /** Provides an entity which can sit in one brooklyn domain and reflect the status of an entity 
  * via the REST API of another domain.

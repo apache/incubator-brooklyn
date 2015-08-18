@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.core.util.http.HttpToolResponse;
-import org.apache.brooklyn.core.util.http.HttpTool.HttpClientBuilder;
+import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.core.http.HttpTool.HttpClientBuilder;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;

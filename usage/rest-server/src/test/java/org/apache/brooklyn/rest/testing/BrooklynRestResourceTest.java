@@ -34,10 +34,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-
-import brooklyn.entity.basic.Entities;
-
 import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.Status;

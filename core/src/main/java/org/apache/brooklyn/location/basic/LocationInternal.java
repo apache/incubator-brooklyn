@@ -20,16 +20,15 @@ package org.apache.brooklyn.location.basic;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.ManagementContext;
-import org.apache.brooklyn.api.mementos.LocationMemento;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.LocationMemento;
 import org.apache.brooklyn.config.ConfigInheritance;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.config.ConfigBag;
-import org.apache.brooklyn.basic.BrooklynObjectInternal;
-
-import brooklyn.entity.basic.ConfigKeys;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 
 import com.google.common.annotations.Beta;
 

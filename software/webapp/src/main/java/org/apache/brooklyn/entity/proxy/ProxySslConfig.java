@@ -21,8 +21,8 @@ package org.apache.brooklyn.entity.proxy;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.brooklyn.core.util.flags.FlagUtils;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.util.core.flags.FlagUtils;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

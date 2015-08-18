@@ -22,11 +22,10 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
-
-import org.apache.brooklyn.api.management.HasTaskChildren;
-import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.mgmt.HasTaskChildren;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.BrooklynTaskTags;
+import org.apache.brooklyn.core.BrooklynTaskTags.WrappedStream;
 import org.apache.brooklyn.rest.api.ActivityApi;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.transform.TaskTransformer;

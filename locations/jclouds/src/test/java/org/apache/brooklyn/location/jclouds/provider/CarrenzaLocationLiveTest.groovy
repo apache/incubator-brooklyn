@@ -20,18 +20,17 @@ package org.apache.brooklyn.location.jclouds.provider;
 
 import static org.testng.Assert.*
 
+import org.apache.brooklyn.core.internal.BrooklynProperties
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext
+import org.apache.brooklyn.location.basic.SshMachineLocation
+import org.apache.brooklyn.location.jclouds.JcloudsLocation
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation
+import org.apache.brooklyn.util.collections.MutableMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
-
-import org.apache.brooklyn.core.config.BrooklynProperties
-import org.apache.brooklyn.location.basic.SshMachineLocation
-import org.apache.brooklyn.location.jclouds.JcloudsLocation
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation
-import org.apache.brooklyn.core.management.internal.LocalManagementContext
-import org.apache.brooklyn.util.collections.MutableMap
 
 import com.google.common.collect.ImmutableList
 

@@ -23,10 +23,9 @@ import javax.management.Notification;
 import javax.management.NotificationFilter;
 import javax.management.ObjectName;
 
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.sensor.feed.FeedConfig;
 import org.apache.brooklyn.util.collections.MutableList;
-
-import brooklyn.event.feed.FeedConfig;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

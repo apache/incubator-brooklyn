@@ -23,22 +23,22 @@ import java.util.concurrent.Callable;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.config.ConfigBag;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.effector.core.AddSensor;
+import org.apache.brooklyn.sensor.core.DependentConfiguration;
+import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.effector.AddSensor;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.entity.software.http.HttpRequestSensor;
 import brooklyn.entity.software.ssh.SshCommandSensor;
-import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
@@ -48,7 +48,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 
 /**
- * Configurable {@link org.apache.brooklyn.api.entity.proxying.EntityInitializer} which adds a JMX sensor feed to retrieve an
+ * Configurable {@link org.apache.brooklyn.api.entity.EntityInitializer} which adds a JMX sensor feed to retrieve an
  * <code>attribute</code> from a JMX <code>objectName</code>.
  *
  * @see SshCommandSensor

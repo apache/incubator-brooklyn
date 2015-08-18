@@ -24,17 +24,17 @@ import javax.ws.rs.core.Context;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.CampPlatform;
-import org.apache.brooklyn.core.config.BrooklynServerConfig;
-import org.apache.brooklyn.core.config.BrooklynServiceAttributes;
+import org.apache.brooklyn.core.BrooklynServerConfig;
+import org.apache.brooklyn.core.BrooklynServiceAttributes;
 import org.apache.brooklyn.core.config.render.RendererHints;
-import org.apache.brooklyn.core.management.ManagementContextInjectable;
-import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.Duration;
 

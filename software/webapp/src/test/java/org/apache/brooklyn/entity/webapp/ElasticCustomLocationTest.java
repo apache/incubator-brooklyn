@@ -21,20 +21,18 @@ package org.apache.brooklyn.entity.webapp;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestEntityImpl;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.entity.factory.BasicConfigurableEntityFactory;
+import org.apache.brooklyn.entity.factory.ConfigurableEntityFactory;
 import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation;
-import org.apache.brooklyn.test.entity.TestApplication;
-import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.entity.basic.BasicConfigurableEntityFactory;
-import brooklyn.entity.basic.ConfigurableEntityFactory;
-import brooklyn.entity.basic.Entities;
-
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import com.google.common.collect.ImmutableList;

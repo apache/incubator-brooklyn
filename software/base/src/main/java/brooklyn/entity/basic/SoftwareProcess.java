@@ -22,19 +22,22 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.config.MapConfigKey;
+import org.apache.brooklyn.entity.annotation.Effector;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.entity.lifecycle.Lifecycle.Transition;
+import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.time.Duration;
-
-import brooklyn.entity.basic.Lifecycle.Transition;
-import brooklyn.entity.annotation.Effector;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.basic.MapConfigKey;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableSet;

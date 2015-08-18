@@ -44,10 +44,10 @@ import mx4j.tools.naming.NamingService;
 import mx4j.tools.naming.NamingServiceMBean;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.entity.core.Attributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.event.feed.jmx.JmxHelper;
 

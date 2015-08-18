@@ -23,14 +23,22 @@ import static org.testng.Assert.assertNotEquals;
 
 import java.io.File;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.api.management.ha.MementoCopyMode;
+import org.apache.brooklyn.api.mgmt.ha.MementoCopyMode;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.test.entity.TestEntity;
-import org.apache.brooklyn.test.entity.TestEntityImpl;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
+import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
+import org.apache.brooklyn.core.mgmt.rebind.persister.BrooklynPersistenceUtils;
+import org.apache.brooklyn.core.mgmt.rebind.persister.FileBasedObjectStore;
+import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.core.test.entity.TestEntityImpl;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.text.Identifiers;
@@ -39,16 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.rebind.RebindOptions;
-import brooklyn.entity.rebind.RebindTestFixtureWithApp;
-import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
-import brooklyn.entity.rebind.persister.FileBasedObjectStore;
-import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.event.basic.Sensors;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.base.Predicates;

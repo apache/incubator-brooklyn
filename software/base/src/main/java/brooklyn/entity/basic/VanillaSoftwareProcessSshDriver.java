@@ -22,14 +22,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
-import org.apache.brooklyn.core.util.file.ArchiveUtils;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.entity.core.Entities;
 
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.file.ArchiveUtils;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.os.Os;

@@ -22,7 +22,7 @@ import static org.testng.Assert.assertEquals
 import static org.testng.Assert.fail
 
 import org.testng.annotations.Test
-import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList

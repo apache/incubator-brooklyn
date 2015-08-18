@@ -18,14 +18,15 @@
  */
 package org.apache.brooklyn.entity.webapp.jetty;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
-import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcess;
+
 import org.apache.brooklyn.location.basic.PortRanges;
 
 public class JettyWebAppFixtureIntegrationTest extends AbstractWebAppFixtureIntegrationTest {

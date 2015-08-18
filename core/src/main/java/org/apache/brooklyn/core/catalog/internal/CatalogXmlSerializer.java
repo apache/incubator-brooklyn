@@ -24,12 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
-import org.apache.brooklyn.core.util.xstream.EnumCaseForgivingSingleValueConverter;
-import org.apache.brooklyn.core.util.xstream.XmlSerializer;
-
-import org.apache.brooklyn.basic.AbstractBrooklynObject;
-import org.apache.brooklyn.core.util.xstream.EnumCaseForgivingSingleValueConverter;
-import org.apache.brooklyn.core.util.xstream.XmlSerializer;
+import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
+import org.apache.brooklyn.util.core.xstream.EnumCaseForgivingSingleValueConverter;
+import org.apache.brooklyn.util.core.xstream.XmlSerializer;
 
 public class CatalogXmlSerializer extends XmlSerializer<Object> {
 

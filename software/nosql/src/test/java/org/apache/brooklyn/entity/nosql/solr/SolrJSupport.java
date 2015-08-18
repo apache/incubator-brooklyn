@@ -20,13 +20,12 @@ package org.apache.brooklyn.entity.nosql.solr;
 
 import java.util.Map;
 
+import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.nosql.solr.SolrServer;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
-
-import brooklyn.entity.basic.Attributes;
 
 /**
  * Solr testing using SolrJ API.
