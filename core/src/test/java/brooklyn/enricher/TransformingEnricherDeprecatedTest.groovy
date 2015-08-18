@@ -31,7 +31,7 @@ import brooklyn.enricher.basic.SensorTransformingEnricher
 import brooklyn.entity.basic.Entities
 import org.apache.brooklyn.api.entity.proxying.EntitySpec
 import org.apache.brooklyn.api.event.AttributeSensor
-import brooklyn.event.basic.BasicAttributeSensor
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensor
 import org.apache.brooklyn.location.basic.SimulatedLocation
 import org.apache.brooklyn.test.TestUtils
 import org.apache.brooklyn.test.entity.TestApplication

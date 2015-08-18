@@ -53,6 +53,11 @@ import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.api.mementos.EntityMemento;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensor;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicSensorEvent;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.test.Asserts;
@@ -73,11 +78,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicSensorEvent;
-import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.LocationConfigTest.MyLocation;
 

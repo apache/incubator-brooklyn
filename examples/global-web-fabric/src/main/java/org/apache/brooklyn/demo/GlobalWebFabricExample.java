@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.StringConfigMap;
+import org.apache.brooklyn.core.event.basic.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.util.BrooklynMavenArtifacts;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
@@ -42,7 +43,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.group.DynamicRegionsFabric;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;

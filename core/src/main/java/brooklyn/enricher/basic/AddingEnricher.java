@@ -23,8 +23,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
-
-import brooklyn.event.basic.BasicSensorEvent;
+import org.apache.brooklyn.core.event.basic.BasicSensorEvent;
 
 /** 
  * enricher which adds multiple sensors on an entity to produce a new sensor

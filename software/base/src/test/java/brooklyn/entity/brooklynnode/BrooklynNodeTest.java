@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.event.feed.ConfigToAttributes;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -42,7 +43,6 @@ import com.google.common.collect.ImmutableMap;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.feed.ConfigToAttributes;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 

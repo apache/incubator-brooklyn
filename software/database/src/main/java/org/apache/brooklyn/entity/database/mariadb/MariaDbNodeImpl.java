@@ -23,10 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.effector.EffectorBody;
-import brooklyn.event.feed.ssh.SshFeed;
-import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.event.feed.ssh.SshPollValue;
 
+import org.apache.brooklyn.core.event.feed.ssh.SshFeed;
+import org.apache.brooklyn.core.event.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.core.event.feed.ssh.SshPollValue;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;

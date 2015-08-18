@@ -24,10 +24,9 @@ import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.StringConfigMap;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.Function;
 

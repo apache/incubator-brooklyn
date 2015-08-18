@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.MapConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
@@ -50,7 +51,6 @@ import brooklyn.entity.brooklynnode.BrooklynNodeDriver;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.basic.MapConfigKey;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicates;

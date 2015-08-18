@@ -28,10 +28,10 @@ import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.EmptySoftwareProcessDriver;
 import brooklyn.entity.basic.EmptySoftwareProcessImpl;
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.feed.ssh.SshFeed;
-import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.event.feed.ssh.SshPollValue;
 
+import org.apache.brooklyn.core.event.feed.ssh.SshFeed;
+import org.apache.brooklyn.core.event.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.core.event.feed.ssh.SshPollValue;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.Machines;

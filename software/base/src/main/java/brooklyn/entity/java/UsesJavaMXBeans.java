@@ -22,11 +22,11 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensor;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.Sensors;
 
 public interface UsesJavaMXBeans {
 

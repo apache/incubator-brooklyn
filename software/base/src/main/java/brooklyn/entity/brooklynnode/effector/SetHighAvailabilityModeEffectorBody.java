@@ -21,6 +21,8 @@ package brooklyn.entity.brooklynnode.effector;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.core.event.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.core.event.feed.http.JsonFunctions;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.util.guava.Functionals;
@@ -32,8 +34,6 @@ import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityModeEffector
 import brooklyn.entity.brooklynnode.EntityHttpClient;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.event.feed.http.JsonFunctions;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Function;

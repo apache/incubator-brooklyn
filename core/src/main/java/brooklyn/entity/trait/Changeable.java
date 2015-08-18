@@ -20,9 +20,8 @@ package brooklyn.entity.trait;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
-
-import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.event.basic.Sensors;
+import org.apache.brooklyn.core.event.basic.BasicNotificationSensor;
+import org.apache.brooklyn.core.event.basic.Sensors;
 
 /**
  * A collection of entities that can change.

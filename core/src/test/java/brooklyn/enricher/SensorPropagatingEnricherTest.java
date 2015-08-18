@@ -25,6 +25,8 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.core.event.basic.BasicNotificationSensor;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -36,8 +38,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

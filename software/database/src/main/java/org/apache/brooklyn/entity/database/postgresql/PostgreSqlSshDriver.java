@@ -39,6 +39,7 @@ import java.io.InputStream;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.ssh.SshTasks;
 import org.apache.brooklyn.core.util.task.ssh.SshTasks.OnFailingTask;
@@ -64,7 +65,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
 
 import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;

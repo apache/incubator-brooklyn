@@ -24,12 +24,12 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
 

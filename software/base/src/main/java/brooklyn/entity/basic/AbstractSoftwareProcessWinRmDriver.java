@@ -28,10 +28,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.python.core.PyException;
-
-import brooklyn.event.basic.Sensors;
-
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
 import org.apache.brooklyn.util.exceptions.ReferenceWithError;
 import org.apache.brooklyn.util.repeat.Repeater;

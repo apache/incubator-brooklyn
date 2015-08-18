@@ -22,9 +22,8 @@ import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.config.ConfigInheritance;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.testng.annotations.Test;
-
-import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.CaseFormat;
 

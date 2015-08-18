@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +35,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperEnsemble;
-
-import brooklyn.event.basic.DependentConfiguration;
-
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;

@@ -35,6 +35,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ExecutionManager;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensor;
 import org.apache.brooklyn.core.management.internal.BrooklynGarbageCollector;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
@@ -63,7 +64,6 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.WrappedEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.event.basic.BasicAttributeSensor;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;

@@ -23,11 +23,11 @@ import java.util.Collection;
 
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.brooklynnode.BrooklynNodeImpl.DeployBlueprintEffectorBody;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.event.feed.http.HttpFeed;
+import org.apache.brooklyn.core.event.feed.http.HttpPollConfig;
+import org.apache.brooklyn.core.event.feed.http.HttpValueFunctions;
 
 /** Implementation of BrooklynNode which just presents the node where this is running, for convenience;
  * 

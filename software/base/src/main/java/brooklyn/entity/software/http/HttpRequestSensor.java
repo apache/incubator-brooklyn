@@ -24,6 +24,9 @@ import net.minidev.json.JSONObject;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.feed.http.HttpFeed;
+import org.apache.brooklyn.core.event.feed.http.HttpPollConfig;
+import org.apache.brooklyn.core.event.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +35,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.effector.AddSensor;
 import brooklyn.entity.software.java.JmxAttributeSensor;
 import brooklyn.entity.software.ssh.SshCommandSensor;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Functions;

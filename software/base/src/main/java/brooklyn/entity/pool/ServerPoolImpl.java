@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.management.LocationManager;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,6 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.BasicLocationDefinition;
 import org.apache.brooklyn.location.basic.Machines;

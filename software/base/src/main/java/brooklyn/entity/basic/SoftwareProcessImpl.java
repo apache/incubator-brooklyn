@@ -41,6 +41,8 @@ import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.feed.function.FunctionFeed;
+import org.apache.brooklyn.core.event.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
@@ -51,8 +53,6 @@ import org.slf4j.LoggerFactory;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
-import brooklyn.event.feed.function.FunctionFeed;
-import brooklyn.event.feed.function.FunctionPollConfig;
 
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
@@ -480,7 +480,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
     /** returns the ports that this entity wants to use;
      * default implementation returns {@link SoftwareProcess#REQUIRED_OPEN_LOGIN_PORTS} plus first value 
-     * for each {@link brooklyn.event.basic.PortAttributeSensorAndConfigKey} config key {@link PortRange}
+     * for each {@link org.apache.brooklyn.core.event.basic.PortAttributeSensorAndConfigKey} config key {@link PortRange}
      * plus any ports defined with a config keys ending in {@code .port}.
      */
     protected Collection<Integer> getRequiredOpenPorts() {

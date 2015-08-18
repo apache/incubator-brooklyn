@@ -30,10 +30,10 @@ import org.testng.annotations.Test
 
 import org.apache.brooklyn.api.entity.Entity
 import org.apache.brooklyn.api.entity.proxying.EntitySpec
-import brooklyn.event.basic.DependentConfiguration
-import brooklyn.event.basic.ListConfigKey.ListModifications
-import brooklyn.event.basic.MapConfigKey.MapModifications
-import brooklyn.event.basic.SetConfigKey.SetModifications
+import org.apache.brooklyn.core.event.basic.DependentConfiguration
+import org.apache.brooklyn.core.event.basic.ListConfigKey.ListModifications
+import org.apache.brooklyn.core.event.basic.MapConfigKey.MapModifications
+import org.apache.brooklyn.core.event.basic.SetConfigKey.SetModifications
 import org.apache.brooklyn.location.basic.SimulatedLocation
 import org.apache.brooklyn.test.entity.TestApplication
 import org.apache.brooklyn.test.entity.TestEntity

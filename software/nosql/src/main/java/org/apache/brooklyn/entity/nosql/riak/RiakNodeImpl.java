@@ -29,16 +29,16 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.core.event.basic.AttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.event.feed.http.HttpFeed;
+import org.apache.brooklyn.core.event.feed.http.HttpPollConfig;
+import org.apache.brooklyn.core.event.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.basic.AttributeSensorAndConfigKey;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;

@@ -23,6 +23,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl.TestEntityWithoutEnrichers;
@@ -38,7 +39,6 @@ import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChild
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

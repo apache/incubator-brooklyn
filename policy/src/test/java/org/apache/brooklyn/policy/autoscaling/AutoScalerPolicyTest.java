@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.event.basic.BasicNotificationSensor;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestCluster;
@@ -50,7 +51,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Resizable;
-import brooklyn.event.basic.BasicNotificationSensor;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;

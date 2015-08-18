@@ -22,6 +22,7 @@ import static org.apache.brooklyn.policy.autoscaling.AutoScalerPolicyTest.curren
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestCluster;
@@ -31,7 +32,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.collect.ImmutableMap;
 

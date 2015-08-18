@@ -24,6 +24,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
@@ -37,7 +38,6 @@ import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.event.basic.Sensors;
 
 public class WebClusterApp extends AbstractApplication {
 

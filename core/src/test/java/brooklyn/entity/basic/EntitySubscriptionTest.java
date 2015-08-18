@@ -23,6 +23,7 @@ import static org.testng.Assert.assertEquals;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
+import org.apache.brooklyn.core.event.basic.BasicSensorEvent;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
@@ -30,9 +31,6 @@ import org.apache.brooklyn.test.entity.TestEntity;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.event.basic.BasicSensorEvent;
-
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import com.google.common.collect.ImmutableList;

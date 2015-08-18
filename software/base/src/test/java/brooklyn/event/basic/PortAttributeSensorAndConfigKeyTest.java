@@ -23,6 +23,7 @@ import static org.testng.Assert.assertEquals;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.event.basic.PortAttributeSensorAndConfigKey;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;

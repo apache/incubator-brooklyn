@@ -23,13 +23,13 @@ import java.util.Collection;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicAttributeSensor;
 
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.brooklynnode.CallbackEntityHttpClient.Request;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
 import brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
-import brooklyn.event.basic.BasicAttributeSensor;
 
 import com.google.common.base.Function;
 import com.google.common.reflect.TypeToken;

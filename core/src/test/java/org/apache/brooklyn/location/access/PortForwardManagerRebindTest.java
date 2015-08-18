@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ha.MementoCopyMode;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.apache.brooklyn.util.net.Networking;
@@ -47,7 +48,6 @@ import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.event.basic.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
 import org.apache.brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
 import org.apache.brooklyn.test.Asserts;
@@ -40,7 +41,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;

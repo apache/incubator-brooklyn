@@ -36,13 +36,12 @@ import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.basic.BrooklynType;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;

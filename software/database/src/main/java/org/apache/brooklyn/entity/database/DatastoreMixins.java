@@ -26,6 +26,7 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.util.stream.KnownSizeInputStream;
@@ -33,7 +34,6 @@ import org.apache.brooklyn.util.text.Strings;
 
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.event.basic.Sensors;
 
 public class DatastoreMixins {
 

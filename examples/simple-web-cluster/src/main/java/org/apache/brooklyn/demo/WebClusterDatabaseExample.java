@@ -19,8 +19,8 @@
 package org.apache.brooklyn.demo;
 
 import static brooklyn.entity.java.JavaEntityMethods.javaSysProp;
-import static brooklyn.event.basic.DependentConfiguration.attributeWhenReady;
-import static brooklyn.event.basic.DependentConfiguration.formatString;
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.event.basic.DependentConfiguration.formatString;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -34,10 +34,8 @@ import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 
+import org.apache.brooklyn.core.event.basic.Sensors;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
-
-import brooklyn.event.basic.Sensors;
-
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;

@@ -34,6 +34,7 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.guava.SerializablePredicate;
@@ -52,7 +53,6 @@ import brooklyn.entity.rebind.RecordingRebindExceptionHandler;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

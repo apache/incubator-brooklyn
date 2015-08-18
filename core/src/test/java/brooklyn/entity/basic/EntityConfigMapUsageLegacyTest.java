@@ -32,9 +32,9 @@ import org.apache.brooklyn.util.time.Time;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.event.basic.DependentConfiguration;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.DependentConfiguration;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import com.google.common.base.Function;

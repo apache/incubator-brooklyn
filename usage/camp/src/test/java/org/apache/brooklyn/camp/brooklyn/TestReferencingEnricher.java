@@ -20,9 +20,9 @@ package org.apache.brooklyn.camp.brooklyn;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
 
 import brooklyn.enricher.basic.AbstractEnricher;
-import brooklyn.event.basic.BasicConfigKey;
 
 public class TestReferencingEnricher extends AbstractEnricher {
     public static final ConfigKey<Entity> TEST_APPLICATION = new BasicConfigKey<Entity>(Entity.class, "test.reference.app");

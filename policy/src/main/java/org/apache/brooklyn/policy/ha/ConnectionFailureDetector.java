@@ -21,11 +21,11 @@ package org.apache.brooklyn.policy.ha;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.event.basic.BasicNotificationSensor;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.event.basic.BasicNotificationSensor;
 
 import org.apache.brooklyn.policy.ha.HASensors.FailureDescriptor;
 import org.apache.brooklyn.util.guava.Maybe;

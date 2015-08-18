@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.entity.messaging.rabbit;
 
+import org.apache.brooklyn.core.event.feed.ssh.SshFeed;
+import org.apache.brooklyn.core.event.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.core.event.feed.ssh.SshPollValue;
 import org.apache.brooklyn.entity.messaging.Queue;
-import brooklyn.event.feed.ssh.SshFeed;
-import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.event.feed.ssh.SshPollValue;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

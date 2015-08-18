@@ -21,13 +21,13 @@ package org.apache.brooklyn.entity.nosql.elasticsearch;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.event.feed.http.HttpFeed;
+import org.apache.brooklyn.core.event.feed.http.HttpPollConfig;
+import org.apache.brooklyn.core.event.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.core.event.feed.http.JsonFunctions;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.event.feed.http.JsonFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.util.guava.Functionals;
