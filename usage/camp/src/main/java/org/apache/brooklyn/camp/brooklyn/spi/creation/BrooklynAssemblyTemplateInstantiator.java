@@ -18,14 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.AssemblyTemplate.Builder;
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-import io.brooklyn.camp.spi.collection.ResolvableLink;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -46,7 +38,14 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate.Builder;
+import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
+import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils;

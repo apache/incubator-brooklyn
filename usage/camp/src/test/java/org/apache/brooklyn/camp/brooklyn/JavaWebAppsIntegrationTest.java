@@ -19,11 +19,6 @@
 package org.apache.brooklyn.camp.brooklyn;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.PlatformComponent;
-import io.brooklyn.camp.spi.PlatformRootSummary;
-import io.brooklyn.camp.spi.collection.ResolvableLink;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -36,11 +31,14 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.Policy;
-
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.PlatformComponent;
+import org.apache.brooklyn.camp.spi.PlatformRootSummary;
+import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
 import org.apache.brooklyn.core.util.ResourceUtils;
-
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
@@ -56,7 +54,9 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
+
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

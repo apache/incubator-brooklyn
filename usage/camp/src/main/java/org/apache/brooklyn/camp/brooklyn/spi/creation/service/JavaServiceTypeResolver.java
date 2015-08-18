@@ -18,9 +18,8 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

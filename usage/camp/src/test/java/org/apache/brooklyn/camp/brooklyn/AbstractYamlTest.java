@@ -18,9 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Set;
@@ -30,6 +27,8 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.util.ResourceUtils;

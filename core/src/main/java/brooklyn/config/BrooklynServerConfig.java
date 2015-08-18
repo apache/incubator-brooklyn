@@ -19,13 +19,13 @@
 package brooklyn.config;
 
 import static brooklyn.entity.basic.ConfigKeys.newStringConfigKey;
-import io.brooklyn.camp.CampPlatform;
 
 import java.io.File;
 import java.net.URI;
 import java.util.Map;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

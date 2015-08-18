@@ -47,8 +47,11 @@ import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl;
 import org.apache.brooklyn.core.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
@@ -106,9 +109,6 @@ import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 /**
  * Example usage is:

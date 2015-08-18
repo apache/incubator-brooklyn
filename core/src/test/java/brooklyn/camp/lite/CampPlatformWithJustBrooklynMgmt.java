@@ -19,8 +19,8 @@
 package brooklyn.camp.lite;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.camp.BasicCampPlatform;
 
-import io.brooklyn.camp.BasicCampPlatform;
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;

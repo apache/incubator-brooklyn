@@ -18,11 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.dsl;
 
-import io.brooklyn.camp.spi.resolve.PlanInterpreter;
-import io.brooklyn.camp.spi.resolve.PlanInterpreter.PlanInterpreterAdapter;
-import io.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
-import io.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode.Role;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +27,10 @@ import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.BrooklynDslCommon;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.parse.DslParser;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.parse.FunctionWithArgs;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.parse.QuotedString;
+import org.apache.brooklyn.camp.spi.resolve.PlanInterpreter;
+import org.apache.brooklyn.camp.spi.resolve.PlanInterpreter.PlanInterpreterAdapter;
+import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
+import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode.Role;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

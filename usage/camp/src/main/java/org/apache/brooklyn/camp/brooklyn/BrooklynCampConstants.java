@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.CampPlatform;
-
 import java.util.Set;
+
+import org.apache.brooklyn.camp.CampPlatform;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.ConfigInheritance;

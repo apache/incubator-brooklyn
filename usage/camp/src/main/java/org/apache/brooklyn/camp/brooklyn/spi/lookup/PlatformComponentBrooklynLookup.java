@@ -18,17 +18,16 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.lookup;
 
-import io.brooklyn.camp.spi.PlatformComponent;
-import io.brooklyn.camp.spi.PlatformComponent.Builder;
-import io.brooklyn.camp.spi.PlatformRootSummary;
-import io.brooklyn.camp.spi.collection.ResolvableLink;
-
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.camp.spi.PlatformComponent;
+import org.apache.brooklyn.camp.spi.PlatformRootSummary;
+import org.apache.brooklyn.camp.spi.PlatformComponent.Builder;
+import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
 
 
 public class PlatformComponentBrooklynLookup extends AbstractBrooklynResourceLookup<PlatformComponent> {

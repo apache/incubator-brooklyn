@@ -18,11 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
-import io.brooklyn.camp.spi.AbstractResource;
-import io.brooklyn.camp.spi.ApplicationComponentTemplate;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -46,6 +41,10 @@ import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
+import org.apache.brooklyn.camp.spi.AbstractResource;
+import org.apache.brooklyn.camp.spi.ApplicationComponentTemplate;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;

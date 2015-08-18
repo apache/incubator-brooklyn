@@ -18,16 +18,15 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.lookup;
 
-import io.brooklyn.camp.spi.AbstractResource;
-import io.brooklyn.camp.spi.PlatformRootSummary;
-import io.brooklyn.camp.spi.collection.ResolvableLink;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.camp.spi.AbstractResource;
+import org.apache.brooklyn.camp.spi.PlatformRootSummary;
+import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 
 public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>  extends AbstractBrooklynResourceLookup<T> {

@@ -22,8 +22,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
-import io.brooklyn.camp.BasicCampPlatform;
-import io.brooklyn.camp.test.mock.web.MockWebPlatform;
 
 import java.io.File;
 
@@ -40,6 +38,8 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.camp.BasicCampPlatform;
+import org.apache.brooklyn.camp.test.mock.web.MockWebPlatform;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogDto;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
