@@ -48,6 +48,7 @@ import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils.CreationResult;
 import org.apache.brooklyn.core.util.ResourceUtils;
@@ -55,7 +56,6 @@ import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Urls;
 
-import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.BasicApplicationImpl;
 
 import com.google.common.collect.Iterables;

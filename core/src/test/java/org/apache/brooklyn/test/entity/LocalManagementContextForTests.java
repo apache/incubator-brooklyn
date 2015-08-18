@@ -19,11 +19,10 @@
 package org.apache.brooklyn.test.entity;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
-
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
 
 /** management context which allows disabling common time-consuming tasks.
  * most instances have:

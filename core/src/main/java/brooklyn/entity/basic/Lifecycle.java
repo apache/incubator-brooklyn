@@ -23,14 +23,13 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import brooklyn.config.render.RendererHints;
-
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.util.text.StringFunctions;
 

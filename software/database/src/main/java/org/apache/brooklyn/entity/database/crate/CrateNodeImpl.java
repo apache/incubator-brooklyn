@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.entity.database.crate;
 
+import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.util.guava.Functionals;
 
-import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcessImpl;

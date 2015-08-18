@@ -32,9 +32,9 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 

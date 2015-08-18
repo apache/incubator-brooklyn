@@ -23,16 +23,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.io.File;
 import java.util.Map;
 
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
+import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.os.Os;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.ConfigUtils;
 
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;

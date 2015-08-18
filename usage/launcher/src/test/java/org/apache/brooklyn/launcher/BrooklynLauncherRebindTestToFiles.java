@@ -21,6 +21,8 @@ package org.apache.brooklyn.launcher;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.config.BrooklynServerPaths;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
@@ -35,8 +37,6 @@ import java.io.File;
 
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;

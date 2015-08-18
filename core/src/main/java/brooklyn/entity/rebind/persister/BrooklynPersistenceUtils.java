@@ -40,13 +40,13 @@ import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.mementos.Memento;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
+import org.apache.brooklyn.core.config.BrooklynServerPaths;
 import org.apache.brooklyn.core.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import org.apache.brooklyn.core.management.internal.LocalLocationManager;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.ResourceUtils;
 
-import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.PersistenceExceptionHandlerImpl;

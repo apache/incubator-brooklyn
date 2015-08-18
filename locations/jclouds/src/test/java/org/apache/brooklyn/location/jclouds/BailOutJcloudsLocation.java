@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -42,7 +43,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.reflect.TypeToken;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ConfigKeys;
 
 public class BailOutJcloudsLocation extends JcloudsLocation {

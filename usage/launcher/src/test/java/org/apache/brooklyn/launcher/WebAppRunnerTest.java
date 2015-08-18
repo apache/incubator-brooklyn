@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.launcher;
 
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.launcher.BrooklynWebServer;
@@ -39,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 
 import com.google.common.collect.Lists;

@@ -20,6 +20,8 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.osgi.OsgiTestResources;
 import org.apache.brooklyn.core.util.ResourceUtils;
@@ -35,9 +37,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
-
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
 
 import com.google.common.io.ByteStreams;
 

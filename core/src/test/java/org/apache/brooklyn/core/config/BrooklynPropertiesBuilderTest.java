@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config;
+package org.apache.brooklyn.core.config;
 
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
 
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.util.os.Os;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

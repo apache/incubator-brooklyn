@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.http.HttpTool;
@@ -41,8 +42,6 @@ import org.eclipse.jetty.server.Server;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
-
-import brooklyn.config.BrooklynProperties;
 
 public class ServerResourceIntegrationTest extends BrooklynRestApiLauncherTestFixture {
 

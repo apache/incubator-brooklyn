@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.test.config.render;
 
-import brooklyn.config.render.RendererHints;
+import org.apache.brooklyn.core.config.render.RendererHints;
 
 /** Methods used when testing the {@link RendererHints} regiostry. */
 public class TestRendererHints {

@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config;
+package org.apache.brooklyn.core.config;
 
 import static org.testng.Assert.assertEquals
 import static org.testng.Assert.fail
 
 import org.testng.annotations.Test
-
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList

@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.launcher.config;
 
-import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BrooklynServiceAttributes;
 import org.apache.brooklyn.core.management.internal.BrooklynGarbageCollector;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.rest.BrooklynWebConfig;

@@ -47,7 +47,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
@@ -65,6 +64,7 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;

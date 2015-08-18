@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config;
+package org.apache.brooklyn.core.config;
 
 import java.io.File;
 import java.util.Map;
@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.config.StringConfigMap;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.apache.brooklyn.util.collections.MutableMap;

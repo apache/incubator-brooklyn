@@ -24,12 +24,12 @@ import static org.testng.Assert.assertTrue;
 import java.util.Arrays;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 
 public class LocalhostProvisioningAndAccessTest {

@@ -21,10 +21,8 @@ package org.apache.brooklyn.entity.database.mysql;
 import java.util.Arrays;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.testng.annotations.Test;
-
-import brooklyn.config.BrooklynProperties;
-
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 import org.apache.brooklyn.location.basic.SshMachineLocation;

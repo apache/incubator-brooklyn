@@ -56,6 +56,8 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.config.BrooklynLogging;
+import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
@@ -77,8 +79,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.basic.AbstractBrooklynObject;
 
-import brooklyn.config.BrooklynLogging;
-import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
 import brooklyn.entity.rebind.BasicEntityRebindSupport;

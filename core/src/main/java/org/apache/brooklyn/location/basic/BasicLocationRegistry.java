@@ -42,6 +42,8 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.config.ConfigMap;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
+import org.apache.brooklyn.core.config.ConfigPredicates;
+import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.management.internal.LocalLocationManager;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -53,9 +55,6 @@ import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.WildcardGlobs;
 import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import org.apache.brooklyn.util.text.WildcardGlobs.PhraseTreatment;
-
-import brooklyn.config.ConfigPredicates;
-import brooklyn.config.ConfigUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;

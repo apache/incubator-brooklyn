@@ -53,6 +53,8 @@ import org.apache.brooklyn.api.location.PortSupplier;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.core.config.BrooklynLogging;
+import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
@@ -93,8 +95,6 @@ import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
 
-import brooklyn.config.BrooklynLogging;
-import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;

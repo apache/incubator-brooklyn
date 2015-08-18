@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
@@ -48,7 +49,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.LocationConfigKeys;

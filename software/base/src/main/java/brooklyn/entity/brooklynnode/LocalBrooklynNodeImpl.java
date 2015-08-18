@@ -18,9 +18,8 @@
  */
 package brooklyn.entity.brooklynnode;
 
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.util.text.Strings;
-
-import brooklyn.config.BrooklynProperties;
 
 public class LocalBrooklynNodeImpl extends BrooklynNodeImpl implements LocalBrooklynNode {
 

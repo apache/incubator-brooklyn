@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config;
+package org.apache.brooklyn.core.config;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.slf4j.Logger;

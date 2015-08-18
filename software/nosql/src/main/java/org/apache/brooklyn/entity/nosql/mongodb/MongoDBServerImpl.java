@@ -24,14 +24,15 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.core.config.render.RendererHints;
 import org.bson.BasicBSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.render.RendererHints;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
+
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 
 import com.google.common.base.Functions;

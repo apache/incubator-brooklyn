@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config;
+package org.apache.brooklyn.core.config;
 
 import java.util.regex.Pattern;
 

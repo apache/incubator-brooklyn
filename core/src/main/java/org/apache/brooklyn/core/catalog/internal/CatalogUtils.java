@@ -33,6 +33,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
+import org.apache.brooklyn.core.config.BrooklynLogging;
 import org.apache.brooklyn.core.management.classloading.BrooklynClassLoadingContextSequential;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.management.classloading.OsgiBrooklynClassLoadingContext;
@@ -42,7 +43,6 @@ import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Time;
 
-import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
 

@@ -24,6 +24,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.config.BrooklynServiceAttributes;
 import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
@@ -34,8 +36,6 @@ import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.ConfigKeys;
 
 public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements ManagementContextInjectable {

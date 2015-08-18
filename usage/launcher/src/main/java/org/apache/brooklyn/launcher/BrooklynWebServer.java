@@ -60,12 +60,12 @@ import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.config.BrooklynServerPaths;
-import brooklyn.config.BrooklynServiceAttributes;
 
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BrooklynServerPaths;
+import org.apache.brooklyn.core.config.BrooklynServiceAttributes;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.BrooklynNetworkUtils;

@@ -20,14 +20,12 @@ package org.apache.brooklyn.location.jclouds;
 
 import java.util.Map;
 
+import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.basic.DeprecatedKeysMappingBuilder;
 import org.apache.brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.ConfigUtils;
-
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 

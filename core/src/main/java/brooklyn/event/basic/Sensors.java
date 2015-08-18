@@ -28,12 +28,11 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.AttributeSensor.SensorPersistenceMode;
+import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.util.net.UserAndHostAndPort;
 import org.apache.brooklyn.util.text.StringFunctions;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
-
-import brooklyn.config.render.RendererHints;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

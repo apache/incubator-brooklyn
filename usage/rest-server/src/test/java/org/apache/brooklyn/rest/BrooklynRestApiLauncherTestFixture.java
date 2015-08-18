@@ -24,12 +24,12 @@ import org.reflections.util.ClasspathHelper;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.BrooklynServiceAttributes;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
+import org.apache.brooklyn.core.config.BrooklynServiceAttributes;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import org.apache.brooklyn.util.exceptions.Exceptions;

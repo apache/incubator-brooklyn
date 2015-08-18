@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config;
+package org.apache.brooklyn.core.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import groovy.lang.Closure;
@@ -34,8 +34,8 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
@@ -47,14 +47,14 @@ import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.event.basic.BasicConfigKey;
-
 import com.google.common.annotations.Beta;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
+
+import brooklyn.event.basic.BasicConfigKey;
 
 /** utils for accessing command-line and system-env properties;
  * doesn't resolve anything (unless an execution context is supplied)

@@ -39,6 +39,8 @@ import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.EnricherSpec.ExtensibleEnricherSpec;
 import org.apache.brooklyn.config.ConfigInheritance;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BrooklynLogging;
+import org.apache.brooklyn.core.config.BrooklynLogging.LoggingLevel;
 import org.apache.brooklyn.core.util.task.ValueResolver;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.collections.MutableList;
@@ -53,8 +55,6 @@ import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.BrooklynLogging;
-import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.enricher.basic.AbstractMultipleSensorAggregator;

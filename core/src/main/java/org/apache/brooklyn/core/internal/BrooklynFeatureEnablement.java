@@ -21,12 +21,11 @@ package org.apache.brooklyn.core.internal;
 import java.util.Map;
 
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.util.internal.ssh.ShellTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.BrooklynProperties;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Maps;

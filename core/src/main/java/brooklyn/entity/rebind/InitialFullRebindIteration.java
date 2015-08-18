@@ -26,6 +26,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
+import org.apache.brooklyn.core.config.BrooklynLogging;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagementMode;
 import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.management.internal.LocationManagerInternal;
@@ -34,7 +35,6 @@ import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 

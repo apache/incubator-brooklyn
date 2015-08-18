@@ -61,6 +61,7 @@ import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
@@ -79,7 +80,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.basic.BrooklynObjectInternal;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.trait.Startable;

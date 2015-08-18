@@ -18,6 +18,7 @@
  */
 package brooklyn.entity.rebind.persister.jclouds;
 
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerTestFixture;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
@@ -25,7 +26,6 @@ import org.apache.brooklyn.util.text.Identifiers;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 
 @Test(groups={"Live", "Live-sanity"})

@@ -24,10 +24,8 @@ import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.config.BrooklynProperties;
-
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
 

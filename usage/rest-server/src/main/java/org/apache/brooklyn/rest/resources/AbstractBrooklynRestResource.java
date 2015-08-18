@@ -23,15 +23,13 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 
 import org.codehaus.jackson.map.ObjectMapper;
-
-import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.BrooklynServiceAttributes;
-import brooklyn.config.render.RendererHints;
-
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
+import org.apache.brooklyn.core.config.BrooklynServiceAttributes;
+import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;

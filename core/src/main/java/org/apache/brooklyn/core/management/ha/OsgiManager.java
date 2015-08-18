@@ -40,6 +40,8 @@ import brooklyn.BrooklynVersion;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BrooklynServerConfig;
+import org.apache.brooklyn.core.config.BrooklynServerPaths;
 import org.apache.brooklyn.core.util.osgi.Osgis;
 import org.apache.brooklyn.core.util.osgi.Osgis.BundleFinder;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -51,9 +53,6 @@ import org.apache.brooklyn.util.os.Os.DeletionResult;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
-
-import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.BrooklynServerPaths;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;

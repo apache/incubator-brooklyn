@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config.internal;
+package org.apache.brooklyn.core.config.internal;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

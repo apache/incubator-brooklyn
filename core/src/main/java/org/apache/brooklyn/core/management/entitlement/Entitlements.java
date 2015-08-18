@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.management.entitlement.EntitlementClass;
 import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -47,7 +48,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
-import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;

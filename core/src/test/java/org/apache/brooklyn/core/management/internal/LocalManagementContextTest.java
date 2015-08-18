@@ -27,15 +27,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext.PropertiesReloadListener;
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.config.BrooklynProperties.Factory.Builder;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.os.Os;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.BrooklynProperties.Factory.Builder;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;

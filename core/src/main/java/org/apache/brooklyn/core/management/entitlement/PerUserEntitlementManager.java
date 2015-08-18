@@ -24,13 +24,13 @@ import org.apache.brooklyn.api.management.entitlement.EntitlementClass;
 import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.core.config.ConfigPredicates;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.config.ConfigPredicates;
 import brooklyn.entity.basic.ConfigKeys;
 
 import com.google.common.base.Preconditions;

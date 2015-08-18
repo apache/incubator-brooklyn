@@ -64,6 +64,8 @@ import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.config.BrooklynLogging;
+import org.apache.brooklyn.core.config.BrooklynLogging.LoggingLevel;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagementMode;
 import org.apache.brooklyn.core.management.internal.BrooklynObjectManagerInternal;
@@ -74,8 +76,6 @@ import org.apache.brooklyn.core.management.internal.ManagementTransitionMode;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 
-import brooklyn.config.BrooklynLogging;
-import brooklyn.config.BrooklynLogging.LoggingLevel;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;

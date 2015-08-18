@@ -31,12 +31,12 @@ import javax.management.openmbean.CompositeData;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.util.math.MathFunctions;
 import org.apache.brooklyn.util.text.ByteSizeStrings;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 
-import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
 import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.event.feed.http.HttpValueFunctions;

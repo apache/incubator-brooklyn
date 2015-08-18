@@ -28,6 +28,8 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.config.BrooklynLogging;
+import org.apache.brooklyn.core.config.BrooklynLogging.LoggingLevel;
 import org.apache.brooklyn.core.management.internal.CollectionChangeListener;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.task.Tasks;
@@ -35,9 +37,6 @@ import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.BrooklynLogging;
-import brooklyn.config.BrooklynLogging.LoggingLevel;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
