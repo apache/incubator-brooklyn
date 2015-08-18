@@ -31,7 +31,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.basic.BrooklynTypes;
+import org.apache.brooklyn.basic.BrooklynTypes;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -66,18 +65,9 @@ import org.apache.brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
 import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
 import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
-import org.apache.brooklyn.cli.CloudExplorer.BlobstoreGetBlobCommand;
-import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainerCommand;
-import org.apache.brooklyn.cli.CloudExplorer.BlobstoreListContainersCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeDefaultTemplateCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeGetImageCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeListHardwareProfilesCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeListImagesCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeListInstancesCommand;
-import org.apache.brooklyn.cli.CloudExplorer.ComputeTerminateInstancesCommand;
-import org.apache.brooklyn.cli.ItemLister.ListAllCommand;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.management.ha.OsgiManager;
+import org.apache.brooklyn.core.util.ResourceUtils;
 
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
@@ -95,7 +85,6 @@ import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import org.apache.brooklyn.rest.security.PasswordHasher;
 import org.apache.brooklyn.rest.util.ShutdownHandler;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import brooklyn.util.exceptions.FatalRuntimeException;

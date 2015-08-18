@@ -31,6 +31,7 @@ import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.LocationManager;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,6 @@ import org.apache.brooklyn.location.dynamic.DynamicLocation;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.guava.Maybe;
-import brooklyn.util.task.DynamicTasks;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

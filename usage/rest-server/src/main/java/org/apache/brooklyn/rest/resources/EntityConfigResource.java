@@ -34,14 +34,14 @@ import brooklyn.event.basic.BasicConfigKey;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.core.util.task.ValueResolver;
 import org.apache.brooklyn.rest.api.EntityConfigApi;
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;
 import org.apache.brooklyn.rest.filter.HaHotStateRequired;
 import org.apache.brooklyn.rest.transform.EntityTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 
-import brooklyn.util.flags.TypeCoercions;
-import brooklyn.util.task.ValueResolver;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;
 

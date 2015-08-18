@@ -51,6 +51,7 @@ import org.apache.brooklyn.cli.AbstractMain.HelpCommand;
 import org.apache.brooklyn.cli.Main.AppShutdownHandler;
 import org.apache.brooklyn.cli.Main.GeneratePasswordCommand;
 import org.apache.brooklyn.cli.Main.LaunchCommand;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,6 @@ import brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import brooklyn.test.Asserts;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;

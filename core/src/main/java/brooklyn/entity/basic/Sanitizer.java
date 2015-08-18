@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.util.config.ConfigBag;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 
 import com.google.api.client.util.Lists;
 import com.google.common.base.Predicate;

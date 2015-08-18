@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.enricher.basic.Aggregator;
@@ -43,7 +44,6 @@ import brooklyn.enricher.basic.UpdatingMap;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.text.StringPredicates;
 import brooklyn.util.text.Strings;
 

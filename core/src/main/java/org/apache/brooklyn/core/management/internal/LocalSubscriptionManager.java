@@ -40,12 +40,12 @@ import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.management.ExecutionManager;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.apache.brooklyn.api.management.SubscriptionManager;
+import org.apache.brooklyn.core.util.task.BasicExecutionManager;
+import org.apache.brooklyn.core.util.task.SingleThreadedScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.task.BasicExecutionManager;
-import brooklyn.util.task.SingleThreadedScheduler;
 import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Predicate;

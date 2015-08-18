@@ -26,10 +26,12 @@ import java.util.Set;
 
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.util.task.ssh.SshTasks;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.Tasks;
-import brooklyn.util.task.ssh.SshTasks;
+
 import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;

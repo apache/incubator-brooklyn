@@ -31,6 +31,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.core.util.internal.ssh.SshTool;
+import org.apache.brooklyn.core.util.internal.ssh.cli.SshCliTool;
+import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationImpl;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -41,13 +44,12 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.Entities;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.internal.ssh.SshTool;
-import brooklyn.util.internal.ssh.cli.SshCliTool;
-import brooklyn.util.internal.ssh.sshj.SshjTool;
 import brooklyn.util.stream.StreamGobbler;
 
 import com.google.common.base.Function;

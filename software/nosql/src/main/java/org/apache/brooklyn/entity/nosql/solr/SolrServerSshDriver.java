@@ -33,10 +33,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.util.file.ArchiveUtils;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.file.ArchiveUtils;
 import brooklyn.util.net.Networking;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;

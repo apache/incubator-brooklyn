@@ -18,12 +18,12 @@
  */
 package org.apache.brooklyn.entity.webapp;
 
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.TypeCoercions;
 
 public class HttpsSslConfigTest {
 

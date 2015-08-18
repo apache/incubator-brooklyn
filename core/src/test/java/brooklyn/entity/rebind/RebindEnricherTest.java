@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
@@ -55,7 +56,6 @@ import org.apache.brooklyn.location.basic.SimulatedLocation;
 
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableSet;
-import brooklyn.util.flags.SetFromFlag;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringFunctions;
 

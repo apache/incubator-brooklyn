@@ -23,13 +23,13 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.event.basic.Sensors;
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

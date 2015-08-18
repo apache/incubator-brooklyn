@@ -24,6 +24,7 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.testng.Assert;
 
 import com.google.common.base.Preconditions;
@@ -32,7 +33,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.config.ConfigBag;
 
 public class TestSensorAndEffectorInitializer implements EntityInitializer {
 

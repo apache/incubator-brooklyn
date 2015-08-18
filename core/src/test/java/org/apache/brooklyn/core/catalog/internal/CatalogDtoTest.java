@@ -39,12 +39,12 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.catalog.internal.CatalogXmlSerializer;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.util.BrooklynMavenArtifacts;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.BrooklynMavenArtifacts;
 import brooklyn.util.maven.MavenRetriever;
 
 import com.google.common.collect.ImmutableList;

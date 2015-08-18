@@ -30,10 +30,12 @@ import brooklyn.entity.database.mysql.MySqlSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
+
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.CountdownTimer;
 import brooklyn.util.time.Duration;
 

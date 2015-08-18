@@ -19,10 +19,10 @@
 package org.apache.brooklyn.camp.brooklyn;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.policy.basic.AbstractPolicy;
 
 public class TestReferencingPolicy extends AbstractPolicy {
     public static final ConfigKey<Entity> TEST_APPLICATION = new BasicConfigKey<Entity>(Entity.class, "test.reference.app");

@@ -19,8 +19,7 @@
 package org.apache.brooklyn.rest.testing.mocks;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
-
-import brooklyn.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 
 public class CapitalizePolicy extends AbstractPolicy {
 

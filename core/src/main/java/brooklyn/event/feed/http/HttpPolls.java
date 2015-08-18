@@ -20,10 +20,9 @@ package brooklyn.event.feed.http;
 
 import java.net.URI;
 
+import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.http.impl.client.DefaultHttpClient;
-
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.collect.ImmutableMap;
 

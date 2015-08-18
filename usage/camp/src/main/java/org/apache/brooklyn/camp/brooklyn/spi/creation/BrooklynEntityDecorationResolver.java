@@ -33,9 +33,9 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.annotations.Beta;
 

@@ -28,6 +28,8 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.core.util.internal.ConfigKeySelfExtracting;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +37,6 @@ import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.TypeTokens;
-import brooklyn.util.internal.ConfigKeySelfExtracting;
-import brooklyn.util.task.Tasks;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;

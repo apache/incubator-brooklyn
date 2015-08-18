@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.util.internal.ssh.process.ProcessTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,6 @@ import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
-import brooklyn.util.internal.ssh.process.ProcessTool;
 import brooklyn.util.io.FileUtil;
 import brooklyn.util.os.Os;
 import brooklyn.util.os.Os.DeletionResult;

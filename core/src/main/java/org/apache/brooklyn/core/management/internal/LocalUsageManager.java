@@ -39,6 +39,7 @@ import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.usage.ApplicationUsage;
 import org.apache.brooklyn.core.management.usage.LocationUsage;
+import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,6 @@ import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.basic.LocationInternal;
 
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.TypeCoercions;
 import brooklyn.util.javalang.Reflections;
 import brooklyn.util.time.Duration;
 

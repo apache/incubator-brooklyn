@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.core.util.task.TaskInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -44,7 +45,6 @@ import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.test.Asserts;
-import brooklyn.util.task.TaskInternal;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;

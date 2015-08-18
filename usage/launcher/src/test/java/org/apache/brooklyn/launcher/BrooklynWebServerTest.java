@@ -19,6 +19,8 @@
 package org.apache.brooklyn.launcher;
 
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.launcher.BrooklynWebServer;
 
 import static org.testng.Assert.assertEquals;
@@ -55,8 +57,6 @@ import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.http.HttpTool;
-import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

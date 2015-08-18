@@ -19,13 +19,13 @@
 package brooklyn.entity.software;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BasicEntity;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.collect.ImmutableMap;
 

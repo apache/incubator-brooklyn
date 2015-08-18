@@ -27,11 +27,11 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 
 import brooklyn.test.TestHttpRequestHandler;
 import brooklyn.test.TestHttpServer;
-import brooklyn.util.ResourceUtils;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 

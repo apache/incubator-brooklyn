@@ -24,6 +24,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,6 @@ import brooklyn.entity.messaging.jms.JMSDestinationImpl;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.flags.SetFromFlag;
 
 public abstract class QpidDestinationImpl extends JMSDestinationImpl implements QpidDestination {
     public static final Logger log = LoggerFactory.getLogger(QpidDestination.class);

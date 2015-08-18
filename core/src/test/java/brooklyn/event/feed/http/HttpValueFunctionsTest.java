@@ -25,10 +25,9 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

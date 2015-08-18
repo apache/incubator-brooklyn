@@ -205,7 +205,7 @@
             </resource>
             <resource>
                 <targetPath>META-INF</targetPath>
-                <directory>${basedir}/src/main/license</directory>
+                <directory>${basedir}/src/main/license/files</directory>
             </resource>
         </resources>
         <testResources>
@@ -214,7 +214,7 @@
             </testResource>
             <testResource>
                 <targetPath>META-INF</targetPath>
-                <directory>${basedir}/src/test/license</directory>
+                <directory>${basedir}/src/test/license/files</directory>
             </testResource>
         </testResources>
     </build>

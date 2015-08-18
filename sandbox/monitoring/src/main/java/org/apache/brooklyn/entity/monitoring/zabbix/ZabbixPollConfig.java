@@ -21,6 +21,7 @@ package org.apache.brooklyn.entity.monitoring.zabbix;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.core.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -30,7 +31,6 @@ import brooklyn.event.feed.PollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 import brooklyn.util.collections.MutableList;
-import brooklyn.util.http.HttpToolResponse;
 
 public class ZabbixPollConfig<T> extends PollConfig<HttpToolResponse, T, ZabbixPollConfig<T>> {
 

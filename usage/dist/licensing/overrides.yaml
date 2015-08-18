@@ -1,0 +1,220 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# overrides file for org.heneveld.license-audit-maven-plugin
+# expands/corrects detail needed for generating license notices
+
+
+# super-projects to suppress notices for sub-projects
+
+- id: org.apache.brooklyn
+  url: http://brooklyn.incubator.apache.org/
+- id: org.apache.jclouds
+  url: http://jclouds.apache.org/
+- id: com.fasterxml.jackson
+  url: http://wiki.fasterxml.com/JacksonHome
+
+
+# poms with missing data
+
+- id: org.codehaus.jettison:jettison
+  url: https://github.com/codehaus/jettison
+  license: ASL2 
+- id: org.glassfish.external:opendmk_jmxremote_optional_jar
+  url: https://opendmk.java.net/
+  license: CDDL
+
+
+# poms with incorrect data (out-of-date URL's mainly)
+
+- id: org.hibernate:jtidy:r8-20060801
+  license:
+  - url: "http://sourceforge.net/p/jtidy/code/HEAD/tree/trunk/jtidy/LICENSE.txt?revision=95"
+    name: Java HTML Tidy License
+    comment: Original link http://svn.sourceforge.net/viewvc/*checkout*/jtidy/trunk/jtidy/LICENSE.txt?revision=95 is no longer valid
+- id: dom4j:dom4j:1.6.1
+  url: "http://dom4j.sourceforge.net/"
+  license:
+  - name: MetaStuff BSD style license (3-clause)
+    url: http://dom4j.sourceforge.net/dom4j-1.6.1/license.html
+- id: org.python:jython-standalone:2.7-b3
+  license:
+  - url: http://www.jython.org/license.html
+    name: Jython Software License
+    comment: Original link http://www.jython.org/Project/license.html is no longer valid
+- id: xpp3:xpp3_min:1.1.4c
+  license:
+  - url: https://github.com/apache/openmeetings/blob/a95714ce3f7e587d13d3d0bb3b4f570be15c67a5/LICENSE#L1361
+    name: "Indiana University Extreme! Lab Software License, vesion 1.1.1"
+    comment: |
+      The license applies to the Xpp3 classes (all classes below the org.xmlpull package with exception of classes directly in package org.xmlpull.v1);
+      original link http://www.extreme.indiana.edu/viewcvs/~checkout~/XPP3/java/LICENSE.txt is no longer valid
+  ## as we pull in xmlpull separately we do not use this, and having a single above simplifies the automation:
+  #  - url: http://creativecommons.org/licenses/publicdomain
+  #    name: Public Domain
+  #    comment: "The license applies to the XmlPull API (all classes directly in the org.xmlpull.v1 package)"
+
+
+# info on non-maven projects
+
+- id: jquery.js
+  url: http://jquery.com/
+  description: JS library for manipulating HTML and eventing
+  name: jQuery JavaScript Library
+  files: jquery.js
+  version: 1.7.2
+  organization: { name: "The jQuery Foundation", url: "http://jquery.org/" }
+  notice: Copyright (c) John Resig (2011)
+  license: MIT
+
+- id: sizzle.js
+  url: http://sizzlejs.com/
+  version: n/a
+  files: included in jquery
+  organization: { name: "The jQuery Foundation", url: "http://jquery.org/" }
+  notice: Copyright (c) jQuery Foundation and other contributors (2011)
+  license: MIT
+
+- id: Swagger JS
+  files: swagger.js
+  version: 1.0.1
+  url: https://github.com/wordnik/swagger-js
+  license: ASL2
+
+- id: Swagger UI
+  files: swagger-ui.js, swagger.js, jquery.{slideto,wiggle}*.js
+  version: 1.0.1
+  url: https://github.com/wordnik/swagger-ui
+  license: ASL2
+  notice: Copyright (c) SmartBear Software (2011-2015), portions WonderGroup and Jordan Thomas (2010)
+  # jquery.wiggle is from WonderGroup/JT, defunct URL http://labs.wondergroup.com/demos/mini-ui/index.html
+
+- id: require.js
+  name: RequireJS 
+  files: require.js, text.js
+  version: 2.0.6 
+  url: http://github.com/jrburke/requirejs for details
+  organization: { name: "The Dojo Foundation", url: "http://dojofoundation.org/" }
+  notice: Copyright (c) The Dojo Foundation (2010-2012)
+  license: MIT
+
+- id: backbone.js
+  version: 1.0.0
+  url: http://backbonejs.org
+  organization: { name: "DocumentCloud Inc", url: "http://www.documentcloud.org/" }
+  notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2010-2013)
+  license: MIT
+
+- id: bootstrap.js
+  version: 2.0.4
+  url: http://twitter.github.com/bootstrap/javascript.html#transitions
+  notice: Copyright (c) Twitter, Inc (2012)
+  license: ASL2
+  
+- id: underscore.js
+  version: 1.4.4
+  files: underscore*.{js,map}
+  url: http://underscorejs.org
+  organization: { name: "DocumentCloud Inc", url: "http://www.documentcloud.org/" }
+  notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2009-2013)
+  license: MIT
+
+- id: async.js
+  files: async.js
+  version: 0.1.1
+  url: https://github.com/p15martin/google-maps-hello-world/blob/master/js/libs/async.js
+  # ORIGINALLY https://github.com/millermedeiros/requirejs-plugins
+  organization: { name: "Miller Medeiros", url: "https://github.com/millermedeiros/" }
+  description: RequireJS plugin for async dependency load like JSONP and Google Maps
+  notice: Copyright (c) Miller Medeiros (2011)
+  license: MIT 
+
+# used for CLI to build catalog
+- id: typeahead.js
+  version: 0.10.5
+  url: https://github.com/twitter/typeahead.js
+  organization: { name: "Twitter, Inc", url: "http://twitter.com" }
+  notice: Copyright (c) Twitter, Inc. and other contributors (2013-2014)
+  license: MIT
+
+- id: handlebars.js
+  files: handlebars*.js
+  version: 1.0-rc1
+  url: https://github.com/wycats/handlebars.js 
+  organization: { name: "Yehuda Katz", url: "https://github.com/wycats/" }
+  notice: Copyright (c) Yehuda Katz (2012)
+  license: MIT
+
+- id: jquery.ba-bbq.js
+  name: "jQuery BBQ: Back Button & Query Library"
+  files: jquery.ba-bbq*.js
+  version: 1.2.1
+  url: http://benalman.com/projects/jquery-bbq-plugin/
+  organization: { name: "\"Cowboy\" Ben Alman", url: "http://benalman.com/" }
+  notice: Copyright (c) "\"Cowboy\" Ben Alman (2010)"
+  license: MIT
+
+- id: moment.js
+  version: 2.1.0
+  url: http://momentjs.com
+  organization: { name: "Tim Wood", url: "http://momentjs.com" }
+  notice: Copyright (c) Tim Wood, Iskren Chernev, Moment.js contributors (2011-2014)
+  license: MIT
+
+- id: ZeroClipboard
+  files: ZeroClipboard.*
+  version: 1.3.1
+  url: http://zeroclipboard.org/
+  organization: { name: "ZeroClipboard contributors", url: "https://github.com/zeroclipboard" }
+  notice: Copyright (c) Jon Rohan, James M. Greene (2014)
+  license: MIT
+
+- id: dataTables.js
+  files: jquery.dataTables.js, dataTables.extensions.js
+  version: 1.9.4
+  url: www.datatables.net
+  organization: { name: "SpryMedia Ltd", url: "http://sprymedia.co.uk/" }
+  notice: Copyright (c) Allan Jardine (2008-2012)
+  license: BSD-3-Clause
+
+- id: js-uri
+  files: URI.js
+  version: r29
+  url: http://code.google.com/p/js-uri/
+  organization: { name: "js-uri contributors", url: "https://code.google.com/js-uri" }
+  license: BSD-3-Clause
+  # inferred
+  notice: Copyright (c) js-uri contributors (2013)
+
+- id: js-yaml.js
+  version: 3.2.7
+  organization: { name: "Vitaly Puzrin", url: "https://github.com/nodeca/" }
+  url: https://github.com/nodeca/
+  notice: Copyright (c) Vitaly Puzrin (2011-2015)
+  license: MIT
+
+- id: jquery.form.js
+  name: jQuery Form Plugin
+  version: "3.09"
+  url: https://github.com/malsup/form
+  organization: { name: "Mike Alsup", url: "http://malsup.com/" }
+  notice: Copyright (c) M. Alsup (2006-2013)
+  # also http://malsup.com/jquery/form/
+  license: MIT
+

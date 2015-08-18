@@ -33,6 +33,9 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.TaskBuilder;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,9 +65,6 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Functionals;
 import brooklyn.util.guava.IfFunctions;
 import brooklyn.util.math.MathPredicates;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.TaskBuilder;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.ByteSizeStrings;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
@@ -565,8 +565,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                                         .onFailureOrException(new Function<Object, Boolean>() {
                                             @Override
                                             public Boolean apply(Object input) {
-                                                if (input instanceof brooklyn.util.http.HttpToolResponse) {
-                                                    if (((brooklyn.util.http.HttpToolResponse) input).getResponseCode() == 404) {
+                                                if (input instanceof org.apache.brooklyn.core.util.http.HttpToolResponse) {
+                                                    if (((org.apache.brooklyn.core.util.http.HttpToolResponse) input).getResponseCode() == 404) {
                                                         return true;
                                                     }
                                                 }

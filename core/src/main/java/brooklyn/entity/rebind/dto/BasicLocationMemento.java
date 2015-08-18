@@ -24,10 +24,10 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.mementos.LocationMemento;
 import org.apache.brooklyn.api.mementos.TreeNode;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Sanitizer;
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Maps;

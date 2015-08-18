@@ -49,6 +49,10 @@ import brooklyn.entity.software.SshEffectorTasks;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.ssh.SshTasks;
+import org.apache.brooklyn.core.util.task.ssh.SshTasks.OnFailingTask;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import brooklyn.util.collections.MutableList;
@@ -57,10 +61,6 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
-import brooklyn.util.task.DynamicTasks;
-import brooklyn.util.task.ssh.SshTasks;
-import brooklyn.util.task.ssh.SshTasks.OnFailingTask;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.StringEscapes;
 import brooklyn.util.text.StringFunctions;

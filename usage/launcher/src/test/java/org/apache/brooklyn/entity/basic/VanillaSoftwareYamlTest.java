@@ -28,11 +28,11 @@ import brooklyn.entity.trait.Startable;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
 import org.apache.brooklyn.launcher.camp.SimpleYamlLauncher;
 
 import brooklyn.test.Asserts;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.os.Os;
 import brooklyn.util.text.Strings;
 

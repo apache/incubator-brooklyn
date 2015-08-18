@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.management.entitlement.EntitlementClass;
 import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.javalang.Reflections;
-import brooklyn.util.task.Tasks;
 import brooklyn.util.text.Strings;
 
 /** @since 0.7.0 */

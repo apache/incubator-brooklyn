@@ -50,6 +50,7 @@ import org.apache.brooklyn.core.management.entitlement.EntitlementPredicates;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils.CreationResult;
+import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.rest.api.EntityApi;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.LocationSummary;
@@ -61,7 +62,6 @@ import org.apache.brooklyn.rest.transform.LocationTransformer.LocationDetailLeve
 import org.apache.brooklyn.rest.transform.TaskTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.time.Duration;
 

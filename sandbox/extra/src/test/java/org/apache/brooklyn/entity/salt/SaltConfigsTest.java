@@ -29,7 +29,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

@@ -26,11 +26,11 @@ import static org.testng.Assert.assertTrue;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.util.collections.MutableMap;
-import brooklyn.util.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;
 

@@ -23,9 +23,9 @@ import java.util.Map;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.basic.AbstractLocationResolver.SpecParser.ParsedSpec;
 
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.guava.Maybe.Absent;

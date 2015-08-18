@@ -27,6 +27,8 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +44,7 @@ import brooklyn.entity.basic.EntityInternal;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;

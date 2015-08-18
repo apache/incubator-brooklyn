@@ -39,6 +39,8 @@ import brooklyn.BrooklynVersion;
 
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.osgi.Osgis;
+import org.apache.brooklyn.core.util.osgi.Osgis.BundleFinder;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
@@ -49,8 +51,6 @@ import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.os.Os;
 import brooklyn.util.os.Os.DeletionResult;
-import brooklyn.util.osgi.Osgis;
-import brooklyn.util.osgi.Osgis.BundleFinder;
 import brooklyn.util.repeat.Repeater;
 import brooklyn.util.text.Strings;
 import brooklyn.util.time.Duration;

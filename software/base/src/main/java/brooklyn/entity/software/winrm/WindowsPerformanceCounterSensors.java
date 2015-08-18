@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.windows.WindowsPerformanceCounterFeed;
-import brooklyn.util.config.ConfigBag;
 import brooklyn.util.text.Strings;
 
 import com.google.common.reflect.TypeToken;

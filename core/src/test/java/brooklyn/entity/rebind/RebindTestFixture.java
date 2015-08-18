@@ -43,6 +43,7 @@ import org.apache.brooklyn.api.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
@@ -53,7 +54,6 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.trait.Startable;
 import brooklyn.util.os.Os;
 import brooklyn.util.repeat.Repeater;
-import brooklyn.util.task.BasicExecutionManager;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.time.Duration;
 

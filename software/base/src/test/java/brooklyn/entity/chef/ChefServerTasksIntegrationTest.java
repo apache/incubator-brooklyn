@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.util.stream.StreamGobbler;
-import brooklyn.util.task.system.ProcessTaskWrapper;
 import brooklyn.util.time.Duration;
 import brooklyn.util.time.Time;
 

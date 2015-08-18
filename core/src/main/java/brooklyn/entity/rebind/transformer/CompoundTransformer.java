@@ -26,13 +26,13 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.text.TemplateProcessor;
 
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.transformer.impl.XsltTransformer;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.text.Strings;
-import brooklyn.util.text.TemplateProcessor;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

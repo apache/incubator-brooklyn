@@ -26,6 +26,7 @@ import static org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROV
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
+import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
@@ -34,7 +35,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.util.http.HttpTool;
 import brooklyn.util.text.Strings;
 
 /**

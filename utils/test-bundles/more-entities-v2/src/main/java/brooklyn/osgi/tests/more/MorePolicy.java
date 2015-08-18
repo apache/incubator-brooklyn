@@ -20,7 +20,7 @@ package brooklyn.osgi.tests.more;
 
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import brooklyn.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 
 @Catalog(name="More Policy", description="Cataliog item OSGi test policy")
 public class MorePolicy extends AbstractPolicy {

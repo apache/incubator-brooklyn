@@ -22,13 +22,13 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.transformer.CompoundTransformer.Builder;
-import brooklyn.util.ResourceUtils;
 import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.TemplateProcessor;
 import brooklyn.util.yaml.Yamls;
 
 import com.google.common.annotations.Beta;

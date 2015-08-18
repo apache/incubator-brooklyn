@@ -18,11 +18,12 @@
  */
 package org.apache.brooklyn.entity.salt;
 
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.task.DynamicTasks;
 
 import com.google.common.collect.ImmutableMap;
 

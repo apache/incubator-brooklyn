@@ -45,9 +45,8 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
+import org.apache.brooklyn.core.util.javalang.UrlClassLoader;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
-
-import brooklyn.util.javalang.UrlClassLoader;
 
 import com.google.common.base.Function;
 

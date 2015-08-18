@@ -26,9 +26,11 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
 import brooklyn.event.feed.ssh.SshPollValue;
+
+import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.config.ConfigBag;
+
 import brooklyn.util.guava.Maybe;
 import brooklyn.util.text.Identifiers;
 import brooklyn.util.text.Strings;
