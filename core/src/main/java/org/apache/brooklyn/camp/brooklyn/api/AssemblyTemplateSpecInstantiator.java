@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.camp.brooklyn.api;
+package org.apache.brooklyn.camp.brooklyn.api;
 
 import java.util.Set;
 

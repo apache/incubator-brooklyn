@@ -26,7 +26,7 @@ import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
-import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
+import org.apache.brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigMap;
