@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.entity.rebind.persister.jclouds;
+package org.apache.brooklyn.entity.rebind.persister.jclouds;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.jclouds.openstack.reference.AuthHeaders.URL_SUFFIX;
