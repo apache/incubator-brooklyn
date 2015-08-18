@@ -41,9 +41,9 @@ public class OsgiTestResources {
      * defines an entity and an application, to confirm it can be read and used by brooklyn
      */
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_PATH = "/brooklyn/osgi/brooklyn-test-osgi-entities.jar";
-    public static final String BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_APPLICATION = "brooklyn.osgi.tests.SimpleApplication";
-    public static final String BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY = "brooklyn.osgi.tests.SimpleEntity";
-    public static final String BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY = "brooklyn.osgi.tests.SimplePolicy";
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_APPLICATION = "org.apache.brooklyn.test.osgi.entities.SimpleApplication";
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY = "org.apache.brooklyn.test.osgi.entities.SimpleEntity";
+    public static final String BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY = "org.apache.brooklyn.test.osgi.entities.SimplePolicy";
 
     /**
      * brooklyn-test-osgi-more-entities_0.1.0 -
@@ -54,7 +54,7 @@ public class OsgiTestResources {
     public static final String BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FULL = 
         "org.apache.brooklyn.test.resources.osgi."+BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FINAL_PART;
     public static final String BROOKLYN_TEST_MORE_ENTITIES_V1_PATH = "/brooklyn/osgi/" + BROOKLYN_TEST_MORE_ENTITIES_SYMBOLIC_NAME_FINAL_PART + "_0.1.0.jar";
-    public static final String BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY = "brooklyn.osgi.tests.more.MoreEntity";
+    public static final String BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY = "org.apache.brooklyn.test.osgi.entities.more.MoreEntity";
     
     /**
      * brooklyn-test-osgi-more-entities_0.2.0 -
