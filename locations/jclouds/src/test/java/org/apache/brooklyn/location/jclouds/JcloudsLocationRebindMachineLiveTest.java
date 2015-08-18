@@ -52,7 +52,7 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
     @Test(groups = { "Live", "Live-sanity" })
     public void testRebindWithIncorrectId() throws Exception {
         try {
-            jcloudsLocation.rebindMachine(ImmutableMap.of("id", "incorrectid", "hostname", "myhostname", "user", "myusername"));
+            jcloudsLocation.registerMachine(ImmutableMap.of("id", "incorrectid", "hostname", "myhostname", "user", "myusername"));
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("node not found")) {
                 // success

@@ -1903,9 +1903,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * <p>
      * Required fields are:
      * <ul>
-     *   <li>id: the jclouds VM id, e.g. "eu-west-1/i-5504f21d" (NB this is @see JcloudsSshMachineLocation#getJcloudsId() not #getId())
+     *   <li>id: the jclouds VM id, e.g. "eu-west-1/i-5504f21d" (NB this is {@see JcloudsMachineLocation#getJcloudsId()} not #getId())
      *   <li>hostname: the public hostname or IP of the machine, e.g. "ec2-176-34-93-58.eu-west-1.compute.amazonaws.com"
-     *   <li>userName: the username for ssh'ing into the machine
+     *   <li>userName: the username for sshing into the machine if it is not a Windows system
      * <ul>
      */
     public MachineLocation registerMachine(ConfigBag setup) throws NoMachinesAvailableException {
@@ -1941,7 +1941,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             // TODO confirm we can SSH ?
             // NB if rawHostname not set, get the hostname using getPublicHostname(node, Optional.<HostAndPort>absent(), setup);
 
-            return registerJcloudsSshMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
+            if (isWindows(node, setup)) {
+                return registerWinRmMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
+            } else {
+                return registerJcloudsSshMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
+            }
 
         } catch (IOException e) {
             throw Exceptions.propagate(e);
