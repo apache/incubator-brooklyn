@@ -24,9 +24,9 @@ import java.util.concurrent.Callable;
 
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.entity.database.mysql.MySqlNodeImpl;
-import brooklyn.entity.database.mysql.MySqlSshDriver;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.entity.database.mysql.MySqlNodeImpl;
+import org.apache.brooklyn.entity.database.mysql.MySqlSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;

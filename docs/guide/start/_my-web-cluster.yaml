@@ -14,7 +14,7 @@ services:
         component("db").attributeWhenReady("datastore.url"),
         "visitors", "brooklyn", "br00k11n")
 
-- type: brooklyn.entity.database.mysql.MySqlNode
+- type: org.apache.brooklyn.entity.database.mysql.MySqlNode
   id: db
   name: My DB
   brooklyn.config:

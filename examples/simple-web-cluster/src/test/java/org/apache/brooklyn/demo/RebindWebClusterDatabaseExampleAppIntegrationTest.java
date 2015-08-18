@@ -51,7 +51,7 @@ import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
 import brooklyn.entity.rebind.RebindOptions;

@@ -18,5 +18,5 @@
 #
 name: PostgreSQL
 services:
-- serviceType: brooklyn.entity.database.postgresql.PostgreSqlNode
+- serviceType: org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode
   location: gce-europe-west1

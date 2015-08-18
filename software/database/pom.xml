@@ -46,15 +46,15 @@
                                 the given components. These are files "without any degree of creativity" from the
                                 perspective of the Brooklyn/Apache contribution.
                             -->
-                            <exclude>src/main/resources/brooklyn/entity/database/crate/crate.yaml</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/database/mariadb/my.cnf</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/database/mysql/mysql.conf</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/database/mysql/mysql_master.conf</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/database/mysql/mysql_slave.conf</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/database/postgresql/postgresql.conf</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/database/rubyrep/rubyrep.conf</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/database/mssql/ConfigurationFile.ini</exclude>
-                            <exclude>src/main/resources/brooklyn/entity/database/mssql/mssql.yaml</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/database/crate/crate.yaml</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/database/mariadb/my.cnf</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/database/mysql/mysql.conf</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/database/mysql/mysql_master.conf</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/database/mysql/mysql_slave.conf</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/database/postgresql/postgresql.conf</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/database/rubyrep/rubyrep.conf</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/database/mssql/ConfigurationFile.ini</exclude>
+                            <exclude>src/main/resources/org/apache/brooklyn/entity/database/mssql/mssql.yaml</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
