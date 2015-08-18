@@ -22,9 +22,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.ws.rs.core.Response.created;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
+
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.util.text.Strings;
-import io.brooklyn.camp.spi.AssemblyTemplate;
 
 import java.io.StringReader;
 import java.net.URI;
@@ -59,6 +59,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.entitlement.EntitlementPredicates;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;

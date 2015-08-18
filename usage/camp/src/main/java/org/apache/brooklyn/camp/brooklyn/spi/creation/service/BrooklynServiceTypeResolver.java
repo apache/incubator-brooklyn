@@ -18,8 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
@@ -29,6 +27,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver;
+import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 
 import brooklyn.util.text.Strings;

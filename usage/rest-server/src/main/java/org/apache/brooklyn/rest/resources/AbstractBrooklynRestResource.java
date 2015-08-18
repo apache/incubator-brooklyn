@@ -18,8 +18,6 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import io.brooklyn.camp.CampPlatform;
-
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
@@ -33,6 +31,7 @@ import brooklyn.config.render.RendererHints;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;

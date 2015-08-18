@@ -18,10 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.lookup;
 
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.PlatformRootSummary;
-import io.brooklyn.camp.spi.collection.ResolvableLink;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -29,6 +25,9 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.PlatformRootSummary;
+import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
 
 
 public class AssemblyBrooklynLookup extends AbstractBrooklynResourceLookup<Assembly> {

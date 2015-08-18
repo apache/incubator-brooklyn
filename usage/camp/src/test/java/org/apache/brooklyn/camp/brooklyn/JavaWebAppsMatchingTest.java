@@ -18,12 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-import io.brooklyn.camp.spi.PlatformRootSummary;
-import io.brooklyn.camp.spi.collection.ResolvableLink;
-import io.brooklyn.camp.spi.pdp.DeploymentPlan;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Iterator;
@@ -32,6 +26,11 @@ import java.util.Map;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
+import org.apache.brooklyn.camp.spi.PlatformRootSummary;
+import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
+import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.task.DeferredSupplier;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;

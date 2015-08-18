@@ -20,13 +20,12 @@ package org.apache.brooklyn.camp.brooklyn.spi.dsl;
 
 import java.io.Serializable;
 
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
-
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
 import org.apache.brooklyn.core.util.task.DeferredSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -19,10 +19,9 @@
 package org.apache.brooklyn.camp.brooklyn.spi.lookup;
 
 import org.apache.brooklyn.api.management.ManagementContext;
-
-import io.brooklyn.camp.spi.AbstractResource;
-import io.brooklyn.camp.spi.PlatformRootSummary;
-import io.brooklyn.camp.spi.collection.AbstractResourceLookup;
+import org.apache.brooklyn.camp.spi.AbstractResource;
+import org.apache.brooklyn.camp.spi.PlatformRootSummary;
+import org.apache.brooklyn.camp.spi.collection.AbstractResourceLookup;
 
 public abstract class AbstractBrooklynResourceLookup<T extends AbstractResource>  extends AbstractResourceLookup<T> {
 

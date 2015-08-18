@@ -18,11 +18,6 @@
  */
 package org.apache.brooklyn.core.management.internal;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-
 import java.io.StringReader;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +32,10 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.util.task.TaskBuilder;
 import org.apache.brooklyn.core.util.task.Tasks;

@@ -18,9 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-
 import java.io.File;
 import java.io.Reader;
 import java.util.Set;
@@ -28,6 +25,8 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.slf4j.Logger;

@@ -18,12 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-import io.brooklyn.camp.spi.PlatformComponentTemplate.Builder;
-import io.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
-import io.brooklyn.camp.spi.pdp.Service;
-import io.brooklyn.camp.spi.resolve.PdpMatcher;
-
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +25,11 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
+import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
+import org.apache.brooklyn.camp.spi.PlatformComponentTemplate.Builder;
+import org.apache.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
+import org.apache.brooklyn.camp.spi.pdp.Service;
+import org.apache.brooklyn.camp.spi.resolve.PdpMatcher;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.slf4j.Logger;

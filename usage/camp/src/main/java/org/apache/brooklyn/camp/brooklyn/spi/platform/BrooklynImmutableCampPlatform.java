@@ -18,24 +18,23 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.platform;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.ApplicationComponent;
-import io.brooklyn.camp.spi.ApplicationComponentTemplate;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.PlatformComponent;
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-import io.brooklyn.camp.spi.PlatformRootSummary;
-import io.brooklyn.camp.spi.PlatformTransaction;
-import io.brooklyn.camp.spi.collection.BasicResourceLookup;
-import io.brooklyn.camp.spi.collection.ResourceLookup;
-import io.brooklyn.camp.spi.collection.ResourceLookup.EmptyResourceLookup;
-
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.AssemblyBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.AssemblyTemplateBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.PlatformComponentBrooklynLookup;
 import org.apache.brooklyn.camp.brooklyn.spi.lookup.PlatformComponentTemplateBrooklynLookup;
+import org.apache.brooklyn.camp.spi.ApplicationComponent;
+import org.apache.brooklyn.camp.spi.ApplicationComponentTemplate;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.PlatformComponent;
+import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
+import org.apache.brooklyn.camp.spi.PlatformRootSummary;
+import org.apache.brooklyn.camp.spi.PlatformTransaction;
+import org.apache.brooklyn.camp.spi.collection.BasicResourceLookup;
+import org.apache.brooklyn.camp.spi.collection.ResourceLookup;
+import org.apache.brooklyn.camp.spi.collection.ResourceLookup.EmptyResourceLookup;
 
 import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 

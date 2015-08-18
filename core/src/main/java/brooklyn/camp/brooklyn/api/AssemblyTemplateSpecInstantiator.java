@@ -18,14 +18,13 @@
  */
 package brooklyn.camp.brooklyn.api;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 public interface AssemblyTemplateSpecInstantiator extends AssemblyTemplateInstantiator {
 

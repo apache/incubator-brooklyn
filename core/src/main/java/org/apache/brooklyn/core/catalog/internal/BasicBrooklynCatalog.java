@@ -20,10 +20,6 @@ package org.apache.brooklyn.core.catalog.internal;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-import io.brooklyn.camp.spi.pdp.DeploymentPlan;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -37,8 +33,8 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
-
 import org.apache.brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
+
 import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 
 import org.apache.brooklyn.api.basic.AbstractBrooklynObjectSpec;
@@ -52,6 +48,10 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
+import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;

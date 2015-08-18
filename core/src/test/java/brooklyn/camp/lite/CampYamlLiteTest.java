@@ -26,11 +26,6 @@ import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.pdp.PdpYamlTest;
-import io.brooklyn.camp.test.mock.web.MockWebPlatform;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -49,6 +44,10 @@ import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.pdp.PdpYamlTest;
+import org.apache.brooklyn.camp.test.mock.web.MockWebPlatform;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogDto;

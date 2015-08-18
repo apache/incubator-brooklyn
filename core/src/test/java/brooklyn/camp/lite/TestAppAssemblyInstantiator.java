@@ -18,20 +18,19 @@
  */
 package brooklyn.camp.lite;
 
-import io.brooklyn.camp.CampPlatform;
-import io.brooklyn.camp.spi.AbstractResource;
-import io.brooklyn.camp.spi.Assembly;
-import io.brooklyn.camp.spi.AssemblyTemplate;
-import io.brooklyn.camp.spi.PlatformComponentTemplate;
-import io.brooklyn.camp.spi.collection.ResolvableLink;
-import io.brooklyn.camp.spi.instantiate.BasicAssemblyTemplateInstantiator;
-
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.spi.AbstractResource;
+import org.apache.brooklyn.camp.spi.Assembly;
+import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
+import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
+import org.apache.brooklyn.camp.spi.instantiate.BasicAssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
