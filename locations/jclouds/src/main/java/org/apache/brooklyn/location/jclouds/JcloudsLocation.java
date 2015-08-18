@@ -141,7 +141,7 @@ import com.google.common.primitives.Ints;
 import brooklyn.entity.basic.Sanitizer;
 import brooklyn.entity.rebind.persister.LocationWithObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
+import org.apache.brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
 
 import org.apache.brooklyn.location.access.PortForwardManager;
 import org.apache.brooklyn.location.basic.BasicMachineMetadata;

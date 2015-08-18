@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
 */
-package brooklyn.entity.rebind.persister.jclouds;
+package org.apache.brooklyn.entity.rebind.persister.jclouds;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
