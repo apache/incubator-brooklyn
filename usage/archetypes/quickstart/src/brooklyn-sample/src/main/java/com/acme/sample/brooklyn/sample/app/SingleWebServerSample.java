@@ -9,8 +9,8 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.location.basic.PortRanges;
-import brooklyn.util.maven.MavenArtifact;
-import brooklyn.util.maven.MavenRetriever;
+import org.apache.brooklyn.util.maven.MavenArtifact;
+import org.apache.brooklyn.util.maven.MavenRetriever;
 
 /** This example starts one web app on 8080. */
 public class SingleWebServerSample extends AbstractApplication {

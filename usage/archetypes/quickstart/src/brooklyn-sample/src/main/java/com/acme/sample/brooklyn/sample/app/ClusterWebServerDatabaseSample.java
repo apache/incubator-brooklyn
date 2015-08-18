@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.catalog.CatalogConfig;
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
 import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.enricher.basic.SensorPropagatingEnricher;
 import brooklyn.enricher.basic.SensorTransformingEnricher;
@@ -31,8 +31,8 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import brooklyn.event.basic.Sensors;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
-import brooklyn.util.maven.MavenArtifact;
-import brooklyn.util.maven.MavenRetriever;
+import org.apache.brooklyn.util.maven.MavenArtifact;
+import org.apache.brooklyn.util.maven.MavenRetriever;
 
 import com.google.common.base.Functions;
 
