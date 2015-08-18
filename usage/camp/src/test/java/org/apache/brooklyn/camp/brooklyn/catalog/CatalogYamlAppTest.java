@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.brooklyn.camp.brooklyn.catalog;
+package org.apache.brooklyn.camp.brooklyn.catalog;
 
 import org.testng.annotations.Test;
 

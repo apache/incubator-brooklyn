@@ -21,7 +21,6 @@
 
     <!-- log all brooklyn at debug -->
     <logger name="brooklyn" level="DEBUG"/>
-    <logger name="io.brooklyn" level="DEBUG"/>
     <logger name="org.apache.brooklyn" level="DEBUG"/>
 
 

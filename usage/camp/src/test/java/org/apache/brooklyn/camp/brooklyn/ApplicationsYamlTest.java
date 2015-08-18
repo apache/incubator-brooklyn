@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.brooklyn.camp.brooklyn;
+package org.apache.brooklyn.camp.brooklyn;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.management.internal.EntityManagementUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
