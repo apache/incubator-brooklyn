@@ -23,7 +23,7 @@
     Create one rotating log file for each discriminator given by JcloudsPersistenceThreadDiscriminator.
     -->
     <appender name="JCLOUDS-SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
-        <discriminator class="brooklyn.logging.JcloudsPersistenceThreadDiscriminator" />
+        <discriminator class="org.apache.brooklyn.util.logback.JcloudsPersistenceThreadDiscriminator" />
         <sift>
             <appender name="JCLOUDS-FILE-${jcloudsPersistSwitch}" class="ch.qos.logback.core.rolling.RollingFileAppender">
                 <file>${logging.dir:-./}${logging.basename:-brooklyn}.${jcloudsPersistSwitch}.log</file>
