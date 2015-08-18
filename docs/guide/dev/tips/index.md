@@ -20,6 +20,15 @@ title: Miscellaneous Tips and Tricks
   or the brooklyn-relevant parts, under ``~/.m2/repository``.
   Also note your IDE might be recompiling at the same time as a Maven command-line build,
   so consider turning off auto-build.
+  
+* When a class or method becomes deprecated, always include ``@deprecated`` in the Javadoc 
+  e.g. "``@deprecated since 0.7.0; instead use {@link ...}``"
+  * Include when it was deprecated
+  * Suggest what to use instead -- e.g. link to alternative method, and/or code snippet, etc.
+  * Consider logging a warning message when a deprecated method or config option is used, 
+    saying who is using it (e.g. useful if deprecated config keys are used in yaml) -- 
+    if it's a method which might be called a lot, some convenience for "warn once per entity" would be helpful)
+  * See the [Java deprecation documentation](https://docs.oracle.com/javase/7/docs/technotes/guides/javadoc/deprecation/deprecation.html)
 
 
 <a name="EntityDesign"></a>
