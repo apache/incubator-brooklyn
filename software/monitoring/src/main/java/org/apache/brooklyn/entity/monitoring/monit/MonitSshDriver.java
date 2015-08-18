@@ -23,19 +23,18 @@ import static java.lang.String.format;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.lifecycle.ScriptHelper;
-
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.os.Os;
-import brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.lifecycle.ScriptHelper;
 
 public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements MonitDriver {
     
@@ -98,7 +97,7 @@ public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements 
     
     @Override
     public boolean isRunning() {
-        Map flags = ImmutableMap.of("usePidFile", getMonitPidFile());
+        Map<String,?> flags = ImmutableMap.of("usePidFile", getMonitPidFile());
         return newScript(flags, CHECK_RUNNING).execute() == 0;
     }
     

@@ -20,16 +20,16 @@ package org.apache.brooklyn.entity.monitoring.monit;
 
 import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.reflect.TypeToken;
-
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.entity.trait.HasShortName;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
-import brooklyn.config.ConfigKey;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
+
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
@@ -51,6 +51,7 @@ public interface MonitNode extends SoftwareProcess, HasShortName {
     @SetFromFlag("controlFileUrl")
     public static final ConfigKey<String> CONTROL_FILE_URL = ConfigKeys.newStringConfigKey("monit.control.url", "URL where monit control (.monitrc) file can be found", "");
 
+    @SuppressWarnings("serial")
     public static final ConfigKey<Map<String, Object>> CONTROL_FILE_SUBSTITUTIONS = ConfigKeys.newConfigKey(new TypeToken<Map<String, Object>>(){}, "monit.control.substitutions", 
         "Additional substitutions to be used in the control file template", ImmutableMap.<String, Object>of());
     

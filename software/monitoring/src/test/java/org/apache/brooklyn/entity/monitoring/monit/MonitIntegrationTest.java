@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.entity.monitoring.monit;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
@@ -30,6 +29,9 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.MachineDetails;
+import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,21 +39,16 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SameServerEntity;
-import brooklyn.entity.basic.SoftwareProcess;
-import org.apache.brooklyn.entity.database.mysql.MySqlNode;
-import brooklyn.event.basic.DependentConfiguration;
-
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.test.Asserts;
-
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+
+import brooklyn.entity.BrooklynAppLiveTestSupport;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.SameServerEntity;
+import brooklyn.entity.basic.SoftwareProcess;
+import brooklyn.event.basic.DependentConfiguration;
 
 public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
 
@@ -113,7 +110,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
             public void run() {
                 String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
                 LOG.debug("MonitNode target status: {}", targetStatus);
-                assertNotEquals(elvis(targetStatus, ""), "Running");
+                assertNotEquals(targetStatus, "Running");
             }
         });
         mySqlNode.restart();
@@ -176,7 +173,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
             public void run() {
                 String targetStatus = monitNode.getAttribute(MonitNode.MONIT_TARGET_PROCESS_STATUS);
                 LOG.debug("MonitNode target status: {}", targetStatus);
-                assertEquals(elvis(targetStatus, ""), "Running");
+                assertEquals(targetStatus, "Running");
                 try {
                     initialPid[0] = Files.readFirstLine(new File(mySqlNode.getAttribute(SoftwareProcess.PID_FILE)), Charset.defaultCharset());
                     LOG.debug("Initial PID: {}", initialPid[0]);
