@@ -294,7 +294,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
         // Wait for commands to complete before running the creation script
         DynamicTasks.waitForLast();
-        if(entity.getConfig(PostgreSqlNode.INITIALIZE_DB)){
+        if(Boolean.TRUE.equals(entity.getConfig(PostgreSqlNode.INITIALIZE_DB))){
             initializeNewDatabase();
         }
         // Capture log file contents if there is an error configuring the database
