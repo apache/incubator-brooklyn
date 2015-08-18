@@ -31,9 +31,8 @@ import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.util.collections.MutableMap.Builder;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.apache.brooklyn.util.net.Urls;
-
-import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 import com.google.common.base.Preconditions;
 

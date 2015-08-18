@@ -50,6 +50,7 @@ import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
+import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -62,8 +63,6 @@ import brooklyn.event.feed.jmx.JmxHelper;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.PortRanges;
-
-import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.jmx.jmxmp;
+package org.apache.brooklyn.util.jmx.jmxmp;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -42,6 +42,7 @@ import javax.net.ssl.TrustManager;
 
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
+import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 @SuppressWarnings({"rawtypes","unchecked"})
 public class JmxmpClient {

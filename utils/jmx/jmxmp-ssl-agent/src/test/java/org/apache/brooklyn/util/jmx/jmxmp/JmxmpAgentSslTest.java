@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.jmx.jmxmp;
+package org.apache.brooklyn.util.jmx.jmxmp;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,6 +36,7 @@ import javax.management.remote.JMXConnectorServer;
 
 import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
+import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.testng.annotations.AfterMethod;

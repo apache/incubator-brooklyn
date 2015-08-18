@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.jmx.jmxmp;
+package org.apache.brooklyn.util.jmx.jmxmp;
 
 import java.io.FileInputStream;
 import java.lang.management.ManagementFactory;
@@ -42,6 +42,8 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+
+import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 
 /**

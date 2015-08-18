@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.jmx.jmxrmi;
+package org.apache.brooklyn.util.jmx.jmxrmi;
 
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -30,6 +30,8 @@ import javax.management.MBeanServer;
 import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
+
+import org.apache.brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 
 /**
  * This exposes JMX support for going through firewalls by starting an RMI registry server

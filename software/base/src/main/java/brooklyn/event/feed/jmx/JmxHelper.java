@@ -65,6 +65,7 @@ import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
@@ -73,7 +74,6 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.java.JmxSupport;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;

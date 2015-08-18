@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.jmx.jmxrmi;
+package org.apache.brooklyn.util.jmx.jmxrmi;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

@@ -43,13 +43,12 @@ import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
+import org.apache.brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 import org.apache.brooklyn.util.maven.MavenArtifact;
 import org.apache.brooklyn.util.maven.MavenRetriever;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.Strings;
-
-import brooklyn.util.jmx.jmxmp.JmxmpAgent;
-import brooklyn.util.jmx.jmxrmi.JmxRmiAgent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.HostAndPort;

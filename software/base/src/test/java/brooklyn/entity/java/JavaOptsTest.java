@@ -46,9 +46,8 @@ import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.apache.brooklyn.util.text.Strings;
-
-import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
