@@ -27,6 +27,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.management.EntityManager;
+import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.rest.resources.ServerResourceTest.StopLatchEntity;
+import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
@@ -44,17 +49,10 @@ import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.drivers.BasicEntityDriverManager;
 import brooklyn.entity.drivers.ReflectiveEntityDriverFactory;
 import brooklyn.entity.trait.Startable;
-
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.management.EntityManager;
-import org.apache.brooklyn.api.management.Task;
-import org.apache.brooklyn.rest.resources.ServerResourceTest.StopLatchEntity;
-import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 
 public class ServerShutdownTest extends BrooklynRestResourceTest {
     private static final Logger log = LoggerFactory.getLogger(ServerResourceTest.class);

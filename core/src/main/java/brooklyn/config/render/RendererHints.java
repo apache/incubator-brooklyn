@@ -52,9 +52,11 @@ public class RendererHints {
 
     private static final Logger log = LoggerFactory.getLogger(RendererHints.class);
     
-    @VisibleForTesting
-    static SetMultimap<Object, Hint<?>> registry = Multimaps.synchronizedSetMultimap(LinkedHashMultimap.<Object, Hint<?>>create());
+    private static SetMultimap<Object, Hint<?>> registry = Multimaps.synchronizedSetMultimap(LinkedHashMultimap.<Object, Hint<?>>create());
 
+    @VisibleForTesting
+    public static SetMultimap<Object, Hint<?>> getRegistry() { return registry; }
+    
     /**
      * Registers a {@link Hint} against the given element.
      * <p>

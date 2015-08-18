@@ -25,8 +25,16 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.rest.domain.ApplicationSpec;
+import org.apache.brooklyn.rest.domain.EntitySpec;
+import org.apache.brooklyn.rest.domain.TaskSummary;
+import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
+import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
@@ -35,24 +43,14 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.BasicApplication;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
-
-import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.rest.domain.ApplicationSpec;
-import org.apache.brooklyn.rest.domain.EntitySpec;
-import org.apache.brooklyn.rest.domain.TaskSummary;
-import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
-import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.exceptions.Exceptions;
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.sun.jersey.api.client.ClientResponse;
+
+import brooklyn.entity.basic.BasicApplication;
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.EntityInternal;
 
 @Test(singleThreaded = true)
 public class EntityResourceTest extends BrooklynRestResourceTest {

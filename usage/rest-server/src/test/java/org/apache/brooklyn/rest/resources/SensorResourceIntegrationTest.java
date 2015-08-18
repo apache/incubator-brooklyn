@@ -20,18 +20,6 @@ package org.apache.brooklyn.rest.resources;
 
 import java.net.URI;
 
-import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-import org.apache.http.client.HttpClient;
-import org.eclipse.jetty.server.Server;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.BasicApplication;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityPredicates;
-
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.ManagementContext;
@@ -41,11 +29,21 @@ import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.net.Urls;
+import org.apache.http.client.HttpClient;
+import org.eclipse.jetty.server.Server;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+
+import brooklyn.entity.basic.BasicApplication;
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
 
 public class SensorResourceIntegrationTest extends BrooklynRestApiLauncherTestFixture {
 

@@ -25,27 +25,20 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.brooklyn.test.HttpTestUtils;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import brooklyn.config.render.RendererHints;
-import brooklyn.config.render.TestRendererHints;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.event.basic.Sensors;
-
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.rest.api.SensorApi;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
+import org.apache.brooklyn.rest.test.config.render.TestRendererHints;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.StringFunctions;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +47,11 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
+
+import brooklyn.config.render.RendererHints;
+import brooklyn.entity.basic.EntityInternal;
+import brooklyn.entity.basic.EntityPredicates;
+import brooklyn.event.basic.Sensors;
 
 /**
  * Test the {@link SensorApi} implementation.

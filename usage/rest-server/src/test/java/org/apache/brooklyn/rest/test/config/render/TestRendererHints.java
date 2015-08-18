@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config.render;
+package org.apache.brooklyn.rest.test.config.render;
 
 import brooklyn.config.render.RendererHints;
 
@@ -31,6 +31,6 @@ public class TestRendererHints {
      *  call this method.
      **/
     public static void clearRegistry() {
-        RendererHints.registry.clear();
+        RendererHints.getRegistry().clear();
     }
 }

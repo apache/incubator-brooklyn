@@ -19,30 +19,10 @@
 package org.apache.brooklyn.rest.resources;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableSet;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-
-import brooklyn.BrooklynVersion;
-import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.EmptySoftwareProcess;
-import brooklyn.entity.basic.EmptySoftwareProcessDriver;
-import brooklyn.entity.basic.EmptySoftwareProcessImpl;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.management.ManagementContext;
@@ -52,6 +32,18 @@ import org.apache.brooklyn.rest.domain.VersionSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableSet;
+import com.sun.jersey.api.client.UniformInterfaceException;
+
+import brooklyn.BrooklynVersion;
+import brooklyn.config.BrooklynProperties;
+import brooklyn.entity.basic.EmptySoftwareProcess;
+import brooklyn.entity.basic.EmptySoftwareProcessDriver;
+import brooklyn.entity.basic.EmptySoftwareProcessImpl;
 
 @Test(singleThreaded = true)
 public class ServerResourceTest extends BrooklynRestResourceTest {
