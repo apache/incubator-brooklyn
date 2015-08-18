@@ -28,8 +28,8 @@ import org.apache.brooklyn.core.util.xstream.EnumCaseForgivingSingleValueConvert
 import org.apache.brooklyn.core.util.xstream.XmlSerializer;
 
 import org.apache.brooklyn.basic.AbstractBrooklynObject;
-import brooklyn.util.xstream.EnumCaseForgivingSingleValueConverter;
-import brooklyn.util.xstream.XmlSerializer;
+import org.apache.brooklyn.core.util.xstream.EnumCaseForgivingSingleValueConverter;
+import org.apache.brooklyn.core.util.xstream.XmlSerializer;
 
 public class CatalogXmlSerializer extends XmlSerializer<Object> {
 
