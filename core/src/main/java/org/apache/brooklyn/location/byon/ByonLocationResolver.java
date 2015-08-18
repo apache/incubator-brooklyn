@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.brooklyn.api.location.Location;
@@ -98,7 +99,7 @@ public class ByonLocationResolver extends AbstractLocationResolver {
         config.remove("hosts");
         String user = (String) config.getStringKey("user");
         Integer port = (Integer) TypeCoercions.coerce(config.getStringKey("port"), Integer.class);
-        Class<? extends MachineLocation> locationClass = OS_TO_MACHINE_LOCATION_TYPE.get(config.get(OS_FAMILY));
+        Class<? extends MachineLocation> locationClass = getLocationClass(config.get(OS_FAMILY));
 
         MutableMap<String, Object> defaultProps = MutableMap.of();
         defaultProps.addIfNotNull("user", user);
@@ -199,10 +200,14 @@ public class ByonLocationResolver extends AbstractLocationResolver {
         
         Class<? extends MachineLocation> locationClassHere = locationClass;
         if (osfamily != null) {
-            locationClassHere = OS_TO_MACHINE_LOCATION_TYPE.get(osfamily);
+            locationClassHere = getLocationClass(osfamily);
         }
 
         return LocationSpec.create(locationClassHere).configure(machineConfig);
+    }
+
+    private Class<? extends MachineLocation> getLocationClass(String osFamily) {
+        return osFamily == null ? null : OS_TO_MACHINE_LOCATION_TYPE.get(osFamily.toLowerCase(Locale.ENGLISH));
     }
 
     protected LocationSpec<? extends MachineLocation> parseMachine(String val, Class<? extends MachineLocation> locationClass, Map<String, ?> defaults, String specForErrMsg) {
