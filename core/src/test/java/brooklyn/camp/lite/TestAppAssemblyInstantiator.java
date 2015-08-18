@@ -35,8 +35,8 @@ import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 
-import brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
-import brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
+import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
+import org.apache.brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
 import brooklyn.util.collections.MutableMap;
 
 /** simple illustrative instantiator which always makes a {@link TestApplication}, populated with {@link TestEntity} children,
