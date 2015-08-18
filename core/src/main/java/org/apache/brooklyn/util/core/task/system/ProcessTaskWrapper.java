@@ -23,7 +23,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.TaskWrapper;
-import org.apache.brooklyn.core.BrooklynTaskTags;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.internal.ssh.ShellTool;
 import org.apache.brooklyn.util.core.task.TaskBuilder;

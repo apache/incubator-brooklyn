@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.apache.brooklyn.api.mgmt.HasTaskChildren;
 import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.core.BrooklynTaskTags;
-import org.apache.brooklyn.core.BrooklynTaskTags.WrappedStream;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags.WrappedStream;
 import org.apache.brooklyn.rest.api.ActivityApi;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.transform.TaskTransformer;

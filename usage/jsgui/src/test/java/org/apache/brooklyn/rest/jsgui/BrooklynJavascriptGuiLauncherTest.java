@@ -25,7 +25,7 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.BrooklynServiceAttributes;
+import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 

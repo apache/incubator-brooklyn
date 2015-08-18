@@ -44,6 +44,7 @@ import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
+import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.util.CommandLineUtil;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -53,7 +54,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
-import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.entity.java.JavaEntityMethods;
 
 /**

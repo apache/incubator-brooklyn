@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.enricher;
+package org.apache.brooklyn.policy.enricher;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -27,6 +27,12 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.policy.enricher.DeltaEnricher;
+import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
+import org.apache.brooklyn.policy.enricher.RollingMeanEnricher;
+import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher;
+import org.apache.brooklyn.policy.enricher.TimeFractionDeltaEnricher;
+import org.apache.brooklyn.policy.enricher.TimeWeightedDeltaEnricher;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;

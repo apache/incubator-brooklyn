@@ -27,10 +27,10 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.core.BrooklynServerConfig;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.test.camp.brooklyn.lite.CampPlatformWithJustBrooklynMgmt;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 

@@ -20,10 +20,10 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
-import org.apache.brooklyn.core.BrooklynServerConfig;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiTestResources;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.util.core.ResourceUtils;

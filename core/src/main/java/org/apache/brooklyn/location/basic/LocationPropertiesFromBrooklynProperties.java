@@ -23,9 +23,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.io.File;
 import java.util.Map;
 
-import org.apache.brooklyn.core.BrooklynServerConfig;
 import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;

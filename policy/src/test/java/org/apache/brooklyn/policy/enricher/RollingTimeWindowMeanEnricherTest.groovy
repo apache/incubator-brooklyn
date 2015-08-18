@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.enricher
+package org.apache.brooklyn.policy.enricher
 
 import static org.testng.Assert.*
 
@@ -26,12 +26,11 @@ import org.apache.brooklyn.api.sensor.Sensor
 import org.apache.brooklyn.entity.core.AbstractApplication
 import org.apache.brooklyn.entity.core.AbstractEntity
 import org.apache.brooklyn.entity.core.Entities
+import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
-
-import brooklyn.enricher.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
 
 class RollingTimeWindowMeanEnricherTest {
     

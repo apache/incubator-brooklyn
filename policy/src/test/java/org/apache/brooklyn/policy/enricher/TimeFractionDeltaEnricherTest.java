@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.enricher;
+package org.apache.brooklyn.policy.enricher;
 
 import static org.testng.Assert.assertEquals;
 
@@ -31,6 +31,7 @@ import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.policy.enricher.TimeFractionDeltaEnricher;
 import org.apache.brooklyn.sensor.core.BasicSensorEvent;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.testng.annotations.AfterMethod;

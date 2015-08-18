@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core;
+package org.apache.brooklyn.core.mgmt;
 
 
 /** @deprecated since 0.7.0 use {@link BrooklynTaskTags} */

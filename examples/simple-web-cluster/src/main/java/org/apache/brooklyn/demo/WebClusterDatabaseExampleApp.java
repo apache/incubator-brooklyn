@@ -37,9 +37,6 @@ import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
-
-import brooklyn.enricher.HttpLatencyDetector;
-
 import org.apache.brooklyn.entity.core.AbstractApplication;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.StartableApplication;
@@ -51,6 +48,7 @@ import brooklyn.entity.java.JavaEntityMethods;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
+import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.util.CommandLineUtil;

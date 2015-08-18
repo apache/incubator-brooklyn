@@ -27,9 +27,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.enricher.HttpLatencyDetector;
-
 import org.apache.brooklyn.entity.core.AbstractApplication;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.StartableApplication;
@@ -44,6 +41,7 @@ import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
+import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.util.CommandLineUtil;

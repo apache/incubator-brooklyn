@@ -38,7 +38,6 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMemento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.objs.BrooklynObjectType;
 import org.apache.brooklyn.api.objs.Identifiable;
-import org.apache.brooklyn.core.BrooklynServerConfig;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
@@ -52,6 +51,7 @@ import org.apache.brooklyn.core.mgmt.rebind.persister.BrooklynMementoPersisterTo
 import org.apache.brooklyn.core.mgmt.rebind.persister.FileBasedObjectStore;
 import org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode;
 import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.io.FileUtil;
 import org.apache.brooklyn.util.javalang.Serializers;

@@ -26,8 +26,8 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.core.BrooklynTaskTags;
-import org.apache.brooklyn.core.BrooklynTaskTags.WrappedStream;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags.WrappedStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;

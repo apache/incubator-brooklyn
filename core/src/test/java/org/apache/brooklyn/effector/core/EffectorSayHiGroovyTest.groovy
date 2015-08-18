@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.entity.EntitySpec
 import org.apache.brooklyn.api.entity.ImplementedBy
 import org.apache.brooklyn.api.mgmt.ManagementContext
 import org.apache.brooklyn.api.mgmt.Task
-import org.apache.brooklyn.core.BrooklynTaskTags
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.internal.EffectorUtils
 import org.apache.brooklyn.core.test.entity.TestApplication
 import org.apache.brooklyn.entity.annotation.EffectorParam

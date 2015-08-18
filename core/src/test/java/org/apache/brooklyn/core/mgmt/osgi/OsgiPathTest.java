@@ -21,10 +21,10 @@ package org.apache.brooklyn.core.mgmt.osgi;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.brooklyn.core.BrooklynServerConfig;
-import org.apache.brooklyn.core.BrooklynServerPaths;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
+import org.apache.brooklyn.core.server.BrooklynServerPaths;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.util.os.Os;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.enricher;
+package org.apache.brooklyn.policy.enricher;
 
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;

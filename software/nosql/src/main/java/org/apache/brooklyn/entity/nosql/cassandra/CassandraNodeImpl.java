@@ -42,8 +42,6 @@ import org.apache.brooklyn.entity.core.Entities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.enricher.RollingTimeWindowMeanEnricher;
-import brooklyn.enricher.TimeWeightedDeltaEnricher;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.java.JavaAppUtils;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
@@ -53,6 +51,8 @@ import brooklyn.event.feed.jmx.JmxOperationPollConfig;
 
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher;
+import org.apache.brooklyn.policy.enricher.TimeWeightedDeltaEnricher;
 import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.sensor.feed.function.FunctionFeed;

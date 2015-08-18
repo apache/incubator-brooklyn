@@ -20,7 +20,7 @@ package org.apache.brooklyn.util.core;
 
 import java.net.InetAddress;
 
-import org.apache.brooklyn.core.BrooklynServiceAttributes;
+import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.location.geo.LocalhostExternalIpLoader;
 import org.apache.brooklyn.util.JavaGroovyEquivalents;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;

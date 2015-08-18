@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.enricher;
+package org.apache.brooklyn.policy.enricher;
 
 import groovy.lang.Closure;
 

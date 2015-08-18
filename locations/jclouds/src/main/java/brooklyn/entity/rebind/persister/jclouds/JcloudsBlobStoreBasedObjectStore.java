@@ -26,9 +26,9 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
-import org.apache.brooklyn.core.BrooklynServerConfig;
 import org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode;
 import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.StorageMetadata;
 import org.jclouds.blobstore.options.ListContainerOptions;

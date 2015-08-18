@@ -25,8 +25,8 @@ import static org.apache.brooklyn.core.config.ConfigKeys.newStringConfigKey;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.BrooklynServerConfig;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.TemplatedStringAttributeSensorAndConfigKey;

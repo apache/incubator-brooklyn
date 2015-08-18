@@ -53,8 +53,6 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateIn
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.BrooklynServerConfig;
-import org.apache.brooklyn.core.BrooklynServerPaths;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.config.ConfigPredicates;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
@@ -70,6 +68,8 @@ import org.apache.brooklyn.core.mgmt.rebind.persister.BrooklynPersistenceUtils;
 import org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode;
 import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
 import org.apache.brooklyn.core.mgmt.rebind.transformer.CompoundTransformer;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
+import org.apache.brooklyn.core.server.BrooklynServerPaths;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.factory.ApplicationBuilder;
