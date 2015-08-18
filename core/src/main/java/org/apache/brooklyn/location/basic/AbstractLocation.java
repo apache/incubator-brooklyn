@@ -36,6 +36,9 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.mementos.LocationMemento;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
+import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
+import org.apache.brooklyn.core.internal.storage.Reference;
+import org.apache.brooklyn.core.internal.storage.impl.BasicReference;
 import org.apache.brooklyn.core.management.internal.LocalLocationManager;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.config.ConfigBag;
@@ -43,17 +46,14 @@ import org.apache.brooklyn.core.util.flags.FlagUtils;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.basic.AbstractBrooklynObject;
+
 import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.internal.storage.Reference;
-import brooklyn.internal.storage.impl.BasicReference;
 
 import org.apache.brooklyn.location.geo.HasHostGeoInfo;
 import org.apache.brooklyn.location.geo.HostGeoInfo;

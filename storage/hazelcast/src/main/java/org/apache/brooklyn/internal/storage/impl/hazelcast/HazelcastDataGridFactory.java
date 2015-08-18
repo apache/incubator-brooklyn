@@ -18,10 +18,9 @@
  */
 package org.apache.brooklyn.internal.storage.impl.hazelcast;
 
+import org.apache.brooklyn.core.internal.storage.DataGrid;
+import org.apache.brooklyn.core.internal.storage.DataGridFactory;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
-
-import brooklyn.internal.storage.DataGrid;
-import brooklyn.internal.storage.DataGridFactory;
 
 import com.hazelcast.core.HazelcastInstance;
 

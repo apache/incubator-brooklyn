@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal.storage.impl;
+package org.apache.brooklyn.core.internal.storage.impl;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
-import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.internal.storage.DataGrid;
-import brooklyn.internal.storage.Reference;
+import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
+import org.apache.brooklyn.core.internal.storage.DataGrid;
+import org.apache.brooklyn.core.internal.storage.Reference;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;

@@ -26,6 +26,9 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
+import org.apache.brooklyn.core.internal.storage.DataGrid;
+import org.apache.brooklyn.core.internal.storage.impl.BrooklynStorageImpl;
 import org.apache.brooklyn.core.management.internal.AbstractManagementContext;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
@@ -42,9 +45,6 @@ import org.testng.annotations.BeforeMethod;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.internal.storage.DataGrid;
-import brooklyn.internal.storage.impl.BrooklynStorageImpl;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 

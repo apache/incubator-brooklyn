@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal.storage.impl;
+package org.apache.brooklyn.core.internal.storage.impl;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -26,6 +26,7 @@ import java.util.AbstractMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.brooklyn.core.internal.storage.impl.ConcurrentMapAcceptingNullVals;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
