@@ -31,8 +31,8 @@ import org.apache.brooklyn.entity.database.DatabaseNode;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import brooklyn.entity.effector.Effectors;
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-
 import org.apache.brooklyn.location.basic.PortRanges;
 
 /**
@@ -81,6 +81,27 @@ public interface PostgreSqlNode extends SoftwareProcess, HasShortName, Datastore
     @SetFromFlag("pollPeriod")
     ConfigKey<Long> POLL_PERIOD = ConfigKeys.newLongConfigKey(
             "postgresql.sensorpoll", "Poll period (in milliseconds)", 1000L);
+    
+    @SetFromFlag("initializeDB")
+    ConfigKey<Boolean> INITIALIZE_DB = ConfigKeys.newBooleanConfigKey(
+            "postgresql.initialize", "If true, PostgreSQL will create a new user and database", false);
+
+    @SetFromFlag("username")
+    BasicAttributeSensorAndConfigKey<String> USERNAME = new BasicAttributeSensorAndConfigKey<>(
+            String.class, "postgresql.username", "Username of the database user");
+    
+    String DEFAULT_USERNAME = "postgresqluser";
+    
+    @SetFromFlag("password")
+    BasicAttributeSensorAndConfigKey<String> PASSWORD = new BasicAttributeSensorAndConfigKey<>(
+            String.class, "postgresql.password",
+            "Password for the database user, auto-generated if not set");
+
+    @SetFromFlag("database")
+    BasicAttributeSensorAndConfigKey<String> DATABASE = new BasicAttributeSensorAndConfigKey<>(
+            String.class, "postgresql.database", "Database to be used");
+    
+    String DEFAULT_DB_NAME = "db";
 
     Effector<String> EXECUTE_SCRIPT = Effectors.effector(DatastoreMixins.EXECUTE_SCRIPT)
             .description("Executes the given script contents using psql")

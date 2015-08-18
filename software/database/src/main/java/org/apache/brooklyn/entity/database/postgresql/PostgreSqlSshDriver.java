@@ -38,6 +38,12 @@ import java.io.InputStream;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.ssh.SshTasks;
+import org.apache.brooklyn.core.util.task.ssh.SshTasks.OnFailingTask;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +52,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
 import brooklyn.entity.software.SshEffectorTasks;
-
-import org.apache.brooklyn.api.location.OsDetails;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks;
-import org.apache.brooklyn.core.util.task.ssh.SshTasks.OnFailingTask;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
-
+import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.util.collections.MutableList;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;
@@ -61,6 +60,7 @@ import brooklyn.util.net.Urls;
 import brooklyn.util.os.Os;
 import brooklyn.util.stream.Streams;
 import brooklyn.util.text.Identifiers;
+import brooklyn.util.text.StringEscapes;
 import brooklyn.util.text.StringFunctions;
 import brooklyn.util.text.Strings;
 
@@ -294,7 +294,9 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
         // Wait for commands to complete before running the creation script
         DynamicTasks.waitForLast();
-
+        if(entity.getConfig(PostgreSqlNode.INITIALIZE_DB)){
+            initializeNewDatabase();
+        }
         // Capture log file contents if there is an error configuring the database
         try {
             executeDatabaseCreationScript();
@@ -306,6 +308,50 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         // Try establishing an external connection. If you get a "Connection refused...accepting TCP/IP connections
         // on port 5432?" error then the port is probably closed. Check that the firewall allows external TCP/IP
         // connections (netstat -nap). You can open a port with lokkit or by configuring the iptables.
+    }
+
+    private void initializeNewDatabase() {
+        String createUserCommand = String.format(
+                "\"CREATE USER %s WITH PASSWORD '%s'; \"",
+                StringEscapes.escapeSql(getUsername()), 
+                StringEscapes.escapeSql(getUserPassword())
+        );
+        String createDatabaseCommand = String.format(
+                "\"CREATE DATABASE %s OWNER %s\"",
+                StringEscapes.escapeSql(getDatabaseName()),
+                StringEscapes.escapeSql(getUsername()));
+        newScript("initializing user and database")
+        .body.append(
+                "cd " + getInstallDir(),
+                callPgctl("start", true),
+                sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + 
+                        " --command="+ createUserCommand),
+                sudoAsUser("postgres", getInstallDir() + "/bin/psql -p " + entity.getAttribute(PostgreSqlNode.POSTGRESQL_PORT) + 
+                                " --command="+ createDatabaseCommand),
+                callPgctl("stop", true))
+                .failOnNonZeroResultCode().execute();
+    }
+    
+    private String getConfigOrDefault(BasicAttributeSensorAndConfigKey<String> key, String def) {
+        String config = entity.getConfig(key);
+        if(Strings.isEmpty(config)) {
+            config = def;
+            log.debug(entity + " has no config specified for " + key + "; using default `" + def + "`");
+            entity.setAttribute(key, config);
+        }
+        return config;
+    }
+    
+    protected String getDatabaseName() {
+        return getConfigOrDefault(PostgreSqlNode.DATABASE, PostgreSqlNode.DEFAULT_DB_NAME);
+    }
+    
+    protected String getUsername(){
+        return getConfigOrDefault(PostgreSqlNode.USERNAME, PostgreSqlNode.DEFAULT_USERNAME);
+    }
+    
+    protected String getUserPassword() {
+        return getConfigOrDefault(PostgreSqlNode.PASSWORD, Strings.makeRandomId(8));
     }
 
     protected void executeDatabaseCreationScript() {
