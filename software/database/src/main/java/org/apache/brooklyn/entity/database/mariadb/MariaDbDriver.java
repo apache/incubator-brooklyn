@@ -20,6 +20,8 @@ package org.apache.brooklyn.entity.database.mariadb;
 
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+
 import brooklyn.entity.basic.SoftwareProcessDriver;
 
 /**
