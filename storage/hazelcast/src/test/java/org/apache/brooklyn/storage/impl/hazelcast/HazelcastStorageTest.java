@@ -29,11 +29,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.internal.storage.DataGridFactory;
-import brooklyn.internal.storage.Reference;
-import brooklyn.internal.storage.impl.BrooklynStorageImpl;
 
+import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
+import org.apache.brooklyn.core.internal.storage.DataGridFactory;
+import org.apache.brooklyn.core.internal.storage.Reference;
+import org.apache.brooklyn.core.internal.storage.impl.BrooklynStorageImpl;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.internal.storage.impl.hazelcast.HazelcastDataGrid;
 import org.apache.brooklyn.internal.storage.impl.hazelcast.HazelcastDataGridFactory;

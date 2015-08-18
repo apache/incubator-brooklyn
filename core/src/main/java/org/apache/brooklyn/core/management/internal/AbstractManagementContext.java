@@ -53,6 +53,11 @@ import org.apache.brooklyn.api.management.ha.HighAvailabilityManager;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
+import org.apache.brooklyn.core.internal.storage.DataGrid;
+import org.apache.brooklyn.core.internal.storage.DataGridFactory;
+import org.apache.brooklyn.core.internal.storage.impl.BrooklynStorageImpl;
+import org.apache.brooklyn.core.internal.storage.impl.inmemory.InMemoryDataGridFactory;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl;
@@ -69,11 +74,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.drivers.BasicEntityDriverManager;
 import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
-import brooklyn.internal.storage.BrooklynStorage;
-import brooklyn.internal.storage.DataGrid;
-import brooklyn.internal.storage.DataGridFactory;
-import brooklyn.internal.storage.impl.BrooklynStorageImpl;
-import brooklyn.internal.storage.impl.inmemory.InMemoryDataGridFactory;
 
 import org.apache.brooklyn.location.basic.BasicLocationRegistry;
 

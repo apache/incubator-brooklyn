@@ -16,23 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.internal.storage;
+package org.apache.brooklyn.core.internal.storage.impl.inmemory;
 
+import org.apache.brooklyn.core.internal.storage.DataGrid;
+import org.apache.brooklyn.core.internal.storage.DataGridFactory;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 
-/**
- * A factory for creating a {@link DataGrid}.
- *
- * Implementations of this interface should have a public no arg constructor; this constructor will be
- * called through reflection in the {@link org.apache.brooklyn.core.management.internal.LocalManagementContext}.
- */
-public interface DataGridFactory {
-
-    /**
-     * Creates a {@link BrooklynStorage} instance.
-     *
-     * @param managementContext the ManagementContextInternal
-     * @return the created BrooklynStorage.
-     */
-    DataGrid newDataGrid(ManagementContextInternal managementContext);
+public class InMemoryDataGridFactory implements DataGridFactory {
+    
+    public static DataGridFactory ofInstance(final DataGrid datagrid) {
+        return new DataGridFactory() {
+            @Override
+            public DataGrid newDataGrid(ManagementContextInternal managementContext) {
+                return datagrid;
+            }
+        };
+    }
+    
+    @Override
+    public DataGrid newDataGrid(ManagementContextInternal managementContext) {
+        return new InmemoryDatagrid();
+    }
 }
