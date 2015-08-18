@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.location.basic;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
 
 import java.io.File;
 import java.net.InetAddress;

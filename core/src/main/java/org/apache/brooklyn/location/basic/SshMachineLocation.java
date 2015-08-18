@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.basic;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
 
 import java.io.Closeable;
 import java.io.File;

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 import org.apache.brooklyn.core.util.internal.Repeater;
 import org.testng.annotations.Test
 
-import brooklyn.util.internal.TimeExtras;
+import org.apache.brooklyn.util.internal.TimeExtras;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Stopwatch

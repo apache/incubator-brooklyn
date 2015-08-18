@@ -30,10 +30,9 @@ import net.schmizz.sshj.userauth.keyprovider.OpenSSHKeyFile;
 import net.schmizz.sshj.userauth.password.PasswordUtils;
 
 import org.apache.brooklyn.core.util.internal.ssh.SshAbstractTool.SshAction;
+import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.base.Objects;
 import com.google.common.net.HostAndPort;

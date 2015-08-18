@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.internal;
+package org.apache.brooklyn.util.internal;
 
 import static java.util.concurrent.TimeUnit.*
 import static org.testng.Assert.*
-
 import groovy.time.TimeDuration
 
+import org.apache.brooklyn.util.internal.TimeExtras;
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 

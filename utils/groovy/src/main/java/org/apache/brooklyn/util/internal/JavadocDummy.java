@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.internal;
+package org.apache.brooklyn.util.internal;
 
 /** Maven Central requires javadoc to promote as a release. This seemed to happen when this was built by maven as a bundle,
  * but now that it is built as a jar it does not. This class exists only to provide that javadoc.

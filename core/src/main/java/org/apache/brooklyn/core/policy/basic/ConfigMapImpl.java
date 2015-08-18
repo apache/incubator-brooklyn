@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.policy.basic;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
 
 import java.util.Collections;
 import java.util.Map;

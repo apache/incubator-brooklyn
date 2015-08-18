@@ -44,7 +44,7 @@ import org.apache.brooklyn.api.location.Location
 import org.apache.brooklyn.location.basic.BasicLocationRegistry
 import org.apache.brooklyn.test.TestUtils
 import org.apache.brooklyn.test.entity.TestApplicationImpl
-import brooklyn.util.internal.TimeExtras
+import org.apache.brooklyn.util.internal.TimeExtras
 
 /**
  * This tests that we can run jboss entity on AWS.

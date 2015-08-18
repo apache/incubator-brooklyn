@@ -18,8 +18,8 @@
  */
 package brooklyn.entity.basic;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

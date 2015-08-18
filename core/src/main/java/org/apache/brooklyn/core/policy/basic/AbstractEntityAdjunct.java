@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.core.policy.basic;
 
-import static brooklyn.util.GroovyJavaMethods.truth;
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
 
 import java.util.Collection;
 import java.util.Collections;

@@ -22,12 +22,11 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.time.Duration;
 
 import groovy.lang.Closure;
-
-import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.base.Function;
 

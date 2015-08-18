@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.location.basic;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.io.Closeable;

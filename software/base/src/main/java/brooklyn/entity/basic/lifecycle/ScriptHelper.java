@@ -46,13 +46,12 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.BrooklynTaskTags;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
-
-import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;

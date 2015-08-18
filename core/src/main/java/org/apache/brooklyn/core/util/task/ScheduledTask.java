@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.core.util.task;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
 
 import java.util.Map;
 import java.util.concurrent.Callable;

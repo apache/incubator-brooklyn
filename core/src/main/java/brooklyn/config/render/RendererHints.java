@@ -25,10 +25,9 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

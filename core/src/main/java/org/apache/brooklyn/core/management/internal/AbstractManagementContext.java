@@ -76,11 +76,10 @@ import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 
 import org.apache.brooklyn.location.basic.BasicLocationRegistry;
+import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.guava.Maybe;
-
-import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;

@@ -53,6 +53,7 @@ import org.apache.brooklyn.core.util.task.ParallelTask;
 import org.apache.brooklyn.core.util.task.TaskInternal;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.task.ValueResolver;
+import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -73,7 +74,6 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

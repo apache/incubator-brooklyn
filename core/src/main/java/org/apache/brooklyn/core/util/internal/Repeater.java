@@ -30,12 +30,11 @@ import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.util.JavaGroovyEquivalents;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.internal.TimeExtras;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.internal.TimeExtras;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Callables;

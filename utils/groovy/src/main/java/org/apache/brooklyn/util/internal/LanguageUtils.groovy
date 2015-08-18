@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.util.internal
+package org.apache.brooklyn.util.internal
 
 import java.lang.reflect.Field
 import java.lang.reflect.Method;

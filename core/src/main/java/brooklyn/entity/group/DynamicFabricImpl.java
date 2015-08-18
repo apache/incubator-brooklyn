@@ -18,8 +18,8 @@
  */
 package brooklyn.entity.group;
 
-import static brooklyn.util.GroovyJavaMethods.elvis;
-import static brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
@@ -48,7 +49,6 @@ import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
-import brooklyn.util.GroovyJavaMethods;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
