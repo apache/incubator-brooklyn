@@ -53,7 +53,8 @@ import brooklyn.event.basic.Sensors;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;
 
-import brooklyn.policy.autoscaling.AutoScalerPolicy;
+import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
+
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.ImmutableMap;

@@ -34,7 +34,7 @@ import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 
-import brooklyn.policy.autoscaling.AutoScalerPolicy;
+import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;

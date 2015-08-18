@@ -8,12 +8,12 @@ services:
     echo hello | nc -l 4321 &
     echo $! > $PID_FILE
   brooklyn.enrichers:
-  - type: brooklyn.policy.ha.ServiceFailureDetector
+  - type: org.apache.brooklyn.policy.ha.ServiceFailureDetector
     brooklyn.config:
       # wait 15s after service fails before propagating failure
       serviceFailedStabilizationDelay: 15s
   brooklyn.policies:
-  - type: brooklyn.policy.ha.ServiceRestarter
+  - type: org.apache.brooklyn.policy.ha.ServiceRestarter
     brooklyn.config:
       # repeated failures in a time window can cause the restarter to abort,
       # propagating the failure; a time window of 0 will mean it always restarts!

@@ -34,13 +34,13 @@ services:
 
   # a failure detector and a service restarter work together
   brooklyn.enrichers:
-  - type: brooklyn.policy.ha.ServiceFailureDetector
+  - type: org.apache.brooklyn.policy.ha.ServiceFailureDetector
     brooklyn.config:
       # wait 15s after service fails before propagating failure
       serviceFailedStabilizationDelay: 15s
 
   brooklyn.policies:
-  - policyType: brooklyn.policy.ha.ServiceRestarter
+  - policyType: org.apache.brooklyn.policy.ha.ServiceRestarter
     brooklyn.config:
       # repeated failures in a time window can cause the restarter to abort,
       # propagating the failure; a time window of 0 will mean it always restarts!

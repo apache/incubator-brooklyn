@@ -86,7 +86,7 @@ public abstract class ConfigSummary implements HasName, Serializable {
         this.reconfigurable = config.isReconfigurable();
 
         /* Use String, to guarantee it is serializable; otherwise get:
-         *   No serializer found for class brooklyn.policy.autoscaling.AutoScalerPolicy$3 and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS) ) (through reference chain: java.util.ArrayList[9]->org.apache.brooklyn.rest.domain.PolicyConfigSummary["defaultValue"])
+         *   No serializer found for class org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy$3 and no properties discovered to create BeanSerializer (to avoid exception, disable SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS) ) (through reference chain: java.util.ArrayList[9]->org.apache.brooklyn.rest.domain.PolicyConfigSummary["defaultValue"])
          *   at org.codehaus.jackson.map.ser.impl.UnknownSerializer.failForEmpty(UnknownSerializer.java:52)
          */
         this.label = label;

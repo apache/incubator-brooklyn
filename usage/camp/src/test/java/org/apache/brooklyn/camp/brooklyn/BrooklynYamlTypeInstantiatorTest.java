@@ -27,7 +27,7 @@ import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoading
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.policy.ha.ServiceRestarter;
+import org.apache.brooklyn.policy.ha.ServiceRestarter;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.javalang.JavaClassNames;
 import brooklyn.util.time.Duration;

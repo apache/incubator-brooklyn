@@ -36,9 +36,11 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.Policy;
+
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.brooklyn.core.util.ResourceUtils;
+
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
@@ -54,7 +56,7 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.policy.autoscaling.AutoScalerPolicy;
+import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 import brooklyn.test.Asserts;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.exceptions.Exceptions;

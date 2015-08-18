@@ -33,7 +33,7 @@ services:
       minRam: 16g
       minCores: 4
   brooklyn.policies:
-  - type: brooklyn.policy.autoscaling.AutoScalerPolicy
+  - type: org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
     brooklyn.config:
       metric: $brooklyn:sensor("org.apache.brooklyn.entity.nosql.couchbase.CouchbaseCluster",
         "couchbase.stats.cluster.per.node.ops")
