@@ -22,22 +22,21 @@ import static java.lang.String.format;
 
 import java.util.concurrent.Callable;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.entity.database.mysql.MySqlNodeImpl;
 import org.apache.brooklyn.entity.database.mysql.MySqlSshDriver;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.CountdownTimer;
+import org.apache.brooklyn.util.time.Duration;
+
+import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
-
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.CountdownTimer;
-import brooklyn.util.time.Duration;
 
 /**
  * @see SimulatedJBoss7ServerImpl for description of purpose and configuration options.

@@ -37,10 +37,9 @@ import java.util.regex.Pattern;
 
 import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.util.stream.StreamGobbler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.stream.StreamGobbler;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;

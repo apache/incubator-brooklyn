@@ -20,25 +20,24 @@ package org.apache.brooklyn.qa.longevity.webcluster;
 
 import java.util.List;
 
-import brooklyn.config.BrooklynProperties;
+import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.core.config.BrooklynProperties;
+import org.apache.brooklyn.entity.proxy.nginx.NginxController;
+import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
+import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
+import org.apache.brooklyn.util.CommandLineUtil;
+
+import com.google.common.collect.Lists;
+
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 import brooklyn.event.basic.Sensors;
-
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.api.policy.EnricherSpec;
-import org.apache.brooklyn.entity.proxy.nginx.NginxController;
-import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
-import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
-import org.apache.brooklyn.launcher.BrooklynLauncher;
-
-import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
-import brooklyn.util.CommandLineUtil;
-
-import com.google.common.collect.Lists;
 
 public class WebClusterApp extends AbstractApplication {
 

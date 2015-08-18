@@ -18,11 +18,11 @@
  */
 package org.apache.brooklyn.qa.longevity;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.brooklyn.qa.longevity.StatusRecorder.Factory.chain;
 import static org.apache.brooklyn.qa.longevity.StatusRecorder.Factory.noop;
 import static org.apache.brooklyn.qa.longevity.StatusRecorder.Factory.toFile;
 import static org.apache.brooklyn.qa.longevity.StatusRecorder.Factory.toLog;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,12 +38,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
+import org.apache.brooklyn.util.collections.TimeWindowedList;
+import org.apache.brooklyn.util.collections.TimestampedValue;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.TimeWindowedList;
-import brooklyn.util.collections.TimestampedValue;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;

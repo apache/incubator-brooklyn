@@ -18,8 +18,6 @@
  */
 package org.apache.brooklyn.qa.load;
 
-import org.apache.brooklyn.test.PerformanceTestUtils;
-
 import static org.testng.Assert.assertEquals;
 
 import java.io.File;
@@ -30,26 +28,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.entity.trait.Startable;
-
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-
-import brooklyn.util.os.Os;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.test.PerformanceTestUtils;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -59,6 +51,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+
+import brooklyn.entity.basic.Entities;
+import brooklyn.entity.basic.StartableApplication;
+import brooklyn.entity.rebind.persister.PersistMode;
+import brooklyn.entity.trait.Startable;
 
 /**
  * Customers ask about the scalability of Brooklyn. These load tests investigate how many 

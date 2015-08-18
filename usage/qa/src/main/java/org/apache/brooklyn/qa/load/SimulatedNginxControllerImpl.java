@@ -28,23 +28,21 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import org.apache.brooklyn.entity.proxy.nginx.NginxSshDriver;
 import org.apache.brooklyn.entity.proxy.nginx.UrlMapping;
+import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Networking;
 
-import brooklyn.config.ConfigKey;
+import com.google.common.base.Functions;
+
 import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
-
-import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
-
-import com.google.common.base.Functions;
 
 /**
  * @see SimulatedJBoss7ServerImpl for description of purpose and configuration options.
