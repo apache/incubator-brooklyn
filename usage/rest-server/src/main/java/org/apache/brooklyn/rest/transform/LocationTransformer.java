@@ -23,9 +23,9 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.location.basic.BasicLocationDefinition;
-import org.apache.brooklyn.location.basic.LocationConfigKeys;
-import org.apache.brooklyn.location.basic.LocationInternal;
+import org.apache.brooklyn.location.core.BasicLocationDefinition;
+import org.apache.brooklyn.location.core.LocationConfigKeys;
+import org.apache.brooklyn.location.core.internal.LocationInternal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationDefinition;
 import org.apache.brooklyn.api.mgmt.ManagementContext;

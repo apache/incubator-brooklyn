@@ -59,7 +59,7 @@ import org.apache.brooklyn.util.text.Strings;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
 import com.google.api.client.util.Preconditions;
 import com.google.common.base.Charsets;

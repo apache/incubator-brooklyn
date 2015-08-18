@@ -20,7 +20,7 @@ package org.apache.brooklyn.entity.software.base;
 
 import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.net.UserAndHostAndPort;
 
 public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWinRmDriver implements VanillaWindowsProcessDriver {

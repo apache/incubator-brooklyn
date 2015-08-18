@@ -41,8 +41,8 @@ import org.testng.Assert;
 import org.testng.TestException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;

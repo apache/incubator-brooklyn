@@ -56,9 +56,9 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 
-import org.apache.brooklyn.location.basic.AbstractLocation;
-import org.apache.brooklyn.location.basic.LocationConfigKeys;
-import org.apache.brooklyn.location.basic.LocationInternal;
+import org.apache.brooklyn.location.core.AbstractLocation;
+import org.apache.brooklyn.location.core.LocationConfigKeys;
+import org.apache.brooklyn.location.core.internal.LocationInternal;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.internal.EntityLocal;

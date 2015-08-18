@@ -37,7 +37,7 @@ import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;

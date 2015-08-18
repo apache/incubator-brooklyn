@@ -69,12 +69,12 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import org.apache.brooklyn.location.basic.AbstractLocation;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.location.basic.Locations;
-import org.apache.brooklyn.location.basic.Machines;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.core.AbstractLocation;
+import org.apache.brooklyn.location.core.Locations;
+import org.apache.brooklyn.location.core.Machines;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
 import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;

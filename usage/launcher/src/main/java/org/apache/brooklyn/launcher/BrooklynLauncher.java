@@ -61,12 +61,12 @@ import org.apache.brooklyn.core.mgmt.ha.ManagementPlaneSyncRecordPersisterToObje
 import org.apache.brooklyn.core.mgmt.internal.BrooklynShutdownHooks;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.persist.BrooklynMementoPersisterToObjectStore;
+import org.apache.brooklyn.core.mgmt.persist.BrooklynPersistenceUtils;
+import org.apache.brooklyn.core.mgmt.persist.PersistMode;
+import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
 import org.apache.brooklyn.core.mgmt.rebind.PersistenceExceptionHandlerImpl;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl;
-import org.apache.brooklyn.core.mgmt.rebind.persister.BrooklynMementoPersisterToObjectStore;
-import org.apache.brooklyn.core.mgmt.rebind.persister.BrooklynPersistenceUtils;
-import org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode;
-import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
 import org.apache.brooklyn.core.mgmt.rebind.transformer.CompoundTransformer;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.server.BrooklynServerPaths;
@@ -89,8 +89,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
-import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.core.PortRanges;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import org.apache.brooklyn.rest.security.provider.BrooklynUserWithRandomPasswordSecurityProvider;

@@ -28,7 +28,7 @@ import org.apache.brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.os.Os;

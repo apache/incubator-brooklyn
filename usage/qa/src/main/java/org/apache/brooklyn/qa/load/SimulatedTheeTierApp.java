@@ -43,7 +43,7 @@ import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
 import org.apache.brooklyn.sensor.enricher.Enrichers;

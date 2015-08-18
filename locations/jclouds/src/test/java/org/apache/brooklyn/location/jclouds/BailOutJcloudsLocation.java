@@ -46,9 +46,11 @@ import com.google.common.reflect.TypeToken;
 
 public class BailOutJcloudsLocation extends JcloudsLocation {
 
+    public static final String ERROR_MESSAGE = "early termination for test";
+    public static final RuntimeException BAIL_OUT_FOR_TESTING = new RuntimeException(ERROR_MESSAGE);
+    
     // Don't care which image; not actually provisioning
     private static final String US_EAST_IMAGE_ID = "us-east-1/ami-7d7bfc14";
-    public static final RuntimeException BAIL_OUT_FOR_TESTING = new RuntimeException("early termination for test");
 
     public static final ConfigKey<Function<ConfigBag, Void>> BUILD_TEMPLATE_INTERCEPTOR = ConfigKeys.newConfigKey(
             new TypeToken<Function<ConfigBag, Void>>() {},

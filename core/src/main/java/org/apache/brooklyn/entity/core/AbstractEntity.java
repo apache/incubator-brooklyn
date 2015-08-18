@@ -75,7 +75,7 @@ import org.apache.brooklyn.entity.core.internal.EntityConfigMap;
 import org.apache.brooklyn.entity.lifecycle.PolicyDescriptor;
 import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic.ServiceNotUpLogic;
-import org.apache.brooklyn.location.basic.Locations;
+import org.apache.brooklyn.location.core.Locations;
 import org.apache.brooklyn.policy.core.AbstractPolicy;
 import org.apache.brooklyn.sensor.core.AttributeMap;
 import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;

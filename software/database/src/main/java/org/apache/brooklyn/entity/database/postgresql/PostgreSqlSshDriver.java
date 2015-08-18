@@ -39,7 +39,7 @@ import java.io.InputStream;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.location.OsDetails;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableList;

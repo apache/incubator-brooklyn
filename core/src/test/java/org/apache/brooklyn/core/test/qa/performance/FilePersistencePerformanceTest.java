@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.brooklyn.core.mgmt.rebind.persister.FileBasedStoreObjectAccessor;
+import org.apache.brooklyn.core.mgmt.persist.FileBasedStoreObjectAccessor;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.internal.ssh.process.ProcessTool;

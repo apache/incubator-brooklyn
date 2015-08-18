@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.core.mgmt.ha;
 
-import org.apache.brooklyn.core.mgmt.rebind.persister.InMemoryObjectStore;
-import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
+import org.apache.brooklyn.core.mgmt.persist.InMemoryObjectStore;
+import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;

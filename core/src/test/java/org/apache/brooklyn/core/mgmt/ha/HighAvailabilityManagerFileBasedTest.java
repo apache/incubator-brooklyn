@@ -20,7 +20,7 @@ package org.apache.brooklyn.core.mgmt.ha;
 
 import java.io.File;
 
-import org.apache.brooklyn.core.mgmt.rebind.persister.FileBasedObjectStore;
+import org.apache.brooklyn.core.mgmt.persist.FileBasedObjectStore;
 import org.apache.brooklyn.util.os.Os;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;

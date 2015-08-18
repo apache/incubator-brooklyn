@@ -47,7 +47,7 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.Locations;
+import org.apache.brooklyn.location.core.Locations;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;

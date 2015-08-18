@@ -37,7 +37,7 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.PolicyMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
-import org.apache.brooklyn.location.basic.LocationInternal;
+import org.apache.brooklyn.location.core.internal.LocationInternal;
 
 import com.google.common.collect.Maps;
 

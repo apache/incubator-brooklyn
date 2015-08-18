@@ -28,7 +28,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.file.ArchiveBuilder;

@@ -34,7 +34,7 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindContext;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.LocationMemento;
 import org.apache.brooklyn.core.mgmt.rebind.BasicLocationRebindSupport;
-import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.core.AbstractLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;

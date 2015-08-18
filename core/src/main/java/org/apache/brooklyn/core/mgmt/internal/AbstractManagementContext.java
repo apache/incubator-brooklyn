@@ -69,7 +69,7 @@ import org.apache.brooklyn.entity.core.AbstractEntity;
 import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.entity.drivers.BasicEntityDriverManager;
 import org.apache.brooklyn.entity.drivers.downloads.BasicDownloadsManager;
-import org.apache.brooklyn.location.basic.BasicLocationRegistry;
+import org.apache.brooklyn.location.core.BasicLocationRegistry;
 import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;

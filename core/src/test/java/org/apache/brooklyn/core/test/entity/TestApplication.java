@@ -28,8 +28,8 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.factory.ApplicationBuilder;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.sensor.core.Sensors;
 
 /**

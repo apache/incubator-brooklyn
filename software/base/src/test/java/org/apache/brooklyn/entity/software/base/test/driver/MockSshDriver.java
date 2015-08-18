@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.software.base.test.driver;
 import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 public class MockSshDriver implements SoftwareProcessDriver {
 

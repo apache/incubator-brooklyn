@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.test.location;
 
-import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.core.AbstractLocation;
 import org.apache.brooklyn.location.paas.PaasLocation;
 
 /**

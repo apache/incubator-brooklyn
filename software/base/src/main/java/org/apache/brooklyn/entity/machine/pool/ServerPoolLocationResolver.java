@@ -39,9 +39,9 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import org.apache.brooklyn.location.basic.BasicLocationRegistry;
-import org.apache.brooklyn.location.basic.LocationInternal;
-import org.apache.brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
+import org.apache.brooklyn.location.core.BasicLocationRegistry;
+import org.apache.brooklyn.location.core.LocationPropertiesFromBrooklynProperties;
+import org.apache.brooklyn.location.core.internal.LocationInternal;
 import org.apache.brooklyn.location.dynamic.DynamicLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.text.KeyValueParser;

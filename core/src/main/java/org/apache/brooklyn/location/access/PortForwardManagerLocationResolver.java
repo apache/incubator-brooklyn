@@ -23,12 +23,12 @@ import java.util.Map;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.location.basic.LocationConfigUtils;
-import org.apache.brooklyn.location.basic.LocationInternal;
-import org.apache.brooklyn.location.basic.LocationPredicates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.location.basic.AbstractLocationResolver;
+import org.apache.brooklyn.location.core.AbstractLocationResolver;
+import org.apache.brooklyn.location.core.LocationConfigUtils;
+import org.apache.brooklyn.location.core.LocationPredicates;
+import org.apache.brooklyn.location.core.internal.LocationInternal;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 
 import com.google.common.base.Optional;

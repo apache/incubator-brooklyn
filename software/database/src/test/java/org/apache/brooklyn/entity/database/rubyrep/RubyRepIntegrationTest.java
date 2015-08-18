@@ -42,8 +42,8 @@ import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;
 import org.apache.brooklyn.entity.factory.ApplicationBuilder;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.core.PortRanges;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
 public class RubyRepIntegrationTest {
 

@@ -33,7 +33,7 @@ import org.apache.brooklyn.entity.drivers.downloads.BasicDownloadRequirement;
 import org.apache.brooklyn.entity.drivers.downloads.DownloadSubstituters;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;

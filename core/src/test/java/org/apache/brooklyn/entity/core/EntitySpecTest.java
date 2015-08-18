@@ -41,7 +41,7 @@ import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;

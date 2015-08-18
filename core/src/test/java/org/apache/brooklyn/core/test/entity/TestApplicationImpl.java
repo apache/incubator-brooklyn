@@ -30,8 +30,8 @@ import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.entity.core.AbstractApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.util.logging.LoggingSetup;
 
 /**

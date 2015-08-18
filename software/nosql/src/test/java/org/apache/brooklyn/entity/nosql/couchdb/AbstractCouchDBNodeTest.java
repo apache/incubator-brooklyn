@@ -27,7 +27,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.factory.ApplicationBuilder;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
 /**
  * CouchDB test framework for integration and live tests.

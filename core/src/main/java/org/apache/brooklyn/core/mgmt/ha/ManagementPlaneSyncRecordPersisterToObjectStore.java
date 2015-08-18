@@ -33,14 +33,14 @@ import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mgmt.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.api.mgmt.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.mgmt.ha.ManagementPlaneSyncRecordPersister;
-import org.apache.brooklyn.core.mgmt.rebind.persister.MementoSerializer;
-import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
-import org.apache.brooklyn.core.mgmt.rebind.persister.RetryingMementoSerializer;
-import org.apache.brooklyn.core.mgmt.rebind.persister.StoreObjectAccessorLocking;
-import org.apache.brooklyn.core.mgmt.rebind.persister.XmlMementoSerializer;
-import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
-import org.apache.brooklyn.core.mgmt.rebind.plane.dto.BasicManagementNodeSyncRecord;
-import org.apache.brooklyn.core.mgmt.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
+import org.apache.brooklyn.core.mgmt.ha.dto.BasicManagementNodeSyncRecord;
+import org.apache.brooklyn.core.mgmt.ha.dto.ManagementPlaneSyncRecordImpl;
+import org.apache.brooklyn.core.mgmt.persist.MementoSerializer;
+import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
+import org.apache.brooklyn.core.mgmt.persist.RetryingMementoSerializer;
+import org.apache.brooklyn.core.mgmt.persist.StoreObjectAccessorLocking;
+import org.apache.brooklyn.core.mgmt.persist.XmlMementoSerializer;
+import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
@@ -111,7 +111,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
     /**
      * @param mgmt not used much at present but handy to ensure we know it so that obj store is prepared
      * @param objectStore the objectStore use to read/write management-plane data;
-     *   this must have been {@link PersistenceObjectStore#prepareForSharedUse(org.apache.brooklyn.core.mgmt.rebind.persister.PersistMode, HighAvailabilityMode)}
+     *   this must have been {@link PersistenceObjectStore#prepareForSharedUse(org.apache.brooklyn.core.mgmt.persist.PersistMode, HighAvailabilityMode)}
      * @param classLoader ClassLoader to use when deserializing data
      */
     public ManagementPlaneSyncRecordPersisterToObjectStore(ManagementContext mgmt, PersistenceObjectStore objectStore, ClassLoader classLoader) {

@@ -46,7 +46,7 @@ import org.apache.brooklyn.core.test.camp.brooklyn.lite.CampPlatformWithJustBroo
 import org.apache.brooklyn.core.test.camp.brooklyn.lite.TestAppAssemblyInstantiator;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.policy.core.AbstractPolicy;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;

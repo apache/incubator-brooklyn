@@ -32,9 +32,9 @@ import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffect
 import org.apache.brooklyn.entity.stock.BasicStartable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.location.basic.BasicOsDetails.OsVersions;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.core.BasicOsDetails.OsVersions;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.Tasks;

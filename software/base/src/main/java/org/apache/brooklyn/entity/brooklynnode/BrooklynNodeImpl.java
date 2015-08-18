@@ -53,7 +53,7 @@ import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
-import org.apache.brooklyn.location.basic.Locations;
+import org.apache.brooklyn.location.core.Locations;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
 import org.apache.brooklyn.sensor.feed.http.HttpFeed;

@@ -46,7 +46,7 @@ import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic.ServiceNotUpLogic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.location.basic.Machines;
+import org.apache.brooklyn.location.core.Machines;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;

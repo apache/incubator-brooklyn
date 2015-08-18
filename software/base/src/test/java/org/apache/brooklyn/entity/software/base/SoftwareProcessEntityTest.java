@@ -64,6 +64,7 @@ import org.apache.brooklyn.entity.software.base.SoftwareProcess.RestartSoftwareP
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwareParameters;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwareParameters.StopMode;
+import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasksTest;
 import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.test.Asserts;
@@ -90,10 +91,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import org.apache.brooklyn.location.basic.Locations;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation;
+import org.apache.brooklyn.location.core.Locations;
+import org.apache.brooklyn.location.core.SimulatedLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 
 public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {

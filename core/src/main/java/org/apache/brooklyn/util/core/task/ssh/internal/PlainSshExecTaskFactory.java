@@ -20,7 +20,7 @@ package org.apache.brooklyn.util.core.task.ssh.internal;
 
 import java.util.List;
 
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 
 import com.google.common.base.Function;

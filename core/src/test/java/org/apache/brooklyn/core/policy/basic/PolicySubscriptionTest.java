@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.entity.core.RecordingSensorEventListener;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
 import org.apache.brooklyn.policy.core.AbstractPolicy;
 import org.apache.brooklyn.sensor.core.BasicSensorEvent;
 import org.apache.brooklyn.test.Asserts;

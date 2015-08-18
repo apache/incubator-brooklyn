@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
 import org.apache.brooklyn.policy.loadbalancing.BalanceableContainer;
 import org.apache.brooklyn.policy.loadbalancing.MockContainerEntity;
 import org.apache.brooklyn.policy.loadbalancing.MockItemEntity;

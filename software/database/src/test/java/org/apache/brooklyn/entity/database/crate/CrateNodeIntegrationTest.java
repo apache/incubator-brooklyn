@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
 public class CrateNodeIntegrationTest {
 

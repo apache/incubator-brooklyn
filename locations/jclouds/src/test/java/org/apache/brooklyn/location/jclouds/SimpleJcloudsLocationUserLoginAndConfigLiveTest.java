@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.ssh.BashCommands;
 import org.apache.brooklyn.util.text.Identifiers;

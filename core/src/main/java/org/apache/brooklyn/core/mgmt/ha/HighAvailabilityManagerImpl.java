@@ -50,18 +50,18 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.ha.BasicMasterChooser.AlphabeticMasterChooser;
+import org.apache.brooklyn.core.mgmt.ha.dto.BasicManagementNodeSyncRecord;
+import org.apache.brooklyn.core.mgmt.ha.dto.ManagementPlaneSyncRecordImpl;
+import org.apache.brooklyn.core.mgmt.ha.dto.ManagementPlaneSyncRecordImpl.Builder;
 import org.apache.brooklyn.core.mgmt.internal.BrooklynObjectManagementMode;
 import org.apache.brooklyn.core.mgmt.internal.LocalEntityManager;
 import org.apache.brooklyn.core.mgmt.internal.LocationManagerInternal;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.internal.ManagementTransitionMode;
+import org.apache.brooklyn.core.mgmt.persist.BrooklynPersistenceUtils;
+import org.apache.brooklyn.core.mgmt.persist.PersistenceActivityMetrics;
+import org.apache.brooklyn.core.mgmt.persist.BrooklynPersistenceUtils.CreateBackupMode;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl;
-import org.apache.brooklyn.core.mgmt.rebind.persister.BrooklynPersistenceUtils;
-import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceActivityMetrics;
-import org.apache.brooklyn.core.mgmt.rebind.persister.BrooklynPersistenceUtils.CreateBackupMode;
-import org.apache.brooklyn.core.mgmt.rebind.plane.dto.BasicManagementNodeSyncRecord;
-import org.apache.brooklyn.core.mgmt.rebind.plane.dto.ManagementPlaneSyncRecordImpl;
-import org.apache.brooklyn.core.mgmt.rebind.plane.dto.ManagementPlaneSyncRecordImpl.Builder;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.util.collections.MutableList;
@@ -1020,7 +1020,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
 
     protected ManagementNodeSyncRecord createManagementNodeSyncRecord(boolean useLocalTimestampAsRemoteTimestamp) {
         long timestamp = currentTimeMillis();
-        org.apache.brooklyn.core.mgmt.rebind.plane.dto.BasicManagementNodeSyncRecord.Builder builder = BasicManagementNodeSyncRecord.builder()
+        org.apache.brooklyn.core.mgmt.ha.dto.BasicManagementNodeSyncRecord.Builder builder = BasicManagementNodeSyncRecord.builder()
                 .brooklynVersion(BrooklynVersion.get())
                 .nodeId(ownNodeId)
                 .status(getNodeState())

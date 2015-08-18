@@ -40,7 +40,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
-import org.apache.brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.location.core.LocationConfigKeys;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.task.DynamicTasks;

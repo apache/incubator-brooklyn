@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.entity.chef.ChefLiveTestSupport;
 import org.apache.brooklyn.entity.software.base.test.mysql.AbstractToyMySqlEntityTest;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 public abstract class AbstractChefToyMySqlEntityLiveTest extends AbstractToyMySqlEntityTest {
 

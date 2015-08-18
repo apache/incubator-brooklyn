@@ -28,7 +28,7 @@ import org.apache.brooklyn.entity.core.Entities;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.location.core.LocationConfigKeys;
 
 import com.google.common.collect.ImmutableSet;
 

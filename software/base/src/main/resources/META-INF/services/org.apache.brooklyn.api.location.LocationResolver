@@ -16,4 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-brooklyn.entity.pool.ServerPoolLocationResolver
+org.apache.brooklyn.entity.machine.pool.ServerPoolLocationResolver

@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.group.DynamicCluster;
-import org.apache.brooklyn.location.basic.MultiLocation;
+import org.apache.brooklyn.location.core.MultiLocation;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;

@@ -27,7 +27,7 @@ import org.apache.brooklyn.api.location.MachineLocationCustomizer;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.location.core.LocationConfigKeys;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 public interface CloudLocationConfig {

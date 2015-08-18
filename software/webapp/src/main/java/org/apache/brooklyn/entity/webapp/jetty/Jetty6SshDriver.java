@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSshDriver;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Networking;

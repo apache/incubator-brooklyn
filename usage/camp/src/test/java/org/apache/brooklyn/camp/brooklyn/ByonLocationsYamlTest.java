@@ -43,12 +43,12 @@ import com.google.common.collect.Iterables;
 import com.google.common.net.HostAndPort;
 
 import org.apache.brooklyn.location.access.PortForwardManager;
-import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
-import org.apache.brooklyn.location.basic.LocationPredicates;
-import org.apache.brooklyn.location.basic.Machines;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
-import org.apache.brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.core.LocationPredicates;
+import org.apache.brooklyn.location.core.Machines;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.net.UserAndHostAndPort;
 

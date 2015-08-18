@@ -44,7 +44,7 @@ import org.apache.brooklyn.entity.trait.Startable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
-import org.apache.brooklyn.location.basic.Machines;
+import org.apache.brooklyn.location.core.Machines;
 import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.Tasks;

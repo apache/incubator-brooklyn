@@ -38,7 +38,7 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.EntityFunctions;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
-import org.apache.brooklyn.location.basic.SupportsPortForwarding;
+import org.apache.brooklyn.location.core.SupportsPortForwarding;
 import org.apache.brooklyn.sensor.feed.AbstractFeed;
 import org.apache.brooklyn.sensor.feed.AttributePollHandler;
 import org.apache.brooklyn.sensor.feed.PollHandler;

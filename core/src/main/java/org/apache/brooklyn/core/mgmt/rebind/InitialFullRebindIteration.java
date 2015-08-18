@@ -31,7 +31,7 @@ import org.apache.brooklyn.core.mgmt.internal.BrooklynObjectManagementMode;
 import org.apache.brooklyn.core.mgmt.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.mgmt.internal.LocationManagerInternal;
 import org.apache.brooklyn.core.mgmt.internal.ManagementTransitionMode;
-import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceActivityMetrics;
+import org.apache.brooklyn.core.mgmt.persist.PersistenceActivityMetrics;
 import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;

@@ -78,7 +78,7 @@ import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
 import org.apache.brooklyn.util.time.Durations;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.LocationConfigTest.MyLocation;
+import org.apache.brooklyn.location.core.LocationConfigTest.MyLocation;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicates;

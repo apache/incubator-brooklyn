@@ -38,6 +38,7 @@ import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.cloud.names.CustomMachineNamer;
+import org.apache.brooklyn.location.core.LocationConfigKeys;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -58,7 +59,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 
-import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation.UserCreation;
 

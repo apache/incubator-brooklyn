@@ -50,8 +50,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import org.apache.brooklyn.location.basic.Locations.LocationsFilter;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
+import org.apache.brooklyn.location.core.Locations.LocationsFilter;
 
 public class BasicStartableTest {
 

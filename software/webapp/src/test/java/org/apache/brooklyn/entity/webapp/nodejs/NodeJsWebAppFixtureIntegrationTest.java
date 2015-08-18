@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.webapp.nodejs;
 
-import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.core.PortRanges;
 
 import com.google.common.collect.ImmutableList;
 

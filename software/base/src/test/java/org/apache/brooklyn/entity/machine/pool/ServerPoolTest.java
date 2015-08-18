@@ -35,7 +35,7 @@ import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation.LocalhostMachine;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

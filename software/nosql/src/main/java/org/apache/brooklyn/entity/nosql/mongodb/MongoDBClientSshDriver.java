@@ -28,7 +28,7 @@ import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment;
 import org.apache.brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.math.MathPredicates;

@@ -30,8 +30,8 @@ import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.jclouds.util.Throwables2;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.core.PortRanges;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;

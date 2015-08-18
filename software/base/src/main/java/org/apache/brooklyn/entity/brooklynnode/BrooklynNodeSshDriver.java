@@ -33,7 +33,7 @@ import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviou
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.drivers.downloads.DownloadSubstituters;
 import org.apache.brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.file.ArchiveBuilder;

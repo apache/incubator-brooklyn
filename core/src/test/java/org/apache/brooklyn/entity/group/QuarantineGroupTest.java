@@ -29,7 +29,7 @@ import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.group.QuarantineGroup;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
 
 import com.google.common.collect.ImmutableList;
 

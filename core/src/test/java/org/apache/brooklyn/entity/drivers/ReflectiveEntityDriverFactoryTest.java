@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.entity.drivers;
 
-import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.paas.PaasLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;

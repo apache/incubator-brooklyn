@@ -20,7 +20,7 @@ package org.apache.brooklyn.test.osgi.entities;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.location.core.AbstractLocation;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 public class SimpleLocation extends AbstractLocation {

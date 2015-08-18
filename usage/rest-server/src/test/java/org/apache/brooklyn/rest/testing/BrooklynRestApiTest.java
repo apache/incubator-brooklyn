@@ -36,7 +36,7 @@ import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.LowLevelAppDescriptor;
 
-import org.apache.brooklyn.location.basic.BasicLocationRegistry;
+import org.apache.brooklyn.location.core.BasicLocationRegistry;
 import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;

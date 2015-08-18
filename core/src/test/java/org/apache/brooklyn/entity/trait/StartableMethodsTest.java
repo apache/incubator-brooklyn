@@ -31,7 +31,7 @@ import org.apache.brooklyn.entity.trait.FailingEntity.RecordingEventListener;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
 
 import com.google.common.collect.ImmutableList;
 

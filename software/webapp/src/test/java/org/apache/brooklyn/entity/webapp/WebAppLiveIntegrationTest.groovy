@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.location.Location
 import org.apache.brooklyn.core.internal.BrooklynProperties
 import org.apache.brooklyn.core.test.entity.TestApplicationImpl
 import org.apache.brooklyn.entity.core.Entities
+import org.apache.brooklyn.entity.software.base.SoftwareProcess
 import org.apache.brooklyn.entity.trait.Startable
 import org.apache.brooklyn.entity.webapp.jboss.JBoss6Server
 import org.apache.brooklyn.entity.webapp.jboss.JBoss6ServerImpl
@@ -34,7 +35,7 @@ import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServerImpl
-import org.apache.brooklyn.location.basic.BasicLocationRegistry
+import org.apache.brooklyn.location.core.BasicLocationRegistry
 import org.apache.brooklyn.test.TestUtils
 import org.apache.brooklyn.util.internal.TimeExtras
 import org.slf4j.Logger
@@ -43,8 +44,6 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
-
-import brooklyn.entity.basic.SoftwareProcess
 
 /**
  * This tests that we can run jboss entity on AWS.

@@ -20,7 +20,7 @@ package org.apache.brooklyn.core.internal;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.util.core.crypto.SecureKeys;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.net.Networking;

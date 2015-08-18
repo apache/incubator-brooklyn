@@ -54,7 +54,7 @@ import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScann
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
-import org.apache.brooklyn.location.basic.BasicLocationRegistry;
+import org.apache.brooklyn.location.core.BasicLocationRegistry;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;

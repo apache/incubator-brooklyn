@@ -40,7 +40,7 @@ import org.apache.brooklyn.entity.proxy.AbstractController;
 import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.location.basic.PortRanges;
+import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.CommandLineUtil;
 import org.apache.brooklyn.util.core.BrooklynMavenArtifacts;

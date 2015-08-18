@@ -31,7 +31,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.BasicLocationRegistry;
+import org.apache.brooklyn.location.core.BasicLocationRegistry;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;

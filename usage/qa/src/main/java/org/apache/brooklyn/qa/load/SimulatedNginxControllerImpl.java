@@ -32,7 +32,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.entity.proxy.nginx.NginxControllerImpl;
 import org.apache.brooklyn.entity.proxy.nginx.NginxSshDriver;
 import org.apache.brooklyn.entity.proxy.nginx.UrlMapping;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
 import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
 import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;

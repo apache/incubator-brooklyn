@@ -44,7 +44,7 @@ import org.apache.brooklyn.effector.core.EffectorTasks;
 import org.apache.brooklyn.entity.core.EntityInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.sensor.feed.AbstractFeed;
 import org.apache.brooklyn.sensor.feed.PollHandler;

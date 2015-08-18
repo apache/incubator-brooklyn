@@ -22,9 +22,9 @@ import static org.testng.Assert.*
 
 import org.apache.brooklyn.api.mgmt.ManagementContext
 import org.apache.brooklyn.entity.core.Entities
-import org.apache.brooklyn.location.basic.SshMachineLocation
 import org.apache.brooklyn.location.jclouds.JcloudsLocation
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod

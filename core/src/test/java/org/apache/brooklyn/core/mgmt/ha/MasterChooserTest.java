@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.mgmt.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.core.BrooklynVersion;
 import org.apache.brooklyn.core.mgmt.ha.BasicMasterChooser.AlphabeticMasterChooser;
 import org.apache.brooklyn.core.mgmt.ha.BasicMasterChooser.ScoredRecord;
-import org.apache.brooklyn.core.mgmt.rebind.plane.dto.BasicManagementNodeSyncRecord;
+import org.apache.brooklyn.core.mgmt.ha.dto.BasicManagementNodeSyncRecord;
 import org.apache.brooklyn.entity.core.EntityFunctions;
 import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.BeforeMethod;

@@ -33,7 +33,7 @@ import org.apache.brooklyn.test.PerformanceTestUtils;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
