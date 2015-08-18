@@ -24,10 +24,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableSet;
 
 /** A config key representing a set of values. 
  * If a value is set using this *typed* key, it is _added_ to the set

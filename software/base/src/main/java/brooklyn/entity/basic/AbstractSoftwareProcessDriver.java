@@ -18,8 +18,8 @@
  */
 package brooklyn.entity.basic;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
 
 import java.io.File;
 import java.io.InputStream;
@@ -29,19 +29,18 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.ReaderInputStream;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.ReaderInputStream;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;

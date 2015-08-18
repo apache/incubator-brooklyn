@@ -30,6 +30,8 @@ import java.util.Set;
 
 import org.apache.brooklyn.core.util.flags.ClassCoercionException;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.text.StringPredicates;
 import org.codehaus.groovy.runtime.GStringImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +39,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;

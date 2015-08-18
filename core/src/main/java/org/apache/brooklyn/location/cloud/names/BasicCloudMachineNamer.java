@@ -22,10 +22,9 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.StringShortener;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.StringShortener;
+import org.apache.brooklyn.util.text.Strings;
 
 /** 
  * Standard implementation of {@link CloudMachineNamer},

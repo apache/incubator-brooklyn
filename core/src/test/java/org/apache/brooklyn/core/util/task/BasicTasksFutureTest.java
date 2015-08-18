@@ -32,16 +32,15 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.util.task.BasicExecutionContext;
 import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
 

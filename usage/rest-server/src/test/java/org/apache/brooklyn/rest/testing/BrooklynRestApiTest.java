@@ -46,8 +46,7 @@ import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
 import org.apache.brooklyn.rest.util.TestShutdownHandler;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 public abstract class BrooklynRestApiTest {
 

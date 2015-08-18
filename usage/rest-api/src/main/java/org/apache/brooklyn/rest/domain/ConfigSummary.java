@@ -26,12 +26,11 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.collections.Jsonya;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.util.collections.Jsonya;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;

@@ -34,8 +34,7 @@ import brooklyn.entity.BrooklynAppLiveTestSupport;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.PortRanges;
-
-import brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 

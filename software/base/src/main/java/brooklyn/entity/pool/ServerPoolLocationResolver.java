@@ -43,10 +43,9 @@ import org.apache.brooklyn.location.basic.BasicLocationRegistry;
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
 import org.apache.brooklyn.location.dynamic.DynamicLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.KeyValueParser;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.text.KeyValueParser;
+import org.apache.brooklyn.util.text.Strings;
 
 public class ServerPoolLocationResolver implements EnableableLocationResolver {
 

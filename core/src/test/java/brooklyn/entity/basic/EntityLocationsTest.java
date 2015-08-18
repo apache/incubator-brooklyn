@@ -26,11 +26,11 @@ import java.util.List;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
+import org.apache.brooklyn.test.Asserts;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

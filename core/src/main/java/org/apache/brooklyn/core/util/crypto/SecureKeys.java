@@ -29,6 +29,10 @@ import java.security.PublicKey;
 import java.security.Security;
 
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
+import org.apache.brooklyn.util.crypto.AuthorizedKeysParser;
+import org.apache.brooklyn.util.crypto.SecureKeysWithoutBouncyCastle;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.stream.Streams;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.X509Principal;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -42,11 +46,6 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.crypto.AuthorizedKeysParser;
-import brooklyn.util.crypto.SecureKeysWithoutBouncyCastle;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;

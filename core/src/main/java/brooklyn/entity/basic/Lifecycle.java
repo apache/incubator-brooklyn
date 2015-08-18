@@ -24,7 +24,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import brooklyn.config.render.RendererHints;
-import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
@@ -33,6 +32,7 @@ import com.google.common.base.Preconditions;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.util.text.StringFunctions;
 
 /**
  * An enumeration representing the status of an {@link org.apache.brooklyn.api.entity.Entity}.

@@ -22,6 +22,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.slf4j.Logger;
@@ -36,8 +37,6 @@ import brooklyn.entity.basic.Entities;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.management.internal.UsageManager;
-
-import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

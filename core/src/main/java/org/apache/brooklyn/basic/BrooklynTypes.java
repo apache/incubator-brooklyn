@@ -26,12 +26,12 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.policy.basic.PolicyDynamicType;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.EnricherDynamicType;
 import brooklyn.entity.basic.EntityDynamicType;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Maps;
 

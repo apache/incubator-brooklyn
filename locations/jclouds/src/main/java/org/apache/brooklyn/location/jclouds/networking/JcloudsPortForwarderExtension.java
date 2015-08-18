@@ -19,11 +19,10 @@
 package org.apache.brooklyn.location.jclouds.networking;
 
 import org.jclouds.compute.domain.NodeMetadata;
-
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.access.PortForwardManager;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.net.Protocol;
+import org.apache.brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.net.Protocol;
 
 import com.google.common.base.Optional;
 import com.google.common.net.HostAndPort;

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.jclouds;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -39,6 +39,9 @@ import org.apache.brooklyn.location.basic.BasicHardwareDetails;
 import org.apache.brooklyn.location.basic.BasicMachineDetails;
 import org.apache.brooklyn.location.basic.BasicOsDetails;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.text.Strings;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.callables.RunScriptOnNode;
 import org.jclouds.compute.domain.ExecResponse;
@@ -54,10 +57,6 @@ import org.jclouds.scriptbuilder.domain.InterpretableStatement;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Networking;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;

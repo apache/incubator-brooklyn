@@ -24,6 +24,9 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.os.Os;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -32,10 +35,8 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

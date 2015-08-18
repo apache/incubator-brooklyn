@@ -22,7 +22,7 @@ import static brooklyn.util.GroovyJavaMethods.truth
 
 import java.util.concurrent.Callable
 
-import brooklyn.util.concurrent.CallableFromRunnable;
+import org.apache.brooklyn.util.concurrent.CallableFromRunnable;
 
 import com.google.common.base.Function
 import com.google.common.base.Predicate

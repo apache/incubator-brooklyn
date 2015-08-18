@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.util.xstream;
 
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.converters.enums.EnumConverter;

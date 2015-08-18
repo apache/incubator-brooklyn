@@ -24,10 +24,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
+import org.apache.brooklyn.util.net.Networking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.net.Networking;
 
 /** @deprecated Mar 2015 - the API has changed; GetLocation now discouraged for free access, and valuepairs.txt not supported */
 @Deprecated

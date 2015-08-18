@@ -30,11 +30,10 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
-
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.guava.MaybeFunctions;
-import brooklyn.util.guava.TypeTokens;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.MaybeFunctions;
+import org.apache.brooklyn.util.guava.TypeTokens;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

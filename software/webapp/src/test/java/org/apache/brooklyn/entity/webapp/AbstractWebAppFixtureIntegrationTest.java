@@ -55,9 +55,6 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.trait.Startable;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.test.Asserts;
-
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
@@ -74,16 +71,16 @@ import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Urls;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;

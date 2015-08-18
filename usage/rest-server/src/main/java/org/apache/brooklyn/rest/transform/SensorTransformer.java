@@ -29,11 +29,10 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.rest.domain.SensorSummary;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.URLParamEncoder;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.URLParamEncoder;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.Iterables;
 

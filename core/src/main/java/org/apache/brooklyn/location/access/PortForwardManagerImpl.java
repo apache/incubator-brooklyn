@@ -34,12 +34,12 @@ import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mementos.LocationMemento;
 import org.apache.brooklyn.location.basic.AbstractLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Preconditions;

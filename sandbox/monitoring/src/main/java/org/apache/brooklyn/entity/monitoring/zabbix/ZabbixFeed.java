@@ -33,10 +33,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.basic.SupportsPortForwarding;
+import org.apache.brooklyn.util.net.Cidr;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
@@ -59,7 +61,6 @@ import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.JsonObject;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityFunctions;
@@ -68,7 +69,6 @@ import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
 import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.util.net.Cidr;
 
 public class ZabbixFeed extends AbstractFeed {
 

@@ -41,10 +41,9 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.Status;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;

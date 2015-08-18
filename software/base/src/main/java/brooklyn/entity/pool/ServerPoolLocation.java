@@ -28,12 +28,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.dynamic.DynamicLocation;

@@ -26,8 +26,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
-
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;

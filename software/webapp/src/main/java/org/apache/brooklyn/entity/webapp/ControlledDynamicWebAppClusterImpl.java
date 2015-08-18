@@ -32,6 +32,10 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.entity.proxy.LoadBalancer;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,10 +50,6 @@ import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.QuorumCheck.QuorumChecks;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

@@ -40,25 +40,25 @@ import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.EntityAdjunct;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigMap;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.management.internal.SubscriptionTracker;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.basic.AbstractBrooklynObject;
 import org.apache.brooklyn.basic.BrooklynObjectInternal;
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.config.ConfigMap;
+
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;

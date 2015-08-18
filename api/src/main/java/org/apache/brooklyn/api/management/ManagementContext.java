@@ -33,9 +33,8 @@ import org.apache.brooklyn.api.entity.rebind.RebindManager;
 import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityManager;
-
-import brooklyn.config.StringConfigMap;
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.config.StringConfigMap;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 

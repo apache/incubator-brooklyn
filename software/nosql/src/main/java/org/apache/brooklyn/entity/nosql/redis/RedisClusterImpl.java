@@ -24,6 +24,9 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
+import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.AbstractEntity;
@@ -33,9 +36,6 @@ import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChild
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.collections.QuorumCheck.QuorumChecks;
-import brooklyn.util.exceptions.CompoundRuntimeException;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -52,6 +52,7 @@ import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl;
 import org.apache.brooklyn.core.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
@@ -71,7 +72,6 @@ import com.google.common.collect.Maps;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
-import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynShutdownHooks;
@@ -96,19 +96,18 @@ import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import org.apache.brooklyn.rest.security.provider.BrooklynUserWithRandomPasswordSecurityProvider;
 import org.apache.brooklyn.rest.util.ShutdownHandler;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
-import brooklyn.util.exceptions.FatalRuntimeException;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.io.FileUtil;
-import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import org.apache.brooklyn.util.exceptions.FatalRuntimeException;
+import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.io.FileUtil;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 
 /**
  * Example usage is:

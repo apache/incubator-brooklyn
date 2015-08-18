@@ -29,11 +29,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.java.UsesJmx;
+
 import org.apache.brooklyn.entity.messaging.amqp.AmqpServer;
 import org.apache.brooklyn.entity.messaging.jms.JMSDestinationImpl;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.exceptions.Exceptions;
 
 public abstract class QpidDestinationImpl extends JMSDestinationImpl implements QpidDestination {
     public static final Logger log = LoggerFactory.getLogger(QpidDestination.class);

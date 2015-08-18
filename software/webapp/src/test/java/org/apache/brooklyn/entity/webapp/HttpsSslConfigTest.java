@@ -20,10 +20,9 @@ package org.apache.brooklyn.entity.webapp;
 
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
 
 public class HttpsSslConfigTest {
 

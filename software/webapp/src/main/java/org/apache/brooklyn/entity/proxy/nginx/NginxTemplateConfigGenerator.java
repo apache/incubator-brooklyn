@@ -21,14 +21,14 @@ package org.apache.brooklyn.entity.proxy.nginx;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.text.Strings;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.Strings;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;

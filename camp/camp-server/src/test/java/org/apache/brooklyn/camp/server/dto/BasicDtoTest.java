@@ -21,13 +21,12 @@ package org.apache.brooklyn.camp.server.dto;
 import java.io.IOException;
 
 import org.apache.brooklyn.camp.server.dto.DtoCustomAttributes;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -25,8 +25,7 @@ import org.apache.brooklyn.api.management.TaskFactory;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.net.Urls;
 
 public class ArchiveTasks {
 

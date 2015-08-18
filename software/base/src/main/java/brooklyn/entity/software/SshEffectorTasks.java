@@ -27,6 +27,8 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.core.util.task.Tasks;
@@ -42,9 +44,7 @@ import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigUtils;
-import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
@@ -55,8 +55,7 @@ import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

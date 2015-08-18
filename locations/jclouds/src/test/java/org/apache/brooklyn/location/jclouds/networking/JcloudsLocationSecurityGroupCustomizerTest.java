@@ -55,8 +55,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Cidr;
 
 public class JcloudsLocationSecurityGroupCustomizerTest {
 

@@ -27,8 +27,7 @@ import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.location.basic.AbstractLocation;
-
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 public abstract class AbstractCloudMachineProvisioningLocation extends AbstractLocation
 implements MachineProvisioningLocation<MachineLocation>, CloudLocationConfig

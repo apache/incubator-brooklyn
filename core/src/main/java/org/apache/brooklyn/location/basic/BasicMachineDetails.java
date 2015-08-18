@@ -37,10 +37,9 @@ import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.TaskTags;
 import org.apache.brooklyn.core.util.task.ssh.internal.PlainSshExecTaskFactory;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.stream.Streams;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;

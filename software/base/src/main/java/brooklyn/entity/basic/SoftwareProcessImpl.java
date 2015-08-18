@@ -18,7 +18,6 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.util.guava.Maybe;
 import groovy.time.TimeDuration;
 
 import java.util.Collection;
@@ -41,6 +40,7 @@ import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
@@ -48,7 +48,6 @@ import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.Lifecycle.Transition;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
@@ -58,13 +57,13 @@ import brooklyn.event.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.CountdownTimer;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.time.CountdownTimer;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;

@@ -27,10 +27,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.time.Duration;
+
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.time.Duration;
 
 /** Wraps access to an object (the delegate {@link StoreObjectAccessor} 
  * in a guarded read-write context such that callers will be blocked if another thread

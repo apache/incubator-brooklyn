@@ -24,9 +24,10 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.brooklyn.entity.messaging.amqp.AmqpExchange;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.exceptions.Exceptions;
 
 public class QpidQueueImpl extends QpidDestinationImpl implements QpidQueue {
     public QpidQueueImpl() {

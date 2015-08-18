@@ -26,10 +26,11 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.stream.KnownSizeInputStream;
+import org.apache.brooklyn.util.time.Duration;
+
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.util.stream.KnownSizeInputStream;
-import brooklyn.util.time.Duration;
 
 /**
  * Defines the methods available on the various different implementations of SSH,

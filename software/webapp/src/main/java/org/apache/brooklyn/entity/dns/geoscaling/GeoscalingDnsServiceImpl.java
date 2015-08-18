@@ -36,10 +36,9 @@ import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.ServiceStateLogic;
 
 import org.apache.brooklyn.location.geo.HostGeoInfo;
-
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
 
 public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implements GeoscalingDnsService {
 

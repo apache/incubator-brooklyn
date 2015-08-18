@@ -19,8 +19,7 @@
 package brooklyn.config;
 
 import org.apache.brooklyn.api.management.ManagementContext;
-
-import brooklyn.util.internal.StringSystemProperty;
+import org.apache.brooklyn.util.internal.StringSystemProperty;
 
 /** attributes which callers can set and a service application
  * (such as servlet or osgi) will pay attention to,

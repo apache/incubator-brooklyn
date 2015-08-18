@@ -22,11 +22,11 @@ import java.net.URI;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicAttributeSensor;

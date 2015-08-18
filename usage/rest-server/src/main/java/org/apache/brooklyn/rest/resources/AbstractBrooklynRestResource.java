@@ -37,9 +37,8 @@ import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
-
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.time.Duration;
 
 public abstract class AbstractBrooklynRestResource implements ManagementContextInjectable {
 

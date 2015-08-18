@@ -33,7 +33,9 @@ import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
+
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+
 import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
@@ -44,10 +46,9 @@ import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
-import brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

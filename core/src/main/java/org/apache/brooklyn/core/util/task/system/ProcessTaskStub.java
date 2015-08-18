@@ -24,9 +24,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

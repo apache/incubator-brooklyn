@@ -54,9 +54,8 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

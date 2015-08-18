@@ -19,17 +19,17 @@
 package brooklyn.entity.basic;
 
 import static brooklyn.entity.basic.ConfigKeys.*;
+
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.internal.ssh.ShellTool;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
-
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
 

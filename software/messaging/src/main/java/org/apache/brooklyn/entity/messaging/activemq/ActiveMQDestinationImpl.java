@@ -27,9 +27,10 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import com.google.common.base.Preconditions;
 
 import org.apache.brooklyn.entity.messaging.jms.JMSDestinationImpl;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.exceptions.Exceptions;
 
 public abstract class ActiveMQDestinationImpl extends JMSDestinationImpl implements ActiveMQDestination {
     protected ObjectName brokerMBeanName;

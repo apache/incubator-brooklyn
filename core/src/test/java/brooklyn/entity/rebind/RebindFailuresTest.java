@@ -39,23 +39,23 @@ import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigMap;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.os.Os;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigMap;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntityImpl;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.os.Os;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;

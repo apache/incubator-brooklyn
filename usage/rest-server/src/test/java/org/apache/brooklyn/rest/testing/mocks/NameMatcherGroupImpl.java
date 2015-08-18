@@ -18,9 +18,10 @@
  */
 package org.apache.brooklyn.rest.testing.mocks;
 
+import org.apache.brooklyn.util.text.StringPredicates;
+
 import brooklyn.entity.basic.DynamicGroupImpl;
 import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.util.text.StringPredicates;
 
 public class NameMatcherGroupImpl extends DynamicGroupImpl implements NameMatcherGroup {
 

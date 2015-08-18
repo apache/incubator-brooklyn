@@ -19,12 +19,11 @@
 package org.apache.brooklyn.location.jclouds;
 
 import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.text.Strings;
 
 public class JcloudsMachineNamerTest {
 

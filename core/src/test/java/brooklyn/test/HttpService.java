@@ -19,6 +19,8 @@
 package brooklyn.test;
 
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.util.javalang.Threads;
+import org.apache.brooklyn.util.os.Os;
 
 import java.io.File;
 import java.io.InputStream;
@@ -43,9 +45,6 @@ import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.util.javalang.Threads;
-import brooklyn.util.os.Os;
 
 import com.google.common.base.Optional;
 

@@ -29,6 +29,8 @@ import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.test.TestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -41,9 +43,6 @@ import brooklyn.entity.trait.FailingEntity;
 import brooklyn.entity.trait.Startable;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
 

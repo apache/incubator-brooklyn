@@ -50,6 +50,7 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityManager;
+import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
@@ -67,7 +68,6 @@ import org.apache.brooklyn.core.util.task.BasicExecutionContext;
 import org.apache.brooklyn.core.util.task.Tasks;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
@@ -76,11 +76,11 @@ import brooklyn.entity.drivers.downloads.BasicDownloadsManager;
 import brooklyn.entity.rebind.RebindManagerImpl;
 
 import org.apache.brooklyn.location.basic.BasicLocationRegistry;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;

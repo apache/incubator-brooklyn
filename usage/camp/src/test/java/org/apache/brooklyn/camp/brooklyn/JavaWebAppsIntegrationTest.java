@@ -42,7 +42,13 @@ import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -56,13 +62,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Urls;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.Iterables;
 

@@ -36,14 +36,14 @@ import org.apache.brooklyn.api.mementos.Memento;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.basic.BrooklynObjectInternal;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableSet;
+
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableSet;
 
 import com.google.common.base.Preconditions;
 

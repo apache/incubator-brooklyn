@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.ProvisioningLocation;
 import org.apache.brooklyn.api.management.AccessController;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.util.config.ConfigBag;
@@ -38,17 +39,15 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.config.BrooklynLogging.LoggingLevel;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.proxying.InternalLocationFactory;
 
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationInternal;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.stream.Streams;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;

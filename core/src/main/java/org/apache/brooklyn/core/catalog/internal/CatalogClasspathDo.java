@@ -42,14 +42,14 @@ import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.javalang.ReflectionScanner;
 import org.apache.brooklyn.core.util.javalang.UrlClassLoader;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.AggregateClassLoader;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Time;
 
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.AggregateClassLoader;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;

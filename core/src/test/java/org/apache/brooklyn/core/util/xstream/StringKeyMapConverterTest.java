@@ -23,9 +23,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.brooklyn.core.util.xstream.StringKeyMapConverter;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.Maps;
 import com.thoughtworks.xstream.XStream;

@@ -32,8 +32,7 @@ import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.Jsonya;
+import org.apache.brooklyn.util.collections.Jsonya;
 
 @Test
 public class EmptySoftwareProcessYamlTest extends AbstractYamlTest {

@@ -25,6 +25,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +35,6 @@ import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Startable;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

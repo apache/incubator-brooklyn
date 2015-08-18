@@ -27,15 +27,15 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.util.JavaGroovyEquivalents;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 import brooklyn.util.internal.TimeExtras;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Callables;
@@ -77,7 +77,7 @@ import com.google.common.util.concurrent.Callables;
  * }
  * </pre>
  * 
- * @deprecated since 0.7.0, use {@link brooklyn.util.repeat.Repeater} instead
+ * @deprecated since 0.7.0, use {@link org.apache.brooklyn.util.repeat.Repeater} instead
  */
 @Deprecated
 public class Repeater {

@@ -21,10 +21,9 @@ package org.apache.brooklyn.camp.server.dto;
 import java.io.IOException;
 
 import org.apache.brooklyn.camp.server.dto.LinkDto;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

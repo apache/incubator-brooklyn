@@ -28,7 +28,7 @@ import org.apache.brooklyn.core.util.internal.Repeater;
 import org.testng.annotations.Test
 
 import brooklyn.util.internal.TimeExtras;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Stopwatch
 

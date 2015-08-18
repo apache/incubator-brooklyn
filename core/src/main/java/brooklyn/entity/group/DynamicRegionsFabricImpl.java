@@ -24,13 +24,13 @@ import java.util.Collection;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.trait.Startable;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

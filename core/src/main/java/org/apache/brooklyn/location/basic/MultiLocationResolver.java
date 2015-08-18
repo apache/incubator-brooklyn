@@ -31,13 +31,12 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.KeyValueParser;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.KeyValueParser;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.Lists;
 

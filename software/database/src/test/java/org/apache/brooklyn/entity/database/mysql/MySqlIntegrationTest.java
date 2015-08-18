@@ -27,11 +27,12 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppLiveTestSupport;
+
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.os.Os;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

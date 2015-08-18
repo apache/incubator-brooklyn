@@ -22,6 +22,10 @@ import java.io.IOException;
 
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -34,10 +38,6 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import brooklyn.entity.rebind.persister.PersistenceStoreObjectAccessorWriterTestFixture;
 import brooklyn.entity.rebind.persister.StoreObjectAccessorLocking;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Urls;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Duration;
 
 @Test(groups={"Live", "Live-sanity"})
 public class JcloudsObjectStoreAccessorWriterTest extends PersistenceStoreObjectAccessorWriterTestFixture {

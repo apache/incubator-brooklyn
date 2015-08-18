@@ -24,8 +24,7 @@ import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.entity.rebind.Rebindable;
 import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.mementos.PolicyMemento;
-
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
 
 import com.google.common.annotations.Beta;
 

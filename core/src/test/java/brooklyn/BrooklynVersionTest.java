@@ -41,8 +41,7 @@ import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.osgi.OsgiTestResources;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
-
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 public class BrooklynVersionTest {
 

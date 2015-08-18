@@ -26,11 +26,11 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.Duration;
 
 import brooklyn.event.feed.PollConfig;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;

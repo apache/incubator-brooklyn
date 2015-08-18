@@ -21,13 +21,13 @@ package brooklyn.entity.rebind.persister;
 import java.io.File;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.rebind.RebindTestUtils;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.os.Os;
-import brooklyn.util.time.Duration;
 
 /**
  * @author Andrea Turli

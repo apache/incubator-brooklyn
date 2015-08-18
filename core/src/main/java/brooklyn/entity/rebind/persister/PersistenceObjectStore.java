@@ -25,8 +25,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
-
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 

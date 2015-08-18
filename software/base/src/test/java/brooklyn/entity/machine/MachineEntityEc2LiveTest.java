@@ -23,12 +23,12 @@ import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.test.Asserts;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.test.Asserts;
 
 public class MachineEntityEc2LiveTest extends AbstractEc2LiveTest {
 

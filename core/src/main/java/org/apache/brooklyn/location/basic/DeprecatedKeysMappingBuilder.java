@@ -20,9 +20,8 @@ package org.apache.brooklyn.location.basic;
 
 import java.util.Map;
 
+import org.apache.brooklyn.config.ConfigKey;
 import org.slf4j.Logger;
-
-import brooklyn.config.ConfigKey;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableMap;

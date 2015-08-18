@@ -35,12 +35,12 @@ import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.MyCatalogItems.MySillyAppTemplate;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.text.Strings;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.net.Urls;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

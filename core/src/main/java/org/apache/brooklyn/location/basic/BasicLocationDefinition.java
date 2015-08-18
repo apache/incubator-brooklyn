@@ -21,8 +21,7 @@ package org.apache.brooklyn.location.basic;
 import java.util.Map;
 
 import org.apache.brooklyn.api.location.LocationDefinition;
-
-import brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

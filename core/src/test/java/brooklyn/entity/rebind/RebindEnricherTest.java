@@ -32,17 +32,21 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.StringFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.ConfigKeys;
@@ -53,11 +57,6 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

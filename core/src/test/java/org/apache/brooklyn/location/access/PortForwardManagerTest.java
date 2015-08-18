@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.net.Networking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -37,8 +38,6 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.net.Networking;
 
 import com.google.common.base.Predicate;
 import com.google.common.net.HostAndPort;

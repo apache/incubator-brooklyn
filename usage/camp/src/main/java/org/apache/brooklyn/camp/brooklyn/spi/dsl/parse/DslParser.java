@@ -21,7 +21,7 @@ package org.apache.brooklyn.camp.brooklyn.spi.dsl.parse;
 import java.util.Collection;
 import java.util.List;
 
-import brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableList;
 
 public class DslParser {
     private final String expression;

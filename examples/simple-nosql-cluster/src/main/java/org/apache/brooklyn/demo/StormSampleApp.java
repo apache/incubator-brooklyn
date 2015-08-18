@@ -28,11 +28,10 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
+
 import org.apache.brooklyn.entity.messaging.storm.StormDeployment;
-
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-
-import brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
 

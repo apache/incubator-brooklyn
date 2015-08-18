@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
 

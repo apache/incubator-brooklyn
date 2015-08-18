@@ -23,6 +23,7 @@ import static org.testng.Assert.assertNull;
 
 import java.util.List;
 
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.location.jclouds.AbstractJcloudsStubbedLiveTest;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -33,13 +34,11 @@ import org.jclouds.domain.LoginCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-
-import brooklyn.config.ConfigKey;
 import org.apache.brooklyn.location.access.PortForwardManager;
 import org.apache.brooklyn.location.access.PortForwardManagerImpl;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.net.Protocol;
+import org.apache.brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.net.Protocol;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;

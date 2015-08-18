@@ -38,16 +38,15 @@ import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 
 import org.apache.brooklyn.location.basic.Machines;
-
-import brooklyn.util.collections.Jsonya;
-import brooklyn.util.collections.Jsonya.Navigator;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Urls;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.collections.Jsonya;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.Jsonya.Navigator;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;

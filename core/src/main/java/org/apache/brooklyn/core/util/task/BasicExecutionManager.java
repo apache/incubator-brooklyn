@@ -50,12 +50,11 @@ import org.apache.brooklyn.api.management.HasTaskChildren;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

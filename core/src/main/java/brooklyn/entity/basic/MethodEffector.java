@@ -29,13 +29,13 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ParameterType;
 import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.codehaus.groovy.runtime.MethodClosure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Lists;
 

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.policy.ha;
 
-import static brooklyn.util.time.Time.makeTimeStringRounded;
+import static org.apache.brooklyn.util.time.Time.makeTimeStringRounded;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.core.util.task.BasicTask;
@@ -35,17 +36,15 @@ import org.apache.brooklyn.core.util.task.ScheduledTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 
 import org.apache.brooklyn.policy.ha.HASensors.FailureDescriptor;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.reflect.TypeToken;
 

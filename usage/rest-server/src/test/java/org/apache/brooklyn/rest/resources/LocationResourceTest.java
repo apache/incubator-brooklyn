@@ -48,8 +48,7 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
-
-import brooklyn.test.Asserts;
+import org.apache.brooklyn.test.Asserts;
 
 @Test(singleThreaded = true)
 public class LocationResourceTest extends BrooklynRestResourceTest {

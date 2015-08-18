@@ -59,10 +59,9 @@ import org.apache.brooklyn.rest.security.provider.SecurityProvider;
 import org.apache.brooklyn.rest.util.ManagementContextProvider;
 import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
 import org.apache.brooklyn.rest.util.TestShutdownHandler;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Networking;
-import brooklyn.util.text.WildcardGlobs;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.text.WildcardGlobs;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;

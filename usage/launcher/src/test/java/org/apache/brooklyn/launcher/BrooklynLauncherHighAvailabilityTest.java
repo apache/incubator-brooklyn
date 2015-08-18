@@ -25,8 +25,11 @@ import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.time.Duration;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -44,9 +47,6 @@ import org.testng.annotations.Test;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.rebind.RebindTestUtils;
 import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.test.Asserts;
-import brooklyn.util.os.Os;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

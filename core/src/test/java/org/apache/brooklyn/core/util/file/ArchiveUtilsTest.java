@@ -37,8 +37,7 @@ import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.file.ArchiveBuilder;
 import org.apache.brooklyn.core.util.file.ArchiveUtils;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.os.Os;
+import org.apache.brooklyn.util.os.Os;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.common.base.Charsets;

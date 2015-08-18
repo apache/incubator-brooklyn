@@ -42,6 +42,10 @@ import org.apache.brooklyn.core.management.ha.ManagementPlaneSyncRecordPersister
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.io.FileUtil;
+import org.apache.brooklyn.util.javalang.Serializers;
+import org.apache.brooklyn.util.javalang.Serializers.ObjectReplacer;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,10 +57,6 @@ import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
-import brooklyn.util.io.FileUtil;
-import brooklyn.util.javalang.Serializers;
-import brooklyn.util.javalang.Serializers.ObjectReplacer;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

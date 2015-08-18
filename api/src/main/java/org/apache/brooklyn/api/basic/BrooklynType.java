@@ -21,7 +21,7 @@ package org.apache.brooklyn.api.basic;
 import java.io.Serializable;
 import java.util.Set;
 
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
 
 /**
  * Gives type information for a {@link BrooklynObject}. It is an immutable snapshot.

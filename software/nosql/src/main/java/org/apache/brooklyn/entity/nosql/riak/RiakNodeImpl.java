@@ -42,10 +42,9 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Function;

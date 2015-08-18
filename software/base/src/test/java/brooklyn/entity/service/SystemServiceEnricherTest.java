@@ -37,10 +37,9 @@ import brooklyn.entity.effector.EffectorTasks;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;

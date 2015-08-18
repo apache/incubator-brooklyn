@@ -20,13 +20,13 @@ package org.apache.brooklyn.entity.webapp.tomcat;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.util.javalang.JavaClassNames;
 
 /**
  * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Tomcat instance.

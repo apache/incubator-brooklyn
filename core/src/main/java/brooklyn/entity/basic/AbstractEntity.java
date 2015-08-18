@@ -53,6 +53,8 @@ import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
@@ -76,8 +78,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.basic.AbstractBrooklynObject;
 
 import brooklyn.config.BrooklynLogging;
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
@@ -90,14 +90,13 @@ import brooklyn.event.feed.AbstractFeed;
 import brooklyn.event.feed.ConfigToAttributes;
 
 import org.apache.brooklyn.location.basic.Locations;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.collections.SetFromLiveMap;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.javalang.Equals;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.collections.SetFromLiveMap;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.javalang.Equals;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

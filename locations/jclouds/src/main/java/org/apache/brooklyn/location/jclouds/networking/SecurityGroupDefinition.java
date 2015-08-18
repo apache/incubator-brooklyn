@@ -21,16 +21,15 @@ package org.apache.brooklyn.location.jclouds.networking;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.net.domain.IpPermission;
 import org.jclouds.net.domain.IpProtocol;
 import org.jclouds.net.util.IpPermissions;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.annotations.Beta;
 

@@ -26,6 +26,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -33,10 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.event.feed.http.HttpPollValue;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;

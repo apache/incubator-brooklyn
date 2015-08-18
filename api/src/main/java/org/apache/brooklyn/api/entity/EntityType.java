@@ -23,8 +23,7 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.basic.BrooklynType;
 import org.apache.brooklyn.api.event.Sensor;
-
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe;
 
 /**
  * Gives type information for an {@link Entity}. It is an immutable snapshot.

@@ -40,14 +40,13 @@ import org.apache.brooklyn.core.util.file.ArchiveUtils;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;

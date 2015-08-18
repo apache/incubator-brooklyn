@@ -24,12 +24,12 @@ import java.util.Map.Entry;
 
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.transformer.CompoundTransformer.Builder;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.yaml.Yamls;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;

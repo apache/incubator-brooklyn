@@ -32,12 +32,11 @@ import org.apache.brooklyn.core.util.internal.ssh.SshException;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.core.util.internal.ssh.SshToolAbstractIntegrationTest;
 import org.apache.brooklyn.core.util.internal.ssh.cli.SshCliTool;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

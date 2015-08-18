@@ -30,8 +30,7 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.ha.OsgiManager;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
-
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
 

@@ -36,9 +36,10 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.Startable;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.Asserts;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -27,6 +27,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.brooklyn.util.text.Identifiers;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
@@ -50,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;

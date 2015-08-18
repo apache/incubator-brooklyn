@@ -30,18 +30,18 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.trait.Configurable;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

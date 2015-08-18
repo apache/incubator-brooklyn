@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskQueueingContext;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.internal.ssh.ShellTool;
 import org.apache.brooklyn.core.util.mutex.WithMutexes;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
@@ -42,17 +43,16 @@ import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
 
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;

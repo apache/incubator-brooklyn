@@ -20,7 +20,10 @@ package org.apache.brooklyn.location.basic;
 
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.net.Networking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -34,10 +37,6 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

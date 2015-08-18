@@ -20,21 +20,22 @@ package org.apache.brooklyn.entity.messaging.kafka;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.java.UsesJmx;
+
 import org.apache.brooklyn.entity.messaging.MessageBroker;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
+
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.PortRanges;
-
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Duration;
 
 /**
  * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Kafka broker instance.

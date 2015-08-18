@@ -32,9 +32,8 @@ import org.apache.brooklyn.core.util.task.ValueResolver;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.EffectorSummary.ParameterSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;

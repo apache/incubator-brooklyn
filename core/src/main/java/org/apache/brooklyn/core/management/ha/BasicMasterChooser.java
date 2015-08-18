@@ -26,12 +26,11 @@ import org.apache.brooklyn.api.entity.trait.Identifiable;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.text.NaturalOrderComparator;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.text.NaturalOrderComparator;
-import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

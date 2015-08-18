@@ -21,11 +21,9 @@ package org.apache.brooklyn.core.util.task.system;
 import java.util.Map;
 
 import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskStub.ScriptReturnType;
-
-import brooklyn.config.ConfigKey;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 
 import com.google.common.annotations.Beta;

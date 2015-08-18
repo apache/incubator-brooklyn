@@ -22,9 +22,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.trait.HasShortName;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.CharMatcher;

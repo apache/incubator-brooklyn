@@ -23,14 +23,13 @@ import java.net.URL;
 import org.apache.brooklyn.camp.BasicCampPlatform;
 import org.apache.brooklyn.camp.server.rest.CampServer;
 import org.apache.brooklyn.camp.test.mock.web.MockWebPlatform;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Urls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.reporters.Files;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Urls;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

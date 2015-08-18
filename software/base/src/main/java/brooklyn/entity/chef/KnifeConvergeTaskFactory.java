@@ -18,8 +18,8 @@
  */
 package brooklyn.entity.chef;
 
-import static brooklyn.util.text.StringEscapes.BashStringEscapes.wrapBash;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.brooklyn.util.text.StringEscapes.BashStringEscapes.wrapBash;
 
 import java.io.File;
 import java.util.List;
@@ -36,11 +36,10 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.effector.EffectorTasks;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.Jsonya;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.collections.Jsonya;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

@@ -34,7 +34,9 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -47,9 +49,6 @@ import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 import org.apache.brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
 import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Ticker;

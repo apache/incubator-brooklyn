@@ -39,15 +39,15 @@ import org.apache.brooklyn.core.util.flags.ClassCoercionException;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.core.util.task.DeferredSupplier;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.Reflections;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import org.apache.commons.beanutils.BeanUtils;
 
 import brooklyn.entity.basic.EntityDynamicType;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.Reflections;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;

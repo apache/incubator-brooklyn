@@ -27,8 +27,7 @@ import org.apache.brooklyn.core.util.internal.ssh.ShellTool;
 import org.apache.brooklyn.core.util.internal.ssh.process.ProcessTool;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 

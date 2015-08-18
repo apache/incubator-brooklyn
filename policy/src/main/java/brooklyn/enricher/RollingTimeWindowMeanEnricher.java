@@ -25,14 +25,14 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.time.Duration;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
 import brooklyn.enricher.basic.YamlRollingTimeWindowMeanEnricher;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;

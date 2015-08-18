@@ -27,10 +27,10 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.collections.QuorumCheck;
 
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
-import brooklyn.util.collections.QuorumCheck;
 
 public class SameServerEntityImpl extends AbstractEntity implements SameServerEntity {
 

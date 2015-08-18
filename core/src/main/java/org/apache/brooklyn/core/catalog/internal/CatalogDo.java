@@ -27,15 +27,14 @@ import java.util.Map;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.AggregateClassLoader;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.time.CountdownTimer;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.AggregateClassLoader;
-import brooklyn.util.net.Urls;
-import brooklyn.util.time.CountdownTimer;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;

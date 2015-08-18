@@ -21,11 +21,11 @@ package org.apache.brooklyn.entity.webapp;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.util.time.Duration;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.util.time.Duration;
 
 /**
  * DynamicWebAppClusters provide cluster-wide aggregates of entity attributes.  Currently totals and averages:

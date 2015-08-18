@@ -42,11 +42,10 @@ import brooklyn.entity.software.SshEffectorTasks;
 import org.apache.brooklyn.location.basic.BasicOsDetails.OsVersions;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.ComparableVersion;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.ComparableVersion;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;

@@ -36,8 +36,7 @@ import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.MultiLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

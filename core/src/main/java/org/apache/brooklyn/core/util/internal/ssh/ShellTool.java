@@ -25,10 +25,11 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.time.Duration;
+
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.util.os.Os;
-import brooklyn.util.time.Duration;
 
 /** Methods for executing things in an environment (localhost process, or ssh) */
 public interface ShellTool {

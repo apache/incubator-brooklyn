@@ -25,8 +25,7 @@ import java.util.concurrent.Future;
 
 import org.apache.brooklyn.api.management.ExecutionManager;
 import org.apache.brooklyn.api.management.Task;
-
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

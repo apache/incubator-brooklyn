@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -39,8 +40,6 @@ import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

@@ -33,15 +33,15 @@ import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.task.ValueResolver;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.EntityFunctions;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

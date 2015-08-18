@@ -23,9 +23,9 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.trait.Startable;
 
 import com.google.common.base.Supplier;

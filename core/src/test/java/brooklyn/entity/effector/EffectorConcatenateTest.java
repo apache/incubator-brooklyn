@@ -34,6 +34,7 @@ import org.apache.brooklyn.core.util.task.BasicExecutionContext;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationImpl;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -46,7 +47,6 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.MethodEffector;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;

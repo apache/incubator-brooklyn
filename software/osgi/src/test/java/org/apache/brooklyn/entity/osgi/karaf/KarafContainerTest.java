@@ -26,8 +26,11 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,10 +41,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.software.SshEffectorTasks;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.ImmutableList;
 

@@ -31,6 +31,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
@@ -40,7 +41,6 @@ import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Attributes;
@@ -67,18 +67,17 @@ import brooklyn.event.feed.http.JsonFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.basic.Locations;
-
-import brooklyn.util.collections.Jsonya;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.PropagatedRuntimeException;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.javalang.Enums;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.collections.Jsonya;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.javalang.Enums;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

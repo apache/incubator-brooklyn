@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
@@ -39,6 +40,8 @@ import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceTest;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -46,7 +49,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
@@ -63,9 +65,6 @@ import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
-
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

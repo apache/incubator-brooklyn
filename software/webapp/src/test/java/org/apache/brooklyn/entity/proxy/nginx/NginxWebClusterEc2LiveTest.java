@@ -31,6 +31,7 @@ import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.TestApplication;
@@ -45,8 +46,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 
 import org.apache.brooklyn.location.basic.Machines;
-
-import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

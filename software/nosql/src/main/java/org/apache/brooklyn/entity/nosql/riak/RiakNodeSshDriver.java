@@ -18,18 +18,18 @@
  */
 package org.apache.brooklyn.entity.nosql.riak;
 
-import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
-import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
-import static brooklyn.util.ssh.BashCommands.addSbinPathCommand;
-import static brooklyn.util.ssh.BashCommands.alternatives;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
-import static brooklyn.util.ssh.BashCommands.ifExecutableElse;
-import static brooklyn.util.ssh.BashCommands.ifNotExecutable;
-import static brooklyn.util.ssh.BashCommands.ok;
-import static brooklyn.util.ssh.BashCommands.sudo;
-import static brooklyn.util.text.StringEscapes.BashStringEscapes.escapeLiteralForDoubleQuotedBash;
 import static java.lang.String.format;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_TAR;
+import static org.apache.brooklyn.util.ssh.BashCommands.addSbinPathCommand;
+import static org.apache.brooklyn.util.ssh.BashCommands.alternatives;
+import static org.apache.brooklyn.util.ssh.BashCommands.chainGroup;
+import static org.apache.brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
+import static org.apache.brooklyn.util.ssh.BashCommands.ifExecutableElse;
+import static org.apache.brooklyn.util.ssh.BashCommands.ifNotExecutable;
+import static org.apache.brooklyn.util.ssh.BashCommands.ok;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
+import static org.apache.brooklyn.util.text.StringEscapes.BashStringEscapes.escapeLiteralForDoubleQuotedBash;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -50,12 +50,11 @@ import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.ssh.SshTasks;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;

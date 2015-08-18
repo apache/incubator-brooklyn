@@ -40,10 +40,9 @@ import org.apache.brooklyn.core.util.task.TaskInternal;
 import org.apache.brooklyn.rest.domain.LinkWithMetadata;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

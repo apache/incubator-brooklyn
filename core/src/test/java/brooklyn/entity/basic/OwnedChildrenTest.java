@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.basic;
 
-import static brooklyn.test.Asserts.assertEqualsIgnoringOrder;
+import static org.apache.brooklyn.test.Asserts.assertEqualsIgnoringOrder;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;

@@ -41,13 +41,12 @@ import org.apache.brooklyn.core.util.internal.ssh.SshException;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.core.util.internal.ssh.SshToolAbstractIntegrationTest;
 import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.RuntimeTimeoutException;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.Test;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.RuntimeTimeoutException;
-import brooklyn.util.os.Os;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;

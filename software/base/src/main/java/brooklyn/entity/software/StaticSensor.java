@@ -20,17 +20,17 @@ package brooklyn.entity.software;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.task.ValueResolver;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.effector.AddSensor;
-import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Supplier;
 

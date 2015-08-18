@@ -32,10 +32,11 @@ import javax.management.NotificationListener;
 import javax.management.ObjectName;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.event.feed.AbstractFeed;
@@ -43,7 +44,6 @@ import brooklyn.event.feed.AttributePollHandler;
 import brooklyn.event.feed.DelegatingPollHandler;
 import brooklyn.event.feed.PollHandler;
 import brooklyn.event.feed.Poller;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;

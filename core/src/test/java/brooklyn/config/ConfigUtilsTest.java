@@ -20,10 +20,11 @@ package brooklyn.config;
 
 import java.util.Set;
 
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 
 public class ConfigUtilsTest {

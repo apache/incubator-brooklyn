@@ -37,13 +37,12 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.EntityInternal;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.net.Protocol;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.ssh.IptablesCommands;
-import brooklyn.util.ssh.IptablesCommands.Chain;
-import brooklyn.util.ssh.IptablesCommands.Policy;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.net.Protocol;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.ssh.IptablesCommands;
+import org.apache.brooklyn.util.ssh.IptablesCommands.Chain;
+import org.apache.brooklyn.util.ssh.IptablesCommands.Policy;
+import org.apache.brooklyn.util.text.Strings;
 
 /**
  * 

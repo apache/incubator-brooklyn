@@ -24,10 +24,13 @@ import static org.testng.Assert.assertNotNull;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.TestJavaWebAppEntity;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
@@ -43,10 +46,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Lifecycle;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;

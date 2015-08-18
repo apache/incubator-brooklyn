@@ -19,16 +19,15 @@
 package org.apache.brooklyn.launcher.config;
 
 import brooklyn.config.BrooklynServiceAttributes;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.management.internal.BrooklynGarbageCollector;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
-
-import brooklyn.util.internal.BrooklynSystemProperties;
-import brooklyn.util.internal.StringSystemProperty;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.internal.BrooklynSystemProperties;
+import org.apache.brooklyn.util.internal.StringSystemProperty;
+import org.apache.brooklyn.util.time.Duration;
 
 /**
  * Convenience collection of popular global configuration values.

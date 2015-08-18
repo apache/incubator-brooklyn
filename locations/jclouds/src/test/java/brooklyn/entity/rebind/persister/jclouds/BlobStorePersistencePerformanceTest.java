@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -29,7 +30,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
 import brooklyn.qa.performance.AbstractPerformanceTest;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

@@ -39,8 +39,7 @@ import org.jclouds.providers.Providers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.basic.BasicLocationRegistry;
-
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

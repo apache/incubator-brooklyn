@@ -27,11 +27,11 @@ import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
 import org.apache.brooklyn.core.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.rebind.persister.InMemoryObjectStore;
-import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.VisibleForTesting;
 

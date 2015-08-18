@@ -45,10 +45,9 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindTestUtils;
 
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.os.Os;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;

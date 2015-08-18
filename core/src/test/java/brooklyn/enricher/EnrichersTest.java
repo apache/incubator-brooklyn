@@ -36,17 +36,17 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.text.StringFunctions;
 
 import brooklyn.event.basic.Sensors;
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

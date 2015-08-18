@@ -40,11 +40,20 @@ import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
+import org.apache.brooklyn.util.net.UserAndHostAndPort;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 import org.jclouds.util.Throwables2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +66,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
@@ -74,15 +82,6 @@ import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.PropagatedRuntimeException;
-import brooklyn.util.net.UserAndHostAndPort;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
 
 
 public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {

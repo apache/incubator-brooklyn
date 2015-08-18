@@ -28,10 +28,9 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-
-import brooklyn.util.exceptions.Exceptions;
 
 public class XmlUtil {
 

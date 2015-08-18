@@ -18,15 +18,15 @@
  */
 package org.apache.brooklyn.core.util.internal.ssh;
 
-import static brooklyn.util.net.Networking.checkPortValid;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.brooklyn.util.net.Networking.checkPortValid;
 
 import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.util.os.Os;
+import org.apache.brooklyn.util.os.Os;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;

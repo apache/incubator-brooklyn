@@ -28,6 +28,7 @@ import org.apache.brooklyn.entity.proxy.AbstractController;
 import org.apache.brooklyn.entity.proxy.LoadBalancer;
 import org.apache.brooklyn.entity.proxy.TrackingAbstractController;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.TestJavaWebAppEntity;
@@ -42,8 +43,8 @@ import brooklyn.entity.basic.BasicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.basic.SoftwareProcess;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

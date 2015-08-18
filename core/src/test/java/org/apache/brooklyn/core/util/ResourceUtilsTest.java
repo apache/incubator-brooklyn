@@ -33,16 +33,15 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

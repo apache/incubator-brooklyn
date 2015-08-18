@@ -36,7 +36,7 @@ import org.apache.brooklyn.location.basic.SimulatedLocation
 import org.apache.brooklyn.test.TestUtils
 import org.apache.brooklyn.test.entity.TestApplication
 import org.apache.brooklyn.test.entity.TestEntity
-import brooklyn.util.collections.MutableMap
+import org.apache.brooklyn.util.collections.MutableMap
 
 public class TransformingEnricherDeprecatedTest {
 

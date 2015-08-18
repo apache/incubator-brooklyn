@@ -26,12 +26,13 @@ import java.util.Map;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
-import brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 

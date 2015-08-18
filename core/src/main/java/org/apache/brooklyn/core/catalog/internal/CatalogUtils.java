@@ -24,9 +24,7 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.basic.BrooklynObjectInternal;
-
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -40,13 +38,13 @@ import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoading
 import org.apache.brooklyn.core.management.classloading.OsgiBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.management.ha.OsgiManager;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Time;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.RebindManagerImpl.RebindTracker;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;

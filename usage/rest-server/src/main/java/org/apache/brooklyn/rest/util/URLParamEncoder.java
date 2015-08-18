@@ -20,8 +20,8 @@ package org.apache.brooklyn.rest.util;
 
 
 /**
- * @deprecated since 0.7.0 use {@link brooklyn.util.net.URLParamEncoder}
+ * @deprecated since 0.7.0 use {@link org.apache.brooklyn.util.net.URLParamEncoder}
  */
-public class URLParamEncoder extends brooklyn.util.net.URLParamEncoder {
+public class URLParamEncoder extends org.apache.brooklyn.util.net.URLParamEncoder {
 
 }

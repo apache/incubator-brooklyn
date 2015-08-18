@@ -26,15 +26,15 @@ import org.apache.brooklyn.api.management.TaskFactory;
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.task.DeferredSupplier;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.EffectorTasks;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

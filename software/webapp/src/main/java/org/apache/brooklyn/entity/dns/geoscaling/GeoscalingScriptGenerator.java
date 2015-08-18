@@ -26,10 +26,9 @@ import java.util.TimeZone;
 
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
-
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Strings;
 
 public class GeoscalingScriptGenerator {
     

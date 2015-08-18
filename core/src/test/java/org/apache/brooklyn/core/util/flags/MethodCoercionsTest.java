@@ -18,13 +18,12 @@
  */
 package org.apache.brooklyn.core.util.flags;
 
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.brooklyn.core.util.flags.MethodCoercions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

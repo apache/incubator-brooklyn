@@ -24,14 +24,14 @@ import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.task.ValueResolver;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 /**
  * see also {@link TasksTest} for more tests

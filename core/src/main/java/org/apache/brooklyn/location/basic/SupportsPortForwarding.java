@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.basic;
 
-import brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.net.Cidr;
 
 import com.google.common.net.HostAndPort;
 

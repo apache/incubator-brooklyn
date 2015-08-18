@@ -36,13 +36,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.internal.ssh.ShellTool;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.time.Time;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;

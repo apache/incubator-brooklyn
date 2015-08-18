@@ -21,10 +21,11 @@ package org.apache.brooklyn.location.basic;
 import java.io.File;
 import java.util.Set;
 
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.os.Os;
+
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.os.Os;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.reflect.TypeToken;

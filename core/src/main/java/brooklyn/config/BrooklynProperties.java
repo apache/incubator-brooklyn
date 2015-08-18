@@ -33,19 +33,21 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.StringConfigMap;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.StringFunctions;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.StringFunctions;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.CharMatcher;

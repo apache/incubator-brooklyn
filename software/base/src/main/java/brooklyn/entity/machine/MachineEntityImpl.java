@@ -36,10 +36,9 @@ import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.jclouds;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -27,12 +27,11 @@ import java.util.Set;
 
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
+import org.apache.brooklyn.util.net.Networking;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.net.Networking;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;

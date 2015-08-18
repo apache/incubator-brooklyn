@@ -38,6 +38,9 @@ import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.entity.proxy.AbstractControllerImpl;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController.NginxControllerInternal;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,9 +54,6 @@ import brooklyn.event.feed.ConfigToAttributes;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;

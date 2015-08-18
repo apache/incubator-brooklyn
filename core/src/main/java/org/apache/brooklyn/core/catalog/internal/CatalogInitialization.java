@@ -31,16 +31,16 @@ import org.apache.brooklyn.core.management.ManagementContextInjectable;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.FatalRuntimeException;
+import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Strings;
 
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.FatalRuntimeException;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.task.ssh.SshTasks;
@@ -30,20 +31,18 @@ import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.event.basic.BasicConfigKey;
 
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.basic.SupportsPortForwarding;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.text.Strings;
 import org.python.google.common.base.Predicates;
 import org.python.google.common.collect.Iterables;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Supplier;
 import com.google.common.net.HostAndPort;

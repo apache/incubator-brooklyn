@@ -24,12 +24,12 @@ import static org.testng.Assert.assertTrue;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.nosql.solr.SolrServer;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.solr.common.SolrDocument;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

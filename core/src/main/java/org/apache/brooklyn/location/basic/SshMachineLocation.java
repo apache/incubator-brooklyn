@@ -51,6 +51,8 @@ import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.location.PortSupplier;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
@@ -92,8 +94,6 @@ import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
 
 import brooklyn.config.BrooklynLogging;
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.config.ConfigUtils;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.BrooklynTaskTags;
@@ -102,20 +102,20 @@ import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;
 
 import org.apache.brooklyn.location.access.PortForwardManager;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.guava.KeyTransformingLoadingCache.KeyTransformingSameTypeLoadingCache;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.pool.BasicPool;
+import org.apache.brooklyn.util.pool.Pool;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.stream.KnownSizeInputStream;
+import org.apache.brooklyn.util.stream.ReaderInputStream;
+import org.apache.brooklyn.util.stream.StreamGobbler;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.guava.KeyTransformingLoadingCache.KeyTransformingSameTypeLoadingCache;
-import brooklyn.util.net.Urls;
-import brooklyn.util.pool.BasicPool;
-import brooklyn.util.pool.Pool;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.stream.KnownSizeInputStream;
-import brooklyn.util.stream.ReaderInputStream;
-import brooklyn.util.stream.StreamGobbler;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
 import groovy.lang.Closure;
 
 /**

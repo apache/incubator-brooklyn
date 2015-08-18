@@ -18,11 +18,10 @@
  */
 package org.apache.brooklyn.entity.messaging.kafka;
 
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
-
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcess;

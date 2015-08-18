@@ -34,12 +34,11 @@ import java.util.zip.ZipInputStream;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.core.util.file.ArchiveBuilder;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;

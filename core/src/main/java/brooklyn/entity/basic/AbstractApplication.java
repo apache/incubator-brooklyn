@@ -24,17 +24,17 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceProblemsLogic;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Time;
 
 /**
  * Users can extend this to define the entities in their application, and the relationships between

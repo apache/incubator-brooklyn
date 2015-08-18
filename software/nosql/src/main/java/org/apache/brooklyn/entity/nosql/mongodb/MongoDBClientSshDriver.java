@@ -30,9 +30,10 @@ import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeploymen
 
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
+
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.math.MathPredicates;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.math.MathPredicates;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;

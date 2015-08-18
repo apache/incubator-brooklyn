@@ -48,6 +48,8 @@ import org.apache.brooklyn.core.management.classloading.BrooklynClassLoadingCont
 import org.apache.brooklyn.core.management.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.util.xstream.XmlSerializer;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 
 import brooklyn.entity.basic.BasicParameterType;
 import brooklyn.entity.effector.EffectorAndBody;
@@ -62,8 +64,6 @@ import brooklyn.entity.rebind.dto.BasicPolicyMemento;
 import brooklyn.entity.rebind.dto.MutableBrooklynMemento;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
 
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;

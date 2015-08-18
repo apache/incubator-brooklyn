@@ -35,17 +35,16 @@ import java.util.Map;
 import org.apache.brooklyn.core.util.internal.ssh.ShellTool;
 import org.apache.brooklyn.core.util.internal.ssh.SshException;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

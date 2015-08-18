@@ -36,15 +36,14 @@ import org.apache.brooklyn.core.util.task.BasicTask;
 import org.apache.brooklyn.core.util.task.CompoundTask;
 import org.apache.brooklyn.core.util.task.ParallelTask;
 import org.apache.brooklyn.core.util.task.SequentialTask;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
-
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;

@@ -28,18 +28,16 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.basic.AbstractBrooklynObject;
-
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;
 import org.apache.brooklyn.api.mementos.CatalogItemMemento;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.FlagUtils;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.util.collections.MutableList;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.rebind.BasicCatalogItemRebindSupport;
-import brooklyn.util.collections.MutableList;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

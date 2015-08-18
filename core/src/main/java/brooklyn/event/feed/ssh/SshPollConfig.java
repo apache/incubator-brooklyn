@@ -25,10 +25,10 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import brooklyn.event.feed.PollConfig;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;

@@ -23,8 +23,7 @@ import org.apache.brooklyn.api.entity.Feed;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
-
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
 
 public interface EntityChangeListener {
 

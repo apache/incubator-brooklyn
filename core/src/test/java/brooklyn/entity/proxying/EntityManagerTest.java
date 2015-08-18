@@ -24,16 +24,16 @@ import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.EntityManager;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.ApplicationBuilder;
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

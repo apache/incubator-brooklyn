@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.java;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
@@ -31,6 +31,10 @@ import javax.management.openmbean.CompositeData;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.util.math.MathFunctions;
+import org.apache.brooklyn.util.text.ByteSizeStrings;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.RollingTimeWindowMeanEnricher;
@@ -38,10 +42,6 @@ import brooklyn.enricher.TimeFractionDeltaEnricher;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.math.MathFunctions;
-import brooklyn.util.text.ByteSizeStrings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 
@@ -218,7 +218,7 @@ public class JavaAppUtils {
         return builder;
     }
 
-    /** @deprecated Since 0.7.0. Use {@link brooklyn.util.math.MathFunctions#times(double)} instead */
+    /** @deprecated Since 0.7.0. Use {@link org.apache.brooklyn.util.math.MathFunctions#times(double)} instead */
     @Deprecated
     public static Function<Number, Double> times(final double x) {
         return MathFunctions.times(x);

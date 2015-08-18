@@ -30,8 +30,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.AbstractEntity;
 
 import org.apache.brooklyn.location.basic.PortRanges;
-
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 public class SetFromFlagTest {
 

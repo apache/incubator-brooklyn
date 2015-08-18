@@ -28,14 +28,18 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ha.MementoCopyMode;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
@@ -46,11 +50,6 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

@@ -35,19 +35,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ExecutionManager;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigMap;
 import org.apache.brooklyn.core.util.task.BasicTask;
 import org.apache.brooklyn.core.util.task.DeferredSupplier;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigMap;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;

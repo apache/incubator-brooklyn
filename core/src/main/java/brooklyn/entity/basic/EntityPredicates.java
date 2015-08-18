@@ -27,13 +27,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.guava.SerializablePredicate;
-import brooklyn.util.javalang.Reflections;
-import brooklyn.util.text.StringPredicates;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.guava.SerializablePredicate;
+import org.apache.brooklyn.util.javalang.Reflections;
+import org.apache.brooklyn.util.text.StringPredicates;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

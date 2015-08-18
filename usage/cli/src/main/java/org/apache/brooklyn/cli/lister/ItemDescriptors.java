@@ -26,10 +26,9 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.basic.BrooklynDynamicType;
 import org.apache.brooklyn.basic.BrooklynTypes;
-
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.basic.BrooklynType;
 import org.apache.brooklyn.api.catalog.Catalog;
@@ -38,7 +37,6 @@ import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.location.LocationResolver;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 
 import org.apache.brooklyn.rest.domain.EffectorSummary;
@@ -48,8 +46,7 @@ import org.apache.brooklyn.rest.domain.SummaryComparators;
 import org.apache.brooklyn.rest.transform.EffectorTransformer;
 import org.apache.brooklyn.rest.transform.EntityTransformer;
 import org.apache.brooklyn.rest.transform.SensorTransformer;
-
-import brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;

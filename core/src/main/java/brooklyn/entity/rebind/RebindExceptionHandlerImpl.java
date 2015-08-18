@@ -39,11 +39,10 @@ import org.apache.brooklyn.api.entity.rebind.RebindManager.RebindFailureMode;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.QuorumCheck;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.QuorumCheck;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

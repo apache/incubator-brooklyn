@@ -61,16 +61,15 @@ import brooklyn.entity.trait.StartableMethods;
 
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.ReferenceWithError;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.javalang.Reflections;
-import brooklyn.util.text.StringPredicates;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.ReferenceWithError;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.javalang.Reflections;
+import org.apache.brooklyn.util.text.StringPredicates;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;

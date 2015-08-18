@@ -24,19 +24,21 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.Resizable;
 import brooklyn.entity.trait.Startable;
+
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
+import org.apache.brooklyn.util.time.Duration;
+
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.util.time.Duration;
 
 /**
  * Provides Kafka cluster functionality through a group of {@link KafkaBroker brokers} controlled

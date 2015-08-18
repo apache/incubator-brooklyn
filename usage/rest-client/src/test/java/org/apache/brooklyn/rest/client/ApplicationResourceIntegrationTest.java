@@ -48,9 +48,8 @@ import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.SensorSummary;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;

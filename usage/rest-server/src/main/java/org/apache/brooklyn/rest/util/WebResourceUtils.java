@@ -33,10 +33,9 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.rest.domain.ApiError;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Urls;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableMap;
 import com.sun.jersey.spi.container.ContainerResponse;

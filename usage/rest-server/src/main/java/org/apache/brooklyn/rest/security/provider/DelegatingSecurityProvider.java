@@ -25,13 +25,10 @@ import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.StringConfigMap;
-
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
-
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 public class DelegatingSecurityProvider implements SecurityProvider {
 

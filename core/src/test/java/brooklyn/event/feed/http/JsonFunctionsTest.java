@@ -20,14 +20,13 @@ package brooklyn.event.feed.http;
 
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.util.collections.Jsonya;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.Jsonya.Navigator;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.Jsonya;
-import brooklyn.util.collections.Jsonya.Navigator;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.guava.Maybe;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;

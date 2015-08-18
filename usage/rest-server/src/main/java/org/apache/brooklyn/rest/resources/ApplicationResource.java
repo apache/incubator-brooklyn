@@ -24,7 +24,6 @@ import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
 
 import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.util.text.Strings;
 
 import java.io.StringReader;
 import java.net.URI;
@@ -80,9 +79,9 @@ import org.apache.brooklyn.rest.transform.EntityTransformer;
 import org.apache.brooklyn.rest.transform.TaskTransformer;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;

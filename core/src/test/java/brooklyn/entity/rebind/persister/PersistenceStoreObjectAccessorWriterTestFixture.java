@@ -26,6 +26,9 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.Executors;
 
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -35,9 +38,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 public abstract class PersistenceStoreObjectAccessorWriterTestFixture {
 

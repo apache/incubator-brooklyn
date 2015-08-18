@@ -30,6 +30,7 @@ import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -41,8 +42,6 @@ import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableList;
 
 import com.google.common.collect.Iterables;
 

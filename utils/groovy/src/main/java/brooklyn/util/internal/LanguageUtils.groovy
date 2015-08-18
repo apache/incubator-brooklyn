@@ -24,8 +24,8 @@ import java.lang.reflect.Modifier
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong
 
-import brooklyn.util.javalang.Reflections;
-import brooklyn.util.text.Identifiers
+import org.apache.brooklyn.util.javalang.Reflections;
+import org.apache.brooklyn.util.text.Identifiers
 
 import com.google.common.annotations.Beta
 import com.google.common.base.Function;

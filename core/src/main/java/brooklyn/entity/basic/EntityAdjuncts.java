@@ -24,12 +24,12 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EntityAdjunct;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import brooklyn.entity.basic.ServiceStateLogic.ComputeServiceState;
 import brooklyn.entity.basic.ServiceStateLogic.ServiceNotUpLogic;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

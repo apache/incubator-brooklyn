@@ -22,9 +22,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.basic.BrooklynType;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;

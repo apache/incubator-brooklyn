@@ -27,22 +27,21 @@ import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
 import org.apache.brooklyn.test.entity.TestEntityNoEnrichersImpl;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.test.Asserts;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;

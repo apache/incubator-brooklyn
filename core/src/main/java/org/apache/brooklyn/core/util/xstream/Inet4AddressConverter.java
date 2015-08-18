@@ -21,7 +21,7 @@ package org.apache.brooklyn.core.util.xstream;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;

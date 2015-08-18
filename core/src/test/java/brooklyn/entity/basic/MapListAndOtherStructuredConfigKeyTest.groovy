@@ -37,8 +37,8 @@ import brooklyn.event.basic.SetConfigKey.SetModifications
 import org.apache.brooklyn.location.basic.SimulatedLocation
 import org.apache.brooklyn.test.entity.TestApplication
 import org.apache.brooklyn.test.entity.TestEntity
-import brooklyn.util.collections.MutableMap
-import brooklyn.util.exceptions.Exceptions
+import org.apache.brooklyn.util.collections.MutableMap
+import org.apache.brooklyn.util.exceptions.Exceptions
 import org.apache.brooklyn.core.util.task.DeferredSupplier
 
 import com.google.common.collect.ImmutableList

@@ -25,10 +25,10 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
+import org.apache.brooklyn.util.text.Strings;
 
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefEntity;
-import brooklyn.util.text.Strings;
 
 /**
  * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code chef:}

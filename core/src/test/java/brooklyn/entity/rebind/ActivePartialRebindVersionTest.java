@@ -28,10 +28,10 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.core.catalog.internal.CatalogTestUtils;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.osgi.OsgiVersionMoreEntityTest;
+import org.apache.brooklyn.util.collections.MutableList;
 
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.rebind.transformer.CompoundTransformer;
-import brooklyn.util.collections.MutableList;
 
 public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
 

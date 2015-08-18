@@ -27,14 +27,15 @@ import java.util.concurrent.CountDownLatch;
 
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.Time;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.DependentConfiguration;
+
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;

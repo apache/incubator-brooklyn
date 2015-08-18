@@ -21,8 +21,7 @@ package brooklyn.event.feed.http;
 import java.util.List;
 
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
-
-import brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

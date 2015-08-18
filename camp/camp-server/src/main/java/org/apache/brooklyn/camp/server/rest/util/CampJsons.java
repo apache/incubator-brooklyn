@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.camp.server.rest.util;
 
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -37,17 +37,17 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.core.util.internal.ssh.process.ProcessTool;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import org.apache.brooklyn.util.io.FileUtil;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.os.Os.DeletionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
-import brooklyn.util.io.FileUtil;
-import brooklyn.util.os.Os;
-import brooklyn.util.os.Os.DeletionResult;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;

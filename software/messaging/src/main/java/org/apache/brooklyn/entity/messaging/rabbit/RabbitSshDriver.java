@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.entity.messaging.rabbit;
 
-import static brooklyn.util.ssh.BashCommands.*;
 import static java.lang.String.format;
+import static org.apache.brooklyn.util.ssh.BashCommands.*;
 
 import java.util.List;
 import java.util.Map;
@@ -34,11 +34,12 @@ import com.google.common.collect.ImmutableMap;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.lifecycle.ScriptHelper;
+
 import org.apache.brooklyn.entity.messaging.amqp.AmqpServer;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.os.Os;
 
 /**
  * TODO javadoc

@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.core.util.task;
 
-import static brooklyn.util.JavaGroovyEquivalents.asString;
-import static brooklyn.util.JavaGroovyEquivalents.elvisString;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.asString;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvisString;
 import groovy.lang.Closure;
 
 import java.io.PrintWriter;
@@ -44,16 +44,16 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.brooklyn.api.management.HasTaskChildren;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -665,7 +665,7 @@ public class BasicTask<T> implements TaskInternal<T> {
         }
         if (verbosity>=2) {
             StackTraceElement[] st = ti.getStackTrace();
-            st = brooklyn.util.javalang.StackTraceSimplifier.cleanStackTrace(st);
+            st = org.apache.brooklyn.util.javalang.StackTraceSimplifier.cleanStackTrace(st);
             if (st!=null && st.length>0)
                 rv += "\n" +"At: "+st[0];
             for (int ii=1; ii<st.length; ii++) {

@@ -20,10 +20,9 @@ package org.apache.brooklyn.entity.proxy;
 
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
 
 @Test
 public class ProxySslConfigTest {

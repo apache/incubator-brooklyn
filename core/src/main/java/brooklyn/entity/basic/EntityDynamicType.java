@@ -32,16 +32,16 @@ import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.event.Sensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.basic.BrooklynDynamicType;
-import brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.util.javalang.Reflections;
+
 import brooklyn.entity.effector.EffectorAndBody;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.EffectorTasks.EffectorBodyTaskFactory;
 import brooklyn.entity.effector.EffectorTasks.EffectorTaskFactory;
 import brooklyn.entity.effector.EffectorWithBody;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.util.javalang.Reflections;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;

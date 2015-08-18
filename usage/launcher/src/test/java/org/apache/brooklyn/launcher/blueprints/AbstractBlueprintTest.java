@@ -31,7 +31,9 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherAbstract;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.os.Os;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -48,9 +50,6 @@ import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
 import org.apache.brooklyn.launcher.camp.BrooklynCampPlatformLauncher;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.os.Os;
 
 public abstract class AbstractBlueprintTest {
 

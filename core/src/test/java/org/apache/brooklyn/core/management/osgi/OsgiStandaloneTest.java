@@ -31,9 +31,13 @@ import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.osgi.Osgis;
 import org.apache.brooklyn.core.util.osgi.Osgis.ManifestHelper;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
-
-import brooklyn.util.exceptions.Exceptions;
-
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.maven.MavenArtifact;
+import org.apache.brooklyn.util.maven.MavenRetriever;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.Streams;
 import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -45,13 +49,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.maven.MavenArtifact;
-import brooklyn.util.maven.MavenRetriever;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.Streams;
 
 /** 
  * Tests some assumptions about OSGi behaviour, in standalone mode (not part of brooklyn).

@@ -42,11 +42,10 @@ import org.apache.brooklyn.rest.transform.LocationTransformer;
 import org.apache.brooklyn.rest.transform.LocationTransformer.LocationDetailLevel;
 import org.apache.brooklyn.rest.util.EntityLocationUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.NaturalOrderComparator;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.NaturalOrderComparator;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

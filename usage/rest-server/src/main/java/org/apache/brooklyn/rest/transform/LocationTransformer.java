@@ -35,10 +35,9 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
 

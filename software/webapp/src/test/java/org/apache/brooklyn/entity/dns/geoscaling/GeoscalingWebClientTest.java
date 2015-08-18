@@ -30,12 +30,11 @@ import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.http.client.HttpClient;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.text.Strings;
 
 /**
  * {@link GeoscalingWebClient} unit tests.

@@ -34,9 +34,8 @@ import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.EntityInternal;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.io.FileUtil;
-import brooklyn.util.stream.InputStreamSupplier;
+import org.apache.brooklyn.util.io.FileUtil;
+import org.apache.brooklyn.util.stream.InputStreamSupplier;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;

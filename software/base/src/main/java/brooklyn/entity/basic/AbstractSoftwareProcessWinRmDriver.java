@@ -27,14 +27,16 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.config.ConfigKey;
 import org.python.core.PyException;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.Sensors;
+
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
-import brooklyn.util.exceptions.ReferenceWithError;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.exceptions.ReferenceWithError;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Duration;
+
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import com.google.api.client.util.Strings;

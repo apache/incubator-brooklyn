@@ -48,16 +48,15 @@ import brooklyn.event.feed.http.JsonFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.guava.MaybeFunctions;
-import brooklyn.util.guava.TypeTokens;
-import brooklyn.util.net.Urls;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.guava.MaybeFunctions;
+import org.apache.brooklyn.util.guava.TypeTokens;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;

@@ -25,6 +25,8 @@ import static org.testng.Assert.fail;
 import java.net.ServerSocket;
 
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Networking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -41,9 +43,6 @@ import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
 
 public class LocalhostMachineProvisioningLocationTest {
 

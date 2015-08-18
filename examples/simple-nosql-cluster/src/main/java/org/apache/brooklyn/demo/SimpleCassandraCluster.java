@@ -28,8 +28,7 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-
-import brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
 

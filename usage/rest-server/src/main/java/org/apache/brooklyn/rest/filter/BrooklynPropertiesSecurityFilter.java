@@ -40,8 +40,7 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.entitlement.WebEntitlementContext;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
-
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.sun.jersey.core.util.Base64;
 

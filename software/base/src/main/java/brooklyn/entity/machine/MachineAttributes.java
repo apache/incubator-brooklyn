@@ -23,13 +23,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.math.MathFunctions;
+import org.apache.brooklyn.util.text.ByteSizeStrings;
+import org.apache.brooklyn.util.time.Duration;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.math.MathFunctions;
-import brooklyn.util.text.ByteSizeStrings;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 

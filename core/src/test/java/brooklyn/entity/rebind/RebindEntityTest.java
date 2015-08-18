@@ -52,15 +52,20 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.api.mementos.EntityMemento;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.time.Durations;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.AbstractGroupImpl;
 import brooklyn.entity.basic.BasicGroup;
@@ -75,12 +80,6 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 
 import org.apache.brooklyn.location.basic.LocationConfigTest.MyLocation;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
-import brooklyn.util.time.Durations;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicates;

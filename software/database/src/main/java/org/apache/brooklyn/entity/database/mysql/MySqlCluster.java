@@ -23,12 +23,14 @@ import java.util.Collection;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.config.ConfigKey;
 
 import com.google.common.reflect.TypeToken;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
+
 import org.apache.brooklyn.entity.database.DatastoreMixins.HasDatastoreUrl;
+
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;

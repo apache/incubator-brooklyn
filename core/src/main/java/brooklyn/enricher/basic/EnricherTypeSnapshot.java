@@ -21,9 +21,8 @@ package brooklyn.enricher.basic;
 import java.util.Map;
 
 import org.apache.brooklyn.api.policy.EnricherType;
-
 import org.apache.brooklyn.basic.BrooklynTypeSnapshot;
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
 
 public class EnricherTypeSnapshot extends BrooklynTypeSnapshot implements EnricherType {
     private static final long serialVersionUID = 4670930188951106009L;

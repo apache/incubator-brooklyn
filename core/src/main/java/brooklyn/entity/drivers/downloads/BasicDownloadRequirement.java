@@ -24,8 +24,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.drivers.EntityDriver;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
-
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;

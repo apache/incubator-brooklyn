@@ -28,8 +28,7 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
-
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

@@ -30,10 +30,9 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.os.Os;
-import brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 

@@ -26,12 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.util.collections.Jsonya;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
-import brooklyn.util.collections.Jsonya;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

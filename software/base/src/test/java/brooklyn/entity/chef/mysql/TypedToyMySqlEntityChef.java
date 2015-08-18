@@ -18,9 +18,10 @@
  */
 package brooklyn.entity.chef.mysql;
 
+import org.apache.brooklyn.util.git.GithubUrls;
+
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefEntityImpl;
-import brooklyn.util.git.GithubUrls;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

@@ -39,10 +39,9 @@ import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.BrooklynTaskTags.WrappedStream;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Throwables;
 

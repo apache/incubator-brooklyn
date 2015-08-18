@@ -23,9 +23,8 @@ import java.util.Comparator;
 import javax.annotation.Nonnull;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
-
-import brooklyn.util.text.NaturalOrderComparator;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.NaturalOrderComparator;
+import org.apache.brooklyn.util.text.Strings;
 
 /**
  * Useful comparators for domain objects

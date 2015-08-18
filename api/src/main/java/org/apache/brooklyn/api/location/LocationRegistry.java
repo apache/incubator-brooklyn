@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
 
 import javax.annotation.Nullable;
 
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 

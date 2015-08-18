@@ -26,7 +26,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -34,9 +36,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

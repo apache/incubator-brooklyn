@@ -21,13 +21,13 @@ package org.apache.brooklyn.entity.nosql.mongodb;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.MethodEffector;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment;
 

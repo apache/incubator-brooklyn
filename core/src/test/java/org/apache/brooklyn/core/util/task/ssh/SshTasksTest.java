@@ -46,9 +46,8 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
 
 /**
  * Some tests for {@link SshTasks}. Note more tests in {@link BashCommandsIntegrationTest}, 

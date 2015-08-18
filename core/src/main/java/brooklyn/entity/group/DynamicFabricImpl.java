@@ -32,6 +32,8 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +49,6 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.Startable;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;

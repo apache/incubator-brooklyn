@@ -37,8 +37,7 @@ import org.apache.brooklyn.core.internal.storage.impl.BrooklynStorageImpl;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.internal.storage.impl.hazelcast.HazelcastDataGrid;
 import org.apache.brooklyn.internal.storage.impl.hazelcast.HazelcastDataGridFactory;
-
-import brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableList;
 
 import com.hazelcast.core.Hazelcast;
 

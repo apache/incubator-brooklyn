@@ -33,13 +33,13 @@ import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.management.ha.OsgiManager;
 import org.apache.brooklyn.core.util.task.TaskTags;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
-import brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 

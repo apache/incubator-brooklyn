@@ -27,6 +27,8 @@ import javax.servlet.DispatcherType;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.server.rest.resource.PlatformRestResource;
 import org.apache.brooklyn.camp.server.rest.util.DtoFactory;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Networking;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -35,9 +37,6 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Networking;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;

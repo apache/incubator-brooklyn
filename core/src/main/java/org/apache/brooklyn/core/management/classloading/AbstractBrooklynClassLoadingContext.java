@@ -4,8 +4,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.classloading.BrooklynClassLoadingContext;
-
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
 

@@ -24,11 +24,10 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.basic.BrooklynObjectInternal;
-import brooklyn.config.ConfigKey;
-
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.rest.api.PolicyConfigApi;

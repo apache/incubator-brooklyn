@@ -29,12 +29,11 @@ import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.util.internal.ssh.SshAbstractTool.SshAction;
 import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool;
 import org.apache.brooklyn.core.util.internal.ssh.sshj.SshjTool.ShellAction;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;

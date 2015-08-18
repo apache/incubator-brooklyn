@@ -21,9 +21,9 @@ package brooklyn.entity.chef;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.ConfigKeys;
 

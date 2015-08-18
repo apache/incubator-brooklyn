@@ -48,10 +48,9 @@ import org.apache.brooklyn.core.management.classloading.OsgiBrooklynClassLoading
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.osgi.Osgis;
 import org.apache.brooklyn.core.util.osgi.Osgis.ManifestHelper;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
 
 /**
  * Wraps the version of Brooklyn.

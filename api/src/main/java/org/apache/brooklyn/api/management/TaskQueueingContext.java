@@ -20,7 +20,7 @@ package org.apache.brooklyn.api.management;
 
 import java.util.List;
 
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 

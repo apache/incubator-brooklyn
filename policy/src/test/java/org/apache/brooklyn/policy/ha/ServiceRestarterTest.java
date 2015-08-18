@@ -32,9 +32,11 @@ import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -44,9 +46,8 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.entity.trait.FailingEntity;
+
 import org.apache.brooklyn.policy.ha.HASensors.FailureDescriptor;
-import brooklyn.test.Asserts;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

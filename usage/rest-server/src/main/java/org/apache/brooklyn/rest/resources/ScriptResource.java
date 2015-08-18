@@ -20,15 +20,18 @@ package org.apache.brooklyn.rest.resources;
 
 import org.apache.brooklyn.rest.api.ScriptApi;
 import org.apache.brooklyn.rest.domain.ScriptExecutionSummary;
-import brooklyn.util.stream.ThreadLocalPrintStream;
-import brooklyn.util.stream.ThreadLocalPrintStream.OutputCapturingContext;
+import org.apache.brooklyn.util.stream.ThreadLocalPrintStream;
+import org.apache.brooklyn.util.stream.ThreadLocalPrintStream.OutputCapturingContext;
+
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 

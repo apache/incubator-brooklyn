@@ -23,14 +23,13 @@ import java.util.Map;
 import org.apache.brooklyn.camp.BasicCampPlatform;
 import org.apache.brooklyn.camp.spi.resolve.PlanInterpreter.PlanInterpreterAdapter;
 import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
-import brooklyn.util.yaml.Yamls;
 
 @Test
 public class DeploymentPlanToyInterpreterTest {

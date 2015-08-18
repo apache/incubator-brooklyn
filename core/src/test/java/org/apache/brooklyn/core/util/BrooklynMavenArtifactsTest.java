@@ -20,19 +20,18 @@ package org.apache.brooklyn.core.util;
 
 import org.apache.brooklyn.core.util.BrooklynMavenArtifacts;
 import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.maven.MavenArtifact;
+import org.apache.brooklyn.util.maven.MavenRetriever;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.maven.MavenArtifact;
-import brooklyn.util.maven.MavenRetriever;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 @Test
 public class BrooklynMavenArtifactsTest {

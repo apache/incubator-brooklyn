@@ -25,10 +25,9 @@ import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.entity.rebind.BrooklynObjectType;
 import org.apache.brooklyn.api.entity.rebind.PersistenceExceptionHandler;
 import org.apache.brooklyn.api.mementos.Memento;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Sets;
 

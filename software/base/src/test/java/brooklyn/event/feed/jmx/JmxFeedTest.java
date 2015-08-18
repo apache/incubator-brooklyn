@@ -46,6 +46,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.TestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationImpl;
@@ -68,10 +69,11 @@ import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.ConfigToAttributes;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.Asserts;
+
 import brooklyn.test.GeneralisedDynamicMBean;
 import brooklyn.test.JmxService;
 

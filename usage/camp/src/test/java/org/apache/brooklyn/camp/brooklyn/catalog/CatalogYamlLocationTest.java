@@ -40,8 +40,7 @@ import brooklyn.event.basic.BasicConfigKey;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
-
-import brooklyn.util.text.StringFunctions;
+import org.apache.brooklyn.util.text.StringFunctions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

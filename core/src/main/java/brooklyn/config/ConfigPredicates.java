@@ -22,7 +22,8 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import brooklyn.util.text.WildcardGlobs;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.text.WildcardGlobs;
 
 import com.google.common.base.Predicate;
 

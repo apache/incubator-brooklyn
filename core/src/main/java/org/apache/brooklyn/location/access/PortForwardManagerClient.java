@@ -24,10 +24,9 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;

@@ -50,9 +50,8 @@ import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.net.UserAndHostAndPort;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.net.UserAndHostAndPort;
 
 public class ByonLocationsYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(ByonLocationsYamlTest.class);

@@ -29,6 +29,9 @@ import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.collections.Jsonya;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Urls;
 import org.apache.http.HttpStatus;
 
 import brooklyn.entity.basic.AbstractEntity;
@@ -41,9 +44,6 @@ import brooklyn.entity.effector.EffectorBody;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.util.collections.Jsonya;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Urls;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

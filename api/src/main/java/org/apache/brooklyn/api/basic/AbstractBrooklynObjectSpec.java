@@ -23,9 +23,8 @@ import java.lang.reflect.Modifier;
 import java.util.Set;
 
 import org.apache.brooklyn.api.basic.internal.ApiObjectsFactory;
-
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;

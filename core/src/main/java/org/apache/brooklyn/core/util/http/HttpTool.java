@@ -29,6 +29,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.brooklyn.util.crypto.SslTrustUtils;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.URLParamEncoder;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.HttpEntity;
@@ -64,12 +69,6 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.crypto.SslTrustUtils;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.URLParamEncoder;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

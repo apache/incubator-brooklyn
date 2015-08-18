@@ -32,9 +32,8 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-
 import org.apache.brooklyn.location.basic.PortRanges;
-import brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
 

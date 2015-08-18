@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.policy.followthesun;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Collection;
 import java.util.Map;
@@ -47,8 +47,7 @@ import brooklyn.entity.basic.Attributes;
 
 import org.apache.brooklyn.policy.followthesun.FollowTheSunPool.ContainerItemPair;
 import org.apache.brooklyn.policy.loadbalancing.Movable;
-
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;

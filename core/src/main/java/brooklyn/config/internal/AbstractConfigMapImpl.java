@@ -23,14 +23,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigMap;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.core.util.task.DeferredSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.config.ConfigMap;
 import brooklyn.entity.basic.ConfigMapViewWithStringKeys;
 import brooklyn.event.basic.StructuredConfigKey;
 

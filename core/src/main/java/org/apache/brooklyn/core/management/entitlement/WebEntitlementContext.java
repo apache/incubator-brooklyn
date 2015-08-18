@@ -19,8 +19,7 @@
 package org.apache.brooklyn.core.management.entitlement;
 
 import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
-
-import brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 
 /**
  * Indicates an authenticated web request as the entitlements context;

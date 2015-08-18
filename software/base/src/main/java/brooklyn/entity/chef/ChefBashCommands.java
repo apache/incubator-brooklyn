@@ -18,12 +18,13 @@
  */
 package brooklyn.entity.chef;
 
-import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
-import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
-import static brooklyn.util.ssh.BashCommands.INSTALL_UNZIP;
-import static brooklyn.util.ssh.BashCommands.downloadToStdout;
-import static brooklyn.util.ssh.BashCommands.sudo;
-import brooklyn.util.ssh.BashCommands;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_TAR;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_UNZIP;
+import static org.apache.brooklyn.util.ssh.BashCommands.downloadToStdout;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
+
+import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.annotations.Beta;
 

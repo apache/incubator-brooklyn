@@ -39,21 +39,21 @@ import brooklyn.BrooklynVersion;
 
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.osgi.Osgis;
 import org.apache.brooklyn.core.util.osgi.Osgis.BundleFinder;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.os.Os.DeletionResult;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
-import brooklyn.config.ConfigKey;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.os.Os;
-import brooklyn.util.os.Os.DeletionResult;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;

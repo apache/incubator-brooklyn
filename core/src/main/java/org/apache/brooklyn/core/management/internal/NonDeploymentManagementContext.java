@@ -59,19 +59,19 @@ import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecordPersister;
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
+import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.ha.OsgiManager;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.time.Duration;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 

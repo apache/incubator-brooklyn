@@ -31,15 +31,14 @@ import java.util.Set;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.stream.Streams;
 
 /**
  * Tests that the correct address is advertised for the VM - for its public/private, 

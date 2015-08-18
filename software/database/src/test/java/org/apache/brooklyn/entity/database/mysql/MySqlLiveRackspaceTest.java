@@ -24,14 +24,15 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
+
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.util.net.Protocol;
-import brooklyn.util.ssh.IptablesCommands;
-import brooklyn.util.ssh.IptablesCommands.Chain;
-import brooklyn.util.ssh.IptablesCommands.Policy;
+import org.apache.brooklyn.util.net.Protocol;
+import org.apache.brooklyn.util.ssh.IptablesCommands;
+import org.apache.brooklyn.util.ssh.IptablesCommands.Chain;
+import org.apache.brooklyn.util.ssh.IptablesCommands.Policy;
 
 import com.google.common.collect.ImmutableList;
 

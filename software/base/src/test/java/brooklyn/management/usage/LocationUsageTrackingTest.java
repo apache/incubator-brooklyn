@@ -43,9 +43,8 @@ import brooklyn.entity.basic.SoftwareProcessEntityTest;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

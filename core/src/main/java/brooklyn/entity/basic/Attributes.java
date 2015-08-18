@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.util.net.UserAndHostAndPort;
 
 import brooklyn.config.render.RendererHints;
 import brooklyn.event.basic.BasicAttributeSensor;
@@ -32,7 +33,6 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicNotificationSensor;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.net.UserAndHostAndPort;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;

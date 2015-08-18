@@ -50,9 +50,8 @@ import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.VersionSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 @Test(singleThreaded = true)
 public class ServerResourceTest extends BrooklynRestResourceTest {

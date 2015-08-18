@@ -23,8 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.camp.spi.AbstractResource;
-
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 public class BasicResourceLookup<T extends AbstractResource> extends AbstractResourceLookup<T> {
 

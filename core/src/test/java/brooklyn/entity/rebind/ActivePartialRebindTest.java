@@ -22,6 +22,7 @@ import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -30,7 +31,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.util.text.Strings;
 
 public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
 

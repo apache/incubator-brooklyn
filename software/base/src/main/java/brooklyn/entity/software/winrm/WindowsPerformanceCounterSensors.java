@@ -23,16 +23,16 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.windows.WindowsPerformanceCounterFeed;
-import brooklyn.util.text.Strings;
 
 import com.google.common.reflect.TypeToken;
 

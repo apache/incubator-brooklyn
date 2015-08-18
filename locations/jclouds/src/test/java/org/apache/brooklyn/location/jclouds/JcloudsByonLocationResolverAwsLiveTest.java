@@ -30,8 +30,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;
-
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -48,8 +49,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
-
-import brooklyn.util.text.Strings;
 
 /**
  * For interacting with the www.geoscaling.com DNS service.

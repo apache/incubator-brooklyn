@@ -27,13 +27,13 @@ import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.core.management.ha.BasicMasterChooser.AlphabeticMasterChooser;
 import org.apache.brooklyn.core.management.ha.BasicMasterChooser.ScoredRecord;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.BrooklynVersion;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

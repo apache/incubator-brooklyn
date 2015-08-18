@@ -20,9 +20,8 @@ package org.apache.brooklyn.camp.spi.pdp;
 
 import java.util.Map;
 
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableMap;
 

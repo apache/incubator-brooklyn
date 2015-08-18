@@ -21,10 +21,10 @@ package org.apache.brooklyn.camp.brooklyn;
 import java.util.Set;
 
 import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.config.ConfigInheritance;
+import org.apache.brooklyn.config.ConfigKey;
 
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.config.ConfigInheritance;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 
 import com.google.common.collect.ImmutableSet;

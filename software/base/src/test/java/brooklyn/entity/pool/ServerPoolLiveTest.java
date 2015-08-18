@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.Test;
 
 import com.google.common.base.CaseFormat;
@@ -34,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.util.collections.MutableMap;
 
 public class ServerPoolLiveTest extends AbstractServerPoolTest {
 

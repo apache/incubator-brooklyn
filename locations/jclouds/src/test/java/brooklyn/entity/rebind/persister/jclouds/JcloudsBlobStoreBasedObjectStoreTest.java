@@ -23,6 +23,9 @@ import java.util.List;
 
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -34,9 +37,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.persister.BrooklynPersistenceUtils;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessor;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Stopwatch;
 

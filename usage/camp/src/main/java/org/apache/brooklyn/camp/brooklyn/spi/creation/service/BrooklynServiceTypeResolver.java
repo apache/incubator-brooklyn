@@ -29,8 +29,7 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateR
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 /**
  * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code brooklyn:}

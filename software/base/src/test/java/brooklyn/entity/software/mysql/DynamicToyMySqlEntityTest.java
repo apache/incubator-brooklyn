@@ -24,9 +24,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 
 public class DynamicToyMySqlEntityTest extends AbstractToyMySqlEntityTest {

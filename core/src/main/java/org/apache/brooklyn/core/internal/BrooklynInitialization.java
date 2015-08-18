@@ -23,8 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.location.basic.PortRanges;
-
-import brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.net.Networking;
 
 import com.google.common.annotations.Beta;
 

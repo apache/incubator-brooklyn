@@ -20,9 +20,8 @@ package org.apache.brooklyn.location.jclouds;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 

@@ -21,9 +21,8 @@ package org.apache.brooklyn.location.basic;
 import java.util.Map;
 
 import org.apache.brooklyn.api.policy.EnricherType;
-
 import org.apache.brooklyn.basic.BrooklynTypeSnapshot;
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
 
 public class LocationTypeSnapshot extends BrooklynTypeSnapshot implements EnricherType {
     

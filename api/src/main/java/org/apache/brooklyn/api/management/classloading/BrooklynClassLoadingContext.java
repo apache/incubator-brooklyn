@@ -23,8 +23,7 @@ import java.net.URL;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.management.ManagementContext;
-
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe;
 
 /** 
  * Provides functionality for loading classes based on the current context

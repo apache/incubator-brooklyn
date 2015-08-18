@@ -22,10 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.yaml.Yamls;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

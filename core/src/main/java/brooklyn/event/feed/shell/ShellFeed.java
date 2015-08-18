@@ -29,13 +29,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskFactory;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.core.util.task.system.internal.SystemProcessTaskFactory.ConcreteSystemProcessTaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.event.feed.AbstractFeed;

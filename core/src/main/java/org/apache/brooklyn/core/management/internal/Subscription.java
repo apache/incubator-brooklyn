@@ -25,8 +25,7 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
-
-import brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Predicate;
 

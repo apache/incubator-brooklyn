@@ -60,11 +60,10 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Strings;
 
 /**
  * This sets up a BIND DNS server.

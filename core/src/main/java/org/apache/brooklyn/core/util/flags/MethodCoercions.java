@@ -18,14 +18,16 @@
  */
 package org.apache.brooklyn.core.util.flags;
 
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
 import javax.annotation.Nullable;
+
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -72,7 +74,7 @@ public class MethodCoercions {
      * @param instance the object to invoke the method on
      * @param methodName the name of the method to invoke
      * @param argument the argument to the method's parameter.
-     * @return the result of the method call, or {@link brooklyn.util.guava.Maybe#absent()} if method could not be matched.
+     * @return the result of the method call, or {@link org.apache.brooklyn.util.guava.Maybe#absent()} if method could not be matched.
      */
     public static Maybe<?> tryFindAndInvokeSingleParameterMethod(final Object instance, final String methodName, final Object argument) {
         Class<?> clazz = instance.getClass();
@@ -130,7 +132,7 @@ public class MethodCoercions {
      * @param instance the object to invoke the method on
      * @param methodName the name of the method to invoke
      * @param argument a list of the arguments to the method's parameters.
-     * @return the result of the method call, or {@link brooklyn.util.guava.Maybe#absent()} if method could not be matched.
+     * @return the result of the method call, or {@link org.apache.brooklyn.util.guava.Maybe#absent()} if method could not be matched.
      */
     public static Maybe<?> tryFindAndInvokeMultiParameterMethod(final Object instance, final String methodName, final List<?> arguments) {
         Class<?> clazz = instance.getClass();
@@ -161,7 +163,7 @@ public class MethodCoercions {
      * @param instance the object to invoke the method on
      * @param methodName the name of the method to invoke
      * @param argument a list of the arguments to the method's parameters, or a single argument for a single-parameter method.
-     * @return the result of the method call, or {@link brooklyn.util.guava.Maybe#absent()} if method could not be matched.
+     * @return the result of the method call, or {@link org.apache.brooklyn.util.guava.Maybe#absent()} if method could not be matched.
      */
     public static Maybe<?> tryFindAndInvokeBestMatchingMethod(final Object instance, final String methodName, final Object argument) {
         if (argument instanceof List) {

@@ -20,10 +20,10 @@ package org.apache.brooklyn.policy.autoscaling;
 
 import java.util.List;
 
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.TimeWindowedList;
-import brooklyn.util.collections.TimestampedValue;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.TimeWindowedList;
+import org.apache.brooklyn.util.collections.TimestampedValue;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 

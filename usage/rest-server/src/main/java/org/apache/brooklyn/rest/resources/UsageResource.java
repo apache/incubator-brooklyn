@@ -40,10 +40,9 @@ import org.apache.brooklyn.rest.api.UsageApi;
 import org.apache.brooklyn.rest.domain.UsageStatistic;
 import org.apache.brooklyn.rest.domain.UsageStatistics;
 import org.apache.brooklyn.rest.transform.ApplicationTransformer;
-
-import brooklyn.util.exceptions.UserFacingException;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.exceptions.UserFacingException;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

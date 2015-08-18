@@ -36,9 +36,13 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.TestUtils;
 import org.apache.brooklyn.test.entity.BlockingEntity;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.repeat.Repeater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -53,11 +57,6 @@ import brooklyn.entity.trait.Startable;
 
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.repeat.Repeater;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

@@ -20,6 +20,7 @@ package org.apache.brooklyn.rest.util.json;
 
 import java.io.IOException;
 
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonStreamContext;
@@ -28,8 +29,6 @@ import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.SerializerFactory;
 import org.codehaus.jackson.map.ser.StdSerializerProvider;
 import org.codehaus.jackson.type.JavaType;
-
-import brooklyn.util.exceptions.Exceptions;
 
 /** allows the serializer-of-last-resort to be customized, ie used for unknown-types */
 final class ConfigurableSerializerProvider extends StdSerializerProvider {

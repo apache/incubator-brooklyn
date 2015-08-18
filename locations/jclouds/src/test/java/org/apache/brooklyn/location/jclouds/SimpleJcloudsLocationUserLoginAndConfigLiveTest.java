@@ -25,15 +25,14 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

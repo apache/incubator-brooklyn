@@ -23,12 +23,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.util.task.BasicTask;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Stopwatch;
 

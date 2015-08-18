@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.entity.proxy;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.Collection;
 import java.util.Map;
@@ -30,6 +30,8 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +40,6 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.Cluster;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.guava.Maybe;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;

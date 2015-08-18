@@ -33,11 +33,13 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.java.JmxSupport;
+
 import org.apache.brooklyn.entity.messaging.jms.JMSBrokerImpl;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+
 import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

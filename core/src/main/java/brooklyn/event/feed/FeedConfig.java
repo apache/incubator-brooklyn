@@ -21,14 +21,14 @@ package brooklyn.event.feed;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.text.Strings;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

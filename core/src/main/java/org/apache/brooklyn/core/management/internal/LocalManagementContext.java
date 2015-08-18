@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.core.management.internal;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,6 +51,9 @@ import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.TaskTags;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,9 +64,6 @@ import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalLocationFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

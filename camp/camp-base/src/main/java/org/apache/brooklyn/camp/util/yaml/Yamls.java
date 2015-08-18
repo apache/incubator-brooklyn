@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.camp.util.yaml;
 
-/** @deprecated since 0.7.0 use {@link brooklyn.util.yaml.Yamls} */
+/** @deprecated since 0.7.0 use {@link org.apache.brooklyn.util.yaml.Yamls} */
 @Deprecated
-public class Yamls extends brooklyn.util.yaml.Yamls {
+public class Yamls extends org.apache.brooklyn.util.yaml.Yamls {
 }

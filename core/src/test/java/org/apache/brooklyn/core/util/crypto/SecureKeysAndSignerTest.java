@@ -30,11 +30,10 @@ import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
 import org.apache.brooklyn.core.util.crypto.SecureKeys.PassphraseProblem;
+import org.apache.brooklyn.util.crypto.AuthorizedKeysParser;
+import org.apache.brooklyn.util.os.Os;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.crypto.AuthorizedKeysParser;
-import brooklyn.util.os.Os;
 
 import com.google.common.io.Files;
 

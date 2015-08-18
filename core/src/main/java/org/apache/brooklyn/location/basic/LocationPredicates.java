@@ -20,10 +20,9 @@ package org.apache.brooklyn.location.basic;
 
 import javax.annotation.Nullable;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
-
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

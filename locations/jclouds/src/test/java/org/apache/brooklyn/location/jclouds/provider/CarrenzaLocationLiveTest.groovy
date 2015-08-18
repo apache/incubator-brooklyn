@@ -31,7 +31,7 @@ import org.apache.brooklyn.location.basic.SshMachineLocation
 import org.apache.brooklyn.location.jclouds.JcloudsLocation
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation
 import org.apache.brooklyn.core.management.internal.LocalManagementContext
-import brooklyn.util.collections.MutableMap
+import org.apache.brooklyn.util.collections.MutableMap
 
 import com.google.common.collect.ImmutableList
 

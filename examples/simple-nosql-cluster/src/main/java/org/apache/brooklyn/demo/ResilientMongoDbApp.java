@@ -38,11 +38,10 @@ import brooklyn.entity.basic.StartableApplication;
 import brooklyn.entity.group.DynamicCluster;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-
 import org.apache.brooklyn.policy.ha.ServiceFailureDetector;
 import org.apache.brooklyn.policy.ha.ServiceReplacer;
 import org.apache.brooklyn.policy.ha.ServiceRestarter;
-import brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.Lists;
 

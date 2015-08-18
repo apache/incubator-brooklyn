@@ -24,6 +24,8 @@ import java.io.IOException;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.PageSet;
@@ -36,12 +38,11 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
+
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsUtil;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Preconditions;
 

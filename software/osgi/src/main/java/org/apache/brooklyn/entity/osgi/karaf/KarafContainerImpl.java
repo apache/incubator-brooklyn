@@ -35,6 +35,10 @@ import javax.management.openmbean.TabularData;
 
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.repeat.Repeater;
 import org.osgi.jmx.JmxConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,10 +52,6 @@ import brooklyn.event.feed.jmx.JmxAttributePollConfig;
 import brooklyn.event.feed.jmx.JmxFeed;
 import brooklyn.event.feed.jmx.JmxHelper;
 import brooklyn.event.feed.jmx.JmxValueFunctions;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.os.Os;
-import brooklyn.util.repeat.Repeater;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;

@@ -26,13 +26,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.CountdownTimer;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.CountdownTimer;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
 

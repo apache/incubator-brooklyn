@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
@@ -40,8 +41,6 @@ import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

@@ -27,7 +27,9 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServerImpl;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -37,10 +39,7 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

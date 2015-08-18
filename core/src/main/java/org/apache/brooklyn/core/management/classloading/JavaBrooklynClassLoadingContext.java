@@ -27,9 +27,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 
 import org.apache.brooklyn.api.management.ManagementContext;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
 

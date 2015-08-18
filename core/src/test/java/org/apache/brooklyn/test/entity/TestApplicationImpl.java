@@ -34,8 +34,7 @@ import brooklyn.entity.basic.AbstractApplication;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.util.logging.LoggingSetup;
+import org.apache.brooklyn.util.logging.LoggingSetup;
 
 /**
  * Mock application for testing.

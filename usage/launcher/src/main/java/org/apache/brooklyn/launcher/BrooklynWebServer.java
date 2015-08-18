@@ -62,10 +62,10 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 import brooklyn.BrooklynVersion;
 import brooklyn.config.BrooklynServerPaths;
 import brooklyn.config.BrooklynServiceAttributes;
-import brooklyn.config.ConfigKey;
 
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.BrooklynNetworkUtils;
@@ -89,17 +89,15 @@ import org.apache.brooklyn.rest.filter.RequestTaggingFilter;
 import org.apache.brooklyn.rest.util.ManagementContextProvider;
 import org.apache.brooklyn.rest.util.ShutdownHandler;
 import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.io.FileUtil;
-import brooklyn.util.javalang.Threads;
-import brooklyn.util.logging.LoggingSetup;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
-
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.io.FileUtil;
+import org.apache.brooklyn.util.javalang.Threads;
+import org.apache.brooklyn.util.logging.LoggingSetup;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.web.ContextHandlerCollectionHotSwappable;
 
 /**

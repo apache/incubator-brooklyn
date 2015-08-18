@@ -36,14 +36,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 import org.apache.brooklyn.core.util.task.BasicTask;
 import org.apache.brooklyn.core.util.task.SingleThreadedScheduler;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.util.concurrent.Callables;
 

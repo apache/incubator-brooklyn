@@ -22,9 +22,8 @@ import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
+import org.apache.brooklyn.util.os.Os;
 import org.testng.annotations.Test;
-
-import brooklyn.util.os.Os;
 
 import com.google.common.collect.ImmutableMap;
 

@@ -29,9 +29,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.management.Task;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Throwables;

@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -30,8 +31,8 @@ import org.testng.annotations.Test;
 import brooklyn.entity.BrooklynAppLiveTestSupport;
 import brooklyn.entity.basic.SoftwareProcess.RestartSoftwareParameters;
 import brooklyn.entity.basic.SoftwareProcess.StopSoftwareParameters;
+
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-import brooklyn.util.collections.CollectionFunctionals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

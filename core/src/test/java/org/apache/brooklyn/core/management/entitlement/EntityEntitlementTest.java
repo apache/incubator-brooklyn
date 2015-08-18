@@ -29,6 +29,7 @@ import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArg
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -41,7 +42,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BasicApplication;
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.exceptions.Exceptions;
 
 public class EntityEntitlementTest {
 

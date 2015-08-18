@@ -33,6 +33,8 @@ import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.repeat.Repeater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -41,9 +43,8 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.SoftwareProcess;
+
 import org.apache.brooklyn.location.basic.PortRanges;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.repeat.Repeater;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;

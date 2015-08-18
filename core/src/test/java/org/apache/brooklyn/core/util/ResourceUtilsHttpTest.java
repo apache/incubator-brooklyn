@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -41,8 +43,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.test.TestHttpRequestHandler;
 import brooklyn.test.TestHttpServer;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
 
 public class ResourceUtilsHttpTest {
     private ResourceUtils utils;

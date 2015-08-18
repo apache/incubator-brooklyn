@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.location.access;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.config.ConfigKey;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;

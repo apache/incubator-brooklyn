@@ -39,9 +39,9 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.os.Os;
 
 import brooklyn.entity.rebind.persister.PersistMode;
-import brooklyn.util.os.Os;
 
 public class BrooklynLauncherRebindCatalogTest {
 

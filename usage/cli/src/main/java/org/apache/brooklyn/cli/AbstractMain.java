@@ -44,11 +44,10 @@ import brooklyn.BrooklynVersion;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.cli.Main.LaunchCommand;
-
-import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
-import brooklyn.util.exceptions.FatalRuntimeException;
-import brooklyn.util.exceptions.UserFacingException;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import org.apache.brooklyn.util.exceptions.FatalRuntimeException;
+import org.apache.brooklyn.util.exceptions.UserFacingException;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;

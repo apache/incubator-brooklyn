@@ -28,10 +28,9 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.entity.ParameterType;
 import org.apache.brooklyn.api.event.Sensor;
-
 import org.apache.brooklyn.basic.BrooklynTypeSnapshot;
-import brooklyn.config.ConfigKey;
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;

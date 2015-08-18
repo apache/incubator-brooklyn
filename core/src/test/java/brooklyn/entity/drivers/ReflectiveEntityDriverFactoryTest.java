@@ -22,9 +22,9 @@ import brooklyn.entity.basic.AbstractEntity;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.paas.PaasLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import brooklyn.test.location.TestPaasLocation;
-import brooklyn.util.collections.MutableMap;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;

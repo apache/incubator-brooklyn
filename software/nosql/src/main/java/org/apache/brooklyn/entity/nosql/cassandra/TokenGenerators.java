@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableList;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

@@ -19,9 +19,9 @@
 package org.apache.brooklyn.location.basic;
 
 import static brooklyn.util.GroovyJavaMethods.elvis;
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.io.Closeable;
 import java.util.Collection;
@@ -35,6 +35,9 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.mementos.LocationMemento;
+import org.apache.brooklyn.config.ConfigInheritance;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.internal.storage.Reference;
@@ -48,19 +51,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.basic.AbstractBrooklynObject;
 
-import brooklyn.config.ConfigInheritance;
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.rebind.BasicLocationRebindSupport;
 import brooklyn.event.basic.BasicConfigKey;
 
 import org.apache.brooklyn.location.geo.HasHostGeoInfo;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
-
-import brooklyn.util.collections.SetFromLiveMap;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.collections.SetFromLiveMap;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;

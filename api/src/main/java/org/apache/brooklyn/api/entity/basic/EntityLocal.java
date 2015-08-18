@@ -31,10 +31,9 @@ import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.apache.brooklyn.api.management.SubscriptionManager;
 import org.apache.brooklyn.api.management.Task;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

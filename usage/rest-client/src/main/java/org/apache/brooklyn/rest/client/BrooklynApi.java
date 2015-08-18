@@ -62,8 +62,7 @@ import org.apache.brooklyn.rest.api.ServerApi;
 import org.apache.brooklyn.rest.api.UsageApi;
 import org.apache.brooklyn.rest.api.VersionApi;
 import org.apache.brooklyn.rest.client.util.http.BuiltResponsePreservingError;
-
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.wordnik.swagger.core.ApiOperation;
 

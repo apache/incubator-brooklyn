@@ -59,12 +59,11 @@ import brooklyn.event.feed.jmx.JmxOperationPollConfig;
 
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

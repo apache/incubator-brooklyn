@@ -57,22 +57,21 @@ import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Time;
 
 import brooklyn.entity.basic.ServiceStateLogic;
 import brooklyn.entity.trait.Changeable;
 import brooklyn.entity.trait.FailingEntity;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.collections.QuorumCheck.QuorumChecks;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;

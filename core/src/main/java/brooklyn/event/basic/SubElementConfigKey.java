@@ -21,9 +21,8 @@ package brooklyn.event.basic;
 import java.util.Map;
 
 import org.apache.brooklyn.api.management.ExecutionContext;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 @SuppressWarnings("rawtypes")
 public class SubElementConfigKey<T> extends BasicConfigKey<T> {

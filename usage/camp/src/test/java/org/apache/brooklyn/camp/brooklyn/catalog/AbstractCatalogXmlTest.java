@@ -25,6 +25,10 @@ import org.apache.brooklyn.core.management.osgi.OsgiTestResources;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.ReaderInputStream;
+import org.apache.brooklyn.util.stream.Streams;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,10 +38,6 @@ import java.io.StringReader;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.ReaderInputStream;
-import brooklyn.util.stream.Streams;
 
 import com.google.common.io.ByteStreams;
 

@@ -18,11 +18,11 @@
  */
 package org.apache.brooklyn.entity.nosql.couchbase;
 
-import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
-import static brooklyn.util.ssh.BashCommands.alternatives;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static org.apache.brooklyn.util.ssh.BashCommands.alternatives;
+import static org.apache.brooklyn.util.ssh.BashCommands.chainGroup;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 
 import java.util.List;
 
@@ -37,11 +37,10 @@ import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.event.basic.DependentConfiguration;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;

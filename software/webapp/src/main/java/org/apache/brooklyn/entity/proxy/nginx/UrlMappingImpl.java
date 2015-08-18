@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.proxy.nginx;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.ArrayList;
 import java.util.Collection;

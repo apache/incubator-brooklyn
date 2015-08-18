@@ -20,7 +20,7 @@ package org.apache.brooklyn.entity.webapp;
 
 import java.util.Map;
 
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe;
 
 public class HttpsSslConfig {
 

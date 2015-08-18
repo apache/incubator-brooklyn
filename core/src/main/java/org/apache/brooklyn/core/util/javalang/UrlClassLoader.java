@@ -24,8 +24,7 @@ import java.net.URLClassLoader;
 import java.util.Arrays;
 
 import org.apache.brooklyn.core.util.ResourceUtils;
-
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 /** like URLClassLoader (and delegates to it) but:
  * * has a nice toString

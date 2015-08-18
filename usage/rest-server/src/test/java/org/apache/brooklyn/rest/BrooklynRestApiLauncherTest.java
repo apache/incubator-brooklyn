@@ -24,14 +24,13 @@ import static org.apache.brooklyn.rest.BrooklynRestApiLauncher.StartMode.WEB_XML
 
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.http.HttpStatus;
 import org.eclipse.jetty.server.Server;
 import org.testng.annotations.Test;
-
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtilsTest.SampleNoOpApplication;
-import brooklyn.test.Asserts;
 
 public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixture {
 

@@ -40,13 +40,12 @@ import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.basic.LocationConfigUtils;
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.LocationPropertiesFromBrooklynProperties;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.KeyValueParser;
-import brooklyn.util.text.Strings;
-import brooklyn.util.text.WildcardGlobs;
-import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.KeyValueParser;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.WildcardGlobs;
+import org.apache.brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

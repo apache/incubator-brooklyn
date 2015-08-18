@@ -29,17 +29,17 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;

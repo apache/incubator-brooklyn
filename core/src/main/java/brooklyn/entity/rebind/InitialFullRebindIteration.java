@@ -30,13 +30,13 @@ import org.apache.brooklyn.core.management.internal.BrooklynObjectManagementMode
 import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.management.internal.LocationManagerInternal;
 import org.apache.brooklyn.core.management.internal.ManagementTransitionMode;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynLogging;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.rebind.persister.PersistenceActivityMetrics;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;

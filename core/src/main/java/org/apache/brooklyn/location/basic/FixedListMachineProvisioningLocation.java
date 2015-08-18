@@ -35,6 +35,7 @@ import org.apache.brooklyn.api.location.MachineLocationCustomizer;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.LocationManager;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.slf4j.Logger;
@@ -50,17 +51,15 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.WildcardGlobs;
-import brooklyn.util.text.WildcardGlobs.PhraseTreatment;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.WildcardGlobs;
+import org.apache.brooklyn.util.text.WildcardGlobs.PhraseTreatment;
 
 /**
  * A provisioner of {@link MachineLocation}s which takes a list of machines it can connect to.

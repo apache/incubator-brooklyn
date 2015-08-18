@@ -21,13 +21,13 @@ package org.apache.brooklyn.policy.loadbalancing;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.collections.QuorumCheck;
+import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractGroup;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicNotificationSensor;
-import brooklyn.util.collections.QuorumCheck;
-import brooklyn.util.collections.QuorumCheck.QuorumChecks;
 
 /**
  * Contains worker items that can be moved between this container and others to effect load balancing.

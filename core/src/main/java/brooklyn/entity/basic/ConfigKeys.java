@@ -22,19 +22,19 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.TemplatedStringAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey.BasicConfigKeyOverwriting;
 import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;

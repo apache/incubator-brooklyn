@@ -20,7 +20,7 @@ package org.apache.brooklyn.api.basic.internal;
 
 import java.util.ServiceLoader;
 
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 

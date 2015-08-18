@@ -22,12 +22,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.io.FileUtil;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.io.FileUtil;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;

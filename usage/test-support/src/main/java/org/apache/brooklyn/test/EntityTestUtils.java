@@ -35,9 +35,8 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.management.SubscriptionHandle;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.test.Asserts;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.test.Asserts;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;

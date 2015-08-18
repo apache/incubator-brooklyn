@@ -29,8 +29,7 @@ import org.slf4j.LoggerFactory;
 import brooklyn.config.ConfigUtils;
 
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
-
-import brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;

@@ -32,12 +32,11 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.core.util.flags.FlagUtils;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.Serializers;
+import org.apache.brooklyn.util.javalang.Serializers.ObjectReplacer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.Serializers;
-import brooklyn.util.javalang.Serializers.ObjectReplacer;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;

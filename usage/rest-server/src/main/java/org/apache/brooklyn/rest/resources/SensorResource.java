@@ -40,9 +40,8 @@ import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.filter.HaHotStateRequired;
 import org.apache.brooklyn.rest.transform.SensorTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
-
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;

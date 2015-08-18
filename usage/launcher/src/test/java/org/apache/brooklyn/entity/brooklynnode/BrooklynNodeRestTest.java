@@ -25,6 +25,12 @@ import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.Jsonya;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Duration;
 import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,13 +55,6 @@ import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
 import org.apache.brooklyn.launcher.camp.SimpleYamlLauncher;
-
-import brooklyn.util.collections.Jsonya;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.net.Urls;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.Iterables;
 

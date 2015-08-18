@@ -46,6 +46,12 @@ import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationImpl;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.exceptions.FatalRuntimeException;
+import org.apache.brooklyn.util.io.FileUtil;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.StringFunctions;
+import org.apache.brooklyn.util.text.Strings;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
@@ -56,13 +62,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.rebind.RebindTestUtils;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.util.exceptions.FatalRuntimeException;
-import brooklyn.util.io.FileUtil;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.StringFunctions;
-import brooklyn.util.text.Strings;
 
 import com.google.api.client.util.Preconditions;
 import com.google.common.base.Charsets;

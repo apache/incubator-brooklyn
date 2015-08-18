@@ -27,6 +27,8 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.util.task.DynamicSequentialTask;
 import org.apache.brooklyn.core.util.task.ScheduledTask;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +36,6 @@ import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Objects;
 

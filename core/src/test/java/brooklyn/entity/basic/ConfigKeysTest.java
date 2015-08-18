@@ -20,10 +20,10 @@ package brooklyn.entity.basic;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.config.ConfigInheritance;
+import org.apache.brooklyn.config.ConfigKey;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigInheritance;
-import brooklyn.config.ConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.base.CaseFormat;

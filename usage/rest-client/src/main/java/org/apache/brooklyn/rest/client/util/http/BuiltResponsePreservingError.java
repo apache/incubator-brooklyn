@@ -22,11 +22,10 @@ import java.lang.annotation.Annotation;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.jboss.resteasy.client.core.BaseClientResponse;
 import org.jboss.resteasy.core.Headers;
 import org.jboss.resteasy.specimpl.BuiltResponse;
-
-import brooklyn.util.exceptions.Exceptions;
 
 /** 
  * Allows wrapping a {@link Response} with the stream fully read and closed so that the client can be re-used.

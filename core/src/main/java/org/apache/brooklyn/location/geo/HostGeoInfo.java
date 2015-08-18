@@ -29,12 +29,11 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.internal.BrooklynSystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.internal.BrooklynSystemProperties;
 
 import com.google.common.base.Objects;
 

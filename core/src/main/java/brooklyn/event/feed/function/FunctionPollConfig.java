@@ -24,12 +24,12 @@ import groovy.lang.Closure;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 
 import brooklyn.event.feed.FeedConfig;
 import brooklyn.event.feed.PollConfig;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Supplier;
 

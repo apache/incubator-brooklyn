@@ -31,8 +31,7 @@ import org.apache.brooklyn.camp.spi.pdp.Artifact;
 import org.apache.brooklyn.camp.spi.pdp.AssemblyTemplateConstructor;
 import org.apache.brooklyn.camp.spi.pdp.Service;
 import org.apache.brooklyn.camp.spi.resolve.PdpMatcher;
-
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe;
 
 public class MockWebPlatform {
 

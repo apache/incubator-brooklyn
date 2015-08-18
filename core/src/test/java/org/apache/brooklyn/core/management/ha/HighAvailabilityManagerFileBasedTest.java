@@ -20,11 +20,11 @@ package org.apache.brooklyn.core.management.ha;
 
 import java.io.File;
 
+import org.apache.brooklyn.util.os.Os;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
-import brooklyn.util.os.Os;
 
 @Test
 public class HighAvailabilityManagerFileBasedTest extends HighAvailabilityManagerTestFixture {

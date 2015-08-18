@@ -20,7 +20,7 @@ package org.apache.brooklyn.api.location;
 
 import java.net.InetAddress;
 
-import brooklyn.util.net.HasNetworkAddresses;
+import org.apache.brooklyn.util.net.HasNetworkAddresses;
 
 /**
  * A location that is a machine.

@@ -24,10 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.camp.commontypes.RepresentationSkew;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;

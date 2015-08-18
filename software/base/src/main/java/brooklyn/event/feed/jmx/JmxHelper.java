@@ -18,8 +18,8 @@
  */
 package brooklyn.event.feed.jmx;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import groovy.time.TimeDuration;
 
 import java.io.IOException;
@@ -62,18 +62,18 @@ import javax.net.ssl.TrustManager;
 
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
+import org.apache.brooklyn.util.crypto.SslTrustUtils;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.java.JmxSupport;
 import brooklyn.entity.java.UsesJmx;
-import brooklyn.util.crypto.SslTrustUtils;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.RuntimeInterruptedException;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;

@@ -23,11 +23,11 @@ import static org.testng.Assert.fail;
 
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableMap;
 

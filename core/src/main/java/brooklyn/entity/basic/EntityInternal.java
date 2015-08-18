@@ -32,11 +32,10 @@ import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.mementos.EntityMemento;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.management.internal.EntityManagementSupport;
 import org.apache.brooklyn.core.util.config.ConfigBag;
-
 import org.apache.brooklyn.basic.BrooklynObjectInternal;
-import brooklyn.config.ConfigKey;
 
 import com.google.common.annotations.Beta;
 

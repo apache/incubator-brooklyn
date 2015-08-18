@@ -24,8 +24,7 @@ import java.util.Collection;
 import java.util.Comparator;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
-
-import brooklyn.util.text.NaturalOrderComparator;
+import org.apache.brooklyn.util.text.NaturalOrderComparator;
 
 /**
  * Largest version first order.

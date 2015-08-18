@@ -25,6 +25,7 @@ import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.Enricher;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.TaskBuilder;
@@ -33,7 +34,6 @@ import org.apache.brooklyn.core.util.task.ssh.SshTasks;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskFactory;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
@@ -44,8 +44,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 import brooklyn.entity.effector.EffectorTasks;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.net.Urls;
 
 import com.google.common.collect.ImmutableSet;
 

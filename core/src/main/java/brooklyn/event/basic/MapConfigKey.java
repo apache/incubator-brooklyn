@@ -26,12 +26,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.management.ExecutionContext;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.collections.Jsonya;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.util.collections.Jsonya;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;

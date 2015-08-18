@@ -18,19 +18,19 @@
  */
 package org.apache.brooklyn.entity.database.postgresql;
 
-import static brooklyn.util.ssh.BashCommands.INSTALL_WGET;
-import static brooklyn.util.ssh.BashCommands.alternativesGroup;
-import static brooklyn.util.ssh.BashCommands.chainGroup;
-import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
-import static brooklyn.util.ssh.BashCommands.executeCommandThenAsUserTeeOutputToFile;
-import static brooklyn.util.ssh.BashCommands.fail;
-import static brooklyn.util.ssh.BashCommands.ifExecutableElse0;
-import static brooklyn.util.ssh.BashCommands.ifExecutableElse1;
-import static brooklyn.util.ssh.BashCommands.installPackage;
-import static brooklyn.util.ssh.BashCommands.sudo;
-import static brooklyn.util.ssh.BashCommands.sudoAsUser;
-import static brooklyn.util.ssh.BashCommands.warn;
 import static java.lang.String.format;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_WGET;
+import static org.apache.brooklyn.util.ssh.BashCommands.alternativesGroup;
+import static org.apache.brooklyn.util.ssh.BashCommands.chainGroup;
+import static org.apache.brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
+import static org.apache.brooklyn.util.ssh.BashCommands.executeCommandThenAsUserTeeOutputToFile;
+import static org.apache.brooklyn.util.ssh.BashCommands.fail;
+import static org.apache.brooklyn.util.ssh.BashCommands.ifExecutableElse0;
+import static org.apache.brooklyn.util.ssh.BashCommands.ifExecutableElse1;
+import static org.apache.brooklyn.util.ssh.BashCommands.installPackage;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudoAsUser;
+import static org.apache.brooklyn.util.ssh.BashCommands.warn;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,25 +44,27 @@ import org.apache.brooklyn.core.util.task.ssh.SshTasks;
 import org.apache.brooklyn.core.util.task.ssh.SshTasks.OnFailingTask;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.StringEscapes;
+import org.apache.brooklyn.util.text.StringFunctions;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.SoftwareProcess;
+
 import org.apache.brooklyn.entity.database.DatastoreMixins;
+
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.StringEscapes;
-import brooklyn.util.text.StringFunctions;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;

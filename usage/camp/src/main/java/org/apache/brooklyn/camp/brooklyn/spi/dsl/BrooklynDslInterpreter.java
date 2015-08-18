@@ -31,12 +31,11 @@ import org.apache.brooklyn.camp.spi.resolve.PlanInterpreter;
 import org.apache.brooklyn.camp.spi.resolve.PlanInterpreter.PlanInterpreterAdapter;
 import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
 import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode.Role;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.Reflections;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.Reflections;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Optional;
 

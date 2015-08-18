@@ -33,6 +33,7 @@ import org.apache.brooklyn.api.mementos.EntityMemento;
 import org.apache.brooklyn.api.mementos.TreeNode;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -40,7 +41,6 @@ import org.testng.annotations.Test;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.dto.MementosGenerators;
-import brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;

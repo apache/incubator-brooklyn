@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.api.management.ha;
 
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe;
 
 public enum ManagementNodeState {
     /** Node is either coming online, or is in some kind of recovery/transitioning mode */

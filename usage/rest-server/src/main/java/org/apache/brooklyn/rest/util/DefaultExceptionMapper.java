@@ -34,11 +34,10 @@ import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.util.flags.ClassCoercionException;
 import org.apache.brooklyn.rest.domain.ApiError;
 import org.apache.brooklyn.rest.domain.ApiError.Builder;
-
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.UserFacingException;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.UserFacingException;
+import org.apache.brooklyn.util.text.Strings;
 
 @Provider
 public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {

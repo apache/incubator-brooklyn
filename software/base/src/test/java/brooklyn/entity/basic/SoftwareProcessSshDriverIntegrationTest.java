@@ -36,6 +36,11 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.util.BrooklynNetworkUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.KnownSizeInputStream;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -45,12 +50,6 @@ import brooklyn.entity.trait.Startable;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.KnownSizeInputStream;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.yaml.Yamls;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

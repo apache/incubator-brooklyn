@@ -24,12 +24,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.brooklyn.core.util.internal.ssh.process.ProcessTool;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.os.Os;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.os.Os;
 
 public class ProcessToolStaticsTest {
 

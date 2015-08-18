@@ -23,9 +23,8 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 
 /**
  * A location that an entity can be in. Examples of locations include a single machine

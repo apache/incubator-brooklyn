@@ -24,7 +24,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.brooklyn.entity.messaging.amqp.AmqpExchange;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 public class QpidTopicImpl extends QpidDestinationImpl implements QpidTopic {
 

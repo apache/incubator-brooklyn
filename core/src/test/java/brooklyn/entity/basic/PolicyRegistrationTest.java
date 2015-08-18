@@ -35,11 +35,11 @@ import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.test.TestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.test.entity.TestEntityNoEnrichersImpl;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
-import brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

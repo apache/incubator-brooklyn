@@ -28,6 +28,7 @@ import org.apache.brooklyn.location.cloud.names.CloudMachineNamer;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -38,8 +39,6 @@ import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.cloud.names.BasicCloudMachineNamer;
-
-import brooklyn.util.text.Strings;
 public class CloudMachineNamerTest {
 
     private static final Logger log = LoggerFactory.getLogger(CloudMachineNamerTest.class);

@@ -46,6 +46,13 @@ import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.text.ByteSizeStrings;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -66,14 +73,6 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.text.ByteSizeStrings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.collect.Iterables;
 

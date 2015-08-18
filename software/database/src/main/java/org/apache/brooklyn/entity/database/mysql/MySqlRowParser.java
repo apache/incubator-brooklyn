@@ -20,8 +20,8 @@ package org.apache.brooklyn.entity.database.mysql;
 
 import java.util.Map;
 
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.text.Strings;
 
 public class MySqlRowParser {
     public static Map<String, String> parseSingle(String row) {

@@ -31,6 +31,10 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.util.http.HttpTool;
 import org.apache.brooklyn.core.util.http.HttpToolResponse;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.apache.http.client.HttpClient;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.PageSet;
@@ -51,11 +55,6 @@ import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsUtil;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;

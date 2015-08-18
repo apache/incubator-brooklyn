@@ -46,9 +46,8 @@ import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.PlatformComponent;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.camp.spi.PlatformRootSummary;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Urls;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

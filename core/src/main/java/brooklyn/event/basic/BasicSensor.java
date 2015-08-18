@@ -25,8 +25,7 @@ import java.util.List;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
-
-import brooklyn.util.guava.TypeTokens;
+import org.apache.brooklyn.util.guava.TypeTokens;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;

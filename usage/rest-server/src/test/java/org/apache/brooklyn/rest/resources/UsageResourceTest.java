@@ -55,9 +55,8 @@ import org.apache.brooklyn.rest.domain.UsageStatistics;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.entity.TestApplication;
-
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

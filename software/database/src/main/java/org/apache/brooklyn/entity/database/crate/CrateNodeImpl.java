@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.entity.database.crate;
 
+import org.apache.brooklyn.util.guava.Functionals;
+
 import brooklyn.config.render.RendererHints;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Attributes;
@@ -27,7 +29,6 @@ import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.util.guava.Functionals;
 
 public class CrateNodeImpl extends SoftwareProcessImpl implements CrateNode{
 

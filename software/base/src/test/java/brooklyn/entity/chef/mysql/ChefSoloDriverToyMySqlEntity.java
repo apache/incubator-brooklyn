@@ -20,8 +20,10 @@ package brooklyn.entity.chef.mysql;
 
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.Duration;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.SoftwareProcessImpl;
 import brooklyn.entity.chef.ChefConfig;
@@ -30,8 +32,6 @@ import brooklyn.entity.chef.ChefSoloDriver;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ssh.SshFeed;
 import brooklyn.event.feed.ssh.SshPollConfig;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
 
 @Deprecated /** @deprecated since 0.7.0 use see examples {Dynamic,Typed}ToyMySqlEntityChef */
 public class ChefSoloDriverToyMySqlEntity extends SoftwareProcessImpl implements ChefConfig {

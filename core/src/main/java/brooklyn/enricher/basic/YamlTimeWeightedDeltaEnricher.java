@@ -19,14 +19,14 @@
 package brooklyn.enricher.basic;
 
 import org.apache.brooklyn.api.event.SensorEvent;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.basic.AbstractTransformer;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 

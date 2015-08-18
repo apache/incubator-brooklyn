@@ -18,12 +18,12 @@
  */
 package org.apache.brooklyn.rest;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigMap;
 import brooklyn.config.ConfigPredicates;
 import brooklyn.entity.basic.ConfigKeys;
 
 import org.apache.brooklyn.api.location.PortRange;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigMap;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
 import org.apache.brooklyn.rest.security.provider.ExplicitUsersSecurityProvider;
 

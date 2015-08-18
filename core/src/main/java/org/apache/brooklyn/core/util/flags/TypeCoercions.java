@@ -47,6 +47,21 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.JavaGroovyEquivalents;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.collections.QuorumCheck;
+import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.javalang.Enums;
+import org.apache.brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.net.UserAndHostAndPort;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,21 +70,6 @@ import brooklyn.entity.basic.ClosureEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactory;
 import brooklyn.entity.basic.ConfigurableEntityFactoryFromEntityFactory;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.collections.QuorumCheck;
-import brooklyn.util.collections.QuorumCheck.QuorumChecks;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.javalang.Enums;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.net.Networking;
-import brooklyn.util.net.UserAndHostAndPort;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
-import brooklyn.util.yaml.Yamls;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
@@ -640,7 +640,7 @@ public class TypeCoercions {
         registerAdapter(Object.class, Duration.class, new Function<Object,Duration>() {
             @Override
             public Duration apply(final Object input) {
-                return brooklyn.util.time.Duration.of(input);
+                return org.apache.brooklyn.util.time.Duration.of(input);
             }
         });
         registerAdapter(Object.class, TimeDuration.class, new Function<Object,TimeDuration>() {

@@ -31,12 +31,11 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.paas.PaasLocation;
 import org.apache.brooklyn.location.basic.WinRmMachineLocation;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.ReferenceWithError;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.ReferenceWithError;
+import org.apache.brooklyn.util.text.Strings;
 
 /**
  * Follows a class naming convention: the driver interface typically ends in "Driver", and the implementation 

@@ -30,6 +30,8 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -43,9 +45,6 @@ import brooklyn.entity.basic.EmptySoftwareProcessSshDriver;
 import brooklyn.entity.basic.EntityInternal;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

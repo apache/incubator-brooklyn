@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.policy.autoscaling;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import groovy.lang.Closure;
 
 import java.util.Map;
@@ -40,12 +40,12 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.core.util.task.Tasks;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Resizable;
@@ -55,9 +55,8 @@ import brooklyn.event.basic.BasicNotificationSensor;
 
 import org.apache.brooklyn.policy.autoscaling.SizeHistory.WindowSummary;
 import org.apache.brooklyn.policy.loadbalancing.LoadBalancingPolicy;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

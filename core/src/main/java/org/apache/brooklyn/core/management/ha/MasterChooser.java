@@ -20,8 +20,7 @@ package org.apache.brooklyn.core.management.ha;
 
 import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.api.management.ha.ManagementPlaneSyncRecord;
-
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 

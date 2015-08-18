@@ -18,7 +18,7 @@
  */
 package brooklyn.enricher;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;

@@ -59,6 +59,8 @@ import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.management.internal.EffectorUtils;
 import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
@@ -75,11 +77,9 @@ import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.core.util.task.system.SystemTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.basic.BrooklynObjectInternal;
+
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.entity.effector.Effectors;
 import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.trait.Startable;
@@ -88,13 +88,12 @@ import brooklyn.event.basic.DependentConfiguration;
 
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.basic.Locations;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

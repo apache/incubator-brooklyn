@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -31,6 +32,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +42,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 
 import brooklyn.config.BrooklynLogging;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.Duration;
 
 /**
  * Handles logging of request information.

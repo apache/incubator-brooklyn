@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.couchdb;
 
-import static brooklyn.util.ssh.BashCommands.*;
+import static org.apache.brooklyn.util.ssh.BashCommands.*;
 
 import java.util.List;
 import java.util.Map;
@@ -32,10 +32,9 @@ import brooklyn.entity.basic.Attributes;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.os.Os;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

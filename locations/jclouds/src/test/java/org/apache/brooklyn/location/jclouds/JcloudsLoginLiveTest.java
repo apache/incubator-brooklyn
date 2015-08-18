@@ -29,10 +29,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.os.Os;
-import brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.Streams;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

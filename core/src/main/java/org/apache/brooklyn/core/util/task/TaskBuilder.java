@@ -28,11 +28,10 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
 import org.apache.brooklyn.api.management.TaskQueueingContext;
-
-import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.JavaGroovyEquivalents;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.Iterables;
 

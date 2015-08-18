@@ -23,11 +23,11 @@ import java.net.URI;
 
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.api.management.ha.ManagementNodeSyncRecord;
+import org.apache.brooklyn.util.time.Time;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import brooklyn.BrooklynVersion;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Objects;
 

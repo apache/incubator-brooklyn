@@ -29,12 +29,11 @@ import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationImpl;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-import brooklyn.util.collections.MutableMap;
 
 /**
  * Tests the deprecated use of AbstractAppliation, where its constructor is called directly.

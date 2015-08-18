@@ -26,9 +26,12 @@ import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.tomcat.Tomcat8Server;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.WebAppMonitor;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.Duration;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
@@ -51,15 +54,15 @@ import brooklyn.enricher.HttpLatencyDetector;
 import brooklyn.enricher.basic.Propagator;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.StartableApplication;
+
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.java.JavaEntityMethods;
 import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixture;
+
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

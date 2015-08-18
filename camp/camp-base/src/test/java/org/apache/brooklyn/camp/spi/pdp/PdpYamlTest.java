@@ -28,12 +28,11 @@ import org.apache.brooklyn.camp.spi.pdp.Artifact;
 import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;
 import org.apache.brooklyn.camp.spi.pdp.Service;
 import org.apache.brooklyn.camp.test.mock.web.MockWebPlatform;
+import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.util.stream.Streams;
 
 public class PdpYamlTest {
 

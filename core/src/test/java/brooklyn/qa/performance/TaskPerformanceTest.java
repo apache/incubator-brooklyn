@@ -28,14 +28,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 import org.apache.brooklyn.core.util.task.SingleThreadedScheduler;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.Time;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

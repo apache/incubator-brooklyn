@@ -44,11 +44,10 @@ import org.apache.brooklyn.cli.lister.ClassFinder;
 import org.apache.brooklyn.cli.lister.ItemDescriptors;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
-
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -31,10 +31,9 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
 import org.apache.brooklyn.launcher.camp.SimpleYamlLauncher;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.Iterables;
 

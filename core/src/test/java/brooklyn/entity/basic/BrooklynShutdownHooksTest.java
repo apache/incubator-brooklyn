@@ -27,12 +27,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.test.entity.BlockingEntity;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.BrooklynShutdownHooks.BrooklynShutdownHookJob;
-import brooklyn.util.time.Duration;
 
 public class BrooklynShutdownHooksTest extends BrooklynAppUnitTestSupport {
 

@@ -31,6 +31,8 @@ import org.apache.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
 import org.apache.brooklyn.core.management.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.util.task.TaskBuilder;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
@@ -39,8 +41,6 @@ import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

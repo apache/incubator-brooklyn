@@ -18,8 +18,8 @@
  */
 package brooklyn.entity.basic;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -52,16 +52,15 @@ import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.event.feed.ConfigToAttributes;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.os.Os;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.stream.KnownSizeInputStream;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.StringPredicates;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.stream.KnownSizeInputStream;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.StringPredicates;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 
 /**
  * An abstract SSH implementation of the {@link AbstractSoftwareProcessDriver}.

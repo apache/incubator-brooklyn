@@ -18,8 +18,9 @@
  */
 package org.apache.brooklyn.rest.domain;
 
-import brooklyn.config.ConfigKey;
 import com.google.common.collect.ImmutableMap;
+
+import org.apache.brooklyn.config.ConfigKey;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;

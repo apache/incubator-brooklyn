@@ -23,13 +23,12 @@ import static java.lang.String.format;
 import java.util.Collection;
 
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-
-import brooklyn.util.text.Strings;
 
 /**
  * Generates the {@code server.conf} configuration file using sensors on an {@link NginxController}.

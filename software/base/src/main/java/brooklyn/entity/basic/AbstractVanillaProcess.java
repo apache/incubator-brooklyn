@@ -18,7 +18,8 @@
  */
 package brooklyn.entity.basic;
 
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
+
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 
 public interface AbstractVanillaProcess extends SoftwareProcess {

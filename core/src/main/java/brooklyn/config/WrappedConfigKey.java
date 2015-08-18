@@ -18,9 +18,10 @@
  */
 package brooklyn.config;
 
-import com.google.common.base.Preconditions;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 
-import brooklyn.config.ConfigKey.HasConfigKey;
+import com.google.common.base.Preconditions;
 
 public class WrappedConfigKey<T> implements HasConfigKey<T> {
 

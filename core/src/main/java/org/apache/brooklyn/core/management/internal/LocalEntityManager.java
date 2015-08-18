@@ -45,6 +45,11 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.collections.SetFromLiveMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.CountdownTimer;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,11 +65,6 @@ import brooklyn.entity.proxying.EntityProxyImpl;
 import brooklyn.entity.proxying.InternalEntityFactory;
 import brooklyn.entity.proxying.InternalPolicyFactory;
 import brooklyn.entity.trait.Startable;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.collections.SetFromLiveMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.CountdownTimer;
-import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

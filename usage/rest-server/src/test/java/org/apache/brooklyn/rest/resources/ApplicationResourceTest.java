@@ -34,7 +34,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -59,11 +63,11 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
 import brooklyn.entity.basic.EntityPredicates;
 import brooklyn.entity.basic.Lifecycle;
+
 import org.apache.brooklyn.location.basic.AbstractLocation;
 import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.basic.LocationInternal;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
-
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.rest.domain.ApiError;
@@ -83,11 +87,6 @@ import org.apache.brooklyn.rest.testing.mocks.NameMatcherGroup;
 import org.apache.brooklyn.rest.testing.mocks.RestMockApp;
 import org.apache.brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.Duration;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BrooklynRestResourceTest {

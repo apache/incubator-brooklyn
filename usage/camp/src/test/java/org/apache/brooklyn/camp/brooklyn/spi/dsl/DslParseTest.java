@@ -27,9 +27,8 @@ import java.util.List;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.parse.DslParser;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.parse.FunctionWithArgs;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.parse.QuotedString;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import org.testng.annotations.Test;
-
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

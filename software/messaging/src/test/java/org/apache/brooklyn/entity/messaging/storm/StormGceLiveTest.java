@@ -20,9 +20,8 @@ package org.apache.brooklyn.entity.messaging.storm;
 
 import java.util.Map;
 
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
 
 @Test(groups="Live")
 public class StormGceLiveTest extends StormAbstractCloudLiveTest {

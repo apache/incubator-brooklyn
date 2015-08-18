@@ -44,6 +44,10 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.task.BasicExecutionManager;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.time.Duration;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityFunctions;
@@ -52,10 +56,6 @@ import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.FileBasedObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.trait.Startable;
-import brooklyn.util.os.Os;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;

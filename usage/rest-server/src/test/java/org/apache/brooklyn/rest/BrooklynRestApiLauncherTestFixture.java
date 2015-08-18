@@ -32,8 +32,7 @@ import brooklyn.entity.basic.Entities;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
-
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 public abstract class BrooklynRestApiLauncherTestFixture {
 

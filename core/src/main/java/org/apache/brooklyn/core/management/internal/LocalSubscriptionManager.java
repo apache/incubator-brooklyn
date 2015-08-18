@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.core.management.internal;
 
-import static brooklyn.util.JavaGroovyEquivalents.elvis;
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import static brooklyn.util.JavaGroovyEquivalents.join;
-import static brooklyn.util.JavaGroovyEquivalents.mapOf;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.join;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.mapOf;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -42,11 +42,11 @@ import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.apache.brooklyn.api.management.SubscriptionManager;
 import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 import org.apache.brooklyn.core.util.task.SingleThreadedScheduler;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;

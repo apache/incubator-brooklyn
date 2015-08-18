@@ -24,9 +24,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
-import brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.net.Networking;
 
 /** launches Javascript GUI programmatically. and used for tests.
  * see {@link BrooklynRestApiLauncher} for more information.

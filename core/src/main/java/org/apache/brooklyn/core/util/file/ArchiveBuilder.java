@@ -34,9 +34,8 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.brooklyn.core.util.file.ArchiveUtils.ArchiveType;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.os.Os;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.os.Os;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;

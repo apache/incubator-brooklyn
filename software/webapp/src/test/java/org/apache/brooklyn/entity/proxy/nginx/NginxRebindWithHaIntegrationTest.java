@@ -40,6 +40,9 @@ import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.WebAppMonitor;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -57,10 +60,6 @@ import brooklyn.entity.rebind.RebindTestUtils;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocationReuseIntegrationTest.RecordingSshjTool;
-
-import brooklyn.util.net.Networking;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

@@ -29,6 +29,9 @@ import org.apache.brooklyn.api.management.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.management.ha.ManagementNodeState;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +43,6 @@ import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityModeEffector
 import brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityPriorityEffector;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.repeat.Repeater;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Objects;

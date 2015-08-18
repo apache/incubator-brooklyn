@@ -21,12 +21,11 @@ package org.apache.brooklyn.camp.spi.resolve.interpret;
 import java.util.Map;
 
 import org.apache.brooklyn.camp.spi.resolve.PlanInterpreter;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.text.StringPredicates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.text.StringPredicates;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

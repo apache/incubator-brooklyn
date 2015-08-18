@@ -38,6 +38,7 @@ import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.proxy.nginx.UrlMapping;
 import org.apache.brooklyn.entity.proxy.nginx.UrlRewriteRule;
 import org.apache.brooklyn.entity.webapp.tomcat.Tomcat8Server;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.WebAppMonitor;
@@ -56,8 +57,6 @@ import brooklyn.entity.rebind.RebindOptions;
 import brooklyn.entity.rebind.RebindTestFixtureWithApp;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
-
-import brooklyn.test.Asserts;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

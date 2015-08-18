@@ -43,10 +43,9 @@ import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.HttpTestUtils;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.StringFunctions;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.StringFunctions;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableSet;

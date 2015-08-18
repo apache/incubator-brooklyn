@@ -32,10 +32,12 @@ import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.Startable;
+
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
+
 import brooklyn.event.feed.ConfigToAttributes;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.exceptions.CompoundRuntimeException;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;

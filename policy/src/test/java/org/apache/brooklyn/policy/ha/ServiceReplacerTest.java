@@ -36,10 +36,12 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -58,10 +60,7 @@ import brooklyn.entity.group.DynamicCluster;
 import brooklyn.entity.trait.FailingEntity;
 
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
 import org.apache.brooklyn.policy.ha.HASensors.FailureDescriptor;
-import brooklyn.test.Asserts;
-import brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;

@@ -18,11 +18,11 @@
  */
 package org.apache.brooklyn.entity.database.mariadb;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
-import static brooklyn.util.ssh.BashCommands.installPackage;
-import static brooklyn.util.ssh.BashCommands.ok;
 import static java.lang.String.format;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
+import static org.apache.brooklyn.util.ssh.BashCommands.installPackage;
+import static org.apache.brooklyn.util.ssh.BashCommands.ok;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -37,22 +37,23 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+
 import org.apache.brooklyn.entity.database.DatastoreMixins;
+
 import brooklyn.entity.software.SshEffectorTasks;
 
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.CountdownTimer;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.CountdownTimer;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableMap;
 

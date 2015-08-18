@@ -18,10 +18,11 @@
  */
 package org.apache.brooklyn.core.util;
 
+import org.apache.brooklyn.util.maven.MavenArtifact;
+import org.apache.brooklyn.util.maven.MavenRetriever;
+import org.apache.brooklyn.util.text.Strings;
+
 import brooklyn.BrooklynVersion;
-import brooklyn.util.maven.MavenArtifact;
-import brooklyn.util.maven.MavenRetriever;
-import brooklyn.util.text.Strings;
 
 public class BrooklynMavenArtifacts {
 

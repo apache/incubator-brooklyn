@@ -19,9 +19,8 @@
 package org.apache.brooklyn.api.entity.trait;
 
 import org.apache.brooklyn.api.management.Task;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 
 import com.google.common.annotations.Beta;
 

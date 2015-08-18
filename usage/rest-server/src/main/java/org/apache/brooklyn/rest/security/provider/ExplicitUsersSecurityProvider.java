@@ -28,9 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.StringConfigMap;
 
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.rest.security.PasswordHasher;
 

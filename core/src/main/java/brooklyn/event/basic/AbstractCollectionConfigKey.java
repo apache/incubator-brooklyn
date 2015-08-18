@@ -24,12 +24,11 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.management.ExecutionContext;
 import org.apache.brooklyn.api.management.TaskAdaptable;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.Iterables;
 

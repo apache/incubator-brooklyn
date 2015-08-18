@@ -25,11 +25,10 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.location.basic.AbstractLocationResolver.SpecParser.ParsedSpec;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.guava.Maybe.Absent;
-import brooklyn.util.text.KeyValueParser;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe.Absent;
+import org.apache.brooklyn.util.text.KeyValueParser;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;

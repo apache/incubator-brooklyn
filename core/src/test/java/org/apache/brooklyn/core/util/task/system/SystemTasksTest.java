@@ -26,13 +26,13 @@ import org.apache.brooklyn.core.util.task.ssh.SshTasks;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskFactory;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.core.util.task.system.SystemTasks;
+import org.apache.brooklyn.util.os.Os;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.os.Os;
 
 /**
  * Some tests for {@link SystemTasks}. See {@link SshTasks}.

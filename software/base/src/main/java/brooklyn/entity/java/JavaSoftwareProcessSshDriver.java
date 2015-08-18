@@ -18,7 +18,7 @@
  */
 package brooklyn.entity.java;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,13 +57,12 @@ import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.StringEscapes.BashStringEscapes;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.StringEscapes.BashStringEscapes;
 
 /**
  * The SSH implementation of the {@link brooklyn.entity.java.JavaSoftwareProcessDriver}.

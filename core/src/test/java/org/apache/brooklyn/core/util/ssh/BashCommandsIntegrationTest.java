@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.core.util.ssh;
 
-import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
@@ -38,6 +38,13 @@ import org.apache.brooklyn.core.util.task.BasicExecutionContext;
 import org.apache.brooklyn.core.util.task.ssh.SshTasks;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,14 +57,6 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.net.Networking;
-import brooklyn.util.os.Os;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

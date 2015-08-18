@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.riak;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.net.URI;
 import java.util.Collection;
@@ -31,6 +31,8 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,8 +48,6 @@ import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import brooklyn.entity.trait.Startable;
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

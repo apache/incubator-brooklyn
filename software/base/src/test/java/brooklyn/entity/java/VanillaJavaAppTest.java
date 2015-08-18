@@ -46,7 +46,10 @@ import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -60,9 +63,6 @@ import brooklyn.event.feed.jmx.JmxHelper;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.PortRanges;
 
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.crypto.SslTrustUtils;
 import brooklyn.util.jmx.jmxmp.JmxmpAgent;
 
 import com.google.common.base.Predicate;

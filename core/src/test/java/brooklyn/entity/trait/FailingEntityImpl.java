@@ -24,10 +24,10 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.test.entity.TestEntityImpl;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.Assert;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.exceptions.Exceptions;
 
 public class FailingEntityImpl extends TestEntityImpl implements FailingEntity {
 

@@ -26,12 +26,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.location.basic.Locations;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.trait.Startable;
 import brooklyn.entity.trait.StartableMethods;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

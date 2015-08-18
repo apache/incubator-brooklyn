@@ -21,10 +21,10 @@ package brooklyn.entity.basic;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.time.Duration;
 
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicate;

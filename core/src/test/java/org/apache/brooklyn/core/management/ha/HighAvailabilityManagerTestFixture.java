@@ -37,7 +37,9 @@ import org.apache.brooklyn.core.management.ha.ManagementPlaneSyncRecordDeltaImpl
 import org.apache.brooklyn.core.management.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import org.apache.brooklyn.core.management.ha.HighAvailabilityManagerImpl.PromotionListener;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -52,8 +54,6 @@ import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.PersistenceObjectStore;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord;
 import brooklyn.entity.rebind.plane.dto.BasicManagementNodeSyncRecord.Builder;
-import brooklyn.test.Asserts;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Ticker;
 import com.google.common.collect.ImmutableSet;

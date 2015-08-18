@@ -23,11 +23,11 @@ import java.io.Serializable;
 /**
  * For checking if a group/cluster is quorate. That is, whether the group has sufficient
  * healthy members.
- * @deprecated since 0.7.0 use {@link brooklyn.util.collections.QuorumCheck}. 
+ * @deprecated since 0.7.0 use {@link org.apache.brooklyn.util.collections.QuorumCheck}. 
  * but keep this for a while as old quorum checks might be persisted. 
  */
 @Deprecated
-public interface QuorumCheck extends brooklyn.util.collections.QuorumCheck {
+public interface QuorumCheck extends org.apache.brooklyn.util.collections.QuorumCheck {
 
     /**
      * @param sizeHealthy Number of healthy members
@@ -74,7 +74,7 @@ public interface QuorumCheck extends brooklyn.util.collections.QuorumCheck {
         }
     }
     
-    /** @deprecated since 0.7.0 use {@link brooklyn.util.collections.QuorumCheck}. 
+    /** @deprecated since 0.7.0 use {@link org.apache.brooklyn.util.collections.QuorumCheck}. 
     * but keep this until we have a transition defined. 
     */
     @Deprecated

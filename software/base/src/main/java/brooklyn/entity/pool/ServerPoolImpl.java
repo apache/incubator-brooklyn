@@ -31,11 +31,11 @@ import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.management.LocationManager;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
@@ -49,9 +49,8 @@ import brooklyn.event.basic.Sensors;
 import org.apache.brooklyn.location.basic.BasicLocationDefinition;
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.dynamic.DynamicLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

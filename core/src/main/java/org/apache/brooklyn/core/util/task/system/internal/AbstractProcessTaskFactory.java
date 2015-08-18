@@ -24,17 +24,16 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.task.TaskBuilder;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskFactory;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskStub;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

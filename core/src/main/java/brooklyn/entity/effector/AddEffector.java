@@ -25,14 +25,14 @@ import org.apache.brooklyn.api.entity.Effector;
 import org.apache.brooklyn.api.entity.ParameterType;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.text.Strings;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.effector.Effectors.EffectorBuilder;
 import brooklyn.event.basic.MapConfigKey;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;

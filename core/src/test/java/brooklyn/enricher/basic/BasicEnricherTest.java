@@ -25,20 +25,20 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherSpec;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestApplicationNoEnrichersImpl;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.BrooklynConfigKeys;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.collections.MutableSet;
 
 /**
  * Test that enricher can be created and accessed, by construction and by spec

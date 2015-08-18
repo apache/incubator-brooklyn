@@ -24,9 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
-
-import brooklyn.util.net.Networking;
-import brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.text.Identifiers;
 
 public class BrooklynUserWithRandomPasswordSecurityProvider extends AbstractSecurityProvider implements SecurityProvider {
 

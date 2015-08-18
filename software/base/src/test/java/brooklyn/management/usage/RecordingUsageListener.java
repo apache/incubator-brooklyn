@@ -22,8 +22,7 @@ import java.util.List;
 
 import org.apache.brooklyn.core.management.usage.ApplicationUsage.ApplicationEvent;
 import org.apache.brooklyn.core.management.usage.LocationUsage.LocationEvent;
-
-import brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableList;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

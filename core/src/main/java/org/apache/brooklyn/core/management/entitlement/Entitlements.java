@@ -29,8 +29,12 @@ import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.entitlement.EntitlementClass;
 import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.Reflections;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,13 +48,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 
 import brooklyn.config.BrooklynProperties;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.javalang.Reflections;
-import brooklyn.util.text.Strings;
 
 /** @since 0.7.0 */
 @Beta

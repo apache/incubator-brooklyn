@@ -24,9 +24,8 @@ import brooklyn.config.BrooklynServiceAttributes;
 
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.apache.brooklyn.location.geo.LocalhostExternalIpLoader;
-
-import brooklyn.util.JavaGroovyEquivalents;
-import brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.JavaGroovyEquivalents;
+import org.apache.brooklyn.util.net.Networking;
 
 public class BrooklynNetworkUtils {
 

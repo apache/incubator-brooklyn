@@ -26,11 +26,10 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiat
 import org.apache.brooklyn.core.management.classloading.JavaBrooklynClassLoadingContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
 import org.apache.brooklyn.policy.ha.ServiceRestarter;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.time.Duration;
 
 public class BrooklynYamlTypeInstantiatorTest extends AbstractYamlTest {
 

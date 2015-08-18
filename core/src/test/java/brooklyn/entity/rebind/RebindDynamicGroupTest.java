@@ -24,12 +24,12 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.test.Asserts;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.DynamicGroup;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.rebind.RebindEntityTest.MyEntity;
-import brooklyn.test.Asserts;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;

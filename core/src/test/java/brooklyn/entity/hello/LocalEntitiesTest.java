@@ -48,10 +48,11 @@ import org.testng.collections.Lists;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
+
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-import brooklyn.test.Asserts;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;

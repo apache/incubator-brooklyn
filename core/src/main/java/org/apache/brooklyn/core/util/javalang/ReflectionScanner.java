@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.util.text.Strings;
 import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.reflections.Store;
@@ -36,8 +37,6 @@ import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;

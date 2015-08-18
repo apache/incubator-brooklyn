@@ -25,6 +25,8 @@ import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.stream.Streams;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -62,8 +64,6 @@ import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.effector.AddChildrenEffector;
 import brooklyn.entity.effector.Effectors;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.stream.Streams;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;

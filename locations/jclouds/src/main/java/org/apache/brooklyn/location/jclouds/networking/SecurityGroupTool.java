@@ -22,6 +22,8 @@ import java.util.Set;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.aws.util.AWSUtils;
 import org.jclouds.compute.domain.SecurityGroup;
@@ -30,9 +32,6 @@ import org.jclouds.net.domain.IpPermission;
 import org.jclouds.rest.ApiContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;

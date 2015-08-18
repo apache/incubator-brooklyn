@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.util.xstream;
 
-import brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.collections.MutableSet;
 
 import com.thoughtworks.xstream.converters.collections.CollectionConverter;
 import com.thoughtworks.xstream.mapper.Mapper;

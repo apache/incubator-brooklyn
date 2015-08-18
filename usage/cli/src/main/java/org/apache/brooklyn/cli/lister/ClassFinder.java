@@ -34,6 +34,8 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.javalang.UrlClassLoader;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
 import org.reflections.scanners.SubTypesScanner;
@@ -46,8 +48,6 @@ import brooklyn.enricher.basic.AbstractEnricher;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;

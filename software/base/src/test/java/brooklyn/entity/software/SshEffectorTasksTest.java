@@ -30,6 +30,8 @@ import org.apache.brooklyn.core.util.task.ssh.SshFetchTaskWrapper;
 import org.apache.brooklyn.core.util.task.ssh.SshPutTaskWrapper;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
+import org.apache.brooklyn.util.net.Urls;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +44,6 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.exceptions.PropagatedRuntimeException;
-import brooklyn.util.net.Urls;
 
 import com.google.common.io.Files;
 

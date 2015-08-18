@@ -23,9 +23,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.time.Duration;
 
 /**
  * Configuration for polling, which is being added to a feed (e.g. to poll a given URL over http).

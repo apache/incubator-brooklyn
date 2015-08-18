@@ -29,6 +29,8 @@ import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -38,8 +40,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.trait.Startable;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.stream.Streams;
 
 public class ReloadBrooklynPropertiesTest {
     

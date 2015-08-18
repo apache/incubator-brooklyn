@@ -34,18 +34,18 @@ import org.apache.brooklyn.api.management.SubscriptionContext;
 import org.apache.brooklyn.api.management.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.management.entitlement.Entitlements;
 import org.apache.brooklyn.core.management.entitlement.Entitlements.EntityAndItem;
 import org.apache.brooklyn.core.management.entitlement.Entitlements.StringAndArgument;
 import org.apache.brooklyn.core.management.internal.NonDeploymentManagementContext.NonDeploymentManagementContextMode;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractEntity;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

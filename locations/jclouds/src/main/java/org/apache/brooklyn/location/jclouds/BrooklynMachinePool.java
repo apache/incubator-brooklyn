@@ -39,8 +39,7 @@ import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.location.jclouds.pool.MachinePool;
 import org.apache.brooklyn.location.jclouds.pool.MachineSet;
 import org.apache.brooklyn.location.jclouds.pool.ReusableMachineTemplate;
-
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;

@@ -28,10 +28,10 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.time.Duration;
 
 import brooklyn.enricher.basic.AbstractTypeTransformingEnricher;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.time.Duration;
 
 /**
  * Converts an absolute measure of time into a fraction of time, based on the delta between consecutive values 

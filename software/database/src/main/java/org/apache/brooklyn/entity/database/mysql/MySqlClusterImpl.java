@@ -31,8 +31,15 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.event.SensorEvent;
 import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.TaskBuilder;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.guava.IfFunctions;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.StringPredicates;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -44,7 +51,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.enricher.Enrichers;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.EntityInternal;
@@ -55,12 +61,6 @@ import brooklyn.event.basic.DependentConfiguration;
 import brooklyn.event.basic.Sensors;
 import brooklyn.event.feed.function.FunctionFeed;
 import brooklyn.event.feed.function.FunctionPollConfig;
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.guava.IfFunctions;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.StringPredicates;
-import brooklyn.util.time.Duration;
 
 // https://dev.mysql.com/doc/refman/5.7/en/replication-howto.html
 

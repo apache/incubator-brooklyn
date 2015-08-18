@@ -29,16 +29,15 @@ import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
+import org.apache.brooklyn.config.ConfigKey;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.config.render.RendererHints;
 
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.URLParamEncoder;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.URLParamEncoder;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;

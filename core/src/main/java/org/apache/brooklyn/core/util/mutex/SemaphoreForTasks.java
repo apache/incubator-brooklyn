@@ -24,10 +24,9 @@ import java.util.Set;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.core.util.task.Tasks;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

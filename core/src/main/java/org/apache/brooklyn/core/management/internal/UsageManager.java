@@ -26,15 +26,15 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.management.usage.ApplicationUsage;
 import org.apache.brooklyn.core.management.usage.LocationUsage;
 import org.apache.brooklyn.core.management.usage.ApplicationUsage.ApplicationEvent;
 import org.apache.brooklyn.core.management.usage.LocationUsage.LocationEvent;
+import org.apache.brooklyn.util.time.Duration;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Lifecycle;
-import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;

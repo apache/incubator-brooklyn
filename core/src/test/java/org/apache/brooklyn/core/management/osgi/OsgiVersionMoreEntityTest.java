@@ -55,9 +55,8 @@ import brooklyn.entity.proxying.InternalPolicyFactory;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
-
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.os.Os;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.os.Os;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

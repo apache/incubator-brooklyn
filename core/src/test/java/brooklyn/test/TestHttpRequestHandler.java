@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
@@ -33,8 +34,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
-
-import brooklyn.util.exceptions.Exceptions;
 
 public class TestHttpRequestHandler implements HttpRequestHandler {
     private HttpEntity entity;

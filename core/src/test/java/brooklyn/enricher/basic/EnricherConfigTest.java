@@ -21,12 +21,12 @@ package brooklyn.enricher.basic;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.Test;
 
 import brooklyn.enricher.basic.BasicEnricherTest.MyEnricher;
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.collections.MutableMap;
 
 /**
  * Test that configuration properties are usable and inherited correctly.

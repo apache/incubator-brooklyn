@@ -21,8 +21,7 @@ package brooklyn.qa.longevity;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 
 /**
  * This test is NOT definitive because GC is not guaranteed.

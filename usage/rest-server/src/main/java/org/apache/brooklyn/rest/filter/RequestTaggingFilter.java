@@ -19,6 +19,7 @@
 package org.apache.brooklyn.rest.filter;
 
 import java.io.IOException;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -26,7 +27,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Identifiers;
 
 /**
  * Tags each request with a probabilistically unique id. Should be included before other

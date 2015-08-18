@@ -43,9 +43,9 @@ import org.apache.brooklyn.core.util.BrooklynMavenArtifacts;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.maven.MavenRetriever;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.maven.MavenRetriever;
 
 import com.google.common.collect.ImmutableList;
 

@@ -20,13 +20,13 @@ package brooklyn.entity.chef.mysql;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.chef.ChefConfig;
 import brooklyn.entity.chef.ChefConfigs;
 import brooklyn.entity.chef.ChefEntity;
-import brooklyn.util.collections.MutableMap;
 
 /** Builds up a MySql entity via chef using specs only */
 public class DynamicToyMySqlEntityChef implements ChefConfig {

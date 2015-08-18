@@ -29,10 +29,10 @@ import org.apache.brooklyn.api.event.Sensor;
 import org.apache.brooklyn.api.mementos.EnricherMemento;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherType;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.policy.basic.AbstractEntityAdjunct;
 import org.apache.brooklyn.core.util.flags.TypeCoercions;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;

@@ -19,7 +19,8 @@
 package org.apache.brooklyn.camp.brooklyn.spi.dsl.parse;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
+
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.base.Objects;
 

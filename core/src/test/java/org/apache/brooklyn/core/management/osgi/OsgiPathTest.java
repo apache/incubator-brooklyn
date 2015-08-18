@@ -23,6 +23,8 @@ import java.io.IOException;
 
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.osgi.framework.BundleException;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -32,8 +34,6 @@ import brooklyn.config.BrooklynProperties;
 import brooklyn.config.BrooklynServerConfig;
 import brooklyn.config.BrooklynServerPaths;
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Identifiers;
 
 
 /** 

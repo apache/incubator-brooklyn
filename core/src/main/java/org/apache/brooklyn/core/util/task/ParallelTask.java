@@ -24,9 +24,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.management.Task;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

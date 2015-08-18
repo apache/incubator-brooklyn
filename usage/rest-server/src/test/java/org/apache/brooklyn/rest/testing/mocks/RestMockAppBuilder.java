@@ -20,10 +20,10 @@ package org.apache.brooklyn.rest.testing.mocks;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.util.javalang.Reflections;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.StartableApplication;
-import brooklyn.util.javalang.Reflections;
 
 public class RestMockAppBuilder extends ApplicationBuilder {
 

@@ -47,10 +47,9 @@ import org.jclouds.providers.Providers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Cidr;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Cidr;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

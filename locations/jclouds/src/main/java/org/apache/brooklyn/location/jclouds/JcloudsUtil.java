@@ -37,6 +37,13 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Protocol;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.ssh.IptablesCommands;
+import org.apache.brooklyn.util.ssh.IptablesCommands.Chain;
+import org.apache.brooklyn.util.ssh.IptablesCommands.Policy;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.aws.ec2.AWSEC2Api;
@@ -80,13 +87,6 @@ import com.google.common.io.Files;
 import com.google.inject.Module;
 
 import brooklyn.entity.basic.Sanitizer;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.net.Protocol;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.ssh.IptablesCommands;
-import brooklyn.util.ssh.IptablesCommands.Chain;
-import brooklyn.util.ssh.IptablesCommands.Policy;
 
 public class JcloudsUtil implements JcloudsLocationConfig {
 
@@ -278,7 +278,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
 
         ContextBuilder contextBuilder = ContextBuilder.newBuilder(provider).credentials(identity, credential);
         contextBuilder.modules(MutableList.copyOf(JcloudsUtil.getCommonModules()));
-        if (!brooklyn.util.text.Strings.isBlank(endpoint)) {
+        if (!org.apache.brooklyn.util.text.Strings.isBlank(endpoint)) {
             contextBuilder.endpoint(endpoint);
         }
         contextBuilder.overrides(overrides);

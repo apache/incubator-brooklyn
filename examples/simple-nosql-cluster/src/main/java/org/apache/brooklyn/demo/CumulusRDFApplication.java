@@ -34,6 +34,7 @@ import org.apache.brooklyn.api.event.SensorEventListener;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.EnricherSpec;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
@@ -44,7 +45,6 @@ import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
@@ -62,16 +62,15 @@ import brooklyn.event.basic.DependentConfiguration;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;
-
 import org.apache.brooklyn.policy.ha.ServiceFailureDetector;
 import org.apache.brooklyn.policy.ha.ServiceReplacer;
 import org.apache.brooklyn.policy.ha.ServiceRestarter;
-import brooklyn.util.CommandLineUtil;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.StringEscapes.JavaStringEscapes;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

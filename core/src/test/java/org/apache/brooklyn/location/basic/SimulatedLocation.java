@@ -31,9 +31,8 @@ import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.location.PortSupplier;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Networking;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;

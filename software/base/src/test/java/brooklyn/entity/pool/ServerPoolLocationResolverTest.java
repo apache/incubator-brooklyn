@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.management.internal.LocalManagementContext;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -43,8 +44,6 @@ import brooklyn.entity.basic.Entities;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.dynamic.DynamicLocation;
-
-import brooklyn.util.collections.MutableMap;
 
 public class ServerPoolLocationResolverTest {
 

@@ -41,9 +41,8 @@ import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.HttpTestUtils;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.net.Urls;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;

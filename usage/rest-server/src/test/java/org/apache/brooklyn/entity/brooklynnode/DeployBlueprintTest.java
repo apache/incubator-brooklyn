@@ -41,8 +41,7 @@ import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.management.EntityManager;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.test.HttpTestUtils;
-
-import brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

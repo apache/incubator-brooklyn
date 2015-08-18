@@ -20,10 +20,10 @@ package org.apache.brooklyn.camp.brooklyn.spi.lookup;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.net.Urls;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.util.net.Urls;
 
 public class BrooklynUrlLookup {
 

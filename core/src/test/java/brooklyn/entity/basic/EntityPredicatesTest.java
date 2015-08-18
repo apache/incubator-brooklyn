@@ -24,12 +24,12 @@ import static org.testng.Assert.assertTrue;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.text.StringPredicates;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.BrooklynAppUnitTestSupport;
 import brooklyn.entity.trait.Changeable;
-import brooklyn.util.text.StringPredicates;
 
 import com.google.common.collect.ImmutableList;
 

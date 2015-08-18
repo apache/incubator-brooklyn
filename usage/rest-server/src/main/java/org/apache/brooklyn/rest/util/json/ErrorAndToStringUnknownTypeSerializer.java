@@ -25,6 +25,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.javalang.Reflections;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonProcessingException;
@@ -35,9 +37,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.ser.impl.UnknownSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.javalang.Reflections;
 
 /**
  * for non-json-serializable classes (quite a lot of them!) simply provide a sensible error message and a toString.

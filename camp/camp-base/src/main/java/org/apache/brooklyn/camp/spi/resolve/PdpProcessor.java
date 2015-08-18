@@ -33,15 +33,14 @@ import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;
 import org.apache.brooklyn.camp.spi.pdp.Service;
 import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationContext;
 import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.yaml.snakeyaml.error.YAMLException;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.yaml.Yamls;
 
 import com.google.common.annotations.VisibleForTesting;
 

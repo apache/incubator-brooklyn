@@ -31,8 +31,7 @@ import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.task.ssh.SshTasks;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableList;
 

@@ -20,14 +20,14 @@ package brooklyn.entity.basic;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.config.ConfigInheritance;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.ConfigInheritance;
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigMapTest.MyOtherEntity;
 import brooklyn.event.basic.AttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;

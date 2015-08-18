@@ -45,9 +45,8 @@ import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsUtil;
-
-import brooklyn.util.exceptions.FatalConfigurationRuntimeException;
-import brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import org.apache.brooklyn.util.stream.Streams;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;

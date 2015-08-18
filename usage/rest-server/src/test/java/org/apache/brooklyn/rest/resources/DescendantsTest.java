@@ -43,9 +43,8 @@ import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.text.StringEscapes;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.text.StringEscapes;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;

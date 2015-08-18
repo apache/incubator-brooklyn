@@ -23,11 +23,11 @@ import static org.testng.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.Test;
 
 import brooklyn.entity.rebind.persister.PersistenceObjectStore.StoreObjectAccessorWithLock;
-import brooklyn.util.os.Os;
-import brooklyn.util.time.Duration;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

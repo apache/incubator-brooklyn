@@ -23,12 +23,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 
+import org.apache.brooklyn.util.internal.BrooklynSystemProperties;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.internal.BrooklynSystemProperties;
-import brooklyn.util.net.Networking;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;

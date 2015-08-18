@@ -28,12 +28,12 @@ import org.apache.brooklyn.core.util.internal.ssh.ShellTool;
 import org.apache.brooklyn.core.util.task.TaskBuilder;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.task.system.internal.AbstractProcessTaskFactory;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.BrooklynTaskTags;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 

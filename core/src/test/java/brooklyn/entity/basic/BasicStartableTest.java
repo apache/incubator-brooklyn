@@ -34,6 +34,7 @@ import org.apache.brooklyn.entity.basic.RecordingSensorEventListener;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -45,8 +46,6 @@ import com.google.common.collect.Lists;
 
 import org.apache.brooklyn.location.basic.Locations.LocationsFilter;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
-
-import brooklyn.util.collections.MutableSet;
 
 public class BasicStartableTest {
 

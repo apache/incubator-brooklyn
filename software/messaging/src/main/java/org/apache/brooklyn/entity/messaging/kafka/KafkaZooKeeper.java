@@ -19,16 +19,18 @@
 package org.apache.brooklyn.entity.messaging.kafka;
 
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.annotation.Effector;
 import brooklyn.entity.annotation.EffectorParam;
 import brooklyn.entity.basic.SoftwareProcess;
+
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
+import org.apache.brooklyn.util.time.Duration;
+
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.BasicConfigKey;
-import brooklyn.util.time.Duration;
 
 /**
  * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Kafka zookeeper instance.

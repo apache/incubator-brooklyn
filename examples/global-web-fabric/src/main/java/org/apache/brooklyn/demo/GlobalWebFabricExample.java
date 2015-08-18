@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.util.BrooklynMavenArtifacts;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
@@ -35,8 +37,6 @@ import org.apache.brooklyn.entity.proxy.AbstractController;
 import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.AbstractApplication;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
@@ -46,8 +46,7 @@ import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;
-
-import brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.util.CommandLineUtil;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

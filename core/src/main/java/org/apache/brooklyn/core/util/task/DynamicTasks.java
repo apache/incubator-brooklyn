@@ -28,12 +28,12 @@ import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
 import org.apache.brooklyn.api.management.TaskQueueingContext;
 import org.apache.brooklyn.api.management.TaskWrapper;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.EntityInternal;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;

@@ -23,8 +23,7 @@ import java.util.Collection;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.brooklyn.api.mementos.BrooklynMementoPersister;
-
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;

@@ -34,9 +34,8 @@ import com.google.common.collect.Iterables;
 import brooklyn.entity.basic.Attributes;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;
-
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.net.HasNetworkAddresses;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.net.HasNetworkAddresses;
 
 /** utilities for working with MachineLocations */
 public class Machines {

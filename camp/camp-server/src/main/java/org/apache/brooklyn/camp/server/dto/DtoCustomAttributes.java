@@ -20,7 +20,7 @@ package org.apache.brooklyn.camp.server.dto;
 
 import java.util.Map;
 
-import brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;

@@ -25,10 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.core.internal.storage.impl.ConcurrentMapAcceptingNullVals;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableList;
 
 /** A config key representing a list of values. 
  * If a value is set on this key, it is _added_ to the list.

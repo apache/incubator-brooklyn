@@ -27,12 +27,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriver;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
+import org.apache.brooklyn.config.StringConfigMap;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.StringConfigMap;
 import brooklyn.entity.basic.Attributes;
-import brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;

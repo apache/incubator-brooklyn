@@ -27,9 +27,9 @@ import java.util.NoSuchElementException;
 
 import javax.annotation.Nullable;
 
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.guava.MaybeFunctions;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.MaybeFunctions;
 
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;

@@ -25,9 +25,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeoutException;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import org.apache.brooklyn.util.time.Duration;
 
-import brooklyn.util.time.Duration;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Represents a unit of work for execution.

@@ -22,9 +22,11 @@ import java.net.URI;
 
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.SoftwareProcessImpl;
+
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
+import org.apache.brooklyn.util.time.Duration;
+
 import brooklyn.event.basic.DependentConfiguration;
-import brooklyn.util.time.Duration;
 
 public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode {
 

@@ -23,7 +23,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
+
 import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.annotations.Beta;
@@ -36,9 +37,9 @@ import com.google.common.collect.Sets;
 @Beta
 public class ConfigMapViewWithStringKeys implements Map<String,Object> {
 
-    private brooklyn.config.ConfigMap target;
+    private org.apache.brooklyn.config.ConfigMap target;
 
-    public ConfigMapViewWithStringKeys(brooklyn.config.ConfigMap target) {
+    public ConfigMapViewWithStringKeys(org.apache.brooklyn.config.ConfigMap target) {
         this.target = target;
     }
     

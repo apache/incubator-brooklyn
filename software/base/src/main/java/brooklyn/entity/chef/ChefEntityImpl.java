@@ -18,8 +18,9 @@
  */
 package brooklyn.entity.chef;
 
+import org.apache.brooklyn.util.text.Strings;
+
 import brooklyn.entity.basic.EffectorStartableImpl;
-import brooklyn.util.text.Strings;
 
 public class ChefEntityImpl extends EffectorStartableImpl implements ChefEntity {
 

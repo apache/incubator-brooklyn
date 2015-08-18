@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.couchbase;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
 import java.util.List;
 import java.util.Map;
@@ -57,19 +57,18 @@ import brooklyn.event.feed.http.HttpValueFunctions;
 import brooklyn.event.feed.http.JsonFunctions;
 
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
-
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.collections.MutableSet;
-import brooklyn.util.collections.QuorumCheck;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.guava.IfFunctions;
-import brooklyn.util.math.MathPredicates;
-import brooklyn.util.text.ByteSizeStrings;
-import brooklyn.util.text.StringFunctions;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.collections.QuorumCheck;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.guava.IfFunctions;
+import org.apache.brooklyn.util.math.MathPredicates;
+import org.apache.brooklyn.util.text.ByteSizeStrings;
+import org.apache.brooklyn.util.text.StringFunctions;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;

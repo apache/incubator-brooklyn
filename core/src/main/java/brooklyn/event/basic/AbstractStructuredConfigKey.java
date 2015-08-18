@@ -22,9 +22,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.management.ExecutionContext;
-
-import brooklyn.config.ConfigKey;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Maps;
 

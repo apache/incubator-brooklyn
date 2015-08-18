@@ -23,11 +23,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.brooklyn.api.management.ExecutionManager;
 import org.apache.brooklyn.core.util.task.BasicExecutionManager;
 import org.apache.brooklyn.core.util.task.SingleThreadedScheduler;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
 
 public class AsyncCollectionChangeAdapter<Item> implements CollectionChangeListener<Item> {
     

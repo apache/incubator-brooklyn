@@ -31,8 +31,9 @@ import brooklyn.entity.basic.BasicEntity;
 import brooklyn.entity.basic.BasicStartable;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.entity.basic.Entities;
+
 import org.apache.brooklyn.policy.ha.ServiceRestarter;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Iterables;
 

@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.entity.database.mysql;
 
-import static brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import static brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
-import static brooklyn.util.ssh.BashCommands.installPackage;
 import static java.lang.String.format;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.ssh.BashCommands.commandsToDownloadUrlsAs;
+import static org.apache.brooklyn.util.ssh.BashCommands.installPackage;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -39,7 +39,9 @@ import org.slf4j.LoggerFactory;
 import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
+
 import org.apache.brooklyn.entity.database.DatastoreMixins;
+
 import brooklyn.entity.software.SshEffectorTasks;
 
 import org.apache.brooklyn.api.location.OsDetails;
@@ -47,19 +49,18 @@ import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.location.basic.BasicOsDetails.OsVersions;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.io.FileUtil;
-import brooklyn.util.net.Urls;
-import brooklyn.util.os.Os;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.ComparableVersion;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.CountdownTimer;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.io.FileUtil;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.ComparableVersion;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.CountdownTimer;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableMap;
 

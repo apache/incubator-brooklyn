@@ -30,13 +30,13 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.management.LocationManager;
 import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.yaml.Yamls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.yaml.Yamls;
 
 import com.google.common.collect.ImmutableList;
 

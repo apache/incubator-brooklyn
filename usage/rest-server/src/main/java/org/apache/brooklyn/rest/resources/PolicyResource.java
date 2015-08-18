@@ -38,8 +38,7 @@ import org.apache.brooklyn.rest.filter.HaHotStateRequired;
 import org.apache.brooklyn.rest.transform.ApplicationTransformer;
 import org.apache.brooklyn.rest.transform.PolicyTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
-
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;

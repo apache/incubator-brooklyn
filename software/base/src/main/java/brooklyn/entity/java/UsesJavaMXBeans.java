@@ -21,9 +21,9 @@ package brooklyn.entity.java;
 import java.util.Map;
 
 import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.Sensors;

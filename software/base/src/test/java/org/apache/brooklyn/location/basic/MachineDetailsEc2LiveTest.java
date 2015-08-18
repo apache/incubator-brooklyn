@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineDetails;
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import brooklyn.entity.AbstractEc2LiveTest;
 import brooklyn.entity.basic.EmptySoftwareProcess;
 import brooklyn.entity.trait.Startable;
-import brooklyn.util.collections.MutableMap;
 
 // This test really belongs in brooklyn-location but depends on AbstractEc2LiveTest in brooklyn-software-base
 public class MachineDetailsEc2LiveTest extends AbstractEc2LiveTest {

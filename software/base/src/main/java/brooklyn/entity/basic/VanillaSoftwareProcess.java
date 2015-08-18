@@ -20,8 +20,7 @@ package brooklyn.entity.basic;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
 
 /** 
  * A {@link SoftwareProcess} entity that runs commands from an archive.

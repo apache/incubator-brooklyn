@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.util.internal.ssh.SshTool;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -40,8 +41,6 @@ import brooklyn.entity.BrooklynAppLiveTestSupport;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
-
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

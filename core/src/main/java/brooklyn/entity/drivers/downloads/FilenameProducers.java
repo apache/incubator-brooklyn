@@ -24,8 +24,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadRequirement;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager.DownloadTargets;
-
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 

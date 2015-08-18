@@ -21,9 +21,9 @@ package brooklyn.entity.rebind.persister;
 import java.util.List;
 import java.util.Map;
 
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.time.Duration;
 
 public class PersistenceActivityMetrics {
     

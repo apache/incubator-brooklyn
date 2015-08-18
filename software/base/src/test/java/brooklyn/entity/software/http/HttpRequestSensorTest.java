@@ -26,6 +26,7 @@ import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.entity.TestApplication;
 import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -35,7 +36,6 @@ import brooklyn.entity.basic.Entities;
 import brooklyn.event.basic.Sensors;
 import brooklyn.test.TestHttpRequestHandler;
 import brooklyn.test.TestHttpServer;
-import brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 

@@ -41,8 +41,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
 import org.apache.brooklyn.core.util.crypto.SecureKeys;
-
-import brooklyn.util.crypto.SslTrustUtils;
+import org.apache.brooklyn.util.crypto.SslTrustUtils;
 
 @SuppressWarnings({"rawtypes","unchecked"})
 public class JmxmpClient {

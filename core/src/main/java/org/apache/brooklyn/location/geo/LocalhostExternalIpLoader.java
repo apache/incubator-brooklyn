@@ -27,13 +27,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.StringPredicates;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Durations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.text.StringPredicates;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Durations;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;

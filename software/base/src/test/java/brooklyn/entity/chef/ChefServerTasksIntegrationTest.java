@@ -24,6 +24,9 @@ import java.io.IOException;
 import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.stream.StreamGobbler;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -33,9 +36,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.entity.basic.ApplicationBuilder;
 import brooklyn.entity.basic.Entities;
-import brooklyn.util.stream.StreamGobbler;
-import brooklyn.util.time.Duration;
-import brooklyn.util.time.Time;
 
 /** Many tests expect knife on the path, but none require any configuration beyond that.
  * They will use the Brooklyn registered account (which has been set up with mysql cookbooks and more).

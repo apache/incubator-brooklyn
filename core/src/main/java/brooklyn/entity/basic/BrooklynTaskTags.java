@@ -36,15 +36,14 @@ import org.apache.brooklyn.api.management.entitlement.EntitlementContext;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 import org.apache.brooklyn.core.util.task.TaskTags;
 import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.javalang.MemoryUsageTracker;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.StringEscapes.BashStringEscapes;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.javalang.MemoryUsageTracker;
-import brooklyn.util.stream.Streams;
-import brooklyn.util.text.StringEscapes.BashStringEscapes;
-import brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Functions;

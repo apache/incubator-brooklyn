@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.management.internal;
 
-import static brooklyn.util.JavaGroovyEquivalents.mapOf;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.mapOf;
 import groovy.lang.Closure;
 
 import java.util.Collection;

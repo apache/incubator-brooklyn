@@ -24,8 +24,7 @@ import java.util.List;
 import org.apache.brooklyn.camp.commontypes.RepresentationSkew;
 import org.apache.brooklyn.camp.server.rest.util.DtoFactory;
 import org.apache.brooklyn.camp.spi.AbstractResource;
-
-import brooklyn.util.time.Time;
+import org.apache.brooklyn.util.time.Time;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;

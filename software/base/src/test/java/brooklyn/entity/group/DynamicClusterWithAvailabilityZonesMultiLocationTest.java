@@ -40,8 +40,7 @@ import brooklyn.entity.basic.SoftwareProcess;
 
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.basic.MultiLocation;
-
-import brooklyn.test.Asserts;
+import org.apache.brooklyn.test.Asserts;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;

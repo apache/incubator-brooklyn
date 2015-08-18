@@ -24,6 +24,9 @@ import org.apache.brooklyn.api.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Identifiers;
 
 import static org.testng.Assert.assertEquals;
 
@@ -36,9 +39,6 @@ import brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore;
 import brooklyn.entity.rebind.persister.PersistMode;
 import brooklyn.entity.rebind.persister.jclouds.BlobStoreTest;
 import brooklyn.entity.rebind.persister.jclouds.JcloudsBlobStoreBasedObjectStore;
-import brooklyn.util.javalang.JavaClassNames;
-import brooklyn.util.os.Os;
-import brooklyn.util.text.Identifiers;
 
 @Test(groups="Live")
 public class BrooklynLauncherRebindToCloudObjectStoreTest extends BrooklynLauncherRebindTestFixture {

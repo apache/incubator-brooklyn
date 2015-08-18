@@ -44,6 +44,7 @@ import org.apache.brooklyn.api.management.SubscriptionHandle;
 import org.apache.brooklyn.api.management.Task;
 import org.apache.brooklyn.api.management.TaskAdaptable;
 import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.util.task.BasicExecutionContext;
 import org.apache.brooklyn.core.util.task.BasicTask;
 import org.apache.brooklyn.core.util.task.DeferredSupplier;
@@ -52,28 +53,27 @@ import org.apache.brooklyn.core.util.task.ParallelTask;
 import org.apache.brooklyn.core.util.task.TaskInternal;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.task.ValueResolver;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.NotManagedException;
+import org.apache.brooklyn.util.exceptions.RuntimeTimeoutException;
+import org.apache.brooklyn.util.guava.Functionals;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.CountdownTimer;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.BrooklynTaskTags;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.EntityInternal;
 import brooklyn.entity.basic.Lifecycle;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.collections.CollectionFunctionals;
-import brooklyn.util.collections.MutableList;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.CompoundRuntimeException;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.exceptions.NotManagedException;
-import brooklyn.util.exceptions.RuntimeTimeoutException;
-import brooklyn.util.guava.Functionals;
-import brooklyn.util.guava.Maybe;
-import brooklyn.util.text.Strings;
-import brooklyn.util.time.CountdownTimer;
-import brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -736,7 +736,7 @@ public class DependentConfiguration {
             return (MultiBuilder<T,V, V2b>) this;
         }
         /** Apply post-processing to the entire list of results 
-         * See {@link CollectionFunctionals#all(Predicate)} and {@link CollectionFunctionals#quorum(brooklyn.util.collections.QuorumCheck, Predicate)
+         * See {@link CollectionFunctionals#all(Predicate)} and {@link CollectionFunctionals#quorum(org.apache.brooklyn.util.collections.QuorumCheck, Predicate)
          * which allow useful arguments. */
         public MultiBuilder<T, V, Boolean> postProcessFromMultiple(final Predicate<? super List<V>> val) {
             return postProcessFromMultiple(Functions.forPredicate(val));

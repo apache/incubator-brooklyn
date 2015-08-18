@@ -21,8 +21,7 @@ package org.apache.brooklyn.core.util.internal;
 import java.util.Map;
 
 import org.apache.brooklyn.api.management.ExecutionContext;
-
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
 
 /** Interface for resolving key values; typically implemented by the config key,
  * but discouraged for external usage.

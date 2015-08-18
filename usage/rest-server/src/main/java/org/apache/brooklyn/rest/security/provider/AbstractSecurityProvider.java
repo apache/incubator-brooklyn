@@ -20,7 +20,7 @@ package org.apache.brooklyn.rest.security.provider;
 
 import javax.servlet.http.HttpSession;
 
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 /**
  * Provides default implementations of {@link #isAuthenticated(HttpSession)} and

@@ -23,9 +23,8 @@ import static org.testng.AssertJUnit.assertNotNull;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.Test;
-
-import brooklyn.util.collections.MutableMap;
 
 public class HostGeoInfoTest {
     private static final String IP = "192.168.0.1";

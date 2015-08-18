@@ -35,15 +35,15 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.trait.Configurable;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.config.ConfigKey;
-import brooklyn.config.ConfigKey.HasConfigKey;
 import brooklyn.util.GroovyJavaMethods;
-import brooklyn.util.exceptions.Exceptions;
-import brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
