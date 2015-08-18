@@ -52,6 +52,7 @@ import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.entity.core.EntityPredicates;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.entity.software.base.SameServerEntity;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -65,8 +66,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
-
-import brooklyn.entity.basic.SameServerEntity;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;

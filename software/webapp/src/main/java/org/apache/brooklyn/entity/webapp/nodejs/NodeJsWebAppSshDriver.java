@@ -24,13 +24,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.SoftwareProcess;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;

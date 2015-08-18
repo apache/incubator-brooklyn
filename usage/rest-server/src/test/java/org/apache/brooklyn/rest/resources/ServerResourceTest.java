@@ -29,6 +29,9 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.BrooklynVersion;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
+import org.apache.brooklyn.entity.software.base.EmptySoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.EmptySoftwareProcessImpl;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.VersionSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
@@ -40,10 +43,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableSet;
 import com.sun.jersey.api.client.UniformInterfaceException;
-
-import brooklyn.entity.basic.EmptySoftwareProcess;
-import brooklyn.entity.basic.EmptySoftwareProcessDriver;
-import brooklyn.entity.basic.EmptySoftwareProcessImpl;
 
 @Test(singleThreaded = true)
 public class ServerResourceTest extends BrooklynRestResourceTest {

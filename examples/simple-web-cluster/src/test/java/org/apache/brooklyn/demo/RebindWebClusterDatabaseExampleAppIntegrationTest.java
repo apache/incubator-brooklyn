@@ -56,9 +56,7 @@ import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.entity.group.DynamicCluster;
-
-import brooklyn.entity.java.JavaEntityMethods;
-
+import org.apache.brooklyn.entity.java.JavaEntityMethods;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
 

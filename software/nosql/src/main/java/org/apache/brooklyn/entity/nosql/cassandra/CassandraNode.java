@@ -29,15 +29,11 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-
-import brooklyn.entity.basic.SoftwareProcess;
-
 import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
-
-import brooklyn.entity.java.UsesJavaMXBeans;
-import brooklyn.entity.java.UsesJmx;
-
+import org.apache.brooklyn.entity.java.UsesJavaMXBeans;
+import org.apache.brooklyn.entity.java.UsesJmx;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;

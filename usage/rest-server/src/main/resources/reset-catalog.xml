@@ -20,7 +20,7 @@
 <catalog>
     <name>Brooklyn Demos</name>
 
-    <template type="brooklyn.entity.basic.BasicApplication" name="Basic application" />
+    <template type="org.apache.brooklyn.entity.software.base.BasicApplication" name="Basic application" />
     <template type="brooklyn.osgi.tests.SimpleApplication" name="Simple OSGi application">
         <libraries>
             <bundle>${bundle-location}</bundle>

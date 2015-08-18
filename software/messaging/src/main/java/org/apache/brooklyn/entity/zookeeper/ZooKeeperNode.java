@@ -23,12 +23,11 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
-
-import brooklyn.entity.basic.SoftwareProcess;
 
 /**
  * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Apache ZooKeeper instance.

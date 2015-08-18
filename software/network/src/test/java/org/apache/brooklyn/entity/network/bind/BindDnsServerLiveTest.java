@@ -28,6 +28,8 @@ import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
+import org.apache.brooklyn.entity.software.base.SameServerEntity;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
@@ -37,9 +39,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-
-import brooklyn.entity.basic.EmptySoftwareProcess;
-import brooklyn.entity.basic.SameServerEntity;
 
 public class BindDnsServerLiveTest {
 

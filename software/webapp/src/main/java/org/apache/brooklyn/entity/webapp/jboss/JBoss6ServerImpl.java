@@ -26,11 +26,10 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
+import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.event.feed.jmx.JmxAttributePollConfig;
-import brooklyn.event.feed.jmx.JmxFeed;
 
 import com.google.common.base.Functions;
 

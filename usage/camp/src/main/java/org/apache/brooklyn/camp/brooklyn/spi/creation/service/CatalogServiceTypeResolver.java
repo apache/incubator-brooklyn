@@ -22,14 +22,13 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.group.DynamicRegionsFabric;
+import org.apache.brooklyn.entity.java.VanillaJavaApp;
+import org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.VanillaSoftwareProcess;
-import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.java.VanillaJavaApp;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;

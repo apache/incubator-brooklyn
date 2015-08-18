@@ -18,12 +18,11 @@
  */
 package org.apache.brooklyn.entity.database.postgresql;
 
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
-
 /**
- * The {@link brooklyn.entity.basic.SoftwareProcessDriver} for PostgreSQL.
+ * The {@link org.apache.brooklyn.entity.software.base.SoftwareProcessDriver} for PostgreSQL.
  */
 public interface PostgreSqlDriver extends SoftwareProcessDriver {
 

@@ -23,10 +23,8 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
-
-import brooklyn.entity.basic.SoftwareProcess;
-
 import org.apache.brooklyn.entity.database.DatastoreMixins;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;

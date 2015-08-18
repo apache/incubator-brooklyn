@@ -27,12 +27,10 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.internal.EntityLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;

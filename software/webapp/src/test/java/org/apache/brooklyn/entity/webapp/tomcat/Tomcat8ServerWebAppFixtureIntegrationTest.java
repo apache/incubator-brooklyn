@@ -33,12 +33,10 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.SoftwareProcess;
-
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;

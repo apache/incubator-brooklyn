@@ -18,9 +18,8 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb;
 
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.entity.trait.Startable;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
 
 public class MongoDBClientImpl extends SoftwareProcessImpl implements MongoDBClient {
     

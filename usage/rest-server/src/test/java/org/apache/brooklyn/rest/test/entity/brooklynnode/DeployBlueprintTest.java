@@ -27,6 +27,8 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.mgmt.EntityManager;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.sensor.feed.http.JsonFunctions;
@@ -41,9 +43,6 @@ import org.testng.annotations.Test;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 
 public class DeployBlueprintTest extends BrooklynRestApiLauncherTestFixture {
 

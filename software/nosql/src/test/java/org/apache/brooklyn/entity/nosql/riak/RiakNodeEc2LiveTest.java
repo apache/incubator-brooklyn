@@ -20,14 +20,13 @@ package org.apache.brooklyn.entity.nosql.riak;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-
-import brooklyn.entity.AbstractEc2LiveTest;
 
 public class RiakNodeEc2LiveTest extends AbstractEc2LiveTest {
 

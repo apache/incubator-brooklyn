@@ -37,11 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.brooklynnode.BrooklynEntityMirror;
-import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.SameBrooklynNodeImpl;
-
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
@@ -49,6 +44,10 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynEntityMirror;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynNodeTest;
+import org.apache.brooklyn.entity.brooklynnode.SameBrooklynNodeImpl;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.EntityInternal;

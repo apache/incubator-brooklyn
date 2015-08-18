@@ -36,6 +36,8 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.entity.java.UsesJmx;
+import org.apache.brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
@@ -44,9 +46,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.java.UsesJmx;
-import brooklyn.entity.java.UsesJmx.JmxAgentModes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -42,6 +42,8 @@ import org.apache.brooklyn.entity.core.AbstractApplication;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.entity.core.StartableApplication;
+import org.apache.brooklyn.entity.java.UsesJava;
+import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraDatacenter;
@@ -50,17 +52,13 @@ import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
 import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
-
-import brooklyn.entity.java.UsesJava;
-import brooklyn.entity.java.UsesJmx;
-import brooklyn.entity.software.SshEffectorTasks;
-
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.policy.ha.ServiceFailureDetector;
 import org.apache.brooklyn.policy.ha.ServiceReplacer;
 import org.apache.brooklyn.policy.ha.ServiceRestarter;
 import org.apache.brooklyn.sensor.core.DependentConfiguration;
+import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.CommandLineUtil;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;

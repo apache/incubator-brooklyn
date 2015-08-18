@@ -23,10 +23,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.brooklyn.entity.proxy.AbstractControllerImpl;
+import org.apache.brooklyn.entity.software.base.test.driver.MockSshDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.driver.MockSshDriver;
 
 import com.google.common.collect.Lists;
 

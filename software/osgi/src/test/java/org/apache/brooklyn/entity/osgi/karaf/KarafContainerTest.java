@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;
@@ -37,9 +38,6 @@ import org.apache.brooklyn.util.text.Identifiers;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.software.SshEffectorTasks;
-
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 
 import com.google.common.collect.ImmutableList;

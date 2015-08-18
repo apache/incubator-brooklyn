@@ -31,13 +31,12 @@ import org.apache.brooklyn.effector.core.MethodEffector;
 import org.apache.brooklyn.entity.annotation.Effector;
 import org.apache.brooklyn.entity.annotation.EffectorParam;
 import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.text.ByteSizeStrings;
-
-import brooklyn.entity.basic.SoftwareProcess;
 
 @Catalog(name="CouchBase Node", description="Couchbase Server is an open source, distributed (shared-nothing architecture) "
         + "NoSQL document-oriented database that is optimized for interactive applications.")

@@ -28,11 +28,9 @@ import java.util.concurrent.ExecutionException;
 import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.os.Os;

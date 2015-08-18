@@ -19,13 +19,12 @@
 package org.apache.brooklyn.entity.webapp.tomcat;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessRestartIntegrationTest;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.AbstractSoftwareProcessRestartIntegrationTest;
-import brooklyn.entity.basic.SoftwareProcess;
 
 /**
  * Tests restart of the software *process* (as opposed to the VM).

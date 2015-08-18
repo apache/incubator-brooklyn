@@ -32,6 +32,8 @@ import org.apache.brooklyn.api.location.MachineDetails;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
+import org.apache.brooklyn.entity.software.base.SameServerEntity;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.test.Asserts;
@@ -46,9 +48,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
-import brooklyn.entity.basic.SameServerEntity;
-import brooklyn.entity.basic.SoftwareProcess;
 
 public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
 

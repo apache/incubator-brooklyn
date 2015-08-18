@@ -24,11 +24,9 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
-
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
 import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;

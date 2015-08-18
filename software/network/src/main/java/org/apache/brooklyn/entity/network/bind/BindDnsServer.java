@@ -33,9 +33,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.annotation.Effector;
 import org.apache.brooklyn.entity.group.DynamicGroup;
-
-import brooklyn.entity.basic.SoftwareProcess;
-
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.Sensors;

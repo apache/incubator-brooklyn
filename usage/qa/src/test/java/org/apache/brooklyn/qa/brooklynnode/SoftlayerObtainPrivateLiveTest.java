@@ -29,6 +29,9 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynEntityMirror;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.lifecycle.Lifecycle;
@@ -53,10 +56,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import brooklyn.entity.brooklynnode.BrooklynEntityMirror;
-import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
 
 /**
  * Tests obtaining a machine with a private IP only. For the machine to be

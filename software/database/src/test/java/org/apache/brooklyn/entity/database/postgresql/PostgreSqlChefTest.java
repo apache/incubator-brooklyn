@@ -24,19 +24,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.chef.ChefLiveTestSupport;
-
 import org.apache.brooklyn.effector.core.EffectorTasks;
+import org.apache.brooklyn.entity.chef.ChefLiveTestSupport;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
-
-import brooklyn.entity.software.SshEffectorTasks;
-
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.time.Duration;
 

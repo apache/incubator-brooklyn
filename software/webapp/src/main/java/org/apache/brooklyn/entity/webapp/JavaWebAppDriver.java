@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.webapp;
 import java.io.File;
 import java.util.Set;
 
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
+import org.apache.brooklyn.entity.java.JavaSoftwareProcessDriver;
 
 public interface JavaWebAppDriver extends JavaSoftwareProcessDriver {
 

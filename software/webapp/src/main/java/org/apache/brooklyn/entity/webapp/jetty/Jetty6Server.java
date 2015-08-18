@@ -24,14 +24,13 @@ import org.apache.brooklyn.api.objs.HasShortName;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.java.UsesJmx;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.time.Duration;
-
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.java.UsesJmx;
 
 /**
  * An {@link org.apache.brooklyn.api.entity.Entity} that represents a single Jetty instance.

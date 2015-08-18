@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.software.base.DoNothingSoftwareProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -40,8 +41,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.net.HostAndPort;
-
-import brooklyn.entity.basic.DoNothingSoftwareProcess;
 
 import org.apache.brooklyn.location.access.PortForwardManager;
 import org.apache.brooklyn.location.basic.FixedListMachineProvisioningLocation;

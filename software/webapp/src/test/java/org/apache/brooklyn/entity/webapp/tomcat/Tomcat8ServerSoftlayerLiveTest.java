@@ -21,11 +21,9 @@ package org.apache.brooklyn.entity.webapp.tomcat;
 import static org.testng.Assert.assertNotNull;
 
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractSoftlayerLiveTest;
-
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractSoftlayerLiveTest;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.test.TestResourceUnavailableException;

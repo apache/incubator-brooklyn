@@ -36,6 +36,7 @@ import org.apache.brooklyn.core.mgmt.rebind.persister.FileBasedObjectStore;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -44,9 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-
-import brooklyn.entity.basic.SoftwareProcess;
-
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
 import org.apache.brooklyn.launcher.camp.BrooklynCampPlatformLauncher;

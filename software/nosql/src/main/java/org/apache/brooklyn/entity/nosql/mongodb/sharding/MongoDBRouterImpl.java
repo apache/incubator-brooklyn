@@ -22,10 +22,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBClientSupport;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
 import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
 
 import com.google.common.base.Functions;
 

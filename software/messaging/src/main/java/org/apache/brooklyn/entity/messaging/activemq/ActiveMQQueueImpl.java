@@ -18,11 +18,10 @@
  */
 package org.apache.brooklyn.entity.messaging.activemq;
 
+import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.event.feed.jmx.JmxAttributePollConfig;
-import brooklyn.event.feed.jmx.JmxFeed;
 
 public class ActiveMQQueueImpl extends ActiveMQDestinationImpl implements ActiveMQQueue {
     public static final Logger log = LoggerFactory.getLogger(ActiveMQQueue.class);

@@ -19,7 +19,7 @@
 name: SameServerEntityYamlTest
 location: localhost
 services:
-- serviceType: brooklyn.entity.basic.SameServerEntity
+- serviceType: org.apache.brooklyn.entity.software.base.SameServerEntity
   name: Entities
   brooklyn.children:
   - serviceType: org.apache.brooklyn.entity.stock.BasicEntity

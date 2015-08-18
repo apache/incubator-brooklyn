@@ -23,14 +23,13 @@ import groovy.time.TimeDuration;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 import org.apache.brooklyn.test.Asserts;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractEc2LiveTest;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

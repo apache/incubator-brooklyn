@@ -41,15 +41,13 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
-
-import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-import brooklyn.entity.java.UsesJmx;
-import brooklyn.entity.software.SshEffectorTasks;
-
+import org.apache.brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.basic.Machines;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.sensor.core.DependentConfiguration;
+import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.task.DynamicTasks;

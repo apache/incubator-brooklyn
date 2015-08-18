@@ -29,11 +29,10 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.entity.annotation.Effector;
 import org.apache.brooklyn.entity.annotation.EffectorParam;
+import org.apache.brooklyn.entity.java.JavaAppUtils;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.java.JavaAppUtils;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Sets;

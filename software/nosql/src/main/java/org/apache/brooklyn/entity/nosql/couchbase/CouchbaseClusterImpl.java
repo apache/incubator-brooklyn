@@ -41,12 +41,10 @@ import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
 import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.trait.Startable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.SoftwareProcess;
-
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.sensor.enricher.Enrichers;

@@ -24,11 +24,9 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.os.Os;

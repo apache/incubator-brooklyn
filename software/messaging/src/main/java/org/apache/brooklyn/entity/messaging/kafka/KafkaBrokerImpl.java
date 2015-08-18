@@ -26,16 +26,13 @@ import javax.management.ObjectName;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
-
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.messaging.MessageBroker;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
-
-import brooklyn.event.feed.jmx.JmxAttributePollConfig;
-import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.event.feed.jmx.JmxHelper;
+import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
+import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;

@@ -20,8 +20,7 @@ package org.apache.brooklyn.entity.database.mysql;
 
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
-
-import brooklyn.entity.software.AbstractDockerLiveTest;
+import org.apache.brooklyn.entity.software.base.AbstractDockerLiveTest;
 
 import com.google.common.collect.ImmutableList;
 

@@ -21,10 +21,9 @@ package org.apache.brooklyn.entity.messaging.kafka;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
-
-import brooklyn.entity.basic.SoftwareProcess;
 
 /**
  * Shared Kafka broker and zookeeper properties.

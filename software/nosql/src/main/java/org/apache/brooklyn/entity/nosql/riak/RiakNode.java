@@ -30,13 +30,12 @@ import org.apache.brooklyn.effector.core.MethodEffector;
 import org.apache.brooklyn.entity.annotation.Effector;
 import org.apache.brooklyn.entity.annotation.EffectorParam;
 import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.java.UsesJava;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
-
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.java.UsesJava;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;

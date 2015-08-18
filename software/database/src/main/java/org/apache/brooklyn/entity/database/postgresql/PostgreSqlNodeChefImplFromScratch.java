@@ -23,20 +23,18 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.effector.core.EffectorBody;
 import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.chef.ChefConfig;
+import org.apache.brooklyn.entity.chef.ChefLifecycleEffectorTasks;
+import org.apache.brooklyn.entity.chef.ChefServerTasks;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.stock.EffectorStartableImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.chef.ChefConfig;
-import brooklyn.entity.chef.ChefLifecycleEffectorTasks;
-import brooklyn.entity.chef.ChefServerTasks;
-import brooklyn.entity.software.SshEffectorTasks;
-
 import org.apache.brooklyn.location.basic.Locations;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
 import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.Jsonya;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.config.ConfigBag;

@@ -30,10 +30,8 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
-
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;

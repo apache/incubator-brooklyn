@@ -25,12 +25,10 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.MapConfigKey;
-
-import brooklyn.entity.basic.SoftwareProcess;
-
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.database.DatabaseNode;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;

@@ -24,10 +24,9 @@ import static org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppFixtureIntegr
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractSoftlayerLiveTest;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractSoftlayerLiveTest;
 
 import com.google.common.collect.ImmutableList;
 

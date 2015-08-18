@@ -19,10 +19,8 @@
 package org.apache.brooklyn.entity.database.mysql;
 
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractSoftlayerLiveTest;
-
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractSoftlayerLiveTest;
 
 @Test(groups = { "Live" })
 public class MySqlClusterLiveSoftlayerTest extends AbstractSoftlayerLiveTest {

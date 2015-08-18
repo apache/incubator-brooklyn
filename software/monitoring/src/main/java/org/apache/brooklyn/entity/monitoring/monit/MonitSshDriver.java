@@ -25,6 +25,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
+import org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.os.Os;
@@ -32,9 +34,6 @@ import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.lifecycle.ScriptHelper;
 
 public class MonitSshDriver extends AbstractSoftwareProcessSshDriver implements MonitDriver {
     

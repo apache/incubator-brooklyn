@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.webapp;
 
-import brooklyn.entity.basic.SoftwareProcess;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 
 public interface JavaWebAppSoftwareProcess extends SoftwareProcess, JavaWebAppService, JavaWebAppService.CanDeployAndUndeploy {
     

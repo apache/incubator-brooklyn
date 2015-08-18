@@ -21,11 +21,9 @@ package org.apache.brooklyn.entity.messaging.kafka;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
-
-import brooklyn.entity.basic.SoftwareProcess;
-
 import org.apache.brooklyn.entity.annotation.Effector;
 import org.apache.brooklyn.entity.annotation.EffectorParam;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;

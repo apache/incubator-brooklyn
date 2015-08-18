@@ -32,6 +32,7 @@ import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.EntityPredicates;
 import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
@@ -46,8 +47,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
-import brooklyn.entity.basic.EmptySoftwareProcess;
 
 public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplication> {
 

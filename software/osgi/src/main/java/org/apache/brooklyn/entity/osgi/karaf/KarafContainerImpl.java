@@ -37,7 +37,13 @@ import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.entity.annotation.Effector;
 import org.apache.brooklyn.entity.annotation.EffectorParam;
+import org.apache.brooklyn.entity.java.JmxSupport;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
+import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
+import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
+import org.apache.brooklyn.sensor.feed.jmx.JmxValueFunctions;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.os.Os;
@@ -45,13 +51,6 @@ import org.apache.brooklyn.util.repeat.Repeater;
 import org.osgi.jmx.JmxConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.java.JmxSupport;
-import brooklyn.event.feed.jmx.JmxAttributePollConfig;
-import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.event.feed.jmx.JmxValueFunctions;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;

@@ -24,11 +24,9 @@ import org.apache.brooklyn.api.objs.HasShortName;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.java.UsesJmx;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
-
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.java.UsesJmx;
-
 import org.apache.brooklyn.location.basic.PortRanges;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;

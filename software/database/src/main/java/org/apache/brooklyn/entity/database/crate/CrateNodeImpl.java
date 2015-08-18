@@ -20,15 +20,14 @@ package org.apache.brooklyn.entity.database.crate;
 
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.java.JavaAppUtils;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.sensor.feed.http.HttpFeed;
 import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
 import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
 import org.apache.brooklyn.util.guava.Functionals;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.java.JavaAppUtils;
-import brooklyn.event.feed.jmx.JmxFeed;
 
 public class CrateNodeImpl extends SoftwareProcessImpl implements CrateNode{
 

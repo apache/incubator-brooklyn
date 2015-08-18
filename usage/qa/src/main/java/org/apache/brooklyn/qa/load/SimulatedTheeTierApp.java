@@ -33,6 +33,7 @@ import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.java.JavaEntityMethods;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
@@ -53,8 +54,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
-import brooklyn.entity.java.JavaEntityMethods;
 
 /**
  * A 3-tier app where all components are just "simulated" - they don't actually run 

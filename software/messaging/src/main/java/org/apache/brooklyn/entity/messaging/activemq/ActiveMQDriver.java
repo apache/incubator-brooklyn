@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.messaging.activemq;
 
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
+import org.apache.brooklyn.entity.java.JavaSoftwareProcessDriver;
 
 public interface ActiveMQDriver extends JavaSoftwareProcessDriver {
 

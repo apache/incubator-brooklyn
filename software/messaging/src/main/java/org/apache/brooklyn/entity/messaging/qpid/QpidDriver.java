@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.messaging.qpid;
 
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
+import org.apache.brooklyn.entity.java.JavaSoftwareProcessDriver;
 
 public interface QpidDriver extends JavaSoftwareProcessDriver {
 

@@ -20,16 +20,15 @@ package org.apache.brooklyn.entity.webapp.jetty;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.entity.java.JavaAppUtils;
+import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
+import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.java.JavaAppUtils;
-import brooklyn.entity.java.UsesJmx;
-import brooklyn.event.feed.jmx.JmxAttributePollConfig;
-import brooklyn.event.feed.jmx.JmxFeed;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;

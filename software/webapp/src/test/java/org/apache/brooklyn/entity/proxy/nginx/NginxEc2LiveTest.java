@@ -20,15 +20,14 @@ package org.apache.brooklyn.entity.proxy.nginx;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractEc2LiveTest;
-import brooklyn.entity.basic.SoftwareProcess;
 
 import com.google.common.collect.ImmutableList;
 

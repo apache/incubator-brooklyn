@@ -28,12 +28,10 @@ import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.effector.core.MethodEffector;
 import org.apache.brooklyn.entity.annotation.Effector;
 import org.apache.brooklyn.entity.annotation.EffectorParam;
+import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.basic.SoftwareProcessImpl;
-
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;

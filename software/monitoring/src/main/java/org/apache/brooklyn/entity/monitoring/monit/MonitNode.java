@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
@@ -34,8 +35,6 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
-
-import brooklyn.entity.basic.SoftwareProcess;
 
 @Catalog(name="Monit Node", description="Monit is a free open source utility for managing and monitoring, processes, programs, files, directories and filesystems on a UNIX system")
 @ImplementedBy(MonitNodeImpl.class)

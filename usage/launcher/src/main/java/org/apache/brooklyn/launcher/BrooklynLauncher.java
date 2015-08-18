@@ -70,9 +70,12 @@ import org.apache.brooklyn.core.mgmt.rebind.persister.PersistenceObjectStore;
 import org.apache.brooklyn.core.mgmt.rebind.transformer.CompoundTransformer;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.server.BrooklynServerPaths;
+import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
+import org.apache.brooklyn.entity.brooklynnode.LocalBrooklynNode;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.trait.Startable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,10 +87,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.brooklynnode.BrooklynNode;
-import brooklyn.entity.brooklynnode.LocalBrooklynNode;
 
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation.LocalhostMachine;

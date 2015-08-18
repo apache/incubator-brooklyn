@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.database.rubyrep;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 /**
  * The driver interface for {@link RubyRepNode}.

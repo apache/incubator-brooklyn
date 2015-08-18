@@ -18,8 +18,6 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb;
 
-import brooklyn.entity.AbstractEc2LiveTest;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.mongodb.DBObject;
@@ -28,6 +26,7 @@ import groovy.time.TimeDuration;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.test.Asserts;

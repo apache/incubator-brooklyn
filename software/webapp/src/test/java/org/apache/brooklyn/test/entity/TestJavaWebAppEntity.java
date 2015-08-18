@@ -24,16 +24,15 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.java.VanillaJavaApp;
 import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriverLifecycleEffectorTasks;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.basic.SoftwareProcessDriverLifecycleEffectorTasks;
-import brooklyn.entity.java.VanillaJavaApp;
 
 /**
  * Mock web application server entity for testing.

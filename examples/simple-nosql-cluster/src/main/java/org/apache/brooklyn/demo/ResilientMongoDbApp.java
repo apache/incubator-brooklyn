@@ -33,9 +33,7 @@ import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
-
-import brooklyn.entity.basic.SoftwareProcess;
-
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.policy.ha.ServiceFailureDetector;
 import org.apache.brooklyn.policy.ha.ServiceReplacer;

@@ -18,9 +18,8 @@
  */
 package org.apache.brooklyn.entity.nosql.cassandra;
 
+import org.apache.brooklyn.entity.java.JavaSoftwareProcessDriver;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
-
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
 
 public interface CassandraNodeDriver extends JavaSoftwareProcessDriver {
 

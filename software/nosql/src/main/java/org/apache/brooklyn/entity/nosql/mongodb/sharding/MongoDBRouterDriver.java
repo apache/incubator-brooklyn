@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 public interface MongoDBRouterDriver extends SoftwareProcessDriver {
 

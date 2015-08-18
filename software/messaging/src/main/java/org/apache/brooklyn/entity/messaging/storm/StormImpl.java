@@ -21,16 +21,15 @@ package org.apache.brooklyn.entity.messaging.storm;
 import javax.management.ObjectName;
 
 import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.java.JavaAppUtils;
+import org.apache.brooklyn.entity.java.JavaSoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
+import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
-import brooklyn.entity.java.JavaAppUtils;
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
-import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.event.feed.jmx.JmxHelper;
 
 public class StormImpl extends SoftwareProcessImpl implements Storm {
 

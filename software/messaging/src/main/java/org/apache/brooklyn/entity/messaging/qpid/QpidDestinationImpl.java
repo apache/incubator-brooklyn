@@ -26,16 +26,13 @@ import javax.management.ObjectName;
 import org.apache.brooklyn.api.internal.EntityLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.java.UsesJmx;
-
+import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.messaging.amqp.AmqpServer;
 import org.apache.brooklyn.entity.messaging.jms.JMSDestinationImpl;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
+import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-
-import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.event.feed.jmx.JmxHelper;
 
 public abstract class QpidDestinationImpl extends JMSDestinationImpl implements QpidDestination {
     public static final Logger log = LoggerFactory.getLogger(QpidDestination.class);

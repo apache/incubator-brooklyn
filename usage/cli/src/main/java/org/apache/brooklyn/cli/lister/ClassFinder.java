@@ -33,6 +33,7 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.entity.core.AbstractApplication;
 import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.policy.core.AbstractPolicy;
 import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -46,8 +47,6 @@ import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.SoftwareProcessImpl;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;

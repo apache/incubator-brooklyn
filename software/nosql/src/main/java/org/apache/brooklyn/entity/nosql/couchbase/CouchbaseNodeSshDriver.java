@@ -38,15 +38,13 @@ import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.drivers.downloads.BasicDownloadRequirement;
 import org.apache.brooklyn.entity.drivers.downloads.DownloadProducerFromUrlAttribute;
 import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.http.auth.UsernamePasswordCredentials;
-
-import brooklyn.entity.basic.AbstractSoftwareProcessSshDriver;
-import brooklyn.entity.software.SshEffectorTasks;
-
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.http.HttpTool;
 import org.apache.brooklyn.util.core.http.HttpToolResponse;

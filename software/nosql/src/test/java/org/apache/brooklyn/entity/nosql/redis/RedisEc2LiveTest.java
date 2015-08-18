@@ -22,12 +22,11 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractEc2LiveTest;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;

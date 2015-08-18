@@ -21,9 +21,7 @@ package org.apache.brooklyn.entity.database.mysql;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractGoogleComputeLiveTest;
-
+import org.apache.brooklyn.entity.AbstractGoogleComputeLiveTest;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 

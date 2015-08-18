@@ -18,13 +18,12 @@
  */
 package org.apache.brooklyn.entity.messaging.activemq;
 
-import brooklyn.entity.AbstractGoogleComputeLiveTest;
-
 import com.google.common.collect.ImmutableList;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractGoogleComputeLiveTest;
 import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;

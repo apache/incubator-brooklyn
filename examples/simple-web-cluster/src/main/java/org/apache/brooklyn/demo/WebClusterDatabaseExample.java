@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.demo;
 
-import static brooklyn.entity.java.JavaEntityMethods.javaSysProp;
+import static org.apache.brooklyn.entity.java.JavaEntityMethods.javaSysProp;
 import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
 import static org.apache.brooklyn.sensor.core.DependentConfiguration.formatString;
 

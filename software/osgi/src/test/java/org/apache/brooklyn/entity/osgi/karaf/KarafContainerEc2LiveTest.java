@@ -20,13 +20,12 @@ package org.apache.brooklyn.entity.osgi.karaf;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractEc2LiveTest;
 
 import com.google.common.collect.ImmutableList;
 
