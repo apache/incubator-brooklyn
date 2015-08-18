@@ -27,7 +27,9 @@ import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScann
 import org.apache.brooklyn.core.util.xstream.EnumCaseForgivingSingleValueConverter;
 import org.apache.brooklyn.core.util.xstream.XmlSerializer;
 
-import brooklyn.basic.AbstractBrooklynObject;
+import org.apache.brooklyn.basic.AbstractBrooklynObject;
+import brooklyn.util.xstream.EnumCaseForgivingSingleValueConverter;
+import brooklyn.util.xstream.XmlSerializer;
 
 public class CatalogXmlSerializer extends XmlSerializer<Object> {
 

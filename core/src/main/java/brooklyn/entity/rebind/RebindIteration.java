@@ -33,8 +33,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.AbstractBrooklynObject;
-import brooklyn.basic.BrooklynObjectInternal;
+import org.apache.brooklyn.basic.AbstractBrooklynObject;
+import org.apache.brooklyn.basic.BrooklynObjectInternal;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;

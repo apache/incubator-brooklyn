@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.AbstractBrooklynObject;
+import org.apache.brooklyn.basic.AbstractBrooklynObject;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.rebind.RebindSupport;

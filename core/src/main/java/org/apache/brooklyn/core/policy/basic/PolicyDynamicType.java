@@ -21,7 +21,7 @@ package org.apache.brooklyn.core.policy.basic;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicyType;
 
-import brooklyn.basic.BrooklynDynamicType;
+import org.apache.brooklyn.basic.BrooklynDynamicType;
 
 public class PolicyDynamicType extends BrooklynDynamicType<Policy, AbstractPolicy> {
 

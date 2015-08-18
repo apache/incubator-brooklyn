@@ -21,7 +21,7 @@ package brooklyn.enricher.basic;
 import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.EnricherType;
 
-import brooklyn.basic.BrooklynDynamicType;
+import org.apache.brooklyn.basic.BrooklynDynamicType;
 
 public class EnricherDynamicType extends BrooklynDynamicType<Enricher, AbstractEnricher> {
 

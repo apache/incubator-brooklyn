@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.basic.BrooklynTypes;
+import org.apache.brooklyn.basic.BrooklynTypes;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;

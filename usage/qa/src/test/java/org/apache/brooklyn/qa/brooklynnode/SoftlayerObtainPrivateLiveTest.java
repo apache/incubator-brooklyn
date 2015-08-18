@@ -32,7 +32,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
+import org.apache.brooklyn.basic.BrooklynObjectInternal.ConfigurationSupportInternal;
 import brooklyn.entity.basic.Attributes;
 import brooklyn.entity.basic.Entities;
 import brooklyn.entity.basic.Lifecycle;

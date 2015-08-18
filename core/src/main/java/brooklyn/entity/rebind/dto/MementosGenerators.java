@@ -25,7 +25,7 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.Set;
 
-import brooklyn.basic.BrooklynTypes;
+import org.apache.brooklyn.basic.BrooklynTypes;
 
 import org.apache.brooklyn.api.basic.BrooklynObject;
 import org.apache.brooklyn.api.catalog.CatalogItem;

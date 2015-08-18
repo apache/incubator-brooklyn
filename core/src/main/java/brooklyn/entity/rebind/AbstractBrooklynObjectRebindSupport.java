@@ -26,7 +26,7 @@ import org.apache.brooklyn.core.policy.basic.AbstractEntityAdjunct.AdjunctTagSup
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.AbstractBrooklynObject;
+import org.apache.brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.entity.rebind.dto.MementosGenerators;
 import brooklyn.util.text.Strings;
 

@@ -44,7 +44,7 @@ import org.apache.brooklyn.core.util.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.AbstractBrooklynObject;
+import org.apache.brooklyn.basic.AbstractBrooklynObject;
 import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;

@@ -29,7 +29,7 @@ import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.entity.ParameterType;
 import org.apache.brooklyn.api.event.Sensor;
 
-import brooklyn.basic.BrooklynTypeSnapshot;
+import org.apache.brooklyn.basic.BrooklynTypeSnapshot;
 import brooklyn.config.ConfigKey;
 import brooklyn.util.guava.Maybe;
 

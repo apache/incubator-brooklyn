@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.management.ManagementContext;
 import org.apache.brooklyn.api.mementos.LocationMemento;
 import org.apache.brooklyn.core.util.config.ConfigBag;
 
-import brooklyn.basic.BrooklynObjectInternal;
+import org.apache.brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.ConfigInheritance;
 import brooklyn.config.ConfigKey;
 import brooklyn.entity.basic.ConfigKeys;

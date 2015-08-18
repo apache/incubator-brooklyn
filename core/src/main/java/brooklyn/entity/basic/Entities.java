@@ -76,7 +76,7 @@ import org.apache.brooklyn.core.util.task.system.SystemTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.BrooklynObjectInternal;
+import org.apache.brooklyn.basic.BrooklynObjectInternal;
 import brooklyn.config.BrooklynProperties;
 import brooklyn.config.ConfigKey;
 import brooklyn.config.ConfigKey.HasConfigKey;
