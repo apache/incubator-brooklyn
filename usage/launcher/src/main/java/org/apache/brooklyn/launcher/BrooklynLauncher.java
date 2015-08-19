@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.StringReader;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,13 +48,11 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindManager;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
-import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
-import org.apache.brooklyn.camp.spi.AssemblyTemplate;
-import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.config.ConfigPredicates;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.ha.HighAvailabilityManagerImpl;
 import org.apache.brooklyn.core.mgmt.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import org.apache.brooklyn.core.mgmt.internal.BrooklynShutdownHooks;
@@ -77,17 +74,6 @@ import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.trait.Startable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.Beta;
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
 import org.apache.brooklyn.launcher.config.StopWhichAppsOnShutdown;
 import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation.LocalhostMachine;
@@ -107,6 +93,16 @@ import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Example usage is:
@@ -172,6 +168,7 @@ public class BrooklynLauncher {
     private Duration haHeartbeatPeriodOverride = null;
     
     private volatile BrooklynWebServer webServer;
+    @SuppressWarnings("unused")
     private CampPlatform campPlatform;
 
     private boolean started;
@@ -916,7 +913,7 @@ public class BrooklynLauncher {
             apps.add(app);
         }
         for (String blueprint : yamlAppsToManage) {
-            Application app = getAppFromYaml(blueprint);
+            Application app = EntityManagementUtils.createUnstarted(managementContext, blueprint);
             // Note: BrooklynAssemblyTemplateInstantiator automatically puts applications under management.
             apps.add(app);
         }
@@ -956,23 +953,6 @@ public class BrooklynLauncher {
                 .start(ImmutableList.of(localhost));
     }
 
-    protected Application getAppFromYaml(String input) {
-        AssemblyTemplate at = campPlatform.pdp().registerDeploymentPlan(new StringReader(input));
-        BrooklynAssemblyTemplateInstantiator instantiator;
-        try {
-            AssemblyTemplateInstantiator ati = at.getInstantiator().newInstance();
-            if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
-                instantiator = BrooklynAssemblyTemplateInstantiator.class.cast(ati);
-            } else {
-                throw new IllegalStateException("Cannot create application with instantiator: " + ati);
-            }
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-        Application app = instantiator.create(at, campPlatform);
-        return app;
-    }
-    
     protected void startApps() {
         if ((stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.ALL) || 
             (stopWhichAppsOnShutdown==StopWhichAppsOnShutdown.ALL_IF_NOT_PERSISTED && persistMode==PersistMode.DISABLED)) {

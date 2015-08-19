@@ -16,26 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.test.camp.brooklyn.lite;
+package org.apache.brooklyn.core.plan;
 
-import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.camp.BasicCampPlatform;
-import org.apache.brooklyn.camp.brooklyn.api.HasBrooklynManagementContext;
-import org.apache.brooklyn.core.internal.BrooklynProperties;
-import org.apache.brooklyn.core.server.BrooklynServerConfig;
+public class PlanNotRecognizedException extends RuntimeException {
 
-public class CampPlatformWithJustBrooklynMgmt extends BasicCampPlatform implements HasBrooklynManagementContext {
+    private static final long serialVersionUID = -5590108442839125317L;
 
-    private ManagementContext mgmt;
-
-    public CampPlatformWithJustBrooklynMgmt(ManagementContext mgmt) {
-        this.mgmt = mgmt;
-        ((BrooklynProperties)mgmt.getConfig()).put(BrooklynServerConfig.CAMP_PLATFORM, this);
+    public PlanNotRecognizedException(String message, Throwable cause) {
+        super(message, cause);
     }
-    
-    @Override
-    public ManagementContext getBrooklynManagementContext() {
-        return mgmt;
+
+    public PlanNotRecognizedException(String message) {
+        super(message);
+    }
+
+    public PlanNotRecognizedException(Throwable cause) {
+        super(cause);
     }
 
 }

@@ -46,7 +46,12 @@ public class CatalogYamlCombiTest extends AbstractYamlTest {
             "brooklyn.catalog:",
             "  version: "+TEST_VERSION,
             "  items:",
-            "  - item:",
+            
+            "  - itemType: entity",
+            "    item:",
+            // TODO inclusion of the above information gives a better error message when no transformers
+//            "  - item:",
+            
             "      id: A",
             "      type: "+BasicEntity.class.getName(),
             "      brooklyn.config: { a: 1, b: 0 }",

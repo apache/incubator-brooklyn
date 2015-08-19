@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.test.camp.brooklyn.lite;
+package org.apache.brooklyn.camp.brooklyn.test.lite;
 
 import java.util.Map;
 import java.util.Set;

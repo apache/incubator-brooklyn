@@ -43,7 +43,8 @@ public class BrooklynCampConstants {
             .inheritance(ConfigInheritance.NONE)
             .build();
 
-    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = BrooklynServerConfig.CAMP_PLATFORM;
+    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
+            "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
 
     public static final Set<String> YAML_URL_PROTOCOL_WHITELIST = ImmutableSet.of("classpath", "http");
 }

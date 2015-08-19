@@ -28,8 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
@@ -37,6 +35,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
@@ -65,6 +64,8 @@ import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.text.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
@@ -250,7 +251,7 @@ public class BrooklynComponentTemplateResolver {
         // including it's OSGi bundles in the loader classpath.
         } else {
             // TODO perhaps migrate to catalog.createSpec ?
-            EntitySpec<?> spec = BrooklynAssemblyTemplateInstantiator.resolveCatalogYamlReferenceSpec(mgmt, item, encounteredCatalogTypes);
+            EntitySpec<?> spec = BrooklynAssemblyTemplateInstantiator.resolveCatalogYamlReferenceSpec(getCampPlatform(), item, encounteredCatalogTypes);
             spec.catalogItemId(item.getId());
             
             return (EntitySpec<T>)spec;
@@ -303,7 +304,7 @@ public class BrooklynComponentTemplateResolver {
             Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
             for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                EntitySpec<? extends Entity> childSpec = BrooklynAssemblyTemplateInstantiator.resolveSpec(ResourceUtils.create(this), entityResolver, encounteredCatalogTypes);
+                EntitySpec<? extends Entity> childSpec = BrooklynAssemblyTemplateInstantiator.resolveSpec(getCampPlatform(), ResourceUtils.create(this), entityResolver, encounteredCatalogTypes);
                 spec.child(childSpec);
             }
         }
@@ -486,4 +487,7 @@ public class BrooklynComponentTemplateResolver {
         return (List<Map<String, Object>>) attrs.get(BrooklynCampReservedKeys.BROOKLYN_CHILDREN);
     }
 
+    private CampPlatform getCampPlatform() {
+        return CampCatalogUtils.getCampPlatform(mgmt);
+    }
 }
