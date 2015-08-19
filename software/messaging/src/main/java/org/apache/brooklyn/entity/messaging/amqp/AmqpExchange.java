@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.messaging.amqp;
 
 import org.apache.brooklyn.api.sensor.Sensor;
-import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 /**

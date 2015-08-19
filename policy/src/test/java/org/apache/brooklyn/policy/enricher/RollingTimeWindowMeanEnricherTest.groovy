@@ -26,8 +26,8 @@ import org.apache.brooklyn.api.sensor.Sensor
 import org.apache.brooklyn.core.entity.AbstractApplication
 import org.apache.brooklyn.core.entity.AbstractEntity
 import org.apache.brooklyn.core.entity.Entities
+import org.apache.brooklyn.core.sensor.BasicAttributeSensor
 import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher.ConfidenceQualifiedNumber
-import org.apache.brooklyn.sensor.core.BasicAttributeSensor
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test

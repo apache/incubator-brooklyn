@@ -26,8 +26,8 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
-import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.time.Duration;
 
 /** Provides an entity which can sit in one brooklyn domain and reflect the status of an entity 

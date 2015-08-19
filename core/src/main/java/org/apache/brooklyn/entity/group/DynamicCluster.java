@@ -38,11 +38,11 @@ import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.factory.EntityFactory;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.trait.MemberReplaceable;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensor;
+import org.apache.brooklyn.core.sensor.BasicNotificationSensor;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.group.zoneaware.BalancingNodePlacementStrategy;
 import org.apache.brooklyn.entity.group.zoneaware.ProportionalZoneFailureDetector;
-import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
-import org.apache.brooklyn.sensor.core.BasicNotificationSensor;
-import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.time.Duration;
 

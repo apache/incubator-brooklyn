@@ -19,8 +19,8 @@
 package org.apache.brooklyn.entity.messaging;
 
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
-import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.Sensors;
 
 /**
  * An interface that describes a messaging queue.

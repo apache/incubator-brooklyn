@@ -21,8 +21,8 @@ package org.apache.brooklyn.sensor.feed;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.sensor.Sensor;
-import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;
-import org.apache.brooklyn.sensor.core.TemplatedStringAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.TemplatedStringAttributeSensorAndConfigKey;
 
 
 /** Simple config adapter for setting {@link AttributeSensorAndConfigKey} sensor values from the config value or config default */ 

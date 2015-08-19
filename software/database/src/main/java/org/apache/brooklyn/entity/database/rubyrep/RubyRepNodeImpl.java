@@ -21,9 +21,9 @@ package org.apache.brooklyn.entity.database.rubyrep;
 import java.net.URI;
 
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
-import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.util.time.Duration;
 
 public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode {

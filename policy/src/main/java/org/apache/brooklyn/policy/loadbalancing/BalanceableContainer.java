@@ -23,8 +23,8 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.sensor.BasicNotificationSensor;
 import org.apache.brooklyn.entity.group.AbstractGroup;
-import org.apache.brooklyn.sensor.core.BasicNotificationSensor;
 import org.apache.brooklyn.util.collections.QuorumCheck;
 import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
 

@@ -20,8 +20,8 @@ package org.apache.brooklyn.core.entity.trait;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.sensor.core.BasicNotificationSensor;
-import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.core.sensor.BasicNotificationSensor;
+import org.apache.brooklyn.core.sensor.Sensors;
 
 /**
  * A collection of entities that can change.

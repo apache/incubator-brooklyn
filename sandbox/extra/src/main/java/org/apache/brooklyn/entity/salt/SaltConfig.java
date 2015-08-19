@@ -26,10 +26,10 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.MapConfigKey;
 import org.apache.brooklyn.core.config.SetConfigKey;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensor;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.sensor.core;
+package org.apache.brooklyn.core.sensor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

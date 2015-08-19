@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.sensor.core;
+package org.apache.brooklyn.core.sensor;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.core.sensor.StaticSensor;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.entity.stock.BasicEntity;
-import org.apache.brooklyn.sensor.core.Sensors;
-import org.apache.brooklyn.sensor.core.StaticSensor;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.testng.annotations.Test;

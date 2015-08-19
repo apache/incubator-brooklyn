@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.util.core.task;
 
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 

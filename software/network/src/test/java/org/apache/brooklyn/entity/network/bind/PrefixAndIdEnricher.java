@@ -24,7 +24,7 @@ import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
 
 import com.google.common.reflect.TypeToken;

@@ -50,7 +50,7 @@ import org.apache.brooklyn.core.entity.factory.ConfigurableEntityFactory;
 import org.apache.brooklyn.core.entity.factory.ConfigurableEntityFactoryFromEntityFactory;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.util.JavaGroovyEquivalents;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.collections.QuorumCheck;

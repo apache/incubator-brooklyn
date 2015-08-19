@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
 
 import java.util.Collection;
 import java.util.List;

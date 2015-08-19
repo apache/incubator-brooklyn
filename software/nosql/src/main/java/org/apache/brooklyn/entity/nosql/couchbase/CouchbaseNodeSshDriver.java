@@ -40,10 +40,10 @@ import org.apache.brooklyn.core.entity.drivers.downloads.BasicDownloadRequiremen
 import org.apache.brooklyn.core.entity.drivers.downloads.DownloadProducerFromUrlAttribute;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.http.HttpTool;

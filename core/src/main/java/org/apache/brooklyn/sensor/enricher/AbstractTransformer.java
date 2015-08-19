@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.sensor.core.BasicSensorEvent;
+import org.apache.brooklyn.core.sensor.BasicSensorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

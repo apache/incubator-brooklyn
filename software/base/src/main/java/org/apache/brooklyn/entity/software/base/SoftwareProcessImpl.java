@@ -484,7 +484,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
     /** returns the ports that this entity wants to use;
      * default implementation returns {@link SoftwareProcess#REQUIRED_OPEN_LOGIN_PORTS} plus first value 
-     * for each {@link org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey} config key {@link PortRange}
+     * for each {@link org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey} config key {@link PortRange}
      * plus any ports defined with a config keys ending in {@code .port}.
      */
     protected Collection<Integer> getRequiredOpenPorts() {

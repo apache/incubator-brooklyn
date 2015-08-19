@@ -18,12 +18,12 @@
  */
 package org.apache.brooklyn.entity.messaging.storm;
 
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.NIMBUS_HOSTNAME;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.ZOOKEEPER_ENSEMBLE;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.NIMBUS;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.SUPERVISOR;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.UI;
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
 
 import java.io.File;
 import java.util.Map;

@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import javax.management.ObjectName;
 
 import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensor;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.entity.database.Schema;
 
@@ -33,7 +34,6 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
 import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
 import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
 import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;

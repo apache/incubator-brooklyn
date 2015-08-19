@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.core.entity.hello;
 
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.transform;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.transform;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
