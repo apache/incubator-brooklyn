@@ -16,21 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.test.camp.brooklyn.lite;
+package org.apache.brooklyn.core.plan;
 
-import org.apache.brooklyn.camp.spi.Assembly;
-import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 
-public class TestAppAssembly extends Assembly {
+import com.google.common.annotations.Beta;
 
-    private TestApplication brooklynApp;
-
-    public TestAppAssembly(TestApplication brooklynApp) {
-        this.brooklynApp = brooklynApp;
-    }
-    
-    public TestApplication getBrooklynApp() {
-        return brooklynApp;
-    }
-    
+public interface PlanToSpecTransformer extends ManagementContextInjectable {
+    String getName();
+    @Beta
+    boolean accepts(String mime);
+    <T extends Application> EntitySpec<T> createApplicationSpec(String plan);
+    AbstractBrooklynObjectSpec<?, ?> createCatalogSpec(CatalogItem<?, ?> item);
 }

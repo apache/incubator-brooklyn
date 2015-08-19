@@ -25,12 +25,10 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.os.Os;
 import org.slf4j.Logger;
@@ -123,9 +121,6 @@ public class BrooklynServerConfig {
     public static final ConfigKey<Boolean> OSGI_CACHE_CLEAN = ConfigKeys.newBooleanConfigKey("brooklyn.osgi.cache.clean",
         "Whether to delete the OSGi directory before and after use; if unset, it will delete if the node ID forms part of the cache dir path (which by default it does) to avoid file leaks");
 
-    public static final ConfigKey<CampPlatform> CAMP_PLATFORM = ConfigKeys.newConfigKey(CampPlatform.class, "brooklyn.camp.platform",
-        "Config set at brooklyn management platform to find the CampPlatform instance (bi-directional)");
-
     /** @see BrooklynServerPaths#getMgmtBaseDir(ManagementContext) */
     public static String getMgmtBaseDir(ManagementContext mgmt) {
         return BrooklynServerPaths.getMgmtBaseDir(mgmt);
@@ -170,15 +165,6 @@ public class BrooklynServerConfig {
     /** @deprecated since 0.7.0 use {@link BrooklynServerPaths#getBrooklynWebTmpDir(ManagementContext)} */
     public static File getBrooklynWebTmpDir(ManagementContext mgmt) {
         return BrooklynServerPaths.getBrooklynWebTmpDir(mgmt);
-    }
-
-    /**
-     * @return the CAMP platform associated with a management context, if there is one.
-     */
-    public static Maybe<CampPlatform> getCampPlatform(ManagementContext mgmt) {
-        CampPlatform result = mgmt.getConfig().getConfig(BrooklynServerConfig.CAMP_PLATFORM);
-        if (result!=null) return Maybe.of(result);
-        return Maybe.absent("No CAMP Platform is registered with this Brooklyn management context.");
     }
 
     /**

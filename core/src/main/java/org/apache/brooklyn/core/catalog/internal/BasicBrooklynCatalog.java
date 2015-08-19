@@ -30,27 +30,19 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
-import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
-import org.apache.brooklyn.camp.CampPlatform;
-import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
-import org.apache.brooklyn.camp.spi.AssemblyTemplate;
-import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
+import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
@@ -64,12 +56,14 @@ import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.AggregateClassLoader;
 import org.apache.brooklyn.util.javalang.LoadedClassLoader;
 import org.apache.brooklyn.util.javalang.Reflections;
-import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 import org.apache.brooklyn.util.yaml.Yamls;
 import org.apache.brooklyn.util.yaml.Yamls.YamlExtract;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -84,8 +78,8 @@ import com.google.common.collect.Iterables;
 /* TODO the complex tree-structured catalogs are only useful when we are relying on those separate catalog classloaders
  * to isolate classpaths. with osgi everything is just put into the "manual additions" catalog. */
 public class BasicBrooklynCatalog implements BrooklynCatalog {
-    private static final String POLICIES_KEY = "brooklyn.policies";
-    private static final String LOCATIONS_KEY = "brooklyn.locations";
+    public static final String POLICIES_KEY = "brooklyn.policies";
+    public static final String LOCATIONS_KEY = "brooklyn.locations";
     public static final String NO_VERSION = "0.0.0.SNAPSHOT";
 
     private static final Logger log = LoggerFactory.getLogger(BasicBrooklynCatalog.class);
@@ -321,45 +315,20 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T, SpecT> SpecT createSpec(CatalogItem<T, SpecT> item) {
         if (item == null) return null;
+        @SuppressWarnings("unchecked")
         CatalogItemDo<T,SpecT> loadedItem = (CatalogItemDo<T, SpecT>) getCatalogItemDo(item.getSymbolicName(), item.getVersion());
         if (loadedItem == null) throw new RuntimeException(item+" not in catalog; cannot create spec");
         Class<SpecT> specType = loadedItem.getSpecType();
         if (specType==null) return null;
 
-        String yaml = loadedItem.getPlanYaml();
-
-        if (yaml!=null) {
-            // preferred way is to parse the yaml, to resolve references late;
-            // the parsing on load is to populate some fields, but it is optional.
-            // TODO messy for location and policy that we need brooklyn.{locations,policies} root of the yaml, but it works;
-            // see related comment when the yaml is set, in addAbstractCatalogItems
-            // (not sure if anywhere else relies on that syntax; if not, it should be easy to fix!)
-            DeploymentPlan plan = makePlanFromYaml(yaml);
-            BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, item);
-            SpecT spec;
-            switch (item.getCatalogItemType()) {
-                case TEMPLATE:
-                case ENTITY:
-                    spec = createEntitySpec(loadedItem.getSymbolicName(), plan, loader);
-                    break;
-                case POLICY:
-                    spec = createPolicySpec(loadedItem.getSymbolicName(), plan, loader);
-                    break;
-                case LOCATION:
-                    spec = createLocationSpec(plan, loader);
-                    break;
-                default: throw new RuntimeException("Only entity, policy & location catalog items are supported. Unsupported catalog item type " + item.getCatalogItemType());
+        if (loadedItem.getPlanYaml() != null) {
+            SpecT yamlSpec = (SpecT) EntityManagementUtils.createCatalogSpec(mgmt, loadedItem);
+            if (yamlSpec != null) {
+                return yamlSpec;
             }
-            ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemId(item.getId());
-            
-            if (Strings.isBlank( ((AbstractBrooklynObjectSpec<?, ?>)spec).getDisplayName() ))
-                ((AbstractBrooklynObjectSpec<?, ?>)spec).displayName(item.getDisplayName());
-            
-            return spec;
         }
 
         // revert to legacy mechanism
@@ -373,6 +342,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
         try {
             if (loadedItem.getJavaType()!=null) {
+                @SuppressWarnings("unchecked")
                 SpecT specT = (SpecT) method.invoke(null, loadedItem.loadJavaClass(mgmt));
                 spec = specT;
             }
@@ -385,154 +355,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             throw new IllegalStateException("Unknown how to create instance of "+this);
 
         return spec;
-    }
-
-    private <T, SpecT> SpecT createSpec(String optionalId, CatalogItemType ciType, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
-        Preconditions.checkNotNull(ciType, "catalog item type for "+plan); 
-        switch (ciType) {
-        case TEMPLATE:
-        case ENTITY: 
-            return createEntitySpec(optionalId, plan, loader);
-        case LOCATION: return createLocationSpec(plan, loader);
-        case POLICY: return createPolicySpec(optionalId, plan, loader);
-        }
-        throw new IllegalStateException("Unknown CI Type "+ciType+" for "+plan);
-    }
-    
-    @SuppressWarnings("unchecked")
-    private <T, SpecT> SpecT createEntitySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
-        CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
-
-        // TODO should not register new AT each time we instantiate from the same plan; use some kind of cache
-        AssemblyTemplate at;
-        BrooklynLoaderTracker.setLoader(loader);
-        try {
-            at = camp.pdp().registerDeploymentPlan(plan);
-        } finally {
-            BrooklynLoaderTracker.unsetLoader(loader);
-        }
-
-        try {
-            AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
-            if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                return (SpecT) ((AssemblyTemplateSpecInstantiator)instantiator).createNestedSpec(at, camp, loader, 
-                    getInitialEncounteredSymbol(symbolicName));
-            }
-            throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-    }
-
-    private MutableSet<String> getInitialEncounteredSymbol(String symbolicName) {
-        return symbolicName==null ? MutableSet.<String>of() : MutableSet.of(symbolicName);
-    }
-
-    private <T, SpecT> SpecT createPolicySpec(String symbolicName, DeploymentPlan plan, BrooklynClassLoadingContext loader) {
-        return createPolicySpec(plan, loader, getInitialEncounteredSymbol(symbolicName));
-    }
-
-    private <T, SpecT> SpecT createPolicySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes) {
-        //Would ideally re-use org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver.PolicySpecResolver
-        //but it is CAMP specific and there is no easy way to get hold of it.
-        Object policies = checkNotNull(plan.getCustomAttributes().get(POLICIES_KEY), "policy config");
-        if (!(policies instanceof Iterable<?>)) {
-            throw new IllegalStateException("The value of " + POLICIES_KEY + " must be an Iterable.");
-        }
-
-        Object policy = Iterables.getOnlyElement((Iterable<?>)policies);
-
-        return createPolicySpec(loader, policy, encounteredCatalogTypes);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T, SpecT> SpecT createPolicySpec(BrooklynClassLoadingContext loader, Object policy, Set<String> encounteredCatalogTypes) {
-        Map<String, Object> itemMap;
-        if (policy instanceof String) {
-            itemMap = ImmutableMap.<String, Object>of("type", policy);
-        } else if (policy instanceof Map) {
-            itemMap = (Map<String, Object>) policy;
-        } else {
-            throw new IllegalStateException("Policy expected to be string or map. Unsupported object type " + policy.getClass().getName() + " (" + policy.toString() + ")");
-        }
-
-        String versionedId = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "policy_type", "policyType", "type"), "policy type");
-        PolicySpec<? extends Policy> spec;
-        CatalogItem<?, ?> policyItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt, versionedId);
-        if (policyItem != null && !encounteredCatalogTypes.contains(policyItem.getSymbolicName())) {
-            if (policyItem.getCatalogItemType() != CatalogItemType.POLICY) {
-                throw new IllegalStateException("Non-policy catalog item in policy context: " + policyItem);
-            }
-            //TODO re-use createSpec
-            BrooklynClassLoadingContext itemLoader = CatalogUtils.newClassLoadingContext(mgmt, policyItem);
-            if (policyItem.getPlanYaml() != null) {
-                DeploymentPlan plan = makePlanFromYaml(policyItem.getPlanYaml());
-                encounteredCatalogTypes.add(policyItem.getSymbolicName());
-                return createPolicySpec(plan, itemLoader, encounteredCatalogTypes);
-            } else if (policyItem.getJavaType() != null) {
-                spec = PolicySpec.create((Class<Policy>)itemLoader.loadClass(policyItem.getJavaType()));
-            } else {
-                throw new IllegalStateException("Invalid policy item - neither yaml nor javaType: " + policyItem);
-            }
-        } else {
-            spec = PolicySpec.create(loader.loadClass(versionedId, Policy.class));
-        }
-        Map<String, Object> brooklynConfig = (Map<String, Object>) itemMap.get("brooklyn.config");
-        if (brooklynConfig != null) {
-            spec.configure(brooklynConfig);
-        }
-        return (SpecT) spec;
-    }
-    
-    private <T, SpecT> SpecT createLocationSpec(DeploymentPlan plan, BrooklynClassLoadingContext loader) {
-        // See #createPolicySpec; this impl is modeled on that.
-        // spec.catalogItemId is set by caller
-        Object locations = checkNotNull(plan.getCustomAttributes().get(LOCATIONS_KEY), "location config");
-        if (!(locations instanceof Iterable<?>)) {
-            throw new IllegalStateException("The value of " + LOCATIONS_KEY + " must be an Iterable.");
-        }
-
-        Object location = Iterables.getOnlyElement((Iterable<?>)locations);
-
-        return createLocationSpec(loader, location); 
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T, SpecT> SpecT createLocationSpec(BrooklynClassLoadingContext loader, Object location) {
-        Map<String, Object> itemMap;
-        if (location instanceof String) {
-            itemMap = ImmutableMap.<String, Object>of("type", location);
-        } else if (location instanceof Map) {
-            itemMap = (Map<String, Object>) location;
-        } else {
-            throw new IllegalStateException("Location expected to be string or map. Unsupported object type " + location.getClass().getName() + " (" + location.toString() + ")");
-        }
-
-        String type = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "location_type", "locationType", "type"), "location type");
-        Map<String, Object> brooklynConfig = (Map<String, Object>) itemMap.get("brooklyn.config");
-        Maybe<Class<? extends Location>> javaClass = loader.tryLoadClass(type, Location.class);
-        if (javaClass.isPresent()) {
-            LocationSpec<?> spec = LocationSpec.create(javaClass.get());
-            if (brooklynConfig != null) {
-                spec.configure(brooklynConfig);
-            }
-            return (SpecT) spec;
-        } else {
-            Maybe<Location> loc = mgmt.getLocationRegistry().resolve(type, false, brooklynConfig);
-            if (loc.isPresent()) {
-                // TODO extensions?
-                Map<String, Object> locConfig = ((ConfigurationSupportInternal)loc.get().config()).getBag().getAllConfig();
-                Class<? extends Location> locType = loc.get().getClass();
-                Set<Object> locTags = loc.get().tags().getTags();
-                String locDisplayName = loc.get().getDisplayName();
-                return (SpecT) LocationSpec.create(locType)
-                        .configure(locConfig)
-                        .displayName(locDisplayName)
-                        .tags(locTags);
-            } else {
-                throw new IllegalStateException("No class or resolver found for location type "+type);
-            }
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -683,7 +505,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         else sourceYaml = new Yaml().dump(item);
         
         CatalogItemType itemType = TypeCoercions.coerce(getFirstAs(catalogMetadata, Object.class, "itemType", "item_type").orNull(), CatalogItemType.class);
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, "<load>:0", libraryBundles);
 
         String id = getFirstAs(catalogMetadata, String.class, "id").orNull();
         String version = getFirstAs(catalogMetadata, String.class, "version").orNull();
@@ -697,7 +518,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             log.warn("Name property will be ignored due to the existence of displayName and at least one of id, symbolicName");
         }
 
-        PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, loader, result).reconstruct();
+        PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, libraryBundles, result).reconstruct();
         if (!planInterpreter.isResolved()) {
             throw Exceptions.create("Could not resolve item "
                 + (Strings.isNonBlank(id) ? id : Strings.isNonBlank(symbolicName) ? symbolicName : Strings.isNonBlank(name) ? name : "<no-name>")
@@ -785,7 +606,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         final Boolean catalogDeprecated = Boolean.valueOf(deprecated);
 
         // run again now that we know the ID
-        planInterpreter = new PlanInterpreterGuessingType(id, item, sourceYaml, itemType, loader, result).reconstruct();
+        planInterpreter = new PlanInterpreterGuessingType(id, item, sourceYaml, itemType, libraryBundles, result).reconstruct();
         if (!planInterpreter.isResolved()) {
             throw new IllegalStateException("Could not resolve plan once id and itemType are known (recursive reference?): "+sourceYaml);
         }
@@ -861,19 +682,16 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         final String id;
         final Map<?,?> item;
         final String itemYaml;
-        final BrooklynClassLoadingContext loader;
+        final Collection<CatalogBundle> libraryBundles;
         final List<CatalogItemDtoAbstract<?, ?>> itemsDefinedSoFar;
         
         CatalogItemType catalogItemType;
         String planYaml;
-        @SuppressWarnings("unused")
-        DeploymentPlan plan;
-        AbstractBrooklynObjectSpec<?,?> spec;
         boolean resolved = false;
         List<Exception> errors = MutableList.of();
         
         public PlanInterpreterGuessingType(@Nullable String id, Object item, String itemYaml, @Nullable CatalogItemType optionalCiType, 
-                BrooklynClassLoadingContext loader, List<CatalogItemDtoAbstract<?,?>> itemsDefinedSoFar) {
+                Collection<CatalogBundle> libraryBundles, List<CatalogItemDtoAbstract<?,?>> itemsDefinedSoFar) {
             // ID is useful to prevent recursive references (currently for entities only)
             this.id = id;
             
@@ -886,7 +704,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                 this.itemYaml = itemYaml;
             }
             this.catalogItemType = optionalCiType;
-            this.loader = loader;
+            this.libraryBundles = libraryBundles;
             this.itemsDefinedSoFar = itemsDefinedSoFar;
         }
 
@@ -964,11 +782,13 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             
             // then try parsing plan - this will use loader
             try {
-                DeploymentPlan candidatePlan = makePlanFromYaml(candidateYaml);
-                spec = createSpec(id, candidateCiType, candidatePlan, loader);
+                CatalogItem<?, ?> itemToAttempt = createItemBuilder(candidateCiType, getIdWithRandomDefault(), DEFAULT_VERSION)
+                    .plan(candidateYaml)
+                    .libraries(libraryBundles)
+                    .build();
+                Object spec = EntityManagementUtils.createCatalogSpec(mgmt, itemToAttempt);
                 if (spec!=null) {
                     catalogItemType = candidateCiType;
-                    plan = candidatePlan;
                     planYaml = candidateYaml;
                     resolved = true;
                 }
@@ -994,8 +814,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             if (type!=null && key!=null) {
                 try {
                     String cutDownYaml = key + ":\n" + makeAsIndentedList("type: "+type);
-                    DeploymentPlan candidatePlan = makePlanFromYaml(cutDownYaml);
-                    Object cutdownSpec = createSpec(id, candidateCiType, candidatePlan, loader);
+                    CatalogItem<?, ?> itemToAttempt = createItemBuilder(candidateCiType, getIdWithRandomDefault(), DEFAULT_VERSION)
+                            .plan(cutDownYaml)
+                            .libraries(libraryBundles)
+                            .build();
+                    Object cutdownSpec = EntityManagementUtils.createCatalogSpec(mgmt, itemToAttempt);
                     if (cutdownSpec!=null) {
                         catalogItemType = candidateCiType;
                         planYaml = candidateYaml;
@@ -1006,8 +829,15 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     Exceptions.propagateIfFatal(e);
                 }
             }
+            // FIXME we should lookup type in the catalog on its own, then infer the type from that,
+            // and give proper errors (right now e.g. if there are no transformers then we bail out 
+            // with very little information)
             
             return false;
+        }
+
+        private String getIdWithRandomDefault() {
+            return id != null ? id : Strings.makeRandomId(10);
         }
         public Map<?,?> getItem() {
             return item;
@@ -1056,11 +886,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 //    private boolean isLocationPlan(DeploymentPlan plan) {
 //        return !isEntityPlan(plan) && plan.getCustomAttributes().containsKey(LOCATIONS_KEY);
 //    }
-
-    private DeploymentPlan makePlanFromYaml(String yaml) {
-        CampPlatform camp = BrooklynServerConfig.getCampPlatform(mgmt).get();
-        return camp.pdp().parseDeploymentPlan(Streams.newReaderWithContents(yaml));
-    }
 
     //------------------------
     

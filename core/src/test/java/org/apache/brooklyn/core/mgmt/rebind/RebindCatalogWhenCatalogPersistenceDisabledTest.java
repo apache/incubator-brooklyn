@@ -22,17 +22,16 @@ import static org.testng.Assert.assertEquals;
 
 import java.io.File;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
-import org.apache.brooklyn.core.test.camp.brooklyn.lite.CampPlatformWithJustBrooklynMgmt;
 import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
 
@@ -47,7 +46,6 @@ public class RebindCatalogWhenCatalogPersistenceDisabledTest extends RebindTestF
         catalogPersistenceWasPreviouslyEnabled = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY);
         BrooklynFeatureEnablement.disable(BrooklynFeatureEnablement.FEATURE_CATALOG_PERSISTENCE_PROPERTY);
         super.setUp();
-        new CampPlatformWithJustBrooklynMgmt(origManagementContext);
         origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
     }
 

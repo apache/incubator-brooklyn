@@ -144,8 +144,4 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
 
     }
 
-    protected CampPlatform camp() {
-        return BrooklynServerConfig.getCampPlatform(mgmt()).get();
-    }
-    
 }
