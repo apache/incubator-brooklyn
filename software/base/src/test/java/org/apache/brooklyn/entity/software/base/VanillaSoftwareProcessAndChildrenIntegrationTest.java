@@ -50,7 +50,7 @@ public class VanillaSoftwareProcessAndChildrenIntegrationTest {
     // TODO Why are these tests so slow? Even when the sleep time was 3 seconds instead of 10, they would still take about 10 seconds.
     
     // Note that tests run by jenkins can be extremely time-sensitive.
-    // e.g. http://brooklyn.builds.cloudsoftcorp.com/job/Brooklyn-Master-Integration/io.brooklyn$brooklyn-software-base/217/testReport/junit/brooklyn.entity.basic/VanillaSoftwareProcessAndChildrenIntegrationTest/testModeBackground/
+    // e.g. http://brooklyn.builds.cloudsoftcorp.com/job/Brooklyn-Master-Integration/io.brooklyn$brooklyn-software-base/217/testReport/junit/org.apache.brooklyn.entity.software.base/VanillaSoftwareProcessAndChildrenIntegrationTest/testModeBackground/
     //      shows a 5 second difference when in background mode, whereas the test originally asserted a difference of <= 1.
     // Therefore increasing time that tests will take, but decreasing the sensitivity so we don't get such false-negatives.
     

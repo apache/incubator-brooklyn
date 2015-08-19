@@ -36,7 +36,7 @@ public interface WebAppServiceMetrics {
             Sensors.newIntegerSensor("webapp.reqs.processingTime.max", "Max processing time for any single request, reported by webserver (millis)");
 
     /** the fraction of time represented by the most recent delta to TOTAL_PROCESSING_TIME, ie 0.4 if 800 millis were accumulated in last 2s;
-     * easily configured with {@link WebAppServiceMethods#connectWebAppServerPolicies(brooklyn.entity.basic.EntityLocal, org.apache.brooklyn.util.time.Duration)} */
+     * easily configured with {@link WebAppServiceMethods#connectWebAppServerPolicies(org.apache.brooklyn.api.internal.EntityLocal, org.apache.brooklyn.util.time.Duration)} */
     public static final AttributeSensor<Double> PROCESSING_TIME_FRACTION_LAST =
             Sensors.newDoubleSensor("webapp.reqs.processingTime.fraction.last", "Fraction of time spent processing, reported by webserver (percentage, last datapoint)");
     public static final AttributeSensor<Double> PROCESSING_TIME_FRACTION_IN_WINDOW =
@@ -52,7 +52,7 @@ public interface WebAppServiceMetrics {
             Sensors.newDoubleSensor("webapp.reqs.perSec.last", "Reqs/sec (last datapoint)");
 
     /** rolled-up req/second for a window, 
-     * easily configured with {@link WebAppServiceMethods#connectWebAppServerPolicies(brooklyn.entity.basic.EntityLocal, org.apache.brooklyn.util.time.Duration)} */
+     * easily configured with {@link WebAppServiceMethods#connectWebAppServerPolicies(org.apache.brooklyn.api.internal.EntityLocal, org.apache.brooklyn.util.time.Duration)} */
     public static final AttributeSensor<Double> REQUESTS_PER_SECOND_IN_WINDOW =
             Sensors.newDoubleSensor("webapp.reqs.perSec.windowed", "Reqs/sec (over time window)");
 

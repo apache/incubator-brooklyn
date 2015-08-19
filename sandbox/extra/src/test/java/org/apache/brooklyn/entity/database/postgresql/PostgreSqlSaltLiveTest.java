@@ -35,7 +35,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.basic.Entities;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;

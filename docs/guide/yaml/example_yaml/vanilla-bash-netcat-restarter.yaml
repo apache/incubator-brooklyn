@@ -1,7 +1,7 @@
 name: Simple Netcat Example with Restarter Policy
 location: localhost
 services:
-- type: brooklyn.entity.basic.VanillaSoftwareProcess
+- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
   id: netcat-server
   name: Simple Netcat Server
   launch.command: |

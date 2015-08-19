@@ -552,7 +552,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  version: " + TEST_VERSION,
             "",
             "services:",
-            "- type: brooklyn.entity.basic.BasicEntity");
+            "- type: org.apache.brooklyn.entity.stock.BasicEntity");
 
         try {
             addCatalogItems(
@@ -577,7 +577,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  version: " + TEST_VERSION,
             "",
             "services:",
-            "- type: brooklyn.entity.basic.BasicEntity");
+            "- type: org.apache.brooklyn.entity.stock.BasicEntity");
 
         String versionedId = CatalogUtils.getVersionedId(symbolicName, TEST_VERSION);
         try {

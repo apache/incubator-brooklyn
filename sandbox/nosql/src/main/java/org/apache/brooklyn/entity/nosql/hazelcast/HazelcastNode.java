@@ -24,8 +24,8 @@ import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.location.basic.PortRanges;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.SoftwareProcess;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;

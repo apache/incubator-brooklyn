@@ -32,7 +32,7 @@ location:
       mapNewVolumeToDeviceName: ["/dev/sda1", 100, true]
 
 services:
-- type: brooklyn.entity.basic.VanillaWindowsProcess
+- type: org.apache.brooklyn.entity.software.base.VanillaWindowsProcess
   brooklyn.config:
     templates.install:
       classpath://org/apache/brooklyn/entity/database/mssql/ConfigurationFile.ini: "C:\\ConfigurationFile.ini"

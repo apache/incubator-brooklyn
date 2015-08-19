@@ -33,7 +33,7 @@ import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
 
-import brooklyn.entity.basic.Entities;
+import org.apache.brooklyn.entity.core.Entities;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.util.collections.MutableMap;

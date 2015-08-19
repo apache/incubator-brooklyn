@@ -125,7 +125,7 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
         }
     }
 
-    // Alternatively could reuse a blocking location, see brooklyn.entity.basic.SoftwareProcessEntityTest.ReleaseLatchLocation
+    // Alternatively could reuse a blocking location, see org.apache.brooklyn.entity.software.base.SoftwareProcessEntityTest.ReleaseLatchLocation
     @ImplementedBy(StopLatchEntityImpl.class)
     public interface StopLatchEntity extends EmptySoftwareProcess {
         public void unblock();

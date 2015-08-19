@@ -20,7 +20,7 @@ name: test-entity-with-policy
 description: TestEntity with Policy at entity-level using Brooklyn
 origin: https://github.com/apache/incubator-brooklyn
 services:
-- serviceType: brooklyn.entity.basic.BasicEntity
+- serviceType: org.apache.brooklyn.entity.stock.BasicEntity
   name: testentity
   foo: bar
   brooklyn.config:

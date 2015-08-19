@@ -22,7 +22,6 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
-import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 
 @ImplementedBy(DoNothingSoftwareProcessImpl.class)
 public interface DoNothingSoftwareProcess extends SoftwareProcess {

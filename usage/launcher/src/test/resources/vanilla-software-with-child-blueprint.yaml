@@ -22,7 +22,7 @@
 name: vanilla-date-test
 location: localhost
 services:
-- type: brooklyn.entity.basic.VanillaSoftwareProcess
+- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
   name: Date1
   brooklyn.config:
     launch.command: |
@@ -33,7 +33,7 @@ services:
         sleep 3
     children.startable.mode: foreground_late
   brooklyn.children:
-  - type: brooklyn.entity.basic.VanillaSoftwareProcess
+  - type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
     name: Date2
     brooklyn.config:
       launch.command: |

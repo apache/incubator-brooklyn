@@ -68,7 +68,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
     /*
      * (non-Javadoc)
-     * @see brooklyn.entity.basic.SoftwareProcessDriver#rebind()
+     * @see org.apache.brooklyn.entity.software.base.SoftwareProcessDriver#rebind()
      */
     @Override
     public void rebind() {

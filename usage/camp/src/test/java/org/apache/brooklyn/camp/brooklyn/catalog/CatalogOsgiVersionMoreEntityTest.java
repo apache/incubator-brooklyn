@@ -216,7 +216,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         
         Entity app = createAndStartApplication(
                 "services: ",
-                "- type: brooklyn.entity.basic.BasicEntity",
+                "- type: org.apache.brooklyn.entity.stock.BasicEntity",
                 "  brooklyn.policies:",
                 "  - type: more-policy:2.0.test");
         Entity basicEntity = Iterables.getOnlyElement(app.getChildren());

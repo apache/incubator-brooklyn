@@ -20,15 +20,15 @@
 
 <catalog>
     <name>Simple catalogue</name>
-    <template name="Basic App" type="brooklyn.entity.basic.BasicApplication" />
-    <template name="Basic App" type="brooklyn.entity.basic.BasicApplication" version="2.0" />
-    <template name="Basic App" type="brooklyn.entity.basic.BasicApplication">
+    <template name="Basic App" type="org.apache.brooklyn.entity.stock.BasicApplication" />
+    <template name="Basic App" type="org.apache.brooklyn.entity.stock.BasicApplication" version="2.0" />
+    <template name="Basic App" type="org.apache.brooklyn.entity.stock.BasicApplication">
         <symbolicName>BasicApp</symbolicName>
     </template>
-    <template name="Basic App" type="brooklyn.entity.basic.BasicApplication" version="2.0">
+    <template name="Basic App" type="org.apache.brooklyn.entity.stock.BasicApplication" version="2.0">
         <symbolicName>BasicApp</symbolicName>
     </template>
-    <template name="Custom App" type="brooklyn.entity.basic.BasicApplication">
+    <template name="Custom App" type="org.apache.brooklyn.entity.stock.BasicApplication">
         <symbolicName>org.apache.brooklyn.camp.brooklyn.catalog.TestBasicApp</symbolicName>
         <!-- Tests that "java:" prefix won't load an old-style catalog item with the same id -->
     </template>

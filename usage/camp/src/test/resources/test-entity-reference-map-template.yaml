@@ -19,9 +19,9 @@ name: test-entity-reference-map-template
 description: TestEntity with templated brooklyn.config and additional config (such as services)
 origin: https://github.com/apache/incubator-brooklyn
 services:
-- serviceType: brooklyn.entity.basic.BasicEntity
+- serviceType: org.apache.brooklyn.entity.stock.BasicEntity
   id: one
-- serviceType: brooklyn.entity.basic.BasicEntity
+- serviceType: org.apache.brooklyn.entity.stock.BasicEntity
   id: two
 - serviceType: org.apache.brooklyn.core.test.entity.TestEntity
   name: testentity

@@ -180,7 +180,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
             "    config2: config2 override",
             "    config3: config3",
             "services: ",
-            "  - type: brooklyn.entity.basic.BasicStartable");
+            "  - type: org.apache.brooklyn.entity.stock.BasicStartable");
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
         Location location = Iterables.getOnlyElement(simpleEntity.getLocations());

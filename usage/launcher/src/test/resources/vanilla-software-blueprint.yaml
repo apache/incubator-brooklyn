@@ -20,7 +20,7 @@
 name: vanilla-date-test
 location: localhost
 services:
-- type: brooklyn.entity.basic.VanillaSoftwareProcess
+- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
   name: Date1
   launch.command: |
     echo utc `date +%s` > DATE

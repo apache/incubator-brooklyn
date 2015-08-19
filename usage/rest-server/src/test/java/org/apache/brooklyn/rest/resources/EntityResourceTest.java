@@ -122,7 +122,7 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
     public void testAddChild() throws Exception {
         try {
             // to test in GUI: 
-            // services: [ { type: brooklyn.entity.basic.BasicEntity }]
+            // services: [ { type: org.apache.brooklyn.entity.stock.BasicEntity }]
             ClientResponse response = client().resource(entityEndpoint + "/children?timeout=10s")
                 .entity("services: [ { type: "+TestEntity.class.getName()+" }]", "application/yaml")
                 .post(ClientResponse.class);

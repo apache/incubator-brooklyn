@@ -7,7 +7,7 @@ categories: [use, guide, defining-applications]
 
 What if you want multiple machines?
 
-One way is just to repeat the `- type: brooklyn.entity.basic.EmptySoftwareProcess` block,
+One way is just to repeat the `- type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess` block,
 but there's another way which will keep your powder [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself):
 
 {% highlight yaml %}

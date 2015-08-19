@@ -100,7 +100,7 @@ This will extend the Brooklyn `AbstractApplication`:
 package brooklyn.demo;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import brooklyn.entity.basic.AbstractApplication;
+import org.apache.brooklyn.entity.core.AbstractApplication;
 
 public class GlobalWebFabricExample extends AbstractApplication {
     @Override
@@ -203,8 +203,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.StringConfigMap;
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.Attributes;
+import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.entity.core.Attributes;
 import brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import brooklyn.entity.group.DynamicFabric;
 import brooklyn.entity.proxy.AbstractController;

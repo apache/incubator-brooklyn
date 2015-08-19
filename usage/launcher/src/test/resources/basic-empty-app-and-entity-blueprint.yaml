@@ -21,10 +21,10 @@ name: Simple 2 Element
 location: localhost
 
 services:
-- type: brooklyn.entity.basic.BasicApplication
+- type: org.apache.brooklyn.entity.stock.BasicApplication
   brooklyn.config:
     key1: val1
   brooklyn.children:
-  - type: brooklyn.entity.basic.BasicEntity
+  - type: org.apache.brooklyn.entity.stock.BasicEntity
     brooklyn.config:
       key2: val2

@@ -71,7 +71,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
         String entityName = "Reference child name";
         Entity createAndStartApplication = createAndStartApplication(
             "services:",
-            "- type: brooklyn.entity.basic.BasicEntity",
+            "- type: org.apache.brooklyn.entity.stock.BasicEntity",
             "  brooklyn.children:",
             "  - name: " + entityName,
             "    type: classpath://yaml-ref-entity.yaml");
@@ -83,7 +83,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
     public void testAnonymousReferenceYamlAsChild() throws Exception {
         Entity createAndStartApplication = createAndStartApplication(
             "services:",
-            "- type: brooklyn.entity.basic.BasicEntity",
+            "- type: org.apache.brooklyn.entity.stock.BasicEntity",
             "  brooklyn.children:",
             "  - type: classpath://yaml-ref-entity.yaml");
         
@@ -115,7 +115,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
             "  id: yaml.basic",
             "  version: " + TEST_VERSION,
             "services:",
-            "- type: brooklyn.entity.basic.BasicEntity");
+            "- type: org.apache.brooklyn.entity.stock.BasicEntity");
         
         String entityName = "YAML -> yaml url -> catalog item";
         Entity app = createAndStartApplication(

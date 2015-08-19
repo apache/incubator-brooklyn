@@ -32,7 +32,7 @@ public class CatalogYamlAppTest extends AbstractYamlTest {
      * "BasicEntity" cyclic reference.
      * 
      * The circular reference comes from the member spec referencing 
-     * "brooklyn.entity.basic.BasicEntity", but that has been defined in the
+     * "org.apache.brooklyn.entity.stock.BasicEntity", but that has been defined in the
      * catalog as this new blueprint (which overrides the previous value of it
      * being a reference to the Java class).
      * 
@@ -45,16 +45,16 @@ public class CatalogYamlAppTest extends AbstractYamlTest {
         // Add a catalog item with a circular reference to its own id.
         addCatalogItems(
                 "brooklyn.catalog:",
-                "  id: brooklyn.entity.basic.BasicEntity",
+                "  id: org.apache.brooklyn.entity.stock.BasicEntity",
                 "  version: "+TEST_VERSION,
                 "services:",
-                "- type: brooklyn.entity.basic.BasicApplication",
+                "- type: org.apache.brooklyn.entity.stock.BasicApplication",
                 "  brooklyn.config:",
                 "    memberSpec:",
                 "      $brooklyn:entitySpec:",
-                "      - type: brooklyn.entity.basic.BasicApplication",
+                "      - type: org.apache.brooklyn.entity.stock.BasicApplication",
                 "        brooklyn.children:",
-                "        - type: brooklyn.entity.basic.BasicEntity");
+                "        - type: org.apache.brooklyn.entity.stock.BasicEntity");
 
         try {
             // Use the blueprint from the catalog that has the circular reference.
@@ -64,10 +64,10 @@ public class CatalogYamlAppTest extends AbstractYamlTest {
                     "  id: another.app.in.the.catalog",
                     "  version: "+TEST_VERSION,
                     "services:",
-                    "- type: brooklyn.entity.basic.BasicEntity");
+                    "- type: org.apache.brooklyn.entity.stock.BasicEntity");
             deleteCatalogEntity("another.app.in.the.catalog");
         } finally {
-            deleteCatalogEntity("brooklyn.entity.basic.BasicEntity");
+            deleteCatalogEntity("org.apache.brooklyn.entity.stock.BasicEntity");
         }
     }
 }

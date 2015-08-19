@@ -20,4 +20,4 @@ name: basic-empy-app
 # no-op "application" which does nothing
 location: localhost
 services:
-- type: brooklyn.entity.basic.BasicApplication
+- type: org.apache.brooklyn.entity.stock.BasicApplication

@@ -32,7 +32,7 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import org.apache.brooklyn.api.entity.Application
-import brooklyn.entity.basic.Entities
+import org.apache.brooklyn.entity.core.Entities
 import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation
 import org.apache.brooklyn.test.entity.TestApplicationImpl
 import brooklyn.util.internal.TimeExtras

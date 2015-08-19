@@ -18,4 +18,4 @@
 name: Basic entity
 services:
 - name: service
-  type: brooklyn.entity.basic.BasicEntity
+  type: org.apache.brooklyn.entity.stock.BasicEntity

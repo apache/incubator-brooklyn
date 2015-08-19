@@ -5,7 +5,7 @@ location: localhost
 services:
 
 # the netcat server instance, running in listener mode (-l)
-- type: brooklyn.entity.basic.VanillaSoftwareProcess
+- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
   id: netcat-server
   name: Simple Netcat Server
   launch.command: |
@@ -40,7 +40,7 @@ services:
       command: cat server-input
 
 # a client to hit netcat
-- type: brooklyn.entity.basic.VanillaSoftwareProcess
+- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
   name: Simple Pinger
   
   # set the hostname of the netcat instance as an env var for the scripts 

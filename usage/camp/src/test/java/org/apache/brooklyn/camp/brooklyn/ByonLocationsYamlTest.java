@@ -61,7 +61,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
         String yaml = Joiner.on("\n").join(
                 "location: byon(user=myuser,mykey=myval,hosts=\"1.1.1.1\")",
                 "services:",
-                "- serviceType: brooklyn.entity.basic.BasicApplication");
+                "- serviceType: org.apache.brooklyn.entity.stock.BasicApplication");
         
         Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
         FixedListMachineProvisioningLocation<SshMachineLocation> loc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(app.getLocations(), 0);
@@ -84,7 +84,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
                 "      user: myuser",
                 "      mykey: myval",
                 "services:",
-                "- serviceType: brooklyn.entity.basic.BasicApplication");
+                "- serviceType: org.apache.brooklyn.entity.stock.BasicApplication");
         
         Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
         FixedListMachineProvisioningLocation<SshMachineLocation> loc = (FixedListMachineProvisioningLocation<SshMachineLocation>) Iterables.get(app.getLocations(), 0);
@@ -111,7 +111,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
                 "      mykey: myval",
                 "      osfamily: windows",
                 "services:",
-                "- serviceType: brooklyn.entity.basic.BasicApplication");
+                "- serviceType: org.apache.brooklyn.entity.stock.BasicApplication");
         
         Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
         FixedListMachineProvisioningLocation<WinRmMachineLocation> loc = (FixedListMachineProvisioningLocation<WinRmMachineLocation>) Iterables.get(app.getLocations(), 0);
@@ -148,7 +148,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
                 "      mykey: myval3",
                 "      osfamily: windows",
                 "services:",
-                "- serviceType: brooklyn.entity.basic.BasicApplication");
+                "- serviceType: org.apache.brooklyn.entity.stock.BasicApplication");
         
         Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
         FixedListMachineProvisioningLocation<MachineLocation> loc = (FixedListMachineProvisioningLocation<MachineLocation>) Iterables.get(app.getLocations(), 0);
@@ -196,7 +196,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
                 "      mykey: myval2",
                 "      osfamily: windows",
                 "services:",
-                "- serviceType: brooklyn.entity.basic.BasicApplication");
+                "- serviceType: org.apache.brooklyn.entity.stock.BasicApplication");
 
         Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
         FixedListMachineProvisioningLocation<MachineLocation> loc = (FixedListMachineProvisioningLocation<MachineLocation>) Iterables.get(app.getLocations(), 0);
@@ -235,7 +235,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
                 "      password: mypassword",
                 "      user: myuser",
                 "services:",
-                "- type: brooklyn.entity.basic.DoNothingSoftwareProcess",
+                "- type: org.apache.brooklyn.entity.software.base.DoNothingSoftwareProcess",
                 "  brooklyn.config:",
                 "    requiredOpenLoginPorts: [22, 1024]");
 

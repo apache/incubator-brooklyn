@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import org.apache.brooklyn.api.entity.Entity;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.SoftwareProcess;
-import brooklyn.entity.basic.SoftwareProcessImpl;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import brooklyn.entity.java.UsesJava;
 import brooklyn.entity.java.UsesJmx;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
