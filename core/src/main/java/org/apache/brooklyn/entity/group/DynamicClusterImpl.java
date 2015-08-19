@@ -803,12 +803,6 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return entity;
     }
 
-    /** @deprecated since 0.6; use {@link #createNode(Location, Map)}, so can take that location into account when configuring node */
-    @Deprecated
-    protected Entity createNode(Map<?,?> flags) {
-        return createNode(getLocation(), flags);
-    }
-
     protected List<Entity> pickAndRemoveMembers(int delta) {
         if (delta==0) 
             return Lists.newArrayList();
