@@ -55,6 +55,12 @@ public class CatalogLocationResolver implements LocationResolver {
     public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
         String id = spec.substring(NAME.length()+1);
         CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(managementContext, id);
+        if (item.isDisabled()) {
+            throw new IllegalStateException("Illegal use of disabled catalog item "+item.getSymbolicName()+":"+item.getVersion());
+        } else if (item.isDeprecated()) {
+            log.warn("Use of deprecated catalog item "+item.getSymbolicName()+":"+item.getVersion());
+        }
+        
         LocationSpec<?> origLocSpec = managementContext.getCatalog().createSpec((CatalogItem<Location, LocationSpec<?>>)item);
         LocationSpec<?> locSpec = LocationSpec.create(origLocSpec)
                 .configure(locationFlags);

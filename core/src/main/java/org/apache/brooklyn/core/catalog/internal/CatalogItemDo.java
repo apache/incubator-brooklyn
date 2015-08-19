@@ -92,6 +92,16 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObj
     }
 
     @Override
+    public void setDisabled(boolean diabled) {
+        itemDto.setDisabled(diabled);
+    }
+
+    @Override
+    public boolean isDisabled() {
+        return itemDto.isDisabled();
+    }
+
+    @Override
     public void setCatalogItemId(String id) {
         itemDto.setCatalogItemId(id);
     }

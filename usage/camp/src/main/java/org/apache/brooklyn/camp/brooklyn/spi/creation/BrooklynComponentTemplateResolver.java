@@ -175,11 +175,18 @@ public class BrooklynComponentTemplateResolver {
     }
 
     protected boolean canResolve() {
-        if (typeResolver.getCatalogItem(this, type)!=null)
-            return true;
-        if (loader.tryLoadClass(getJavaType(), Entity.class).isPresent())
-            return true;
-        return false;
+        CatalogItem<Entity, EntitySpec<?>> item = typeResolver.getCatalogItem(this, type);
+        if (item == null) {
+            return loader.tryLoadClass(getJavaType(), Entity.class).isPresent();
+        }
+        
+        if (item.isDisabled()) {
+            log.warn("Disallowed attempt to use disabled catalog item "+item.getId());
+            return false;
+        } else if (item.isDeprecated()) {
+            log.warn("Use of deprecated catalog item "+item.getId());
+        }
+        return true;
     }
 
     /** returns the entity class, if needed in contexts which scan its statics for example */
@@ -223,9 +230,17 @@ public class BrooklynComponentTemplateResolver {
     @SuppressWarnings({ "unchecked" })
     protected <T extends Entity> EntitySpec<T> createSpec(Set<String> encounteredCatalogTypes) {
         CatalogItem<Entity, EntitySpec<?>> item = getServiceTypeResolver().getCatalogItem(this, getDeclaredType());
+        if (item == null) {
+            // ignore; presumably a java type or some such?
+        } else if (item.isDisabled()) {
+            throw new IllegalStateException("Illegal use of disabled catalog item "+item.getSymbolicName()+":"+item.getVersion());
+        } else if (item.isDeprecated()) {
+            log.warn("Use of deprecated catalog item "+item.getSymbolicName()+":"+item.getVersion());
+        }
+        
         if (encounteredCatalogTypes==null) encounteredCatalogTypes = MutableSet.of();
         
-        //Take the symoblicName part of the catalog item only for recursion detection to prevent
+        //Take the symbolicName part of the catalog item only for recursion detection to prevent
         //cross referencing of different versions. Not interested in non-catalog item types.
         //Prevent catalog items self-referencing even if explicitly different version.
         boolean firstOccurrence = (item == null || encounteredCatalogTypes.add(item.getSymbolicName()));

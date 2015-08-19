@@ -119,6 +119,20 @@ public class CatalogVersioningTest {
     }
     
     @Test
+    public void testGetLatestSkipsDisabled() {
+        String symbolicName = "sampleId";
+        String v1 = "0.1.0";
+        String v2 = "0.2.0";
+        createCatalogItem(symbolicName, v1);
+        createCatalogItem(symbolicName, v2);
+        disableCatalogItem(symbolicName, v2);
+        
+        CatalogItem<?, ?> item = catalog.getCatalogItem(symbolicName, BasicBrooklynCatalog.DEFAULT_VERSION);
+        assertEquals(item.getSymbolicName(), symbolicName);
+        assertEquals(item.getVersion(), v1);
+    }
+    
+    @Test
     public void testDelete() {
         String symbolicName = "sampleId";
         String version = "0.1.0";
@@ -145,6 +159,12 @@ public class CatalogVersioningTest {
         catalog.addItem(CatalogItemBuilder.newEntity(symbolicName, version).
                 plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
+    }
+
+    private void disableCatalogItem(String symbolicName, String version) {
+        CatalogItem<?, ?> item = catalog.getCatalogItem(symbolicName, version);
+        item.setDisabled(true);
+        catalog.persist(item);
     }
 
     private void assertSingleCatalogItem(String symbolicName, String version) {

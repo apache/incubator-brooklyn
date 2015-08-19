@@ -18,9 +18,27 @@
  */
 package org.apache.brooklyn.camp.brooklyn.catalog;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlRebindTest;
@@ -28,13 +46,24 @@ import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.StartableApplication;
+import org.apache.brooklyn.core.mgmt.persist.BrooklynMementoPersisterToObjectStore;
+import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
+import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
 import org.apache.brooklyn.core.test.policy.TestEnricher;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
 import org.apache.brooklyn.entity.stock.BasicEntity;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.annotations.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
@@ -46,6 +75,9 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
     
     enum RebindWithCatalogTestMode {
         NO_OP,
+        STRIP_DEPRECATION_AND_ENABLEMENT_FROM_CATALOG_ITEM,
+        DEPRECATE_CATALOG,
+        DISABLE_CATALOG,
         DELETE_CATALOG,
         REPLACE_CATALOG_WITH_NEWER_VERSION;
     }
@@ -53,6 +85,16 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
     @Test
     public void testRebindWithCatalogAndApp() throws Exception {
         runRebindWithCatalogAndApp(RebindWithCatalogTestMode.NO_OP);
+    }
+    
+    @Test
+    public void testRebindWithCatalogDeprecatedAndAppExisting() throws Exception {
+        runRebindWithCatalogAndApp(RebindWithCatalogTestMode.DEPRECATE_CATALOG);
+    }
+    
+    @Test
+    public void testRebindWithCatalogDisabledAndAppExisting() throws Exception {
+        runRebindWithCatalogAndApp(RebindWithCatalogTestMode.DISABLE_CATALOG);
     }
     
     // See https://issues.apache.org/jira/browse/BROOKLYN-149.
@@ -72,13 +114,22 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
         runRebindWithCatalogAndApp(RebindWithCatalogTestMode.REPLACE_CATALOG_WITH_NEWER_VERSION);
     }
     
+    /**
+     * Old persisted state for catalog items may not have a "deprecated" or "disabled"
+     * value. Need to check that their absence will default to false.
+     */
+    @Test
+    public void testRebindWithCatalogPropertiesForDeprecationAndEnablementAbsent() throws Exception {
+        runRebindWithCatalogAndApp(RebindWithCatalogTestMode.STRIP_DEPRECATION_AND_ENABLEMENT_FROM_CATALOG_ITEM);
+    }
+
     @SuppressWarnings("unused")
     protected void runRebindWithCatalogAndApp(RebindWithCatalogTestMode mode) throws Exception {
-        String symbolicName = "my.catalog.app.id.load";
-        String version = "0.1.2";
-        String catalogFormat = Joiner.on("\n").join(
+        String appSymbolicName = "my.catalog.app.id.load";
+        String appVersion = "0.1.0";
+        String appCatalogFormat = Joiner.on("\n").join(
                 "brooklyn.catalog:",
-                "  id: " + symbolicName,
+                "  id: " + appSymbolicName,
                 "  version: %s",
                 "  item:",
                 "    type: "+ BasicEntity.class.getName(),
@@ -87,45 +138,203 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
                 "    brooklyn.policies:",
                 "    - type: "+TestPolicy.class.getName());
         
-        // Create the catalog item
-        addCatalogItems(String.format(catalogFormat, version));
-
+        String locSymbolicName = "my.catalog.loc.id.load";
+        String locVersion = "1.0.0";
+        String locCatalogFormat = Joiner.on("\n").join(
+                "brooklyn.catalog:",
+                "  id: " + locSymbolicName,
+                "  version: %s",
+                "  item.type: location",
+                "  item:",
+                "    type: localhost");
+        
+        // Create the catalog items
+        CatalogItem<?, ?> appItem = Iterables.getOnlyElement(addCatalogItems(String.format(appCatalogFormat, appVersion)));
+        CatalogItem<?, ?> locItem = Iterables.getOnlyElement(addCatalogItems(String.format(locCatalogFormat, locVersion)));
+        final String appItemId = appItem.getId();
+        final String locItemId = locItem.getId();
+        
         // Create an app, using that catalog item
         String yaml = "name: simple-app-yaml\n" +
-                "location: localhost\n" +
+                "location: \"brooklyn.catalog:"+CatalogUtils.getVersionedId(locSymbolicName, locVersion)+"\"\n" +
                 "services: \n" +
-                "- type: "+CatalogUtils.getVersionedId(symbolicName, version);
+                "- type: "+CatalogUtils.getVersionedId(appSymbolicName, appVersion);
         origApp = (StartableApplication) createAndStartApplication(yaml);
         BasicEntity origEntity = (BasicEntity) Iterables.getOnlyElement(origApp.getChildren());
         TestPolicy origPolicy = (TestPolicy) Iterables.getOnlyElement(origEntity.getPolicies());
         TestEnricher origEnricher = (TestEnricher) Iterables.tryFind(origEntity.getEnrichers(), Predicates.instanceOf(TestEnricher.class)).get();
-        assertEquals(origEntity.getCatalogItemId(), symbolicName+":"+version);
+        assertEquals(origEntity.getCatalogItemId(), appSymbolicName+":"+appVersion);
 
         // Depending on test-mode, delete the catalog item, and then rebind
         switch (mode) {
+            case DEPRECATE_CATALOG:
+                appItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), appSymbolicName+":"+appVersion);
+                appItem.setDeprecated(true);
+                mgmt().getCatalog().persist(appItem);
+                locItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), locSymbolicName+":"+locVersion);
+                locItem.setDeprecated(true);
+                mgmt().getCatalog().persist(locItem);
+                break;
+            case DISABLE_CATALOG:
+                appItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), appSymbolicName+":"+appVersion);
+                appItem.setDisabled(true);
+                mgmt().getCatalog().persist(appItem);
+                locItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), locSymbolicName+":"+locVersion);
+                locItem.setDisabled(true);
+                mgmt().getCatalog().persist(locItem);
+                break;
             case DELETE_CATALOG:
-                mgmt().getCatalog().deleteCatalogItem(symbolicName, version);
+                mgmt().getCatalog().deleteCatalogItem(appSymbolicName, appVersion);
+                mgmt().getCatalog().deleteCatalogItem(locSymbolicName, locVersion);
                 break;
             case REPLACE_CATALOG_WITH_NEWER_VERSION:
-                mgmt().getCatalog().deleteCatalogItem(symbolicName, version);
-                version = "0.1.3";
-                addCatalogItems(String.format(catalogFormat, version));
+                mgmt().getCatalog().deleteCatalogItem(appSymbolicName, appVersion);
+                mgmt().getCatalog().deleteCatalogItem(locSymbolicName, locVersion);
+                appVersion = "0.2.0";
+                locVersion = "1.1.0";
+                addCatalogItems(String.format(appCatalogFormat, appVersion));
+                addCatalogItems(String.format(locCatalogFormat, locVersion));
                 break;
+            case STRIP_DEPRECATION_AND_ENABLEMENT_FROM_CATALOG_ITEM:
             case NO_OP:
-                // no-op
+                break; // no-op
+            default:
+                throw new IllegalStateException("Unknown mode: "+mode);
         }
-        
-        rebind();
 
-        // Ensure app is still there
+        // Rebind
+        if (mode == RebindWithCatalogTestMode.STRIP_DEPRECATION_AND_ENABLEMENT_FROM_CATALOG_ITEM) {
+            // Edit the persisted state to remove the "deprecated" and "enablement" tags for our catalog items
+            rebind(RebindOptions.create()
+                    .stateTransformer(new Function<BrooklynMementoPersister, Void>() {
+                        @Override public Void apply(BrooklynMementoPersister input) {
+                            PersistenceObjectStore objectStore = ((BrooklynMementoPersisterToObjectStore)input).getObjectStore();
+                            String appItemMemento = checkNotNull(objectStore.newAccessor("catalog/"+appItemId.replace(":", "_")).get(), "appItem in catalog");
+                            String locItemMemento = checkNotNull(objectStore.newAccessor("catalog/"+locItemId.replace(":", "_")).get(), "locItem in catalog");
+                            String newAppItemMemento = removeFromXml(appItemMemento, ImmutableList.of("catalogItem/deprecated", "catalogItem/disabled"));
+                            String newLocItemMemento = removeFromXml(appItemMemento, ImmutableList.of("catalogItem/deprecated", "catalogItem/disabled"));
+                            objectStore.newAccessor("catalog/"+appItemId).put(newAppItemMemento);
+                            objectStore.newAccessor("catalog/"+locItemId).put(newLocItemMemento);
+                            return null;
+                        }}));
+        } else {
+            rebind();
+        }
+
+        // Ensure app is still there, and that it is usabe - e.g. "stop" effector functions as expected
         BasicEntity newEntity = (BasicEntity) Iterables.getOnlyElement(newApp.getChildren());
         Policy newPolicy = Iterables.getOnlyElement(newEntity.getPolicies());
         Enricher newEnricher = Iterables.tryFind(newEntity.getEnrichers(), Predicates.instanceOf(TestEnricher.class)).get();
-        assertEquals(newEntity.getCatalogItemId(), symbolicName+":"+version);
+        assertEquals(newEntity.getCatalogItemId(), appSymbolicName+":"+appVersion);
 
-        // Ensure app is still usable - e.g. "stop" effector functions as expected
         newApp.stop();
         assertFalse(Entities.isManaged(newApp));
         assertFalse(Entities.isManaged(newEntity));
+        
+        // Ensure catalog item is as expecpted
+        CatalogItem<?, ?> newAppItem = mgmt().getCatalog().getCatalogItem(appSymbolicName, appVersion);
+        CatalogItem<?, ?> newLocItem = mgmt().getCatalog().getCatalogItem(locSymbolicName, locVersion);
+
+        boolean itemDeployable;
+        switch (mode) {
+        case DISABLE_CATALOG:
+            assertTrue(newAppItem.isDisabled());
+            assertTrue(newLocItem.isDisabled());
+            itemDeployable = false;
+            break;
+        case DELETE_CATALOG:
+            assertNull(newAppItem);
+            assertNull(newLocItem);
+            itemDeployable = false;
+            break;
+        case DEPRECATE_CATALOG:
+            assertTrue(newAppItem.isDeprecated());
+            assertTrue(newLocItem.isDeprecated());
+            itemDeployable = true;
+            break;
+        case NO_OP:
+        case STRIP_DEPRECATION_AND_ENABLEMENT_FROM_CATALOG_ITEM:
+        case REPLACE_CATALOG_WITH_NEWER_VERSION:
+            assertNotNull(newAppItem);
+            assertNotNull(newLocItem);
+            assertFalse(newAppItem.isDeprecated());
+            assertFalse(newAppItem.isDisabled());
+            assertFalse(newLocItem.isDeprecated());
+            assertFalse(newLocItem.isDisabled());
+            itemDeployable = true;
+            break;
+        default:
+            throw new IllegalStateException("Unknown mode: "+mode);
+        }
+
+        // Try to deploy a new app
+        String yaml2 = "name: simple-app-yaml2\n" +
+                "location: \"brooklyn.catalog:"+CatalogUtils.getVersionedId(locSymbolicName, locVersion)+"\"\n" +
+                "services: \n" +
+                "- type: "+CatalogUtils.getVersionedId(appSymbolicName, appVersion);
+
+        if (itemDeployable) {
+            StartableApplication app2 = (StartableApplication) createAndStartApplication(yaml2);
+            BasicEntity entity2 = (BasicEntity) Iterables.getOnlyElement(app2.getChildren());
+            assertEquals(entity2.getCatalogItemId(), appSymbolicName+":"+appVersion);
+        } else {
+            try {
+                StartableApplication app2 = (StartableApplication) createAndStartApplication(yaml2);
+                fail();
+            } catch (Exception e) {
+                if (mode == RebindWithCatalogTestMode.DELETE_CATALOG) {
+                    if (!e.toString().contains("cannot be matched")) throw e;
+                } else {
+                    assertEquals(mode, RebindWithCatalogTestMode.DISABLE_CATALOG);
+                    if (!e.toString().contains("cannot be matched")) throw e;
+                }
+            }
+        }
+    }
+    
+    /**
+     * Given the "/"-separated path for the elements to be removed, it removes these from the xml
+     * and returns the transformed XML.
+     */
+    private String removeFromXml(String xml, List<String> elementsToRemove) {
+        try {
+            InputSource source = new InputSource(new StringReader(xml));
+            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(source);
+
+            for (String elementToRemove : elementsToRemove) {
+                Node current = null;
+                boolean first = true;
+                for (String tag : elementToRemove.split("/")) {
+                    NodeList matches;
+                    if (first) {
+                        matches = doc.getElementsByTagName(tag);
+                        first = false;
+                    } else {
+                        matches = ((Element)current).getElementsByTagName(tag);
+                    }
+                    if (matches.getLength() > 0) {
+                        current = matches.item(0);
+                    } else {
+                        current = null;
+                        break;
+                    }
+                }
+                if (current != null) {
+                    current.getParentNode().removeChild(current);
+                }
+            }
+          
+            DOMSource domSource = new DOMSource(doc);
+            StringWriter writer = new StringWriter();
+            StreamResult result = new StreamResult(writer);
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.transform(domSource, result);
+            
+            return writer.toString();
+          
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
     }
 }

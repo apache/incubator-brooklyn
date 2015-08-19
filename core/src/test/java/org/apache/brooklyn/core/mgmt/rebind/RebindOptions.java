@@ -22,7 +22,10 @@ import java.io.File;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.rebind.RebindExceptionHandler;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
+
+import com.google.common.base.Function;
 
 /**
  * See {@link RebindTestFixture#rebind(RebindOptions)} and {@link RebindTestUtils#rebind(RebindOptions)}.
@@ -35,6 +38,7 @@ public class RebindOptions {
     public ManagementContext newManagementContext;
     public File mementoDir;
     public File mementoDirBackup;
+    public Function<BrooklynMementoPersister, Void> stateTransformer;
     public ClassLoader classLoader;
     public PersistenceObjectStore objectStore;
     
@@ -50,6 +54,7 @@ public class RebindOptions {
         result.newManagementContext(options.newManagementContext);
         result.mementoDir(options.mementoDir);
         result.mementoDirBackup(options.mementoDirBackup);
+        result.stateTransformer(options.stateTransformer);
         result.classLoader(options.classLoader);
         result.objectStore(options.objectStore);
         return result;
@@ -80,6 +85,10 @@ public class RebindOptions {
     }
     public RebindOptions mementoDirBackup(File val) {
         this.mementoDirBackup = val;
+        return this;
+    }
+    public RebindOptions stateTransformer(Function<BrooklynMementoPersister, Void> val) {
+        this.stateTransformer = val;
         return this;
     }
     public RebindOptions classLoader(ClassLoader val) {

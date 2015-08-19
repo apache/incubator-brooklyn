@@ -46,13 +46,16 @@ public class CatalogPredicates {
                 return (item != null) && item.getCatalogItemType()==ciType;
             }
         };
-        return new CatalogItemTypeEquals<T, SpecT>(ciType);
+        return new CatalogItemTypeEqualTo<T, SpecT>(ciType);
     }
 
-    private static class CatalogItemTypeEquals<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+    /**
+     * @since 0.8.0
+     */
+    private static class CatalogItemTypeEqualTo<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
         private final CatalogItemType ciType;
         
-        public CatalogItemTypeEquals(final CatalogItemType ciType) {
+        public CatalogItemTypeEqualTo(final CatalogItemType ciType) {
             this.ciType = ciType;
         }
         @Override
@@ -69,18 +72,43 @@ public class CatalogPredicates {
                 return (item != null) && item.isDeprecated() == deprecated;
             }
         };
-        return new DeprecatedEquals<T, SpecT>(deprecated);
+        return new DeprecatedEqualTo<T, SpecT>(deprecated);
     }
 
-    private static class DeprecatedEquals<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+    /**
+     * @since 0.8.0
+     */
+    private static class DeprecatedEqualTo<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
         private final boolean deprecated;
         
-        public DeprecatedEquals(boolean deprecated) {
+        public DeprecatedEqualTo(boolean deprecated) {
             this.deprecated = deprecated;
         }
         @Override
         public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
             return (item != null) && item.isDeprecated() == deprecated;
+        }
+    }
+
+    /**
+     * @since 0.8.0
+     */
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> disabled(boolean disabled) {
+        return new DisabledEqualTo<T, SpecT>(disabled);
+    }
+
+    /**
+     * @since 0.8.0
+     */
+    private static class DisabledEqualTo<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final boolean disabled;
+        
+        public DisabledEqualTo(boolean disabled) {
+            this.disabled = disabled;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return (item != null) && item.isDisabled() == disabled;
         }
     }
 
@@ -106,6 +134,9 @@ public class CatalogPredicates {
     // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
     public static final Function<CatalogItem<?,?>,String> ID_OF_ITEM_TRANSFORMER = new IdOfItemTransformer();
     
+    /**
+     * @since 0.8.0
+     */
     private static class IdOfItemTransformer implements Function<CatalogItem<?,?>,String> {
         @Override @Nullable
         public String apply(@Nullable CatalogItem<?,?> input) {
@@ -120,6 +151,9 @@ public class CatalogPredicates {
         return displayName(filter);
     }
 
+    /**
+     * @since 0.7.0
+     */
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> displayName(final Predicate<? super String> filter) {
         // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
         new Predicate<CatalogItem<T,SpecT>>() {
@@ -131,6 +165,9 @@ public class CatalogPredicates {
         return new DisplayNameMatches<T,SpecT>(filter);
     }
 
+    /**
+     * @since 0.8.0
+     */
     private static class DisplayNameMatches<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
         private final Predicate<? super String> filter;
         
@@ -159,6 +196,9 @@ public class CatalogPredicates {
         return new SymbolicNameMatches<T,SpecT>(filter);
     }
     
+    /**
+     * @since 0.8.0
+     */
     private static class SymbolicNameMatches<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
         private final Predicate<? super String> filter;
         
@@ -182,6 +222,9 @@ public class CatalogPredicates {
         return new JavaTypeMatches<T, SpecT>(filter);
     }
     
+    /**
+     * @since 0.8.0
+     */
     private static class JavaTypeMatches<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
         private final Predicate<? super String> filter;
         
@@ -205,6 +248,9 @@ public class CatalogPredicates {
         return new XmlMatches<T,SpecT>(filter);
     }
     
+    /**
+     * @since 0.8.0
+     */
     private static class XmlMatches<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
         private final Predicate<? super String> filter;
         
@@ -229,6 +275,9 @@ public class CatalogPredicates {
         return new EntitledToSee<T, SpecT>(mgmt);
     }
     
+    /**
+     * @since 0.8.0
+     */
     private static class EntitledToSee<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
         private final ManagementContext mgmt;
         
@@ -253,6 +302,9 @@ public class CatalogPredicates {
         return new IsBestVersion<T, SpecT>(mgmt);
     }
     
+    /**
+     * @since 0.8.0
+     */
     private static class IsBestVersion<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
         private final ManagementContext mgmt;
         

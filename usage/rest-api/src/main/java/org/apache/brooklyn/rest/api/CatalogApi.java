@@ -314,12 +314,39 @@ public interface CatalogApi {
         @ApiParam(name = "version", value = "version identifier of catalog item (application, entity, policy, location)", required=true)
         @PathParam("version") String version);
 
+    /**
+     * @deprecated since 0.8.0; use "/entities/{itemId}/deprecated" with payload of true/false
+     */
+    @Deprecated
     @POST
     @Path("/entities/{itemId}/deprecated/{deprecated}")
-    public void setDeprecated(
+    public void setDeprecatedLegacy(
         @ApiParam(name = "itemId", value = "The ID of the catalog item to be deprecated", required = true)
         @PathParam("itemId") String itemId,
         @ApiParam(name = "deprecated", value = "Whether or not the catalog item is deprecated", required = true)
         @PathParam("deprecated") boolean deprecated);
+    
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM, MediaType.TEXT_PLAIN})
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Undefined catalog item"),
+    })
+    @Path("/entities/{itemId}/deprecated")
+    public void setDeprecated(
+        @ApiParam(name = "itemId", value = "The ID of the catalog item to be deprecated", required = true)
+        @PathParam("itemId") String itemId,
+        @ApiParam(name = "deprecated", value = "Whether or not the catalog item is deprecated", required = true)
+        boolean deprecated);
+    
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM, MediaType.TEXT_PLAIN})
+    @ApiErrors(value = {
+            @ApiError(code = 404, reason = "Undefined catalog item"),
+    })
+    @Path("/entities/{itemId}/disabled")
+    public void setDisabled(
+        @ApiParam(name = "itemId", value = "The ID of the catalog item to be disabled", required = true)
+        @PathParam("itemId") String itemId,
+        @ApiParam(name = "disabled", value = "Whether or not the catalog item is disabled", required = true)
+        boolean disabled);
 }
-

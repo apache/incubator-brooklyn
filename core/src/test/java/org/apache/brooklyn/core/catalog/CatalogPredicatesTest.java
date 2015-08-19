@@ -25,17 +25,17 @@ import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
-import org.apache.brooklyn.core.management.internal.LocalManagementContext;
-import org.apache.brooklyn.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicates;
 
-import brooklyn.entity.basic.Entities;
 
 public class CatalogPredicatesTest {
     private LocalManagementContext mgmt;
@@ -76,6 +76,21 @@ public class CatalogPredicatesTest {
         
         assertFalse(CatalogPredicates.<Entity,EntitySpec<?>>deprecated(false).apply(item));
         assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>deprecated(true).apply(item));
+    }
+    
+    @Test
+    public void testDisabled() {
+        CatalogItem<Entity, EntitySpec<?>> item = createItem(CatalogItemBuilder.newEntity("foo", "1.0")
+                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .build());
+
+        assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>disabled(false).apply(item));
+        assertFalse(CatalogPredicates.<Entity,EntitySpec<?>>disabled(true).apply(item));
+        
+        item = disableItem(item);
+        
+        assertFalse(CatalogPredicates.<Entity,EntitySpec<?>>disabled(false).apply(item));
+        assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>disabled(true).apply(item));
     }
     
     @Test
@@ -147,6 +162,14 @@ public class CatalogPredicatesTest {
     protected <T, SpecT> CatalogItem<T, SpecT> deprecateItem(CatalogItem<T, SpecT> orig) {
         CatalogItem<T, SpecT> item = (CatalogItem<T, SpecT>) catalog.getCatalogItem(orig.getSymbolicName(), orig.getVersion());
         item.setDeprecated(true);
+        catalog.persist(item);
+        return item;
+    }
+    
+    @SuppressWarnings("unchecked")
+    protected <T, SpecT> CatalogItem<T, SpecT> disableItem(CatalogItem<T, SpecT> orig) {
+        CatalogItem<T, SpecT> item = (CatalogItem<T, SpecT>) catalog.getCatalogItem(orig.getSymbolicName(), orig.getVersion());
+        item.setDisabled(true);
         catalog.persist(item);
         return item;
     }

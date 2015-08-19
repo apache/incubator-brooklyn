@@ -35,6 +35,7 @@ import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mgmt.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMemento;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.objs.BrooklynObjectType;
 import org.apache.brooklyn.api.objs.Identifiable;
@@ -60,6 +61,7 @@ import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -386,6 +388,7 @@ public class RebindTestUtils {
         boolean hasPersister = newManagementContext != null && newManagementContext.getRebindManager().getPersister() != null;
         boolean checkSerializable = options.checkSerializable;
         boolean terminateOrigManagementContext = options.terminateOrigManagementContext;
+        Function<BrooklynMementoPersister, Void> stateTransformer = options.stateTransformer;
         
         LOG.info("Rebinding app, using mementoDir " + mementoDir + "; object store " + objectStore);
 
@@ -423,6 +426,11 @@ public class RebindTestUtils {
         if (mementoDirBackup != null) {
             FileUtil.copyDir(mementoDir, mementoDirBackup);
             FileUtil.setFilePermissionsTo700(mementoDirBackup);
+        }
+        
+        if (stateTransformer != null) {
+            BrooklynMementoPersister persister = newManagementContext.getRebindManager().getPersister();
+            stateTransformer.apply(persister);
         }
         
         List<Application> newApps = newManagementContext.getRebindManager().rebind(classLoader, exceptionHandler, ManagementNodeState.MASTER);
