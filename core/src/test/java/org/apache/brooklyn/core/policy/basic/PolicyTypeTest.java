@@ -22,7 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.policy.PolicyType;
 import org.apache.brooklyn.core.config.BasicConfigKey;
-import org.apache.brooklyn.policy.core.AbstractPolicy;
+import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

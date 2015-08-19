@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.entity.EntityDynamicType;
-import org.apache.brooklyn.policy.core.PolicyDynamicType;
+import org.apache.brooklyn.core.policy.PolicyDynamicType;
 import org.apache.brooklyn.sensor.enricher.EnricherDynamicType;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 

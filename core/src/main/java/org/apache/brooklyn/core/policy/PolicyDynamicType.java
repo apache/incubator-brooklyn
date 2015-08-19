@@ -16,24 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.policy.core;
+package org.apache.brooklyn.core.policy;
 
-import java.util.Map;
-
+import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicyType;
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.objs.BrooklynTypeSnapshot;
+import org.apache.brooklyn.core.objs.BrooklynDynamicType;
 
-public class PolicyTypeSnapshot extends BrooklynTypeSnapshot implements PolicyType {
-    private static final long serialVersionUID = 4670930188951106009L;
+public class PolicyDynamicType extends BrooklynDynamicType<Policy, AbstractPolicy> {
+
+    public PolicyDynamicType(Class<? extends Policy> type) {
+        super(type);
+    }
     
-    PolicyTypeSnapshot(String name, Map<String, ConfigKey<?>> configKeys) {
-        super(name, configKeys);
+    public PolicyDynamicType(AbstractPolicy policy) {
+        super(policy);
+    }
+    
+    public PolicyType getSnapshot() {
+        return (PolicyType) super.getSnapshot();
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        return (obj instanceof PolicyTypeSnapshot) && super.equals(obj);
+    protected PolicyTypeSnapshot newSnapshot() {
+        return new PolicyTypeSnapshot(name, value(configKeys));
     }
 }

@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.policy.core.Policies;
+import org.apache.brooklyn.core.policy.Policies;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.PolicyConfigSummary;
 import org.apache.brooklyn.rest.domain.PolicySummary;

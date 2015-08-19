@@ -84,7 +84,7 @@ import org.apache.brooklyn.core.objs.proxy.InternalEntityFactory;
 import org.apache.brooklyn.core.objs.proxy.InternalFactory;
 import org.apache.brooklyn.core.objs.proxy.InternalLocationFactory;
 import org.apache.brooklyn.core.objs.proxy.InternalPolicyFactory;
-import org.apache.brooklyn.policy.core.AbstractPolicy;
+import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
 import org.apache.brooklyn.sensor.feed.AbstractFeed;
 import org.apache.brooklyn.util.collections.MutableList;

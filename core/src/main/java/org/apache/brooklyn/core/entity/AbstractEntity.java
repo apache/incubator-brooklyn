@@ -76,7 +76,7 @@ import org.apache.brooklyn.core.mgmt.rebind.BasicEntityRebindSupport;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
 import org.apache.brooklyn.core.objs.AbstractEntityAdjunct;
 import org.apache.brooklyn.core.objs.AbstractEntityAdjunct.AdjunctTagSupport;
-import org.apache.brooklyn.policy.core.AbstractPolicy;
+import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.sensor.core.AttributeMap;
 import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.BasicNotificationSensor;
