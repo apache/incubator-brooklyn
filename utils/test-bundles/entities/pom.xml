@@ -38,6 +38,11 @@
         <version>0.8.0-SNAPSHOT</version><!-- BROOKLYN_VERSION -->
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
+
+    <properties>
+        <maven.install.skip>true</maven.install.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>

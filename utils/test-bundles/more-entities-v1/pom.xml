@@ -55,7 +55,11 @@
             <version>${brooklyn.version}</version>
         </dependency>
     </dependencies>
-    
+
+    <properties>
+        <maven.install.skip>true</maven.install.skip>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
