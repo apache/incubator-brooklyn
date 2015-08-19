@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.policy.enricher
 
-import static org.testng.Assert
+import static org.testng.Assert.assertEquals
 
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.SubscriptionContext
